@@ -1,6 +1,7 @@
 /* parser.c */
 
 #include "parser.h"
+#include "types.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -103,6 +104,9 @@ void free_node(Node *node) {
  * then return the tokens in a Parser object.
  * */
 Parser *parse_str(const char *input) {
+    /* Just bail if input is a comment */
+    if (input[0] == ';') return NULL;
+
     int count;
     char **tokens = lexer(input, &count);
     if (!tokens) return NULL;
