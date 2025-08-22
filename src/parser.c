@@ -1,21 +1,27 @@
 /* parser.c */
 
 #include "parser.h"
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
 
-char **tokenize(const char *input, int *count) {
-    int capacity = 8;
 
+/* tokenize() -> char**
+ * Take a line of input and return an array of strings
+ * containing all the tokens.
+ * */
+char **lexer(const char *input, int *count) {
+
+    /* Initialize with room for 8 tokens */
+    int capacity = 8;
     char **tokens = malloc(capacity * sizeof(char *));
     if (!tokens) {
         fprintf(stderr, "ENOMEM: malloc failed\n");
         return NULL;
     }
 
+    /* Keep track of the # of tokens we've created */
     int n = 0;
     const char *p = input;
 
@@ -65,6 +71,9 @@ char **tokenize(const char *input, int *count) {
     return tokens;
 }
 
+/* free_tokens() -> void
+ * Destroy an array of tokens.
+ * */
 void free_tokens(char **tokens) {
     if (!tokens) {
         return;
@@ -72,11 +81,15 @@ void free_tokens(char **tokens) {
     free(tokens);
 }
 
+/*
+ * free_node() -> void
+ * Destroy a Node object.
+ * */
 void free_node(Node *node) {
     if (!node) return;
     if (node->type == NODE_ATOM) {
         free(node->atom);
-    } else {  // LIST
+    } else {  /* NODE_LIST */
         for (int i = 0; i < node->size; i++) {
             free_node(node->list[i]);
         }
@@ -85,9 +98,13 @@ void free_node(Node *node) {
     free(node);
 }
 
-Parser *read_str(const char *input) {
+/* parse_str() -> Parser
+ * Take a raw line, run it through the lexer,
+ * then return the tokens in a Parser object.
+ * */
+Parser *parse_str(const char *input) {
     int count;
-    char **tokens = tokenize(input, &count);
+    char **tokens = lexer(input, &count);
     if (!tokens) return NULL;
 
     Parser *p = malloc(sizeof(Parser));
@@ -100,8 +117,12 @@ Parser *read_str(const char *input) {
     return p;
 }
 
-Node *read_list(Parser *p) {
-    // Skip the '('
+/* parse_list() -> Node
+ * Take a Parser object and return a
+ * NODE_LIST type Node.
+ * */
+Node *parse_list(Parser *p) {
+    /* Skip the '(' */
     p->position++;
     Node **elements = NULL;
     Node **tmp_elements = NULL;
@@ -124,15 +145,15 @@ Node *read_list(Parser *p) {
             }
             elements = tmp_elements;
         }
-        elements[n++] = read_form(p);
+        elements[n++] = parse_form(p);
     }
 
     if (p->position >= p->size) {
         fprintf(stderr, "Error: unmatched '('\n");
-        exit(1);
+        return NULL;
     }
 
-    // Skip the ')'
+    /* Skip the ')' */
     p->position++;
 
     Node *node = malloc(sizeof(Node));
@@ -143,9 +164,17 @@ Node *read_list(Parser *p) {
     return node;
 }
 
-Node *read_atom(Parser *p) {
+/* parse_atom() -> Node
+ * Take a Parser object and return a
+ * NODE_ATOM type Node.
+ * */
+Node *parse_atom(Parser *p) {
     const char *token = p->array[p->position++];
     Node *node = malloc(sizeof(Node));
+    if (!node) {
+        fprintf(stderr, "ENOMEM: Failed to allocate memory for atom\n");
+        exit (EXIT_FAILURE);
+    }
     node->type = NODE_ATOM;
     node->atom = strdup(token);
     node->list = NULL;
@@ -153,18 +182,22 @@ Node *read_atom(Parser *p) {
     return node;
 }
 
-Node *read_form(Parser *p) {
+/* parse_form() -> Node
+ * Take a Parser object and decide which form it is.
+ * Dispatch it accordingly.
+ * */
+Node *parse_form(Parser *p) {
     if (p->position >= p->size) return NULL;
 
     const char *token = p->array[p->position];
     //debug:
     //printf("read_form: pos=%d token='%s'\n", p->position, token);
     if (strcmp(token, "(") == 0) {
-        return read_list(p);
+        return parse_list(p);
     }
     if (strcmp(token, ")") == 0) {
         fprintf(stderr, "Error: unexpected ')'\n");
-        exit(1);
+        return NULL;
     }
-    return read_atom(p);
+    return parse_atom(p);
 }

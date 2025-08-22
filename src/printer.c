@@ -4,6 +4,11 @@
 #include "parser.h"
 #include <stdio.h>
 
+
+/* print_node() -> void
+ * Take a Node object and display the AST.
+ * For debugging.
+ * */
 void print_node(const Node *node, const int indent) {
     for (int i = 0; i < indent; i++) printf("  ");
     if (node->type == NODE_ATOM) {
@@ -18,10 +23,13 @@ void print_node(const Node *node, const int indent) {
     }
 }
 
+/* print_string() ->void
+ * Print the Node object as response into the REPL.
+ * */
 void print_string(const Node *node) {
     if (node->type == NODE_ATOM) {
         printf("%s", node->atom);
-    } else {  // LIST
+    } else {  /* NODE_LIST */
         printf("(");
         for (int i = 0; i < node->size; i++) {
             print_string(node->list[i]);
@@ -33,6 +41,9 @@ void print_string(const Node *node) {
     }
 }
 
+/* print_string_ln() -> void
+ * Wrapper which prints a newline.
+ * */
 void print_string_ln(const Node *node) {
     print_string(node);
     printf("\n");

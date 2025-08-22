@@ -16,10 +16,12 @@ typedef struct Node {
     int size;             // number of elements in list
 } Node;
 
-char **tokenize(const char *input, int *count);
-Parser *read_str(const char *input);
-Node *read_form(Parser *p);
+char **lexer(const char *input, int *count);
 void free_tokens(char **tokens);
 void free_node(Node *node);
+Parser *parse_str(const char *input);
+Node *parse_list(Parser *p);
+Node *parse_atom(Parser *p);
+Node *parse_form(Parser *p);
 
 #endif //COZENAGE_PARSER_H
