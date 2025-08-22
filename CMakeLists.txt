@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.10)
 # here we specify that the project is C language only, so the default
 # C compiler on the system will be used
 project(cozenage C)
-set(CMAKE_C_STANDARD 99)
+set(CMAKE_C_STANDARD 23)
 
 # Option to force libedit
 option(USE_LIBEDIT "Force using libedit instead of GNU readline" OFF)
@@ -44,6 +44,10 @@ add_executable(cozenage src/main.c
                         src/parser.h
                         src/parser.c
                         src/printer.h
-                        src/printer.c)
+                        src/printer.c
+                        src/types.c
+                        src/types.h
+                        src/environment.c
+                        src/environment.h)
 
 target_link_libraries(cozenage ${READLINE_LIBRARY})
