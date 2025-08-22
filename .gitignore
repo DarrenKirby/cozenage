@@ -1,0 +1,31 @@
+# ======================
+# CLion
+# ======================
+.idea/
+*.iml
+cmake-build-*/
+
+# ======================
+# KDevelop
+# ======================
+.kdev4/
+.kdev5/
+
+# ======================
+# CMake
+# ======================
+CMakeCache.txt
+CMakeFiles/
+Makefile
+cmake_install.cmake
+CTestTestfile.cmake
+_build/
+_build-*/
+
+# ======================
+# Mac / Editor
+# ======================
+.DS_Store
+*.swp
+*~
+
