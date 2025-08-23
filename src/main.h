@@ -2,7 +2,7 @@
 #define COZENAGE_H
 
 #define APP_NAME "Cozenage"
-#define APP_VERSION "0.1.3"
+#define APP_VERSION "0.2.3"
 #define PROMPT_STRING "\x1b[34;1mcoz> \x1b[0m"
 
 /* ANSI colour codes */

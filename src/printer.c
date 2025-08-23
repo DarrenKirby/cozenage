@@ -1,7 +1,8 @@
-/* printer.c */
+/* printer.c - print ASTs (Node objects) and l_vals */
 
 #include "printer.h"
 #include "parser.h"
+#include "types.h"
 #include <stdio.h>
 
 
@@ -26,13 +27,13 @@ void print_node(const Node *node, const int indent) {
 /* print_string() ->void
  * Print the Node object as response into the REPL.
  * */
-void print_string(const Node *node) {
+void print_ast_string(const Node *node) {
     if (node->type == NODE_ATOM) {
         printf("%s", node->atom);
     } else {  /* NODE_LIST */
         printf("(");
         for (int i = 0; i < node->size; i++) {
-            print_string(node->list[i]);
+            print_ast_string(node->list[i]);
             if (i < node->size - 1) {
                 printf(" ");
             }
@@ -44,7 +45,33 @@ void print_string(const Node *node) {
 /* print_string_ln() -> void
  * Wrapper which prints a newline.
  * */
-void print_string_ln(const Node *node) {
-    print_string(node);
+void print_ast_string_ln(const Node *node) {
+    print_ast_string(node);
     printf("\n");
+}
+
+void print_lval(const l_val* v) {
+    switch (v->type) {
+        case LVAL_FLOAT:
+            printf("%Lf\n", v->float_n);
+            return;
+            case LVAL_INT:
+            printf("%lld\n", v->int_n);
+            return;
+        case LVAL_BOOL:
+            printf("%s\n", v->boolean == 1 ? "#true" : "#false");
+            return;
+        case LVAL_ERR:
+        case LVAL_STR:
+            printf("%s\n", v->str);
+            return;
+        //case LVAL_STR:
+        //    printf("%s\n", v->str);
+        //    return;
+        case LVAL_SYM:
+            printf("%s\n", v->sym);
+            return;
+        default:
+            printf("(unknown type: %d)\n", v->type);
+    }
 }

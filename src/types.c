@@ -1,8 +1,8 @@
-
-/* types.c */
+/* types.c - definition of l_val constructors/destructors and helpers */
 
 #include "types.h"
 #include "parser.h"
+#include "environment.h"
 #include <ctype.h>
 #include <errno.h>
 #include <stdio.h>
@@ -10,25 +10,22 @@
 #include <string.h>
 
 
-double parse_number(const char* str, char* errbuf, size_t errbuf_sz, int* ok) {
+double parse_float(const char* str, char* errbuf, size_t errbuf_sz, int* ok) {
     errno = 0;
     char* endptr;
-    double val = strtod(str, &endptr);
-
+    const double val = strtod(str, &endptr);
     if (endptr == str) {
         /* No conversion performed at all */
         snprintf(errbuf, errbuf_sz, "invalid number: '%s'", str);
         *ok = 0;
         return 0.0;
     }
-
     if (errno == ERANGE) {
         /* Underflow or overflow */
         snprintf(errbuf, errbuf_sz, "number out of range: '%s'", str);
         *ok = 0;
         return 0.0;
     }
-
     /* Trailing non-numeric chars */
     if (*endptr != '\0') {
         snprintf(errbuf, errbuf_sz, "invalid trailing characters in number: '%s'", str);
@@ -40,10 +37,44 @@ double parse_number(const char* str, char* errbuf, size_t errbuf_sz, int* ok) {
     return val;
 }
 
-l_val* lval_num(const double n) {
+long long int parse_int(const char* str, char* errbuf, size_t errbuf_sz, int* ok) {
+    errno = 0;
+    char* endptr;
+    const long long int val = strtoll(str, &endptr,  10);
+    if (endptr == str) {
+        /* No conversion performed at all */
+        snprintf(errbuf, errbuf_sz, "invalid number: '%s'", str);
+        *ok = 0;
+        return 0;
+    }
+
+    if (errno == ERANGE) {
+        /* Underflow or overflow */
+        snprintf(errbuf, errbuf_sz, "number out of range: '%s'", str);
+        *ok = 0;
+        return 0;
+    }
+    /* Trailing non-numeric chars */
+    if (*endptr != '\0') {
+        snprintf(errbuf, errbuf_sz, "invalid trailing characters in number: '%s'", str);
+        *ok = 0;
+        return 0;
+    }
+    *ok = 1;
+    return val;
+}
+
+l_val* lval_float(const long double n) {
     l_val* v = malloc(sizeof(l_val));
-    v->type = LVAL_NUM;
-    v->num = n;
+    v->type = LVAL_FLOAT;
+    v->float_n = n;
+    return v;
+}
+
+l_val* lval_int(const long long int n) {
+    l_val* v = malloc(sizeof(l_val));
+    v->type = LVAL_INT;
+    v->int_n = n;
     return v;
 }
 
@@ -102,6 +133,31 @@ l_val* lval_add(l_val* v, l_val* x) {
     return v;
 }
 
+/* Pop a value out of an s-expression at index i */
+l_val* lval_pop(l_val* v, int i) {
+    /* Find the item at "i" */
+    l_val* x = v->cell[i];
+
+    /* Shift the memory after the item at "i" over the top */
+    memmove(&v->cell[i], &v->cell[i+1],
+        sizeof(l_val*) * (v->count-i-1));
+
+    /* Decrease the count of items */
+    v->count--;
+
+    /* Reallocate the memory used */
+    v->cell = realloc(v->cell, sizeof(l_val*) * v->count);
+    return x;
+}
+
+/* Take an element out and delete the rest */
+l_val* lval_take(l_val* v, int i) {
+    l_val* x = lval_pop(v, i);
+    lval_del(v);
+    return x;
+}
+
+
 l_val *node_to_lval(Node *node) {
     if (!node) return NULL;
     char err_buf[128];
@@ -110,10 +166,10 @@ l_val *node_to_lval(Node *node) {
         case NODE_ATOM:
             /* Initial pound symbol */
             if (node->atom[0] == '#') {
-                if (node->atom[1] == 'f') {  /* Also captures #false */
+                if (node->atom[1] == 'f' || strcmp(node->atom, "#false") == 0) {
                     return lval_bool(0);
                 }
-                if (node->atom[1] == 't') {  /* Also captures #true */
+                if (node->atom[1] == 't' || strcmp(node->atom, "#true") == 0) {
                     return lval_bool(1);
                 }
                 /* Can add additional forms later (ie: #e #i #b #o #d #x) */
@@ -121,14 +177,30 @@ l_val *node_to_lval(Node *node) {
                 return lval_err(err_buf);
             }
             /* Looks like a number */
-            if (isdigit(node->atom[0]) != 0 || node->atom[0] == '-' || node->atom[0] == '+' || node->atom[0] == '.') {
+            if (isdigit(node->atom[0]) ||
+                ((node->atom[0] == '+' || node->atom[0] == '-') &&
+                isdigit(node->atom[1])) ||
+                ((node->atom[0] == '+' || node->atom[0] == '-') &&
+                node->atom[1] == '.' && isdigit(node->atom[2])) ||
+                (node->atom[0] == '.' && isdigit(node->atom[1]))) {
+                /* Check if it smells like a float */
+                if (strchr(node->atom, '.') != NULL) {
+                    int ok = 0;
+                    const double x = parse_float(node->atom, err_buf, sizeof(err_buf), &ok);
+
+                    if (!ok) {
+                        return lval_err(err_buf);
+                    }
+                    return lval_float(x);
+                }
+                /* Must be an integer */
                 int ok = 0;
-                const double x = parse_number(node->atom, err_buf, sizeof(err_buf), &ok);
+                const long long int x = parse_int(node->atom, err_buf, sizeof(err_buf), &ok);
 
                 if (!ok) {
                     return lval_err(err_buf);
                 }
-                return lval_num(x);
+                return lval_int(x);
             }
             /* A string - note: still need to unescape */
             if (node->atom[0] == '"') {
@@ -173,16 +245,17 @@ l_val *node_to_lval(Node *node) {
             }
             return v;
         }
+        default:
+            return lval_err("Unknown node type");
     }
-    /* Should never get here */
-    return NULL;
 }
 
 void lval_del(l_val* v) {
     switch (v->type) {
-        case LVAL_NUM:
+        case LVAL_INT:
+        case LVAL_FLOAT:
         case LVAL_BOOL:
-            // nothing heap-allocated here
+            /* nothing heap-allocated here */
             break;
 
         case LVAL_SYM:
@@ -202,8 +275,7 @@ void lval_del(l_val* v) {
             break;
 
         case LVAL_FUN:
-            // if you later add user-defined functions with captured
-            // environments, you’d free those here.
+            /* Free user-defined functions here (after I implement them) */
             break;
     }
     free(v);
