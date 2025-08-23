@@ -48,6 +48,8 @@ add_executable(cozenage src/main.c
                         src/types.c
                         src/types.h
                         src/environment.c
-                        src/environment.h)
+                        src/environment.h
+                        src/ops.c
+                        src/ops.h)
 
 target_link_libraries(cozenage ${READLINE_LIBRARY})
