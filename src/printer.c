@@ -25,7 +25,7 @@ void print_lval_list(const l_val* v, const char* prefix, const char open, const 
 void print_lval(const l_val* v) {
     switch (v->type) {
         case LVAL_FLOAT:
-            printf("%Lf", v->float_n);
+            printf("%Lg", v->float_n);
             break;
 
         case LVAL_INT:
