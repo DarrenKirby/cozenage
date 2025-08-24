@@ -1,61 +1,121 @@
-
-/* environment.c */
+/* environment.c - functions for getting and setting values in the environment
+ *               - also, mapping from lisp procedure to C implementation
+ */
 
 #include "environment.h"
 #include "ops.h"
+#include "types.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 
+/* lenv_new()
+ * Initializes an environment, and returns a pointer to it.
+ * */
 l_env* lenv_new(void) {
     l_env* e = malloc(sizeof(l_env));
     e->count = 0;
     e->syms = NULL;
-    e->funs = NULL;
+    e->vals = NULL;
     return e;
 }
 
+/* lenv_delete()
+ * Environment destructor. The value of this is questionable,
+ * as the only time it is called is when a ctrl-d is trapped.
+ * */
 void lenv_del(l_env* e) {
+    if (!e) return;
     for (int i = 0; i < e->count; i++) {
         free(e->syms[i]);
+        lval_del(e->vals[i]);
     }
     free(e->syms);
-    free(e->funs);
+    free(e->vals);
     free(e);
 }
 
-l_val* lenv_get(l_env* e, const l_val* k) {
+l_val* lenv_get(const l_env* e, const l_val* k) {
+    if (!e || !k || k->type != LVAL_SYM) return NULL;
+
     for (int i = 0; i < e->count; i++) {
         if (strcmp(e->syms[i], k->sym) == 0) {
-            // wrap the function pointer in an lval
-            l_val* v = malloc(sizeof(l_val));
-            v->type = LVAL_FUN;
-            v->builtin = e->funs[i];
-            return v;
+            return lval_copy(e->vals[i]);
         }
     }
-    char err_buf[128];
-    snprintf(err_buf, sizeof(err_buf), "Unbound symbol: '%s'", k->sym);
-    return lval_err(err_buf);
+
+    char buf[128];
+    snprintf(buf, sizeof(buf), "Unbound symbol: '%s'", k->sym);
+    return lval_err(buf);
 }
 
-void lenv_add_builtin(l_env* e, const char* name, const l_builtin func) {
+void lenv_put(l_env* e, const l_val* k, const l_val* v) {
+    if (!e || !k || !v || k->type != LVAL_SYM) {
+        fprintf(stderr, "lenv_put: invalid arguments\n");
+        return;
+    }
+
+    /* Check if symbol already exists */
+    for (int i = 0; i < e->count; i++) {
+        if (strcmp(e->syms[i], k->sym) == 0) {
+            /* Free the old value and replace it with a copy of v */
+            lval_del(e->vals[i]);
+            e->vals[i] = lval_copy(v);
+            return;
+        }
+    }
+
+    /* Symbol not found; append new entry */
     e->count++;
     e->syms = realloc(e->syms, sizeof(char*) * e->count);
-    e->funs = realloc(e->funs, sizeof(l_builtin) * e->count);
+    e->vals = realloc(e->vals, sizeof(l_val*) * e->count);
+    if (!e->syms || !e->vals) {
+        fprintf(stderr, "ENOMEM: lenv_put failed\n");
+        exit(EXIT_FAILURE);
+    }
+    e->syms[e->count - 1] = strdup(k->sym);
+    e->vals[e->count - 1] = lval_copy(v);
+}
 
-    e->syms[e->count-1] = malloc(strlen(name)+1);
-    strcpy(e->syms[e->count-1], name);
+l_val* lval_builtin(const char* name,
+                    l_val* (*func)(l_env*, l_val*)) {
+    l_val* v = malloc(sizeof(l_val));
+    v->type = LVAL_FUN;
+    v->builtin = func;
+    v->name = strdup(name);   /* store name for printing */
+    return v;
+}
 
-    e->funs[e->count-1] = func;
+void lenv_add_builtin(l_env* e, const char* name,
+                      l_val* (*func)(l_env*, l_val*)) {
+    l_val* fn = lval_builtin(name, func);
+    lenv_put(e, lval_sym(name), fn);
+    lval_del(fn);  /* env makes its own copy */
 }
 
 void lenv_add_builtins(l_env* e) {
+    /* basic arithmatic operators */
     lenv_add_builtin(e, "+", builtin_add);
     lenv_add_builtin(e, "-", builtin_sub);
     lenv_add_builtin(e, "*", builtin_mul);
     lenv_add_builtin(e, "/", builtin_div);
-    //lenv_add_builtin(e, "%", builtin_mod);
-    //lenv_add_builtin(e, "^", builtin_pow);
+    /* comparison operators */
+    lenv_add_builtin(e, "=", builtin_eq_op);
+    lenv_add_builtin(e, ">", builtin_gt_op);
+    lenv_add_builtin(e, "<", builtin_lt_op);
+    lenv_add_builtin(e, ">=", builtin_gte_op);
+    lenv_add_builtin(e, "<=", builtin_lte_op);
+    /* general numeric procedures */
+    lenv_add_builtin(e, "zero?", builtin_zero);
+    lenv_add_builtin(e, "positive?", builtin_positive);
+    lenv_add_builtin(e, "negative?", builtin_negative);
+    lenv_add_builtin(e, "odd?", builtin_odd);
+    lenv_add_builtin(e, "even?", builtin_even);
+    /* quote */
+    lenv_add_builtin(e, "quote", builtin_quote);
+    /* eq?, eql?, and equal? */
+    lenv_add_builtin(e, "eq?",    builtin_eq);
+    lenv_add_builtin(e, "eqv?",   builtin_eqv);
+    lenv_add_builtin(e, "equal?", builtin_equal);
 }

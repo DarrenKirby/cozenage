@@ -1,77 +1,92 @@
-/* printer.c - print ASTs (Node objects) and l_vals */
+/* printer.c - print l_vals */
 
 #include "printer.h"
 #include "parser.h"
 #include "types.h"
 #include <stdio.h>
 
+#include "main.h"
 
-/* print_node() -> void
- * Take a Node object and display the AST.
- * For debugging.
- * */
-void print_node(const Node *node, const int indent) {
-    for (int i = 0; i < indent; i++) printf("  ");
-    if (node->type == NODE_ATOM) {
-        printf("%s\n", node->atom);
-    } else {
-        printf("(\n");
-        for (int i = 0; i < node->size; i++) {
-            print_node(node->list[i], indent + 1);
-        }
-        for (int i = 0; i < indent; i++) printf("  ");
-        printf(")\n");
+
+void print_lval_list(const l_val* v, const char* prefix, const char open, const char close) {
+    if (!v) return;
+
+    if (prefix) printf("%s", prefix);
+    printf("%c", open);
+
+    for (int i = 0; i < v->count; i++) {
+        print_lval(v->cell[i]);
+        if (i != v->count - 1) printf(" ");
     }
-}
 
-/* print_string() ->void
- * Print the Node object as response into the REPL.
- * */
-void print_ast_string(const Node *node) {
-    if (node->type == NODE_ATOM) {
-        printf("%s", node->atom);
-    } else {  /* NODE_LIST */
-        printf("(");
-        for (int i = 0; i < node->size; i++) {
-            print_ast_string(node->list[i]);
-            if (i < node->size - 1) {
-                printf(" ");
-            }
-        }
-        printf(")");
-    }
-}
-
-/* print_string_ln() -> void
- * Wrapper which prints a newline.
- * */
-void print_ast_string_ln(const Node *node) {
-    print_ast_string(node);
-    printf("\n");
+    printf("%c", close);
 }
 
 void print_lval(const l_val* v) {
     switch (v->type) {
         case LVAL_FLOAT:
-            printf("%Lf\n", v->float_n);
-            return;
-            case LVAL_INT:
-            printf("%lld\n", v->int_n);
-            return;
+            printf("%Lf", v->float_n);
+            break;
+
+        case LVAL_INT:
+            printf("%lld", v->int_n);
+            break;
+
         case LVAL_BOOL:
-            printf("%s\n", v->boolean == 1 ? "#true" : "#false");
-            return;
+            printf("%s%s%s", ANSI_MAGENTA,
+                   v->boolean ? "#t" : "#f",
+                   ANSI_RESET);
+            break;
+
         case LVAL_ERR:
+            printf("%sError:%s %s", ANSI_RED_B, ANSI_RESET, v->str);
+            break;
+
+        case LVAL_CHAR:
+            switch (v->char_val) {
+            case '\n': printf("#\\newline"); break;
+            case ' ':  printf("#\\space");   break;
+            case '\t': printf("#\\tab");     break;
+            default:   printf("#\\%c", v->char_val); break;
+            }
+            break;
+
         case LVAL_STR:
-            printf("%s\n", v->str);
-            return;
-        //case LVAL_STR:
-        //    printf("%s\n", v->str);
-        //    return;
+            printf("\"%s\"", v->str);
+            break;
+
+        case LVAL_FUN:
+            if (v->name) {
+                printf("<builtin procedure '%s%s%s'>", ANSI_GREEN_B, v->name, ANSI_RESET);
+            } else {
+                printf("<lambda>");
+            }
+            break;
+
         case LVAL_SYM:
-            printf("%s\n", v->sym);
-            return;
+            printf("%s", v->sym);
+            break;
+
+        case LVAL_NIL:
+            printf("()");
+            break;
+        case LVAL_SEXPR:
+            print_lval_list(v, NULL, '(', ')');
+            break;
+        case LVAL_VECT:
+            print_lval_list(v, "#", '(', ')');
+            break;
+        case LVAL_BYTEVEC:
+            print_lval_list(v, "#u8", '(', ')');
+            break;
+
         default:
-            printf("(unknown type: %d)\n", v->type);
+            printf("%sError:%s unknown type: '%s%d%s'", ANSI_RED_B,
+                ANSI_RESET, ANSI_RED_B, v->type, ANSI_RESET);
     }
+}
+
+void println_lval(const l_val* v) {
+    print_lval(v);
+    putchar('\n');
 }
