@@ -18,6 +18,10 @@ lval_check_arity((a), -1, -1, (n))
 #define CHECK_ARITY_RANGE(a, lo, hi) \
 lval_check_arity((a), -1, (lo), (hi))
 
+#define LVAL_AS_NUM(v) \
+((v)->type == LVAL_INT ? (long double)(v)->int_n : (v)->float_n)
+
+
 
 typedef enum {
     LVAL_INT      = 1 << 0,   /* exact integer */
