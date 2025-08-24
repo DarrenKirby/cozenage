@@ -16,7 +16,7 @@
  * through a 2 step lexer/parser stream, and convert
  * it to an l_val struct.
  * */
-l_val* read(l_env* e) {
+l_val* coz_read(l_env* e) {
     char *input = readline(PROMPT_STRING);
     if (!input || strcmp(input, "exit") == 0) { printf("\n"); lenv_del(e); exit(0); }
 
@@ -44,7 +44,7 @@ l_val* eval_sexpr(l_env* e, l_val* v);
  * Literals evaluate to themselves; symbols are looked up.
  * S-expressions are recursively evaluated.
  */
-l_val* eval(l_env* e, l_val* v) {
+l_val* coz_eval(l_env* e, l_val* v) {
     if (!v) return NULL;
 
     switch (v->type) {
@@ -98,7 +98,7 @@ l_val* eval_sexpr(l_env* e, l_val* v) {
     if (v->count == 0) return v;
 
     /* Step 1: Evaluate the first element (the function/symbol) */
-    l_val* f = eval(e, lval_pop(v, 0));
+    l_val* f = coz_eval(e, lval_pop(v, 0));
     if (f->type != LVAL_FUN) {
         lval_del(f);
         lval_del(v);
@@ -116,7 +116,7 @@ l_val* eval_sexpr(l_env* e, l_val* v) {
     if (!special_form) {
         /* Evaluate arguments */
         for (int i = 0; i < v->count; i++) {
-            v->cell[i] = eval(e, v->cell[i]);
+            v->cell[i] = coz_eval(e, v->cell[i]);
             if (v->cell[i]->type == LVAL_ERR) {
                 return lval_take(v, i);
             }
@@ -132,7 +132,7 @@ l_val* eval_sexpr(l_env* e, l_val* v) {
  * Take the l_val produced by eval and print it in a
  * context-specific, meaningful way.
  * */
-void print(const l_val* v) {
+void coz_print(const l_val* v) {
     println_lval(v);
 }
 
@@ -144,15 +144,15 @@ void repl() {
     lenv_add_builtins(e);
 
     for (;;) {
-        l_val *val = read(e);
+        l_val *val = coz_read(e);
         if (!val) {
             continue;
         }
-        l_val *result = eval(e, val);
+        l_val *result = coz_eval(e, val);
         if (!result) {
             continue;
         }
-        print(result);
+        coz_print(result);
         lval_del(result);
     }
 }
