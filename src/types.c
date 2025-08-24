@@ -184,6 +184,7 @@ l_val* lval_take(l_val* v, const int i) {
     return x;
 }
 
+/* Recursively delete components of an l_val */
 void lval_del(l_val* v) {
     if (!v) return;
 
@@ -243,6 +244,7 @@ void lval_del(l_val* v) {
     free(v);
 }
 
+/* Recursively deep-copy all components of an l_val */
 l_val* lval_copy(const l_val* v) {
     if (!v) return NULL;
 
