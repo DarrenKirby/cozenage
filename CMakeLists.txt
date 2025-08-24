@@ -39,17 +39,21 @@ endif()
 include_directories(${READLINE_INCLUDE_DIR})
 
 add_executable(cozenage src/main.c
-                        src/main.h
-                        src/compat_readline.h
-                        src/parser.h
-                        src/parser.c
-                        src/printer.h
-                        src/printer.c
-                        src/types.c
-                        src/types.h
-                        src/environment.c
-                        src/environment.h
-                        src/ops.c
-                        src/ops.h)
+        src/main.h
+        src/compat_readline.h
+        src/parser.h
+        src/parser.c
+        src/printer.h
+        src/printer.c
+        src/types.c
+        src/types.h
+        src/environment.c
+        src/environment.h
+        src/ops.c
+        src/ops.h)
 
-target_link_libraries(cozenage ${READLINE_LIBRARY})
+
+# Find math library
+find_library(M_LIB m)
+
+target_link_libraries(cozenage PRIVATE ${READLINE_LIBRARY} ${M_LIB})
