@@ -125,6 +125,7 @@ l_val* eval_sexpr(l_env* e, l_val* v) {
     /* Step 3: Call the function with v as arguments */
     l_val* result = f->builtin(e, v);
     lval_del(f);
+    lval_del(v);
     return result;
 }
 
