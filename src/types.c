@@ -185,6 +185,8 @@ l_val* lval_take(l_val* v, const int i) {
 }
 
 void lval_del(l_val* v) {
+    if (!v) return;
+
     switch (v->type) {
     case LVAL_INT:
     case LVAL_FLOAT:
@@ -195,13 +197,18 @@ void lval_del(l_val* v) {
         /* nothing heap-allocated */
         break;
 
-        /* NIL is singleton object. Don't free/delete it */
     case LVAL_NIL:
+        /* NIL is a singleton; never free */
         return;
 
-    case LVAL_SYM:   free(v->sym); break;
-    case LVAL_STR:   free(v->str); break;
-    case LVAL_ERR:   free(v->str); break;
+    case LVAL_SYM:
+        free(v->sym);
+        break;
+
+    case LVAL_STR:
+    case LVAL_ERR:
+        free(v->str);
+        break;
 
     case LVAL_SEXPR:
     case LVAL_VECT:
@@ -214,30 +221,37 @@ void lval_del(l_val* v) {
 
     case LVAL_PAIR:
         /* Not implemented yet */
-        //lval_del(v->car);
-        //lval_del(v->cdr);
+        // lval_del(v->car);
+        // lval_del(v->cdr);
         break;
 
     case LVAL_FUN:
-        /* free user-defined functions later */
+        if (v->name) free(v->name);
+        /* TODO: free env/body if user-defined later */
         break;
 
     case LVAL_PORT:
     case LVAL_CONT:
-        /* later */
+        /* not implemented yet */
+        break;
+
+    default:
+        fprintf(stderr, "lval_del: unknown type %d\n", v->type);
         break;
     }
+
     free(v);
 }
 
 l_val* lval_copy(const l_val* v) {
     if (!v) return NULL;
 
-    l_val* copy = malloc(sizeof(l_val));
+    l_val* copy = calloc(1, sizeof(l_val));  // zero-init for safety
     if (!copy) {
         fprintf(stderr, "ENOMEM: lval_copy failed\n");
         exit(EXIT_FAILURE);
     }
+
     copy->type = v->type;
 
     switch (v->type) {
@@ -253,39 +267,50 @@ l_val* lval_copy(const l_val* v) {
     case LVAL_CHAR:
         copy->char_val = v->char_val;
         break;
+
     case LVAL_SYM:
         copy->sym = strdup(v->sym);
         break;
+
     case LVAL_STR:
+    case LVAL_ERR:
         copy->str = strdup(v->str);
         break;
+
     case LVAL_FUN:
         copy->builtin = v->builtin;
         copy->name = v->name ? strdup(v->name) : NULL;
+        /* TODO: deep copy env/body for lambdas */
         break;
+
     case LVAL_SEXPR:
     case LVAL_VECT:
     case LVAL_BYTEVEC:
         copy->count = v->count;
-        copy->cell = malloc(sizeof(l_val*) * v->count);
+        copy->cell = v->count ? malloc(sizeof(l_val*) * v->count) : NULL;
         for (int i = 0; i < v->count; i++) {
             copy->cell[i] = lval_copy(v->cell[i]);
         }
         break;
-    case LVAL_ERR:
-        copy->str = strdup(v->str);
-        break;
+
     case LVAL_NIL:
+        /* return the singleton instead of allocating */
+        free(copy);
+        return (l_val*)v; // or return global_nil if you prefer
+        break;
+
     case LVAL_PAIR:
     case LVAL_PORT:
     case LVAL_CONT:
-        /* for now, just shallow copy, or extend later if needed */
+        /* shallow copy (all fields remain zeroed) */
         break;
+
     default:
         fprintf(stderr, "lval_copy: unknown type %d\n", v->type);
         free(copy);
         return NULL;
     }
+
     return copy;
 }
 

@@ -25,16 +25,35 @@ l_env* lenv_new(void) {
  * Environment destructor. The value of this is questionable,
  * as the only time it is called is when a ctrl-d is trapped.
  * */
+// void lenv_del(l_env* e) {
+//     if (!e) return;
+//     for (int i = 0; i < e->count; i++) {
+//         free(e->syms[i]);
+//         lval_del(e->vals[i]);
+//     }
+//     free(e->syms);
+//     free(e->vals);
+//     free(e);
+// }
 void lenv_del(l_env* e) {
     if (!e) return;
+
     for (int i = 0; i < e->count; i++) {
-        free(e->syms[i]);
-        lval_del(e->vals[i]);
+        // Free symbols properly
+        if (e->syms[i]) {
+            free(e->syms[i]);  // this will free v->sym as well
+        }
+        // Free values
+        if (e->vals[i]) {
+            lval_del(e->vals[i]);
+        }
     }
+
     free(e->syms);
     free(e->vals);
     free(e);
 }
+
 
 l_val* lenv_get(const l_env* e, const l_val* k) {
     if (!e || !k || k->type != LVAL_SYM) return NULL;
@@ -90,7 +109,9 @@ l_val* lval_builtin(const char* name,
 void lenv_add_builtin(l_env* e, const char* name,
                       l_val* (*func)(l_env*, l_val*)) {
     l_val* fn = lval_builtin(name, func);
-    lenv_put(e, lval_sym(name), fn);
+    l_val* k = lval_sym(name);
+    lenv_put(e, k, fn);
+    lval_del(k);
     lval_del(fn);  /* env makes its own copy */
 }
 
@@ -124,4 +145,10 @@ void lenv_add_builtins(l_env* e) {
     lenv_add_builtin(e, "remainder", builtin_remainder);
     lenv_add_builtin(e, "modulo", builtin_modulo);
     lenv_add_builtin(e, "quotient", builtin_quotient);
+    /* logical operators */
+    lenv_add_builtin(e, "not", builtin_not);
+    lenv_add_builtin(e, "and", builtin_not);
+    lenv_add_builtin(e, "or", builtin_not);
+    lenv_add_builtin(e, "boolean?", builtin_boolean_pred);
+    lenv_add_builtin(e, "boolean", builtin_boolean);
 }
