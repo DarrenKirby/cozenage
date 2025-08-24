@@ -4,6 +4,8 @@
 #include "types.h"
 #include "environment.h"
 #include <string.h>
+#include <math.h>
+#include <float.h>
 
 
 /* Return 1 if l_val is a number (int or float) */
@@ -28,6 +30,21 @@ int lval_any_float(const l_val* a) {
 l_val* lval_make_num(const long double val, const int float_seen) {
     if (float_seen) return lval_float(val);
     return lval_int((long long)val);
+}
+
+/* Helper which determines if there is a meaningful fractional portion
+ * in the result, and returns LVAL_INT or LVAL_FLOAT accordingly */
+l_val* make_lval_from_double(const long double x) {
+    // epsilon: what counts as “effectively an integer”
+    const long double EPS = 1e-12L;
+
+    const long double rounded = roundl(x);
+    if (fabsl(x - rounded) < EPS) {
+        // treat as integer
+        return lval_int((long long)rounded);
+    }
+    // treat as float
+    return lval_float(x);
 }
 
 /* Basic arithmetic operators: + - * /
@@ -90,20 +107,21 @@ l_val* builtin_mul(l_env* e, l_val* a) {
         lval_del(a);
         return lval_int(1);
     }
-    const int float_seen = lval_any_float(a);
+    //const int float_seen = lval_any_float(a);
     long double result = lval_to_ld(a->cell[0]);
+
 
     /* more identity law logic */
     if (a->count == 1) {
         lval_del(a);
-        return lval_make_num(result, float_seen);
+        return make_lval_from_double(result);
     }
 
     for (int i = 1; i < a->count; i++) {
-        result *= lval_to_ld(a->cell[i]);
+        result *= LVAL_AS_NUM(a->cell[i]); //lval_to_ld(a->cell[i]);
     }
     lval_del(a);
-    return lval_make_num(result, float_seen);
+    return make_lval_from_double(result);
 }
 
 /* TODO: implement unary division reciprocal ie: (/ 5) -> 1/5 */
@@ -117,7 +135,7 @@ l_val* builtin_div(l_env* e, l_val* a) {
         const long double intermediate = lval_to_ld(a->cell[i]);
         if (intermediate == 0) {
             lval_del(a);
-            return lval_err("CozError: Division by zero");
+            return lval_err("Division by zero");
         }
         result /= intermediate;
     }
@@ -137,41 +155,57 @@ l_val* builtin_div(l_env* e, l_val* a) {
 l_val* builtin_eq_op(l_env* e, l_val* a) {
     l_val* err = lval_check_types(a, LVAL_INT | LVAL_FLOAT);
     if (err) { return err; }
-    if ((err = CHECK_ARITY_MIN(a, 2))) { return err; }
-    /* FIXME: finish these functions! */
-    return lval_err("Not implemented yet");
+    for (int i = 0; i < a->count - 1; i++) {
+        if (!(LVAL_AS_NUM(a->cell[i]) == LVAL_AS_NUM(a->cell[i+1]))) {
+            return lval_bool(0);  /* false */
+        }
+    }
+    return lval_bool(1);
 }
 
 l_val* builtin_gt_op(l_env* e, l_val* a) {
     l_val* err = lval_check_types(a, LVAL_INT | LVAL_FLOAT);
     if (err) { return err; }
-    if ((err = CHECK_ARITY_MIN(a, 2))) { return err; }
-    /* FIXME: finish these functions! */
-    return lval_err("Not implemented yet");
+    for (int i = 0; i < a->count - 1; i++) {
+        if (!(LVAL_AS_NUM(a->cell[i]) > LVAL_AS_NUM(a->cell[i+1]))) {
+            return lval_bool(0);  /* false */
+        }
+    }
+    return lval_bool(1);
 }
 
 l_val* builtin_lt_op(l_env* e, l_val* a) {
     l_val* err = lval_check_types(a, LVAL_INT | LVAL_FLOAT);
     if (err) { return err; }
-    if ((err = CHECK_ARITY_MIN(a, 2))) { return err; }
-    /* FIXME: finish these functions! */
-    return lval_err("Not implemented yet");
+    for (int i = 0; i < a->count - 1; i++) {
+        if (!(LVAL_AS_NUM(a->cell[i]) < LVAL_AS_NUM(a->cell[i+1]))) {
+            return lval_bool(0);  /* false */
+        }
+    }
+    return lval_bool(1);
+
 }
 
 l_val* builtin_gte_op(l_env* e, l_val* a) {
     l_val* err = lval_check_types(a, LVAL_INT | LVAL_FLOAT);
     if (err) { return err; }
-    if ((err = CHECK_ARITY_MIN(a, 2))) { return err; }
-    /* FIXME: finish these functions! */
-    return lval_err("Not implemented yet");
+    for (int i = 0; i < a->count - 1; i++) {
+        if (!(LVAL_AS_NUM(a->cell[i]) >= LVAL_AS_NUM(a->cell[i+1]))) {
+            return lval_bool(0);  /* false */
+        }
+    }
+    return lval_bool(1);
 }
 
 l_val* builtin_lte_op(l_env* e, l_val* a) {
     l_val* err = lval_check_types(a, LVAL_INT | LVAL_FLOAT);
     if (err) { return err; }
-    if ((err = CHECK_ARITY_MIN(a, 2))) { return err; }
-    /* FIXME: finish these functions! */
-    return lval_err("Not implemented yet");
+    for (int i = 0; i < a->count - 1; i++) {
+        if (!(LVAL_AS_NUM(a->cell[i]) <= LVAL_AS_NUM(a->cell[i+1]))) {
+            return lval_bool(0);  /* false */
+        }
+    }
+    return lval_bool(1);
 }
 
 /* generic unary numeric procedures */
@@ -312,4 +346,81 @@ l_val* builtin_equal(l_env* e, l_val* a) {
     l_val* err = CHECK_ARITY_EXACT(a, 2);
     if (err) return err;
     return lval_equal(a->cell[0], a->cell[1]);
+}
+
+/* More numeric operations */
+
+l_val* builtin_abs(l_env* e, l_val* a) {
+    l_val* err = lval_check_types(a, LVAL_INT | LVAL_FLOAT);
+    if (err) { return err; }
+    if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
+    if (LVAL_AS_NUM(a->cell[0]) >= 0) {
+        if (a->type == LVAL_INT) { return lval_int(a->int_n); }
+        return lval_float(a->float_n);
+    }
+    if (a->type == LVAL_INT) { return lval_int(-a->int_n); }
+    return lval_float(-a->float_n);
+}
+
+l_val* builtin_expt(l_env* e, l_val* a) {
+    l_val* err = lval_check_types(a, LVAL_INT | LVAL_FLOAT);
+    if (err) { return err; }
+    if ((err = CHECK_ARITY_EXACT(a, 2))) { return err; }
+    // if (a->cell[0]->type == LVAL_INT && a->cell[1]->type == LVAL_INT) {
+    //     /* Two ints .... easy */
+    //     long long result = a->cell[0]->int_n;
+    //     for (int i = 1; i < a->cell[1]->int_n; i++) {
+    //         result *= a->cell[0]->int_n;
+    //     }
+    //     return lval_int(result);
+    // }
+    // return lval_err("Floating point expt not yet implemented!");
+    long double base = LVAL_AS_NUM(a->cell[0]);
+    l_val* exp_val = a->cell[1];
+    long double result;
+
+    if (exp_val->type == LVAL_INT) {
+        /* integer exponent: use fast exponentiation */
+        long long n = exp_val->int_n;
+        result = 1.0;
+        long long abs_n = n > 0 ? n : -n;
+
+        while (abs_n > 0) {
+            if (abs_n & 1) result *= base;
+            base *= base;
+            abs_n >>= 1;
+        }
+
+        if (n < 0) result = 1.0 / result;
+    } else {
+        /* float exponent: delegate to powl */
+        result = powl(base, LVAL_AS_NUM(exp_val));
+    }
+    return make_lval_from_double(result);
+
+}
+
+l_val* builtin_modulo(l_env* e, l_val* a) {
+    l_val* err = lval_check_types(a, LVAL_INT);
+    if (err) { return err; }
+    if ((err = CHECK_ARITY_EXACT(a, 2))) { return err; }
+    long long r = a->cell[0]->int_n % a->cell[1]->int_n;
+    if ((r != 0) && ((a->cell[1]->int_n > 0 && r < 0) || (a->cell[1]->int_n < 0 && r > 0))) {
+        r += a->cell[1]->int_n;
+    }
+    return lval_int(r);
+}
+
+l_val* builtin_quotient(l_env* e, l_val* a) {
+    l_val* err = lval_check_types(a, LVAL_INT);
+    if (err) { return err; }
+    if ((err = CHECK_ARITY_EXACT(a, 2))) { return err; }
+    return lval_int(a->cell[0]->int_n / a->cell[1]->int_n);
+}
+
+l_val* builtin_remainder(l_env* e, l_val* a) {
+    l_val* err = lval_check_types(a, LVAL_INT);
+    if (err) { return err; }
+    if ((err = CHECK_ARITY_EXACT(a, 2))) { return err; }
+    return lval_int(a->cell[0]->int_n % a->cell[1]->int_n);
 }

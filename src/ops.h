@@ -26,4 +26,10 @@ l_val* builtin_equal(l_env* e, l_val* a);
 l_val* builtin_eqv(l_env* e, l_val* a);
 l_val* builtin_eq(l_env* e, l_val* a);
 
+l_val* builtin_abs(l_env* e, l_val* a);
+l_val* builtin_expt(l_env* e, l_val* a);
+l_val* builtin_modulo(l_env* e, l_val* a);
+l_val* builtin_quotient(l_env* e, l_val* a);
+l_val* builtin_remainder(l_env* e, l_val* a);
+
 #endif //COZENAGE_OPS_H

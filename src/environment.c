@@ -115,7 +115,13 @@ void lenv_add_builtins(l_env* e) {
     /* quote */
     lenv_add_builtin(e, "quote", builtin_quote);
     /* eq?, eql?, and equal? */
-    lenv_add_builtin(e, "eq?",    builtin_eq);
-    lenv_add_builtin(e, "eqv?",   builtin_eqv);
+    lenv_add_builtin(e, "eq?", builtin_eq);
+    lenv_add_builtin(e, "eqv?", builtin_eqv);
     lenv_add_builtin(e, "equal?", builtin_equal);
+    /* more numerics */
+    lenv_add_builtin(e, "abs", builtin_abs);
+    lenv_add_builtin(e, "expt", builtin_expt);
+    lenv_add_builtin(e, "remainder", builtin_remainder);
+    lenv_add_builtin(e, "modulo", builtin_modulo);
+    lenv_add_builtin(e, "quotient", builtin_quotient);
 }
