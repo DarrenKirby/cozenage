@@ -127,6 +127,18 @@ l_val* lval_char(char c) {
     return v;
 }
 
+l_val* lval_pair(l_val* car, l_val* cdr) {
+    l_val* v = malloc(sizeof(l_val));
+    if (!v) {
+        fprintf(stderr, "ENOMEM: lval_pair failed\n");
+        exit(EXIT_FAILURE);
+    }
+    v->type = LVAL_PAIR;
+    v->car = car;
+    v->cdr = cdr;
+    return v;
+}
+
 l_val* lval_vect(void) {
     l_val* v = calloc(1, sizeof(l_val));
     v->type = LVAL_VECT;
@@ -221,9 +233,8 @@ void lval_del(l_val* v) {
         break;
 
     case LVAL_PAIR:
-        /* Not implemented yet */
-        // lval_del(v->car);
-        // lval_del(v->cdr);
+        lval_del(v->car);
+        lval_del(v->cdr);
         break;
 
     case LVAL_FUN:
@@ -289,7 +300,11 @@ l_val* lval_copy(const l_val* v) {
     case LVAL_VECT:
     case LVAL_BYTEVEC:
         copy->count = v->count;
-        copy->cell = v->count ? malloc(sizeof(l_val*) * v->count) : NULL;
+        if (v->count) {
+            copy->cell = malloc(sizeof(l_val*) * v->count);
+        } else {
+            copy->cell = NULL;
+        }
         for (int i = 0; i < v->count; i++) {
             copy->cell[i] = lval_copy(v->cell[i]);
         }
@@ -298,10 +313,14 @@ l_val* lval_copy(const l_val* v) {
     case LVAL_NIL:
         /* return the singleton instead of allocating */
         free(copy);
-        return (l_val*)v; // or return global_nil if you prefer
-        break;
+        return lval_new_nil();
 
-    case LVAL_PAIR:
+    case LVAL_PAIR: {
+        copy->car = lval_copy(v->car);
+        copy->cdr = lval_copy(v->cdr);
+        break;
+        }
+
     case LVAL_PORT:
     case LVAL_CONT:
         /* shallow copy (all fields remain zeroed) */
@@ -373,9 +392,8 @@ l_val* lval_check_types(const l_val* a, const int mask) {
         if (!(arg->type & mask)) {
             char buf[128];
             snprintf(buf, sizeof(buf),
-                     "Bad type at arg%s %d: got %s, expected %s",
-                     i == 1 ? "" : "s",
-                     i,
+                     "Bad type at arg %d: got %s, expected %s",
+                     i+1,
                      lval_type_name(arg->type),
                      lval_mask_types(mask));
             return lval_err(buf);

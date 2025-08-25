@@ -58,6 +58,11 @@ typedef struct l_val {
         char* sym;               /* symbols */
         char* str;               /* strings */
 
+        struct {                 /* pairs */
+            l_val* car;
+            l_val* cdr;
+        };
+
         struct {                 /* for compound types (sexpr, vectors, etc.) */
             l_val** cell;
             int count;
@@ -81,7 +86,8 @@ l_val* lval_bytevect(void);
 l_val* lval_sym(const char* s);
 l_val* lval_str(const char* s);
 l_val* lval_sexpr(void);
-l_val* lval_qexpr(void);
+l_val* lval_new_nil(void);
+l_val* lval_pair(l_val* car, l_val* cdr);
 l_val* lval_err(const char* m);
 l_val* lval_add(l_val* v, l_val* x);
 void lval_del(l_val* v);
