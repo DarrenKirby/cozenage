@@ -38,4 +38,9 @@ l_val* builtin_boolean(l_env* e, l_val* a);
 l_val* builtin_or(l_env* e, l_val* a);
 l_val* builtin_and(l_env* e, l_val* a);
 
+l_val* builtin_cons(l_env* e, l_val* a);
+l_val* builtin_car(l_env* e, l_val* a);
+l_val* builtin_cdr(l_env* e, l_val* a);
+l_val* builtin_list(l_env* e, l_val* a);
+
 #endif //COZENAGE_OPS_H

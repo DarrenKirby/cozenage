@@ -137,4 +137,9 @@ void lenv_add_builtins(l_env* e) {
     lenv_add_builtin(e, "or", builtin_or);
     lenv_add_builtin(e, "boolean?", builtin_boolean_pred);
     lenv_add_builtin(e, "boolean", builtin_boolean);
+    /* Pair/list constructors and selectors */
+    lenv_add_builtin(e, "cons", builtin_cons);
+    lenv_add_builtin(e, "car", builtin_car);
+    lenv_add_builtin(e, "cdr", builtin_cdr);
+    lenv_add_builtin(e, "list", builtin_list);
 }

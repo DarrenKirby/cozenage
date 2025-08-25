@@ -5,7 +5,7 @@
 #include "environment.h"
 #include <string.h>
 #include <math.h>
-#include <float.h>
+#include <stdlib.h>
 
 
 /* Return 1 if l_val is a number (int or float) */
@@ -419,38 +419,55 @@ l_val* builtin_boolean(l_env* e, l_val* a) {
     return lval_bool(result);
 }
 
-/* and: returns first falsy value, or last value if all true */
 l_val* builtin_and(l_env* e, l_val* a) {
-    if (a->count == 0) {
-        return lval_bool(1);  // Scheme: (and) => #t
-    }
     for (int i = 0; i < a->count; i++) {
-        //l_val* arg = a->cell[i];
-        int is_false = a->cell[i]->type == LVAL_BOOL && a->cell[i]->boolean == 0;
-        if (is_false) {
-            // return #f immediately
-            return lval_bool(0);
+        if (a->cell[i]->type == LVAL_BOOL && a->cell[i]->boolean == 0) {
+            /* first #f encountered → return a copy of it */
+            return lval_copy(a->cell[i]);
         }
     }
-    // all true: return the last value
-    l_val* last = a->cell[a->count - 1];
-    return last;
+    /* all truthy → return copy of last element */
+    return lval_copy(a->cell[a->count - 1]);
 }
 
-/* or: returns first truthy value, or #f if none */
 l_val* builtin_or(l_env* e, l_val* a) {
-    if (a->count == 0) {
-        lval_del(a);
-        return lval_bool(0); // Scheme: (or) => #f
-    }
     for (int i = 0; i < a->count; i++) {
-        l_val* arg = a->cell[i];
-        int is_true = !(arg->type == LVAL_BOOL && arg->boolean == 0);
-        if (is_true) {
-            // return first truthy, clean up remaining
-            return arg;
+        if (!(a->cell[i]->type == LVAL_BOOL && a->cell[i]->boolean == 0)) {
+            /* first truthy value → return a copy */
+            return lval_copy(a->cell[i]);
         }
     }
-    // none truthy
-    return lval_bool(0);
+    /* all false → return copy of last element (#f) */
+    return lval_copy(a->cell[a->count - 1]);
+}
+
+/* pair/list constructors and selectors */
+
+l_val* builtin_cons(l_env* e, l_val* a) {
+    l_val* err = CHECK_ARITY_EXACT(a, 2);
+    if (err) return err;
+    return lval_pair(lval_copy(a->cell[0]), lval_copy(a->cell[1]));
+}
+
+l_val* builtin_car(l_env* e, l_val* a) {
+    l_val* err = lval_check_types(a, LVAL_PAIR);
+    if (err) { return err; }
+    return lval_copy(a->cell[0]->car);
+}
+
+l_val* builtin_cdr(l_env* e, l_val* a) {
+    l_val* err = lval_check_types(a, LVAL_PAIR);
+    if (err) { return err; }
+    return lval_copy(a->cell[0]->cdr);
+}
+
+l_val* builtin_list(l_env* e, l_val* a) {
+    // start with nil
+    l_val* result = lval_new_nil();
+
+    // build backwards so it comes out in the right order
+    for (int i = a->count - 1; i >= 0; i--) {
+        result = lval_pair(lval_copy(a->cell[i]), result);
+    }
+    return result;
 }
