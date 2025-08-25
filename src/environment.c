@@ -21,20 +21,6 @@ l_env* lenv_new(void) {
     return e;
 }
 
-/* lenv_delete()
- * Environment destructor. The value of this is questionable,
- * as the only time it is called is when a ctrl-d is trapped.
- * */
-// void lenv_del(l_env* e) {
-//     if (!e) return;
-//     for (int i = 0; i < e->count; i++) {
-//         free(e->syms[i]);
-//         lval_del(e->vals[i]);
-//     }
-//     free(e->syms);
-//     free(e->vals);
-//     free(e);
-// }
 void lenv_del(l_env* e) {
     if (!e) return;
 
@@ -147,8 +133,8 @@ void lenv_add_builtins(l_env* e) {
     lenv_add_builtin(e, "quotient", builtin_quotient);
     /* logical operators */
     lenv_add_builtin(e, "not", builtin_not);
-    lenv_add_builtin(e, "and", builtin_not);
-    lenv_add_builtin(e, "or", builtin_not);
+    lenv_add_builtin(e, "and", builtin_and);
+    lenv_add_builtin(e, "or", builtin_or);
     lenv_add_builtin(e, "boolean?", builtin_boolean_pred);
     lenv_add_builtin(e, "boolean", builtin_boolean);
 }
