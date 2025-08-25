@@ -64,35 +64,33 @@ l_val* builtin_add(l_env* e, l_val* a) {
     if (a->count == 0) {
         return lval_int(0);
     }
-    const int float_seen = lval_any_float(a);
     long double result = lval_to_ld(a->cell[0]);
 
     /* more identity law logic */
     if (a->count == 1) {
-        return lval_make_num(result, float_seen);
+        return make_lval_from_double(result);
     }
 
     for (int i = 1; i < a->count; i++) {
-        result += lval_to_ld(a->cell[i]);
+        result += LVAL_AS_NUM(a->cell[i]);
     }
-    return lval_make_num(result, float_seen);
+    return make_lval_from_double(result);
 }
 
 l_val* builtin_sub(l_env* e, l_val* a) {
     l_val* err = lval_check_types(a, LVAL_INT | LVAL_FLOAT);
     if (err) { return err; }
     if ((err = CHECK_ARITY_MIN(a, 1))) { return err; }
-    const int float_seen = lval_any_float(a);
     long double result = lval_to_ld(a->cell[0]);
     /* Handle unary minus */
     if (a->count == 1) {
         result = -result;
     } else {
         for (int i = 1; i < a->count; i++) {
-            result -= lval_to_ld(a->cell[i]);
+            result -= LVAL_AS_NUM(a->cell[i]);
         }
     }
-    return lval_make_num(result, float_seen);
+    return make_lval_from_double(result);
 }
 
 l_val* builtin_mul(l_env* e, l_val* a) {
@@ -102,17 +100,14 @@ l_val* builtin_mul(l_env* e, l_val* a) {
     if (a->count == 0) {
         return lval_int(1);
     }
-    //const int float_seen = lval_any_float(a);
     long double result = lval_to_ld(a->cell[0]);
-
-
     /* more identity law logic */
     if (a->count == 1) {
         return make_lval_from_double(result);
     }
 
     for (int i = 1; i < a->count; i++) {
-        result *= LVAL_AS_NUM(a->cell[i]); //lval_to_ld(a->cell[i]);
+        result *= LVAL_AS_NUM(a->cell[i]);
     }
     return make_lval_from_double(result);
 }
@@ -122,7 +117,6 @@ l_val* builtin_div(l_env* e, l_val* a) {
     l_val* err = lval_check_types(a, LVAL_INT | LVAL_FLOAT);
     if (err) { return err; }
     if ((err = CHECK_ARITY_MIN(a, 1))) { return err; }
-    const int float_seen = lval_any_float(a);
     long double result = lval_to_ld(a->cell[0]);
     for (int i = 1; i < a->count; i++) {
         const long double intermediate = lval_to_ld(a->cell[i]);
@@ -131,7 +125,7 @@ l_val* builtin_div(l_env* e, l_val* a) {
         }
         result /= intermediate;
     }
-    return lval_make_num(result, float_seen);
+    return make_lval_from_double(result);
 }
 
 /* Comparison operators
@@ -250,9 +244,8 @@ l_val* builtin_even(l_env* e, l_val* a) {
  * Simply returns the first argument unevaluated.
  */
 l_val* builtin_quote(l_env* e, l_val* a) {
-    if (a->count != 1) {
-        return lval_err("quote expects exactly 1 argument");
-    }
+    l_val* err = CHECK_ARITY_EXACT(a, 1);
+    if (err) return err;
     /* Take the first argument and do NOT evaluate it */
     l_val* quoted = lval_take(a, 0);
     return quoted;
@@ -351,15 +344,7 @@ l_val* builtin_expt(l_env* e, l_val* a) {
     l_val* err = lval_check_types(a, LVAL_INT | LVAL_FLOAT);
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 2))) { return err; }
-    // if (a->cell[0]->type == LVAL_INT && a->cell[1]->type == LVAL_INT) {
-    //     /* Two ints .... easy */
-    //     long long result = a->cell[0]->int_n;
-    //     for (int i = 1; i < a->cell[1]->int_n; i++) {
-    //         result *= a->cell[0]->int_n;
-    //     }
-    //     return lval_int(result);
-    // }
-    // return lval_err("Floating point expt not yet implemented!");
+
     long double base = LVAL_AS_NUM(a->cell[0]);
     l_val* exp_val = a->cell[1];
     long double result;
@@ -411,7 +396,7 @@ l_val* builtin_remainder(l_env* e, l_val* a) {
 }
 
 l_val* builtin_not(l_env* e, l_val* a) {
-    l_val* err; // = lval_check_types(a, LVAL_INT);
+    l_val* err;
     /* Only #f (boolean false) returns true for `not`; everything else is false */
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
     const int is_false = (a->cell[0]->type == LVAL_BOOL && a->cell[0]->boolean == 0);
@@ -419,30 +404,29 @@ l_val* builtin_not(l_env* e, l_val* a) {
 }
 
 l_val* builtin_boolean_pred(l_env* e, l_val* a) {
-    l_val* err;
-    if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
+    l_val* err = CHECK_ARITY_EXACT(a, 1);
+    if (err) return err;
     return lval_bool(a->cell[0]->type == LVAL_BOOL);
 }
 
 /* boolean: converts any value to a strict boolean */
 l_val* builtin_boolean(l_env* e, l_val* a) {
-    if (a->count != 1) {
-        return lval_err("boolean: expected exactly 1 argument");
-    }
+    l_val* err = CHECK_ARITY_EXACT(a, 1);
+    if (err) return err;
     int result = (a->cell[0]->type == LVAL_BOOL)
                  ? a->cell[0]->boolean
                  : 1; // everything except #f is true
     return lval_bool(result);
 }
 
-/* and: returns first falsey value, or last value if all true */
+/* and: returns first falsy value, or last value if all true */
 l_val* builtin_and(l_env* e, l_val* a) {
     if (a->count == 0) {
         return lval_bool(1);  // Scheme: (and) => #t
     }
     for (int i = 0; i < a->count; i++) {
-        l_val* arg = a->cell[i];
-        int is_false = (arg->type == LVAL_BOOL && arg->boolean == 0);
+        //l_val* arg = a->cell[i];
+        int is_false = a->cell[i]->type == LVAL_BOOL && a->cell[i]->boolean == 0;
         if (is_false) {
             // return #f immediately
             return lval_bool(0);
