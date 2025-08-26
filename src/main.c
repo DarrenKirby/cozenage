@@ -18,6 +18,8 @@
  * */
 l_val* coz_read(l_env* e) {
     char *input = readline(PROMPT_STRING);
+    /* reset bold input */
+    printf("%s", ANSI_RESET);
     if (!input || strcmp(input, "exit") == 0) { printf("\n"); lenv_del(e); exit(0); }
 
     Parser *p = parse_str(input);
@@ -158,7 +160,7 @@ void repl() {
 int main(int argc, char** argv) {
     /* Print Version and Exit Information */
     printf("  %s%s%s Version %s\n", ANSI_BLUE_B, APP_NAME, ANSI_RESET, APP_VERSION);
-    printf("  Press <Ctrl+d> to exit\n\n");
+    printf("  Press <Ctrl+d> or type 'exit' to quit\n\n");
 
     /* Run until we don't */
     repl();
