@@ -9,60 +9,6 @@
 #include <string.h>
 
 
-// double parse_float(const char* str, char* errbuf, size_t errbuf_sz, int* ok) {
-//     errno = 0;
-//     char* endptr;
-//     const double val = strtod(str, &endptr);
-//     if (endptr == str) {
-//         /* No conversion performed at all */
-//         snprintf(errbuf, errbuf_sz, "invalid number: '%s'", str);
-//         *ok = 0;
-//         return 0.0;
-//     }
-//     if (errno == ERANGE) {
-//         /* Underflow or overflow */
-//         snprintf(errbuf, errbuf_sz, "number out of range: '%s'", str);
-//         *ok = 0;
-//         return 0.0;
-//     }
-//     /* Trailing non-numeric chars */
-//     if (*endptr != '\0') {
-//         snprintf(errbuf, errbuf_sz, "invalid trailing characters in number: '%s'", str);
-//         *ok = 0;
-//         return 0.0;
-//     }
-//
-//     *ok = 1;
-//     return val;
-// }
-//
-// long long int parse_int(const char* str, char* errbuf, size_t errbuf_sz, int* ok) {
-//     errno = 0;
-//     char* endptr;
-//     const long long int val = strtoll(str, &endptr,  10);
-//     if (endptr == str) {
-//         /* No conversion performed at all */
-//         snprintf(errbuf, errbuf_sz, "invalid number: '%s'", str);
-//         *ok = 0;
-//         return 0;
-//     }
-//
-//     if (errno == ERANGE) {
-//         /* Underflow or overflow */
-//         snprintf(errbuf, errbuf_sz, "number out of range: '%s'", str);
-//         *ok = 0;
-//         return 0;
-//     }
-//     /* Trailing non-numeric chars */
-//     if (*endptr != '\0') {
-//         snprintf(errbuf, errbuf_sz, "invalid trailing characters in number: '%s'", str);
-//         *ok = 0;
-//         return 0;
-//     }
-//     *ok = 1;
-//     return val;
-// }
-
 /* define the global nil */
 l_val* lval_nil = NULL;
 
@@ -172,27 +118,40 @@ l_val* lval_add(l_val* v, l_val* x) {
     return v;
 }
 
-/* Pop a value out of an s-expression at index i */
 l_val* lval_pop(l_val* v, const int i) {
-    /* Find the item at "i" */
+    if (i < 0 || i >= v->count) return NULL; /* defensive */
+
+    /* Grab item */
     l_val* x = v->cell[i];
 
     /* Shift the memory after the item at "i" over the top */
-    memmove(&v->cell[i], &v->cell[i+1],
-        sizeof(l_val*) * (v->count-i-1));
+    if (i < v->count - 1) {
+        memmove(&v->cell[i], &v->cell[i+1],
+                sizeof(l_val*) * (v->count - i - 1));
+    }
 
     /* Decrease the count of items */
     v->count--;
 
-    /* Reallocate the memory used */
-    v->cell = realloc(v->cell, sizeof(l_val*) * v->count);
+    /* If there are no elements left, free the array and set to NULL.
+       Do NOT call realloc(..., 0). */
+    if (v->count == 0) {
+        free(v->cell);
+        v->cell = NULL;
+    } else {
+        /* Try to shrink the allocation; keep old pointer on OOM */
+        l_val** tmp = realloc(v->cell, sizeof(l_val*) * v->count);
+        if (tmp) {
+            v->cell = tmp;
+        } /* else: on OOM we keep the old block (safe) */
+    }
     return x;
 }
+
 
 /* Take an element out and delete the rest */
 l_val* lval_take(l_val* v, const int i) {
     l_val* x = lval_pop(v, i);
-    lval_del(v);
     return x;
 }
 
@@ -226,10 +185,15 @@ void lval_del(l_val* v) {
     case LVAL_SEXPR:
     case LVAL_VECT:
     case LVAL_BYTEVEC:
-        for (int i = 0; i < v->count; i++) {
-            lval_del(v->cell[i]);
+        if (v->cell) {
+            for (int i = 0; i < v->count; i++) {
+                /* guard against NULL children just in case */
+                if (v->cell[i]) lval_del(v->cell[i]);
+            }
+            free(v->cell);
+            v->cell = NULL;
         }
-        free(v->cell);
+        v->count = 0;
         break;
 
     case LVAL_PAIR:
