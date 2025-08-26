@@ -211,11 +211,10 @@ char **lexer(const char *input, int *count) {
     return tokens;
 }
 
-
 /* free_tokens() -> void
  * Destroy an array of tokens.
  * */
-void free_tokens(char **tokens, int count) {
+void free_tokens(char **tokens, const int count) {
     if (!tokens) return;
     for (int i = 0; i < count; i++) {
         free(tokens[i]);  // free each strdup’d string
@@ -229,7 +228,7 @@ void free_tokens(char **tokens, int count) {
  * */
 Parser *parse_str(const char *input) {
     /* Just bail if input is a comment */
-    if (input[0] == ';') return NULL;
+    //if (input[0] == ';') return NULL;
 
     int count;
     char **tokens = lexer(input, &count);
@@ -256,6 +255,17 @@ static const char *advance(Parser *p) {
 }
 
 l_val *parse_form(Parser *p) {
+    int left_count = 0, right_count = 0;
+
+    for (int i = 0; i < p->size; i++) {
+        if (strcmp(p->array[i], "(") == 0) left_count++;
+        else if (strcmp(p->array[i], ")") == 0) right_count++;
+    }
+
+    if (left_count != right_count) {
+        return lval_err("Unbalanced parentheses");
+    }
+
     const char *tok = peek(p);
     if (!tok) return NULL;
 
@@ -340,43 +350,44 @@ l_val* lval_atom_from_token(const char *tok) {
         return lval_str(str);
     }
 
-    /* Numeric constants with optional base prefix */
-    int ok = 0;
-    char errbuf[128] = {0};
-    const char* numstart = tok;
-    int base = 10;
+    if (tok[0] == '#' || isdigit(tok[0])) {
+        /* Numeric constants with optional base prefix */
+        int ok = 0;
+        char errbuf[128] = {0};
+        const char* numstart = tok;
+        int base = 10;
 
-    /* reject prefixes without numeric suffix, and single '#' */
-    if (tok[0] == '#' && len <= 2) {
-        snprintf(errbuf, sizeof(errbuf), "Invalid token: '%s%s%s'",
-            ANSI_RED_B, tok, ANSI_RESET);
-        return lval_err(errbuf);
-    }
-
-    if (tok[0] == '#' && len > 2) {
-        switch (tok[1]) {
-            case 'b': base = 2; numstart = tok + 2; break;
-            case 'o': base = 8; numstart = tok + 2; break;
-            case 'd': base = 10; numstart = tok + 2; break;
-            case 'x': base = 16; numstart = tok + 2; break;
+        /* reject prefixes without numeric suffix, and single '#' */
+        if (tok[0] == '#' && len <= 2) {
+            snprintf(errbuf, sizeof(errbuf), "Invalid token: '%s%s%s'",
+                ANSI_RED_B, tok, ANSI_RESET);
+            return lval_err(errbuf);
         }
+
+        if (tok[0] == '#' && len > 2) {
+            switch (tok[1]) {
+                case 'b': base = 2; numstart = tok + 2; break;
+                case 'o': base = 8; numstart = tok + 2; break;
+                case 'd': base = 10; numstart = tok + 2; break;
+                case 'x': base = 16; numstart = tok + 2; break;
+            }
+        }
+
+        if (base != 10 || !strchr(tok, '.')) {
+            /* Try integer parsing */
+            long long i = parse_int_checked(numstart, errbuf, sizeof(errbuf), base, &ok);
+            if (ok) return lval_int(i);
+        }
+
+        /* If no base prefix or decimal point detected, try float */
+        if (base == 10) {
+            long double f = parse_float_checked(numstart, errbuf, sizeof(errbuf), &ok);
+            if (ok) return lval_float(f);
+        }
+
+        /* If parsing failed but there was a numeric-like string, return error */
+        if (!ok) return lval_err(errbuf);
     }
-
-    if (base != 10 || !strchr(tok, '.')) {
-        /* Try integer parsing */
-        long long i = parse_int_checked(numstart, errbuf, sizeof(errbuf), base, &ok);
-        if (ok) return lval_int(i);
-    }
-
-    /* If no base prefix or decimal point detected, try float */
-    if (base == 10) {
-        long double f = parse_float_checked(numstart, errbuf, sizeof(errbuf), &ok);
-        if (ok) return lval_float(f);
-    }
-
-    /* If parsing failed but there was a numeric-like string, return error */
-    if (!ok) return lval_err(errbuf);
-
     /* Otherwise, treat as symbol */
     return lval_sym(tok);
 }

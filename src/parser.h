@@ -18,5 +18,4 @@ Parser *parse_str(const char *input);
 l_val *parse_form(Parser *p);
 l_val *lval_atom_from_token(const char *tok);
 
-
 #endif //COZENAGE_PARSER_H
