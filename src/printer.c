@@ -29,19 +29,18 @@ void print_pair(const l_val* v) {
         print_lval(cur->car);
         if (cur->cdr->type == LVAL_NIL) {
             break;  // proper end of list
-        } else if (cur->cdr->type == LVAL_PAIR) {
+        }
+        if (cur->cdr->type == LVAL_PAIR) {
             printf(" ");
             cur = cur->cdr;
             continue;
-        } else {
-            printf(" . ");
-            print_lval(cur->cdr);
-            break;
         }
+        printf(" . ");
+        print_lval(cur->cdr);
+        break;
     }
     printf(")");
 }
-
 
 void print_lval(const l_val* v) {
     switch (v->type) {
