@@ -57,3 +57,4 @@ add_executable(cozenage src/main.c
 find_library(M_LIB m)
 
 target_link_libraries(cozenage PRIVATE ${READLINE_LIBRARY} ${M_LIB})
+
