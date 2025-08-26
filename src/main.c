@@ -24,11 +24,8 @@ l_val* coz_read(l_env* e) {
     if (!p) { free(input); return NULL; }
 
     l_val *v = parse_form(p);
-    //----------DEBUG----------------
-    //printf("Right after call to parse_form:\n");
-    //println_lval(v);
-    //===============================
-    free_tokens(p->array);
+
+    free_tokens(p->array, p->size);
     free(p);
     if (v) add_history(input);
     free(input);
