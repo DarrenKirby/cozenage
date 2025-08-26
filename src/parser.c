@@ -350,7 +350,11 @@ l_val* lval_atom_from_token(const char *tok) {
         return lval_str(str);
     }
 
-    if (tok[0] == '#' || isdigit(tok[0])) {
+    if (tok[0] == '#' && strchr("bodx", tok[1]) || /* #b101, #o666, #d123, #xfff */
+        isdigit(tok[0]) ||                           /* 123 */
+        tok[0] == '+' && isdigit(tok[1]) ||          /* +123 */
+        tok[0] == '-' && isdigit(tok[1])             /* -123 */
+        ) {
         /* Numeric constants with optional base prefix */
         int ok = 0;
         char errbuf[128] = {0};
@@ -366,10 +370,13 @@ l_val* lval_atom_from_token(const char *tok) {
 
         if (tok[0] == '#' && len > 2) {
             switch (tok[1]) {
-                case 'b': base = 2; numstart = tok + 2; break;
-                case 'o': base = 8; numstart = tok + 2; break;
-                case 'd': base = 10; numstart = tok + 2; break;
-                case 'x': base = 16; numstart = tok + 2; break;
+            case 'b': base = 2; numstart = tok + 2; break;
+            case 'o': base = 8; numstart = tok + 2; break;
+            case 'd': base = 10; numstart = tok + 2; break;
+            case 'x': base = 16; numstart = tok + 2; break;
+                /* this will never run, but the linter
+                 * complains about no default case */
+            default: ;
             }
         }
 
@@ -385,7 +392,7 @@ l_val* lval_atom_from_token(const char *tok) {
             if (ok) return lval_float(f);
         }
 
-        /* If parsing failed but there was a numeric-like string, return error */
+        /* If parsing fails but there is a numeric-like string, return error */
         if (!ok) return lval_err(errbuf);
     }
     /* Otherwise, treat as symbol */
