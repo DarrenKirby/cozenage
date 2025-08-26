@@ -20,8 +20,8 @@ l_val* lenv_get(const l_env* e, const l_val* k);
 void lenv_put(l_env* e, const l_val* k, const l_val* v);
 
 /* Builtin helpers */
-l_val* lval_builtin(const char* name, l_val* (*func)(struct l_env*, l_val*));
-void lenv_add_builtin(l_env* e, const char* name, l_val* (*func)(struct l_env*, l_val*));
+l_val* lval_builtin(const char* name, l_val* (*func)(l_env*, l_val*));
+void lenv_add_builtin(l_env* e, const char* name, l_val* (*func)(l_env*, l_val*));
 void lenv_add_builtins(l_env* e);
 
 
