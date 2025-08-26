@@ -13,7 +13,7 @@ typedef struct {
 } Parser;
 
 char **lexer(const char *input, int *count);
-void free_tokens(char **tokens);
+void free_tokens(char **tokens, int count);
 Parser *parse_str(const char *input);
 l_val *parse_form(Parser *p);
 l_val *lval_atom_from_token(const char *tok);
