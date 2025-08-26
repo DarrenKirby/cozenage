@@ -5,6 +5,7 @@
 #include "environment.h"
 #include <string.h>
 #include <math.h>
+#include <stdio.h>
 #include <stdlib.h>
 
 
@@ -247,8 +248,9 @@ l_val* builtin_quote(l_env* e, l_val* a) {
     l_val* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
     /* Take the first argument and do NOT evaluate it */
-    l_val* quoted = lval_take(a, 0);
-    return quoted;
+    //l_val* quoted = lval_take(a, 0);
+    //return quoted;
+    return lval_take(a, 0);
 }
 
 /*
@@ -441,7 +443,7 @@ l_val* builtin_or(l_env* e, l_val* a) {
     return lval_copy(a->cell[a->count - 1]);
 }
 
-/* pair/list constructors and selectors */
+/* pair/list constructors, selectors, and procedures */
 
 l_val* builtin_cons(l_env* e, l_val* a) {
     l_val* err = CHECK_ARITY_EXACT(a, 2);
@@ -470,4 +472,23 @@ l_val* builtin_list(l_env* e, l_val* a) {
         result = lval_pair(lval_copy(a->cell[i]), result);
     }
     return result;
+}
+
+l_val* builtin_list_length(l_env* e, l_val* a) {
+    l_val* err = CHECK_ARITY_EXACT(a, 1);
+    if (err) return err;
+    err = lval_check_types(a, LVAL_PAIR);
+    if (err) { return err; }
+
+    int len = 0;
+    const l_val* p = a->cell[0];
+    while (p->type == LVAL_PAIR) {
+        len++;
+        p = p->cdr;
+    }
+
+    if (p->type != LVAL_NIL) {
+        return lval_err("Improper list");
+    }
+    return lval_int(len);
 }
