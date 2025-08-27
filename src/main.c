@@ -69,8 +69,6 @@ l_val* coz_eval(l_env* e, l_val* v) {
         case LVAL_VECT:
         case LVAL_BYTEVEC:
         case LVAL_NIL:
-            return v;
-
         /* Functions, ports, continuations, and errors are returned as-is */
         case LVAL_FUN:
         case LVAL_PORT:
