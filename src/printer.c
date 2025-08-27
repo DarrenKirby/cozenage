@@ -54,7 +54,7 @@ void print_lval(const l_val* v) {
 
     case LVAL_BOOL:
         printf("%s%s%s", ANSI_MAGENTA,
-               v->boolean ? "#t" : "#f",
+               v->boolean ? "#true" : "#false",
                ANSI_RESET);
         break;
 
