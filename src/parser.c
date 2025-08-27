@@ -14,20 +14,20 @@
 long long parse_int_checked(const char* str, char* errbuf, size_t errbuf_sz, int base, int* ok) {
     errno = 0;
     char* endptr;
-    long long val = strtoll(str, &endptr, base);
+    const long long val = strtoll(str, &endptr, base);
 
     if (endptr == str) {
-        snprintf(errbuf, errbuf_sz, "invalid integer: '%s%s%s'",
+        snprintf(errbuf, errbuf_sz, "Invalid numeric: '%s%s%s'",
             ANSI_RED_B, str, ANSI_RESET);
         *ok = 0; return 0;
     }
     if (errno == ERANGE || val > LLONG_MAX || val < LLONG_MIN) {
-        snprintf(errbuf, errbuf_sz, "integer out of range: '%s%s%s'",
+        snprintf(errbuf, errbuf_sz, "Integer out of range: '%s%s%s'",
             ANSI_RED_B, str, ANSI_RESET);
         *ok = 0; return 0;
     }
     if (*endptr != '\0') {
-        snprintf(errbuf, errbuf_sz, "invalid trailing characters in integer: '%s%s%s'",
+        snprintf(errbuf, errbuf_sz, "Invalid trailing characters in numeric: '%s%s%s'",
             ANSI_RED_B, str, ANSI_RESET);
         *ok = 0; return 0;
     }
@@ -39,20 +39,20 @@ long long parse_int_checked(const char* str, char* errbuf, size_t errbuf_sz, int
 long double parse_float_checked(const char* str, char* errbuf, size_t errbuf_sz, int* ok) {
     errno = 0;
     char* endptr;
-    long double val = strtold(str, &endptr);
+    const long double val = strtold(str, &endptr);
 
     if (endptr == str) {
-        snprintf(errbuf, errbuf_sz, "invalid float: '%s%s%s'",
+        snprintf(errbuf, errbuf_sz, "Invalid numeric: '%s%s%s'",
             ANSI_RED_B, str, ANSI_RESET);
         *ok = 0; return 0;
     }
     if (errno == ERANGE) {
-        snprintf(errbuf, errbuf_sz, "float out of range: '%s%s%s'",
+        snprintf(errbuf, errbuf_sz, "Float out of range: '%s%s%s'",
             ANSI_RED_B, str, ANSI_RESET);
         *ok = 0; return 0;
     }
     if (*endptr != '\0') {
-        snprintf(errbuf, errbuf_sz, "invalid trailing characters in float: '%s%s%s'",
+        snprintf(errbuf, errbuf_sz, "Invalid trailing characters in numeric: '%s%s%s'",
             ANSI_RED_B, str, ANSI_RESET);
         *ok = 0; return 0;
     }
@@ -101,7 +101,7 @@ char **lexer(const char *input, int *count) {
 
         /* quote char: ' */
         if (*p == '\'') {
-            tokens[n++] = strdup("'");  // emit a single-quote token
+            tokens[n++] = strdup("'");  /* emit a single-quote token */
             p++;
             continue;
         }
@@ -114,7 +114,7 @@ char **lexer(const char *input, int *count) {
         }
         /* String literal */
         else if (*p == '"') {
-            p++; // skip opening quote
+            p++; /* skip opening quote */
             const char *start = p;
             size_t buf_size = 64;
             char *tok = malloc(buf_size);
@@ -147,37 +147,17 @@ char **lexer(const char *input, int *count) {
         /* Hash literals: booleans #t/#f, characters #\x, numeric bases #b #o #d #x */
         else if (*p == '#') {
             const char *start = p;
-            p++; // skip '#'
+            p++;  // skip '#'
 
-            if (*p == 't' || *p == 'f') {
-                p++; // boolean
-            }
-            else if (*p == '\\') {
-                p++; // character
-                if (*p) p++;
-            }
-            else if (strchr("bodx", *p)) {
-                char base = *p++;
-                const char *digits_start = p;
-                // consume digits appropriate for base
-                while (*p) {
-                    if ((base == 'b' && (*p == '0' || *p == '1')) ||
-                        (base == 'o' && (*p >= '0' && *p <= '7')) ||
-                        (base == 'd' && isdigit((unsigned char)*p) || *p == '.') ||
-                        (base == 'x' && isxdigit((unsigned char)*p))) {
-                        p++;
-                        } else {
-                            break;
-                        }
-                }
-                if (digits_start == p) {
-                    // no digits after base prefix, still create token (#b, etc.)
-                    p = digits_start;
-                }
-            }
-            // now emit token from start..p
-            long len = p - start;
+            /* Consume entire token until whitespace, paren, or quote */
+            while (*p && !isspace((unsigned char)*p) &&
+                   *p != '(' && *p != ')' && *p != '"') {
+                p++;
+                   }
+
+            const size_t len = p - start;
             char *tok = malloc(len + 1);
+            if (!tok) exit(EXIT_FAILURE);
             memcpy(tok, start, len);
             tok[len] = '\0';
             tokens[n++] = tok;
@@ -187,10 +167,10 @@ char **lexer(const char *input, int *count) {
         else {
             const char *start = p;
             while (*p && !isspace((unsigned char)*p) && *p != '(' && *p != ')' && *p != '"') {
-                if (*p == ';') break; // comment start ends token
+                if (*p == ';') break; /* comment start ends token */
                 p++;
             }
-            long len = p - start;
+            const long len = p - start;
             char *tok = malloc(len + 1);
             memcpy(tok, start, len);
             tok[len] = '\0';
@@ -217,19 +197,16 @@ char **lexer(const char *input, int *count) {
 void free_tokens(char **tokens, const int count) {
     if (!tokens) return;
     for (int i = 0; i < count; i++) {
-        free(tokens[i]);  // free each strdup’d string
+        free(tokens[i]);  /* Free each strdup’d string */
     }
-    free(tokens); // then free the array
+    free(tokens); /* Then free the array */
 }
 
 /* parse_str() -> Parser
  * Take a raw line, run it through the lexer,
  * then return the tokens in a Parser object.
  * */
-Parser *parse_str(const char *input) {
-    /* Just bail if input is a comment */
-    //if (input[0] == ';') return NULL;
-
+Parser *parse_str(const char *input) {;
     int count;
     char **tokens = lexer(input, &count);
     if (!tokens) return NULL;
@@ -271,7 +248,7 @@ l_val *parse_form(Parser *p) {
 
     /* Handle quote (') */
     if (strcmp(tok, "'") == 0) {
-        advance(p);  // consume '
+        advance(p);  /* consume ' */
         l_val *quoted = parse_form(p);
         if (!quoted) return lval_err("Expected expression after quote");
         l_val *qexpr = lval_sexpr();
@@ -282,9 +259,9 @@ l_val *parse_form(Parser *p) {
 
     /* Handle vector/byte vector literals */
     if (strcmp(tok, "#") == 0) {
-        advance(p);  // consume '#'
+        advance(p);  /* consume '#' */
         const char *next = peek(p);
-        if (!next) return lval_err("Unexpected end after '#'");
+        if (!next) return lval_err("Invalid token: '#'");
 
         /* plain vector: #( ... ) */
         if (strcmp(next, "(") == 0) {
@@ -335,18 +312,70 @@ l_val *parse_form(Parser *p) {
 
 l_val* lval_atom_from_token(const char *tok) {
     if (!tok) return lval_err("NULL token");
+    char errbuf[128] = {0};
+    const size_t len = strlen(tok);
 
     /* Boolean */
-    if (strcmp(tok, "#t") == 0) return lval_bool(1);
-    if (strcmp(tok, "#f") == 0) return lval_bool(0);
+    if (strcmp(tok, "#t") == 0 ||
+        strcmp(tok, "#true") == 0) return lval_bool(1);
+    if (strcmp(tok, "#f") == 0 ||
+        strcmp(tok, "#false") == 0) return lval_bool(0);
 
     /* Character literal */
-    if (tok[0] == '#' && tok[1] == '\\') return lval_char(tok[2]);
+    if (tok[0] == '#' && tok[1] == '\\') {
+        /* the oddball case where '#\ ' is considered a 'space'
+         * char literal, but the lexer will only return '#\'
+         * as the token */
+        if (strcmp(tok, "#\\") == 0) {
+            return lval_char(' ');
+        }
+        /* single char in the ascii set */
+        if (isascii(tok[2]) && len == 3) {
+            return lval_char(tok[2]);
+        }
+        /* named chars */
+        if (strcmp(tok, "#\\alarm") == 0) {
+            return lval_char(0x7);
+        }
+        if (strcmp(tok, "#\\backspace") == 0) {
+            return lval_char(0x8);
+        }
+        if (strcmp(tok, "#\\delete") == 0) {
+            return lval_char(0x7f);
+        }
+        if (strcmp(tok, "#\\escape") == 0) {
+            return lval_char(0x1b);
+        }
+        if (strcmp(tok, "#\\newline") == 0) {
+            return lval_char('\n');
+        }
+        if (strcmp(tok, "#\\null") == 0) {
+            return lval_char('\0');
+        }
+        if (strcmp(tok, "#\\return") == 0) {
+            return lval_char(0xd);
+        }
+        if (strcmp(tok, "#\\space") == 0) {
+            return lval_char(' ');
+        }
+        if (strcmp(tok, "#\\tab") == 0) {
+            return lval_char('\t');
+        }
+        /* valid hex codes: 0x00 to 0x7f */
+        if (tok[2] == 'x' && len >= 4) {
+            unsigned int code = 0;
+            const int items_read = sscanf(tok, "#\\x%x", &code);
+            if (items_read != 1) { return lval_err("Invalid token"); }
+            if (code > 0x7f) {
+                return lval_err("Invalid ASCII hex value");
+            }
+            return lval_char((char)code);
+        }
+    }
 
     /* String literal */
-    size_t len = strlen(tok);
     if (tok[0] == '"' && tok[len-1] == '"') {
-        char *str = strndup(tok+1, len-2);
+        const char *str = strndup(tok+1, len-2);
         return lval_str(str);
     }
 
@@ -357,16 +386,8 @@ l_val* lval_atom_from_token(const char *tok) {
         ) {
         /* Numeric constants with optional base prefix */
         int ok = 0;
-        char errbuf[128] = {0};
         const char* numstart = tok;
         int base = 10;
-
-        /* reject prefixes without numeric suffix, and single '#' */
-        if (tok[0] == '#' && len <= 2) {
-            snprintf(errbuf, sizeof(errbuf), "Invalid token: '%s%s%s'",
-                ANSI_RED_B, tok, ANSI_RESET);
-            return lval_err(errbuf);
-        }
 
         if (tok[0] == '#' && len > 2) {
             switch (tok[1]) {
@@ -382,19 +403,27 @@ l_val* lval_atom_from_token(const char *tok) {
 
         if (base != 10 || !strchr(tok, '.')) {
             /* Try integer parsing */
-            long long i = parse_int_checked(numstart, errbuf, sizeof(errbuf), base, &ok);
+            const long long i = parse_int_checked(numstart, errbuf, sizeof(errbuf), base, &ok);
             if (ok) return lval_int(i);
         }
 
         /* If no base prefix or decimal point detected, try float */
         if (base == 10) {
-            long double f = parse_float_checked(numstart, errbuf, sizeof(errbuf), &ok);
+            const long double f = parse_float_checked(numstart, errbuf, sizeof(errbuf), &ok);
             if (ok) return lval_float(f);
         }
 
         /* If parsing fails but there is a numeric-like string, return error */
         if (!ok) return lval_err(errbuf);
     }
+
+    /* reject all other hash prefixes and single '#' */
+    if (tok[0] == '#') {
+        snprintf(errbuf, sizeof(errbuf), "Invalid token: '%s%s%s'",
+            ANSI_RED_B, tok, ANSI_RESET);
+        return lval_err(errbuf);
+    }
+
     /* Otherwise, treat as symbol */
     return lval_sym(tok);
 }

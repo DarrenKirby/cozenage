@@ -64,9 +64,16 @@ void print_lval(const l_val* v) {
 
     case LVAL_CHAR:
         switch (v->char_val) {
-        case '\n': printf("#\\newline"); break;
-        case ' ':  printf("#\\space");   break;
-        case '\t': printf("#\\tab");     break;
+        case '\n': printf("#\\newline");   break;
+        case ' ':  printf("#\\space");     break;
+        case '\t': printf("#\\tab");       break;
+        case 0x7:  printf("#\\alarm");     break;
+        case 0x8:  printf("#\\backspace"); break;
+        case 0x1b: printf("#\\escape");    break;
+        case 0xd:  printf("#\\return");    break;
+        case 0x7f: printf("#\\delete");    break;
+        case '\0': printf("#\\null");      break;
+
         default:   printf("#\\%c", v->char_val); break;
         }
         break;
