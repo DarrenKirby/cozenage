@@ -43,5 +43,6 @@ l_val* builtin_car(l_env* e, l_val* a);
 l_val* builtin_cdr(l_env* e, l_val* a);
 l_val* builtin_list(l_env* e, l_val* a);
 l_val* builtin_list_length(l_env* e, l_val* a);
+l_val* builtin_list_ref(l_env* e, l_val* a);
 
 #endif //COZENAGE_OPS_H

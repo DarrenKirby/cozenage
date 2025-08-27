@@ -529,6 +529,25 @@ l_val* builtin_list_length(l_env* e, l_val* a) {
     return lval_int(len);
 }
 
+/* 'list-ref' -> ANY - returns the list member at the index
+ * specified in the second arg. First arg is the list */
+l_val* builtin_list_ref(l_env* e, l_val* a) {
+    l_val* err = CHECK_ARITY_EXACT(a, 2);
+    if (err) return err;
+    err = lval_check_types(a->cell[0], LVAL_PAIR);
+    if (err) { return err; }
+    err = lval_check_types(a->cell[1], LVAL_INT);
+    if (err) { return err; }
+
+    int i = (int)a->cell[1]->int_n;
+    const l_val* p = a->cell[0];
+    while (i > 0) {
+        p = p->cdr;
+        i--;
+    }
+    return lval_copy(p->car);
+}
+
 /*-------------------------------------------------------*
  *     Vector constructors, selectors, and procedures    *
  * ------------------------------------------------------*/

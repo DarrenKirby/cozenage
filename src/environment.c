@@ -119,7 +119,7 @@ void lenv_add_builtins(l_env* e) {
     lenv_add_builtin(e, "negative?", builtin_negative);
     lenv_add_builtin(e, "odd?", builtin_odd);
     lenv_add_builtin(e, "even?", builtin_even);
-    /* quote */
+    /* special forms */
     lenv_add_builtin(e, "quote", builtin_quote);
     /* eq?, eql?, and equal? */
     lenv_add_builtin(e, "eq?", builtin_eq);
@@ -128,8 +128,10 @@ void lenv_add_builtins(l_env* e) {
     /* more numerics */
     lenv_add_builtin(e, "abs", builtin_abs);
     lenv_add_builtin(e, "expt", builtin_expt);
+    lenv_add_builtin(e, "^", builtin_expt); /* non-standard alias for expt */
     lenv_add_builtin(e, "remainder", builtin_remainder);
     lenv_add_builtin(e, "modulo", builtin_modulo);
+    lenv_add_builtin(e, "%", builtin_modulo); /* non-standard alias for modulo */
     lenv_add_builtin(e, "quotient", builtin_quotient);
     /* logical operators */
     lenv_add_builtin(e, "not", builtin_not);
@@ -143,4 +145,5 @@ void lenv_add_builtins(l_env* e) {
     lenv_add_builtin(e, "cdr", builtin_cdr);
     lenv_add_builtin(e, "list", builtin_list);
     lenv_add_builtin(e, "length", builtin_list_length);
+    lenv_add_builtin(e, "length-ref", builtin_list_ref);
 }
