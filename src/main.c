@@ -66,6 +66,7 @@ l_val* coz_eval(l_env* e, l_val* v) {
         case LVAL_BOOL:
         case LVAL_CHAR:
         case LVAL_STR:
+        /* case LVAL_PAIR: is not necessary - no concept of 'pair literal' */
         case LVAL_VECT:
         case LVAL_BYTEVEC:
         case LVAL_NIL:
@@ -88,43 +89,44 @@ l_val* coz_eval(l_env* e, l_val* v) {
  * 3) Treat first element as function (symbol or builtin).
  */
 l_val* eval_sexpr(l_env* e, l_val* v) {
-    if (DEBUG) {
-        printf("Immediately after entering eval_sexpr:\n");
-        println_lval(v);
-    }
     if (v->count == 0) return v;
 
-    /* Step 1: Evaluate the first element (the function/symbol) */
-    l_val* f = coz_eval(e, lval_pop(v, 0));
+    /* Grab first element without evaluating yet */
+    l_val* first = lval_pop(v, 0);
+
+    /* Special form: quote */
+    if (first->type == LVAL_SYM && strcmp(first->sym, "quote") == 0) {
+        lval_del(first);
+        if (v->count != 1) {
+            lval_del(v);
+            return lval_err("quote takes exactly one argument");
+        }
+        return lval_take(v, 0);  // return argument unevaluated
+    }
+
+    /* Otherwise, evaluate first element normally (should become a function) */
+    l_val* f = coz_eval(e, first);
     if (f->type != LVAL_FUN) {
         lval_del(f);
         lval_del(v);
-        return lval_err("S-expression does not start with function");
+        return lval_err("S-expression does not start with a procedure");
     }
 
-    /* Step 2: Decide whether to pre-evaluate arguments
-    *  Special forms like 'quote' or user-defined macros do NOT evaluate args here
-    * */
-    int special_form = 0;
-    if (f->name && strcmp(f->name, "quote") == 0) {
-        special_form = 1;
-    }
-
-    if (!special_form) {
-        /* Evaluate arguments */
-        for (int i = 0; i < v->count; i++) {
-            v->cell[i] = coz_eval(e, v->cell[i]);
-            if (v->cell[i]->type == LVAL_ERR) {
-                return lval_take(v, i);
-            }
+    /* Now evaluate arguments (since it's not a special form) */
+    for (int i = 0; i < v->count; i++) {
+        v->cell[i] = coz_eval(e, v->cell[i]);
+        if (v->cell[i]->type == LVAL_ERR) {
+            lval_del(f);
+            return lval_take(v, i);
         }
     }
-    /* Step 3: Call the function with v as arguments */
+
+    /* Apply function */
     l_val* result = f->builtin(e, v);
     lval_del(f);
-    lval_del(v);
     return result;
 }
+
 
 /* print()
  * Take the l_val produced by eval and print it in a
