@@ -17,5 +17,6 @@ void free_tokens(char **tokens, int count);
 Parser *parse_str(const char *input);
 l_val *parse_form(Parser *p);
 l_val *lval_atom_from_token(const char *tok);
+int paren_balance(const char *s, int *in_string);
 
 #endif //COZENAGE_PARSER_H

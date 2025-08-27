@@ -427,3 +427,114 @@ l_val* lval_atom_from_token(const char *tok) {
     /* Otherwise, treat as symbol */
     return lval_sym(tok);
 }
+
+/* Count '(' and ')' while ignoring:
+   - anything inside string literals (with \" escapes),
+   - character literals starting with "#\..." (including #\()/#\)),
+   - line comments starting with ';' to end-of-line.
+*/
+// int paren_balance(const char *s) {
+//     int bal = 0;
+//     int in_str = 0;     /* inside "..." */
+//     int esc = 0;        /* previous char was backslash inside string */
+//     int in_comment = 0; /* after ';' until '\n' */
+//
+//     while (*s) {
+//         char c = *s;
+//
+//         /* Inside a line comment: ignore until newline */
+//         if (in_comment) {
+//             if (c == '\n') in_comment = 0;
+//             s++;
+//             continue;
+//         }
+//
+//         /* Inside a string: handle escapes and closing quote */
+//         if (in_str) {
+//             if (esc) {
+//                 esc = 0;           /* escape just consumed this char */
+//             } else if (c == '\\') {
+//                 esc = 1;           /* next char is escaped */
+//             } else if (c == '"') {
+//                 in_str = 0;        /* end of string */
+//             }
+//             s++;
+//             continue;
+//         }
+//
+//         /* Not in string/comment: handle starts of those states */
+//         if (c == ';') {            /* line comment */
+//             in_comment = 1;
+//             s++;
+//             continue;
+//         }
+//         if (c == '"') {            /* string start */
+//             in_str = 1;
+//             s++;
+//             continue;
+//         }
+//
+//         /* Character literal beginning: "#\..." */
+//         if (c == '#' && s[1] == '\\') {
+//             s += 2; /* jump to first char after "#\" */
+//
+//             if (*s == '\0') break;
+//
+//             if (*s == '(' || *s == ')') {
+//                 /* Single-char paren literal (#\() or (#\)) — consume it,
+//                    but do NOT count toward balance. */
+//                 s++;
+//             } else {
+//                 /* Named or multi-byte char: skip until delimiter,
+//                    but DO NOT consume a following '(' or ')' here. */
+//                 while (*s && !isspace((unsigned char)*s) && *s != '(' && *s != ')')
+//                     s++;
+//             }
+//             continue;
+//         }
+//
+//         /* Count parens normally */
+//         if (c == '(') bal++;
+//         else if (c == ')') bal--;
+//
+//         s++;
+//     }
+//
+//     return bal;
+// }
+
+int paren_balance(const char *s, int *in_string) {
+    int balance = 0;
+    int escaped = 0;
+    int string = *in_string;  /* carry-over state from previous line */
+
+    for (const char *p = s; *p; p++) {
+        if (string) {
+            if (escaped) {
+                escaped = 0;
+            } else if (*p == '\\') {
+                escaped = 1;
+            } else if (*p == '"') {
+                string = 0; /* string closed */
+            }
+            continue;
+        }
+
+        /* not in a string */
+        if (*p == '"') {
+            string = 1;
+            escaped = 0;
+        } else if (*p == '#' && *(p+1) == '\\') {
+            /* char literal — skip this and next */
+            p++;
+            if (*p && *(p+1)) p++;
+        } else if (*p == '(') {
+            balance++;
+        } else if (*p == ')') {
+            balance--;
+        }
+    }
+
+    *in_string = string;  /* pass string-state back */
+    return balance;
+}

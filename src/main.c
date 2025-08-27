@@ -9,7 +9,73 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <signal.h>
 
+
+static volatile sig_atomic_t got_sigint = 0;
+static volatile sig_atomic_t discard_line = 0;
+
+static void sigint_handler(const int sig) {
+    (void)sig;
+    got_sigint = 1;
+    printf("\n");
+}
+
+/* Callback for Ctrl-G binding */
+int discard_continuation(const int count, const int key) {
+    (void)count; (void)key;
+    discard_line = 1;
+    rl_replace_line("", 0);  /* clear current line buffer */
+    rl_done = 1;             /* break out of readline() */
+    return 0;
+}
+
+static char* read_multiline(const char* prompt, const char* cont_prompt) {
+    char *line = NULL;
+    char *input = NULL;
+    size_t total_len = 0;
+    int balance = 0;
+    int in_string = 0;   /* track string literal state across lines */
+
+    line = readline(prompt);
+    if (!line) return NULL;
+    if (got_sigint) {
+        free(line);
+        got_sigint = 0;
+        return strdup("");  /* return empty input so REPL just re-prompts */
+    }
+
+    balance += paren_balance(line, &in_string);
+
+    input = strdup(line);
+    total_len = strlen(line);
+    free(line);
+
+    while (balance > 0 || in_string) {
+        line = readline(cont_prompt);
+        if (!line) break;
+        if (got_sigint) {
+            free(line);
+            free(input);
+            got_sigint = 0;
+            return strdup("");  /* abort multiline and reset prompt */
+        }
+
+        balance += paren_balance(line, &in_string);
+
+        const size_t line_len = strlen(line);
+        char *tmp = realloc(input, total_len + line_len + 2);
+        if (!tmp) { fprintf(stderr, "ENOMEM: malloc failed\n"); exit(EXIT_FAILURE); }
+        input = tmp;
+        input[total_len] = '\n';
+        memcpy(input + total_len + 1, line, line_len + 1);
+
+        total_len += line_len + 1;
+        free(line);
+    }
+
+    return input;
+}
 
 /* read()
  * Take a line of input from a prompt and pass it
@@ -17,10 +83,14 @@
  * it to an l_val struct.
  * */
 l_val* coz_read(l_env* e) {
-    char *input = readline(PROMPT_STRING);
+    char *input = read_multiline(PS1_PROMPT, PS2_PROMPT);
     /* reset bold input */
     printf("%s", ANSI_RESET);
-    if (!input || strcmp(input, "exit") == 0) { printf("\n"); lenv_del(e); exit(0); }
+    if (!input || strcmp(input, "exit") == 0) {
+        printf("\n");
+        lenv_del(e);
+        exit(0);
+    }
 
     Parser *p = parse_str(input);
     if (!p) { free(input); return NULL; }
@@ -34,6 +104,7 @@ l_val* coz_read(l_env* e) {
 
     return v;
 }
+
 
 /* Forward declaration to resolve circular dependency */
 l_val* eval_sexpr(l_env* e, l_val* v);
@@ -127,7 +198,6 @@ l_val* eval_sexpr(l_env* e, l_val* v) {
     return result;
 }
 
-
 /* print()
  * Take the l_val produced by eval and print it in a
  * context-specific, meaningful way.
@@ -161,6 +231,10 @@ int main(int argc, char** argv) {
     /* Print Version and Exit Information */
     printf("  %s%s%s Version %s\n", ANSI_BLUE_B, APP_NAME, ANSI_RESET, APP_VERSION);
     printf("  Press <Ctrl+d> or type 'exit' to quit\n\n");
+
+    /* Set up keybinding and signal for Ctrl-G and CTRL-C */
+    rl_bind_key('\007', discard_continuation);  /* 7 = Ctrl-G */
+    signal(SIGINT, sigint_handler);
 
     /* Run until we don't */
     repl();
