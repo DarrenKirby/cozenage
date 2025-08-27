@@ -5,6 +5,9 @@
 #include "environment.h"
 #include <string.h>
 #include <math.h>
+#include <stdio.h>
+
+#include "printer.h"
 
 
 /* Return 1 if l_val is a number (int or float) */
@@ -514,38 +517,54 @@ l_val* builtin_list(l_env* e, l_val* a) {
 l_val* builtin_list_length(l_env* e, l_val* a) {
     l_val* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
-    err = lval_check_types(a, LVAL_PAIR);
+    err = lval_check_types(a, LVAL_PAIR|LVAL_SEXPR);
     if (err) { return err; }
 
-    int len = 0;
-    const l_val* p = a->cell[0];
-    while (p->type == LVAL_PAIR) {
-        len++;
-        p = p->cdr;
+    if (a->cell[0]->type == LVAL_PAIR) {
+        int len = 0;
+        const l_val* p = a->cell[0];
+        while (p->type == LVAL_PAIR) {
+            len++;
+            p = p->cdr;
+        }
+        if (p->type != LVAL_NIL) {
+            return lval_err("Improper list");
+        }
+        return lval_int(len);
     }
-    if (p->type != LVAL_NIL) {
-        return lval_err("Improper list");
+    if (a->cell[0]->type == LVAL_SEXPR) {
+        return lval_int(a->cell[0]->count);
     }
-    return lval_int(len);
+    return lval_err("Ooops, still broken\n");
 }
 
-/* 'list-ref' -> ANY - returns the list member at the index
- * specified in the second arg. First arg is the list */
+/* 'list-ref' -> ANY - returns the list member at the zero-indexed
+ * integer specified in the second arg. First arg is the list to act on*/
 l_val* builtin_list_ref(l_env* e, l_val* a) {
     l_val* err = CHECK_ARITY_EXACT(a, 2);
     if (err) return err;
-    err = lval_check_types(a->cell[0], LVAL_PAIR);
-    if (err) { return err; }
-    err = lval_check_types(a->cell[1], LVAL_INT);
-    if (err) { return err; }
 
-    int i = (int)a->cell[1]->int_n;
-    const l_val* p = a->cell[0];
-    while (i > 0) {
-        p = p->cdr;
-        i--;
+    if (a->cell[1]->type != LVAL_INT) {
+        return lval_err("list-ref: arg 2 must be an integer");
     }
-    return lval_copy(p->car);
+    int i = (int)a->cell[1]->int_n;
+
+    if (a->cell[0]->type == LVAL_PAIR) {
+        const l_val* p = a->cell[0];
+        if (p->type != LVAL_PAIR) {
+            return lval_err("list-ref: index out of bounds");
+        }
+        while (i > 0) {
+            p = p->cdr;
+            i--;
+        }
+        return lval_copy(p->car);
+    }
+    if (a->cell[0]->type == LVAL_SEXPR) {
+        /* else the list is buried in an LVAL_SEXPR */
+        return lval_copy(a->cell[0]->cell[i]);
+    }
+    return lval_err("list-ref: arg 1 must be list or pair.");
 }
 
 /*-------------------------------------------------------*
