@@ -11,23 +11,23 @@
 #include <limits.h>
 
 
-long long parse_int_checked(const char* str, char* errbuf, size_t errbuf_sz, int base, int* ok) {
+long long parse_int_checked(const char* str, char* err_buf, size_t err_buf_sz, const int base, int* ok) {
     errno = 0;
-    char* endptr;
-    const long long val = strtoll(str, &endptr, base);
+    char* end_ptr;
+    const long long val = strtoll(str, &end_ptr, base);
 
-    if (endptr == str) {
-        snprintf(errbuf, errbuf_sz, "Invalid numeric: '%s%s%s'",
+    if (end_ptr == str) {
+        snprintf(err_buf, err_buf_sz, "Invalid numeric: '%s%s%s'",
             ANSI_RED_B, str, ANSI_RESET);
         *ok = 0; return 0;
     }
     if (errno == ERANGE || val > LLONG_MAX || val < LLONG_MIN) {
-        snprintf(errbuf, errbuf_sz, "Integer out of range: '%s%s%s'",
+        snprintf(err_buf, err_buf_sz, "Integer out of range: '%s%s%s'",
             ANSI_RED_B, str, ANSI_RESET);
         *ok = 0; return 0;
     }
-    if (*endptr != '\0') {
-        snprintf(errbuf, errbuf_sz, "Invalid trailing characters in numeric: '%s%s%s'",
+    if (*end_ptr != '\0') {
+        snprintf(err_buf, err_buf_sz, "Invalid trailing characters in numeric: '%s%s%s'",
             ANSI_RED_B, str, ANSI_RESET);
         *ok = 0; return 0;
     }
@@ -36,23 +36,23 @@ long long parse_int_checked(const char* str, char* errbuf, size_t errbuf_sz, int
     return val;
 }
 
-long double parse_float_checked(const char* str, char* errbuf, size_t errbuf_sz, int* ok) {
+long double parse_float_checked(const char* str, char* err_buf, size_t err_buf_sz, int* ok) {
     errno = 0;
-    char* endptr;
-    const long double val = strtold(str, &endptr);
+    char* end_ptr;
+    const long double val = strtold(str, &end_ptr);
 
-    if (endptr == str) {
-        snprintf(errbuf, errbuf_sz, "Invalid numeric: '%s%s%s'",
+    if (end_ptr == str) {
+        snprintf(err_buf, err_buf_sz, "Invalid numeric: '%s%s%s'",
             ANSI_RED_B, str, ANSI_RESET);
         *ok = 0; return 0;
     }
     if (errno == ERANGE) {
-        snprintf(errbuf, errbuf_sz, "Float out of range: '%s%s%s'",
+        snprintf(err_buf, err_buf_sz, "Float out of range: '%s%s%s'",
             ANSI_RED_B, str, ANSI_RESET);
         *ok = 0; return 0;
     }
-    if (*endptr != '\0') {
-        snprintf(errbuf, errbuf_sz, "Invalid trailing characters in numeric: '%s%s%s'",
+    if (*end_ptr != '\0') {
+        snprintf(err_buf, err_buf_sz, "Invalid trailing characters in numeric: '%s%s%s'",
             ANSI_RED_B, str, ANSI_RESET);
         *ok = 0; return 0;
     }
@@ -231,7 +231,7 @@ static const char *advance(Parser *p) {
     return NULL;
 }
 
-l_val *parse_form(Parser *p) {
+Cell *parse_tokens(Parser *p) {
     int left_count = 0, right_count = 0;
 
     for (int i = 0; i < p->size; i++) {
@@ -240,7 +240,7 @@ l_val *parse_form(Parser *p) {
     }
 
     if (left_count != right_count) {
-        return lval_err("Unbalanced parentheses");
+        return make_val_err("Unbalanced parentheses");
     }
 
     const char *tok = peek(p);
@@ -249,11 +249,11 @@ l_val *parse_form(Parser *p) {
     /* Handle quote (') */
     if (strcmp(tok, "'") == 0) {
         advance(p);  /* consume ' */
-        l_val *quoted = parse_form(p);
-        if (!quoted) return lval_err("Expected expression after quote");
-        l_val *qexpr = lval_sexpr();
-        lval_add(qexpr, lval_sym("quote"));
-        lval_add(qexpr, quoted);
+        Cell *quoted = parse_tokens(p);
+        if (!quoted) return make_val_err("Expected expression after quote");
+        Cell *qexpr = make_val_sexpr();
+        cell_add(qexpr, make_val_sym("quote"));
+        cell_add(qexpr, quoted);
         return qexpr;
     }
 
@@ -261,16 +261,16 @@ l_val *parse_form(Parser *p) {
     if (strcmp(tok, "#") == 0) {
         advance(p);  /* consume '#' */
         const char *next = peek(p);
-        if (!next) return lval_err("Invalid token: '#'");
+        if (!next) return make_val_err("Invalid token: '#'");
 
         /* plain vector: #( ... ) */
         if (strcmp(next, "(") == 0) {
             advance(p); /* consume '(' */
-            l_val *vec = lval_vect();
+            Cell *vec = make_val_vect();
             while (peek(p) && strcmp(peek(p), ")") != 0) {
-                lval_add(vec, parse_form(p));
+                cell_add(vec, parse_tokens(p));
             }
-            if (!peek(p)) return lval_err("Unmatched '(' in vector literal");
+            if (!peek(p)) return make_val_err("Unmatched '(' in vector literal");
             advance(p); /* skip ')' */
             return vec;
         }
@@ -280,45 +280,45 @@ l_val *parse_form(Parser *p) {
             advance(p); /* consume 'u8' */
             const char *paren = advance(p); /* must be '(' */
             if (!paren || strcmp(paren, "(") != 0)
-                return lval_err("Expected '(' after #u8");
-            l_val *bv = lval_byte();
+                return make_val_err("Expected '(' after #u8");
+            Cell *bv = make_val_bytevec();
             while (peek(p) && strcmp(peek(p), ")") != 0) {
-                lval_add(bv, parse_form(p));
+                cell_add(bv, parse_tokens(p));
             }
-            if (!peek(p)) return lval_err("Unmatched '(' in bytevector literal");
+            if (!peek(p)) return make_val_err("Unmatched '(' in bytevector literal");
             advance(p); /* skip ')' */
             return bv;
         }
-        return lval_err("Invalid token");
+        return make_val_err("Invalid token");
     }
 
     /* Handle S-expressions '(' ... ')' */
     if (strcmp(tok, "(") == 0) {
         advance(p);  /* consume '(' */
-        l_val *sexpr = lval_sexpr();
+        Cell *sexpr = make_val_sexpr();
         while (peek(p) && strcmp(peek(p), ")") != 0) {
-            lval_add(sexpr, parse_form(p));
+            cell_add(sexpr, parse_tokens(p));
         }
-        if (!peek(p)) return lval_err("Unmatched '('");
+        if (!peek(p)) return make_val_err("Unmatched '('");
         advance(p); /* skip ')' */
         return sexpr;
     }
 
     /* Otherwise, atom (number, boolean, char, string, symbol) */
     advance(p);
-    return lval_atom_from_token(tok);
+    return parse_atom(tok);
 }
 
-l_val* lval_atom_from_token(const char *tok) {
-    if (!tok) return lval_err("NULL token");
+Cell* parse_atom(const char *tok) {
+    if (!tok) return make_val_err("NULL token");
     char err_buf[128] = {0};
     const size_t len = strlen(tok);
 
     /* Boolean */
     if (strcmp(tok, "#t") == 0 ||
-        strcmp(tok, "#true") == 0) return lval_bool(1);
+        strcmp(tok, "#true") == 0) return make_val_bool(1);
     if (strcmp(tok, "#f") == 0 ||
-        strcmp(tok, "#false") == 0) return lval_bool(0);
+        strcmp(tok, "#false") == 0) return make_val_bool(0);
 
     /* Character literal */
     if (tok[0] == '#' && tok[1] == '\\') {
@@ -326,56 +326,56 @@ l_val* lval_atom_from_token(const char *tok) {
          * char literal, but the lexer will only return '#\'
          * as the token */
         if (strcmp(tok, "#\\") == 0) {
-            return lval_char(' ');
+            return make_val_char(' ');
         }
         /* single char in the ascii set */
         if (isascii(tok[2]) && len == 3) {
-            return lval_char(tok[2]);
+            return make_val_char(tok[2]);
         }
         /* named chars */
         if (strcmp(tok, "#\\alarm") == 0) {
-            return lval_char(0x7);
+            return make_val_char(0x7);
         }
         if (strcmp(tok, "#\\backspace") == 0) {
-            return lval_char(0x8);
+            return make_val_char(0x8);
         }
         if (strcmp(tok, "#\\delete") == 0) {
-            return lval_char(0x7f);
+            return make_val_char(0x7f);
         }
         if (strcmp(tok, "#\\escape") == 0) {
-            return lval_char(0x1b);
+            return make_val_char(0x1b);
         }
         if (strcmp(tok, "#\\newline") == 0) {
-            return lval_char('\n');
+            return make_val_char('\n');
         }
         if (strcmp(tok, "#\\null") == 0) {
-            return lval_char('\0');
+            return make_val_char('\0');
         }
         if (strcmp(tok, "#\\return") == 0) {
-            return lval_char(0xd);
+            return make_val_char(0xd);
         }
         if (strcmp(tok, "#\\space") == 0) {
-            return lval_char(' ');
+            return make_val_char(' ');
         }
         if (strcmp(tok, "#\\tab") == 0) {
-            return lval_char('\t');
+            return make_val_char('\t');
         }
         /* valid hex codes: 0x00 to 0x7f */
         if (tok[2] == 'x' && len >= 4) {
             unsigned int code = 0;
             const int items_read = sscanf(tok, "#\\x%x", &code);
-            if (items_read != 1) { return lval_err("Invalid token"); }
+            if (items_read != 1) { return make_val_err("Invalid token"); }
             if (code > 0x7f) {
-                return lval_err("Invalid ASCII hex value");
+                return make_val_err("Invalid ASCII hex value");
             }
-            return lval_char((char)code);
+            return make_val_char((char)code);
         }
     }
 
     /* String literal */
     if (tok[0] == '"' && tok[len-1] == '"') {
         const char *str = strndup(tok+1, len-2);
-        return lval_str(str);
+        return make_val_str(str);
     }
 
     if (tok[0] == '#' && strchr("bodx", tok[1]) || /* #b101, #o666, #d123, #xfff */
@@ -396,14 +396,14 @@ l_val* lval_atom_from_token(const char *tok) {
             if (p != NULL) {
                 snprintf(err_buf, sizeof(err_buf), "Invalid token: '%s%s%s'",
                     ANSI_RED_B, tok, ANSI_RESET);
-                return lval_err(err_buf);
+                return make_val_err(err_buf);
             }
 
             const long long n = parse_int_checked(tok1, err_buf, sizeof(err_buf), 10, &ok);
             const long long d = parse_int_checked(tok2, err_buf, sizeof(err_buf), 10, &ok);
 
             free(to_free);
-            return lval_rat(n, d);
+            return make_val_rat(n, d);
         }
 
         /* Numeric constants with optional base prefix */
@@ -425,28 +425,28 @@ l_val* lval_atom_from_token(const char *tok) {
         if (base != 10 || !strchr(tok, '.')) {
             /* Try integer parsing */
             const long long i = parse_int_checked(numstart, err_buf, sizeof(err_buf), base, &ok);
-            if (ok) return lval_int(i);
+            if (ok) return make_val_int(i);
         }
 
         /* If no base prefix or decimal point detected, try float */
         if (base == 10) {
             const long double f = parse_float_checked(numstart, err_buf, sizeof(err_buf), &ok);
-            if (ok) return lval_float(f);
+            if (ok) return make_val_real(f);
         }
 
         /* If parsing fails but there is a numeric-like string, return error */
-        if (!ok) return lval_err(err_buf);
+        if (!ok) return make_val_err(err_buf);
     }
 
     /* reject all other hash prefixes and single '#' */
     if (tok[0] == '#') {
         snprintf(err_buf, sizeof(err_buf), "Invalid token: '%s%s%s'",
             ANSI_RED_B, tok, ANSI_RESET);
-        return lval_err(err_buf);
+        return make_val_err(err_buf);
     }
 
     /* Otherwise, treat as symbol */
-    return lval_sym(tok);
+    return make_val_sym(tok);
 }
 
 /* Count '(' and ')' while ignoring:

@@ -11,28 +11,28 @@
 
 
 /* Return 1 if l_val is a number (int or float) */
-int lval_is_num(const l_val* v) {
-    return v->type == LVAL_INT || v->type == LVAL_FLOAT;
+int lval_is_num(const Cell* v) {
+    return v->type == VAL_INT || v->type == VAL_REAL;
 }
 
 /* Convert any l_val number to long double for calculation */
-long double lval_to_ld(const l_val* v) {
-    return (v->type == LVAL_INT) ? (long double)v->int_n : v->float_n;
+long double lval_to_ld(const Cell* v) {
+    return (v->type == VAL_INT) ? (long double)v->int_v : v->real_v;
 }
 
 /* Helper which determines if there is a meaningful fractional portion
  * in the result, and returns LVAL_INT or LVAL_FLOAT accordingly */
-l_val* make_lval_from_double(const long double x) {
+Cell* make_lval_from_double(const long double x) {
     /* epsilon: what counts as “effectively an integer” */
     const long double EPS = 1e-12L;
 
     const long double rounded = roundl(x);
     if (fabsl(x - rounded) < EPS) {
         /* treat as integer */
-        return lval_int((long long)rounded);
+        return make_val_int((long long)rounded);
     }
     /* treat as float */
-    return lval_float(x);
+    return make_val_real(x);
 }
 
 /*------------------------------------*
@@ -40,225 +40,225 @@ l_val* make_lval_from_double(const long double x) {
  * -----------------------------------*/
 
 /* '+' -> LVAL_INT|LVAL_FLOAT|LVAL_RAT|LVAL_COMP - returns the sum of its arguments */
-l_val* builtin_add(l_env* e, l_val* a) {
-    l_val* err = lval_check_types(a, LVAL_INT|LVAL_FLOAT|LVAL_RAT|LVAL_COMP);
+Cell* builtin_add(Lex* e, Cell* a) {
+    Cell* err = check_arg_types(a, VAL_INT|VAL_REAL|VAL_RAT|VAL_COMPLEX);
     if (err) { return err; }
     /* identity law logic */
-    if (a->count == 0) return lval_int(0);
-    if (a->count == 1) return lval_copy(a->cell[0]);
+    if (a->count == 0) return make_val_int(0);
+    if (a->count == 1) return cell_copy(a->cell[0]);
 
-    l_val* result = lval_copy(a->cell[0]);
+    Cell* result = cell_copy(a->cell[0]);
 
     for (int i = 1; i < a->count; i++) {
-        l_val* rhs = lval_copy(a->cell[i]);
+        Cell* rhs = cell_copy(a->cell[i]);
         numeric_promote(&result, &rhs);
 
         switch (result->type) {
-            case LVAL_INT:
-                result->int_n += rhs->int_n;
+            case VAL_INT:
+                result->int_v += rhs->int_v;
                 break;
-            case LVAL_RAT:
+            case VAL_RAT:
                 /* (a/b) + (c/d) = (ad + bc)/bd */
                 result->num = result->num * rhs->den + rhs->num * result->den;
                 result->den = result->den * rhs->den;
-                result = lval_rat_simplify(result);
+                result = simplify_rational(result);
                 break;
-            case LVAL_FLOAT:
-                result->float_n += rhs->float_n;
+            case VAL_REAL:
+                result->real_v += rhs->real_v;
                 break;
-            case LVAL_COMP:
-                result->real = builtin_add(e, lval_sexpr_from2(result->real, rhs->real));
-                result->imag = builtin_add(e, lval_sexpr_from2(result->imag, rhs->imag));
+            case VAL_COMPLEX:
+                result->real = builtin_add(e, make_sexpr_len2(result->real, rhs->real));
+                result->imag = builtin_add(e, make_sexpr_len2(result->imag, rhs->imag));
                 break;
             default:
-                return lval_err("<builtin '+'> Oops, this shouldn't have happened.");
+                return make_val_err("<builtin '+'> Oops, this shouldn't have happened.");
         }
         result->exact = result->exact && rhs->exact;
-        lval_del(rhs); /* free temp */
+        cell_delete(rhs); /* free temp */
     }
     return result;
 }
 
 /* '-' -> LVAL_INT|LVAL_FLOAT|LVAL_RAT|LVAL_COMP - returns the difference of its arguments */
-l_val* builtin_sub(l_env* e, l_val* a) {
-    l_val* err = lval_check_types(a, LVAL_INT|LVAL_FLOAT|LVAL_RAT|LVAL_COMP);
+Cell* builtin_sub(Lex* e, Cell* a) {
+    Cell* err = check_arg_types(a, VAL_INT|VAL_REAL|VAL_RAT|VAL_COMPLEX);
     if (err) { return err; }
     if ((err = CHECK_ARITY_MIN(a, 1))) { return err; }
 
     /* Handle unary minus */
     if (a->count == 1) {
-        return lval_neg(a->cell[0]);
+        return negate_numeric(a->cell[0]);
     }
     /* multiple args */
-    l_val* result = lval_copy(a->cell[0]);
+    Cell* result = cell_copy(a->cell[0]);
 
     for (int i = 1; i < a->count; i++) {
-        l_val* rhs = lval_copy(a->cell[i]);
+        Cell* rhs = cell_copy(a->cell[i]);
         numeric_promote(&result, &rhs);
 
         switch (result->type) {
-            case LVAL_INT:
-                result->int_n -= rhs->int_n;
+            case VAL_INT:
+                result->int_v -= rhs->int_v;
                 break;
-            case LVAL_RAT:
+            case VAL_RAT:
                 /* (a/b) - (c/d) = (ad - bc)/bd */
                 result->num = result->num * rhs->den - rhs->num * result->den;
                 result->den = result->den * rhs->den;
-                result = lval_rat_simplify(result);
+                result = simplify_rational(result);
                 break;
-            case LVAL_FLOAT:
-                result->float_n -= rhs->float_n;
+            case VAL_REAL:
+                result->real_v -= rhs->real_v;
                 break;
-            case LVAL_COMP:
-                result->real = builtin_sub(e, lval_sexpr_from2(result->real, rhs->real));
-                result->imag = builtin_sub(e, lval_sexpr_from2(result->imag, rhs->imag));
+            case VAL_COMPLEX:
+                result->real = builtin_sub(e, make_sexpr_len2(result->real, rhs->real));
+                result->imag = builtin_sub(e, make_sexpr_len2(result->imag, rhs->imag));
                 break;
             default:
-                return lval_err("<builtin '-'> Oops, this shouldn't have happened.");
+                return make_val_err("<builtin '-'> Oops, this shouldn't have happened.");
         }
         result->exact = result->exact && rhs->exact;
-        lval_del(rhs); /* free temp */
+        cell_delete(rhs); /* free temp */
     }
     return result;
 }
 
 /* '*' -> LVAL_INT|LVAL_FLOAT|LVAL_RAT|LVAL_COMP - returns the product of its arguments */
-l_val* builtin_mul(l_env* e, l_val* a) {
-    l_val* err = lval_check_types(a, LVAL_INT|LVAL_FLOAT|LVAL_RAT|LVAL_COMP);
+Cell* builtin_mul(Lex* e, Cell* a) {
+    Cell* err = check_arg_types(a, VAL_INT|VAL_REAL|VAL_RAT|VAL_COMPLEX);
     if (err) { return err; }
     /* identity law logic */
-    if (a->count == 0) return lval_int(1);
-    if (a->count == 1) return lval_copy(a->cell[0]);
+    if (a->count == 0) return make_val_int(1);
+    if (a->count == 1) return cell_copy(a->cell[0]);
 
-    l_val* result = lval_copy(a->cell[0]);
+    Cell* result = cell_copy(a->cell[0]);
 
     for (int i = 1; i < a->count; i++) {
-        l_val* rhs = lval_copy(a->cell[i]);
+        Cell* rhs = cell_copy(a->cell[i]);
         numeric_promote(&result, &rhs);
 
         switch (result->type) {
-            case LVAL_INT:
-                result->int_n *= rhs->int_n;
+            case VAL_INT:
+                result->int_v *= rhs->int_v;
                 break;
-            case LVAL_RAT:
+            case VAL_RAT:
                 /* (a/b) * (c/d) = (a * c)/(b * d) */
                 result->num = result->num * rhs->num;
                 result->den = result->den * rhs->den;
-                result = lval_rat_simplify(result);
+                result = simplify_rational(result);
                 break;
-            case LVAL_FLOAT:
-                result->float_n *= rhs->float_n;
+            case VAL_REAL:
+                result->real_v *= rhs->real_v;
                 break;
-            case LVAL_COMP:
-                result->real = builtin_mul(e, lval_sexpr_from2(result->real, rhs->real));
-                result->imag = builtin_mul(e, lval_sexpr_from2(result->imag, rhs->imag));
+            case VAL_COMPLEX:
+                result->real = builtin_mul(e, make_sexpr_len2(result->real, rhs->real));
+                result->imag = builtin_mul(e, make_sexpr_len2(result->imag, rhs->imag));
                 break;
             default:
-                return lval_err("<builtin '*'> Oops, this shouldn't have happened.");
+                return make_val_err("<builtin '*'> Oops, this shouldn't have happened.");
         }
         result->exact = result->exact && rhs->exact;
-        lval_del(rhs); /* free temp */
+        cell_delete(rhs); /* free temp */
     }
     return result;
 }
 
 /* '+' -> LVAL_INT|LVAL_FLOAT|LVAL_RAT|LVAL_COMP - returns the quotient of its arguments */
-l_val* builtin_div(l_env* e, l_val* a) {
-    l_val* err = lval_check_types(a, LVAL_INT|LVAL_FLOAT|LVAL_RAT|LVAL_COMP);
+Cell* builtin_div(Lex* e, Cell* a) {
+    Cell* err = check_arg_types(a, VAL_INT|VAL_REAL|VAL_RAT|VAL_COMPLEX);
     if (err) { return err; }
     if ((err = CHECK_ARITY_MIN(a, 1))) { return err; }
 
     /* unary division reciprocal/inverse */
     if (a->count == 1) {
-        if (a->cell[0]->type == LVAL_INT) {
-            return lval_rat(1, a->cell[0]->int_n);
+        if (a->cell[0]->type == VAL_INT) {
+            return make_val_rat(1, a->cell[0]->int_v);
         }
-        if (a->cell[0]->type == LVAL_RAT) {
+        if (a->cell[0]->type == VAL_RAT) {
             const long int n = a->cell[0]->num;
             const long int d = a->cell[0]->den;
-            return lval_rat(d, n);
+            return make_val_rat(d, n);
         }
-        if (a->cell[0]->type == LVAL_FLOAT) {
-            return lval_float(1.0L / a->cell[0]->float_n);
+        if (a->cell[0]->type == VAL_REAL) {
+            return make_val_real(1.0L / a->cell[0]->real_v);
         }
-        if (a->cell[0]->type == LVAL_COMP) {
-            const l_val* real = a->cell[0]->real;
-            const l_val* imag = a->cell[0]->imag;
+        if (a->cell[0]->type == VAL_COMPLEX) {
+            const Cell* real = a->cell[0]->real;
+            const Cell* imag = a->cell[0]->imag;
 
             /* denominator = real^2 + imag^2 */
-            const l_val* real_sq = builtin_mul(e, lval_sexpr_from2(lval_copy(real), lval_copy(real)));
-            const l_val* imag_sq = builtin_mul(e, lval_sexpr_from2(lval_copy(imag), lval_copy(imag)));
-            const l_val* denominator = builtin_add(e, lval_sexpr_from2(real_sq, imag_sq));
+            const Cell* real_sq = builtin_mul(e, make_sexpr_len2(cell_copy(real), cell_copy(real)));
+            const Cell* imag_sq = builtin_mul(e, make_sexpr_len2(cell_copy(imag), cell_copy(imag)));
+            const Cell* denominator = builtin_add(e, make_sexpr_len2(real_sq, imag_sq));
 
             /* new real = real / denominator */
-            l_val* new_real = builtin_div(e, lval_sexpr_from2(lval_copy(real), lval_copy(denominator)));
+            Cell* new_real = builtin_div(e, make_sexpr_len2(cell_copy(real), cell_copy(denominator)));
             /* new imag = -imag / denominator */
-            const l_val* neg_imag = lval_neg(lval_copy(imag));
-            l_val* new_imag = builtin_div(e, lval_sexpr_from2(neg_imag, denominator));
+            const Cell* neg_imag = negate_numeric(cell_copy(imag));
+            Cell* new_imag = builtin_div(e, make_sexpr_len2(neg_imag, denominator));
 
-            return lval_comp(new_real, new_imag);
+            return make_val_complex(new_real, new_imag);
         }
     }
     /* multiple args */
-    l_val* result = lval_copy(a->cell[0]);
+    Cell* result = cell_copy(a->cell[0]);
 
     for (int i = 1; i < a->count; i++) {
-        l_val* rhs = lval_copy(a->cell[i]);
+        Cell* rhs = cell_copy(a->cell[i]);
         numeric_promote(&result, &rhs);
 
         switch (result->type) {
-            case LVAL_INT:
-                if (rhs->int_n == 0) {
-                    lval_del(rhs);
-                    return lval_err("Division by zero.");
-                }
-                result->int_n /= rhs->int_n;
-                break;
-            case LVAL_RAT:
-                /* (a/b) / (c/d) = (a * d)/(b * c)   */
-                result->num = result->num * rhs->den;
-                result->den = result->den * rhs->num;
-                result = lval_rat_simplify(result);
-                break;
-            case LVAL_FLOAT:
-                if (rhs->float_n == 0) {
-                    lval_del(rhs);
-                    return lval_err("Division by zero.");
-                }
-                result->float_n /= rhs->float_n;
-                break;
-            case LVAL_COMP: {
-                /* result = (a + bi), rhs = (c + di) */
-                const l_val* a_real = result->real;
-                const l_val* a_imag = result->imag;
-                const l_val* b_real = rhs->real;
-                const l_val* b_imag = rhs->imag;
-
-                /* denominator = c^2 + d^2 */
-                const l_val* b_real_sq = builtin_mul(e, lval_sexpr_from2(lval_copy(b_real), lval_copy(b_real)));
-                const l_val* b_imag_sq = builtin_mul(e, lval_sexpr_from2(lval_copy(b_imag), lval_copy(b_imag)));
-                const l_val* denominator = builtin_add(e, lval_sexpr_from2(b_real_sq, b_imag_sq));
-
-                /* numerator real = (ac + bd) */
-                const l_val* ac = builtin_mul(e, lval_sexpr_from2(lval_copy(a_real), lval_copy(b_real)));
-                const l_val* bd = builtin_mul(e, lval_sexpr_from2(lval_copy(a_imag), lval_copy(b_imag)));
-                const l_val* num_real = builtin_add(e, lval_sexpr_from2(ac, bd));
-
-                /* numerator imag = (bc - ad) */
-                const l_val* bc = builtin_mul(e, lval_sexpr_from2(lval_copy(a_imag), lval_copy(b_real)));
-                const l_val* ad = builtin_mul(e, lval_sexpr_from2(lval_copy(a_real), lval_copy(b_imag)));
-                const l_val* num_imag = builtin_sub(e, lval_sexpr_from2(bc, ad));
-
-                /* divide both by denominator */
-                result->real = builtin_div(e, lval_sexpr_from2(num_real, lval_copy(denominator)));
-                result->imag = builtin_div(e, lval_sexpr_from2(num_imag, denominator));
-                break;
+        case VAL_INT:
+            if (rhs->int_v == 0) {
+                cell_delete(rhs);
+                return make_val_err("Division by zero.");
             }
-            default:
-                return lval_err("<builtin '/'> Oops, this shouldn't have happened.");
+            result->int_v /= rhs->int_v;
+            break;
+        case VAL_RAT:
+            /* (a/b) / (c/d) = (a * d)/(b * c)   */
+            result->num = result->num * rhs->den;
+            result->den = result->den * rhs->num;
+            result = simplify_rational(result);
+            break;
+        case VAL_REAL:
+            if (rhs->real_v == 0) {
+                cell_delete(rhs);
+                return make_val_err("Division by zero.");
+            }
+            result->real_v /= rhs->real_v;
+            break;
+        case VAL_COMPLEX: {
+            /* result = (a + bi), rhs = (c + di) */
+            const Cell* a_real = result->real;
+            const Cell* a_imag = result->imag;
+            const Cell* b_real = rhs->real;
+            const Cell* b_imag = rhs->imag;
+
+            /* denominator = c^2 + d^2 */
+            const Cell* b_real_sq = builtin_mul(e, make_sexpr_len2(cell_copy(b_real), cell_copy(b_real)));
+            const Cell* b_imag_sq = builtin_mul(e, make_sexpr_len2(cell_copy(b_imag), cell_copy(b_imag)));
+            const Cell* denominator = builtin_add(e, make_sexpr_len2(b_real_sq, b_imag_sq));
+
+            /* numerator real = (ac + bd) */
+            const Cell* ac = builtin_mul(e, make_sexpr_len2(cell_copy(a_real), cell_copy(b_real)));
+            const Cell* bd = builtin_mul(e, make_sexpr_len2(cell_copy(a_imag), cell_copy(b_imag)));
+            const Cell* num_real = builtin_add(e, make_sexpr_len2(ac, bd));
+
+            /* numerator imag = (bc - ad) */
+            const Cell* bc = builtin_mul(e, make_sexpr_len2(cell_copy(a_imag), cell_copy(b_real)));
+            const Cell* ad = builtin_mul(e, make_sexpr_len2(cell_copy(a_real), cell_copy(b_imag)));
+            const Cell* num_imag = builtin_sub(e, make_sexpr_len2(bc, ad));
+
+            /* divide both by denominator */
+            result->real = builtin_div(e, make_sexpr_len2(num_real, cell_copy(denominator)));
+            result->imag = builtin_div(e, make_sexpr_len2(num_imag, denominator));
+            break;
+        }
+        default:
+            return make_val_err("<builtin '/'> Oops, this shouldn't have happened.");
         }
         result->exact = result->exact && rhs->exact;
-        lval_del(rhs); /* free temp */
+        cell_delete(rhs); /* free temp */
     }
     return result;
 }
@@ -268,63 +268,63 @@ l_val* builtin_div(l_env* e, l_val* a) {
  * -----------------------------*/
 
 /* '==' -> LVAL_BOOL - returns true if all arguments are equal. */
-l_val* builtin_eq_op(l_env* e, l_val* a) {
-    l_val* err = lval_check_types(a, LVAL_INT | LVAL_FLOAT);
+Cell* builtin_eq_op(Lex* e, Cell* a) {
+    Cell* err = check_arg_types(a, VAL_INT | VAL_REAL);
     if (err) { return err; }
     for (int i = 0; i < a->count - 1; i++) {
         if (!(LVAL_AS_NUM(a->cell[i]) == LVAL_AS_NUM(a->cell[i+1]))) {
-            return lval_bool(0);  /* false */
+            return make_val_bool(0);  /* false */
         }
     }
-    return lval_bool(1);
+    return make_val_bool(1);
 }
 
 /* '>' -> LVAL_BOOL - returns true if each argument is greater than the one that follows. */
-l_val* builtin_gt_op(l_env* e, l_val* a) {
-    l_val* err = lval_check_types(a, LVAL_INT | LVAL_FLOAT);
+Cell* builtin_gt_op(Lex* e, Cell* a) {
+    Cell* err = check_arg_types(a, VAL_INT | VAL_REAL);
     if (err) { return err; }
     for (int i = 0; i < a->count - 1; i++) {
         if (!(LVAL_AS_NUM(a->cell[i]) > LVAL_AS_NUM(a->cell[i+1]))) {
-            return lval_bool(0);  /* false */
+            return make_val_bool(0);  /* false */
         }
     }
-    return lval_bool(1);
+    return make_val_bool(1);
 }
 
 /* '<' -> LVAL_BOOL - returns true if each argument is less than the one that follows. */
-l_val* builtin_lt_op(l_env* e, l_val* a) {
-    l_val* err = lval_check_types(a, LVAL_INT | LVAL_FLOAT);
+Cell* builtin_lt_op(Lex* e, Cell* a) {
+    Cell* err = check_arg_types(a, VAL_INT | VAL_REAL);
     if (err) { return err; }
     for (int i = 0; i < a->count - 1; i++) {
         if (!(LVAL_AS_NUM(a->cell[i]) < LVAL_AS_NUM(a->cell[i+1]))) {
-            return lval_bool(0);  /* false */
+            return make_val_bool(0);  /* false */
         }
     }
-    return lval_bool(1);
+    return make_val_bool(1);
 }
 
 /* '>=' -> LVAL_BOOL - */
-l_val* builtin_gte_op(l_env* e, l_val* a) {
-    l_val* err = lval_check_types(a, LVAL_INT | LVAL_FLOAT);
+Cell* builtin_gte_op(Lex* e, Cell* a) {
+    Cell* err = check_arg_types(a, VAL_INT | VAL_REAL);
     if (err) { return err; }
     for (int i = 0; i < a->count - 1; i++) {
         if (!(LVAL_AS_NUM(a->cell[i]) >= LVAL_AS_NUM(a->cell[i+1]))) {
-            return lval_bool(0);  /* false */
+            return make_val_bool(0);  /* false */
         }
     }
-    return lval_bool(1);
+    return make_val_bool(1);
 }
 
 /* '<=' -> LVAL_BOOL - */
-l_val* builtin_lte_op(l_env* e, l_val* a) {
-    l_val* err = lval_check_types(a, LVAL_INT | LVAL_FLOAT);
+Cell* builtin_lte_op(Lex* e, Cell* a) {
+    Cell* err = check_arg_types(a, VAL_INT | VAL_REAL);
     if (err) { return err; }
     for (int i = 0; i < a->count - 1; i++) {
         if (!(LVAL_AS_NUM(a->cell[i]) <= LVAL_AS_NUM(a->cell[i+1]))) {
-            return lval_bool(0);  /* false */
+            return make_val_bool(0);  /* false */
         }
     }
-    return lval_bool(1);
+    return make_val_bool(1);
 }
 
 /* ---------------------------------------*
@@ -332,53 +332,53 @@ l_val* builtin_lte_op(l_env* e, l_val* a) {
  * ---------------------------------------*/
 
 /* 'zero?' -> LVAL - returns #t if arg is == 0 else #f */
-l_val* builtin_zero(l_env* e, l_val* a) {
-    l_val* err = lval_check_types(a, LVAL_INT | LVAL_FLOAT);
+Cell* builtin_zero(Lex* e, Cell* a) {
+    Cell* err = check_arg_types(a, VAL_INT | VAL_REAL);
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
     const long double result = lval_to_ld(a->cell[0]);
-    if (result == 0 || result == 0.0) { return lval_bool(1); }
-    return lval_bool(0);
+    if (result == 0 || result == 0.0) { return make_val_bool(1); }
+    return make_val_bool(0);
 }
 
 /* 'positive?' -> LVAL_BOOL - returns #t if arg is >= 0 else #f */
-l_val* builtin_positive(l_env* e, l_val* a) {
-    l_val* err = lval_check_types(a, LVAL_INT | LVAL_FLOAT);
+Cell* builtin_positive(Lex* e, Cell* a) {
+    Cell* err = check_arg_types(a, VAL_INT | VAL_REAL);
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
     const long double result = lval_to_ld(a->cell[0]);
-    if (result >= 0) { return lval_bool(1); }
-    return lval_bool(0);
+    if (result >= 0) { return make_val_bool(1); }
+    return make_val_bool(0);
 }
 
 /* 'negative?' -> LVAL_BOOL - returns #t if arg is < 0 else #f */
-l_val* builtin_negative(l_env* e, l_val* a) {
-    l_val* err = lval_check_types(a, LVAL_INT | LVAL_FLOAT);
+Cell* builtin_negative(Lex* e, Cell* a) {
+    Cell* err = check_arg_types(a, VAL_INT | VAL_REAL);
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
     const long double result = lval_to_ld(a->cell[0]);
-    if (result < 0) { return lval_bool(1); }
-    return lval_bool(0);
+    if (result < 0) { return make_val_bool(1); }
+    return make_val_bool(0);
 }
 
 /* 'odd?' -> LVAL_BOOL - returns #t if arg is odd else #f */
-l_val* builtin_odd(l_env* e, l_val* a) {
-    l_val* err = lval_check_types(a, LVAL_INT);
+Cell* builtin_odd(Lex* e, Cell* a) {
+    Cell* err = check_arg_types(a, VAL_INT);
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
-    const long long n = a->cell[0]->int_n;
-    if (n % 2 == 0) { return lval_bool(0); }
-    return lval_bool(1);
+    const long long n = a->cell[0]->int_v;
+    if (n % 2 == 0) { return make_val_bool(0); }
+    return make_val_bool(1);
 }
 
 /* 'even?' -> LVAL_BOOL - returns #t if arg is even else #f */
-l_val* builtin_even(l_env* e, l_val* a) {
-    l_val* err = lval_check_types(a, LVAL_INT);
+Cell* builtin_even(Lex* e, Cell* a) {
+    Cell* err = check_arg_types(a, VAL_INT);
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
-    const long long n = a->cell[0]->int_n;
-    if (n % 2 == 0) { return lval_bool(1); }
-    return lval_bool(0);
+    const long long n = a->cell[0]->int_v;
+    if (n % 2 == 0) { return make_val_bool(1); }
+    return make_val_bool(0);
 }
 
 /* -----------------------------*
@@ -386,11 +386,11 @@ l_val* builtin_even(l_env* e, l_val* a) {
  * -----------------------------*/
 
 /* 'quote' -> LVAL_SEXPR -  returns the sole argument unevaluated */
-l_val* builtin_quote(l_env* e, l_val* a) {
-    l_val* err = CHECK_ARITY_EXACT(a, 1);
+Cell* builtin_quote(Lex* e, Cell* a) {
+    Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
     /* Take the first argument and do NOT evaluate it */
-    return lval_take(a, 0);
+    return cell_take(a, 0);
 }
 
 /* ------------------------------------------*
@@ -401,15 +401,15 @@ l_val* builtin_quote(l_env* e, l_val* a) {
  * (pointer equality). Typically used for symbols and other non-numeric atoms.
  * May not give meaningful results for numbers or characters, since distinct but
  * equal values aren’t guaranteed to be the same object. */
-l_val* builtin_eq(l_env* e, l_val* a) {
-    l_val* err = CHECK_ARITY_EXACT(a, 2);
+Cell* builtin_eq(Lex* e, Cell* a) {
+    Cell* err = CHECK_ARITY_EXACT(a, 2);
     if (err) return err;
 
-    const l_val* x = a->cell[0];
-    const l_val* y = a->cell[1];
+    const Cell* x = a->cell[0];
+    const Cell* y = a->cell[1];
 
     /* Strict pointer equality */
-    return lval_bool(x == y);
+    return make_val_bool(x == y);
 }
 
 /* 'eqv?' -> LVAL_BOOL - Like 'eq?', but also considers numbers and characters
@@ -417,46 +417,46 @@ l_val* builtin_eq(l_env* e, l_val* a) {
  * not the same object. Use when: you want a general-purpose equality predicate
  * that works for numbers, characters, and symbols, but you don’t need deep
  * structural comparison. */
-l_val* builtin_eqv(l_env* e, l_val* a) {
-    l_val* err = CHECK_ARITY_EXACT(a, 2);
+Cell* builtin_eqv(Lex* e, Cell* a) {
+    Cell* err = CHECK_ARITY_EXACT(a, 2);
     if (err) return err;
 
-    const l_val* x = a->cell[0];
-    const l_val* y = a->cell[1];
+    const Cell* x = a->cell[0];
+    const Cell* y = a->cell[1];
 
-    if (x->type != y->type) return lval_bool(0);
+    if (x->type != y->type) return make_val_bool(0);
 
     switch (x->type) {
-        case LVAL_INT:   return lval_bool(x->int_n == y->int_n);
-        case LVAL_FLOAT: return lval_bool(x->float_n == y->float_n);
-        case LVAL_CHAR:  return lval_bool(x->char_val == y->char_val);
-        default:         return lval_bool(x == y); /* fall back to identity */
+        case VAL_INT:   return make_val_bool(x->int_v == y->int_v);
+        case VAL_REAL: return make_val_bool(x->real_v == y->real_v);
+        case VAL_CHAR:  return make_val_bool(x->char_val == y->char_val);
+        default:         return make_val_bool(x == y); /* fall back to identity */
     }
 }
 
 /* Helper for equal? */
-l_val* lval_equal(const l_val* x, const l_val* y) {
-    if (x->type != y->type) return lval_bool(0);
+Cell* lval_equal(const Cell* x, const Cell* y) {
+    if (x->type != y->type) return make_val_bool(0);
 
     switch (x->type) {
-        case LVAL_INT:   return lval_bool(x->int_n == y->int_n);
-        case LVAL_FLOAT: return lval_bool(x->float_n == y->float_n);
-        case LVAL_CHAR:  return lval_bool(x->char_val == y->char_val);
-        case LVAL_SYM:   return lval_bool(strcmp(x->sym, y->sym) == 0);
-        case LVAL_STR:   return lval_bool(strcmp(x->str, y->str) == 0);
+        case VAL_INT:   return make_val_bool(x->int_v == y->int_v);
+        case VAL_REAL: return make_val_bool(x->real_v == y->real_v);
+        case VAL_CHAR:  return make_val_bool(x->char_val == y->char_val);
+        case VAL_SYM:   return make_val_bool(strcmp(x->sym, y->sym) == 0);
+        case VAL_STR:   return make_val_bool(strcmp(x->str, y->str) == 0);
 
-        case LVAL_SEXPR:
-        case LVAL_VECT:
-            if (x->count != y->count) return lval_bool(0);
+        case VAL_SEXPR:
+        case VAL_VEC:
+            if (x->count != y->count) return make_val_bool(0);
             for (int i = 0; i < x->count; i++) {
-                l_val* eq = lval_equal(x->cell[i], y->cell[i]);
-                if (!eq->boolean) { lval_del(eq); return lval_bool(0); }
-                lval_del(eq);
+                Cell* eq = lval_equal(x->cell[i], y->cell[i]);
+                if (!eq->boolean) { cell_delete(eq); return make_val_bool(0); }
+                cell_delete(eq);
             }
-            return lval_bool(1);
+            return make_val_bool(1);
 
         default:
-            return lval_bool(0);
+            return make_val_bool(0);
     }
 }
 
@@ -464,8 +464,8 @@ l_val* lval_equal(const l_val* x, const l_val* y) {
  * recursively in lists, vectors, and strings. (equal? '(1 2 3) '(1 2 3)) → true,
  * even though the two lists are distinct objects.
  * Use when: you want to compare data structures by content, not identity.*/
-l_val* builtin_equal(l_env* e, l_val* a) {
-    l_val* err = CHECK_ARITY_EXACT(a, 2);
+Cell* builtin_equal(Lex* e, Cell* a) {
+    Cell* err = CHECK_ARITY_EXACT(a, 2);
     if (err) return err;
     return lval_equal(a->cell[0], a->cell[1]);
 }
@@ -475,32 +475,32 @@ l_val* builtin_equal(l_env* e, l_val* a) {
  * --------------------------------*/
 
 /* 'abs' -> LVAL_INT|LVAL_FLOAT - returns the absolute value of its argument */
-l_val* builtin_abs(l_env* e, l_val* a) {
-    l_val* err = lval_check_types(a, LVAL_INT | LVAL_FLOAT);
+Cell* builtin_abs(Lex* e, Cell* a) {
+    Cell* err = check_arg_types(a, VAL_INT | VAL_REAL);
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
     if (LVAL_AS_NUM(a->cell[0]) >= 0) {
-        if (a->type == LVAL_INT) { return lval_int(a->int_n); }
-        return lval_float(a->float_n);
+        if (a->type == VAL_INT) { return make_val_int(a->int_v); }
+        return make_val_real(a->real_v);
     }
-    if (a->type == LVAL_INT) { return lval_int(-a->int_n); }
-    return lval_float(-a->float_n);
+    if (a->type == VAL_INT) { return make_val_int(-a->int_v); }
+    return make_val_real(-a->real_v);
 }
 
 /* 'expt' -> LVAL_INT|LVAL_FLOAT - returns its first arg calculated
  * to the power of its second arg */
-l_val* builtin_expt(l_env* e, l_val* a) {
-    l_val* err = lval_check_types(a, LVAL_INT | LVAL_FLOAT);
+Cell* builtin_expt(Lex* e, Cell* a) {
+    Cell* err = check_arg_types(a, VAL_INT | VAL_REAL);
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 2))) { return err; }
 
     long double base = LVAL_AS_NUM(a->cell[0]);
-    const l_val* exp_val = a->cell[1];
+    const Cell* exp_val = a->cell[1];
     long double result;
 
-    if (exp_val->type == LVAL_INT) {
+    if (exp_val->type == VAL_INT) {
         /* integer exponent: use fast exponentiation */
-        long long n = exp_val->int_n;
+        long long n = exp_val->int_v;
         result = 1.0;
         long long abs_n = n > 0 ? n : -n;
 
@@ -519,60 +519,60 @@ l_val* builtin_expt(l_env* e, l_val* a) {
 
 /* 'modulo' -> LVAL_INT - returns the remainder of dividing the first argument
  * by the second, with the result having the same sign as the divisor.*/
-l_val* builtin_modulo(l_env* e, l_val* a) {
-    l_val* err = lval_check_types(a, LVAL_INT);
+Cell* builtin_modulo(Lex* e, Cell* a) {
+    Cell* err = check_arg_types(a, VAL_INT);
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 2))) { return err; }
-    long long r = a->cell[0]->int_n % a->cell[1]->int_n;
-    if ((r != 0) && ((a->cell[1]->int_n > 0 && r < 0) || (a->cell[1]->int_n < 0 && r > 0))) {
-        r += a->cell[1]->int_n;
+    long long r = a->cell[0]->int_v % a->cell[1]->int_v;
+    if ((r != 0) && ((a->cell[1]->int_v > 0 && r < 0) || (a->cell[1]->int_v < 0 && r > 0))) {
+        r += a->cell[1]->int_v;
     }
-    return lval_int(r);
+    return make_val_int(r);
 }
 
 /* 'quotient' -> LVAL_INT - returns the integer result of dividing
  * the first argument by the second, discarding any remainder.*/
-l_val* builtin_quotient(l_env* e, l_val* a) {
-    l_val* err = lval_check_types(a, LVAL_INT);
+Cell* builtin_quotient(Lex* e, Cell* a) {
+    Cell* err = check_arg_types(a, VAL_INT);
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 2))) { return err; }
-    return lval_int(a->cell[0]->int_n / a->cell[1]->int_n);
+    return make_val_int(a->cell[0]->int_v / a->cell[1]->int_v);
 }
 
 /* 'remainder' -> LVAL_INT - returns the remainder of dividing the first argument
  * by the second, with the result having the same sign as the dividend.*/
-l_val* builtin_remainder(l_env* e, l_val* a) {
-    l_val* err = lval_check_types(a, LVAL_INT);
+Cell* builtin_remainder(Lex* e, Cell* a) {
+    Cell* err = check_arg_types(a, VAL_INT);
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 2))) { return err; }
-    return lval_int(a->cell[0]->int_n % a->cell[1]->int_n);
+    return make_val_int(a->cell[0]->int_v % a->cell[1]->int_v);
 }
 
-l_val* builtin_lcm(l_env* e, l_val* a) {
-    l_val* err = lval_check_types(a, LVAL_INT);
+Cell* builtin_lcm(Lex* e, Cell* a) {
+    Cell* err = check_arg_types(a, VAL_INT);
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 2))) { return err; }
 
-    const long long int x = a->cell[0]->int_n;
-    const long long int y = a->cell[1]->int_n;
+    const long long int x = a->cell[0]->int_v;
+    const long long int y = a->cell[1]->int_v;
 
-    l_val* gcd = builtin_gcd(e, lval_sexpr_from2(lval_int(x), lval_int(y)));
-    long long int tmp = x * y / gcd->int_n;
+    Cell* gcd = builtin_gcd(e, make_sexpr_len2(make_val_int(x), make_val_int(y)));
+    long long int tmp = x * y / gcd->int_v;
     /* return only positive value */
     if (tmp < 0) {
         tmp = -tmp;
     }
-    lval_del(gcd);
-    return lval_int(tmp);
+    cell_delete(gcd);
+    return make_val_int(tmp);
 }
 
-l_val* builtin_gcd(l_env* e, l_val* a) {
-    l_val* err = lval_check_types(a, LVAL_INT);
+Cell* builtin_gcd(Lex* e, Cell* a) {
+    Cell* err = check_arg_types(a, VAL_INT);
     if (err) return err;
     if ((err = CHECK_ARITY_EXACT(a, 2))) return err;
 
-    long long x = a->cell[0]->int_n;
-    long long y = a->cell[1]->int_n;
+    long long x = a->cell[0]->int_v;
+    long long y = a->cell[1]->int_v;
 
     while (x != 0) {
         const long long tmp = x;
@@ -584,7 +584,7 @@ l_val* builtin_gcd(l_env* e, l_val* a) {
     if (y < 0) {
         y = -y;
     }
-    return lval_int(y);
+    return make_val_int(y);
 }
 
 /* ---------------------------------------*
@@ -592,58 +592,58 @@ l_val* builtin_gcd(l_env* e, l_val* a) {
  * ---------------------------------------*/
 
 /* 'not' -> LVAL_BOOL - returns #t if obj is false, and returns #f otherwise */
-l_val* builtin_not(l_env* e, l_val* a) {
-    l_val* err;
+Cell* builtin_not(Lex* e, Cell* a) {
+    Cell* err;
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
-    const int is_false = (a->cell[0]->type == LVAL_BOOL && a->cell[0]->boolean == 0);
-    return lval_bool(is_false);
+    const int is_false = (a->cell[0]->type == VAL_BOOL && a->cell[0]->boolean == 0);
+    return make_val_bool(is_false);
 }
 
 /* 'boolean?' -> LVAL_BOOL  - returns #t if obj is either #t or #f
     and returns #f otherwise. */
-l_val* builtin_boolean_pred(l_env* e, l_val* a) {
-    l_val* err = CHECK_ARITY_EXACT(a, 1);
+Cell* builtin_boolean_pred(Lex* e, Cell* a) {
+    Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
-    return lval_bool(a->cell[0]->type == LVAL_BOOL);
+    return make_val_bool(a->cell[0]->type == VAL_BOOL);
 }
 
 /* 'boolean' -> LVAL_BOOL - converts any value to a strict boolean */
-l_val* builtin_boolean(l_env* e, l_val* a) {
-    l_val* err = CHECK_ARITY_EXACT(a, 1);
+Cell* builtin_boolean(Lex* e, Cell* a) {
+    Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
-    int result = (a->cell[0]->type == LVAL_BOOL)
+    int result = (a->cell[0]->type == VAL_BOOL)
                  ? a->cell[0]->boolean
                  : 1; /* everything except #f is true */
-    return lval_bool(result);
+    return make_val_bool(result);
 }
 
 /* 'and' -> LVAL_BOOL|ANY - if any expression evaluates to #f, then #f is
  * returned. Any remaining expressions are not evaluated. If all the expressions
  * evaluate to true values, the values of the last expression are returned.
  * If there are no expressions, then #t is returned.*/
-l_val* builtin_and(l_env* e, l_val* a) {
+Cell* builtin_and(Lex* e, Cell* a) {
     for (int i = 0; i < a->count; i++) {
-        if (a->cell[i]->type == LVAL_BOOL && a->cell[i]->boolean == 0) {
+        if (a->cell[i]->type == VAL_BOOL && a->cell[i]->boolean == 0) {
             /* first #f encountered → return a copy of it */
-            return lval_copy(a->cell[i]);
+            return cell_copy(a->cell[i]);
         }
     }
     /* all truthy → return copy of last element */
-    return lval_copy(a->cell[a->count - 1]);
+    return cell_copy(a->cell[a->count - 1]);
 }
 
 /* 'or' -> LVAL_BOOL|ANY - the value of the first expression that evaluates
  * to true is returned. Any remaining expressions are not evaluated. If all
  * expressions evaluate to #f or if there are no expressions, #f is returned */
-l_val* builtin_or(l_env* e, l_val* a) {
+Cell* builtin_or(Lex* e, Cell* a) {
     for (int i = 0; i < a->count; i++) {
-        if (!(a->cell[i]->type == LVAL_BOOL && a->cell[i]->boolean == 0)) {
+        if (!(a->cell[i]->type == VAL_BOOL && a->cell[i]->boolean == 0)) {
             /* first truthy value → return a copy */
-            return lval_copy(a->cell[i]);
+            return cell_copy(a->cell[i]);
         }
     }
     /* all false → return copy of last element (#f) */
-    return lval_copy(a->cell[a->count - 1]);
+    return cell_copy(a->cell[a->count - 1]);
 }
 
 /* ----------------------------------------------------------*
@@ -651,108 +651,108 @@ l_val* builtin_or(l_env* e, l_val* a) {
  * ----------------------------------------------------------*/
 
 /* 'cons' -> LVAL_PAIR - returns a pair made from two arguments */
-l_val* builtin_cons(l_env* e, l_val* a) {
-    l_val* err = CHECK_ARITY_EXACT(a, 2);
+Cell* builtin_cons(Lex* e, Cell* a) {
+    Cell* err = CHECK_ARITY_EXACT(a, 2);
     if (err) return err;
-    return lval_pair(lval_copy(a->cell[0]), lval_copy(a->cell[1]));
+    return make_val_pair(cell_copy(a->cell[0]), cell_copy(a->cell[1]));
 }
 
 /* 'car' -> ANY - returns the first member of a pair */
-l_val* builtin_car(l_env* e, l_val* a) {
-    l_val* err = lval_check_types(a, LVAL_PAIR|LVAL_SEXPR);
+Cell* builtin_car(Lex* e, Cell* a) {
+    Cell* err = check_arg_types(a, VAL_PAIR|VAL_SEXPR);
     if (err) { return err; }
 
-    if (a->cell[0]->type == LVAL_PAIR) {
-        return lval_copy(a->cell[0]->car);
+    if (a->cell[0]->type == VAL_PAIR) {
+        return cell_copy(a->cell[0]->car);
     }
     /* This is for the case where the argument list was quoted.
      * It needs to be transformed into a list before taking the car */
-    l_val* list = builtin_list(e, a->cell[0]);
-    l_val* result = lval_copy(list->car);
-    lval_del(list);
+    Cell* list = builtin_list(e, a->cell[0]);
+    Cell* result = cell_copy(list->car);
+    cell_delete(list);
     return result;
 }
 
 /* 'cdr' -> ANY - returns the second member of a pair */
-l_val* builtin_cdr(l_env* e, l_val* a) {
-    l_val* err = lval_check_types(a, LVAL_PAIR|LVAL_SEXPR);
+Cell* builtin_cdr(Lex* e, Cell* a) {
+    Cell* err = check_arg_types(a, VAL_PAIR|VAL_SEXPR);
     if (err) { return err; }
 
-    if (a->cell[0]->type == LVAL_PAIR) {
-        return lval_copy(a->cell[0]->cdr);
+    if (a->cell[0]->type == VAL_PAIR) {
+        return cell_copy(a->cell[0]->cdr);
     }
     /* This is for the case where the argument list was quoted.
      * It needs to be transformed into a list before taking the cdr */
-    l_val* list = builtin_list(e, a->cell[0]);
-    l_val* result = lval_copy(list->cdr);
-    lval_del(list);
+    Cell* list = builtin_list(e, a->cell[0]);
+    Cell* result = cell_copy(list->cdr);
+    cell_delete(list);
     return result;
 }
 
 /* 'list' -> LVAL_PAIR - returns a nil-terminated proper list */
-l_val* builtin_list(l_env* e, l_val* a) {
+Cell* builtin_list(Lex* e, Cell* a) {
     /* start with nil */
-    l_val* result = lval_new_nil();
+    Cell* result = make_val_nil();
 
     /* build backwards so it comes out in the right order */
     for (int i = a->count - 1; i >= 0; i--) {
-        result = lval_pair(lval_copy(a->cell[i]), result);
+        result = make_val_pair(cell_copy(a->cell[i]), result);
     }
     return result;
 }
 
 /* 'length' -> LVAL_INT - returns the member count of a proper list */
-l_val* builtin_list_length(l_env* e, l_val* a) {
-    l_val* err = CHECK_ARITY_EXACT(a, 1);
+Cell* builtin_list_length(Lex* e, Cell* a) {
+    Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
-    err = lval_check_types(a, LVAL_PAIR|LVAL_SEXPR);
+    err = check_arg_types(a, VAL_PAIR|VAL_SEXPR);
     if (err) { return err; }
 
-    if (a->cell[0]->type == LVAL_PAIR) {
+    if (a->cell[0]->type == VAL_PAIR) {
         int len = 0;
-        const l_val* p = a->cell[0];
-        while (p->type == LVAL_PAIR) {
+        const Cell* p = a->cell[0];
+        while (p->type == VAL_PAIR) {
             len++;
             p = p->cdr;
         }
-        if (p->type != LVAL_NIL) {
-            return lval_err("Improper list");
+        if (p->type != VAL_NIL) {
+            return make_val_err("Improper list");
         }
-        return lval_int(len);
+        return make_val_int(len);
     }
-    if (a->cell[0]->type == LVAL_SEXPR) {
-        return lval_int(a->cell[0]->count);
+    if (a->cell[0]->type == VAL_SEXPR) {
+        return make_val_int(a->cell[0]->count);
     }
-    return lval_err("Ooops, still broken\n");
+    return make_val_err("Ooops, still broken\n");
 }
 
 /* 'list-ref' -> ANY - returns the list member at the zero-indexed
  * integer specified in the second arg. First arg is the list to act on*/
-l_val* builtin_list_ref(l_env* e, l_val* a) {
-    l_val* err = CHECK_ARITY_EXACT(a, 2);
+Cell* builtin_list_ref(Lex* e, Cell* a) {
+    Cell* err = CHECK_ARITY_EXACT(a, 2);
     if (err) return err;
 
-    if (a->cell[1]->type != LVAL_INT) {
-        return lval_err("list-ref: arg 2 must be an integer");
+    if (a->cell[1]->type != VAL_INT) {
+        return make_val_err("list-ref: arg 2 must be an integer");
     }
-    int i = (int)a->cell[1]->int_n;
+    int i = (int)a->cell[1]->int_v;
 
-    if (a->cell[0]->type == LVAL_PAIR) {
-        const l_val* p = a->cell[0];
-        if (p->type != LVAL_PAIR) {
-            return lval_err("list-ref: index out of bounds");
+    if (a->cell[0]->type == VAL_PAIR) {
+        const Cell* p = a->cell[0];
+        if (p->type != VAL_PAIR) {
+            return make_val_err("list-ref: index out of bounds");
         }
         while (i > 0) {
             p = p->cdr;
             i--;
         }
-        return lval_copy(p->car);
+        return cell_copy(p->car);
     }
-    if (a->cell[0]->type == LVAL_SEXPR) {
+    if (a->cell[0]->type == VAL_SEXPR) {
         /* else the list is buried in an LVAL_SEXPR */
-        return lval_copy(a->cell[0]->cell[i]);
+        return cell_copy(a->cell[0]->cell[i]);
     }
-    return lval_err("list-ref: arg 1 must be list or pair.");
+    return make_val_err("list-ref: arg 1 must be list or pair.");
 }
 
 /*-------------------------------------------------------*

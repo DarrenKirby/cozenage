@@ -8,72 +8,72 @@
 #include "main.h"
 
 
-void print_lval_seq(const l_val* v, const char* prefix, const char open, const char close) {
+void print_lval_seq(const Cell* v, const char* prefix, const char open, const char close) {
     if (!v) return;
 
     if (prefix) printf("%s", prefix);
     printf("%c", open);
 
     for (int i = 0; i < v->count; i++) {
-        print_lval(v->cell[i]);
+        print_cell(v->cell[i]);
         if (i != v->count - 1) printf(" ");
     }
 
     printf("%c", close);
 }
 
-void print_pair(const l_val* v) {
+void print_pair(const Cell* v) {
     printf("(");
-    const l_val* cur = v;
-    while (cur->type == LVAL_PAIR) {
-        print_lval(cur->car);
-        if (cur->cdr->type == LVAL_NIL) {
+    const Cell* cur = v;
+    while (cur->type == VAL_PAIR) {
+        print_cell(cur->car);
+        if (cur->cdr->type == VAL_NIL) {
             break;  // proper end of list
         }
-        if (cur->cdr->type == LVAL_PAIR) {
+        if (cur->cdr->type == VAL_PAIR) {
             printf(" ");
             cur = cur->cdr;
             continue;
         }
         printf(" . ");
-        print_lval(cur->cdr);
+        print_cell(cur->cdr);
         break;
     }
     printf(")");
 }
 
-void print_lval(const l_val* v) {
+void print_cell(const Cell* v) {
     switch (v->type) {
-    case LVAL_FLOAT:
-        printf("%Lg", v->float_n);
+    case VAL_REAL:
+        printf("%Lg", v->real_v);
         break;
 
-    case LVAL_INT:
-        printf("%lld", v->int_n);
+    case VAL_INT:
+        printf("%lld", v->int_v);
         break;
 
-    case LVAL_RAT:
+    case VAL_RAT:
         printf("%ld/%ld", v->num, v->den);
         break;
 
-    case LVAL_COMP:
-        print_lval(v->real);
+    case VAL_COMPLEX:
+        print_cell(v->real);
         printf("+");
-        print_lval(v->imag);
+        print_cell(v->imag);
         printf("i");
         break;
 
-    case LVAL_BOOL:
+    case VAL_BOOL:
         printf("%s%s%s", ANSI_MAGENTA,
                v->boolean ? "#true" : "#false",
                ANSI_RESET);
         break;
 
-    case LVAL_ERR:
+    case VAL_ERR:
         printf("%sError:%s %s", ANSI_RED_B, ANSI_RESET, v->str);
         break;
 
-    case LVAL_CHAR:
+    case VAL_CHAR:
         switch (v->char_val) {
         case '\n': printf("#\\newline");   break;
         case ' ':  printf("#\\space");     break;
@@ -89,11 +89,11 @@ void print_lval(const l_val* v) {
         }
         break;
 
-    case LVAL_STR:
+    case VAL_STR:
         printf("\"%s\"", v->str);
         break;
 
-    case LVAL_FUN:
+    case VAL_PROC:
         if (v->name) {
             printf("<builtin procedure '%s%s%s'>", ANSI_GREEN_B, v->name, ANSI_RESET);
         } else {
@@ -101,25 +101,25 @@ void print_lval(const l_val* v) {
         }
         break;
 
-    case LVAL_SYM:
+    case VAL_SYM:
         printf("%s", v->sym);
         break;
 
-    case LVAL_PAIR:
+    case VAL_PAIR:
         print_pair(v);
             break;
 
-    case LVAL_NIL:
+    case VAL_NIL:
         printf("()");
         break;
 
-    case LVAL_SEXPR:
+    case VAL_SEXPR:
         print_lval_seq(v, NULL, '(', ')');
         break;
-    case LVAL_VECT:
+    case VAL_VEC:
         print_lval_seq(v, "#", '(', ')');
         break;
-    case LVAL_BYTE:
+    case VAL_BYTEVEC:
         print_lval_seq(v, "#u8", '(', ')');
         break;
 
@@ -129,7 +129,7 @@ void print_lval(const l_val* v) {
     }
 }
 
-void println_lval(const l_val* v) {
-    print_lval(v);
+void println_cell(const Cell* v) {
+    print_cell(v);
     putchar('\n');
 }

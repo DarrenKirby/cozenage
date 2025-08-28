@@ -4,7 +4,7 @@
 #include "parser.h"
 
 
-void print_lval(const l_val* v);
-void println_lval(const l_val* v);
+void print_cell(const Cell* v);
+void println_cell(const Cell* v);
 
 #endif //COZENAGE_PRINTER_H

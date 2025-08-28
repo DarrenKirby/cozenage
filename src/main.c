@@ -84,20 +84,20 @@ static char* read_multiline(const char* prompt, const char* cont_prompt) {
  * through a 2 step lexer/parser stream, and convert
  * it to an l_val struct.
  * */
-l_val* coz_read(l_env* e) {
+Cell* coz_read(Lex* e) {
     char *input = read_multiline(PS1_PROMPT, PS2_PROMPT);
     /* reset bold input */
     printf("%s", ANSI_RESET);
     if (!input || strcmp(input, "exit") == 0) {
         printf("\n");
-        lenv_del(e);
+        lex_delete(e);
         exit(0);
     }
 
     Parser *p = parse_str(input);
     if (!p) { free(input); return NULL; }
 
-    l_val *v = parse_form(p);
+    Cell *v = parse_tokens(p);
 
     free_tokens(p->array, p->size);
     free(p);
@@ -109,49 +109,49 @@ l_val* coz_read(l_env* e) {
 
 
 /* Forward declaration to resolve circular dependency */
-l_val* eval_sexpr(l_env* e, l_val* v);
+Cell* eval_sexpr(Lex* e, Cell* v);
 
-/* eval()
+/* coz_eval()
  * Evaluate an l_val in the given environment.
  * Literals evaluate to themselves; symbols are looked up.
  * S-expressions are recursively evaluated.
  */
-l_val* coz_eval(l_env* e, l_val* v) {
+Cell* coz_eval(Lex* e, Cell* v) {
     if (!v) return NULL;
 
     switch (v->type) {
         /* Symbols: look them up in the environment */
-        case LVAL_SYM: {
-            l_val* x = lenv_get(e, v);
-            lval_del(v);
+        case VAL_SYM: {
+            Cell* x = lex_get(e, v);
+            cell_delete(v);
             return x;
         }
 
         /* S-expressions: recursively evaluate */
-        case LVAL_SEXPR:
+        case VAL_SEXPR:
             return eval_sexpr(e, v);
 
         /* All literals evaluate to themselves */
-        case LVAL_INT:
-        case LVAL_FLOAT:
-        case LVAL_RAT:
-        case LVAL_COMP:
-        case LVAL_BOOL:
-        case LVAL_CHAR:
-        case LVAL_STR:
+        case VAL_INT:
+        case VAL_REAL:
+        case VAL_RAT:
+        case VAL_COMPLEX:
+        case VAL_BOOL:
+        case VAL_CHAR:
+        case VAL_STR:
         /* case LVAL_PAIR: is not necessary - no concept of 'pair literal' */
-        case LVAL_VECT:
-        case LVAL_BYTE:
-        case LVAL_NIL:
+        case VAL_VEC:
+        case VAL_BYTEVEC:
+        case VAL_NIL:
         /* Functions, ports, continuations, and errors are returned as-is */
-        case LVAL_FUN:
-        case LVAL_PORT:
-        case LVAL_CONT:
-        case LVAL_ERR:
+        case VAL_PROC:
+        case VAL_PORT:
+        case VAL_CONT:
+        case VAL_ERR:
             return v;
 
         default:
-            return lval_err("Unknown l_val type in eval()");
+            return make_val_err("Unknown l_val type in eval()");
     }
 }
 
@@ -161,42 +161,42 @@ l_val* coz_eval(l_env* e, l_val* v) {
  * 2) Handle empty or single-element S-expressions.
  * 3) Treat first element as function (symbol or builtin).
  */
-l_val* eval_sexpr(l_env* e, l_val* v) {
+Cell* eval_sexpr(Lex* e, Cell* v) {
     if (v->count == 0) return v;
 
     /* Grab first element without evaluating yet */
-    l_val* first = lval_pop(v, 0);
+    Cell* first = cell_pop(v, 0);
 
     /* Special form: quote */
-    if (first->type == LVAL_SYM && strcmp(first->sym, "quote") == 0) {
-        lval_del(first);
+    if (first->type == VAL_SYM && strcmp(first->sym, "quote") == 0) {
+        cell_delete(first);
         if (v->count != 1) {
-            lval_del(v);
-            return lval_err("quote takes exactly one argument");
+            cell_delete(v);
+            return make_val_err("quote takes exactly one argument");
         }
-        return lval_take(v, 0);  // return argument unevaluated
+        return cell_take(v, 0);  /* return argument unevaluated */
     }
 
     /* Otherwise, evaluate first element normally (should become a function) */
-    l_val* f = coz_eval(e, first);
-    if (f->type != LVAL_FUN) {
-        lval_del(f);
-        lval_del(v);
-        return lval_err("S-expression does not start with a procedure");
+    Cell* f = coz_eval(e, first);
+    if (f->type != VAL_PROC) {
+        cell_delete(f);
+        cell_delete(v);
+        return make_val_err("S-expression does not start with a procedure");
     }
 
     /* Now evaluate arguments (since it's not a special form) */
     for (int i = 0; i < v->count; i++) {
         v->cell[i] = coz_eval(e, v->cell[i]);
-        if (v->cell[i]->type == LVAL_ERR) {
-            lval_del(f);
-            return lval_take(v, i);
+        if (v->cell[i]->type == VAL_ERR) {
+            cell_delete(f);
+            return cell_take(v, i);
         }
     }
 
     /* Apply function */
-    l_val* result = f->builtin(e, v);
-    lval_del(f);
+    Cell* result = f->builtin(e, v);
+    cell_delete(f);
     return result;
 }
 
@@ -204,28 +204,28 @@ l_val* eval_sexpr(l_env* e, l_val* v) {
  * Take the l_val produced by eval and print it in a
  * context-specific, meaningful way.
  * */
-void coz_print(const l_val* v) {
-    println_lval(v);
+void coz_print(const Cell* v) {
+    println_cell(v);
 }
 
 /* repl()
  * Read-Evaluate-Print loop
  * */
 void repl() {
-    l_env* e = lenv_new();
-    lenv_add_builtins(e);
+    Lex* e = lex_initialize();
+    lex_add_builtins(e);
 
     for (;;) {
-        l_val *val = coz_read(e);
+        Cell *val = coz_read(e);
         if (!val) {
             continue;
         }
-        l_val *result = coz_eval(e, val);
+        Cell *result = coz_eval(e, val);
         if (!result) {
             continue;
         }
         coz_print(result);
-        lval_del(result);
+        cell_delete(result);
     }
 }
 

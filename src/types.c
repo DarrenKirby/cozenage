@@ -1,4 +1,4 @@
-/* types.c - definition of l_val constructors/destructors and helpers */
+/* types.c - definition of Cell constructors/destructors and helpers */
 
 #include "types.h"
 #include "parser.h"
@@ -10,147 +10,150 @@
 
 
 /* define the global nil */
-l_val* lval_nil = NULL;
+Cell* val_nil = NULL;
 
-/* L_VAL constructors.... */
+/*------------------------------------*
+ *       Cell type constructors       *
+ * -----------------------------------*/
 
-l_val* lval_new_nil(void) {
-    if (!lval_nil) {
-        lval_nil = malloc(sizeof(l_val));
-        lval_nil->type = LVAL_NIL;
+Cell* make_val_nil(void) {
+    if (!val_nil) {
+        val_nil = malloc(sizeof(Cell));
+        val_nil->type = VAL_NIL;
         /* no other fields needed */
     }
-    return lval_nil;
+    return val_nil;
 }
 
-l_val* lval_float(const long double n) {
-    l_val* v = calloc(1, sizeof(l_val));
-    v->type = LVAL_FLOAT;
+Cell* make_val_real(const long double n) {
+    Cell* v = calloc(1, sizeof(Cell));
+    v->type = VAL_REAL;
     v->exact = false;
-    v->float_n = n;
+    v->real_v = n;
     return v;
 }
 
-l_val* lval_int(const long long int n) {
-    l_val* v = calloc(1, sizeof(l_val));
-    v->type = LVAL_INT;
+Cell* make_val_int(const long long int n) {
+    Cell* v = calloc(1, sizeof(Cell));
+    v->type = VAL_INT;
     v->exact = true;
-    v->int_n = n;
+    v->int_v = n;
     return v;
 }
 
-l_val* lval_rat(const long int num, const long int den) {
-    l_val* v = calloc(1, sizeof(l_val));
-    v->type = LVAL_RAT;
+Cell* make_val_rat(const long int num, const long int den) {
+    Cell* v = calloc(1, sizeof(Cell));
+    v->type = VAL_RAT;
     v->exact = true;
     v->num = num;
     v->den = den;
-    return lval_rat_simplify(v);
+    return simplify_rational(v);
 }
 
-l_val* lval_comp(l_val* real, l_val *imag) {
-    if (real->type == LVAL_COMP || imag->type == LVAL_COMP) {
-        return lval_err("Cannot have complex real or imaginary parts.");
+Cell* make_val_complex(Cell* real, Cell *imag) {
+    if (real->type == VAL_COMPLEX || imag->type == VAL_COMPLEX) {
+        return make_val_err("Cannot have complex real or imaginary parts.");
     }
-    l_val* v = calloc(1, sizeof(l_val));
-    v->type = LVAL_COMP;
+    Cell* v = calloc(1, sizeof(Cell));
+    v->type = VAL_COMPLEX;
     v->real = real;
     v->imag = imag;
     v->exact = real->exact && imag->exact;
     return v;
 }
 
-l_val* lval_bool(const int b) {
-    l_val* v = calloc(1, sizeof(l_val));
-    v->type = LVAL_BOOL;
+Cell* make_val_bool(const int b) {
+    Cell* v = calloc(1, sizeof(Cell));
+    v->type = VAL_BOOL;
     v->boolean = b ? 1 : 0;
     return v;
 }
 
-l_val* lval_sym(const char* s) {
-    l_val* v = calloc(1, sizeof(l_val));
-    v->type = LVAL_SYM;
+Cell* make_val_sym(const char* s) {
+    Cell* v = calloc(1, sizeof(Cell));
+    v->type = VAL_SYM;
     v->sym = strdup(s);
     return v;
 }
 
-l_val* lval_str(const char* s) {
-    l_val* v = calloc(1, sizeof(l_val));
-    v->type = LVAL_STR;
+Cell* make_val_str(const char* s) {
+    Cell* v = calloc(1, sizeof(Cell));
+    v->type = VAL_STR;
     v->str = strdup(s);
     return v;
 }
 
-l_val* lval_sexpr(void) {
-    l_val* v = calloc(1, sizeof(l_val));
-    v->type = LVAL_SEXPR;
+Cell* make_val_sexpr(void) {
+    Cell* v = calloc(1, sizeof(Cell));
+    v->type = VAL_SEXPR;
     v->count = 0;
     v->cell = NULL;
     return v;
 }
 
-l_val* lval_char(char c) {
-    l_val* v = calloc(1, sizeof(l_val));
-    v->type = LVAL_CHAR;
+Cell* make_val_char(char c) {
+    Cell* v = calloc(1, sizeof(Cell));
+    v->type = VAL_CHAR;
     v->char_val = c;
     return v;
 }
 
-l_val* lval_pair(l_val* car, l_val* cdr) {
-    l_val* v = calloc(1,sizeof(l_val));
+Cell* make_val_pair(Cell* car, Cell* cdr) {
+    Cell* v = calloc(1,sizeof(Cell));
     if (!v) {
         fprintf(stderr, "ENOMEM: lval_pair failed\n");
         exit(EXIT_FAILURE);
     }
-    v->type = LVAL_PAIR;
+    v->type = VAL_PAIR;
     v->car = car;
     v->cdr = cdr;
     return v;
 }
 
-l_val* lval_vect(void) {
-    l_val* v = calloc(1, sizeof(l_val));
-    v->type = LVAL_VECT;
+Cell* make_val_vect(void) {
+    Cell* v = calloc(1, sizeof(Cell));
+    v->type = VAL_VEC;
     v->cell = NULL;
     v->count = 0;
     return v;
 }
 
-l_val* lval_byte(void) {
-    l_val* v = calloc(1, sizeof(l_val));
-    v->type = LVAL_BYTE;
+Cell* make_val_bytevec(void) {
+    Cell* v = calloc(1, sizeof(Cell));
+    v->type = VAL_BYTEVEC;
     v->cell = NULL;
     v->count = 0;
     return v;
 }
 
-l_val* lval_err(const char* m) {
-    l_val* v = calloc(1, sizeof(l_val));
-    v->type = LVAL_ERR;
+Cell* make_val_err(const char* m) {
+    Cell* v = calloc(1, sizeof(Cell));
+    v->type = VAL_ERR;
     v->str = strdup(m);
     return v;
 }
 
-/* Not a type constructor - despite the name
- * this is a helper function used by lval_sexpr.
- */
-l_val* lval_add(l_val* v, l_val* x) {
+/*------------------------------------*
+ *       Cell accessors, destructors, and         *
+ * -----------------------------------*/
+
+Cell* cell_add(Cell* v, Cell* x) {
     v->count++;
-    v->cell = realloc(v->cell, sizeof(l_val*) * v->count);
+    v->cell = realloc(v->cell, sizeof(Cell*) * v->count);
     v->cell[v->count-1] = x;
     return v;
 }
 
-l_val* lval_pop(l_val* v, const int i) {
+Cell* cell_pop(Cell* v, const int i) {
     if (i < 0 || i >= v->count) return NULL; /* defensive */
 
     /* Grab item */
-    l_val* x = v->cell[i];
+    Cell* x = v->cell[i];
 
     /* Shift the memory after the item at "i" over the top */
     if (i < v->count - 1) {
         memmove(&v->cell[i], &v->cell[i+1],
-                sizeof(l_val*) * (v->count - i - 1));
+                sizeof(Cell*) * (v->count - i - 1));
     }
 
     /* Decrease the count of items */
@@ -163,7 +166,7 @@ l_val* lval_pop(l_val* v, const int i) {
         v->cell = NULL;
     } else {
         /* Try to shrink the allocation; keep old pointer on OOM */
-        l_val** tmp = realloc(v->cell, sizeof(l_val*) * v->count);
+        Cell** tmp = realloc(v->cell, sizeof(Cell*) * v->count);
         if (tmp) {
             v->cell = tmp;
         } /* else: on OOM we keep the old block (safe) */
@@ -171,46 +174,45 @@ l_val* lval_pop(l_val* v, const int i) {
     return x;
 }
 
-
 /* Take an element out and delete the rest */
-l_val* lval_take(l_val* v, const int i) {
-    l_val* x = lval_pop(v, i);
+Cell* cell_take(Cell* v, const int i) {
+    Cell* x = cell_pop(v, i);
     return x;
 }
 
 /* Recursively delete components of an l_val */
-void lval_del(l_val* v) {
+void cell_delete(Cell* v) {
     if (!v) return;
 
     switch (v->type) {
-    case LVAL_INT:
-    case LVAL_FLOAT:
-    case LVAL_RAT:
-    case LVAL_BOOL:
-    case LVAL_CHAR:
+    case VAL_INT:
+    case VAL_REAL:
+    case VAL_RAT:
+    case VAL_BOOL:
+    case VAL_CHAR:
         /* nothing heap-allocated */
         break;
 
-    case LVAL_NIL:
+    case VAL_NIL:
         /* NIL is a singleton; never free */
         return;
 
-    case LVAL_SYM:
+    case VAL_SYM:
         free(v->sym);
         break;
 
-    case LVAL_STR:
-    case LVAL_ERR:
+    case VAL_STR:
+    case VAL_ERR:
         free(v->str);
         break;
 
-    case LVAL_SEXPR:
-    case LVAL_VECT:
-    case LVAL_BYTE:
+    case VAL_SEXPR:
+    case VAL_VEC:
+    case VAL_BYTEVEC:
         if (v->cell) {
             for (int i = 0; i < v->count; i++) {
                 /* guard against NULL children just in case */
-                if (v->cell[i]) lval_del(v->cell[i]);
+                if (v->cell[i]) cell_delete(v->cell[i]);
             }
             free(v->cell);
             v->cell = NULL;
@@ -218,23 +220,23 @@ void lval_del(l_val* v) {
         v->count = 0;
         break;
 
-    case LVAL_PAIR:
-        lval_del(v->car);
-        lval_del(v->cdr);
+    case VAL_PAIR:
+        cell_delete(v->car);
+        cell_delete(v->cdr);
         break;
 
-    case LVAL_COMP:
-        lval_del(v->real);
-        lval_del(v->imag);
+    case VAL_COMPLEX:
+        cell_delete(v->real);
+        cell_delete(v->imag);
         break;
 
-    case LVAL_FUN:
+    case VAL_PROC:
         if (v->name) free(v->name);
         /* TODO: free env/body if user-defined later */
         break;
 
-    case LVAL_PORT:
-    case LVAL_CONT:
+    case VAL_PORT:
+    case VAL_CONT:
         /* not implemented yet */
         break;
 
@@ -245,11 +247,11 @@ void lval_del(l_val* v) {
     free(v);
 }
 
-/* Recursively deep-copy all components of an l_val */
-l_val* lval_copy(const l_val* v) {
+/* Recursively deep-copy all components of a Cell */
+Cell* cell_copy(const Cell* v) {
     if (!v) return NULL;
 
-    l_val* copy = calloc(1, sizeof(l_val));  // zero-init for safety
+    Cell* copy = calloc(1, sizeof(Cell));
     if (!copy) {
         fprintf(stderr, "ENOMEM: lval_copy failed\n");
         exit(EXIT_FAILURE);
@@ -259,73 +261,73 @@ l_val* lval_copy(const l_val* v) {
     copy->exact = v->exact;
 
     switch (v->type) {
-    case LVAL_INT:
-        copy->int_n = v->int_n;
+    case VAL_INT:
+        copy->int_v = v->int_v;
         break;
-    case LVAL_FLOAT:
-        copy->float_n = v->float_n;
+    case VAL_REAL:
+        copy->real_v = v->real_v;
         break;
-    case LVAL_BOOL:
+    case VAL_BOOL:
         copy->boolean = v->boolean;
         break;
-    case LVAL_CHAR:
+    case VAL_CHAR:
         copy->char_val = v->char_val;
         break;
 
-    case LVAL_SYM:
+    case VAL_SYM:
         copy->sym = strdup(v->sym);
         break;
 
-    case LVAL_STR:
-    case LVAL_ERR:
+    case VAL_STR:
+    case VAL_ERR:
         copy->str = strdup(v->str);
         break;
 
-    case LVAL_FUN:
+    case VAL_PROC:
         copy->builtin = v->builtin;
         copy->name = v->name ? strdup(v->name) : NULL;
         /* TODO: deep copy env/body for lambdas */
         break;
 
-    case LVAL_SEXPR:
-    case LVAL_VECT:
-    case LVAL_BYTE:
+    case VAL_SEXPR:
+    case VAL_VEC:
+    case VAL_BYTEVEC:
         copy->count = v->count;
         if (v->count) {
-            copy->cell = malloc(sizeof(l_val*) * v->count);
+            copy->cell = malloc(sizeof(Cell*) * v->count);
         } else {
             copy->cell = NULL;
         }
         for (int i = 0; i < v->count; i++) {
-            copy->cell[i] = lval_copy(v->cell[i]);
+            copy->cell[i] = cell_copy(v->cell[i]);
         }
         break;
 
-    case LVAL_NIL:
+    case VAL_NIL:
         /* return the singleton instead of allocating */
         free(copy);
-        return lval_new_nil();
+        return make_val_nil();
 
-    case LVAL_PAIR: {
-        copy->car = lval_copy(v->car);
-        copy->cdr = lval_copy(v->cdr);
+    case VAL_PAIR: {
+        copy->car = cell_copy(v->car);
+        copy->cdr = cell_copy(v->cdr);
         break;
         }
 
-    case LVAL_RAT: {
+    case VAL_RAT: {
         copy->num = v->num;
         copy->den = v->den;
         break;
     }
 
-    case LVAL_COMP: {
-        copy->real = lval_copy(v->real);
-        copy->imag = lval_copy(v->imag);
+    case VAL_COMPLEX: {
+        copy->real = cell_copy(v->real);
+        copy->imag = cell_copy(v->imag);
         break;
         }
 
-    case LVAL_PORT:
-    case LVAL_CONT:
+    case VAL_PORT:
+    case VAL_CONT:
         /* shallow copy (all fields remain zeroed) */
         break;
 
@@ -338,48 +340,48 @@ l_val* lval_copy(const l_val* v) {
 }
 
 /* Turn a single type into a string (for error reporting) */
-const char* lval_type_name(const int t) {
+const char* cell_type_name(const int t) {
     switch (t) {
-        case LVAL_INT:     return "integer";
-        case LVAL_FLOAT:   return "float";
-        case LVAL_RAT:     return "rational";
-        case LVAL_COMP:    return "complex";
-        case LVAL_BOOL:    return "bool";
-        case LVAL_SYM:     return "symbol";
-        case LVAL_STR:     return "string";
-        case LVAL_SEXPR:   return "sexpr";
-        case LVAL_NIL:     return "nil";
-        case LVAL_FUN:     return "function";
-        case LVAL_ERR:     return "error";
-        case LVAL_PAIR:    return "pair";
-        case LVAL_VECT:    return "vector";
-        case LVAL_CHAR:    return "char";
-        case LVAL_BYTE:    return "byte vector";
+        case VAL_INT:     return "integer";
+        case VAL_REAL:   return "float";
+        case VAL_RAT:     return "rational";
+        case VAL_COMPLEX:    return "complex";
+        case VAL_BOOL:    return "bool";
+        case VAL_SYM:     return "symbol";
+        case VAL_STR:     return "string";
+        case VAL_SEXPR:   return "sexpr";
+        case VAL_NIL:     return "nil";
+        case VAL_PROC:     return "function";
+        case VAL_ERR:     return "error";
+        case VAL_PAIR:    return "pair";
+        case VAL_VEC:    return "vector";
+        case VAL_CHAR:    return "char";
+        case VAL_BYTEVEC:    return "byte vector";
         default:           return "unknown";
     }
 }
 
 /* Turn a mask (possibly multiple flags ORed together) into a string
-   e.g. (LVAL_INT | LVAL_FLOAT) -> "int|float" */
-const char* lval_mask_types(const int mask) {
+   e.g. (VAL_INT | VAL_REAL) -> "int|real" */
+const char* cell_mask_types(const int mask) {
     static char buf[128];  /* static to return pointer safely */
     buf[0] = '\0';
 
-    if (mask & LVAL_INT)      strcat(buf, "integer|");
-    if (mask & LVAL_FLOAT)    strcat(buf, "float|");
-    if (mask & LVAL_RAT)      strcat(buf, "rational|");
-    if (mask & LVAL_COMP)     strcat(buf, "complex|");
-    if (mask & LVAL_BOOL)     strcat(buf, "bool|");
-    if (mask & LVAL_SYM)      strcat(buf, "symbol|");
-    if (mask & LVAL_STR)      strcat(buf, "string|");
-    if (mask & LVAL_SEXPR)    strcat(buf, "sexpr|");
-    if (mask & LVAL_NIL)      strcat(buf, "nil|");
-    if (mask & LVAL_FUN)      strcat(buf, "function|");
-    if (mask & LVAL_ERR)      strcat(buf, "error|");
-    if (mask & LVAL_PAIR)     strcat(buf, "pair|");
-    if (mask & LVAL_VECT)     strcat(buf, "vector|");
-    if (mask & LVAL_CHAR)     strcat(buf, "char|");
-    if (mask & LVAL_BYTE)     strcat(buf, "byte vector|");
+    if (mask & VAL_INT)      strcat(buf, "integer|");
+    if (mask & VAL_REAL)    strcat(buf, "real|");
+    if (mask & VAL_RAT)      strcat(buf, "rational|");
+    if (mask & VAL_COMPLEX)     strcat(buf, "complex|");
+    if (mask & VAL_BOOL)     strcat(buf, "bool|");
+    if (mask & VAL_SYM)      strcat(buf, "symbol|");
+    if (mask & VAL_STR)      strcat(buf, "string|");
+    if (mask & VAL_SEXPR)    strcat(buf, "sexpr|");
+    if (mask & VAL_NIL)      strcat(buf, "nil|");
+    if (mask & VAL_PROC)      strcat(buf, "procedure|");
+    if (mask & VAL_ERR)      strcat(buf, "error|");
+    if (mask & VAL_PAIR)     strcat(buf, "pair|");
+    if (mask & VAL_VEC)     strcat(buf, "vector|");
+    if (mask & VAL_CHAR)     strcat(buf, "char|");
+    if (mask & VAL_BYTEVEC)     strcat(buf, "byte vector|");
 
     /* remove trailing '|' */
     const size_t len = strlen(buf);
@@ -390,9 +392,9 @@ const char* lval_mask_types(const int mask) {
 }
 
 /* Return NULL if all args are valid, else return an error lval* */
-l_val* lval_check_types(const l_val* a, const int mask) {
+Cell* check_arg_types(const Cell* a, const int mask) {
     for (int i = 0; i < a->count; i++) {
-        const l_val* arg = a->cell[i];
+        const Cell* arg = a->cell[i];
 
         /* bitwise AND: if arg->type isn't in mask, it's invalid */
         if (!(arg->type & mask)) {
@@ -400,15 +402,15 @@ l_val* lval_check_types(const l_val* a, const int mask) {
             snprintf(buf, sizeof(buf),
                      "Bad type at arg %d: got %s, expected %s",
                      i+1,
-                     lval_type_name(arg->type),
-                     lval_mask_types(mask));
-            return lval_err(buf);
+                     cell_type_name(arg->type),
+                     cell_mask_types(mask));
+            return make_val_err(buf);
         }
     }
     return NULL;
 }
 
-l_val* lval_check_arity(const l_val* a, const int exact, const int min, const int max) {
+Cell* check_arg_arity(const Cell* a, const int exact, const int min, const int max) {
     const int argc = a->count;
 
     if (exact >= 0 && argc != exact) {
@@ -416,21 +418,21 @@ l_val* lval_check_arity(const l_val* a, const int exact, const int min, const in
         snprintf(buf, sizeof(buf),
                  "Arity error: expected exactly %d arg%s, got %d",
                  exact, exact == 1 ? "" : "s", argc);
-        return lval_err(buf);
+        return make_val_err(buf);
     }
     if (min >= 0 && argc < min) {
         char buf[128];
         snprintf(buf, sizeof(buf),
                  "Arity error: expected at least %d arg%s, got %d",
                  min, min == 1 ? "" : "s", argc);
-        return lval_err(buf);
+        return make_val_err(buf);
     }
     if (max >= 0 && argc > max) {
         char buf[128];
         snprintf(buf, sizeof(buf),
                  "Arity error: expected at most %d arg%s, got %d",
                  max, max == 1 ? "" : "s", argc);
-        return lval_err(buf);
+        return make_val_err(buf);
     }
     return NULL; /* all good */
 }
@@ -438,45 +440,45 @@ l_val* lval_check_arity(const l_val* a, const int exact, const int min, const in
 /* Helper functions for numeric type promotion */
 
 /* Convertors */
-l_val* int_to_rat(l_val* v) {
-    return lval_rat(v->int_n, 1);
+Cell* int_to_rat(Cell* v) {
+    return make_val_rat(v->int_v, 1);
 }
 
-l_val* int_to_float(l_val* v) {
-    return lval_float((long double)v->int_n);
+Cell* int_to_real(Cell* v) {
+    return make_val_real((long double)v->int_v);
 }
 
-l_val* rat_to_float(l_val* v) {
-    return lval_float((long double)v->num / (long double)v->den);
+Cell* rat_to_real(Cell* v) {
+    return make_val_real((long double)v->num / (long double)v->den);
 }
 
-l_val* to_complex(l_val* v) {
-    return lval_comp(lval_copy(v), lval_int(0));
+Cell* to_complex(Cell* v) {
+    return make_val_complex(cell_copy(v), make_val_int(0));
 }
 
 /* Promote two numbers to the same type, modifying lhs and rhs in-place.
    Returns 0 on success, nonzero on error. */
-void numeric_promote(l_val** lhs, l_val** rhs) {
-    l_val* a = *lhs;
-    l_val* b = *rhs;
+void numeric_promote(Cell** lhs, Cell** rhs) {
+    Cell* a = *lhs;
+    Cell* b = *rhs;
 
     /* If either is complex, promote other to complex */
-    if (a->type == LVAL_COMP || b->type == LVAL_COMP) {
-        if (a->type != LVAL_COMP) a = to_complex(a);
-        if (b->type != LVAL_COMP) b = to_complex(b);
+    if (a->type == VAL_COMPLEX || b->type == VAL_COMPLEX) {
+        if (a->type != VAL_COMPLEX) a = to_complex(a);
+        if (b->type != VAL_COMPLEX) b = to_complex(b);
     }
     /* If either is float, promote other to float */
-    else if (a->type == LVAL_FLOAT || b->type == LVAL_FLOAT) {
-        if (a->type == LVAL_INT) a = int_to_float(a);
-        else if (a->type == LVAL_RAT) a = rat_to_float(a);
+    else if (a->type == VAL_REAL || b->type == VAL_REAL) {
+        if (a->type == VAL_INT) a = int_to_real(a);
+        else if (a->type == VAL_RAT) a = rat_to_real(a);
 
-        if (b->type == LVAL_INT) b = int_to_float(b);
-        else if (b->type == LVAL_RAT) b = rat_to_float(b);
+        if (b->type == VAL_INT) b = int_to_real(b);
+        else if (b->type == VAL_RAT) b = rat_to_real(b);
     }
     /* If either is rat, promote other to rat */
-    else if (a->type == LVAL_RAT || b->type == LVAL_RAT) {
-        if (a->type == LVAL_INT) a = int_to_rat(a);
-        if (b->type == LVAL_INT) b = int_to_rat(b);
+    else if (a->type == VAL_RAT || b->type == VAL_RAT) {
+        if (a->type == VAL_INT) a = int_to_rat(a);
+        if (b->type == VAL_INT) b = int_to_rat(b);
     }
     /* else both are ints, nothing to do */
 
@@ -486,28 +488,28 @@ void numeric_promote(l_val** lhs, l_val** rhs) {
 }
 
 /* Construct an S-expression with exactly two elements */
-l_val* lval_sexpr_from2(const l_val* a, const l_val* b) {
-    l_val* v = lval_sexpr();
+Cell* make_sexpr_len2(const Cell* a, const Cell* b) {
+    Cell* v = make_val_sexpr();
     v->count = 2;
-    v->cell = malloc(sizeof(l_val*) * 2);
-    v->cell[0] = lval_copy(a);
-    v->cell[1] = lval_copy(b);
+    v->cell = malloc(sizeof(Cell*) * 2);
+    v->cell[0] = cell_copy(a);
+    v->cell[1] = cell_copy(b);
     return v;
 }
 
-l_val* lval_neg(l_val* x) {
-    lval_check_types(x, LVAL_INT|LVAL_FLOAT|LVAL_RAT|LVAL_COMP);
+Cell* negate_numeric(Cell* x) {
+    check_arg_types(x, VAL_INT|VAL_REAL|VAL_RAT|VAL_COMPLEX);
     switch (x->type) {
-        case LVAL_INT: return lval_int(-x->int_n);
-        case LVAL_RAT: return lval_rat(-x->num, x->den);
-        case LVAL_FLOAT: return lval_float(-x->float_n);
-        case LVAL_COMP:
-            return lval_comp(
-                lval_neg(x->real),
-                lval_neg(x->imag)
+        case VAL_INT: return make_val_int(-x->int_v);
+        case VAL_RAT: return make_val_rat(-x->num, x->den);
+        case VAL_REAL: return make_val_real(-x->real_v);
+        case VAL_COMPLEX:
+            return make_val_complex(
+                negate_numeric(x->real),
+                negate_numeric(x->imag)
             );
         default:
-            return lval_err("lval_neg: Oops, this isn't right!");
+            return make_val_err("lval_neg: Oops, this isn't right!");
     }
 }
 
@@ -524,8 +526,8 @@ static long int gcd_ll(long int a, long int b) {
 }
 
 /* simplify rational: reduce to the lowest terms, normalize sign */
-l_val* lval_rat_simplify(l_val* v) {
-    if (v->type != LVAL_RAT) {
+Cell* simplify_rational(Cell* v) {
+    if (v->type != VAL_RAT) {
         return v; /* nothing to do */
     }
 
