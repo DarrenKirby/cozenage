@@ -427,10 +427,10 @@ Cell* builtin_eqv(Lex* e, Cell* a) {
     if (x->type != y->type) return make_val_bool(0);
 
     switch (x->type) {
-        case VAL_INT:   return make_val_bool(x->int_v == y->int_v);
+        case VAL_INT:  return make_val_bool(x->int_v == y->int_v);
         case VAL_REAL: return make_val_bool(x->real_v == y->real_v);
-        case VAL_CHAR:  return make_val_bool(x->char_val == y->char_val);
-        default:         return make_val_bool(x == y); /* fall back to identity */
+        case VAL_CHAR: return make_val_bool(x->char_val == y->char_val);
+        default:       return make_val_bool(x == y); /* fall back to identity */
     }
 }
 
@@ -439,11 +439,11 @@ Cell* lval_equal(const Cell* x, const Cell* y) {
     if (x->type != y->type) return make_val_bool(0);
 
     switch (x->type) {
-        case VAL_INT:   return make_val_bool(x->int_v == y->int_v);
+        case VAL_INT:  return make_val_bool(x->int_v == y->int_v);
         case VAL_REAL: return make_val_bool(x->real_v == y->real_v);
-        case VAL_CHAR:  return make_val_bool(x->char_val == y->char_val);
-        case VAL_SYM:   return make_val_bool(strcmp(x->sym, y->sym) == 0);
-        case VAL_STR:   return make_val_bool(strcmp(x->str, y->str) == 0);
+        case VAL_CHAR: return make_val_bool(x->char_val == y->char_val);
+        case VAL_SYM:  return make_val_bool(strcmp(x->sym, y->sym) == 0);
+        case VAL_STR:  return make_val_bool(strcmp(x->str, y->str) == 0);
 
         case VAL_SEXPR:
         case VAL_VEC:
@@ -470,9 +470,9 @@ Cell* builtin_equal(Lex* e, Cell* a) {
     return lval_equal(a->cell[0], a->cell[1]);
 }
 
-/* --------------------------------*
- *     More numeric operations     *
- * --------------------------------*/
+/* -----------------------------------*
+ *     Generic numeric operations     *
+ * -----------------------------------*/
 
 /* 'abs' -> LVAL_INT|LVAL_FLOAT - returns the absolute value of its argument */
 Cell* builtin_abs(Lex* e, Cell* a) {
@@ -587,6 +587,210 @@ Cell* builtin_gcd(Lex* e, Cell* a) {
     return make_val_int(y);
 }
 
+/* 'max' -> */
+
+/* 'min' -> */
+
+/* -------------------------------------------------*
+ *       Type identity predicate procedures         *
+ * -------------------------------------------------*/
+
+/* 'number?' -> VAL_BOOL - returns #t if obj is numeric, else #f  */
+Cell* builtin_number_pred(Lex *e, Cell* a) {
+    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    if (err) return err;
+
+    const int mask = VAL_INT|VAL_REAL|VAL_RAT|VAL_COMPLEX;
+    if (a->cell[0]->type & mask) {
+        return make_val_bool(1);
+    }
+    return make_val_bool(0);
+}
+
+/* 'boolean?' -> LVAL_BOOL  - returns #t if obj is either #t or #f
+    and returns #f otherwise. */
+Cell* builtin_boolean_pred(Lex* e, Cell* a) {
+    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    if (err) return err;
+    return make_val_bool(a->cell[0]->type == VAL_BOOL);
+}
+
+/* 'null?' -> VAL_BOOL - return #t if obj is null, else #f */
+Cell* builtin_null_pred(Lex* e, Cell* a) {
+    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    if (err) return err;
+    return make_val_bool(a->cell[0]->type == VAL_NIL);
+}
+
+/* 'pair?' -> VAL_BOOL - return #t if obj is a pair, else #f */
+Cell* builtin_pair_pred(Lex* e, Cell* a) {
+    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    if (err) return err;
+    return make_val_bool(a->cell[0]->type == VAL_PAIR);
+}
+
+/* 'procedure?' -> VAL_BOOL - return #t if obj is a procedure, else #f */
+Cell* builtin_proc_pred(Lex* e, Cell* a) {
+    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    if (err) return err;
+    return make_val_bool(a->cell[0]->type == VAL_PROC);
+}
+
+/* 'symbol?' -> VAL_BOOL - return #t if obj is a symbol, else #f */
+Cell* builtin_sym_pred(Lex* e, Cell* a) {
+    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    if (err) return err;
+    return make_val_bool(a->cell[0]->type == VAL_SYM);
+}
+
+/* 'string?' -> VAL_BOOL - return #t if obj is a string, else #f */
+Cell* builtin_string_pred(Lex* e, Cell* a) {
+    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    if (err) return err;
+    return make_val_bool(a->cell[0]->type == VAL_STR);
+}
+
+/* 'char?' -> VAL_BOOL - return #t if obj is a char, else #f */
+Cell* builtin_char_pred(Lex* e, Cell* a) {
+    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    if (err) return err;
+    return make_val_bool(a->cell[0]->type == VAL_CHAR);
+}
+
+/* 'vector?' -> VAL_BOOL - return #t if obj is a vector, else #f */
+Cell* builtin_vector_pred(Lex* e, Cell* a) {
+    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    if (err) return err;
+    return make_val_bool(a->cell[0]->type == VAL_VEC);
+}
+
+/* 'bytevector?' -> VAL_BOOL - return #t if obj is a byte vector, else #f */
+Cell* builtin_byte_vector_pred(Lex* e, Cell* a) {
+    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    if (err) return err;
+    return make_val_bool(a->cell[0]->type == VAL_BYTEVEC);
+}
+
+/* 'port?' -> VAL_BOOL - return #t if obj is a port, else #f */
+Cell* builtin_port_pred(Lex* e, Cell* a) {
+    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    if (err) return err;
+    return make_val_bool(a->cell[0]->type == VAL_PORT);
+}
+
+/* 'eof-object?' -> VAL_BOOL - return #t if obj is an eof, else #f */
+Cell* builtin_eof_pred(Lex* e, Cell* a) {
+    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    if (err) return err;
+    return make_val_err("Not implemented yet");
+}
+
+/* ---------------------------------------*
+ *      Numeric identity procedures       *
+ * ---------------------------------------*/
+
+/* 'exact?' -> VAL_BOOL -  */
+Cell* builtin_exact(Lex *e, Cell* a) {
+    Cell* err = check_arg_types(a, VAL_INT|VAL_REAL|VAL_RAT|VAL_COMPLEX);
+    if (err) { return err; }
+    if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
+
+    if (a->cell[0]->type == VAL_COMPLEX) {
+        if (a->cell[0]->exact && a->cell[1]->exact) {
+            return make_val_bool(1);
+        }
+        return make_val_bool(0);
+    }
+    return make_val_bool(a->cell[0]->exact);
+}
+
+/* 'inexact?' -> VAL_BOOL -  */
+Cell* builtin_inexact(Lex *e, Cell* a) {
+    Cell* err = check_arg_types(a, VAL_INT|VAL_REAL|VAL_RAT|VAL_COMPLEX);
+    if (err) { return err; }
+    if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
+
+    if (a->cell[0]->type == VAL_COMPLEX) {
+        if (a->cell[0]->exact && a->cell[1]->exact) {
+            return make_val_bool(0);
+        }
+        return make_val_bool(1);
+    }
+     if (a->cell[0]->exact) {
+         return make_val_bool(0);
+     }
+    return make_val_bool(1);
+}
+
+/* NOTE: these do not yet match the Scheme standard,
+ * in terms of the 'tower of numeric types'. For now,
+ * they simply return true if the underlying Cell type
+ * matches */
+
+/* 'complex?' -> VAL_BOOL -  */
+Cell* builtin_complex(Lex *e, Cell* a) {
+    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    if (err) return err;
+
+    const int mask = VAL_COMPLEX;
+    if (a->cell[0]->type & mask) {
+        return make_val_bool(1);
+    }
+    return make_val_bool(0);
+}
+
+/* 'real?' -> VAL_BOOL -  */
+Cell* builtin_real(Lex *e, Cell* a) {
+    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    if (err) return err;
+
+    const int mask = VAL_REAL;
+    if (a->cell[0]->type & mask) {
+        return make_val_bool(1);
+    }
+    return make_val_bool(0);
+}
+
+/* 'rational?' -> VAL_BOOL -  */
+Cell* builtin_rational(Lex *e, Cell* a) {
+    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    if (err) return err;
+
+    const int mask = VAL_RAT;
+    if (a->cell[0]->type & mask) {
+        return make_val_bool(1);
+    }
+    return make_val_bool(0);
+}
+
+/* 'integer?' -> VAL_BOOL -  */
+Cell* builtin_integer(Lex *e, Cell* a) {
+    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    if (err) return err;
+
+    const int mask = VAL_INT;
+    if (a->cell[0]->type & mask) {
+        return make_val_bool(1);
+    }
+    return make_val_bool(0);
+}
+
+/* 'exact-integer?' -> VAL_BOOL -  */
+Cell* builtin_exact_integer(Lex *e, Cell* a) {
+    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    if (err) return err;
+
+    const int mask = VAL_INT;
+    if ((a->cell[0]->type & mask) && (a->cell[0]->exact)) {
+        return make_val_bool(1);
+    }
+    return make_val_bool(0);
+}
+/* 'finite?' -> VAL_BOOL -  */
+
+/* 'infinite?' -> VAL_BOOL -  */
+
+
 /* ---------------------------------------*
  *     Boolean and logical procedures     *
  * ---------------------------------------*/
@@ -597,14 +801,6 @@ Cell* builtin_not(Lex* e, Cell* a) {
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
     const int is_false = (a->cell[0]->type == VAL_BOOL && a->cell[0]->boolean == 0);
     return make_val_bool(is_false);
-}
-
-/* 'boolean?' -> LVAL_BOOL  - returns #t if obj is either #t or #f
-    and returns #f otherwise. */
-Cell* builtin_boolean_pred(Lex* e, Cell* a) {
-    Cell* err = CHECK_ARITY_EXACT(a, 1);
-    if (err) return err;
-    return make_val_bool(a->cell[0]->type == VAL_BOOL);
 }
 
 /* 'boolean' -> LVAL_BOOL - converts any value to a strict boolean */
@@ -723,7 +919,7 @@ Cell* builtin_list_length(Lex* e, Cell* a) {
     if (a->cell[0]->type == VAL_SEXPR) {
         return make_val_int(a->cell[0]->count);
     }
-    return make_val_err("Ooops, still broken\n");
+    return make_val_err("Oops, this shouldn't be\n");
 }
 
 /* 'list-ref' -> ANY - returns the list member at the zero-indexed
