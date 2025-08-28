@@ -81,7 +81,7 @@ void lex_put(Lex* e, const Cell* k, const Cell* v) {
     e->vals[e->count - 1] = cell_copy(v);
 }
 
-Cell* lval_builtin(const char* name,
+Cell* lex_register_builtin(const char* name,
                     Cell* (*func)(Lex*, Cell*)) {
     Cell* v = malloc(sizeof(Cell));
     v->type = VAL_PROC;
@@ -92,7 +92,7 @@ Cell* lval_builtin(const char* name,
 
 void lex_add_builtin(Lex* e, const char* name,
                       Cell* (*func)(Lex*, Cell*)) {
-    Cell* fn = lval_builtin(name, func);
+    Cell* fn = lex_register_builtin(name, func);
     Cell* k = make_val_sym(name);
     lex_put(e, k, fn);
     cell_delete(k);
@@ -100,30 +100,30 @@ void lex_add_builtin(Lex* e, const char* name,
 }
 
 void lex_add_builtins(Lex* e) {
-    /* basic arithmatic operators */
+    /* Basic arithmatic operators */
     lex_add_builtin(e, "+", builtin_add);
     lex_add_builtin(e, "-", builtin_sub);
     lex_add_builtin(e, "*", builtin_mul);
     lex_add_builtin(e, "/", builtin_div);
-    /* comparison operators */
+    /* Comparison operators */
     lex_add_builtin(e, "=", builtin_eq_op);
     lex_add_builtin(e, ">", builtin_gt_op);
     lex_add_builtin(e, "<", builtin_lt_op);
     lex_add_builtin(e, ">=", builtin_gte_op);
     lex_add_builtin(e, "<=", builtin_lte_op);
-    /* general numeric procedures */
+    /* Numeric predicate procedures */
     lex_add_builtin(e, "zero?", builtin_zero);
     lex_add_builtin(e, "positive?", builtin_positive);
     lex_add_builtin(e, "negative?", builtin_negative);
     lex_add_builtin(e, "odd?", builtin_odd);
     lex_add_builtin(e, "even?", builtin_even);
-    /* special forms */
+    /* Special forms */
     lex_add_builtin(e, "quote", builtin_quote);
-    /* eq?, eql?, and equal? */
+    /* Equality and equivalence comparators */
     lex_add_builtin(e, "eq?", builtin_eq);
     lex_add_builtin(e, "eqv?", builtin_eqv);
     lex_add_builtin(e, "equal?", builtin_equal);
-    /* more numerics */
+    /* Generic numeric operations */
     lex_add_builtin(e, "abs", builtin_abs);
     lex_add_builtin(e, "expt", builtin_expt);
     lex_add_builtin(e, "^", builtin_expt); /* non-standard alias for expt */
@@ -133,11 +133,31 @@ void lex_add_builtins(Lex* e) {
     lex_add_builtin(e, "quotient", builtin_quotient);
     lex_add_builtin(e, "lcm", builtin_lcm);
     lex_add_builtin(e, "gcd", builtin_gcd);
-    /* logical operators */
+    /* Type identity predicate procedures */
+    lex_add_builtin(e, "number?", builtin_number_pred);
+    lex_add_builtin(e, "boolean?", builtin_boolean_pred);
+    lex_add_builtin(e, "null?", builtin_null_pred);
+    lex_add_builtin(e, "pair?", builtin_pair_pred);
+    lex_add_builtin(e, "procedure?", builtin_proc_pred);
+    lex_add_builtin(e, "symbol?", builtin_sym_pred);
+    lex_add_builtin(e, "string?", builtin_string_pred);
+    lex_add_builtin(e, "char?", builtin_char_pred);
+    lex_add_builtin(e, "vector?", builtin_vector_pred);
+    lex_add_builtin(e, "bytevector?", builtin_byte_vector_pred);
+    lex_add_builtin(e, "port?", builtin_port_pred);
+    lex_add_builtin(e, "eof-object?", builtin_eof_pred);
+    /* Numeric identity procedures */
+    lex_add_builtin(e, "exact?", builtin_exact);
+    lex_add_builtin(e, "inexact?", builtin_inexact);
+    lex_add_builtin(e, "complex?", builtin_complex);
+    lex_add_builtin(e, "real?", builtin_real);
+    lex_add_builtin(e, "rational?", builtin_rational);
+    lex_add_builtin(e, "integer?", builtin_integer);
+    lex_add_builtin(e, "exact-integer?", builtin_exact_integer);
+    /* Boolean and logical procedures */
     lex_add_builtin(e, "not", builtin_not);
     lex_add_builtin(e, "and", builtin_and);
     lex_add_builtin(e, "or", builtin_or);
-    lex_add_builtin(e, "boolean?", builtin_boolean_pred);
     lex_add_builtin(e, "boolean", builtin_boolean);
     /* Pair/list constructors and selectors */
     lex_add_builtin(e, "cons", builtin_cons);

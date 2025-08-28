@@ -20,7 +20,7 @@ Cell* lex_get(const Lex* e, const Cell* k);
 void lex_put(Lex* e, const Cell* k, const Cell* v);
 
 /* Builtin helpers */
-Cell* lval_builtin(const char* name, Cell* (*func)(Lex*, Cell*));
+Cell* lex_register_builtin(const char* name, Cell* (*func)(Lex*, Cell*));
 void lex_add_builtin(Lex* e, const char* name, Cell* (*func)(Lex*, Cell*));
 void lex_add_builtins(Lex* e);
 
