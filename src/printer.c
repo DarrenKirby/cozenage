@@ -52,6 +52,17 @@ void print_lval(const l_val* v) {
         printf("%lld", v->int_n);
         break;
 
+    case LVAL_RAT:
+        printf("%ld/%ld", v->num, v->den);
+        break;
+
+    case LVAL_COMP:
+        print_lval(v->real);
+        printf("+");
+        print_lval(v->imag);
+        printf("i");
+        break;
+
     case LVAL_BOOL:
         printf("%s%s%s", ANSI_MAGENTA,
                v->boolean ? "#true" : "#false",
@@ -97,6 +108,7 @@ void print_lval(const l_val* v) {
     case LVAL_PAIR:
         print_pair(v);
             break;
+
     case LVAL_NIL:
         printf("()");
         break;
@@ -107,7 +119,7 @@ void print_lval(const l_val* v) {
     case LVAL_VECT:
         print_lval_seq(v, "#", '(', ')');
         break;
-    case LVAL_BYTEVEC:
+    case LVAL_BYTE:
         print_lval_seq(v, "#u8", '(', ')');
         break;
 
