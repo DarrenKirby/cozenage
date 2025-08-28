@@ -70,7 +70,7 @@ void print_cell(const Cell* v) {
         break;
 
     case VAL_ERR:
-        printf("%sError:%s %s", ANSI_RED_B, ANSI_RESET, v->str);
+        printf(" %sError:%s %s", ANSI_RED_B, ANSI_RESET, v->str);
         break;
 
     case VAL_CHAR:
@@ -124,7 +124,7 @@ void print_cell(const Cell* v) {
         break;
 
     default:
-        printf("%sError:%s unknown type: '%s%d%s'", ANSI_RED_B,
+        printf("%sError:%s print_cell: unknown type: '%s%d%s'", ANSI_RED_B,
             ANSI_RESET, ANSI_RED_B, v->type, ANSI_RESET);
     }
 }
