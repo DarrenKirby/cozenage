@@ -1,5 +1,6 @@
 /* parser.c */
 
+#include "main.h"
 #include "parser.h"
 #include "types.h"
 #include <stdio.h>
@@ -9,7 +10,6 @@
 #include <errno.h>
 #include <limits.h>
 
-#include "main.h"
 
 long long parse_int_checked(const char* str, char* errbuf, size_t errbuf_sz, int base, int* ok) {
     errno = 0;
@@ -281,7 +281,7 @@ l_val *parse_form(Parser *p) {
             const char *paren = advance(p); /* must be '(' */
             if (!paren || strcmp(paren, "(") != 0)
                 return lval_err("Expected '(' after #u8");
-            l_val *bv = lval_bytevect();
+            l_val *bv = lval_byte();
             while (peek(p) && strcmp(peek(p), ")") != 0) {
                 lval_add(bv, parse_form(p));
             }
@@ -289,7 +289,6 @@ l_val *parse_form(Parser *p) {
             advance(p); /* skip ')' */
             return bv;
         }
-
         return lval_err("Invalid token");
     }
 
@@ -312,7 +311,7 @@ l_val *parse_form(Parser *p) {
 
 l_val* lval_atom_from_token(const char *tok) {
     if (!tok) return lval_err("NULL token");
-    char errbuf[128] = {0};
+    char err_buf[128] = {0};
     const size_t len = strlen(tok);
 
     /* Boolean */
@@ -380,12 +379,34 @@ l_val* lval_atom_from_token(const char *tok) {
     }
 
     if (tok[0] == '#' && strchr("bodx", tok[1]) || /* #b101, #o666, #d123, #xfff */
-        isdigit(tok[0]) ||                           /* 123 */
+        isdigit(tok[0]) ||                           /* 123, 5/4 */
         tok[0] == '+' && isdigit(tok[1]) ||          /* +123 */
-        tok[0] == '-' && isdigit(tok[1])             /* -123 */
+        tok[0] == '-' && isdigit(tok[1])             /* -123, -5/4 */
         ) {
+        int ok = 0; /* error flag */
+
+        /* Rational numbers */
+        if (strchr(tok, '/')) {
+            char *p, *to_free;
+            p = to_free = strdup(tok);
+
+            const char *tok1 = strsep(&p, "/");
+            const char *tok2 = strsep(&p, "/");
+
+            if (p != NULL) {
+                snprintf(err_buf, sizeof(err_buf), "Invalid token: '%s%s%s'",
+                    ANSI_RED_B, tok, ANSI_RESET);
+                return lval_err(err_buf);
+            }
+
+            const long long n = parse_int_checked(tok1, err_buf, sizeof(err_buf), 10, &ok);
+            const long long d = parse_int_checked(tok2, err_buf, sizeof(err_buf), 10, &ok);
+
+            free(to_free);
+            return lval_rat(n, d);
+        }
+
         /* Numeric constants with optional base prefix */
-        int ok = 0;
         const char* numstart = tok;
         int base = 10;
 
@@ -403,25 +424,25 @@ l_val* lval_atom_from_token(const char *tok) {
 
         if (base != 10 || !strchr(tok, '.')) {
             /* Try integer parsing */
-            const long long i = parse_int_checked(numstart, errbuf, sizeof(errbuf), base, &ok);
+            const long long i = parse_int_checked(numstart, err_buf, sizeof(err_buf), base, &ok);
             if (ok) return lval_int(i);
         }
 
         /* If no base prefix or decimal point detected, try float */
         if (base == 10) {
-            const long double f = parse_float_checked(numstart, errbuf, sizeof(errbuf), &ok);
+            const long double f = parse_float_checked(numstart, err_buf, sizeof(err_buf), &ok);
             if (ok) return lval_float(f);
         }
 
         /* If parsing fails but there is a numeric-like string, return error */
-        if (!ok) return lval_err(errbuf);
+        if (!ok) return lval_err(err_buf);
     }
 
     /* reject all other hash prefixes and single '#' */
     if (tok[0] == '#') {
-        snprintf(errbuf, sizeof(errbuf), "Invalid token: '%s%s%s'",
+        snprintf(err_buf, sizeof(err_buf), "Invalid token: '%s%s%s'",
             ANSI_RED_B, tok, ANSI_RESET);
-        return lval_err(errbuf);
+        return lval_err(err_buf);
     }
 
     /* Otherwise, treat as symbol */
@@ -433,76 +454,6 @@ l_val* lval_atom_from_token(const char *tok) {
    - character literals starting with "#\..." (including #\()/#\)),
    - line comments starting with ';' to end-of-line.
 */
-// int paren_balance(const char *s) {
-//     int bal = 0;
-//     int in_str = 0;     /* inside "..." */
-//     int esc = 0;        /* previous char was backslash inside string */
-//     int in_comment = 0; /* after ';' until '\n' */
-//
-//     while (*s) {
-//         char c = *s;
-//
-//         /* Inside a line comment: ignore until newline */
-//         if (in_comment) {
-//             if (c == '\n') in_comment = 0;
-//             s++;
-//             continue;
-//         }
-//
-//         /* Inside a string: handle escapes and closing quote */
-//         if (in_str) {
-//             if (esc) {
-//                 esc = 0;           /* escape just consumed this char */
-//             } else if (c == '\\') {
-//                 esc = 1;           /* next char is escaped */
-//             } else if (c == '"') {
-//                 in_str = 0;        /* end of string */
-//             }
-//             s++;
-//             continue;
-//         }
-//
-//         /* Not in string/comment: handle starts of those states */
-//         if (c == ';') {            /* line comment */
-//             in_comment = 1;
-//             s++;
-//             continue;
-//         }
-//         if (c == '"') {            /* string start */
-//             in_str = 1;
-//             s++;
-//             continue;
-//         }
-//
-//         /* Character literal beginning: "#\..." */
-//         if (c == '#' && s[1] == '\\') {
-//             s += 2; /* jump to first char after "#\" */
-//
-//             if (*s == '\0') break;
-//
-//             if (*s == '(' || *s == ')') {
-//                 /* Single-char paren literal (#\() or (#\)) — consume it,
-//                    but do NOT count toward balance. */
-//                 s++;
-//             } else {
-//                 /* Named or multi-byte char: skip until delimiter,
-//                    but DO NOT consume a following '(' or ')' here. */
-//                 while (*s && !isspace((unsigned char)*s) && *s != '(' && *s != ')')
-//                     s++;
-//             }
-//             continue;
-//         }
-//
-//         /* Count parens normally */
-//         if (c == '(') bal++;
-//         else if (c == ')') bal--;
-//
-//         s++;
-//     }
-//
-//     return bal;
-// }
-
 int paren_balance(const char *s, int *in_string) {
     int balance = 0;
     int escaped = 0;
