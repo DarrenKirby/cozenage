@@ -21,6 +21,7 @@ static void sigint_handler(const int sig) {
     printf("\n");
 }
 
+#ifdef __linux__
 /* Callback for Ctrl-G binding */
 int discard_continuation(const int count, const int key) {
     (void)count; (void)key;
@@ -29,6 +30,7 @@ int discard_continuation(const int count, const int key) {
     rl_done = 1;             /* break out of readline() */
     return 0;
 }
+#endif
 
 static char* read_multiline(const char* prompt, const char* cont_prompt) {
     char *line = NULL;
@@ -133,13 +135,13 @@ l_val* coz_eval(l_env* e, l_val* v) {
         case LVAL_INT:
         case LVAL_FLOAT:
         case LVAL_RAT:
-        case LVAL_COMPLEX:
+        case LVAL_COMP:
         case LVAL_BOOL:
         case LVAL_CHAR:
         case LVAL_STR:
         /* case LVAL_PAIR: is not necessary - no concept of 'pair literal' */
         case LVAL_VECT:
-        case LVAL_BYTEVEC:
+        case LVAL_BYTE:
         case LVAL_NIL:
         /* Functions, ports, continuations, and errors are returned as-is */
         case LVAL_FUN:
@@ -233,7 +235,9 @@ int main(int argc, char** argv) {
     printf("  Press <Ctrl+d> or type 'exit' to quit\n\n");
 
     /* Set up keybinding and signal for Ctrl-G and CTRL-C */
+#ifdef __linux__
     rl_bind_key('\007', discard_continuation);  /* 7 = Ctrl-G */
+#endif
     signal(SIGINT, sigint_handler);
 
     /* Run until we don't */
