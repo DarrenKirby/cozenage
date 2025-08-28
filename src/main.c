@@ -180,6 +180,9 @@ Cell* eval_sexpr(Lex* e, Cell* v) {
     /* Otherwise, evaluate first element normally (should become a function) */
     Cell* f = coz_eval(e, first);
     if (f->type != VAL_PROC) {
+        printf(ANSI_RED_B);
+        print_cell(f);
+        printf(ANSI_RESET);
         cell_delete(f);
         cell_delete(v);
         return make_val_err("S-expression does not start with a procedure");
