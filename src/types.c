@@ -241,7 +241,7 @@ void cell_delete(Cell* v) {
         break;
 
     default:
-        fprintf(stderr, "lval_del: unknown type %d\n", v->type);
+        fprintf(stderr, "cell_delete: unknown type %d\n", v->type);
         break;
     }
     free(v);
@@ -253,7 +253,7 @@ Cell* cell_copy(const Cell* v) {
 
     Cell* copy = calloc(1, sizeof(Cell));
     if (!copy) {
-        fprintf(stderr, "ENOMEM: lval_copy failed\n");
+        fprintf(stderr, "ENOMEM: cell_copy failed\n");
         exit(EXIT_FAILURE);
     }
 
