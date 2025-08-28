@@ -378,12 +378,41 @@ Cell* parse_atom(const char *tok) {
         return make_val_str(str);
     }
 
-    if (tok[0] == '#' && strchr("bodx", tok[1]) || /* #b101, #o666, #d123, #xfff */
-        isdigit(tok[0]) ||                           /* 123, 5/4 */
-        tok[0] == '+' && isdigit(tok[1]) ||          /* +123 */
-        tok[0] == '-' && isdigit(tok[1])             /* -123, -5/4 */
+    if (tok[0] == '#' && strchr("bodx", tok[1]) || /* #b101, #o666, #d123, #x0ff */
+        isdigit(tok[0]) ||                           /*  123,  5/4,  123+23i */
+        tok[0] == '+' && isdigit(tok[1]) ||          /* +123, +5/4, +123+23i */
+        tok[0] == '-' && isdigit(tok[1])             /* -123, -5/4, -123+23i */
         ) {
         int ok = 0; /* error flag */
+        const char* num_start = tok;
+
+        /* complex numbers */
+        if (strchr(tok, 'i') && strchr(tok, '+')) {
+            char *p;
+            p = strdup(tok);
+
+            if (tok[len-1] != 'i') {
+                snprintf(err_buf, sizeof(err_buf), "Invalid token: '%s%s%s'",
+                    ANSI_RED_B, tok, ANSI_RESET);
+                return make_val_err(err_buf);
+            }
+            /* remove trailing 'i' */
+            p[len-1] = '\0';
+            if (tok[0] == '+') {
+                /* replace any leading '+' with a zero */
+                p[0] = '0';
+            }
+            const char *tok1 = strsep(&p, "+");
+            const char *tok2 = strsep(&p, "+");
+
+            /* recursively parse the real and imaginary parts */
+            Cell* r = parse_atom(tok1);
+            Cell* i = parse_atom(tok2);
+
+            Cell* result = make_val_complex(r, i);
+            free(p);
+            return result;
+        }
 
         /* Rational numbers */
         if (strchr(tok, '/')) {
@@ -407,15 +436,14 @@ Cell* parse_atom(const char *tok) {
         }
 
         /* Numeric constants with optional base prefix */
-        const char* numstart = tok;
         int base = 10;
 
         if (tok[0] == '#' && len > 2) {
             switch (tok[1]) {
-            case 'b': base = 2; numstart = tok + 2; break;
-            case 'o': base = 8; numstart = tok + 2; break;
-            case 'd': base = 10; numstart = tok + 2; break;
-            case 'x': base = 16; numstart = tok + 2; break;
+            case 'b': base = 2; num_start = tok + 2; break;
+            case 'o': base = 8; num_start = tok + 2; break;
+            case 'd': base = 10; num_start = tok + 2; break;
+            case 'x': base = 16; num_start = tok + 2; break;
                 /* this will never run, but the linter
                  * complains about no default case */
             default: ;
@@ -424,13 +452,13 @@ Cell* parse_atom(const char *tok) {
 
         if (base != 10 || !strchr(tok, '.')) {
             /* Try integer parsing */
-            const long long i = parse_int_checked(numstart, err_buf, sizeof(err_buf), base, &ok);
+            const long long i = parse_int_checked(num_start, err_buf, sizeof(err_buf), base, &ok);
             if (ok) return make_val_int(i);
         }
 
         /* If no base prefix or decimal point detected, try float */
         if (base == 10) {
-            const long double f = parse_float_checked(numstart, err_buf, sizeof(err_buf), &ok);
+            const long double f = parse_float_checked(num_start, err_buf, sizeof(err_buf), &ok);
             if (ok) return make_val_real(f);
         }
 
