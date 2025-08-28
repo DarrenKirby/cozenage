@@ -133,6 +133,8 @@ void lenv_add_builtins(l_env* e) {
     lenv_add_builtin(e, "modulo", builtin_modulo);
     lenv_add_builtin(e, "%", builtin_modulo); /* non-standard alias for modulo */
     lenv_add_builtin(e, "quotient", builtin_quotient);
+    lenv_add_builtin(e, "lcm", builtin_lcm);
+    lenv_add_builtin(e, "gcd", builtin_gcd);
     /* logical operators */
     lenv_add_builtin(e, "not", builtin_not);
     lenv_add_builtin(e, "and", builtin_and);
