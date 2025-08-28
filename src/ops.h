@@ -32,6 +32,9 @@ l_val* builtin_modulo(l_env* e, l_val* a);
 l_val* builtin_quotient(l_env* e, l_val* a);
 l_val* builtin_remainder(l_env* e, l_val* a);
 
+l_val* builtin_lcm(l_env* e, l_val* a);
+l_val* builtin_gcd(l_env* e, l_val* a);
+
 l_val* builtin_not(l_env* e, l_val* a);
 l_val* builtin_boolean_pred(l_env* e, l_val* a);
 l_val* builtin_boolean(l_env* e, l_val* a);

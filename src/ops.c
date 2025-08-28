@@ -39,79 +39,228 @@ l_val* make_lval_from_double(const long double x) {
  *     Basic arithmetic operators     *
  * -----------------------------------*/
 
-/* '+' -> LVAL_INT|LVAL_FLOAT - returns the sum of its arguments */
+/* '+' -> LVAL_INT|LVAL_FLOAT|LVAL_RAT|LVAL_COMP - returns the sum of its arguments */
 l_val* builtin_add(l_env* e, l_val* a) {
-    l_val* err = lval_check_types(a, LVAL_INT | LVAL_FLOAT);
+    l_val* err = lval_check_types(a, LVAL_INT|LVAL_FLOAT|LVAL_RAT|LVAL_COMP);
     if (err) { return err; }
     /* identity law logic */
-    if (a->count == 0) {
-        return lval_int(0);
-    }
-    long double result = lval_to_ld(a->cell[0]);
+    if (a->count == 0) return lval_int(0);
+    if (a->count == 1) return lval_copy(a->cell[0]);
 
-    /* more identity law logic */
-    if (a->count == 1) {
-        return make_lval_from_double(result);
-    }
+    l_val* result = lval_copy(a->cell[0]);
 
     for (int i = 1; i < a->count; i++) {
-        result += LVAL_AS_NUM(a->cell[i]);
+        l_val* rhs = lval_copy(a->cell[i]);
+        numeric_promote(&result, &rhs);
+
+        switch (result->type) {
+            case LVAL_INT:
+                result->int_n += rhs->int_n;
+                break;
+            case LVAL_RAT:
+                /* (a/b) + (c/d) = (ad + bc)/bd */
+                result->num = result->num * rhs->den + rhs->num * result->den;
+                result->den = result->den * rhs->den;
+                result = lval_rat_simplify(result);
+                break;
+            case LVAL_FLOAT:
+                result->float_n += rhs->float_n;
+                break;
+            case LVAL_COMP:
+                result->real = builtin_add(e, lval_sexpr_from2(result->real, rhs->real));
+                result->imag = builtin_add(e, lval_sexpr_from2(result->imag, rhs->imag));
+                break;
+            default:
+                return lval_err("<builtin '+'> Oops, this shouldn't have happened.");
+        }
+        result->exact = result->exact && rhs->exact;
+        lval_del(rhs); /* free temp */
     }
-    return make_lval_from_double(result);
+    return result;
 }
 
-/* '-' -> LVAL_INT|LVAL_FLOAT - returns the difference of its arguments */
+/* '-' -> LVAL_INT|LVAL_FLOAT|LVAL_RAT|LVAL_COMP - returns the difference of its arguments */
 l_val* builtin_sub(l_env* e, l_val* a) {
-    l_val* err = lval_check_types(a, LVAL_INT | LVAL_FLOAT);
+    l_val* err = lval_check_types(a, LVAL_INT|LVAL_FLOAT|LVAL_RAT|LVAL_COMP);
     if (err) { return err; }
     if ((err = CHECK_ARITY_MIN(a, 1))) { return err; }
-    long double result = lval_to_ld(a->cell[0]);
+
     /* Handle unary minus */
     if (a->count == 1) {
-        result = -result;
-    } else {
-        for (int i = 1; i < a->count; i++) {
-            result -= LVAL_AS_NUM(a->cell[i]);
-        }
+        return lval_neg(a->cell[0]);
     }
-    return make_lval_from_double(result);
+    /* multiple args */
+    l_val* result = lval_copy(a->cell[0]);
+
+    for (int i = 1; i < a->count; i++) {
+        l_val* rhs = lval_copy(a->cell[i]);
+        numeric_promote(&result, &rhs);
+
+        switch (result->type) {
+            case LVAL_INT:
+                result->int_n -= rhs->int_n;
+                break;
+            case LVAL_RAT:
+                /* (a/b) - (c/d) = (ad - bc)/bd */
+                result->num = result->num * rhs->den - rhs->num * result->den;
+                result->den = result->den * rhs->den;
+                result = lval_rat_simplify(result);
+                break;
+            case LVAL_FLOAT:
+                result->float_n -= rhs->float_n;
+                break;
+            case LVAL_COMP:
+                result->real = builtin_sub(e, lval_sexpr_from2(result->real, rhs->real));
+                result->imag = builtin_sub(e, lval_sexpr_from2(result->imag, rhs->imag));
+                break;
+            default:
+                return lval_err("<builtin '-'> Oops, this shouldn't have happened.");
+        }
+        result->exact = result->exact && rhs->exact;
+        lval_del(rhs); /* free temp */
+    }
+    return result;
 }
 
-/* '*' -> LVAL_INT|LVAL_FLOAT - returns the product of its arguments */
+/* '*' -> LVAL_INT|LVAL_FLOAT|LVAL_RAT|LVAL_COMP - returns the product of its arguments */
 l_val* builtin_mul(l_env* e, l_val* a) {
-    l_val* err = lval_check_types(a, LVAL_INT | LVAL_FLOAT);
+    l_val* err = lval_check_types(a, LVAL_INT|LVAL_FLOAT|LVAL_RAT|LVAL_COMP);
     if (err) { return err; }
     /* identity law logic */
-    if (a->count == 0) {
-        return lval_int(1);
-    }
-    long double result = lval_to_ld(a->cell[0]);
-    /* more identity law logic */
-    if (a->count == 1) {
-        return make_lval_from_double(result);
-    }
+    if (a->count == 0) return lval_int(1);
+    if (a->count == 1) return lval_copy(a->cell[0]);
+
+    l_val* result = lval_copy(a->cell[0]);
 
     for (int i = 1; i < a->count; i++) {
-        result *= LVAL_AS_NUM(a->cell[i]);
+        l_val* rhs = lval_copy(a->cell[i]);
+        numeric_promote(&result, &rhs);
+
+        switch (result->type) {
+            case LVAL_INT:
+                result->int_n *= rhs->int_n;
+                break;
+            case LVAL_RAT:
+                /* (a/b) * (c/d) = (a * c)/(b * d) */
+                result->num = result->num * rhs->num;
+                result->den = result->den * rhs->den;
+                result = lval_rat_simplify(result);
+                break;
+            case LVAL_FLOAT:
+                result->float_n *= rhs->float_n;
+                break;
+            case LVAL_COMP:
+                result->real = builtin_mul(e, lval_sexpr_from2(result->real, rhs->real));
+                result->imag = builtin_mul(e, lval_sexpr_from2(result->imag, rhs->imag));
+                break;
+            default:
+                return lval_err("<builtin '*'> Oops, this shouldn't have happened.");
+        }
+        result->exact = result->exact && rhs->exact;
+        lval_del(rhs); /* free temp */
     }
-    return make_lval_from_double(result);
+    return result;
 }
 
-/* '+' -> LVAL_INT|LVAL_FLOAT - returns the quotient of its arguments */
-/* TODO: implement unary division reciprocal ie: (/ 5) -> 1/5 */
+/* '+' -> LVAL_INT|LVAL_FLOAT|LVAL_RAT|LVAL_COMP - returns the quotient of its arguments */
 l_val* builtin_div(l_env* e, l_val* a) {
-    l_val* err = lval_check_types(a, LVAL_INT | LVAL_FLOAT);
+    l_val* err = lval_check_types(a, LVAL_INT|LVAL_FLOAT|LVAL_RAT|LVAL_COMP);
     if (err) { return err; }
     if ((err = CHECK_ARITY_MIN(a, 1))) { return err; }
-    long double result = lval_to_ld(a->cell[0]);
-    for (int i = 1; i < a->count; i++) {
-        const long double intermediate = lval_to_ld(a->cell[i]);
-        if (intermediate == 0) {
-            return lval_err("Division by zero");
+
+    /* unary division reciprocal/inverse */
+    if (a->count == 1) {
+        if (a->cell[0]->type == LVAL_INT) {
+            return lval_rat(1, a->cell[0]->int_n);
         }
-        result /= intermediate;
+        if (a->cell[0]->type == LVAL_RAT) {
+            const long int n = a->cell[0]->num;
+            const long int d = a->cell[0]->den;
+            return lval_rat(d, n);
+        }
+        if (a->cell[0]->type == LVAL_FLOAT) {
+            return lval_float(1.0L / a->cell[0]->float_n);
+        }
+        if (a->cell[0]->type == LVAL_COMP) {
+            const l_val* real = a->cell[0]->real;
+            const l_val* imag = a->cell[0]->imag;
+
+            /* denominator = real^2 + imag^2 */
+            const l_val* real_sq = builtin_mul(e, lval_sexpr_from2(lval_copy(real), lval_copy(real)));
+            const l_val* imag_sq = builtin_mul(e, lval_sexpr_from2(lval_copy(imag), lval_copy(imag)));
+            const l_val* denominator = builtin_add(e, lval_sexpr_from2(real_sq, imag_sq));
+
+            /* new real = real / denominator */
+            l_val* new_real = builtin_div(e, lval_sexpr_from2(lval_copy(real), lval_copy(denominator)));
+            /* new imag = -imag / denominator */
+            const l_val* neg_imag = lval_neg(lval_copy(imag));
+            l_val* new_imag = builtin_div(e, lval_sexpr_from2(neg_imag, denominator));
+
+            return lval_comp(new_real, new_imag);
+        }
     }
-    return make_lval_from_double(result);
+    /* multiple args */
+    l_val* result = lval_copy(a->cell[0]);
+
+    for (int i = 1; i < a->count; i++) {
+        l_val* rhs = lval_copy(a->cell[i]);
+        numeric_promote(&result, &rhs);
+
+        switch (result->type) {
+            case LVAL_INT:
+                if (rhs->int_n == 0) {
+                    lval_del(rhs);
+                    return lval_err("Division by zero.");
+                }
+                result->int_n /= rhs->int_n;
+                break;
+            case LVAL_RAT:
+                /* (a/b) / (c/d) = (a * d)/(b * c)   */
+                result->num = result->num * rhs->den;
+                result->den = result->den * rhs->num;
+                result = lval_rat_simplify(result);
+                break;
+            case LVAL_FLOAT:
+                if (rhs->float_n == 0) {
+                    lval_del(rhs);
+                    return lval_err("Division by zero.");
+                }
+                result->float_n /= rhs->float_n;
+                break;
+            case LVAL_COMP: {
+                /* result = (a + bi), rhs = (c + di) */
+                const l_val* a_real = result->real;
+                const l_val* a_imag = result->imag;
+                const l_val* b_real = rhs->real;
+                const l_val* b_imag = rhs->imag;
+
+                /* denominator = c^2 + d^2 */
+                const l_val* b_real_sq = builtin_mul(e, lval_sexpr_from2(lval_copy(b_real), lval_copy(b_real)));
+                const l_val* b_imag_sq = builtin_mul(e, lval_sexpr_from2(lval_copy(b_imag), lval_copy(b_imag)));
+                const l_val* denominator = builtin_add(e, lval_sexpr_from2(b_real_sq, b_imag_sq));
+
+                /* numerator real = (ac + bd) */
+                const l_val* ac = builtin_mul(e, lval_sexpr_from2(lval_copy(a_real), lval_copy(b_real)));
+                const l_val* bd = builtin_mul(e, lval_sexpr_from2(lval_copy(a_imag), lval_copy(b_imag)));
+                const l_val* num_real = builtin_add(e, lval_sexpr_from2(ac, bd));
+
+                /* numerator imag = (bc - ad) */
+                const l_val* bc = builtin_mul(e, lval_sexpr_from2(lval_copy(a_imag), lval_copy(b_real)));
+                const l_val* ad = builtin_mul(e, lval_sexpr_from2(lval_copy(a_real), lval_copy(b_imag)));
+                const l_val* num_imag = builtin_sub(e, lval_sexpr_from2(bc, ad));
+
+                /* divide both by denominator */
+                result->real = builtin_div(e, lval_sexpr_from2(num_real, lval_copy(denominator)));
+                result->imag = builtin_div(e, lval_sexpr_from2(num_imag, denominator));
+                break;
+            }
+            default:
+                return lval_err("<builtin '/'> Oops, this shouldn't have happened.");
+        }
+        result->exact = result->exact && rhs->exact;
+        lval_del(rhs); /* free temp */
+    }
+    return result;
 }
 
 /* -----------------------------*
@@ -245,7 +394,7 @@ l_val* builtin_quote(l_env* e, l_val* a) {
 }
 
 /* ------------------------------------------*
-*    Equality and equivalence comparitors    *
+*    Equality and equivalence comparators    *
 * -------------------------------------------*/
 
 /* 'eq?' -> LVAL_BOOL - Tests whether its two arguments are the exact same object
@@ -397,6 +546,45 @@ l_val* builtin_remainder(l_env* e, l_val* a) {
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 2))) { return err; }
     return lval_int(a->cell[0]->int_n % a->cell[1]->int_n);
+}
+
+l_val* builtin_lcm(l_env* e, l_val* a) {
+    l_val* err = lval_check_types(a, LVAL_INT);
+    if (err) { return err; }
+    if ((err = CHECK_ARITY_EXACT(a, 2))) { return err; }
+
+    const long long int x = a->cell[0]->int_n;
+    const long long int y = a->cell[1]->int_n;
+
+    l_val* gcd = builtin_gcd(e, lval_sexpr_from2(lval_int(x), lval_int(y)));
+    long long int tmp = x * y / gcd->int_n;
+    /* return only positive value */
+    if (tmp < 0) {
+        tmp = -tmp;
+    }
+    lval_del(gcd);
+    return lval_int(tmp);
+}
+
+l_val* builtin_gcd(l_env* e, l_val* a) {
+    l_val* err = lval_check_types(a, LVAL_INT);
+    if (err) return err;
+    if ((err = CHECK_ARITY_EXACT(a, 2))) return err;
+
+    long long x = a->cell[0]->int_n;
+    long long y = a->cell[1]->int_n;
+
+    while (x != 0) {
+        const long long tmp = x;
+        x = y % x;
+        y = tmp;
+    }
+
+    /* return only positive value */
+    if (y < 0) {
+        y = -y;
+    }
+    return lval_int(y);
 }
 
 /* ---------------------------------------*
@@ -575,6 +763,7 @@ l_val* builtin_list_ref(l_env* e, l_val* a) {
 /*------------------------------------------------------------*
  *     Byte vector constructors, selectors, and procedures    *
  * -----------------------------------------------------------*/
+
 
 /*-------------------------------------------------------*
  *     String constructors, selectors, and procedures    *
