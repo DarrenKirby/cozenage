@@ -6,6 +6,7 @@
 #include <string.h>
 #include <math.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "printer.h"
 
@@ -17,7 +18,7 @@ int lval_is_num(const Cell* v) {
 
 /* Convert any l_val number to long double for calculation */
 long double lval_to_ld(const Cell* v) {
-    return (v->type == VAL_INT) ? (long double)v->int_v : v->real_v;
+    return (v->type == VAL_INT) ? (long double)v->i_val : v->r_val;
 }
 
 /* Helper which determines if there is a meaningful fractional portion
@@ -55,7 +56,7 @@ Cell* builtin_add(Lex* e, Cell* a) {
 
         switch (result->type) {
             case VAL_INT:
-                result->int_v += rhs->int_v;
+                result->i_val += rhs->i_val;
                 break;
             case VAL_RAT:
                 /* (a/b) + (c/d) = (ad + bc)/bd */
@@ -64,7 +65,7 @@ Cell* builtin_add(Lex* e, Cell* a) {
                 result = simplify_rational(result);
                 break;
             case VAL_REAL:
-                result->real_v += rhs->real_v;
+                result->r_val += rhs->r_val;
                 break;
             case VAL_COMPLEX:
                 result->real = builtin_add(e, make_sexpr_len2(result->real, rhs->real));
@@ -98,7 +99,7 @@ Cell* builtin_sub(Lex* e, Cell* a) {
 
         switch (result->type) {
             case VAL_INT:
-                result->int_v -= rhs->int_v;
+                result->i_val -= rhs->i_val;
                 break;
             case VAL_RAT:
                 /* (a/b) - (c/d) = (ad - bc)/bd */
@@ -107,7 +108,7 @@ Cell* builtin_sub(Lex* e, Cell* a) {
                 result = simplify_rational(result);
                 break;
             case VAL_REAL:
-                result->real_v -= rhs->real_v;
+                result->r_val -= rhs->r_val;
                 break;
             case VAL_COMPLEX:
                 result->real = builtin_sub(e, make_sexpr_len2(result->real, rhs->real));
@@ -138,7 +139,7 @@ Cell* builtin_mul(Lex* e, Cell* a) {
 
         switch (result->type) {
             case VAL_INT:
-                result->int_v *= rhs->int_v;
+                result->i_val *= rhs->i_val;
                 break;
             case VAL_RAT:
                 /* (a/b) * (c/d) = (a * c)/(b * d) */
@@ -147,7 +148,7 @@ Cell* builtin_mul(Lex* e, Cell* a) {
                 result = simplify_rational(result);
                 break;
             case VAL_REAL:
-                result->real_v *= rhs->real_v;
+                result->r_val *= rhs->r_val;
                 break;
             case VAL_COMPLEX:
                 result->real = builtin_mul(e, make_sexpr_len2(result->real, rhs->real));
@@ -162,7 +163,7 @@ Cell* builtin_mul(Lex* e, Cell* a) {
     return result;
 }
 
-/* '+' -> LVAL_INT|LVAL_FLOAT|LVAL_RAT|LVAL_COMP - returns the quotient of its arguments */
+/* '+' -> VAL_INT|VAL_REAL|VAL_RAT|VAL_COMP - returns the quotient of its arguments */
 Cell* builtin_div(Lex* e, Cell* a) {
     Cell* err = check_arg_types(a, VAL_INT|VAL_REAL|VAL_RAT|VAL_COMPLEX);
     if (err) { return err; }
@@ -171,7 +172,7 @@ Cell* builtin_div(Lex* e, Cell* a) {
     /* unary division reciprocal/inverse */
     if (a->count == 1) {
         if (a->cell[0]->type == VAL_INT) {
-            return make_val_rat(1, a->cell[0]->int_v);
+            return make_val_rat(1, a->cell[0]->i_val);
         }
         if (a->cell[0]->type == VAL_RAT) {
             const long int n = a->cell[0]->num;
@@ -179,7 +180,7 @@ Cell* builtin_div(Lex* e, Cell* a) {
             return make_val_rat(d, n);
         }
         if (a->cell[0]->type == VAL_REAL) {
-            return make_val_real(1.0L / a->cell[0]->real_v);
+            return make_val_real(1.0L / a->cell[0]->r_val);
         }
         if (a->cell[0]->type == VAL_COMPLEX) {
             const Cell* real = a->cell[0]->real;
@@ -208,11 +209,11 @@ Cell* builtin_div(Lex* e, Cell* a) {
 
         switch (result->type) {
         case VAL_INT:
-            if (rhs->int_v == 0) {
+            if (rhs->i_val == 0) {
                 cell_delete(rhs);
                 return make_val_err("Division by zero.");
             }
-            result->int_v /= rhs->int_v;
+            result->i_val /= rhs->i_val;
             break;
         case VAL_RAT:
             /* (a/b) / (c/d) = (a * d)/(b * c)   */
@@ -221,11 +222,11 @@ Cell* builtin_div(Lex* e, Cell* a) {
             result = simplify_rational(result);
             break;
         case VAL_REAL:
-            if (rhs->real_v == 0) {
+            if (rhs->r_val == 0) {
                 cell_delete(rhs);
                 return make_val_err("Division by zero.");
             }
-            result->real_v /= rhs->real_v;
+            result->r_val /= rhs->r_val;
             break;
         case VAL_COMPLEX: {
             /* result = (a + bi), rhs = (c + di) */
@@ -267,60 +268,95 @@ Cell* builtin_div(Lex* e, Cell* a) {
  *     Comparison operators     *
  * -----------------------------*/
 
-/* '==' -> LVAL_BOOL - returns true if all arguments are equal. */
+/* Helper for '=' which recursively compares complex numbers */
+static int complex_eq_op(Lex* e, const Cell* lhs, const Cell* rhs) {
+    Cell* real_result = builtin_eq_op(e, make_sexpr_len2(lhs->real, rhs->real));
+    Cell* imag_result = builtin_eq_op(e, make_sexpr_len2(lhs->imag, rhs->imag));
+
+    if (real_result->b_val && imag_result->b_val) {
+        cell_delete(real_result);
+        cell_delete(imag_result);
+        return 1;
+    }
+    cell_delete(real_result);
+    cell_delete(imag_result);
+    return 0;
+}
+
+/* '=' -> VAL_BOOL - returns true if all arguments are equal. */
 Cell* builtin_eq_op(Lex* e, Cell* a) {
-    Cell* err = check_arg_types(a, VAL_INT | VAL_REAL);
+    Cell* err = check_arg_types(a, VAL_INT|VAL_REAL|VAL_RAT|VAL_COMPLEX);
     if (err) { return err; }
     for (int i = 0; i < a->count - 1; i++) {
-        if (!(LVAL_AS_NUM(a->cell[i]) == LVAL_AS_NUM(a->cell[i+1]))) {
-            return make_val_bool(0);  /* false */
+        int the_same = 0;
+        Cell* lhs = cell_copy(a->cell[i]);
+        Cell* rhs = cell_copy(a->cell[i+1]);
+        numeric_promote(&lhs, &rhs);
+
+        switch (lhs->type) {
+            case VAL_INT:
+                if (lhs->i_val == rhs->i_val) { the_same = 1; }
+                break;
+            case VAL_RAT:
+                if ((lhs->den == rhs->den) && (lhs->num == rhs->num)) { the_same = 1; }
+                break;
+            case VAL_REAL:
+                if (lhs->r_val == rhs->r_val) { the_same = 1; }
+                break;
+            case VAL_COMPLEX:
+                if (complex_eq_op(e, lhs, rhs)) { the_same = 1; }
+                break;
+            default: ; /* this will never run as the types are pre-checked, but without the linter complains */
+        }
+        if (!the_same) {
+            return make_val_bool(0);
         }
     }
     return make_val_bool(1);
 }
 
-/* '>' -> LVAL_BOOL - returns true if each argument is greater than the one that follows. */
+/* '>' -> VAL_BOOL - returns true if each argument is greater than the one that follows. */
 Cell* builtin_gt_op(Lex* e, Cell* a) {
-    Cell* err = check_arg_types(a, VAL_INT | VAL_REAL);
+    Cell* err = check_arg_types(a, VAL_INT|VAL_REAL|VAL_RAT);
     if (err) { return err; }
     for (int i = 0; i < a->count - 1; i++) {
-        if (!(LVAL_AS_NUM(a->cell[i]) > LVAL_AS_NUM(a->cell[i+1]))) {
+        if (!(VAL_AS_NUM(a->cell[i]) > VAL_AS_NUM(a->cell[i+1]))) {
             return make_val_bool(0);  /* false */
         }
     }
     return make_val_bool(1);
 }
 
-/* '<' -> LVAL_BOOL - returns true if each argument is less than the one that follows. */
+/* '<' -> VAL_BOOL - returns true if each argument is less than the one that follows. */
 Cell* builtin_lt_op(Lex* e, Cell* a) {
-    Cell* err = check_arg_types(a, VAL_INT | VAL_REAL);
+    Cell* err = check_arg_types(a, VAL_INT|VAL_REAL|VAL_RAT);
     if (err) { return err; }
     for (int i = 0; i < a->count - 1; i++) {
-        if (!(LVAL_AS_NUM(a->cell[i]) < LVAL_AS_NUM(a->cell[i+1]))) {
+        if (!(VAL_AS_NUM(a->cell[i]) < VAL_AS_NUM(a->cell[i+1]))) {
             return make_val_bool(0);  /* false */
         }
     }
     return make_val_bool(1);
 }
 
-/* '>=' -> LVAL_BOOL - */
+/* '>=' -> VAL_BOOL - */
 Cell* builtin_gte_op(Lex* e, Cell* a) {
-    Cell* err = check_arg_types(a, VAL_INT | VAL_REAL);
+    Cell* err = check_arg_types(a, VAL_INT|VAL_REAL|VAL_RAT);
     if (err) { return err; }
     for (int i = 0; i < a->count - 1; i++) {
-        if (!(LVAL_AS_NUM(a->cell[i]) >= LVAL_AS_NUM(a->cell[i+1]))) {
+        if (!(VAL_AS_NUM(a->cell[i]) >= VAL_AS_NUM(a->cell[i+1]))) {
             return make_val_bool(0);  /* false */
         }
     }
     return make_val_bool(1);
 }
 
-/* '<=' -> LVAL_BOOL - */
+/* '<=' -> VAL_BOOL - */
 Cell* builtin_lte_op(Lex* e, Cell* a) {
-    Cell* err = check_arg_types(a, VAL_INT | VAL_REAL);
+    Cell* err = check_arg_types(a, VAL_INT|VAL_REAL|VAL_RAT);
     if (err) { return err; }
     for (int i = 0; i < a->count - 1; i++) {
-        if (!(LVAL_AS_NUM(a->cell[i]) <= LVAL_AS_NUM(a->cell[i+1]))) {
+        if (!(VAL_AS_NUM(a->cell[i]) <= VAL_AS_NUM(a->cell[i+1]))) {
             return make_val_bool(0);  /* false */
         }
     }
@@ -333,7 +369,7 @@ Cell* builtin_lte_op(Lex* e, Cell* a) {
 
 /* 'zero?' -> LVAL - returns #t if arg is == 0 else #f */
 Cell* builtin_zero(Lex* e, Cell* a) {
-    Cell* err = check_arg_types(a, VAL_INT | VAL_REAL);
+    Cell* err = check_arg_types(a, VAL_INT|VAL_REAL);
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
     const long double result = lval_to_ld(a->cell[0]);
@@ -343,7 +379,7 @@ Cell* builtin_zero(Lex* e, Cell* a) {
 
 /* 'positive?' -> LVAL_BOOL - returns #t if arg is >= 0 else #f */
 Cell* builtin_positive(Lex* e, Cell* a) {
-    Cell* err = check_arg_types(a, VAL_INT | VAL_REAL);
+    Cell* err = check_arg_types(a, VAL_INT|VAL_REAL);
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
     const long double result = lval_to_ld(a->cell[0]);
@@ -366,7 +402,7 @@ Cell* builtin_odd(Lex* e, Cell* a) {
     Cell* err = check_arg_types(a, VAL_INT);
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
-    const long long n = a->cell[0]->int_v;
+    const long long n = a->cell[0]->i_val;
     if (n % 2 == 0) { return make_val_bool(0); }
     return make_val_bool(1);
 }
@@ -376,7 +412,7 @@ Cell* builtin_even(Lex* e, Cell* a) {
     Cell* err = check_arg_types(a, VAL_INT);
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
-    const long long n = a->cell[0]->int_v;
+    const long long n = a->cell[0]->i_val;
     if (n % 2 == 0) { return make_val_bool(1); }
     return make_val_bool(0);
 }
@@ -427,30 +463,36 @@ Cell* builtin_eqv(Lex* e, Cell* a) {
     if (x->type != y->type) return make_val_bool(0);
 
     switch (x->type) {
-        case VAL_INT:  return make_val_bool(x->int_v == y->int_v);
-        case VAL_REAL: return make_val_bool(x->real_v == y->real_v);
-        case VAL_CHAR: return make_val_bool(x->char_val == y->char_val);
+        case VAL_BOOL: return make_val_bool(x->b_val == y->b_val);
+        case VAL_INT:  return make_val_bool(x->i_val == y->i_val);
+        case VAL_REAL: return make_val_bool(x->r_val == y->r_val);
+        case VAL_RAT:  return make_val_bool((x->den == y->den) && (x->num == y->num));
+        case VAL_COMPLEX: return make_val_bool(complex_eq_op(e, x, y));
+        case VAL_CHAR: return make_val_bool(x->c_val == y->c_val);
         default:       return make_val_bool(x == y); /* fall back to identity */
     }
 }
 
 /* Helper for equal? */
-Cell* lval_equal(const Cell* x, const Cell* y) {
+Cell* val_equal(Lex* e, const Cell* x, const Cell* y) {
     if (x->type != y->type) return make_val_bool(0);
 
     switch (x->type) {
-        case VAL_INT:  return make_val_bool(x->int_v == y->int_v);
-        case VAL_REAL: return make_val_bool(x->real_v == y->real_v);
-        case VAL_CHAR: return make_val_bool(x->char_val == y->char_val);
+        case VAL_BOOL: return make_val_bool(x->b_val == y->b_val);
+        case VAL_CHAR: return make_val_bool(x->c_val == y->c_val);
+        case VAL_INT:  return make_val_bool(x->i_val == y->i_val);
+        case VAL_REAL: return make_val_bool(x->r_val == y->r_val);
+        case VAL_RAT:  return make_val_bool((x->den == y->den) && (x->num == y->num));
         case VAL_SYM:  return make_val_bool(strcmp(x->sym, y->sym) == 0);
         case VAL_STR:  return make_val_bool(strcmp(x->str, y->str) == 0);
+        case VAL_COMPLEX: return make_val_bool(complex_eq_op(e, x, y));
 
         case VAL_SEXPR:
         case VAL_VEC:
             if (x->count != y->count) return make_val_bool(0);
             for (int i = 0; i < x->count; i++) {
-                Cell* eq = lval_equal(x->cell[i], y->cell[i]);
-                if (!eq->boolean) { cell_delete(eq); return make_val_bool(0); }
+                Cell* eq = val_equal(e, x->cell[i], y->cell[i]);
+                if (!eq->b_val) { cell_delete(eq); return make_val_bool(0); }
                 cell_delete(eq);
             }
             return make_val_bool(1);
@@ -460,14 +502,14 @@ Cell* lval_equal(const Cell* x, const Cell* y) {
     }
 }
 
-/* 'equal?' -> LVAL_BOOL - Tests structural (deep) equality, comparing contents
+/* 'equal?' -> VAL_BOOL - Tests structural (deep) equality, comparing contents
  * recursively in lists, vectors, and strings. (equal? '(1 2 3) '(1 2 3)) → true,
  * even though the two lists are distinct objects.
  * Use when: you want to compare data structures by content, not identity.*/
 Cell* builtin_equal(Lex* e, Cell* a) {
     Cell* err = CHECK_ARITY_EXACT(a, 2);
     if (err) return err;
-    return lval_equal(a->cell[0], a->cell[1]);
+    return val_equal(e, a->cell[0], a->cell[1]);
 }
 
 /* -----------------------------------*
@@ -479,12 +521,12 @@ Cell* builtin_abs(Lex* e, Cell* a) {
     Cell* err = check_arg_types(a, VAL_INT | VAL_REAL);
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
-    if (LVAL_AS_NUM(a->cell[0]) >= 0) {
-        if (a->type == VAL_INT) { return make_val_int(a->int_v); }
-        return make_val_real(a->real_v);
+    if (VAL_AS_NUM(a->cell[0]) >= 0) {
+        if (a->type == VAL_INT) { return make_val_int(a->i_val); }
+        return make_val_real(a->r_val);
     }
-    if (a->type == VAL_INT) { return make_val_int(-a->int_v); }
-    return make_val_real(-a->real_v);
+    if (a->type == VAL_INT) { return make_val_int(-a->i_val); }
+    return make_val_real(-a->r_val);
 }
 
 /* 'expt' -> LVAL_INT|LVAL_FLOAT - returns its first arg calculated
@@ -494,13 +536,13 @@ Cell* builtin_expt(Lex* e, Cell* a) {
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 2))) { return err; }
 
-    long double base = LVAL_AS_NUM(a->cell[0]);
+    long double base = VAL_AS_NUM(a->cell[0]);
     const Cell* exp_val = a->cell[1];
     long double result;
 
     if (exp_val->type == VAL_INT) {
         /* integer exponent: use fast exponentiation */
-        long long n = exp_val->int_v;
+        long long n = exp_val->i_val;
         result = 1.0;
         long long abs_n = n > 0 ? n : -n;
 
@@ -512,7 +554,7 @@ Cell* builtin_expt(Lex* e, Cell* a) {
         if (n < 0) result = 1.0 / result;
     } else {
         /* float exponent: delegate to powl */
-        result = powl(base, LVAL_AS_NUM(exp_val));
+        result = powl(base, VAL_AS_NUM(exp_val));
     }
     return make_lval_from_double(result);
 }
@@ -523,9 +565,9 @@ Cell* builtin_modulo(Lex* e, Cell* a) {
     Cell* err = check_arg_types(a, VAL_INT);
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 2))) { return err; }
-    long long r = a->cell[0]->int_v % a->cell[1]->int_v;
-    if ((r != 0) && ((a->cell[1]->int_v > 0 && r < 0) || (a->cell[1]->int_v < 0 && r > 0))) {
-        r += a->cell[1]->int_v;
+    long long r = a->cell[0]->i_val % a->cell[1]->i_val;
+    if ((r != 0) && ((a->cell[1]->i_val > 0 && r < 0) || (a->cell[1]->i_val < 0 && r > 0))) {
+        r += a->cell[1]->i_val;
     }
     return make_val_int(r);
 }
@@ -536,7 +578,7 @@ Cell* builtin_quotient(Lex* e, Cell* a) {
     Cell* err = check_arg_types(a, VAL_INT);
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 2))) { return err; }
-    return make_val_int(a->cell[0]->int_v / a->cell[1]->int_v);
+    return make_val_int(a->cell[0]->i_val / a->cell[1]->i_val);
 }
 
 /* 'remainder' -> LVAL_INT - returns the remainder of dividing the first argument
@@ -545,7 +587,7 @@ Cell* builtin_remainder(Lex* e, Cell* a) {
     Cell* err = check_arg_types(a, VAL_INT);
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 2))) { return err; }
-    return make_val_int(a->cell[0]->int_v % a->cell[1]->int_v);
+    return make_val_int(a->cell[0]->i_val % a->cell[1]->i_val);
 }
 
 Cell* builtin_lcm(Lex* e, Cell* a) {
@@ -553,11 +595,11 @@ Cell* builtin_lcm(Lex* e, Cell* a) {
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 2))) { return err; }
 
-    const long long int x = a->cell[0]->int_v;
-    const long long int y = a->cell[1]->int_v;
+    const long long int x = a->cell[0]->i_val;
+    const long long int y = a->cell[1]->i_val;
 
     Cell* gcd = builtin_gcd(e, make_sexpr_len2(make_val_int(x), make_val_int(y)));
-    long long int tmp = x * y / gcd->int_v;
+    long long int tmp = x * y / gcd->i_val;
     /* return only positive value */
     if (tmp < 0) {
         tmp = -tmp;
@@ -571,8 +613,8 @@ Cell* builtin_gcd(Lex* e, Cell* a) {
     if (err) return err;
     if ((err = CHECK_ARITY_EXACT(a, 2))) return err;
 
-    long long x = a->cell[0]->int_v;
-    long long y = a->cell[1]->int_v;
+    long long x = a->cell[0]->i_val;
+    long long y = a->cell[1]->i_val;
 
     while (x != 0) {
         const long long tmp = x;
@@ -799,7 +841,7 @@ Cell* builtin_exact_integer(Lex *e, Cell* a) {
 Cell* builtin_not(Lex* e, Cell* a) {
     Cell* err;
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
-    const int is_false = (a->cell[0]->type == VAL_BOOL && a->cell[0]->boolean == 0);
+    const int is_false = (a->cell[0]->type == VAL_BOOL && a->cell[0]->b_val == 0);
     return make_val_bool(is_false);
 }
 
@@ -808,7 +850,7 @@ Cell* builtin_boolean(Lex* e, Cell* a) {
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
     int result = (a->cell[0]->type == VAL_BOOL)
-                 ? a->cell[0]->boolean
+                 ? a->cell[0]->b_val
                  : 1; /* everything except #f is true */
     return make_val_bool(result);
 }
@@ -819,7 +861,7 @@ Cell* builtin_boolean(Lex* e, Cell* a) {
  * If there are no expressions, then #t is returned.*/
 Cell* builtin_and(Lex* e, Cell* a) {
     for (int i = 0; i < a->count; i++) {
-        if (a->cell[i]->type == VAL_BOOL && a->cell[i]->boolean == 0) {
+        if (a->cell[i]->type == VAL_BOOL && a->cell[i]->b_val == 0) {
             /* first #f encountered → return a copy of it */
             return cell_copy(a->cell[i]);
         }
@@ -833,7 +875,7 @@ Cell* builtin_and(Lex* e, Cell* a) {
  * expressions evaluate to #f or if there are no expressions, #f is returned */
 Cell* builtin_or(Lex* e, Cell* a) {
     for (int i = 0; i < a->count; i++) {
-        if (!(a->cell[i]->type == VAL_BOOL && a->cell[i]->boolean == 0)) {
+        if (!(a->cell[i]->type == VAL_BOOL && a->cell[i]->b_val == 0)) {
             /* first truthy value → return a copy */
             return cell_copy(a->cell[i]);
         }
@@ -931,7 +973,7 @@ Cell* builtin_list_ref(Lex* e, Cell* a) {
     if (a->cell[1]->type != VAL_INT) {
         return make_val_err("list-ref: arg 2 must be an integer");
     }
-    int i = (int)a->cell[1]->int_v;
+    int i = (int)a->cell[1]->i_val;
 
     if (a->cell[0]->type == VAL_PAIR) {
         const Cell* p = a->cell[0];
