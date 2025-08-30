@@ -2,11 +2,29 @@
 
 #include "printer.h"
 #include "parser.h"
+#include "main.h"
 #include "types.h"
 #include <stdio.h>
+#include <string.h>
+#include <float.h>
 
-#include "main.h"
 
+void print_long_double(long double x) {
+    char buf[128];
+
+    // Use LDBL_DIG (guaranteed decimal digits of precision)
+    // Add a couple of "guard" digits so we don't lose info
+    int prec = LDBL_DIG + 2;
+
+    snprintf(buf, sizeof buf, "%.*Lg", prec, x);
+
+    // If there's no '.' or exponent marker, force a ".0"
+    if (!strchr(buf, '.') && !strchr(buf, 'e') && !strchr(buf, 'E')) {
+        strcat(buf, ".0");
+    }
+
+    printf("%s\n", buf);
+}
 
 void print_lval_seq(const Cell* v, const char* prefix, const char open, const char close) {
     if (!v) return;
@@ -45,11 +63,12 @@ void print_pair(const Cell* v) {
 void print_cell(const Cell* v) {
     switch (v->type) {
     case VAL_REAL:
-        printf("%Lg", v->real_v);
+        //printf("%Lg", v->real_val);
+        print_long_double(v->r_val);
         break;
 
     case VAL_INT:
-        printf("%lld", v->int_v);
+        printf("%lld", v->i_val);
         break;
 
     case VAL_RAT:
@@ -65,7 +84,7 @@ void print_cell(const Cell* v) {
 
     case VAL_BOOL:
         printf("%s%s%s", ANSI_MAGENTA,
-               v->boolean ? "#true" : "#false",
+               v->b_val ? "#true" : "#false",
                ANSI_RESET);
         break;
 
@@ -74,7 +93,7 @@ void print_cell(const Cell* v) {
         break;
 
     case VAL_CHAR:
-        switch (v->char_val) {
+        switch (v->c_val) {
         case '\n': printf("#\\newline");   break;
         case ' ':  printf("#\\space");     break;
         case '\t': printf("#\\tab");       break;
@@ -85,7 +104,7 @@ void print_cell(const Cell* v) {
         case 0x7f: printf("#\\delete");    break;
         case '\0': printf("#\\null");      break;
 
-        default:   printf("#\\%c", v->char_val); break;
+        default:   printf("#\\%c", v->c_val); break;
         }
         break;
 
