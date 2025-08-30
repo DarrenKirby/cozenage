@@ -18,14 +18,14 @@ check_arg_arity((a), -1, -1, (n))
 #define CHECK_ARITY_RANGE(a, lo, hi) \
 check_arg_arity((a), -1, (lo), (hi))
 
-#define LVAL_AS_NUM(v) \
-((v)->type == VAL_INT ? (long double)(v)->int_v : (v)->real_v)
+#define VAL_AS_NUM(v) \
+((v)->type == VAL_INT ? (long double)(v)->i_val : (v)->r_val)
 
 
 typedef enum {
     VAL_INT     = 1 << 0,   /* integer */
-    VAL_REAL    = 1 << 1,   /* real (long double) */
-    VAL_RAT     = 1 << 2,   /* rational */
+    VAL_RAT     = 1 << 1,   /* rational */
+    VAL_REAL    = 1 << 2,   /* real (long double) */
     VAL_COMPLEX = 1 << 3,   /* complex number */
 
     VAL_BOOL    = 1 << 4,   /* #t / #f */
@@ -51,10 +51,10 @@ typedef struct Cell {
     bool exact;                /* exact/inexact flag for numerics */
 
     union {
-        long double real_v;    /* reals */
-        long long int int_v;   /* integers */
-        int boolean;           /* 0 = false, 1 = true */
-        char char_val;         /* character literal #\a */
+        long double r_val;    /* reals */
+        long long int i_val;   /* integers */
+        int b_val;           /* 0 = false, 1 = true */
+        char c_val;         /* character literal #\a */
         char* sym;             /* symbols */
         char* str;             /* strings */
 
@@ -109,6 +109,7 @@ Cell* cell_take(Cell* v, int i);
 Cell* check_arg_types(const Cell* a, int mask);
 Cell* check_arg_arity(const Cell* a, int exact, int min, int max);
 void numeric_promote(Cell** lhs, Cell** rhs);
+
 Cell* make_sexpr_len2(const Cell* a, const Cell* b);
 Cell* negate_numeric(Cell* x);
 Cell* simplify_rational(Cell* v);

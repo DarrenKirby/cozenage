@@ -8,6 +8,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "printer.h"
+
 
 /* define the global nil */
 Cell* val_nil = NULL;
@@ -29,7 +31,7 @@ Cell* make_val_real(const long double n) {
     Cell* v = calloc(1, sizeof(Cell));
     v->type = VAL_REAL;
     v->exact = false;
-    v->real_v = n;
+    v->r_val = n;
     return v;
 }
 
@@ -37,7 +39,7 @@ Cell* make_val_int(const long long int n) {
     Cell* v = calloc(1, sizeof(Cell));
     v->type = VAL_INT;
     v->exact = true;
-    v->int_v = n;
+    v->i_val = n;
     return v;
 }
 
@@ -65,7 +67,7 @@ Cell* make_val_complex(Cell* real, Cell *imag) {
 Cell* make_val_bool(const int b) {
     Cell* v = calloc(1, sizeof(Cell));
     v->type = VAL_BOOL;
-    v->boolean = b ? 1 : 0;
+    v->b_val = b ? 1 : 0;
     return v;
 }
 
@@ -94,7 +96,7 @@ Cell* make_val_sexpr(void) {
 Cell* make_val_char(char c) {
     Cell* v = calloc(1, sizeof(Cell));
     v->type = VAL_CHAR;
-    v->char_val = c;
+    v->c_val = c;
     return v;
 }
 
@@ -262,16 +264,16 @@ Cell* cell_copy(const Cell* v) {
 
     switch (v->type) {
     case VAL_INT:
-        copy->int_v = v->int_v;
+        copy->i_val = v->i_val;
         break;
     case VAL_REAL:
-        copy->real_v = v->real_v;
+        copy->r_val = v->r_val;
         break;
     case VAL_BOOL:
-        copy->boolean = v->boolean;
+        copy->b_val = v->b_val;
         break;
     case VAL_CHAR:
-        copy->char_val = v->char_val;
+        copy->c_val = v->c_val;
         break;
 
     case VAL_SYM:
@@ -441,11 +443,11 @@ Cell* check_arg_arity(const Cell* a, const int exact, const int min, const int m
 
 /* Convertors */
 Cell* int_to_rat(Cell* v) {
-    return make_val_rat(v->int_v, 1);
+    return make_val_rat(v->i_val, 1);
 }
 
 Cell* int_to_real(Cell* v) {
-    return make_val_real((long double)v->int_v);
+    return make_val_real((long double)v->i_val);
 }
 
 Cell* rat_to_real(Cell* v) {
@@ -456,8 +458,7 @@ Cell* to_complex(Cell* v) {
     return make_val_complex(cell_copy(v), make_val_int(0));
 }
 
-/* Promote two numbers to the same type, modifying lhs and rhs in-place.
-   Returns 0 on success, nonzero on error. */
+/* Promote two numbers to the same type, modifying lhs and rhs in-place. */
 void numeric_promote(Cell** lhs, Cell** rhs) {
     Cell* a = *lhs;
     Cell* b = *rhs;
@@ -484,7 +485,6 @@ void numeric_promote(Cell** lhs, Cell** rhs) {
 
     *lhs = a;
     *rhs = b;
-    //return 0;
 }
 
 /* Construct an S-expression with exactly two elements */
@@ -500,9 +500,9 @@ Cell* make_sexpr_len2(const Cell* a, const Cell* b) {
 Cell* negate_numeric(Cell* x) {
     check_arg_types(x, VAL_INT|VAL_REAL|VAL_RAT|VAL_COMPLEX);
     switch (x->type) {
-        case VAL_INT: return make_val_int(-x->int_v);
+        case VAL_INT: return make_val_int(-x->i_val);
         case VAL_RAT: return make_val_rat(-x->num, x->den);
-        case VAL_REAL: return make_val_real(-x->real_v);
+        case VAL_REAL: return make_val_real(-x->r_val);
         case VAL_COMPLEX:
             return make_val_complex(
                 negate_numeric(x->real),
