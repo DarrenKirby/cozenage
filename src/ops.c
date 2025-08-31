@@ -68,8 +68,7 @@ Cell* builtin_add(Lex* e, Cell* a) {
                 result->r_val += rhs->r_val;
                 break;
             case VAL_COMPLEX:
-                result->real = builtin_add(e, make_sexpr_len2(result->real, rhs->real));
-                result->imag = builtin_add(e, make_sexpr_len2(result->imag, rhs->imag));
+                complex_apply(builtin_add, e, result, rhs);
                 break;
             default:
                 return make_val_err("<builtin '+'> Oops, this shouldn't have happened.");
@@ -111,8 +110,7 @@ Cell* builtin_sub(Lex* e, Cell* a) {
                 result->r_val -= rhs->r_val;
                 break;
             case VAL_COMPLEX:
-                result->real = builtin_sub(e, make_sexpr_len2(result->real, rhs->real));
-                result->imag = builtin_sub(e, make_sexpr_len2(result->imag, rhs->imag));
+                complex_apply(builtin_sub, e, result, rhs);
                 break;
             default:
                 return make_val_err("<builtin '-'> Oops, this shouldn't have happened.");
@@ -151,8 +149,7 @@ Cell* builtin_mul(Lex* e, Cell* a) {
                 result->r_val *= rhs->r_val;
                 break;
             case VAL_COMPLEX:
-                result->real = builtin_mul(e, make_sexpr_len2(result->real, rhs->real));
-                result->imag = builtin_mul(e, make_sexpr_len2(result->imag, rhs->imag));
+                complex_apply(builtin_mul, e, result, rhs);
                 break;
             default:
                 return make_val_err("<builtin '*'> Oops, this shouldn't have happened.");
@@ -183,21 +180,15 @@ Cell* builtin_div(Lex* e, Cell* a) {
             return make_val_real(1.0L / a->cell[0]->r_val);
         }
         if (a->cell[0]->type == VAL_COMPLEX) {
-            const Cell* real = a->cell[0]->real;
-            const Cell* imag = a->cell[0]->imag;
+            Cell* real_arg = make_sexpr_len1(a->cell[0]->real);
+            Cell* imag_arg = make_sexpr_len1(a->cell[0]->imag);
+            Cell* real = builtin_div(e, real_arg);
+            Cell* imag = builtin_div(e, imag_arg);
 
-            /* denominator = real^2 + imag^2 */
-            const Cell* real_sq = builtin_mul(e, make_sexpr_len2(cell_copy(real), cell_copy(real)));
-            const Cell* imag_sq = builtin_mul(e, make_sexpr_len2(cell_copy(imag), cell_copy(imag)));
-            const Cell* denominator = builtin_add(e, make_sexpr_len2(real_sq, imag_sq));
-
-            /* new real = real / denominator */
-            Cell* new_real = builtin_div(e, make_sexpr_len2(cell_copy(real), cell_copy(denominator)));
-            /* new imag = -imag / denominator */
-            const Cell* neg_imag = negate_numeric(cell_copy(imag));
-            Cell* new_imag = builtin_div(e, make_sexpr_len2(neg_imag, denominator));
-
-            return make_val_complex(new_real, new_imag);
+            Cell* result = make_val_complex(real, imag);
+            cell_delete(real_arg);
+            cell_delete(imag_arg);
+            return result;
         }
     }
     /* multiple args */
@@ -228,33 +219,9 @@ Cell* builtin_div(Lex* e, Cell* a) {
             }
             result->r_val /= rhs->r_val;
             break;
-        case VAL_COMPLEX: {
-            /* result = (a + bi), rhs = (c + di) */
-            const Cell* a_real = result->real;
-            const Cell* a_imag = result->imag;
-            const Cell* b_real = rhs->real;
-            const Cell* b_imag = rhs->imag;
-
-            /* denominator = c^2 + d^2 */
-            const Cell* b_real_sq = builtin_mul(e, make_sexpr_len2(cell_copy(b_real), cell_copy(b_real)));
-            const Cell* b_imag_sq = builtin_mul(e, make_sexpr_len2(cell_copy(b_imag), cell_copy(b_imag)));
-            const Cell* denominator = builtin_add(e, make_sexpr_len2(b_real_sq, b_imag_sq));
-
-            /* numerator real = (ac + bd) */
-            const Cell* ac = builtin_mul(e, make_sexpr_len2(cell_copy(a_real), cell_copy(b_real)));
-            const Cell* bd = builtin_mul(e, make_sexpr_len2(cell_copy(a_imag), cell_copy(b_imag)));
-            const Cell* num_real = builtin_add(e, make_sexpr_len2(ac, bd));
-
-            /* numerator imag = (bc - ad) */
-            const Cell* bc = builtin_mul(e, make_sexpr_len2(cell_copy(a_imag), cell_copy(b_real)));
-            const Cell* ad = builtin_mul(e, make_sexpr_len2(cell_copy(a_real), cell_copy(b_imag)));
-            const Cell* num_imag = builtin_sub(e, make_sexpr_len2(bc, ad));
-
-            /* divide both by denominator */
-            result->real = builtin_div(e, make_sexpr_len2(num_real, cell_copy(denominator)));
-            result->imag = builtin_div(e, make_sexpr_len2(num_imag, denominator));
+        case VAL_COMPLEX:
+            complex_apply(builtin_div, e, result, rhs);
             break;
-        }
         default:
             return make_val_err("<builtin '/'> Oops, this shouldn't have happened.");
         }
@@ -270,17 +237,20 @@ Cell* builtin_div(Lex* e, Cell* a) {
 
 /* Helper for '=' which recursively compares complex numbers */
 static int complex_eq_op(Lex* e, const Cell* lhs, const Cell* rhs) {
-    Cell* real_result = builtin_eq_op(e, make_sexpr_len2(lhs->real, rhs->real));
-    Cell* imag_result = builtin_eq_op(e, make_sexpr_len2(lhs->imag, rhs->imag));
+    Cell* args_real = make_sexpr_len2(lhs->real, rhs->real);
+    Cell* args_imag = make_sexpr_len2(lhs->imag, rhs->imag);
 
-    if (real_result->b_val && imag_result->b_val) {
-        cell_delete(real_result);
-        cell_delete(imag_result);
-        return 1;
-    }
+    Cell* real_result = builtin_eq_op(e, args_real);
+    Cell* imag_result = builtin_eq_op(e, args_imag);
+
+    const int eq = (real_result->b_val && imag_result->b_val);
+
     cell_delete(real_result);
     cell_delete(imag_result);
-    return 0;
+    cell_delete(args_real);   // 🔥 free the temporary argv
+    cell_delete(args_imag);   // 🔥 free the temporary argv
+
+    return eq;
 }
 
 /* '=' -> VAL_BOOL - returns true if all arguments are equal. */
@@ -308,6 +278,8 @@ Cell* builtin_eq_op(Lex* e, Cell* a) {
                 break;
             default: ; /* this will never run as the types are pre-checked, but without the linter complains */
         }
+        cell_delete(lhs);
+        cell_delete(rhs);
         if (!the_same) {
             return make_val_bool(0);
         }
