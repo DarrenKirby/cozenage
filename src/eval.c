@@ -1,9 +1,8 @@
-
+/* eval.c - recursive evaluator */
 
 #include "eval.h"
-
+#include "ops.h"
 #include "printer.h"
-
 #include "main.h"
 #include <stdio.h>
 #include <string.h>
@@ -13,10 +12,10 @@ Cell* apply_lambda(Cell* lambda, Cell* args) {
         return make_val_err("Not a lambda");
     }
 
-    // Create a new child environment
+    /* Create a new child environment */
     Lex* local_env = lex_new_child(lambda->env);
 
-    // Bind formals to arguments
+    /* Bind formals to arguments */
     if (lambda->formals->count != args->count) {
         return make_val_err("Lambda: wrong number of arguments");
     }
@@ -24,20 +23,19 @@ Cell* apply_lambda(Cell* lambda, Cell* args) {
     for (int i = 0; i < args->count; i++) {
         Cell* sym = lambda->formals->cell[i];
         Cell* val = args->cell[i];
-        lex_put(local_env, sym, val);  // sym should be VAL_SYM, val evaluated
+        lex_put(local_env, sym, val);  /* sym should be VAL_SYM, val evaluated */
     }
 
-    // Evaluate body expressions in this environment
+    /* Evaluate body expressions in this environment */
     Cell* result = NULL;
     for (int i = 0; i < lambda->body->count; i++) {
         if (result) cell_delete(result);
-        result = coz_eval(local_env, lambda->body->cell[i]);
+        result = coz_eval(local_env, cell_copy(lambda->body->cell[i]));
     }
 
     lex_delete(local_env);
     return result;
 }
-
 
 /* coz_eval()
  * Evaluate a Cell in the given environment.
@@ -67,7 +65,7 @@ Cell* coz_eval(Lex* e, Cell* v) {
         case VAL_BOOL:
         case VAL_CHAR:
         case VAL_STR:
-        /* case LVAL_PAIR: is not necessary - no concept of 'pair literal' */
+        /* case VAL_PAIR: is not necessary - no concept of 'pair literal' */
         case VAL_VEC:
         case VAL_BYTEVEC:
         case VAL_NIL:
@@ -79,7 +77,7 @@ Cell* coz_eval(Lex* e, Cell* v) {
             return v;
 
         default:
-            return make_val_err("Unknown l_val type in eval()");
+            return make_val_err("Unknown val type in eval()");
     }
 }
 
@@ -95,6 +93,10 @@ Cell* eval_sexpr(Lex* e, Cell* v) {
     /* Grab first element without evaluating yet */
     Cell* first = cell_pop(v, 0);
 
+    if (strcmp(first->sym, "define") == 0) {
+        return builtin_define(e, v);
+    }
+
     /* Special form: quote */
     if (first->type == VAL_SYM && strcmp(first->sym, "quote") == 0) {
         cell_delete(first);
@@ -103,6 +105,36 @@ Cell* eval_sexpr(Lex* e, Cell* v) {
             return make_val_err("quote takes exactly one argument");
         }
         return cell_take(v, 0);  /* return argument unevaluated */
+    }
+
+    /* Special form: lambda */
+    if (first->type == VAL_SYM && strcmp(first->sym, "lambda") == 0) {
+        cell_delete(first);
+
+        if (v->count < 2) {
+            cell_delete(v);
+            return make_val_err("lambda requires formals and a body");
+        }
+
+        Cell* formals = cell_pop(v, 0);   /* first arg */
+        Cell* body    = v;                  /* remaining args */
+
+        /* formals should be a list of symbols */
+        for (int i = 0; i < formals->count; i++) {
+            if (formals->cell[i]->type != VAL_SYM) {
+                cell_delete(formals);
+                cell_delete(body);
+                return make_val_err("lambda formals must be symbols");
+            }
+        }
+
+        /* Build the lambda cell */
+        Cell* lambda = lex_make_lambda(formals, body, e);
+
+        cell_delete(formals);
+        cell_delete(body);  // make_lambda deep-copies body and formals
+
+        return lambda;
     }
 
     /* Otherwise, evaluate first element normally (should become a function) */
@@ -126,7 +158,6 @@ Cell* eval_sexpr(Lex* e, Cell* v) {
     }
 
     /* Apply function */
-    //Cell* result = f->builtin(e, v);
     Cell* result;
     if (f->builtin) {
         result = f->builtin(e, v);

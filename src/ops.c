@@ -3,6 +3,7 @@
 #include "ops.h"
 #include "types.h"
 #include "environment.h"
+#include "eval.h"
 #include <string.h>
 #include <math.h>
 #include <stdio.h>
@@ -394,6 +395,56 @@ Cell* builtin_quote(Lex* e, Cell* a) {
     if (err) return err;
     /* Take the first argument and do NOT evaluate it */
     return cell_take(a, 0);
+}
+
+/* 'define' -> binds a value (or proc) to a symbol, and places it
+ * into the environment */
+Cell* builtin_define(Lex* e, Cell* a) {
+    if (a->count < 2) {
+        return make_val_err("define requires at least 2 arguments");
+    }
+
+    Cell* target = a->cell[0];
+
+    /* (define <symbol> <expr>) */
+    if (target->type == VAL_SYM) {
+        Cell* val = coz_eval(e, a->cell[1]);
+        lex_put(e, target, val);
+        return cell_copy(val);
+    }
+
+    /* (define (<f-name> <args>) <body>) */
+    if (target->type == VAL_SEXPR && target->count > 0 &&
+        target->cell[0]->type == VAL_SYM) {
+
+        /* first element is function name */
+        Cell* fname = target->cell[0];
+
+        /* rest are formal args */
+        Cell* formals = make_val_sexpr();
+        for (int i = 1; i < target->count; i++) {
+            if (target->cell[i]->type != VAL_SYM) {
+                return make_val_err("lambda formals must be symbols");
+            }
+            cell_add(formals, cell_copy(target->cell[i]));
+        }
+
+        /* build lambda with args + body */
+        Cell* body = make_val_sexpr();
+        for (int i = 1; i < a->count; i++) {
+            cell_add(body, cell_copy(a->cell[i]));
+        }
+
+        Cell* lam = lex_make_lambda(formals, body, e);
+        lex_put(e, fname, lam);
+
+        cell_delete(formals);
+        cell_delete(body);
+
+        return lam;
+        }
+
+    return make_val_err("invalid define syntax");
 }
 
 /* ------------------------------------------*

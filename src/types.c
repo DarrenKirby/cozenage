@@ -234,8 +234,15 @@ void cell_delete(Cell* v) {
         break;
 
     case VAL_PROC:
-        if (v->name) free(v->name);
-        /* TODO: free env/body if user-defined later */
+        if (v->builtin) {
+            if (v->name) free(v->name);
+            /* builtin has no formals/body/env to free */
+        } else {
+            /* user lambda: free deep-copied formals and body, but NOT env */
+            if (v->formals) cell_delete(v->formals);
+            if (v->body)    cell_delete(v->body);
+            /* v->env is NOT owned here, do not free it */
+        }
         break;
 
     case VAL_PORT:
@@ -287,9 +294,23 @@ Cell* cell_copy(const Cell* v) {
         break;
 
     case VAL_PROC:
+        /* If it's a builtin, keep the function pointer; copy the name if present. */
         copy->builtin = v->builtin;
         copy->name = v->name ? strdup(v->name) : NULL;
-        /* TODO: deep copy env/body for lambdas */
+
+        if (v->builtin) {
+            /* builtin: nothing else to deep-copy */
+            copy->formals = NULL;
+            copy->body = NULL;
+            copy->env = NULL;
+        } else {
+            /* user lambda: deep copy formals and body; keep env pointer (closure) */
+            copy->builtin = NULL;
+            copy->name = NULL;
+            copy->formals = v->formals ? cell_copy(v->formals) : NULL;
+            copy->body   = v->body   ? cell_copy(v->body)   : NULL;
+            copy->env    = v->env;   /* DO NOT copy environments; share the pointer */
+        }
         break;
 
     case VAL_SEXPR:

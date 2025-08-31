@@ -110,21 +110,12 @@ Cell* lex_make_builtin(const char* name, Cell* (*func)(Lex*, Cell*)) {
 Cell* lex_make_lambda(Cell* formals, Cell* body, Lex* env) {
     Cell* c = malloc(sizeof(Cell));
     c->type = VAL_PROC;
-    c->name = NULL;  // optional
+    c->name = NULL;  /* optional */
     c->builtin = NULL;
     c->formals = cell_copy(formals);
     c->body = cell_copy(body);
-    c->env = env;  // do NOT copy, just store pointer
+    c->env = env;  /* do NOT copy, just store pointer */
     return c;
-}
-
-Cell* lex_register_builtin(const char* name,
-                    Cell* (*func)(Lex*, Cell*)) {
-    Cell* v = malloc(sizeof(Cell));
-    v->type = VAL_PROC;
-    v->builtin = func;
-    v->name = strdup(name);   /* store name for printing */
-    return v;
 }
 
 void lex_add_builtin(Lex* e, const char* name,
@@ -156,6 +147,7 @@ void lex_add_builtins(Lex* e) {
     lex_add_builtin(e, "even?", builtin_even);
     /* Special forms */
     lex_add_builtin(e, "quote", builtin_quote);
+    lex_add_builtin(e, "define", builtin_define);
     /* Equality and equivalence comparators */
     lex_add_builtin(e, "eq?", builtin_eq);
     lex_add_builtin(e, "eqv?", builtin_eqv);
