@@ -10,6 +10,8 @@
 #include <errno.h>
 #include <limits.h>
 
+#include "printer.h"
+
 
 long long parse_int_checked(const char* str, char* err_buf, size_t err_buf_sz, const int base, int* ok) {
     errno = 0;
@@ -101,8 +103,14 @@ char **lexer(const char *input, int *count) {
 
         /* quote char: ' */
         if (*p == '\'') {
-            tokens[n++] = strdup("'");  /* emit a single-quote token */
-            p++;
+            /* '() - null */
+            if (*(p+1) == '(' && *(p+2) == ')') {
+                tokens[n++] = strdup("'()\0");
+                p += 3;
+            } else {
+                tokens[n++] = strdup("'");  /* emit a single-quote token */
+                p++;
+            }
             continue;
         }
 
@@ -115,7 +123,7 @@ char **lexer(const char *input, int *count) {
         /* String literal */
         else if (*p == '"') {
             p++; /* skip opening quote */
-            const char *start = p;
+            //const char *start = p;
             size_t buf_size = 64;
             char *tok = malloc(buf_size);
             if (!tok) exit(EXIT_FAILURE);
@@ -246,6 +254,7 @@ Cell *parse_tokens(Parser *p) {
     const char *tok = peek(p);
     if (!tok) return NULL;
 
+
     /* Handle quote (') */
     if (strcmp(tok, "'") == 0) {
         advance(p);  /* consume ' */
@@ -257,7 +266,25 @@ Cell *parse_tokens(Parser *p) {
         return qexpr;
     }
 
-    /* Handle vector/byte vector literals */
+    /* byte vector: #u8( ... ) */
+    if (strcmp(tok, "#u8") == 0) {
+        advance(p); /* consume '#u8' */
+        const char *paren = advance(p); /* must be '(' */
+        if (!paren || strcmp(paren, "(") != 0)
+            return make_val_err("Expected '(' after #u8");
+        Cell *bv = make_val_bytevec();
+        while (peek(p) && strcmp(peek(p), ")") != 0) {
+            cell_add(bv, parse_tokens(p));
+        }
+        if (!peek(p)) {
+            cell_delete(bv);
+            return make_val_err("Unmatched '(' in bytevector literal");
+        }
+        advance(p); /* skip ')' */
+        return bv;
+    }
+
+    /* Handle vector literals */
     if (strcmp(tok, "#") == 0) {
         advance(p);  /* consume '#' */
         const char *next = peek(p);
@@ -270,24 +297,12 @@ Cell *parse_tokens(Parser *p) {
             while (peek(p) && strcmp(peek(p), ")") != 0) {
                 cell_add(vec, parse_tokens(p));
             }
-            if (!peek(p)) return make_val_err("Unmatched '(' in vector literal");
+            if (!peek(p)) {
+                cell_delete(vec);
+                return make_val_err("Unmatched '(' in vector literal");
+            }
             advance(p); /* skip ')' */
             return vec;
-        }
-
-        /* byte vector: #u8( ... ) */
-        if (strcmp(next, "u8") == 0) {
-            advance(p); /* consume 'u8' */
-            const char *paren = advance(p); /* must be '(' */
-            if (!paren || strcmp(paren, "(") != 0)
-                return make_val_err("Expected '(' after #u8");
-            Cell *bv = make_val_bytevec();
-            while (peek(p) && strcmp(peek(p), ")") != 0) {
-                cell_add(bv, parse_tokens(p));
-            }
-            if (!peek(p)) return make_val_err("Unmatched '(' in bytevector literal");
-            advance(p); /* skip ')' */
-            return bv;
         }
         return make_val_err("Invalid token");
     }
@@ -299,7 +314,11 @@ Cell *parse_tokens(Parser *p) {
         while (peek(p) && strcmp(peek(p), ")") != 0) {
             cell_add(sexpr, parse_tokens(p));
         }
-        if (!peek(p)) return make_val_err("Unmatched '('");
+        if (!peek(p)) {
+            cell_delete(sexpr);
+            return make_val_err("Unmatched '('");
+        }
+
         advance(p); /* skip ')' */
         return sexpr;
     }
@@ -313,6 +332,11 @@ Cell* parse_atom(const char *tok) {
     if (!tok) return make_val_err("NULL token");
     char err_buf[128] = {0};
     const size_t len = strlen(tok);
+
+    /* null - '() */
+    if (strcmp(tok, "'()") == 0) {
+        return make_val_nil();
+    }
 
     /* Boolean */
     if (strcmp(tok, "#t") == 0 ||
@@ -387,33 +411,56 @@ Cell* parse_atom(const char *tok) {
         const char* num_start = tok;
 
         /* complex numbers */
-        if (strchr(tok, 'i') && strchr(tok, '+')) {
-            char *p;
-            p = strdup(tok);
+        if (tok[len-1] == 'i') {
+            char *copy = strdup(tok);
+            char *p = copy;
 
-            if (tok[len-1] != 'i') {
-                snprintf(err_buf, sizeof(err_buf), "Invalid token: '%s%s%s'",
-                    ANSI_RED_B, tok, ANSI_RESET);
-                return make_val_err(err_buf);
-            }
-            /* remove trailing 'i' */
+            // strip trailing 'i'
             p[len-1] = '\0';
-            if (tok[0] == '+') {
-                /* replace any leading '+' with a zero */
-                p[0] = '0';
+
+            Cell* r = NULL;
+            Cell* i = NULL;
+
+            // Find the last '+' or '-' (but not the leading sign)
+            char *sep = NULL;
+            for (char *q = p + 1; *q; q++) {
+                if (*q == '+' || *q == '-') {
+                    sep = q;
+                }
             }
-            const char *tok1 = strsep(&p, "+");
-            const char *tok2 = strsep(&p, "+");
 
-            /* recursively parse the real and imaginary parts */
-            Cell* r = parse_atom(tok1);
-            Cell* i = parse_atom(tok2);
+            if (!sep) {
+                // pure imaginary case: "12i", "-12i", "+12i", "i", "-i", "+i"
+                r = make_val_int(0);
 
+                if (strcmp(p, "+") == 0 || strcmp(p, "") == 0) {
+                    i = make_val_int(1);
+                } else if (strcmp(p, "-") == 0) {
+                    i = make_val_int(-1);
+                } else {
+                    i = parse_atom(p);
+                }
+
+            } else {
+                // real ± imag case: "23+10i", "23-10i", "-23+10i", etc.
+                const char sign = *sep;     // save '+' or '-'
+                *sep = '\0';          // terminate real part
+                const char *real_str = p;
+
+                // imaginary part starts right after sep
+                const char *imag_digits = sep + 1;
+
+                // rebuild full imag string: e.g. "+10" or "-10"
+                char buf[64];
+                snprintf(buf, sizeof(buf), "%c%s", sign, imag_digits);
+
+                r = parse_atom(real_str);
+                i = parse_atom(buf);
+            }
             Cell* result = make_val_complex(r, i);
-            free(p);
+            free(copy);
             return result;
         }
-
         /* Rational numbers */
         if (strchr(tok, '/')) {
             char *p, *to_free;
