@@ -199,6 +199,7 @@ Cell* eval_sexpr(Lex* e, Cell* v) {
 
     /* Apply function */
     Cell* result = f->builtin(e, v);
+    cell_delete(v);
     cell_delete(f);
     return result;
 }
