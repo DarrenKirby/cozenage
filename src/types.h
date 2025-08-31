@@ -25,7 +25,7 @@ check_arg_arity((a), -1, (lo), (hi))
 typedef enum {
     VAL_INT     = 1 << 0,   /* integer */
     VAL_RAT     = 1 << 1,   /* rational */
-    VAL_REAL    = 1 << 2,   /* real (long double) */
+    VAL_REAL    = 1 << 2,   /* real */
     VAL_COMPLEX = 1 << 3,   /* complex number */
 
     VAL_BOOL    = 1 << 4,   /* #t / #f */
@@ -52,11 +52,11 @@ typedef struct Cell {
 
     union {
         long double r_val;    /* reals */
-        long long int i_val;   /* integers */
-        int b_val;           /* 0 = false, 1 = true */
-        char c_val;         /* character literal #\a */
-        char* sym;             /* symbols */
-        char* str;             /* strings */
+        long long int i_val;  /* integers */
+        int b_val;            /* 0 = false, 1 = true */
+        char c_val;           /* character literal #\a */
+        char* sym;              /* symbols */
+        char* str;              /* strings */
 
         struct {               /* pairs */
             Cell* car;           /* first member */

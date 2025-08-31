@@ -32,6 +32,7 @@ int discard_continuation(const int count, const int key) {
 }
 #endif
 
+/* Allow multi-line input in the REPL */
 static char* read_multiline(const char* prompt, const char* cont_prompt) {
     char *line = NULL;
     char *input = NULL;
@@ -82,7 +83,7 @@ static char* read_multiline(const char* prompt, const char* cont_prompt) {
 /* read()
  * Take a line of input from a prompt and pass it
  * through a 2 step lexer/parser stream, and convert
- * it to an l_val struct.
+ * the value to a Cell struct.
  * */
 Cell* coz_read(Lex* e) {
     char *input = read_multiline(PS1_PROMPT, PS2_PROMPT);
@@ -107,12 +108,11 @@ Cell* coz_read(Lex* e) {
     return v;
 }
 
-
 /* Forward declaration to resolve circular dependency */
 Cell* eval_sexpr(Lex* e, Cell* v);
 
 /* coz_eval()
- * Evaluate an l_val in the given environment.
+ * Evaluate a Cell in the given environment.
  * Literals evaluate to themselves; symbols are looked up.
  * S-expressions are recursively evaluated.
  */
@@ -205,7 +205,7 @@ Cell* eval_sexpr(Lex* e, Cell* v) {
 }
 
 /* print()
- * Take the l_val produced by eval and print it in a
+ * Take the Cell produced by eval and print it in a
  * context-specific, meaningful way.
  * */
 void coz_print(const Cell* v) {

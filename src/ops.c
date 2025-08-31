@@ -11,19 +11,14 @@
 #include "printer.h"
 
 
-/* Return 1 if l_val is a number (int or float) */
-int lval_is_num(const Cell* v) {
-    return v->type == VAL_INT || v->type == VAL_REAL;
-}
-
-/* Convert any l_val number to long double for calculation */
-long double lval_to_ld(const Cell* v) {
+/* Convert any Cell number to long double for calculation */
+long double VAL_to_ld(const Cell* v) {
     return (v->type == VAL_INT) ? (long double)v->i_val : v->r_val;
 }
 
 /* Helper which determines if there is a meaningful fractional portion
- * in the result, and returns LVAL_INT or LVAL_FLOAT accordingly */
-Cell* make_lval_from_double(const long double x) {
+ * in the result, and returns VAL_INT or VAL_FLOAT accordingly */
+Cell* make_VAL_from_double(const long double x) {
     /* epsilon: what counts as “effectively an integer” */
     const long double EPS = 1e-12L;
 
@@ -40,7 +35,7 @@ Cell* make_lval_from_double(const long double x) {
  *     Basic arithmetic operators     *
  * -----------------------------------*/
 
-/* '+' -> LVAL_INT|LVAL_FLOAT|LVAL_RAT|LVAL_COMP - returns the sum of its arguments */
+/* '+' -> VAL_INT|VAL_FLOAT|VAL_RAT|VAL_COMP - returns the sum of its arguments */
 Cell* builtin_add(Lex* e, Cell* a) {
     Cell* err = check_arg_types(a, VAL_INT|VAL_REAL|VAL_RAT|VAL_COMPLEX);
     if (err) { return err; }
@@ -79,7 +74,7 @@ Cell* builtin_add(Lex* e, Cell* a) {
     return result;
 }
 
-/* '-' -> LVAL_INT|LVAL_FLOAT|LVAL_RAT|LVAL_COMP - returns the difference of its arguments */
+/* '-' -> VAL_INT|VAL_FLOAT|VAL_RAT|VAL_COMP - returns the difference of its arguments */
 Cell* builtin_sub(Lex* e, Cell* a) {
     Cell* err = check_arg_types(a, VAL_INT|VAL_REAL|VAL_RAT|VAL_COMPLEX);
     if (err) { return err; }
@@ -121,7 +116,7 @@ Cell* builtin_sub(Lex* e, Cell* a) {
     return result;
 }
 
-/* '*' -> LVAL_INT|LVAL_FLOAT|LVAL_RAT|LVAL_COMP - returns the product of its arguments */
+/* '*' -> VAL_INT|VAL_FLOAT|VAL_RAT|VAL_COMP - returns the product of its arguments */
 Cell* builtin_mul(Lex* e, Cell* a) {
     Cell* err = check_arg_types(a, VAL_INT|VAL_REAL|VAL_RAT|VAL_COMPLEX);
     if (err) { return err; }
@@ -247,8 +242,8 @@ static int complex_eq_op(Lex* e, const Cell* lhs, const Cell* rhs) {
 
     cell_delete(real_result);
     cell_delete(imag_result);
-    cell_delete(args_real);   // 🔥 free the temporary argv
-    cell_delete(args_imag);   // 🔥 free the temporary argv
+    cell_delete(args_real);
+    cell_delete(args_imag);
 
     return eq;
 }
@@ -339,37 +334,37 @@ Cell* builtin_lte_op(Lex* e, Cell* a) {
  *    Generic unary numeric procedures    *
  * ---------------------------------------*/
 
-/* 'zero?' -> LVAL - returns #t if arg is == 0 else #f */
+/* 'zero?' -> VAL - returns #t if arg is == 0 else #f */
 Cell* builtin_zero(Lex* e, Cell* a) {
     Cell* err = check_arg_types(a, VAL_INT|VAL_REAL);
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
-    const long double result = lval_to_ld(a->cell[0]);
+    const long double result = VAL_to_ld(a->cell[0]);
     if (result == 0 || result == 0.0) { return make_val_bool(1); }
     return make_val_bool(0);
 }
 
-/* 'positive?' -> LVAL_BOOL - returns #t if arg is >= 0 else #f */
+/* 'positive?' -> VAL_BOOL - returns #t if arg is >= 0 else #f */
 Cell* builtin_positive(Lex* e, Cell* a) {
     Cell* err = check_arg_types(a, VAL_INT|VAL_REAL);
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
-    const long double result = lval_to_ld(a->cell[0]);
+    const long double result = VAL_to_ld(a->cell[0]);
     if (result >= 0) { return make_val_bool(1); }
     return make_val_bool(0);
 }
 
-/* 'negative?' -> LVAL_BOOL - returns #t if arg is < 0 else #f */
+/* 'negative?' -> VAL_BOOL - returns #t if arg is < 0 else #f */
 Cell* builtin_negative(Lex* e, Cell* a) {
     Cell* err = check_arg_types(a, VAL_INT | VAL_REAL);
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
-    const long double result = lval_to_ld(a->cell[0]);
+    const long double result = VAL_to_ld(a->cell[0]);
     if (result < 0) { return make_val_bool(1); }
     return make_val_bool(0);
 }
 
-/* 'odd?' -> LVAL_BOOL - returns #t if arg is odd else #f */
+/* 'odd?' -> VAL_BOOL - returns #t if arg is odd else #f */
 Cell* builtin_odd(Lex* e, Cell* a) {
     Cell* err = check_arg_types(a, VAL_INT);
     if (err) { return err; }
@@ -379,7 +374,7 @@ Cell* builtin_odd(Lex* e, Cell* a) {
     return make_val_bool(1);
 }
 
-/* 'even?' -> LVAL_BOOL - returns #t if arg is even else #f */
+/* 'even?' -> VAL_BOOL - returns #t if arg is even else #f */
 Cell* builtin_even(Lex* e, Cell* a) {
     Cell* err = check_arg_types(a, VAL_INT);
     if (err) { return err; }
@@ -393,7 +388,7 @@ Cell* builtin_even(Lex* e, Cell* a) {
  *         Special forms        *
  * -----------------------------*/
 
-/* 'quote' -> LVAL_SEXPR -  returns the sole argument unevaluated */
+/* 'quote' -> VAL_SEXPR -  returns the sole argument unevaluated */
 Cell* builtin_quote(Lex* e, Cell* a) {
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
@@ -405,7 +400,7 @@ Cell* builtin_quote(Lex* e, Cell* a) {
 *    Equality and equivalence comparators    *
 * -------------------------------------------*/
 
-/* 'eq?' -> LVAL_BOOL - Tests whether its two arguments are the exact same object
+/* 'eq?' -> VAL_BOOL - Tests whether its two arguments are the exact same object
  * (pointer equality). Typically used for symbols and other non-numeric atoms.
  * May not give meaningful results for numbers or characters, since distinct but
  * equal values aren’t guaranteed to be the same object. */
@@ -420,7 +415,7 @@ Cell* builtin_eq(Lex* e, Cell* a) {
     return make_val_bool(x == y);
 }
 
-/* 'eqv?' -> LVAL_BOOL - Like 'eq?', but also considers numbers and characters
+/* 'eqv?' -> VAL_BOOL - Like 'eq?', but also considers numbers and characters
  * with the same value as equivalent. (eqv? 2 2) is true, even if those 2s are
  * not the same object. Use when: you want a general-purpose equality predicate
  * that works for numbers, characters, and symbols, but you don’t need deep
@@ -488,7 +483,7 @@ Cell* builtin_equal(Lex* e, Cell* a) {
  *     Generic numeric operations     *
  * -----------------------------------*/
 
-/* 'abs' -> LVAL_INT|LVAL_FLOAT - returns the absolute value of its argument */
+/* 'abs' -> VAL_INT|VAL_FLOAT - returns the absolute value of its argument */
 Cell* builtin_abs(Lex* e, Cell* a) {
     Cell* err = check_arg_types(a, VAL_INT | VAL_REAL);
     if (err) { return err; }
@@ -501,7 +496,7 @@ Cell* builtin_abs(Lex* e, Cell* a) {
     return make_val_real(-a->r_val);
 }
 
-/* 'expt' -> LVAL_INT|LVAL_FLOAT - returns its first arg calculated
+/* 'expt' -> VAL_INT|VAL_FLOAT - returns its first arg calculated
  * to the power of its second arg */
 Cell* builtin_expt(Lex* e, Cell* a) {
     Cell* err = check_arg_types(a, VAL_INT | VAL_REAL);
@@ -528,10 +523,10 @@ Cell* builtin_expt(Lex* e, Cell* a) {
         /* float exponent: delegate to powl */
         result = powl(base, VAL_AS_NUM(exp_val));
     }
-    return make_lval_from_double(result);
+    return make_VAL_from_double(result);
 }
 
-/* 'modulo' -> LVAL_INT - returns the remainder of dividing the first argument
+/* 'modulo' -> VAL_INT - returns the remainder of dividing the first argument
  * by the second, with the result having the same sign as the divisor.*/
 Cell* builtin_modulo(Lex* e, Cell* a) {
     Cell* err = check_arg_types(a, VAL_INT);
@@ -544,7 +539,7 @@ Cell* builtin_modulo(Lex* e, Cell* a) {
     return make_val_int(r);
 }
 
-/* 'quotient' -> LVAL_INT - returns the integer result of dividing
+/* 'quotient' -> VAL_INT - returns the integer result of dividing
  * the first argument by the second, discarding any remainder.*/
 Cell* builtin_quotient(Lex* e, Cell* a) {
     Cell* err = check_arg_types(a, VAL_INT);
@@ -553,7 +548,7 @@ Cell* builtin_quotient(Lex* e, Cell* a) {
     return make_val_int(a->cell[0]->i_val / a->cell[1]->i_val);
 }
 
-/* 'remainder' -> LVAL_INT - returns the remainder of dividing the first argument
+/* 'remainder' -> VAL_INT - returns the remainder of dividing the first argument
  * by the second, with the result having the same sign as the dividend.*/
 Cell* builtin_remainder(Lex* e, Cell* a) {
     Cell* err = check_arg_types(a, VAL_INT);
@@ -621,7 +616,7 @@ Cell* builtin_number_pred(Lex *e, Cell* a) {
     return make_val_bool(0);
 }
 
-/* 'boolean?' -> LVAL_BOOL  - returns #t if obj is either #t or #f
+/* 'boolean?' -> VAL_BOOL  - returns #t if obj is either #t or #f
     and returns #f otherwise. */
 Cell* builtin_boolean_pred(Lex* e, Cell* a) {
     Cell* err = CHECK_ARITY_EXACT(a, 1);
@@ -809,7 +804,7 @@ Cell* builtin_exact_integer(Lex *e, Cell* a) {
  *     Boolean and logical procedures     *
  * ---------------------------------------*/
 
-/* 'not' -> LVAL_BOOL - returns #t if obj is false, and returns #f otherwise */
+/* 'not' -> VAL_BOOL - returns #t if obj is false, and returns #f otherwise */
 Cell* builtin_not(Lex* e, Cell* a) {
     Cell* err;
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
@@ -817,7 +812,7 @@ Cell* builtin_not(Lex* e, Cell* a) {
     return make_val_bool(is_false);
 }
 
-/* 'boolean' -> LVAL_BOOL - converts any value to a strict boolean */
+/* 'boolean' -> VAL_BOOL - converts any value to a strict boolean */
 Cell* builtin_boolean(Lex* e, Cell* a) {
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
@@ -827,7 +822,7 @@ Cell* builtin_boolean(Lex* e, Cell* a) {
     return make_val_bool(result);
 }
 
-/* 'and' -> LVAL_BOOL|ANY - if any expression evaluates to #f, then #f is
+/* 'and' -> VAL_BOOL|ANY - if any expression evaluates to #f, then #f is
  * returned. Any remaining expressions are not evaluated. If all the expressions
  * evaluate to true values, the values of the last expression are returned.
  * If there are no expressions, then #t is returned.*/
@@ -842,7 +837,7 @@ Cell* builtin_and(Lex* e, Cell* a) {
     return cell_copy(a->cell[a->count - 1]);
 }
 
-/* 'or' -> LVAL_BOOL|ANY - the value of the first expression that evaluates
+/* 'or' -> VAL_BOOL|ANY - the value of the first expression that evaluates
  * to true is returned. Any remaining expressions are not evaluated. If all
  * expressions evaluate to #f or if there are no expressions, #f is returned */
 Cell* builtin_or(Lex* e, Cell* a) {
@@ -860,7 +855,7 @@ Cell* builtin_or(Lex* e, Cell* a) {
  *     pair/list constructors, selectors, and procedures     *
  * ----------------------------------------------------------*/
 
-/* 'cons' -> LVAL_PAIR - returns a pair made from two arguments */
+/* 'cons' -> VAL_PAIR - returns a pair made from two arguments */
 Cell* builtin_cons(Lex* e, Cell* a) {
     Cell* err = CHECK_ARITY_EXACT(a, 2);
     if (err) return err;
@@ -899,7 +894,7 @@ Cell* builtin_cdr(Lex* e, Cell* a) {
     return result;
 }
 
-/* 'list' -> LVAL_PAIR - returns a nil-terminated proper list */
+/* 'list' -> VAL_PAIR - returns a nil-terminated proper list */
 Cell* builtin_list(Lex* e, Cell* a) {
     /* start with nil */
     Cell* result = make_val_nil();
@@ -911,7 +906,7 @@ Cell* builtin_list(Lex* e, Cell* a) {
     return result;
 }
 
-/* 'length' -> LVAL_INT - returns the member count of a proper list */
+/* 'length' -> VAL_INT - returns the member count of a proper list */
 Cell* builtin_list_length(Lex* e, Cell* a) {
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
@@ -959,7 +954,7 @@ Cell* builtin_list_ref(Lex* e, Cell* a) {
         return cell_copy(p->car);
     }
     if (a->cell[0]->type == VAL_SEXPR) {
-        /* else the list is buried in an LVAL_SEXPR */
+        /* else the list is buried in an VAL_SEXPR */
         return cell_copy(a->cell[0]->cell[i]);
     }
     return make_val_err("list-ref: arg 1 must be list or pair.");

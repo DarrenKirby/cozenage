@@ -12,13 +12,13 @@
 void print_long_double(long double x) {
     char buf[128];
 
-    // Use LDBL_DIG (guaranteed decimal digits of precision)
-    // Add a couple of "guard" digits so we don't lose info
+    /* Use LDBL_DIG (guaranteed decimal digits of precision)
+       Add a couple of "guard" digits so we don't lose info */
     int prec = LDBL_DIG + 2;
 
     snprintf(buf, sizeof buf, "%.*Lg", prec, x);
 
-    // If there's no '.' or exponent marker, force a ".0"
+    /* If there's no '.' or exponent marker, force a ".0" */
     if (!strchr(buf, '.') && !strchr(buf, 'e') && !strchr(buf, 'E')) {
         strcat(buf, ".0");
     }
@@ -26,7 +26,7 @@ void print_long_double(long double x) {
     printf("%s", buf);
 }
 
-void print_lval_seq(const Cell* v, const char* prefix, const char open, const char close) {
+void print_sequence(const Cell* v, const char* prefix, const char open, const char close) {
     if (!v) return;
 
     if (prefix) printf("%s", prefix);
@@ -36,7 +36,6 @@ void print_lval_seq(const Cell* v, const char* prefix, const char open, const ch
         print_cell(v->cell[i]);
         if (i != v->count - 1) printf(" ");
     }
-
     printf("%c", close);
 }
 
@@ -46,7 +45,7 @@ void print_pair(const Cell* v) {
     while (cur->type == VAL_PAIR) {
         print_cell(cur->car);
         if (cur->cdr->type == VAL_NIL) {
-            break;  // proper end of list
+            break;  /* proper end of list */
         }
         if (cur->cdr->type == VAL_PAIR) {
             printf(" ");
@@ -63,7 +62,7 @@ void print_pair(const Cell* v) {
 void print_cell(const Cell* v) {
     switch (v->type) {
     case VAL_REAL:
-        //printf("%Lg", v->real_val);
+        //printf("%#Lg", v->r_val);
         print_long_double(v->r_val);
         break;
 
@@ -80,7 +79,7 @@ void print_cell(const Cell* v) {
 
         long double im = cell_to_ld(v->imag);
         if (im < 0) {
-            print_cell(v->imag);  // already negative
+            print_cell(v->imag);  /* already negative */
         } else {
             printf("+");
             print_cell(v->imag);
@@ -140,13 +139,13 @@ void print_cell(const Cell* v) {
         break;
 
     case VAL_SEXPR:
-        print_lval_seq(v, NULL, '(', ')');
+        print_sequence(v, NULL, '(', ')');
         break;
     case VAL_VEC:
-        print_lval_seq(v, "#", '(', ')');
+        print_sequence(v, "#", '(', ')');
         break;
     case VAL_BYTEVEC:
-        print_lval_seq(v, "#u8", '(', ')');
+        print_sequence(v, "#u8", '(', ')');
         break;
 
     default:

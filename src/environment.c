@@ -38,7 +38,6 @@ void lex_delete(Lex* e) {
     free(e);
 }
 
-
 Cell* lex_get(const Lex* e, const Cell* k) {
     if (!e || !k || k->type != VAL_SYM) return NULL;
 

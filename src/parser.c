@@ -63,7 +63,6 @@ long double parse_float_checked(const char* str, char* err_buf, size_t err_buf_s
     return val;
 }
 
-
 /* lexer() -> char**
  * Take a line of input and return an array of strings
  * containing all the tokens.
@@ -123,7 +122,6 @@ char **lexer(const char *input, int *count) {
         /* String literal */
         else if (*p == '"') {
             p++; /* skip opening quote */
-            //const char *start = p;
             size_t buf_size = 64;
             char *tok = malloc(buf_size);
             if (!tok) exit(EXIT_FAILURE);
@@ -415,13 +413,13 @@ Cell* parse_atom(const char *tok) {
             char *copy = strdup(tok);
             char *p = copy;
 
-            // strip trailing 'i'
+            /* strip trailing 'i' */
             p[len-1] = '\0';
 
             Cell* r = NULL;
             Cell* i = NULL;
 
-            // Find the last '+' or '-' (but not the leading sign)
+            /* Find the last '+' or '-' (but not the leading sign) */
             char *sep = NULL;
             for (char *q = p + 1; *q; q++) {
                 if (*q == '+' || *q == '-') {
@@ -430,7 +428,7 @@ Cell* parse_atom(const char *tok) {
             }
 
             if (!sep) {
-                // pure imaginary case: "12i", "-12i", "+12i", "i", "-i", "+i"
+                /* pure imaginary case: "12i", "-12i", "+12i", "i", "-i", "+i" */
                 r = make_val_int(0);
 
                 if (strcmp(p, "+") == 0 || strcmp(p, "") == 0) {
@@ -442,15 +440,15 @@ Cell* parse_atom(const char *tok) {
                 }
 
             } else {
-                // real ± imag case: "23+10i", "23-10i", "-23+10i", etc.
-                const char sign = *sep;     // save '+' or '-'
-                *sep = '\0';          // terminate real part
+                /* real ± imag case: "23+10i", "23-10i", "-23+10i", etc. */
+                const char sign = *sep;     /* save '+' or '-' */
+                *sep = '\0';                /* terminate real part */
                 const char *real_str = p;
 
-                // imaginary part starts right after sep
+                /* imaginary part starts right after sep */
                 const char *imag_digits = sep + 1;
 
-                // rebuild full imag string: e.g. "+10" or "-10"
+                /* rebuild full imag string: e.g. "+10" or "-10" */
                 char buf[64];
                 snprintf(buf, sizeof(buf), "%c%s", sign, imag_digits);
 

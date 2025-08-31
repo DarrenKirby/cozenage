@@ -136,9 +136,9 @@ Cell* make_val_err(const char* m) {
     return v;
 }
 
-/*------------------------------------*
- *       Cell accessors, destructors, and         *
- * -----------------------------------*/
+/*------------------------------------------------*
+ *    Cell accessors, destructors, and helpers    *
+ * -----------------------------------------------*/
 
 Cell* cell_add(Cell* v, Cell* x) {
     v->count++;
@@ -394,6 +394,10 @@ const char* cell_mask_types(const int mask) {
     return buf;
 }
 
+/*---------------------------------------------------------*
+ *      Procedure argument arity and type validators       *
+ * --------------------------------------------------------*/
+
 /* Return NULL if all args are valid, else return an error lval* */
 Cell* check_arg_types(const Cell* a, const int mask) {
     for (int i = 0; i < a->count; i++) {
@@ -440,7 +444,9 @@ Cell* check_arg_arity(const Cell* a, const int exact, const int min, const int m
     return NULL; /* all good */
 }
 
-/* Helper functions for numeric type promotion */
+/*---------------------------------------------------------*
+ *       Helper functions for numeric type promotion       *
+ * --------------------------------------------------------*/
 
 /* Convertors */
 Cell* int_to_rat(Cell* v) {
@@ -505,6 +511,10 @@ void numeric_promote(Cell** lhs, Cell** rhs) {
     *rhs = b;
 }
 
+/*---------------------------------------------------------*
+ *      Helper functions for using builtins internally     *
+ * --------------------------------------------------------*/
+
 /* Construct an S-expression with exactly one element */
 Cell* make_sexpr_len1(const Cell* a) {
     Cell* v = make_val_sexpr();
@@ -523,6 +533,10 @@ Cell* make_sexpr_len2(const Cell* a, const Cell* b) {
     v->cell[1] = cell_copy(b);
     return v;
 }
+
+/*-------------------------------------------*
+ *       Miscellaneous numeric helpers       *
+ * ------------------------------------------*/
 
 Cell* negate_numeric(Cell* x) {
     check_arg_types(x, VAL_INT|VAL_REAL|VAL_RAT|VAL_COMPLEX);
@@ -637,4 +651,3 @@ void complex_apply(BuiltinFn fn, Lex* e, Cell* result, Cell* rhs) {
         result->imag = new_imag;
     }
 }
-
