@@ -50,8 +50,9 @@ add_executable(cozenage src/main.c
         src/environment.c
         src/environment.h
         src/ops.c
-        src/ops.h)
-
+        src/ops.h
+        src/eval.c
+        src/eval.h)
 
 # Find math library
 find_library(M_LIB m)

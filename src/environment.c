@@ -12,10 +12,21 @@
 
 /* Initializes an environment, and returns a pointer to it. */
 Lex* lex_initialize(void) {
+    Lex* top_env = malloc(sizeof(Lex));
+    top_env->count = 0;
+    top_env->syms = NULL;
+    top_env->vals = NULL;
+    top_env->parent = NULL;  /* top-level has no parent */
+    return top_env;
+}
+
+/* Initialize a new local environment */
+Lex* lex_new_child(Lex* parent) {
     Lex* e = malloc(sizeof(Lex));
     e->count = 0;
     e->syms = NULL;
     e->vals = NULL;
+    e->parent = parent;
     return e;
 }
 
@@ -45,6 +56,11 @@ Cell* lex_get(const Lex* e, const Cell* k) {
         if (strcmp(e->syms[i], k->sym) == 0) {
             return cell_copy(e->vals[i]);
         }
+    }
+
+    /* Recurse into parent if not found */
+    if (e->parent) {
+        return lex_get(e->parent, k);
     }
 
     char buf[128];
@@ -80,6 +96,28 @@ void lex_put(Lex* e, const Cell* k, const Cell* v) {
     e->vals[e->count - 1] = cell_copy(v);
 }
 
+Cell* lex_make_builtin(const char* name, Cell* (*func)(Lex*, Cell*)) {
+    Cell* c = malloc(sizeof(Cell));
+    c->type = VAL_PROC;
+    c->name = strdup(name);
+    c->builtin = func;
+    c->formals = NULL;
+    c->body = NULL;
+    c->env = NULL;
+    return c;
+}
+
+Cell* lex_make_lambda(Cell* formals, Cell* body, Lex* env) {
+    Cell* c = malloc(sizeof(Cell));
+    c->type = VAL_PROC;
+    c->name = NULL;  // optional
+    c->builtin = NULL;
+    c->formals = cell_copy(formals);
+    c->body = cell_copy(body);
+    c->env = env;  // do NOT copy, just store pointer
+    return c;
+}
+
 Cell* lex_register_builtin(const char* name,
                     Cell* (*func)(Lex*, Cell*)) {
     Cell* v = malloc(sizeof(Cell));
@@ -91,7 +129,7 @@ Cell* lex_register_builtin(const char* name,
 
 void lex_add_builtin(Lex* e, const char* name,
                       Cell* (*func)(Lex*, Cell*)) {
-    Cell* fn = lex_register_builtin(name, func);
+    Cell* fn = lex_make_builtin(name, func);
     Cell* k = make_val_sym(name);
     lex_put(e, k, fn);
     cell_delete(k);

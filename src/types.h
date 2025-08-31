@@ -78,9 +78,12 @@ typedef struct Cell {
             int count;
         };
 
-        struct {               /* for functions */
-            char* name;        /* function name (optional, for builtins) */
-            Cell* (*builtin)(Lex*, Cell*);
+        struct {                      /* built-in and user-defined procedures */
+            char* name;                    /* optional, for printing name of builtins */
+            Cell* (*builtin)(Lex*, Cell*); /* non-NULL → builtin, ignore formals/body/env */
+            Cell* formals;                 /* non-NULL → user-defined lambda */
+            Cell* body;                    /* S-expression for lambda */
+            Lex* env;                      /* closure environment */
         };
     };
 } Cell;

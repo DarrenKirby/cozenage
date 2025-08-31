@@ -8,11 +8,13 @@ typedef struct Cell Cell;
 typedef struct Lex {
     int count;
     char** syms;   /* symbol names */
-    Cell** vals;   /* values (can be VAL_PROC, VAL_INT, etc.) */
+    Cell** vals;   /* values */
+    struct Lex* parent;  /* points to parent env, NULL if top-level */
 } Lex;
 
 /* Environment management */
 Lex* lex_initialize(void);
+Lex* lex_new_child(Lex* parent);
 void lex_delete(Lex* e);
 
 /* Environment operations */

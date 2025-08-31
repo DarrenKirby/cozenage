@@ -6,6 +6,7 @@
 #include "printer.h"
 #include "types.h"
 #include "environment.h"
+#include "eval.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -76,7 +77,6 @@ static char* read_multiline(const char* prompt, const char* cont_prompt) {
         total_len += line_len + 1;
         free(line);
     }
-
     return input;
 }
 
@@ -108,101 +108,6 @@ Cell* coz_read(Lex* e) {
     return v;
 }
 
-/* Forward declaration to resolve circular dependency */
-Cell* eval_sexpr(Lex* e, Cell* v);
-
-/* coz_eval()
- * Evaluate a Cell in the given environment.
- * Literals evaluate to themselves; symbols are looked up.
- * S-expressions are recursively evaluated.
- */
-Cell* coz_eval(Lex* e, Cell* v) {
-    if (!v) return NULL;
-
-    switch (v->type) {
-        /* Symbols: look them up in the environment */
-        case VAL_SYM: {
-            Cell* x = lex_get(e, v);
-            cell_delete(v);
-            return x;
-        }
-
-        /* S-expressions: recursively evaluate */
-        case VAL_SEXPR:
-            return eval_sexpr(e, v);
-
-        /* All literals evaluate to themselves */
-        case VAL_INT:
-        case VAL_REAL:
-        case VAL_RAT:
-        case VAL_COMPLEX:
-        case VAL_BOOL:
-        case VAL_CHAR:
-        case VAL_STR:
-        /* case LVAL_PAIR: is not necessary - no concept of 'pair literal' */
-        case VAL_VEC:
-        case VAL_BYTEVEC:
-        case VAL_NIL:
-        /* Functions, ports, continuations, and errors are returned as-is */
-        case VAL_PROC:
-        case VAL_PORT:
-        case VAL_CONT:
-        case VAL_ERR:
-            return v;
-
-        default:
-            return make_val_err("Unknown l_val type in eval()");
-    }
-}
-
-/* eval_sexpr()
- * Evaluate an S-expression.
- * 1) Evaluate each child.
- * 2) Handle empty or single-element S-expressions.
- * 3) Treat first element as function (symbol or builtin).
- */
-Cell* eval_sexpr(Lex* e, Cell* v) {
-    if (v->count == 0) return v;
-
-    /* Grab first element without evaluating yet */
-    Cell* first = cell_pop(v, 0);
-
-    /* Special form: quote */
-    if (first->type == VAL_SYM && strcmp(first->sym, "quote") == 0) {
-        cell_delete(first);
-        if (v->count != 1) {
-            cell_delete(v);
-            return make_val_err("quote takes exactly one argument");
-        }
-        return cell_take(v, 0);  /* return argument unevaluated */
-    }
-
-    /* Otherwise, evaluate first element normally (should become a function) */
-    Cell* f = coz_eval(e, first);
-    if (f->type != VAL_PROC) {
-        printf(ANSI_RED_B);
-        print_cell(f);
-        printf(ANSI_RESET);
-        cell_delete(f);
-        cell_delete(v);
-        return make_val_err("S-expression does not start with a procedure");
-    }
-
-    /* Now evaluate arguments (since it's not a special form) */
-    for (int i = 0; i < v->count; i++) {
-        v->cell[i] = coz_eval(e, v->cell[i]);
-        if (v->cell[i]->type == VAL_ERR) {
-            cell_delete(f);
-            return cell_take(v, i);
-        }
-    }
-
-    /* Apply function */
-    Cell* result = f->builtin(e, v);
-    cell_delete(v);
-    cell_delete(f);
-    return result;
-}
 
 /* print()
  * Take the Cell produced by eval and print it in a
