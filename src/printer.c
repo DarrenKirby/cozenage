@@ -23,7 +23,7 @@ void print_long_double(long double x) {
         strcat(buf, ".0");
     }
 
-    printf("%s\n", buf);
+    printf("%s", buf);
 }
 
 void print_lval_seq(const Cell* v, const char* prefix, const char open, const char close) {
@@ -75,12 +75,19 @@ void print_cell(const Cell* v) {
         printf("%ld/%ld", v->num, v->den);
         break;
 
-    case VAL_COMPLEX:
+    case VAL_COMPLEX: {
         print_cell(v->real);
-        printf("+");
-        print_cell(v->imag);
+
+        long double im = cell_to_ld(v->imag);
+        if (im < 0) {
+            print_cell(v->imag);  // already negative
+        } else {
+            printf("+");
+            print_cell(v->imag);
+        }
         printf("i");
         break;
+    }
 
     case VAL_BOOL:
         printf("%s%s%s", ANSI_MAGENTA,
