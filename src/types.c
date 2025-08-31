@@ -2,6 +2,7 @@
 
 #include "types.h"
 #include "parser.h"
+#include "ops.h"
 #include <ctype.h>
 #include <errno.h>
 #include <stdio.h>
@@ -463,28 +464,54 @@ void numeric_promote(Cell** lhs, Cell** rhs) {
     Cell* a = *lhs;
     Cell* b = *rhs;
 
-    /* If either is complex, promote other to complex */
     if (a->type == VAL_COMPLEX || b->type == VAL_COMPLEX) {
-        if (a->type != VAL_COMPLEX) a = to_complex(a);
-        if (b->type != VAL_COMPLEX) b = to_complex(b);
+        if (a->type != VAL_COMPLEX) {
+            Cell* old = a;
+            a = to_complex(a);
+            cell_delete(old);
+        }
+        if (b->type != VAL_COMPLEX) {
+            Cell* old = b;
+            b = to_complex(b);
+            cell_delete(old);
+        }
     }
-    /* If either is float, promote other to float */
     else if (a->type == VAL_REAL || b->type == VAL_REAL) {
-        if (a->type == VAL_INT) a = int_to_real(a);
-        else if (a->type == VAL_RAT) a = rat_to_real(a);
-
-        if (b->type == VAL_INT) b = int_to_real(b);
-        else if (b->type == VAL_RAT) b = rat_to_real(b);
+        if (a->type == VAL_INT || a->type == VAL_RAT) {
+            Cell* old = a;
+            a = (a->type == VAL_INT) ? int_to_real(a) : rat_to_real(a);
+            cell_delete(old);
+        }
+        if (b->type == VAL_INT || b->type == VAL_RAT) {
+            Cell* old = b;
+            b = (b->type == VAL_INT) ? int_to_real(b) : rat_to_real(b);
+            cell_delete(old);
+        }
     }
-    /* If either is rat, promote other to rat */
     else if (a->type == VAL_RAT || b->type == VAL_RAT) {
-        if (a->type == VAL_INT) a = int_to_rat(a);
-        if (b->type == VAL_INT) b = int_to_rat(b);
+        if (a->type == VAL_INT) {
+            Cell* old = a;
+            a = int_to_rat(a);
+            cell_delete(old);
+        }
+        if (b->type == VAL_INT) {
+            Cell* old = b;
+            b = int_to_rat(b);
+            cell_delete(old);
+        }
     }
-    /* else both are ints, nothing to do */
 
     *lhs = a;
     *rhs = b;
+}
+
+/* Construct an S-expression with exactly one element */
+Cell* make_sexpr_len1(const Cell* a) {
+    Cell* v = make_val_sexpr();
+    v->count = 1;
+    v->cell = malloc(sizeof(Cell*) * 2);
+    v->cell[0] = cell_copy(a);
+    return v;
 }
 
 /* Construct an S-expression with exactly two elements */
@@ -548,3 +575,66 @@ Cell* simplify_rational(Cell* v) {
 
     return v;
 }
+
+/* Helper: convert numeric Cell to long double */
+long double cell_to_ld(Cell* c) {
+    switch (c->type) {
+        case VAL_INT:  return (long double)c->i_val;
+        case VAL_RAT:  return (long double)c->num / (long double)c->den;
+        case VAL_REAL: return c->r_val;
+        default:       return 0.0L; /* should not happen */
+    }
+}
+
+/* optimized helper for operating on complex numbers */
+void complex_apply(BuiltinFn fn, Lex* e, Cell* result, Cell* rhs) {
+    if (fn == builtin_mul) {
+        long double a = cell_to_ld(result->real);
+        long double b = cell_to_ld(result->imag);
+        long double c = cell_to_ld(rhs->real);
+        long double d = cell_to_ld(rhs->imag);
+
+        long double real_val = a*c - b*d;
+        long double imag_val = a*d + b*c;
+
+        cell_delete(result->real);
+        cell_delete(result->imag);
+
+        result->real = make_val_real(real_val);
+        result->imag = make_val_real(imag_val);
+    }
+    else if (fn == builtin_div) {
+        long double a = cell_to_ld(result->real);
+        long double b = cell_to_ld(result->imag);
+        long double c = cell_to_ld(rhs->real);
+        long double d = cell_to_ld(rhs->imag);
+
+        long double denom = c*c + d*d;
+        long double real_val = (a*c + b*d) / denom;
+        long double imag_val = (b*c - a*d) / denom;
+
+        cell_delete(result->real);
+        cell_delete(result->imag);
+
+        result->real = make_val_real(real_val);
+        result->imag = make_val_real(imag_val);
+    }
+    else {
+        /* addition/subtraction: elementwise using recursion */
+        Cell* real_args = make_sexpr_len2(result->real, rhs->real);
+        Cell* imag_args = make_sexpr_len2(result->imag, rhs->imag);
+
+        Cell* new_real = fn(e, real_args);
+        Cell* new_imag = fn(e, imag_args);
+
+        cell_delete(real_args);
+        cell_delete(imag_args);
+
+        cell_delete(result->real);
+        cell_delete(result->imag);
+
+        result->real = new_real;
+        result->imag = new_imag;
+    }
+}
+

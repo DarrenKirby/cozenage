@@ -86,6 +86,7 @@ typedef struct Cell {
 } Cell;
 
 extern Cell* val_nil;  /* declare the global singleton */
+typedef Cell* (*BuiltinFn)(Lex* e, Cell* args);
 
 Cell* make_val_real(long double n);
 Cell* make_val_int(long long n);
@@ -109,9 +110,11 @@ Cell* cell_take(Cell* v, int i);
 Cell* check_arg_types(const Cell* a, int mask);
 Cell* check_arg_arity(const Cell* a, int exact, int min, int max);
 void numeric_promote(Cell** lhs, Cell** rhs);
-
+Cell* make_sexpr_len1(const Cell* a);
 Cell* make_sexpr_len2(const Cell* a, const Cell* b);
 Cell* negate_numeric(Cell* x);
 Cell* simplify_rational(Cell* v);
+long double cell_to_ld(Cell* c);
+void complex_apply(BuiltinFn fn, Lex* e, Cell* result, Cell* rhs);
 
 #endif //COZENAGE_TYPES_H
