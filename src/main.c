@@ -14,7 +14,9 @@
 
 
 static volatile sig_atomic_t got_sigint = 0;
+#ifdef __linux__
 static volatile sig_atomic_t discard_line = 0;
+#endif
 
 static void sigint_handler(const int sig) {
     (void)sig;
@@ -107,7 +109,6 @@ Cell* coz_read(Lex* e) {
 
     return v;
 }
-
 
 /* print()
  * Take the Cell produced by eval and print it in a
