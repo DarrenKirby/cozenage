@@ -9,7 +9,8 @@ SRCS = $(SRC_DIR)/environment.c \
        $(SRC_DIR)/ops.c \
        $(SRC_DIR)/parser.c \
        $(SRC_DIR)/printer.c \
-       $(SRC_DIR)/types.c
+       $(SRC_DIR)/types.c \
+       $(SRC_DIR)/eval.c
 
 OBJS = $(SRCS:.c=.o)
 CC = gcc
