@@ -195,4 +195,8 @@ void lex_add_builtins(Lex* e) {
     lex_add_builtin(e, "list", builtin_list);
     lex_add_builtin(e, "length", builtin_list_length);
     lex_add_builtin(e, "list-ref", builtin_list_ref);
+    /* Vector constructors, selectors, and procedures */
+    lex_add_builtin(e, "vector", builtin_vector);
+    lex_add_builtin(e, "vector-length", builtin_vector_length);
+    lex_add_builtin(e, "vector-ref", builtin_vector_ref);
 }

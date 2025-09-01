@@ -288,8 +288,28 @@ Cell* builtin_gt_op(Lex* e, Cell* a) {
     Cell* err = check_arg_types(a, VAL_INT|VAL_REAL|VAL_RAT);
     if (err) { return err; }
     for (int i = 0; i < a->count - 1; i++) {
-        if (!(VAL_AS_NUM(a->cell[i]) > VAL_AS_NUM(a->cell[i+1]))) {
-            return make_val_bool(0);  /* false */
+        int ok = 0;
+        Cell* lhs = cell_copy(a->cell[i]);
+        Cell* rhs = cell_copy(a->cell[i+1]);
+        numeric_promote(&lhs, &rhs);
+        switch (lhs->type) {
+            case VAL_INT: {
+                if (lhs->i_val > rhs->i_val) { ok = 1; }
+            }
+            case VAL_REAL: {
+                if (lhs->r_val > rhs->r_val) { ok = 1; }
+                break;
+            }
+            case VAL_RAT: {
+                if ((lhs->num * rhs->den) > (lhs->den * rhs->num)) { ok = 1; }
+                break;
+            }
+            default: ;
+        }
+        cell_delete(lhs);
+        cell_delete(rhs);
+        if (!ok) {
+            return make_val_bool(0);
         }
     }
     return make_val_bool(1);
@@ -300,8 +320,28 @@ Cell* builtin_lt_op(Lex* e, Cell* a) {
     Cell* err = check_arg_types(a, VAL_INT|VAL_REAL|VAL_RAT);
     if (err) { return err; }
     for (int i = 0; i < a->count - 1; i++) {
-        if (!(VAL_AS_NUM(a->cell[i]) < VAL_AS_NUM(a->cell[i+1]))) {
-            return make_val_bool(0);  /* false */
+        int ok = 0;
+        Cell* lhs = cell_copy(a->cell[i]);
+        Cell* rhs = cell_copy(a->cell[i+1]);
+        numeric_promote(&lhs, &rhs);
+        switch (lhs->type) {
+            case VAL_INT: {
+                if (lhs->i_val < rhs->i_val) { ok = 1; }
+            }
+            case VAL_REAL: {
+                if (lhs->r_val < rhs->r_val) { ok = 1; }
+                break;
+            }
+            case VAL_RAT: {
+                if ((lhs->num * rhs->den) < (lhs->den * rhs->num)) { ok = 1; }
+                break;
+            }
+            default: ;
+        }
+        cell_delete(lhs);
+        cell_delete(rhs);
+        if (!ok) {
+            return make_val_bool(0);
         }
     }
     return make_val_bool(1);
@@ -312,8 +352,28 @@ Cell* builtin_gte_op(Lex* e, Cell* a) {
     Cell* err = check_arg_types(a, VAL_INT|VAL_REAL|VAL_RAT);
     if (err) { return err; }
     for (int i = 0; i < a->count - 1; i++) {
-        if (!(VAL_AS_NUM(a->cell[i]) >= VAL_AS_NUM(a->cell[i+1]))) {
-            return make_val_bool(0);  /* false */
+        int ok = 0;
+        Cell* lhs = cell_copy(a->cell[i]);
+        Cell* rhs = cell_copy(a->cell[i+1]);
+        numeric_promote(&lhs, &rhs);
+        switch (lhs->type) {
+            case VAL_INT: {
+                if (lhs->i_val >= rhs->i_val) { ok = 1; }
+            }
+            case VAL_REAL: {
+                if (lhs->r_val >= rhs->r_val) { ok = 1; }
+                break;
+            }
+            case VAL_RAT: {
+                if ((lhs->num * rhs->den) >= (lhs->den * rhs->num)) { ok = 1; }
+                break;
+            }
+            default: ;
+        }
+        cell_delete(lhs);
+        cell_delete(rhs);
+        if (!ok) {
+            return make_val_bool(0);
         }
     }
     return make_val_bool(1);
@@ -324,8 +384,28 @@ Cell* builtin_lte_op(Lex* e, Cell* a) {
     Cell* err = check_arg_types(a, VAL_INT|VAL_REAL|VAL_RAT);
     if (err) { return err; }
     for (int i = 0; i < a->count - 1; i++) {
-        if (!(VAL_AS_NUM(a->cell[i]) <= VAL_AS_NUM(a->cell[i+1]))) {
-            return make_val_bool(0);  /* false */
+        int ok = 0;
+        Cell* lhs = cell_copy(a->cell[i]);
+        Cell* rhs = cell_copy(a->cell[i+1]);
+        numeric_promote(&lhs, &rhs);
+        switch (lhs->type) {
+            case VAL_INT: {
+                if (lhs->i_val <= rhs->i_val) { ok = 1; }
+            }
+            case VAL_REAL: {
+                if (lhs->r_val <= rhs->r_val) { ok = 1; }
+                break;
+            }
+            case VAL_RAT: {
+                if ((lhs->num * rhs->den) <= (lhs->den * rhs->num)) { ok = 1; }
+                break;
+            }
+            default: ;
+        }
+        cell_delete(lhs);
+        cell_delete(rhs);
+        if (!ok) {
+            return make_val_bool(0);
         }
     }
     return make_val_bool(1);
@@ -1015,6 +1095,42 @@ Cell* builtin_list_ref(Lex* e, Cell* a) {
  *     Vector constructors, selectors, and procedures    *
  * ------------------------------------------------------*/
 
+Cell* builtin_vector(Lex* e, Cell* a) {
+    Cell* err = CHECK_ARITY_MIN(a, 1);
+    if (err) return err;
+
+    Cell *vec = make_val_vect();
+    for (int i = 0; i < a->count; i++) {
+        cell_add(vec, cell_copy(a->cell[i]));
+    }
+    return vec;
+}
+
+Cell* builtin_vector_length(Lex* e, Cell* a) {
+    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    if (err) return err;
+    err = check_arg_types(a, VAL_VEC);
+    if (err) return err;
+
+    return make_val_int(a->cell[0]->count);
+}
+
+Cell* builtin_vector_ref(Lex* e, Cell* a) {
+    Cell* err = CHECK_ARITY_EXACT(a, 2);
+    if (err) return err;
+    if (a->cell[0]->type != VAL_VEC) {
+        return make_val_err("list-ref: arg 1 must be a vector");
+    }
+    if (a->cell[1]->type != VAL_INT) {
+        return make_val_err("list-ref: arg 2 must be an integer");
+    }
+    int i = (int)a->cell[1]->i_val;
+
+    if (i >= a->cell[0]->count) {
+        return make_val_err("vector-ref: index out of bounds");
+    }
+    return cell_copy(a->cell[0]->cell[i]);
+}
 
 /*------------------------------------------------------------*
  *     Byte vector constructors, selectors, and procedures    *
