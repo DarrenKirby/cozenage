@@ -132,7 +132,7 @@ Cell* eval_sexpr(Lex* e, Cell* v) {
         Cell* lambda = lex_make_lambda(formals, body, e);
 
         cell_delete(formals);
-        cell_delete(body);  // make_lambda deep-copies body and formals
+        cell_delete(body);  /* make_lambda deep-copies body and formals */
 
         return lambda;
     }
