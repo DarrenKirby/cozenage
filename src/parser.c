@@ -400,10 +400,10 @@ Cell* parse_atom(const char *tok) {
         return make_val_str(str);
     }
 
-    if (tok[0] == '#' && strchr("bodx", tok[1]) || /* #b101, #o666, #d123, #x0ff */
-        isdigit(tok[0]) ||                           /*  123,  5/4,  123+23i */
-        tok[0] == '+' && isdigit(tok[1]) ||          /* +123, +5/4, +123+23i */
-        tok[0] == '-' && isdigit(tok[1])             /* -123, -5/4, -123+23i */
+    if ((tok[0] == '#' && strchr("bodx", tok[1])) ||  /* #b101, #o666, #d123, #x0ff */
+        isdigit(tok[0]) ||                              /*  123,  5/4,  123+23i */
+        (tok[0] == '+' && isdigit(tok[1])) ||           /* +123, +5/4, +123+23i */
+        (tok[0] == '-' && isdigit(tok[1]))              /* -123, -5/4, -123+23i */
         ) {
         int ok = 0; /* error flag */
         const char* num_start = tok;
