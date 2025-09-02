@@ -396,8 +396,10 @@ Cell* parse_atom(const char *tok) {
 
     /* String literal */
     if (tok[0] == '"' && tok[len-1] == '"') {
-        const char *str = strndup(tok+1, len-2);
-        return make_val_str(str);
+        char *str = strndup(tok+1, len-2);
+        Cell* result = make_val_str(str);
+        free(str);
+        return result;
     }
 
     if ((tok[0] == '#' && strchr("bodx", tok[1])) ||  /* #b101, #o666, #d123, #x0ff */

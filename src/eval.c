@@ -109,7 +109,10 @@ Cell* eval_sexpr(Lex* e, Cell* v) {
             cell_delete(v);
             return make_val_err("quote takes exactly one argument");
         }
-        return cell_take(v, 0);  /* return argument unevaluated */
+        /* extract argument from s-expr and return unevaluated */
+        Cell* result = cell_take(v, 0);
+        cell_delete(v);
+        return result;
     }
 
     /* Special form: lambda */
