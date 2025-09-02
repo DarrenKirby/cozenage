@@ -487,12 +487,17 @@ Cell* builtin_define(Lex* e, Cell* a) {
     if (a->count < 2) {
         return make_val_err("define requires at least 2 arguments");
     }
-
     const Cell* target = a->cell[0];
 
     /* (define <symbol> <expr>) */
     if (target->type == VAL_SYM) {
         Cell* val = coz_eval(e, a->cell[1]);
+        /* Grab the name for the un-sugared define lambda */
+        if (val->type == VAL_PROC) {
+            if (!val->name) {
+                val->name = strdup(target->name);
+            }
+        }
         lex_put(e, target, val);
         return val;
     }
@@ -519,7 +524,7 @@ Cell* builtin_define(Lex* e, Cell* a) {
             cell_add(body, cell_copy(a->cell[i]));
         }
 
-        Cell* lam = lex_make_lambda(formals, body, e);
+        Cell* lam = lex_make_named_lambda(fname->sym, formals, body, e);
         lex_put(e, fname, lam);
 
         cell_delete(formals);
@@ -530,6 +535,67 @@ Cell* builtin_define(Lex* e, Cell* a) {
         }
 
     return make_val_err("invalid define syntax");
+}
+
+Cell* builtin_if(Lex* e, Cell* a) {
+    Cell* err = CHECK_ARITY_RANGE(a, 2, 3);
+    if (err) return err;
+
+    Cell* test = coz_eval(e, a->cell[0]);
+    if (test->type != VAL_BOOL) {
+        cell_delete(test);
+        return make_val_err("'if' test must be a predicate");
+    }
+    Cell* result;
+    if (test->b_val == 1) {
+        result = coz_eval(e, a->cell[1]);
+    } else {
+        if (a->count == 2) {
+            result = NULL;
+        } else {
+            result = coz_eval(e, a->cell[2]);
+        }
+    }
+    cell_delete(test);
+    return result;
+}
+
+Cell* builtin_when(Lex* e, Cell* a) {
+    Cell* err = CHECK_ARITY_MIN(a, 2);
+    if (err) return err;
+
+    Cell* test = coz_eval(e, a->cell[0]);
+    if (test->type != VAL_BOOL) {
+        cell_delete(test);
+        return make_val_err("'when' test must be a predicate");
+    }
+    Cell* result = NULL;
+    if (test->b_val == 1) {
+        for (int i = 1; i < a->count; i++) {
+            result = coz_eval(e, a->cell[i]);
+        }
+    }
+    cell_delete(test);
+    return result;
+}
+
+Cell* builtin_unless(Lex* e, Cell* a) {
+    Cell* err = CHECK_ARITY_MIN(a, 2);
+    if (err) return err;
+
+    Cell* test = coz_eval(e, a->cell[0]);
+    if (test->type != VAL_BOOL) {
+        cell_delete(test);
+        return make_val_err("'unless' test must be a predicate");
+    }
+    Cell* result = NULL;
+    if (test->b_val == 0) {
+        for (int i = 1; i < a->count; i++) {
+            result = coz_eval(e, a->cell[i]);
+        }
+    }
+    cell_delete(test);
+    return result;
 }
 
 /* ------------------------------------------*

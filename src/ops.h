@@ -23,6 +23,9 @@ Cell* builtin_even(Lex* e, Cell* a);
 /* Special forms */
 Cell* builtin_quote(Lex* e, Cell* a);
 Cell* builtin_define(Lex* e, Cell* a);
+Cell* builtin_if(Lex* e, Cell* a);
+Cell* builtin_when(Lex* e, Cell* a);
+Cell* builtin_unless(Lex* e, Cell* a);
 /* Equality and equivalence comparators */
 Cell* builtin_equal(Lex* e, Cell* a);
 Cell* builtin_eqv(Lex* e, Cell* a);
