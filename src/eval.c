@@ -93,7 +93,8 @@ Cell* eval_sexpr(Lex* e, Cell* v) {
     /* Grab first element without evaluating yet */
     Cell* first = cell_pop(v, 0);
 
-    if (strcmp(first->sym, "define") == 0) {
+    if (first->type == VAL_SYM && strcmp(first->sym, "define") == 0) {
+        cell_delete(first);
         return builtin_define(e, v);
     }
 
@@ -117,7 +118,7 @@ Cell* eval_sexpr(Lex* e, Cell* v) {
         }
 
         Cell* formals = cell_pop(v, 0);   /* first arg */
-        Cell* body    = v;                  /* remaining args */
+        Cell* body    = cell_copy(v);       /* remaining args */
 
         /* formals should be a list of symbols */
         for (int i = 0; i < formals->count; i++) {
@@ -133,16 +134,17 @@ Cell* eval_sexpr(Lex* e, Cell* v) {
 
         cell_delete(formals);
         cell_delete(body);  /* make_lambda deep-copies body and formals */
-
+        cell_delete(v);
         return lambda;
     }
 
     /* Otherwise, evaluate first element normally (should become a function) */
     Cell* f = coz_eval(e, first);
     if (f->type != VAL_PROC) {
+        printf("Bad token: ");
         printf(ANSI_RED_B);
         print_cell(f);
-        printf(ANSI_RESET);
+        printf("%s: ", ANSI_RESET);
         cell_delete(f);
         cell_delete(v);
         return make_val_err("S-expression does not start with a procedure");

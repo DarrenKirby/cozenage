@@ -484,13 +484,13 @@ Cell* builtin_define(Lex* e, Cell* a) {
         return make_val_err("define requires at least 2 arguments");
     }
 
-    Cell* target = a->cell[0];
+    const Cell* target = a->cell[0];
 
     /* (define <symbol> <expr>) */
     if (target->type == VAL_SYM) {
         Cell* val = coz_eval(e, a->cell[1]);
         lex_put(e, target, val);
-        return cell_copy(val);
+        return val;
     }
 
     /* (define (<f-name> <args>) <body>) */
@@ -520,6 +520,7 @@ Cell* builtin_define(Lex* e, Cell* a) {
 
         cell_delete(formals);
         cell_delete(body);
+        cell_delete(fname);
 
         return lam;
         }

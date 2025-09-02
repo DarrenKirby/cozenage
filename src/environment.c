@@ -33,8 +33,9 @@ Lex* lex_new_child(Lex* parent) {
 /* Delete the environment upon program exit */
 void lex_delete(Lex* e) {
     if (!e) return;
-
+    //printf("Deleting env with %d entries\n", e->count);
     for (int i = 0; i < e->count; i++) {
+        //printf("Deleting val[%d] type %d\n", i, e->vals[i]->type);
         /* Free symbols properly */
         if (e->syms[i]) {
             free(e->syms[i]);

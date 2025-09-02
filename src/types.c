@@ -183,7 +183,7 @@ Cell* cell_take(Cell* v, const int i) {
     return x;
 }
 
-/* Recursively delete components of an l_val */
+/* Recursively delete components of an Cell */
 void cell_delete(Cell* v) {
     if (!v) return;
 
