@@ -71,7 +71,7 @@ Cell* lex_get(const Lex* e, const Cell* k) {
 
 void lex_put(Lex* e, const Cell* k, const Cell* v) {
     if (!e || !k || !v || k->type != VAL_SYM) {
-        fprintf(stderr, "lenv_put: invalid arguments\n");
+        fprintf(stderr, "lex_put: invalid arguments\n");
         return;
     }
 
@@ -90,7 +90,7 @@ void lex_put(Lex* e, const Cell* k, const Cell* v) {
     e->syms = realloc(e->syms, sizeof(char*) * e->count);
     e->vals = realloc(e->vals, sizeof(Cell*) * e->count);
     if (!e->syms || !e->vals) {
-        fprintf(stderr, "ENOMEM: lenv_put failed\n");
+        fprintf(stderr, "ENOMEM: lex_put failed\n");
         exit(EXIT_FAILURE);
     }
     e->syms[e->count - 1] = strdup(k->sym);
@@ -108,7 +108,18 @@ Cell* lex_make_builtin(const char* name, Cell* (*func)(Lex*, Cell*)) {
     return c;
 }
 
-Cell* lex_make_lambda(Cell* formals, Cell* body, Lex* env) {
+Cell* lex_make_named_lambda(const char* name, const Cell* formals, const Cell* body, Lex* env) {
+    Cell* c = malloc(sizeof(Cell));
+    c->type = VAL_PROC;
+    c->name = strdup(name);  //NULL;  /* optional */
+    c->builtin = NULL;
+    c->formals = cell_copy(formals);
+    c->body = cell_copy(body);
+    c->env = env;  /* do NOT copy, just store pointer */
+    return c;
+}
+
+Cell* lex_make_lambda(const Cell* formals, const Cell* body, Lex* env) {
     Cell* c = malloc(sizeof(Cell));
     c->type = VAL_PROC;
     c->name = NULL;  /* optional */
@@ -149,6 +160,9 @@ void lex_add_builtins(Lex* e) {
     /* Special forms */
     lex_add_builtin(e, "quote", builtin_quote);
     lex_add_builtin(e, "define", builtin_define);
+    lex_add_builtin(e, "if", builtin_if);
+    lex_add_builtin(e, "when", builtin_when);
+    lex_add_builtin(e, "unless", builtin_unless);
     /* Equality and equivalence comparators */
     lex_add_builtin(e, "eq?", builtin_eq);
     lex_add_builtin(e, "eqv?", builtin_eqv);
