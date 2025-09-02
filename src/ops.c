@@ -295,6 +295,7 @@ Cell* builtin_gt_op(Lex* e, Cell* a) {
         switch (lhs->type) {
             case VAL_INT: {
                 if (lhs->i_val > rhs->i_val) { ok = 1; }
+                break;
             }
             case VAL_REAL: {
                 if (lhs->r_val > rhs->r_val) { ok = 1; }
@@ -327,6 +328,7 @@ Cell* builtin_lt_op(Lex* e, Cell* a) {
         switch (lhs->type) {
             case VAL_INT: {
                 if (lhs->i_val < rhs->i_val) { ok = 1; }
+                break;
             }
             case VAL_REAL: {
                 if (lhs->r_val < rhs->r_val) { ok = 1; }
@@ -359,6 +361,7 @@ Cell* builtin_gte_op(Lex* e, Cell* a) {
         switch (lhs->type) {
             case VAL_INT: {
                 if (lhs->i_val >= rhs->i_val) { ok = 1; }
+                break;
             }
             case VAL_REAL: {
                 if (lhs->r_val >= rhs->r_val) { ok = 1; }
@@ -391,6 +394,7 @@ Cell* builtin_lte_op(Lex* e, Cell* a) {
         switch (lhs->type) {
             case VAL_INT: {
                 if (lhs->i_val <= rhs->i_val) { ok = 1; }
+                break;
             }
             case VAL_REAL: {
                 if (lhs->r_val <= rhs->r_val) { ok = 1; }
