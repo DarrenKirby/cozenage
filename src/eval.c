@@ -93,6 +93,10 @@ Cell* eval_sexpr(Lex* e, Cell* v) {
     /* Grab first element without evaluating yet */
     Cell* first = cell_pop(v, 0);
 
+    /* NOTE: These special forms need to be dispatched out of
+     * eval_sexpr() early, so that their arguments are not evaluated */
+
+    /* special form: define */
     if (first->type == VAL_SYM && strcmp(first->sym, "define") == 0) {
         cell_delete(first);
         return builtin_define(e, v);
@@ -136,6 +140,24 @@ Cell* eval_sexpr(Lex* e, Cell* v) {
         cell_delete(body);  /* make_lambda deep-copies body and formals */
         cell_delete(v);
         return lambda;
+    }
+
+    /* special form - if */
+    if (first->type == VAL_SYM && strcmp(first->sym, "if") == 0) {
+        cell_delete(first);
+        return builtin_if(e, v);
+    }
+
+    /* special form - when */
+    if (first->type == VAL_SYM && strcmp(first->sym, "when") == 0) {
+        cell_delete(first);
+        return builtin_when(e, v);
+    }
+
+    /* special form - unless */
+    if (first->type == VAL_SYM && strcmp(first->sym, "unless") == 0) {
+        cell_delete(first);
+        return builtin_unless(e, v);
     }
 
     /* Otherwise, evaluate first element normally (should become a function) */
