@@ -306,7 +306,6 @@ Cell* cell_copy(const Cell* v) {
         } else {
             /* user lambda: deep copy formals and body; keep env pointer (closure) */
             copy->builtin = NULL;
-            copy->name = NULL;
             copy->formals = v->formals ? cell_copy(v->formals) : NULL;
             copy->body   = v->body   ? cell_copy(v->body)   : NULL;
             copy->env    = v->env;   /* DO NOT copy environments; share the pointer */
