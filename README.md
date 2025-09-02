@@ -1,6 +1,13 @@
-## Cozenage
+# Cozenage
 
-*Not yet ready for prime time*
+*Getting close to being ready for prime time*
+
+If you have cmake, run `make`.
+If you do not have cmake, run `make -f Makefile.no_cmake`
+
+Then run `./cozenage` to enter the funhouse.
+
+## Status of Builtin Procedures
 
 ### Basic arithmatic operators
 - `+`
@@ -24,6 +31,10 @@
 
 ### Special forms
 - `quote`
+- `define`
+- `if`
+- `when`
+- `unless`
 
 ### Equality and equivalence comparators
 - `eq?`
@@ -77,3 +88,10 @@
 - `list`
 - `length`
 - `list-ref`
+
+### Vector constructors, selectors, and procedures
+- `vector`
+- `vector-length`
+- `vector-ref`
+
+
