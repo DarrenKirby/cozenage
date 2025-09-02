@@ -35,4 +35,4 @@ $(BINARY): $(OBJS)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
-	rm -f $(OBJS) $(BINARY)
+	rm -f $(OBJS)
