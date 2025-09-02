@@ -14,7 +14,7 @@ SRCS = $(SRC_DIR)/environment.c \
 
 OBJS = $(SRCS:.c=.o)
 CC = gcc
-CFLAGS = -Wall -Wextra -O2 -I$(SRC_DIR) -std=gnu2x
+CFLAGS = -Wall -Wextra -O0 -g -I$(SRC_DIR) -std=gnu2x
 
 # Detect readline or libedit
 UNAME_S := $(shell uname -s)
