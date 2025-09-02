@@ -119,10 +119,10 @@ void print_cell(const Cell* v) {
         break;
 
     case VAL_PROC:
-        if (v->name) {
+        if (!v->formals) {
             printf("<builtin procedure '%s%s%s'>", ANSI_GREEN_B, v->name, ANSI_RESET);
         } else {
-            printf("<lambda>");
+            printf("<lambda '%s%s%s'>", ANSI_GREEN_B, v->name, ANSI_RESET);
         }
         break;
 
@@ -157,4 +157,16 @@ void print_cell(const Cell* v) {
 void println_cell(const Cell* v) {
     print_cell(v);
     putchar('\n');
+}
+
+void print_env(const Lex* e) {
+    for (int i = 0; i < e->count; i++) {
+        printf("%s -> ", e->syms[i]);
+        print_cell(e->vals[i]);
+        if (e->vals[i]->type == VAL_PROC) {
+            printf(" Name:  %s \n", e->vals[i]->name);
+        } else {
+            printf("\n");
+        }
+    }
 }
