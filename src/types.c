@@ -559,18 +559,24 @@ Cell* make_sexpr_len2(const Cell* a, const Cell* b) {
  * ------------------------------------------*/
 
 Cell* negate_numeric(Cell* x) {
-    check_arg_types(x, VAL_INT|VAL_REAL|VAL_RAT|VAL_COMPLEX);
+    /* FIXME: This arg check segfaults on some types */
+    //Cell* err = check_arg_types(x, VAL_INT|VAL_REAL|VAL_RAT|VAL_COMPLEX);
+    //if (err) { return err; }
+
+    printf("x type: %d\n", x->type);
     switch (x->type) {
         case VAL_INT: return make_val_int(-x->i_val);
-        case VAL_RAT: return make_val_rat(-x->num, x->den);
-        case VAL_REAL: return make_val_real(-x->r_val);
+        case VAL_RAT:
+            return make_val_rat(-x->num, x->den);
+        case VAL_REAL:
+            return make_val_real(-x->r_val);
         case VAL_COMPLEX:
             return make_val_complex(
                 negate_numeric(x->real),
                 negate_numeric(x->imag)
             );
         default:
-            return make_val_err("lval_neg: Oops, this isn't right!");
+            return make_val_err("negate_numeric: Oops, this isn't right!");
     }
 }
 
