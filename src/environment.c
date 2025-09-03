@@ -33,9 +33,7 @@ Lex* lex_new_child(Lex* parent) {
 /* Delete the environment upon program exit */
 void lex_delete(Lex* e) {
     if (!e) return;
-    //printf("Deleting env with %d entries\n", e->count);
     for (int i = 0; i < e->count; i++) {
-        //printf("Deleting val[%d] type %d\n", i, e->vals[i]->type);
         /* Free symbols properly */
         if (e->syms[i]) {
             free(e->syms[i]);
@@ -163,6 +161,8 @@ void lex_add_builtins(Lex* e) {
     lex_add_builtin(e, "if", builtin_if);
     lex_add_builtin(e, "when", builtin_when);
     lex_add_builtin(e, "unless", builtin_unless);
+    lex_add_builtin(e, "cond", builtin_cond);
+    lex_add_builtin(e, "else", builtin_else);
     /* Equality and equivalence comparators */
     lex_add_builtin(e, "eq?", builtin_eq);
     lex_add_builtin(e, "eqv?", builtin_eqv);

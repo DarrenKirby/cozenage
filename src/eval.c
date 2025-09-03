@@ -163,6 +163,12 @@ Cell* eval_sexpr(Lex* e, Cell* v) {
         return builtin_unless(e, v);
     }
 
+    /* special form - cond */
+    if (first->type == VAL_SYM && strcmp(first->sym, "cond") == 0) {
+        cell_delete(first);
+        return builtin_cond(e, v);
+    }
+
     /* Otherwise, evaluate first element normally (should become a function) */
     Cell* f = coz_eval(e, first);
     if (f->type != VAL_PROC) {

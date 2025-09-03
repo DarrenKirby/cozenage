@@ -13,7 +13,7 @@
 
 
 /* Convert any Cell number to long double for calculation */
-long double VAL_to_ld(const Cell* v) {
+long double VAL_to_ld(Cell* v) {
     return (v->type == VAL_INT) ? (long double)v->i_val : v->r_val;
 }
 
@@ -38,6 +38,7 @@ Cell* make_VAL_from_double(const long double x) {
 
 /* '+' -> VAL_INT|VAL_FLOAT|VAL_RAT|VAL_COMP - returns the sum of its arguments */
 Cell* builtin_add(Lex* e, Cell* a) {
+    (void)e;
     Cell* err = check_arg_types(a, VAL_INT|VAL_REAL|VAL_RAT|VAL_COMPLEX);
     if (err) { return err; }
     /* identity law logic */
@@ -232,7 +233,7 @@ Cell* builtin_div(Lex* e, Cell* a) {
  * -----------------------------*/
 
 /* Helper for '=' which recursively compares complex numbers */
-static int complex_eq_op(Lex* e, const Cell* lhs, const Cell* rhs) {
+static int complex_eq_op(Lex* e, Cell* lhs, Cell* rhs) {
     Cell* args_real = make_sexpr_len2(lhs->real, rhs->real);
     Cell* args_imag = make_sexpr_len2(lhs->imag, rhs->imag);
 
@@ -251,6 +252,7 @@ static int complex_eq_op(Lex* e, const Cell* lhs, const Cell* rhs) {
 
 /* '=' -> VAL_BOOL - returns true if all arguments are equal. */
 Cell* builtin_eq_op(Lex* e, Cell* a) {
+    (void)e;
     Cell* err = check_arg_types(a, VAL_INT|VAL_REAL|VAL_RAT|VAL_COMPLEX);
     if (err) { return err; }
     for (int i = 0; i < a->count - 1; i++) {
@@ -285,6 +287,7 @@ Cell* builtin_eq_op(Lex* e, Cell* a) {
 
 /* '>' -> VAL_BOOL - returns true if each argument is greater than the one that follows. */
 Cell* builtin_gt_op(Lex* e, Cell* a) {
+    (void)e;
     Cell* err = check_arg_types(a, VAL_INT|VAL_REAL|VAL_RAT);
     if (err) { return err; }
     for (int i = 0; i < a->count - 1; i++) {
@@ -318,6 +321,7 @@ Cell* builtin_gt_op(Lex* e, Cell* a) {
 
 /* '<' -> VAL_BOOL - returns true if each argument is less than the one that follows. */
 Cell* builtin_lt_op(Lex* e, Cell* a) {
+    (void)e;
     Cell* err = check_arg_types(a, VAL_INT|VAL_REAL|VAL_RAT);
     if (err) { return err; }
     for (int i = 0; i < a->count - 1; i++) {
@@ -351,6 +355,7 @@ Cell* builtin_lt_op(Lex* e, Cell* a) {
 
 /* '>=' -> VAL_BOOL - */
 Cell* builtin_gte_op(Lex* e, Cell* a) {
+    (void)e;
     Cell* err = check_arg_types(a, VAL_INT|VAL_REAL|VAL_RAT);
     if (err) { return err; }
     for (int i = 0; i < a->count - 1; i++) {
@@ -384,6 +389,7 @@ Cell* builtin_gte_op(Lex* e, Cell* a) {
 
 /* '<=' -> VAL_BOOL - */
 Cell* builtin_lte_op(Lex* e, Cell* a) {
+    (void)e;
     Cell* err = check_arg_types(a, VAL_INT|VAL_REAL|VAL_RAT);
     if (err) { return err; }
     for (int i = 0; i < a->count - 1; i++) {
@@ -487,7 +493,7 @@ Cell* builtin_define(Lex* e, Cell* a) {
     if (a->count < 2) {
         return make_val_err("define requires at least 2 arguments");
     }
-    const Cell* target = a->cell[0];
+    Cell* target = a->cell[0];
 
     /* (define <symbol> <expr>) */
     if (target->type == VAL_SYM) {
@@ -598,6 +604,40 @@ Cell* builtin_unless(Lex* e, Cell* a) {
     return result;
 }
 
+Cell* builtin_cond(Lex* e, Cell* a) {
+    Cell* err = CHECK_ARITY_MIN(a, 2);
+    if (err) return err;
+
+    Cell* result = NULL;
+    Cell* clause = NULL;
+    Cell* test = NULL;
+    for (int i = 0; i < a->count; i++) {
+        clause = a->cell[i];
+        test = coz_eval(e, clause->cell[0]);
+        if (test->type == VAL_PROC && strcmp(test->name, "else") == 0) {
+            result = coz_eval(e, clause->cell[1]);
+            break;
+        }
+        if (test->type != VAL_BOOL) {
+            result = make_val_err("'cond' test must be a predicate");
+        }
+        if (test->b_val == 1) {
+            for (int j = 1; j < clause->count; j++) {
+                result = coz_eval(e, clause->cell[j]);
+            }
+            break;
+        }
+
+    }
+    cell_delete(test);
+    return result;
+}
+
+/* dummy function */
+Cell* builtin_else(Lex* e, Cell* a) {
+    return make_val_bool(1);
+}
+
 /* ------------------------------------------*
 *    Equality and equivalence comparators    *
 * -------------------------------------------*/
@@ -610,8 +650,8 @@ Cell* builtin_eq(Lex* e, Cell* a) {
     Cell* err = CHECK_ARITY_EXACT(a, 2);
     if (err) return err;
 
-    const Cell* x = a->cell[0];
-    const Cell* y = a->cell[1];
+    Cell* x = a->cell[0];
+    Cell* y = a->cell[1];
 
     /* Strict pointer equality */
     return make_val_bool(x == y);
@@ -626,8 +666,8 @@ Cell* builtin_eqv(Lex* e, Cell* a) {
     Cell* err = CHECK_ARITY_EXACT(a, 2);
     if (err) return err;
 
-    const Cell* x = a->cell[0];
-    const Cell* y = a->cell[1];
+    Cell* x = a->cell[0];
+    Cell* y = a->cell[1];
 
     if (x->type != y->type) return make_val_bool(0);
 
@@ -643,7 +683,7 @@ Cell* builtin_eqv(Lex* e, Cell* a) {
 }
 
 /* Helper for equal? */
-Cell* val_equal(Lex* e, const Cell* x, const Cell* y) {
+Cell* val_equal(Lex* e, Cell* x, Cell* y) {
     if (x->type != y->type) return make_val_bool(0);
 
     switch (x->type) {
@@ -676,6 +716,7 @@ Cell* val_equal(Lex* e, const Cell* x, const Cell* y) {
  * even though the two lists are distinct objects.
  * Use when: you want to compare data structures by content, not identity.*/
 Cell* builtin_equal(Lex* e, Cell* a) {
+    (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2);
     if (err) return err;
     return val_equal(e, a->cell[0], a->cell[1]);
@@ -685,33 +726,39 @@ Cell* builtin_equal(Lex* e, Cell* a) {
  *     Generic numeric operations     *
  * -----------------------------------*/
 
-/* 'abs' -> VAL_INT|VAL_FLOAT - returns the absolute value of its argument */
+/* 'abs' -> VAL_INT|VAL_REAL|VAL_RAT - returns the absolute value of its argument */
 Cell* builtin_abs(Lex* e, Cell* a) {
-    Cell* err = check_arg_types(a, VAL_INT | VAL_REAL);
+    (void)e;
+    Cell* err = check_arg_types(a, VAL_INT|VAL_REAL|VAL_RAT);
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
-    if (VAL_AS_NUM(a->cell[0]) >= 0) {
-        if (a->type == VAL_INT) { return make_val_int(a->i_val); }
-        return make_val_real(a->r_val);
+    switch (a->cell[0]->type) {
+        case VAL_INT:
+            return (a->cell[0]->i_val < 0) ? negate_numeric(a->cell[0]) : cell_copy(a->cell[0]);
+        case VAL_REAL:
+            return (a->cell[0]->r_val < 0) ? negate_numeric(a->cell[0]) : cell_copy(a->cell[0]);
+        case VAL_RAT:
+            return (a->cell[0]->num < 0) ? negate_numeric(a->cell[0]) : cell_copy(a->cell[0]);
+        default:
+            return make_val_err("abs: Oops, this isn't right");
     }
-    if (a->type == VAL_INT) { return make_val_int(-a->i_val); }
-    return make_val_real(-a->r_val);
 }
 
-/* 'expt' -> VAL_INT|VAL_FLOAT - returns its first arg calculated
+/* 'expt' -> VAL_INT|VAL_REAL - returns its first arg calculated
  * to the power of its second arg */
 Cell* builtin_expt(Lex* e, Cell* a) {
+    (void)e;
     Cell* err = check_arg_types(a, VAL_INT | VAL_REAL);
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 2))) { return err; }
 
     long double base = VAL_AS_NUM(a->cell[0]);
-    const Cell* exp_val = a->cell[1];
+    Cell* exp_val = a->cell[1];
     long double result;
 
     if (exp_val->type == VAL_INT) {
         /* integer exponent: use fast exponentiation */
-        long long n = exp_val->i_val;
+        const long long n = exp_val->i_val;
         result = 1.0;
         long long abs_n = n > 0 ? n : -n;
 
@@ -731,6 +778,7 @@ Cell* builtin_expt(Lex* e, Cell* a) {
 /* 'modulo' -> VAL_INT - returns the remainder of dividing the first argument
  * by the second, with the result having the same sign as the divisor.*/
 Cell* builtin_modulo(Lex* e, Cell* a) {
+    (void)e;
     Cell* err = check_arg_types(a, VAL_INT);
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 2))) { return err; }
@@ -744,6 +792,7 @@ Cell* builtin_modulo(Lex* e, Cell* a) {
 /* 'quotient' -> VAL_INT - returns the integer result of dividing
  * the first argument by the second, discarding any remainder.*/
 Cell* builtin_quotient(Lex* e, Cell* a) {
+    (void)e;
     Cell* err = check_arg_types(a, VAL_INT);
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 2))) { return err; }
@@ -753,6 +802,7 @@ Cell* builtin_quotient(Lex* e, Cell* a) {
 /* 'remainder' -> VAL_INT - returns the remainder of dividing the first argument
  * by the second, with the result having the same sign as the dividend.*/
 Cell* builtin_remainder(Lex* e, Cell* a) {
+    (void)e;
     Cell* err = check_arg_types(a, VAL_INT);
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 2))) { return err; }
@@ -778,6 +828,7 @@ Cell* builtin_lcm(Lex* e, Cell* a) {
 }
 
 Cell* builtin_gcd(Lex* e, Cell* a) {
+    (void)e;
     Cell* err = check_arg_types(a, VAL_INT);
     if (err) return err;
     if ((err = CHECK_ARITY_EXACT(a, 2))) return err;
@@ -807,7 +858,8 @@ Cell* builtin_gcd(Lex* e, Cell* a) {
  * -------------------------------------------------*/
 
 /* 'number?' -> VAL_BOOL - returns #t if obj is numeric, else #f  */
-Cell* builtin_number_pred(Lex *e, Cell* a) {
+Cell* builtin_number_pred(Lex* e, Cell* a) {
+    (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
 
@@ -1117,7 +1169,7 @@ Cell* builtin_list_length(Lex* e, Cell* a) {
 
     if (a->cell[0]->type == VAL_PAIR) {
         int len = 0;
-        const Cell* p = a->cell[0];
+        Cell* p = a->cell[0];
         while (p->type == VAL_PAIR) {
             len++;
             p = p->cdr;
@@ -1145,7 +1197,7 @@ Cell* builtin_list_ref(Lex* e, Cell* a) {
     int i = (int)a->cell[1]->i_val;
 
     if (a->cell[0]->type == VAL_PAIR) {
-        const Cell* p = a->cell[0];
+        Cell* p = a->cell[0];
         if (p->type != VAL_PAIR) {
             return make_val_err("list-ref: index out of bounds");
         }

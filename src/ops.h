@@ -26,6 +26,8 @@ Cell* builtin_define(Lex* e, Cell* a);
 Cell* builtin_if(Lex* e, Cell* a);
 Cell* builtin_when(Lex* e, Cell* a);
 Cell* builtin_unless(Lex* e, Cell* a);
+Cell* builtin_cond(Lex* e, Cell* a);
+Cell* builtin_else(Lex* e, Cell* a);
 /* Equality and equivalence comparators */
 Cell* builtin_equal(Lex* e, Cell* a);
 Cell* builtin_eqv(Lex* e, Cell* a);
