@@ -479,6 +479,10 @@ Cell* parse_atom(const char *tok) {
             const long long d = parse_int_checked(tok2, err_buf, sizeof(err_buf), 10, &ok);
 
             free(to_free);
+
+            if (d == 0) {
+                return make_val_err("Cannot have zero-value denominator in rational");
+            }
             return make_val_rat(n, d);
         }
 
