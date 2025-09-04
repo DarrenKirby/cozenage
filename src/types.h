@@ -3,6 +3,7 @@
 
 #include "parser.h"
 #include "environment.h"
+#include <stdbool.h>
 
 
 /* Convenience macros for readability */
@@ -48,7 +49,7 @@ typedef enum {
 
 typedef struct Cell {
     Cell_t type;               /* type of data the l_val holds */
-    bool exact;                /* exact/inexact flag for numerics */
+    bool exact;                 /* exact/inexact flag for numerics */
 
     union {
         long double r_val;    /* reals */
@@ -115,6 +116,7 @@ Cell* check_arg_arity(const Cell* a, int exact, int min, int max);
 void numeric_promote(Cell** lhs, Cell** rhs);
 Cell* make_sexpr_len1(const Cell* a);
 Cell* make_sexpr_len2(const Cell* a, const Cell* b);
+Cell* make_sexpr_len4(const Cell* a, const Cell* b, const Cell* c, const Cell* d);
 Cell* negate_numeric(Cell* x);
 Cell* simplify_rational(Cell* v);
 long double cell_to_ld(Cell* c);

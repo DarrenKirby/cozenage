@@ -539,7 +539,7 @@ void numeric_promote(Cell** lhs, Cell** rhs) {
 Cell* make_sexpr_len1(const Cell* a) {
     Cell* v = make_val_sexpr();
     v->count = 1;
-    v->cell = malloc(sizeof(Cell*) * 2);
+    v->cell = malloc(sizeof(Cell*));
     v->cell[0] = cell_copy(a);
     return v;
 }
@@ -551,6 +551,18 @@ Cell* make_sexpr_len2(const Cell* a, const Cell* b) {
     v->cell = malloc(sizeof(Cell*) * 2);
     v->cell[0] = cell_copy(a);
     v->cell[1] = cell_copy(b);
+    return v;
+}
+
+/* Construct an S-expression with exactly two elements */
+Cell* make_sexpr_len4(const Cell* a, const Cell* b, const Cell* c, const Cell* d) {
+    Cell* v = make_val_sexpr();
+    v->count = 4;
+    v->cell = malloc(sizeof(Cell*) * 4);
+    v->cell[0] = cell_copy(a);
+    v->cell[1] = cell_copy(b);
+    v->cell[2] = cell_copy(c);
+    v->cell[3] = cell_copy(d);
     return v;
 }
 
@@ -598,11 +610,6 @@ Cell* simplify_rational(Cell* v) {
         return v; /* nothing to do */
     }
 
-    if (v->den == 0) {
-        /* undefined fraction, maybe return an error instead */
-        return v;
-    }
-
     long int g = gcd_ll(v->num, v->den);
     v->num /= g;
     v->den /= g;
@@ -613,6 +620,20 @@ Cell* simplify_rational(Cell* v) {
         v->num = -v->num;
     }
 
+    if (v->den == 0) {
+        /* undefined fraction, maybe return an error instead */
+        return make_val_err("simplify_rational: denominator is zero!");
+    }
+
+    if (v->num == v->den) {
+        /* Return as integer 1 */
+        return make_val_int(1);
+    }
+
+    if (v->den == 1) {
+        /* Return as integer */
+        return make_val_int(v->num);
+    }
     return v;
 }
 
