@@ -36,7 +36,7 @@ Cell* make_VAL_from_double(const long double x) {
  *     Basic arithmetic operators     *
  * -----------------------------------*/
 
-/* '+' -> VAL_INT|VAL_FLOAT|VAL_RAT|VAL_COMP - returns the sum of its arguments */
+/* '+' -> VAL_INT|VAL_REAL|VAL_RAT|VAL_COMP - returns the sum of its arguments */
 Cell* builtin_add(Lex* e, Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, VAL_INT|VAL_REAL|VAL_RAT|VAL_COMPLEX);
@@ -76,7 +76,7 @@ Cell* builtin_add(Lex* e, Cell* a) {
     return result;
 }
 
-/* '-' -> VAL_INT|VAL_FLOAT|VAL_RAT|VAL_COMP - returns the difference of its arguments */
+/* '-' -> VAL_INT|VAL_REAL|VAL_RAT|VAL_COMP - returns the difference of its arguments */
 Cell* builtin_sub(Lex* e, Cell* a) {
     Cell* err = check_arg_types(a, VAL_INT|VAL_REAL|VAL_RAT|VAL_COMPLEX);
     if (err) { return err; }
@@ -1164,9 +1164,12 @@ Cell* builtin_list(Lex* e, Cell* a) {
 Cell* builtin_list_length(Lex* e, Cell* a) {
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
-    err = check_arg_types(a, VAL_PAIR|VAL_SEXPR);
+    err = check_arg_types(a, VAL_PAIR|VAL_SEXPR|VAL_NIL);
     if (err) { return err; }
 
+    if (a->cell[0]->type == VAL_NIL) {
+        return make_val_int(0);
+    }
     if (a->cell[0]->type == VAL_PAIR) {
         int len = 0;
         Cell* p = a->cell[0];
