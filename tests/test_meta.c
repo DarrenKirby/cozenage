@@ -16,7 +16,7 @@ void setup_suite(void) {
 }
 
 void teardown_suite(void) {
-    lex_delete(test_env);
+    //lex_delete(test_env);
 }
 
 void suite_setup_wrapper(void) {
@@ -41,8 +41,6 @@ void eval_and_check(const char* input, const char* expected_output) {
     FILE* stdout_pipe = cr_get_redirected_stdout();
     fread(buffer, 1, sizeof(buffer) - 1, stdout_pipe);
 
-    //cr_assert_str_eq(buffer, expected_output,
-    //    "Test failed for input: \"%s\"", input);
     cr_assert_str_eq(buffer, expected_output,
         "Expected '%s' but got '%s' for input '%s'",
         expected_output, buffer, input);
