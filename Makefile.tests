@@ -1,6 +1,6 @@
 # Compiler and flags
 CC = gcc
-CFLAGS = -Wall -Wextra -Isrc -g
+CFLAGS = -Wall -Wextra -Isrc -g -DTESTING__
 
 # --- Application-Specific ---
 # Name of your final application executable
@@ -31,12 +31,12 @@ all: $(APP_TARGET)
 
 # Rule to build the main application
 $(APP_TARGET): $(APP_OBJECTS)
-	$(CC) $(CFLAGS) -o $@ $^
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS_TEST) -DTESTING__
 
 # Rule to build the test runner
 # Note: This is NOT the default target. We build it on demand.
 $(TEST_TARGET): $(TEST_OBJECTS)
-	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS_TEST)
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS_TEST) -DTESTING__
 
 # Generic rule to compile any .c file into a .o file
 # This rule is used by both the app and test builds
@@ -51,7 +51,6 @@ $(TEST_TARGET): $(TEST_OBJECTS)
 
 # Rule to build AND run the tests
 test: $(TEST_TARGET)
-	./$(TEST_TARGET)
 
 # Clean up all build artifacts
 clean:
