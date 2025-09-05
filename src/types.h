@@ -94,7 +94,7 @@ typedef Cell* (*BuiltinFn)(Lex* e, Cell* args);
 
 Cell* make_val_real(long double n);
 Cell* make_val_int(long long n);
-Cell* make_val_rat(long int num, long int den);
+Cell* make_val_rat(long int num, long int den, bool simplify);
 Cell* make_val_complex(Cell* real, Cell *imag);
 Cell* make_val_bool(int b);
 Cell* make_val_char(char c);

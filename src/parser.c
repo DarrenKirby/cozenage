@@ -483,7 +483,7 @@ Cell* parse_atom(const char *tok) {
             if (d == 0) {
                 return make_val_err("Cannot have zero-value denominator in rational");
             }
-            return make_val_rat(n, d);
+            return make_val_rat(n, d, 1);
         }
 
         /* Numeric constants with optional base prefix */

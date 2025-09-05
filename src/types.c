@@ -44,13 +44,17 @@ Cell* make_val_int(const long long int n) {
     return v;
 }
 
-Cell* make_val_rat(const long int num, const long int den) {
+Cell* make_val_rat(const long int num, const long int den, const bool simplify) {
     Cell* v = calloc(1, sizeof(Cell));
     v->type = VAL_RAT;
     v->exact = true;
     v->num = num;
     v->den = den;
-    return simplify_rational(v);
+    if (simplify) {
+        return simplify_rational(v);
+    } else {
+        return v;
+    }
 }
 
 Cell* make_val_complex(Cell* real, Cell *imag) {
@@ -470,7 +474,7 @@ Cell* check_arg_arity(const Cell* a, const int exact, const int min, const int m
 
 /* Convertors */
 Cell* int_to_rat(Cell* v) {
-    return make_val_rat(v->i_val, 1);
+    return make_val_rat(v->i_val, 1, 0);
 }
 
 Cell* int_to_real(Cell* v) {
@@ -554,7 +558,7 @@ Cell* make_sexpr_len2(const Cell* a, const Cell* b) {
     return v;
 }
 
-/* Construct an S-expression with exactly two elements */
+/* Construct an S-expression with exactly four elements */
 Cell* make_sexpr_len4(const Cell* a, const Cell* b, const Cell* c, const Cell* d) {
     Cell* v = make_val_sexpr();
     v->count = 4;
@@ -575,11 +579,10 @@ Cell* negate_numeric(Cell* x) {
     //Cell* err = check_arg_types(x, VAL_INT|VAL_REAL|VAL_RAT|VAL_COMPLEX);
     //if (err) { return err; }
 
-    printf("x type: %d\n", x->type);
     switch (x->type) {
         case VAL_INT: return make_val_int(-x->i_val);
         case VAL_RAT:
-            return make_val_rat(-x->num, x->den);
+            return make_val_rat(-x->num, x->den, 1);
         case VAL_REAL:
             return make_val_real(-x->r_val);
         case VAL_COMPLEX:
@@ -624,12 +627,10 @@ Cell* simplify_rational(Cell* v) {
         /* undefined fraction, maybe return an error instead */
         return make_val_err("simplify_rational: denominator is zero!");
     }
-
     if (v->num == v->den) {
         /* Return as integer 1 */
         return make_val_int(1);
     }
-
     if (v->den == 1) {
         /* Return as integer */
         return make_val_int(v->num);
@@ -649,6 +650,7 @@ long double cell_to_ld(Cell* c) {
 
 /* optimized helper for operating on complex numbers */
 void complex_apply(BuiltinFn fn, Lex* e, Cell* result, Cell* rhs) {
+    /* FIXME: implicitly converting to real. Ints need to stay int */
     if (fn == builtin_mul) {
         long double a = cell_to_ld(result->real);
         long double b = cell_to_ld(result->imag);

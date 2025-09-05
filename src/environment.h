@@ -2,7 +2,7 @@
 #define COZENAGE_ENVIRONMENT_H
 
 
-struct Cell;  // forward declaration
+struct Cell;
 typedef struct Cell Cell;
 
 typedef struct Lex {
