@@ -99,6 +99,7 @@ Cell* builtin_sub(Lex* e, Cell* a) {
                 break;
             case VAL_RAT:
                 /* (a/b) - (c/d) = (ad - bc)/bd */
+                /* 1/1 - 1/2 = ((1)(2) - (1)(1))/(1)(2) = (2 - 1)/2 = 1/2 */
                 result->num = result->num * rhs->den - rhs->num * result->den;
                 result->den = result->den * rhs->den;
                 result = simplify_rational(result);
@@ -166,12 +167,12 @@ Cell* builtin_div(Lex* e, Cell* a) {
     /* unary division reciprocal/inverse */
     if (a->count == 1) {
         if (a->cell[0]->type == VAL_INT) {
-            return make_val_rat(1, a->cell[0]->i_val);
+            return make_val_rat(1, a->cell[0]->i_val, 1);
         }
         if (a->cell[0]->type == VAL_RAT) {
             const long int n = a->cell[0]->num;
             const long int d = a->cell[0]->den;
-            return make_val_rat(d, n);
+            return make_val_rat(d, n, 1);
         }
         if (a->cell[0]->type == VAL_REAL) {
             return make_val_real(1.0L / a->cell[0]->r_val);
@@ -201,7 +202,13 @@ Cell* builtin_div(Lex* e, Cell* a) {
                 cell_delete(rhs);
                 return make_val_err("Division by zero.");
             }
-            result->i_val /= rhs->i_val;
+            /* pretty hacky way to get (/ 9 3) -> 3 but (/ 10 3) -> 10/3 */
+            const double r = remainder((double)result->i_val, (double)rhs->i_val);
+            if (r == 0 || r == 0.0) {
+                result->i_val /= rhs->i_val;
+            } else {
+                result = make_val_rat(result->i_val, rhs->i_val, 1);
+            }
             break;
         case VAL_RAT:
             /* (a/b) / (c/d) = (a * d)/(b * c)   */
