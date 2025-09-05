@@ -89,14 +89,24 @@ void print_cell(const Cell* v) {
     }
 
     case VAL_BOOL:
+#ifdef TESTING__
         printf("%s%s%s", ANSI_MAGENTA,
                v->b_val ? "#true" : "#false",
                ANSI_RESET);
         break;
+#else
+        printf("%s", v->b_val ? "#true" : "#false");
+        break;
+#endif
 
     case VAL_ERR:
+#ifdef TESTING__
+        printf(" Error: %s", v->str);
+        break;
+#else
         printf(" %sError:%s %s", ANSI_RED_B, ANSI_RESET, v->str);
         break;
+#endif
 
     case VAL_CHAR:
         switch (v->c_val) {
