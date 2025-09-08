@@ -96,7 +96,7 @@ void lex_put(Lex* e, const Cell* k, const Cell* v) {
 }
 
 Cell* lex_make_builtin(const char* name, Cell* (*func)(Lex*, Cell*)) {
-    Cell* c = malloc(sizeof(Cell));
+    Cell* c = calloc(1, sizeof(Cell));
     c->type = VAL_PROC;
     c->name = strdup(name);
     c->builtin = func;
@@ -107,9 +107,9 @@ Cell* lex_make_builtin(const char* name, Cell* (*func)(Lex*, Cell*)) {
 }
 
 Cell* lex_make_named_lambda(const char* name, const Cell* formals, const Cell* body, Lex* env) {
-    Cell* c = malloc(sizeof(Cell));
+    Cell* c = calloc(1, sizeof(Cell));
     c->type = VAL_PROC;
-    c->name = strdup(name);  //NULL;  /* optional */
+    c->name = strdup(name);  /* optional */
     c->builtin = NULL;
     c->formals = cell_copy(formals);
     c->body = cell_copy(body);
@@ -118,7 +118,7 @@ Cell* lex_make_named_lambda(const char* name, const Cell* formals, const Cell* b
 }
 
 Cell* lex_make_lambda(const Cell* formals, const Cell* body, Lex* env) {
-    Cell* c = malloc(sizeof(Cell));
+    Cell* c = calloc(1, sizeof(Cell));
     c->type = VAL_PROC;
     c->name = NULL;  /* optional */
     c->builtin = NULL;
