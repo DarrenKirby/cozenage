@@ -16,7 +16,7 @@ void setup_suite(void) {
 }
 
 void teardown_suite(void) {
-    //lex_delete(test_env);
+    lex_delete(test_env);
 }
 
 void suite_setup_wrapper(void) {
@@ -24,26 +24,26 @@ void suite_setup_wrapper(void) {
     setup_suite();
 }
 
-void eval_and_check(const char* input, const char* expected_output) {
+char* t_eval(const char* input) {
     /* Parse the input string into an expression. */
     Parser *p = parse_str(input);
     Cell *v = parse_tokens(p);
-    free_tokens(p->array, p->size);
-    free(p);
+
     Cell *result = coz_eval(test_env, v);
 
     /* Print the result to stdout, and push stdout into the capture pipe */
     print_cell(result);
     fflush(stdout);
 
-    /* Capture the result and compare it to the expected string */
-    char buffer[4096] = {0};
+    free_tokens(p->array, p->size);
+    free(p);
+    cell_delete(result);
+
+    /* Capture the result from stdout */
+    static char buffer[4096];
+    memset(buffer, 0, sizeof(buffer));
     FILE* stdout_pipe = cr_get_redirected_stdout();
     fread(buffer, 1, sizeof(buffer) - 1, stdout_pipe);
 
-    cr_assert_str_eq(buffer, expected_output,
-        "Expected '%s' but got '%s' for input '%s'",
-        expected_output, buffer, input);
-
-    cell_delete(result);
+    return buffer;
 }
