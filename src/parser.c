@@ -252,7 +252,6 @@ Cell *parse_tokens(Parser *p) {
     const char *tok = peek(p);
     if (!tok) return NULL;
 
-
     /* Handle quote (') */
     if (strcmp(tok, "'") == 0) {
         advance(p);  /* consume ' */

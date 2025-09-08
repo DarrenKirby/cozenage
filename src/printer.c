@@ -89,7 +89,7 @@ void print_cell(const Cell* v) {
     }
 
     case VAL_BOOL:
-#ifdef TESTING__
+#ifndef TESTING__
         printf("%s%s%s", ANSI_MAGENTA,
                v->b_val ? "#true" : "#false",
                ANSI_RESET);
