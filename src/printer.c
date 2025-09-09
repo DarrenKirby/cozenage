@@ -11,18 +11,12 @@
 
 void print_long_double(long double x) {
     char buf[128];
-
-    /* Use LDBL_DIG (guaranteed decimal digits of precision)
-       Add a couple of "guard" digits so we don't lose info */
-    int prec = LDBL_DIG + 2;
-
-    snprintf(buf, sizeof buf, "%.*Lg", prec, x);
+    snprintf(buf, sizeof buf, "%.15Lg", x);
 
     /* If there's no '.' or exponent marker, force a ".0" */
     if (!strchr(buf, '.') && !strchr(buf, 'e') && !strchr(buf, 'E')) {
         strcat(buf, ".0");
     }
-
     printf("%s", buf);
 }
 
@@ -42,19 +36,26 @@ void print_sequence(const Cell* v, const char* prefix, const char open, const ch
 void print_pair(const Cell* v) {
     printf("(");
     const Cell* cur = v;
-    while (cur->type == VAL_PAIR) {
+
+    for (;;) {
+        /* Always print the car of the current pair. */
         print_cell(cur->car);
-        if (cur->cdr->type == VAL_NIL) {
-            break;  /* proper end of list */
-        }
+
+        /* Case 1: The list continues (cdr is another pair). */
         if (cur->cdr->type == VAL_PAIR) {
             printf(" ");
             cur = cur->cdr;
-            continue;
         }
-        printf(" . ");
-        print_cell(cur->cdr);
-        break;
+        /* Case 2: This is the end of a proper list. */
+        else if (cur->cdr->type == VAL_NIL) {
+            break;
+        }
+        /* Case 3: This is an improper list. */
+        else {
+            printf(" . ");
+            print_cell(cur->cdr);
+            break;
+        }
     }
     printf(")");
 }
@@ -62,7 +63,6 @@ void print_pair(const Cell* v) {
 void print_cell(const Cell* v) {
     switch (v->type) {
     case VAL_REAL:
-        //printf("%#Lg", v->r_val);
         print_long_double(v->r_val);
         break;
 
@@ -77,6 +77,7 @@ void print_cell(const Cell* v) {
     case VAL_COMPLEX: {
         print_cell(v->real);
 
+        /* FIXME: remove use of cell_to_ld() */
         long double im = cell_to_ld(v->imag);
         if (im < 0) {
             print_cell(v->imag);  /* already negative */
