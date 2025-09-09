@@ -183,17 +183,31 @@ Cell* builtin_div(Lex* e, Cell* a) {
             Cell* b_part = z->imag;
 
             /* Calculate the denominator: a^2 + b^2 */
-            Cell* a_sq = builtin_mul(e, make_sexpr_len2(a_part, a_part));
-            Cell* b_sq = builtin_mul(e, make_sexpr_len2(b_part, b_part));
-            Cell* denom = builtin_add(e, make_sexpr_len2(a_sq, b_sq));
+            Cell* a_sq_args = make_sexpr_len2(a_part, a_part);
+            Cell* b_sq_args = make_sexpr_len2(b_part, b_part);
+            Cell* a_sq = builtin_mul(e, a_sq_args);
+            Cell* b_sq = builtin_mul(e, b_sq_args);
+            cell_delete(a_sq_args);
+            cell_delete(b_sq_args);
+
+            Cell* denom_args = make_sexpr_len2(a_sq, b_sq);
+            Cell* denom = builtin_add(e, denom_args);
+            cell_delete(denom_args);
 
             /* Calculate the new real part: a / (a^2 + b^2) */
-            Cell* new_real = builtin_div(e, make_sexpr_len2(a_part, denom));
+            Cell* real_args = make_sexpr_len2(a_part, denom);
+            Cell* new_real = builtin_div(e, real_args);
+            cell_delete(real_args);
 
             /* Calculate the new imaginary part: -b / (a^2 + b^2) */
             Cell* zero = make_val_int(0);
-            Cell* neg_b = builtin_sub(e, make_sexpr_len2(zero, b_part));
-            Cell* new_imag = builtin_div(e, make_sexpr_len2(neg_b, denom));
+            Cell* neg_b_args = make_sexpr_len2(zero, b_part);
+            Cell* neg_b = builtin_sub(e, neg_b_args);
+            cell_delete(neg_b_args);
+
+            Cell* imag_args = make_sexpr_len2(neg_b, denom);
+            Cell* new_imag = builtin_div(e, imag_args);
+            cell_delete(imag_args);
 
             /* Create the final result */
             Cell* result = make_val_complex(new_real, new_imag);
@@ -218,6 +232,7 @@ Cell* builtin_div(Lex* e, Cell* a) {
         switch (result->type) {
         case VAL_INT:
             if (rhs->i_val == 0) {
+                cell_delete(result);
                 cell_delete(rhs);
                 return make_val_err("Division by zero.");
             }
@@ -226,17 +241,30 @@ Cell* builtin_div(Lex* e, Cell* a) {
             if (r == 0 || r == 0.0) {
                 result->i_val /= rhs->i_val;
             } else {
-                result = make_val_rat(result->i_val, rhs->i_val, 1);
+                Cell* new_result = make_val_rat(result->i_val, rhs->i_val, 1);
+                cell_delete(result);
+                result = new_result;
             }
             break;
         case VAL_RAT:
+            if (rhs->num == 0) {
+                cell_delete(result);
+                cell_delete(rhs);
+                return make_val_err("Division by zero.");
+            }
             /* (a/b) / (c/d) = (a * d)/(b * c)   */
             result->num = result->num * rhs->den;
             result->den = result->den * rhs->num;
-            result = simplify_rational(result);
+            Cell* simplified = simplify_rational(result);
+            if (simplified != result) {
+                /* simplify_rational returned a new cell, free the old one */
+                cell_delete(result);
+                result = simplified;
+            }
             break;
         case VAL_REAL:
             if (rhs->r_val == 0) {
+                cell_delete(result);
                 cell_delete(rhs);
                 return make_val_err("Division by zero.");
             }
@@ -246,6 +274,8 @@ Cell* builtin_div(Lex* e, Cell* a) {
             complex_apply(builtin_div, e, result, rhs);
             break;
         default:
+            cell_delete(result);
+            cell_delete(rhs);
             return make_val_err("<builtin '/'> Oops, this shouldn't have happened.");
         }
         result->exact = result->exact && rhs->exact;
@@ -253,6 +283,100 @@ Cell* builtin_div(Lex* e, Cell* a) {
     }
     return result;
 }
+// Cell* builtin_div(Lex* e, Cell* a) {
+//     Cell* err = check_arg_types(a, VAL_INT|VAL_REAL|VAL_RAT|VAL_COMPLEX);
+//     if (err) { return err; }
+//     if ((err = CHECK_ARITY_MIN(a, 1))) { return err; }
+//
+//     /* unary division reciprocal */
+//     if (a->count == 1) {
+//         if (a->cell[0]->type == VAL_INT) {
+//             return make_val_rat(1, a->cell[0]->i_val, 1);
+//         }
+//         if (a->cell[0]->type == VAL_RAT) {
+//             const long int n = a->cell[0]->num;
+//             const long int d = a->cell[0]->den;
+//             return make_val_rat(d, n, 1);
+//         }
+//         if (a->cell[0]->type == VAL_REAL) {
+//             return make_val_real(1.0L / a->cell[0]->r_val);
+//         }
+//         if (a->cell[0]->type == VAL_COMPLEX) {
+//             Cell* z = a->cell[0];
+//             Cell* a_part = z->real;
+//             Cell* b_part = z->imag;
+//
+//             /* Calculate the denominator: a^2 + b^2 */
+//             Cell* a_sq = builtin_mul(e, make_sexpr_len2(a_part, a_part));
+//             Cell* b_sq = builtin_mul(e, make_sexpr_len2(b_part, b_part));
+//             Cell* denom = builtin_add(e, make_sexpr_len2(a_sq, b_sq));
+//
+//             /* Calculate the new real part: a / (a^2 + b^2) */
+//             Cell* new_real = builtin_div(e, make_sexpr_len2(a_part, denom));
+//
+//             /* Calculate the new imaginary part: -b / (a^2 + b^2) */
+//             Cell* zero = make_val_int(0);
+//             Cell* neg_b = builtin_sub(e, make_sexpr_len2(zero, b_part));
+//             Cell* new_imag = builtin_div(e, make_sexpr_len2(neg_b, denom));
+//
+//             /* Create the final result */
+//             Cell* result = make_val_complex(new_real, new_imag);
+//
+//             /* Clean up all intermediate cells */
+//             cell_delete(a_sq);
+//             cell_delete(b_sq);
+//             cell_delete(denom);
+//             cell_delete(zero);
+//             cell_delete(neg_b);
+//
+//             return result;
+//         }
+//     }
+//     /* multiple args */
+//     Cell* result = cell_copy(a->cell[0]);
+//
+//     for (int i = 1; i < a->count; i++) {
+//         Cell* rhs = cell_copy(a->cell[i]);
+//         numeric_promote(&result, &rhs);
+//
+//         switch (result->type) {
+//         case VAL_INT:
+//             if (rhs->i_val == 0) {
+//                 cell_delete(rhs);
+//                 return make_val_err("Division by zero.");
+//             }
+//             /* pretty hacky way to get (/ 9 3) -> 3 but (/ 10 3) -> 10/3 */
+//             const double r = remainder((double)result->i_val, (double)rhs->i_val);
+//             if (r == 0 || r == 0.0) {
+//                 result->i_val /= rhs->i_val;
+//             } else {
+//                 result = make_val_rat(result->i_val, rhs->i_val, 1);
+//             }
+//             break;
+//         case VAL_RAT:
+//             /* (a/b) / (c/d) = (a * d)/(b * c)   */
+//             result->num = result->num * rhs->den;
+//             result->den = result->den * rhs->num;
+//             result = simplify_rational(result);
+//             break;
+//         case VAL_REAL:
+//             if (rhs->r_val == 0) {
+//                 cell_delete(rhs);
+//                 return make_val_err("Division by zero.");
+//             }
+//             result->r_val /= rhs->r_val;
+//             break;
+//         case VAL_COMPLEX:
+//             complex_apply(builtin_div, e, result, rhs);
+//             break;
+//         default:
+//             return make_val_err("<builtin '/'> Oops, this shouldn't have happened.");
+//         }
+//         result->exact = result->exact && rhs->exact;
+//         cell_delete(rhs); /* free temp */
+//     }
+//     return result;
+// }
 
 /* -----------------------------*
  *     Comparison operators     *
