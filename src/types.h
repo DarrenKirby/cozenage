@@ -49,7 +49,7 @@ typedef enum {
 
 typedef struct Cell {
     Cell_t type;               /* type of data the l_val holds */
-    bool exact;                 /* exact/inexact flag for numerics */
+    int exact;                 /* exact/inexact flag for numerics */
 
     union {
         long double r_val;    /* reals */
