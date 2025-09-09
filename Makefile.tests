@@ -1,6 +1,6 @@
 # Compiler and flags
 CC = gcc
-CFLAGS = -Wall -Wextra -Isrc -g -DTESTING__
+CFLAGS = -fsanitize=address,undefined -Wall -Wextra -Isrc -g -DTESTING__
 
 # --- Application-Specific ---
 # Name of your final application executable
