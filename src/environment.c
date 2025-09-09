@@ -177,6 +177,8 @@ void lex_add_builtins(Lex* e) {
     lex_add_builtin(e, "quotient", builtin_quotient);
     lex_add_builtin(e, "lcm", builtin_lcm);
     lex_add_builtin(e, "gcd", builtin_gcd);
+    lex_add_builtin(e, "max", builtin_max);
+    lex_add_builtin(e, "min", builtin_min);
     /* Type identity predicate procedures */
     lex_add_builtin(e, "number?", builtin_number_pred);
     lex_add_builtin(e, "boolean?", builtin_boolean_pred);

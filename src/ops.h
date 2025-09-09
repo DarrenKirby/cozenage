@@ -40,6 +40,8 @@ Cell* builtin_quotient(Lex* e, Cell* a);
 Cell* builtin_remainder(Lex* e, Cell* a);
 Cell* builtin_lcm(Lex* e, Cell* a);
 Cell* builtin_gcd(Lex* e, Cell* a);
+Cell* builtin_max(Lex* e, Cell* a);
+Cell* builtin_min(Lex* e, Cell* a);
 /* Type identity predicate procedures */
 Cell* builtin_number_pred(Lex* e, Cell* a);
 Cell* builtin_boolean_pred(Lex* e, Cell* a);

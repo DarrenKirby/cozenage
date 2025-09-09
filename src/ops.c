@@ -876,8 +876,40 @@ Cell* builtin_gcd(Lex* e, Cell* a) {
 }
 
 /* 'max' -> */
+Cell* builtin_max(Lex* e, Cell* a) {
+    (void)e;
+    Cell* err = check_arg_types(a, VAL_INT|VAL_RAT|VAL_REAL);
+    if (err) { return err; }
+    Cell* largest_so_far = cell_copy(a->cell[0]);
+    for (int i = 0; i < a->count - 1; i++) {
+        Cell* rhs = cell_copy(a->cell[i+1]);
+        Cell* result = builtin_lt_op(e, make_sexpr_len2(largest_so_far, rhs));
+        if (result->b_val == 1) {
+            largest_so_far = cell_copy(rhs);
+        }
+        cell_delete(rhs);
+        cell_delete(result);
+    }
+    return largest_so_far;
+}
 
 /* 'min' -> */
+Cell* builtin_min(Lex* e, Cell* a) {
+    (void)e;
+    Cell* err = check_arg_types(a, VAL_INT|VAL_RAT|VAL_REAL);
+    if (err) { return err; }
+    Cell* smallest_so_far = cell_copy(a->cell[0]);
+    for (int i = 0; i < a->count - 1; i++) {
+        Cell* rhs = cell_copy(a->cell[i+1]);
+        Cell* result = builtin_gt_op(e, make_sexpr_len2(smallest_so_far, rhs));
+        if (result->b_val == 1) {
+            smallest_so_far = cell_copy(rhs);
+        }
+        cell_delete(rhs);
+        cell_delete(result);
+    }
+    return smallest_so_far;
+}
 
 /* -------------------------------------------------*
  *       Type identity predicate procedures         *
