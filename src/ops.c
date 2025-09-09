@@ -164,7 +164,7 @@ Cell* builtin_div(Lex* e, Cell* a) {
     if (err) { return err; }
     if ((err = CHECK_ARITY_MIN(a, 1))) { return err; }
 
-    /* unary division reciprocal/inverse */
+    /* unary division reciprocal */
     if (a->count == 1) {
         if (a->cell[0]->type == VAL_INT) {
             return make_val_rat(1, a->cell[0]->i_val, 1);
@@ -178,14 +178,33 @@ Cell* builtin_div(Lex* e, Cell* a) {
             return make_val_real(1.0L / a->cell[0]->r_val);
         }
         if (a->cell[0]->type == VAL_COMPLEX) {
-            Cell* real_arg = make_sexpr_len1(a->cell[0]->real);
-            Cell* imag_arg = make_sexpr_len1(a->cell[0]->imag);
-            Cell* real = builtin_div(e, real_arg);
-            Cell* imag = builtin_div(e, imag_arg);
+            Cell* z = a->cell[0];
+            Cell* a_part = z->real;
+            Cell* b_part = z->imag;
 
-            Cell* result = make_val_complex(real, imag);
-            cell_delete(real_arg);
-            cell_delete(imag_arg);
+            /* Calculate the denominator: a^2 + b^2 */
+            Cell* a_sq = builtin_mul(e, make_sexpr_len2(a_part, a_part));
+            Cell* b_sq = builtin_mul(e, make_sexpr_len2(b_part, b_part));
+            Cell* denom = builtin_add(e, make_sexpr_len2(a_sq, b_sq));
+
+            /* Calculate the new real part: a / (a^2 + b^2) */
+            Cell* new_real = builtin_div(e, make_sexpr_len2(a_part, denom));
+
+            /* Calculate the new imaginary part: -b / (a^2 + b^2) */
+            Cell* zero = make_val_int(0);
+            Cell* neg_b = builtin_sub(e, make_sexpr_len2(zero, b_part));
+            Cell* new_imag = builtin_div(e, make_sexpr_len2(neg_b, denom));
+
+            /* Create the final result */
+            Cell* result = make_val_complex(new_real, new_imag);
+
+            /* Clean up all intermediate cells */
+            cell_delete(a_sq);
+            cell_delete(b_sq);
+            cell_delete(denom);
+            cell_delete(zero);
+            cell_delete(neg_b);
+
             return result;
         }
     }
