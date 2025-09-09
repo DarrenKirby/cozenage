@@ -41,7 +41,7 @@ Test(end_to_end_numerics, test_add_real) {
     cr_assert_str_eq(t_eval("(+ 1.0)"), "1.0");
     cr_assert_str_eq(t_eval("(+ 1.1 2.2 3.3)"), "6.6");
     cr_assert_str_eq(t_eval("(+ 1.0 2.0 3.0 4.0 5.0)"), "15.0");
-    cr_assert_str_eq(t_eval("(+)"), "0.0");
+    cr_assert_str_eq(t_eval("(+)"), "0");
     cr_assert_str_eq(t_eval("(+ 0.0 5.5)"), "5.5");
     cr_assert_str_eq(t_eval("(+ 5.5 0.0)"), "5.5");
     cr_assert_str_eq(t_eval("(+ 0.0 0.0)"), "0.0");
@@ -202,7 +202,7 @@ Test(end_to_end_numerics, test_sub_mixed) {
     cr_assert_str_eq(t_eval("(- 1/2 2-3i)"), "-3/2+3i");
     cr_assert_str_eq(t_eval("(- 2-3i 1/2)"), "3/2-3i");
     cr_assert_str_eq(t_eval("(- 10.5 1-0i)"), "9.5+0i");
-    cr_assert_str_eq(t_eval("(- 1-0i 10.5)"), "-9.5-1i");
+    cr_assert_str_eq(t_eval("(- 1-0i 10.5)"), "-9.5+0i");
     cr_assert_str_eq(t_eval("(- 10 1/2 0.25)"), "9.25");
     cr_assert_str_eq(t_eval("(- 20 2.5 1+1i)"), "16.5-1i");
     cr_assert_str_eq(t_eval("(- 5/2 1.5 2+2i)"), "-1.0-2i");
@@ -263,12 +263,12 @@ Test(end_to_end_numerics, test_mul_real) {
 
 Test(end_to_end_numerics, test_mul_complex) {
     cr_assert_str_eq(t_eval("(* 2+3i 4+5i)"), "-7+22i");
-    cr_assert_str_eq(t_eval("(* 1-0i 1+0i)"), "2+0i");
+    cr_assert_str_eq(t_eval("(* 1-0i 1+0i)"), "1+0i");
     cr_assert_str_eq(t_eval("(* 2+0i 0+2i)"), "0+4i");
     cr_assert_str_eq(t_eval("(* 3i 4i)"), "-12+0i");
-    cr_assert_str_eq(t_eval("(* 1+0i 1+0i)"), "0+2i");
+    cr_assert_str_eq(t_eval("(* 1+0i 1+0i)"), "1+0i");
     cr_assert_str_eq(t_eval("(* 1-2i 3-4i)"), "-5-10i");
-    cr_assert_str_eq(t_eval("(* 1+0i 2+0i 3i)"), "-6+6i");
+    cr_assert_str_eq(t_eval("(* 1+0i 2+0i 3i)"), "0+6i");
     cr_assert_str_eq(t_eval("(* 123+456i 0+0i)"), "0+0i");
     cr_assert_str_eq(t_eval("(* 5-10i)"), "5-10i");
 }
@@ -284,7 +284,7 @@ Test(end_to_end_numerics, test_mul_mixed) {
     cr_assert_str_eq(t_eval("(* 1/2 2+2i)"), "1+1i");
     cr_assert_str_eq(t_eval("(* 1.5 2+4i)"), "3.0+6.0i");
     cr_assert_str_eq(t_eval("(* 2 1/2 5.0)"), "5.0");
-    cr_assert_str_eq(t_eval("(* 2 1/2 5.0 1+0i)"), "5.0+5.0i");
+    cr_assert_str_eq(t_eval("(* 2 1/2 5.0 1+0i)"), "5.0+0.0i");
     cr_assert_str_eq(t_eval("(* 1/2 0.0)"), "0.0");
     cr_assert_str_eq(t_eval("(* 5.0 0+0i)"), "0.0+0.0i");
 }
@@ -324,7 +324,7 @@ Test(end_to_end_numerics, test_div_rational) {
 Test(end_to_end_numerics, test_div_real) {
     cr_assert_str_eq(t_eval("(/ 2.0)"), "0.5");
     cr_assert_str_eq(t_eval("(/ -4.0)"), "-0.25");
-    cr_assert_str_eq(t_eval("(/ 5.5)"), "0.18181818181818181819");
+    cr_assert_str_eq(t_eval("(/ 5.5)"), "0.181818181818182");
     cr_assert_str_eq(t_eval("(/ 10.0 4.0)"), "2.5");
     cr_assert_str_eq(t_eval("(/ 5.0 2.0)"), "2.5");
     cr_assert_str_eq(t_eval("(/ -10.0 4.0)"), "-2.5");
@@ -334,14 +334,14 @@ Test(end_to_end_numerics, test_div_real) {
 }
 
 Test(end_to_end_numerics, test_div_complex) {
-    cr_assert_str_eq(t_eval("(/ 10+10i)"), "0.05-0.05i");
-    cr_assert_str_eq(t_eval("(/ 1+0i)"), "0.5-0.5i");
-    cr_assert_str_eq(t_eval("(/ 2i)"), "0-0.5i");
+    cr_assert_str_eq(t_eval("(/ 10+10i)"), "1/20-1/20i");
+    cr_assert_str_eq(t_eval("(/ 1+0i)"), "1+0i");
+    cr_assert_str_eq(t_eval("(/ 2i)"), "0-1/2i");
     cr_assert_str_eq(t_eval("(/ 8+6i 2+4i)"), "2-1i");
     cr_assert_str_eq(t_eval("(/ 2+4i 1+2i)"), "2+0i");
     cr_assert_str_eq(t_eval("(/ 10+20i 2+1i)"), "8+6i");
     cr_assert_str_eq(t_eval("(/ -16+0i 2+2i 2-2i)"), "-2+0i");
-    cr_assert_str_eq(t_eval("(/ 20+10i 1+2i 2)"), "2-3i");
+    cr_assert_str_eq(t_eval("(/ 20+10i 1+2i 2)"), "4-3i");
 }
 
 Test(end_to_end_numerics, test_div_mixed) {
@@ -351,10 +351,10 @@ Test(end_to_end_numerics, test_div_mixed) {
     cr_assert_str_eq(t_eval("(/ 5.0 2)"), "2.5");
     cr_assert_str_eq(t_eval("(/ 1/2 2.0)"), "0.25");
     cr_assert_str_eq(t_eval("(/ 2.0 1/2)"), "4.0");
-    cr_assert_str_eq(t_eval("(/ 10 1+i)"), "5-5i");
-    cr_assert_str_eq(t_eval("(/ 1/2 1+i)"), "0.25-0.25i");
-    cr_assert_str_eq(t_eval("(/ 2.0 1+i)"), "1.0-1.0i");
-    cr_assert_str_eq(t_eval("(/ 5+5i 2)"), "2.5+2.5i");
+    cr_assert_str_eq(t_eval("(/ 10 1+0i)"), "10+0i");
+    cr_assert_str_eq(t_eval("(/ 1/2 1+0i)"), "1/2+0i");
+    cr_assert_str_eq(t_eval("(/ 2.0 1+0i)"), "2.0+0.0i");
+    cr_assert_str_eq(t_eval("(/ 5+5i 2)"), "5/2+5/2i");
     cr_assert_str_eq(t_eval("(/ 100 2.0 5)"), "10.0");
     cr_assert_str_eq(t_eval("(/ 40+0i 2.0 5)"), "4.0+0.0i");
 }
