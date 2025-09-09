@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <string.h>
 
+
 Cell* apply_lambda(Cell* lambda, Cell* args) {
     if (!lambda || lambda->type != VAL_PROC || lambda->builtin) {
         return make_val_err("Not a lambda");
@@ -35,6 +36,48 @@ Cell* apply_lambda(Cell* lambda, Cell* args) {
 
     lex_delete(local_env);
     return result;
+}
+
+Cell* sexpr_to_list(const Cell* c) {
+    /* If the item is not an S-expression, it's an atom. Return a copy. */
+    if (c->type != VAL_SEXPR) {
+        return cell_copy(c);
+    }
+
+    /* It is an S-expression. Check for improper list syntax. */
+    int dot_pos = -1;
+    if (c->count > 1) {
+        Cell* dot_candidate = c->cell[c->count - 2];
+        if (dot_candidate->type == VAL_SYM && strcmp(dot_candidate->sym, ".") == 0) {
+            dot_pos = c->count - 2;
+        }
+    }
+
+    /* Handle Improper List */
+    if (dot_pos != -1) {
+        /* The final cdr is the very last element in the S-expression. */
+        Cell* final_cdr = sexpr_to_list(c->cell[c->count - 1]);
+
+        /* Build the list chain backwards from the element *before* the dot. */
+        Cell* list_head = final_cdr;
+        for (int i = dot_pos - 1; i >= 0; i--) {
+            Cell* element = sexpr_to_list(c->cell[i]);
+            list_head = make_val_pair(element, list_head);
+        }
+        return list_head;
+    }
+    /* Handle Proper List */
+    Cell* list_head = make_val_nil();
+
+    for (int i = c->count - 1; i >= 0; i--) {
+        /* Recursively call this function on each element to ensure
+         * any nested S-expressions are also converted. */
+        Cell* element = sexpr_to_list(c->cell[i]);
+
+        /* Prepend the new element to the head of our list. */
+        list_head = make_val_pair(element, list_head);
+    }
+    return list_head;
 }
 
 /* coz_eval()
@@ -109,9 +152,16 @@ Cell* eval_sexpr(Lex* e, Cell* v) {
             cell_delete(v);
             return make_val_err("quote takes exactly one argument");
         }
-        /* extract argument from s-expr and return unevaluated */
-        Cell* result = cell_take(v, 0);
-        cell_delete(v);
+        /* Extract the S-expression that was quoted. */
+        Cell* quoted_sexpr = cell_take(v, 0);
+        cell_delete(v); /* Delete the (quote ...) wrapper. */
+
+        /* Convert the VAL_SEXPR into a proper VAL_PAIR list. */
+        Cell* result = sexpr_to_list(quoted_sexpr);
+
+        /* Clean up the original VAL_SEXPR. */
+        cell_delete(quoted_sexpr);
+
         return result;
     }
 
