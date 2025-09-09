@@ -90,7 +90,8 @@ char **lexer(const char *input, int *count) {
         }
 
         /* Allocate more space if needed */
-        if (n >= capacity) {
+        //if (n >= capacity) {
+        if (n + 1 >= capacity) {
             capacity *= 2;
             char **tmp_tokens = realloc(tokens, capacity * sizeof(char *));
             if (!tmp_tokens) {
@@ -319,6 +320,44 @@ Cell *parse_tokens(Parser *p) {
         advance(p); /* skip ')' */
         return sexpr;
     }
+
+    /* FIXME: will eventually have to use this logic where 'all data/code is a list'
+     * but am deferring for now, as it requires refactoring all builtins and special forms */
+    // if (strcmp(tok, "(") == 0) {
+    //     advance(p);  /* consume '(' */
+    //
+    //     // Handle the empty list '()'
+    //     if (strcmp(peek(p), ")") == 0) {
+    //         advance(p); // consume ')'
+    //         return make_val_nil();
+    //     }
+    //
+    //     // --- Logic to build a VAL_PAIR chain ---
+    //
+    //     // 1. Parse the first element to create the head of the list.
+    //     Cell* first_element = parse_tokens(p);
+    //     Cell* head = make_val_pair(first_element, make_val_nil());
+    //     Cell* tail = head; // 'tail' will always point to the last pair in our chain.
+    //
+    //     // 2. Loop through the rest of the elements.
+    //     while (strcmp(peek(p), ")") != 0) {
+    //         Cell* next_element = parse_tokens(p);
+    //
+    //         // Create a new pair for this element.
+    //         Cell* new_pair = make_val_pair(next_element, make_val_nil());
+    //
+    //         // Append it to the end of our list.
+    //         tail->cdr = new_pair;
+    //
+    //         // Update the tail pointer to the new end of the list.
+    //         tail = new_pair;
+    //     }
+    //
+    //     // 3. Consume the final ')' token.
+    //     advance(p);
+    //
+    //     return head; // Return the head of the newly constructed proper list.
+    // }
 
     /* Otherwise, atom (number, boolean, char, string, symbol) */
     advance(p);
