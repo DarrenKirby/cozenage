@@ -52,9 +52,8 @@ Cell* make_val_rat(const long int num, const long int den, const bool simplify) 
     v->den = den;
     if (simplify) {
         return simplify_rational(v);
-    } else {
-        return v;
     }
+    return v;
 }
 
 Cell* make_val_complex(Cell* real, Cell *imag) {
@@ -624,16 +623,21 @@ Cell* simplify_rational(Cell* v) {
     }
 
     if (v->den == 0) {
-        /* undefined fraction, maybe return an error instead */
-        return make_val_err("simplify_rational: denominator is zero!");
+        /* undefined fraction, return an error */
+        Cell* err = make_val_err("simplify_rational: denominator is zero!");
+        cell_delete(v);
+        return err;
     }
     if (v->num == v->den) {
         /* Return as integer 1 */
+        cell_delete(v);
         return make_val_int(1);
     }
     if (v->den == 1) {
         /* Return as integer */
-        return make_val_int(v->num);
+        Cell* int_cell = make_val_int(v->num);
+        cell_delete(v);
+        return int_cell;
     }
     return v;
 }
@@ -649,86 +653,6 @@ long double cell_to_ld(Cell* c) {
 }
 
 /* Helper for performing arithmetic on complex numbers */
-// void complex_apply(BuiltinFn fn, Lex* e, Cell* result, Cell* rhs) {
-//     // Addition/subtraction logic is already perfect and remains unchanged.
-//     if (fn == builtin_add || fn == builtin_sub) {
-//         /* addition/subtraction: elementwise using recursion */
-//         Cell* real_args = make_sexpr_len2(result->real, rhs->real);
-//         Cell* imag_args = make_sexpr_len2(result->imag, rhs->imag);
-//
-//         Cell* new_real = fn(e, real_args);
-//         Cell* new_imag = fn(e, imag_args);
-//
-//         cell_delete(real_args);
-//         cell_delete(imag_args);
-//
-//         cell_delete(result->real);
-//         cell_delete(result->imag);
-//
-//         result->real = new_real;
-//         result->imag = new_imag;
-//         return;
-//     }
-//
-//     /* Pointers to the four numeric components (a, b, c, d). */
-//     Cell* a = result->real;
-//     Cell* b = result->imag;
-//     Cell* c = rhs->real;
-//     Cell* d = rhs->imag;
-//
-//     /* Perform the intermediate calculations using existing built-ins. */
-//     Cell* ac = builtin_mul(e, make_sexpr_len2(a, c));
-//     Cell* bd = builtin_mul(e, make_sexpr_len2(b, d));
-//     Cell* ad = builtin_mul(e, make_sexpr_len2(a, d));
-//     Cell* bc = builtin_mul(e, make_sexpr_len2(b, c));
-//
-//     Cell* new_real = NULL;
-//     Cell* new_imag = NULL;
-//
-//     if (fn == builtin_mul) {
-//         /* New real part: (ac - bd) */
-//         new_real = builtin_sub(e, make_sexpr_len2(ac, bd));
-//         // New imaginary part: (ad + bc)
-//         new_imag = builtin_add(e, make_sexpr_len2(ad, bc));
-//     }
-//     else if (fn == builtin_div) {
-//         /* Denominator: (c*c + d*d) */
-//         Cell* c_sq = builtin_mul(e, make_sexpr_len2(c, c));
-//         Cell* d_sq = builtin_mul(e, make_sexpr_len2(d, d));
-//         Cell* denom = builtin_add(e, make_sexpr_len2(c_sq, d_sq));
-//
-//         /* Numerator for real part: (ac + bd) */
-//         Cell* real_num = builtin_add(e, make_sexpr_len2(ac, bd));
-//         /* Numerator for imag part: (bc - ad) */
-//         Cell* imag_num = builtin_sub(e, make_sexpr_len2(bc, ad));
-//
-//         /* Final division to get new parts */
-//         new_real = builtin_div(e, make_sexpr_len2(real_num, denom));
-//         new_imag = builtin_div(e, make_sexpr_len2(imag_num, denom));
-//
-//         /* Cleanup for division-specific intermediates */
-//         cell_delete(c_sq);
-//         cell_delete(d_sq);
-//         cell_delete(denom);
-//         cell_delete(real_num);
-//         cell_delete(imag_num);
-//     }
-//
-//     /* Cleanup for common intermediate results */
-//     cell_delete(ac);
-//     cell_delete(bd);
-//     cell_delete(ad);
-//     cell_delete(bc);
-//
-//     /* Clean up the old components from the result cell. */
-//     cell_delete(result->real);
-//     cell_delete(result->imag);
-//
-//     /* Assign the newly calculated, type-correct components. */
-//     result->real = new_real;
-//     result->imag = new_imag;
-// }
-
 void complex_apply(BuiltinFn fn, Lex* e, Cell* result, Cell* rhs) {
     // Addition/subtraction logic is already perfect and remains unchanged.
     if (fn == builtin_add || fn == builtin_sub) {
