@@ -649,6 +649,86 @@ long double cell_to_ld(Cell* c) {
 }
 
 /* Helper for performing arithmetic on complex numbers */
+// void complex_apply(BuiltinFn fn, Lex* e, Cell* result, Cell* rhs) {
+//     // Addition/subtraction logic is already perfect and remains unchanged.
+//     if (fn == builtin_add || fn == builtin_sub) {
+//         /* addition/subtraction: elementwise using recursion */
+//         Cell* real_args = make_sexpr_len2(result->real, rhs->real);
+//         Cell* imag_args = make_sexpr_len2(result->imag, rhs->imag);
+//
+//         Cell* new_real = fn(e, real_args);
+//         Cell* new_imag = fn(e, imag_args);
+//
+//         cell_delete(real_args);
+//         cell_delete(imag_args);
+//
+//         cell_delete(result->real);
+//         cell_delete(result->imag);
+//
+//         result->real = new_real;
+//         result->imag = new_imag;
+//         return;
+//     }
+//
+//     /* Pointers to the four numeric components (a, b, c, d). */
+//     Cell* a = result->real;
+//     Cell* b = result->imag;
+//     Cell* c = rhs->real;
+//     Cell* d = rhs->imag;
+//
+//     /* Perform the intermediate calculations using existing built-ins. */
+//     Cell* ac = builtin_mul(e, make_sexpr_len2(a, c));
+//     Cell* bd = builtin_mul(e, make_sexpr_len2(b, d));
+//     Cell* ad = builtin_mul(e, make_sexpr_len2(a, d));
+//     Cell* bc = builtin_mul(e, make_sexpr_len2(b, c));
+//
+//     Cell* new_real = NULL;
+//     Cell* new_imag = NULL;
+//
+//     if (fn == builtin_mul) {
+//         /* New real part: (ac - bd) */
+//         new_real = builtin_sub(e, make_sexpr_len2(ac, bd));
+//         // New imaginary part: (ad + bc)
+//         new_imag = builtin_add(e, make_sexpr_len2(ad, bc));
+//     }
+//     else if (fn == builtin_div) {
+//         /* Denominator: (c*c + d*d) */
+//         Cell* c_sq = builtin_mul(e, make_sexpr_len2(c, c));
+//         Cell* d_sq = builtin_mul(e, make_sexpr_len2(d, d));
+//         Cell* denom = builtin_add(e, make_sexpr_len2(c_sq, d_sq));
+//
+//         /* Numerator for real part: (ac + bd) */
+//         Cell* real_num = builtin_add(e, make_sexpr_len2(ac, bd));
+//         /* Numerator for imag part: (bc - ad) */
+//         Cell* imag_num = builtin_sub(e, make_sexpr_len2(bc, ad));
+//
+//         /* Final division to get new parts */
+//         new_real = builtin_div(e, make_sexpr_len2(real_num, denom));
+//         new_imag = builtin_div(e, make_sexpr_len2(imag_num, denom));
+//
+//         /* Cleanup for division-specific intermediates */
+//         cell_delete(c_sq);
+//         cell_delete(d_sq);
+//         cell_delete(denom);
+//         cell_delete(real_num);
+//         cell_delete(imag_num);
+//     }
+//
+//     /* Cleanup for common intermediate results */
+//     cell_delete(ac);
+//     cell_delete(bd);
+//     cell_delete(ad);
+//     cell_delete(bc);
+//
+//     /* Clean up the old components from the result cell. */
+//     cell_delete(result->real);
+//     cell_delete(result->imag);
+//
+//     /* Assign the newly calculated, type-correct components. */
+//     result->real = new_real;
+//     result->imag = new_imag;
+// }
+
 void complex_apply(BuiltinFn fn, Lex* e, Cell* result, Cell* rhs) {
     // Addition/subtraction logic is already perfect and remains unchanged.
     if (fn == builtin_add || fn == builtin_sub) {
@@ -676,35 +756,72 @@ void complex_apply(BuiltinFn fn, Lex* e, Cell* result, Cell* rhs) {
     Cell* c = rhs->real;
     Cell* d = rhs->imag;
 
-    /* Perform the intermediate calculations using existing built-ins. */
-    Cell* ac = builtin_mul(e, make_sexpr_len2(a, c));
-    Cell* bd = builtin_mul(e, make_sexpr_len2(b, d));
-    Cell* ad = builtin_mul(e, make_sexpr_len2(a, d));
-    Cell* bc = builtin_mul(e, make_sexpr_len2(b, c));
+    /* Create temporary argument lists and perform calculations */
+    Cell* ac_args = make_sexpr_len2(a, c);
+    Cell* bd_args = make_sexpr_len2(b, d);
+    Cell* ad_args = make_sexpr_len2(a, d);
+    Cell* bc_args = make_sexpr_len2(b, c);
+
+    Cell* ac = builtin_mul(e, ac_args);
+    Cell* bd = builtin_mul(e, bd_args);
+    Cell* ad = builtin_mul(e, ad_args);
+    Cell* bc = builtin_mul(e, bc_args);
+
+    /* Free the temporary argument lists */
+    cell_delete(ac_args);
+    cell_delete(bd_args);
+    cell_delete(ad_args);
+    cell_delete(bc_args);
 
     Cell* new_real = NULL;
     Cell* new_imag = NULL;
 
     if (fn == builtin_mul) {
-        /* New real part: (ac - bd) */
-        new_real = builtin_sub(e, make_sexpr_len2(ac, bd));
-        // New imaginary part: (ad + bc)
-        new_imag = builtin_add(e, make_sexpr_len2(ad, bc));
+        /* Create temporary argument lists for final operations */
+        Cell* real_args = make_sexpr_len2(ac, bd);
+        Cell* imag_args = make_sexpr_len2(ad, bc);
+
+        new_real = builtin_sub(e, real_args);
+        new_imag = builtin_add(e, imag_args);
+
+        /* Free the temporary argument lists */
+        cell_delete(real_args);
+        cell_delete(imag_args);
     }
     else if (fn == builtin_div) {
-        /* Denominator: (c*c + d*d) */
-        Cell* c_sq = builtin_mul(e, make_sexpr_len2(c, c));
-        Cell* d_sq = builtin_mul(e, make_sexpr_len2(d, d));
-        Cell* denom = builtin_add(e, make_sexpr_len2(c_sq, d_sq));
+        /* Create temporary argument lists for denominator calculation */
+        Cell* c_sq_args = make_sexpr_len2(c, c);
+        Cell* d_sq_args = make_sexpr_len2(d, d);
 
-        /* Numerator for real part: (ac + bd) */
-        Cell* real_num = builtin_add(e, make_sexpr_len2(ac, bd));
-        /* Numerator for imag part: (bc - ad) */
-        Cell* imag_num = builtin_sub(e, make_sexpr_len2(bc, ad));
+        Cell* c_sq = builtin_mul(e, c_sq_args);
+        Cell* d_sq = builtin_mul(e, d_sq_args);
 
-        /* Final division to get new parts */
-        new_real = builtin_div(e, make_sexpr_len2(real_num, denom));
-        new_imag = builtin_div(e, make_sexpr_len2(imag_num, denom));
+        cell_delete(c_sq_args);
+        cell_delete(d_sq_args);
+
+        Cell* denom_args = make_sexpr_len2(c_sq, d_sq);
+        Cell* denom = builtin_add(e, denom_args);
+        cell_delete(denom_args);
+
+        /* Create temporary argument lists for numerators */
+        Cell* real_num_args = make_sexpr_len2(ac, bd);
+        Cell* imag_num_args = make_sexpr_len2(bc, ad);
+
+        Cell* real_num = builtin_add(e, real_num_args);
+        Cell* imag_num = builtin_sub(e, imag_num_args);
+
+        cell_delete(real_num_args);
+        cell_delete(imag_num_args);
+
+        /* Create temporary argument lists for final division */
+        Cell* final_real_args = make_sexpr_len2(real_num, denom);
+        Cell* final_imag_args = make_sexpr_len2(imag_num, denom);
+
+        new_real = builtin_div(e, final_real_args);
+        new_imag = builtin_div(e, final_imag_args);
+
+        cell_delete(final_real_args);
+        cell_delete(final_imag_args);
 
         /* Cleanup for division-specific intermediates */
         cell_delete(c_sq);
