@@ -421,7 +421,8 @@ const char* cell_mask_types(const int mask) {
  *      Procedure argument arity and type validators       *
  * --------------------------------------------------------*/
 
-/* Return NULL if all args are valid, else return an error lval* */
+/* Return NULL if all args are valid, else return an error lval*
+ * 'a' is expected to be VAL_SEXPR holding the args */
 Cell* check_arg_types(const Cell* a, const int mask) {
     for (int i = 0; i < a->count; i++) {
         const Cell* arg = a->cell[i];
@@ -574,10 +575,6 @@ Cell* make_sexpr_len4(const Cell* a, const Cell* b, const Cell* c, const Cell* d
  * ------------------------------------------*/
 
 Cell* negate_numeric(Cell* x) {
-    /* FIXME: This arg check segfaults on some types */
-    //Cell* err = check_arg_types(x, VAL_INT|VAL_REAL|VAL_RAT|VAL_COMPLEX);
-    //if (err) { return err; }
-
     switch (x->type) {
         case VAL_INT: return make_val_int(-x->i_val);
         case VAL_RAT:
@@ -654,7 +651,6 @@ long double cell_to_ld(Cell* c) {
 
 /* Helper for performing arithmetic on complex numbers */
 void complex_apply(BuiltinFn fn, Lex* e, Cell* result, Cell* rhs) {
-    // Addition/subtraction logic is already perfect and remains unchanged.
     if (fn == builtin_add || fn == builtin_sub) {
         /* addition/subtraction: elementwise using recursion */
         Cell* real_args = make_sexpr_len2(result->real, rhs->real);
