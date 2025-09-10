@@ -3,13 +3,15 @@
 *Getting close to being ready for prime time*
 
 If you have cmake, run `make`.
-If you do not have cmake, run `make -f Makefile.no_cmake`
+If you do not have cmake, run `make nocmake`.
+To build the tests run `make tests`. You will need `criterion` installed.
+To delete objects and binaries run `make clean`
 
 Then run `./cozenage` to enter the funhouse.
 
 ## Status of Builtin Procedures
 
-### Basic arithmatic operators
+### Basic arithmetic operators
 - `+`
 - `-`
 - `*`
@@ -35,6 +37,8 @@ Then run `./cozenage` to enter the funhouse.
 - `if`
 - `when`
 - `unless`
+- `cond`
+- `else`
 
 ### Equality and equivalence comparators
 - `eq?`
@@ -51,6 +55,8 @@ Then run `./cozenage` to enter the funhouse.
 - `quotient`
 - `lcm`
 - `gcd`
+- `max`
+- `min`
 
 ### Type identity predicate procedures
 - `number?`
@@ -93,5 +99,3 @@ Then run `./cozenage` to enter the funhouse.
 - `vector`
 - `vector-length`
 - `vector-ref`
-
-

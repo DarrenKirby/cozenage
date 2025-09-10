@@ -138,7 +138,7 @@ void lex_add_builtin(Lex* e, const char* name,
 }
 
 void lex_add_builtins(Lex* e) {
-    /* Basic arithmatic operators */
+    /* Basic arithmetic operators */
     lex_add_builtin(e, "+", builtin_add);
     lex_add_builtin(e, "-", builtin_sub);
     lex_add_builtin(e, "*", builtin_mul);
