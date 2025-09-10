@@ -6,30 +6,161 @@
 #include "eval.h"
 #include <string.h>
 #include <math.h>
-#include <stdio.h>
+#include <limits.h>
 #include <stdlib.h>
 
-#include "printer.h"
 
-
-/* Convert any Cell number to long double for calculation */
-long double VAL_to_ld(Cell* v) {
-    return (v->type == VAL_INT) ? (long double)v->i_val : v->r_val;
+/* Helper to convert any real-valued cell to a C long double. */
+static long double cell_to_long_double(const Cell* c) {
+    switch (c->type) {
+        case VAL_INT:
+            return (long double)c->i_val;
+        case VAL_RAT:
+            return (long double)c->num / c->den;
+        case VAL_REAL:
+            return c->r_val;
+        default:
+            /* This case should ideally not be reached if inputs are valid numbers. */
+            return 0.0L;
+    }
 }
 
-/* Helper which determines if there is a meaningful fractional portion
- * in the result, and returns VAL_INT or VAL_FLOAT accordingly */
-Cell* make_VAL_from_double(const long double x) {
-    /* epsilon: what counts as “effectively an integer” */
-    const long double EPS = 1e-12L;
-
-    const long double rounded = roundl(x);
-    if (fabsl(x - rounded) < EPS) {
-        /* treat as integer */
-        return make_val_int((long long)rounded);
+/* Helper to construct appropriate cell from a long double */
+Cell* make_cell_from_double(long double d) {
+    if (d == floorl(d) && d >= LLONG_MIN && d <= LLONG_MAX) {
+        return make_val_int((long long)d);
     }
-    /* treat as float */
-    return make_val_real(x);
+    return make_val_real(d);
+}
+
+/* Helper to check if a non-complex numeric cell has a value of zero. */
+static bool cell_is_real_zero(const Cell* c) {
+    if (!c) return false;
+    switch (c->type) {
+        case VAL_INT:
+            return c->i_val == 0;
+        case VAL_RAT:
+            /* Assumes simplified rational where numerator would be 0. */
+            return c->num == 0;
+        case VAL_REAL:
+            return c->r_val == 0.0L;
+        default:
+            return false;
+    }
+}
+
+/* Helper to check if a cell represents an integer value, per R7RS tower. */
+static bool cell_is_integer(const Cell* c) {
+    if (!c) return false;
+    switch (c->type) {
+        case VAL_INT:
+            return true;
+        case VAL_RAT:
+            /* A simplified rational is an integer if its denominator is 1. */
+            return c->den == 1;
+        case VAL_REAL:
+            /* A real is an integer if it has no fractional part. */
+            return c->r_val == floorl(c->r_val);
+        case VAL_COMPLEX:
+            /* A complex is an integer if its imaginary part is zero
+             * and its real part is an integer. */
+            return cell_is_real_zero(c->imag) && cell_is_integer(c->real);
+        default:
+            return false;
+    }
+}
+
+/* Checks if a number is real-valued (i.e., has a zero imaginary part). */
+static bool cell_is_real(const Cell* c) {
+    if (!c) return false;
+    switch (c->type) {
+        case VAL_INT:
+        case VAL_RAT:
+        case VAL_REAL:
+            return true;
+        case VAL_COMPLEX:
+            /* A complex number is real if its imaginary part is zero. */
+            return cell_is_real_zero(c->imag);
+        default:
+            return false;
+    }
+}
+
+/* Helper for positive? (> 0)
+ * Note: R7RS 'positive?' is strictly greater than 0. */
+static bool cell_is_positive(const Cell* c) {
+    if (!c) return false;
+
+    const Cell* val_to_check = c;
+    if (c->type == VAL_COMPLEX) {
+        /* Must be a real number to be positive */
+        if (!cell_is_real_zero(c->imag)) return false;
+        val_to_check = c->real;
+    }
+
+    switch (val_to_check->type) {
+        case VAL_INT:  return val_to_check->i_val > 0;
+        case VAL_REAL: return val_to_check->r_val > 0.0L;
+        case VAL_RAT:  return val_to_check->num > 0; /* Assumes den is always positive */
+        default:       return false;
+    }
+}
+
+/* Helper for negative? (< 0) */
+static bool cell_is_negative(const Cell* c) {
+    if (!c) return false;
+
+    const Cell* val_to_check = c;
+    if (c->type == VAL_COMPLEX) {
+        /* Must be a real number to be negative */
+        if (!cell_is_real_zero(c->imag)) return false;
+        val_to_check = c->real;
+    }
+
+    switch (val_to_check->type) {
+        case VAL_INT:  return val_to_check->i_val < 0;
+        case VAL_REAL: return val_to_check->r_val < 0.0L;
+        case VAL_RAT:  return val_to_check->num < 0; /* Assumes den is always positive */
+        default:       return false;
+    }
+}
+
+/* Helper for odd? */
+static bool cell_is_odd(const Cell* c) {
+    /* Must be an integer to be odd or even. */
+    if (!cell_is_integer(c)) {
+        return false;
+    }
+
+    const Cell* int_cell = (c->type == VAL_COMPLEX) ? c->real : c;
+
+    long long val;
+    switch (int_cell->type) {
+        case VAL_INT:  val = int_cell->i_val; break;
+        case VAL_REAL: val = (long long)int_cell->r_val; break;
+        case VAL_RAT:  val = int_cell->num; break; /* den is 1 if it's an integer */
+        default: return false; /* Unreachable */
+    }
+    return (val % 2 != 0);
+}
+
+/* Helper for even? */
+static bool cell_is_even(const Cell* c) {
+    /* Must be an integer to be odd or even. */
+    if (!cell_is_integer(c)) {
+        return false;
+    }
+
+    const Cell* int_cell = (c->type == VAL_COMPLEX) ? c->real : c;
+
+    long long val;
+    switch (int_cell->type) {
+        case VAL_INT:  val = int_cell->i_val; break;
+        case VAL_REAL: val = (long long)int_cell->r_val; break;
+        case VAL_RAT:  val = int_cell->num; break; /* den is 1 if it's an integer */
+        default: return false; /* Unreachable */
+    }
+    return (val % 2 == 0);
 }
 
 /*------------------------------------*
@@ -256,7 +387,7 @@ Cell* builtin_div(Lex* e, Cell* a) {
         case VAL_REAL:
             if (rhs->r_val == 0) {
                 cell_delete(rhs);
-                cell_delete(result);  // Free result before returning error
+                cell_delete(result);
                 return make_val_err("Division by zero.");
             }
             result->r_val /= rhs->r_val;
@@ -470,54 +601,62 @@ Cell* builtin_lte_op(Lex* e, Cell* a) {
  *    Generic unary numeric procedures    *
  * ---------------------------------------*/
 
-/* 'zero?' -> VAL - returns #t if arg is == 0 else #f */
+/* 'zero?' -> VAL_BOOL - returns #t if arg is == 0 else #f */
 Cell* builtin_zero(Lex* e, Cell* a) {
-    Cell* err = check_arg_types(a, VAL_INT|VAL_REAL);
+    (void)e;
+    Cell* err = check_arg_types(a, VAL_INT | VAL_REAL | VAL_RAT | VAL_COMPLEX);
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
-    const long double result = VAL_to_ld(a->cell[0]);
-    if (result == 0 || result == 0.0) { return make_val_bool(1); }
-    return make_val_bool(0);
+
+    const Cell* arg = a->cell[0];
+    bool is_zero;
+
+    if (arg->type == VAL_COMPLEX) {
+        is_zero = cell_is_real_zero(arg->real) && cell_is_real_zero(arg->imag);
+    } else {
+        is_zero = cell_is_real_zero(arg);
+    }
+    return make_val_bool(is_zero);
 }
 
-/* 'positive?' -> VAL_BOOL - returns #t if arg is >= 0 else #f */
+/* 'positive?' -> VAL_BOOL - returns #t if arg is > 0 else #f */
 Cell* builtin_positive(Lex* e, Cell* a) {
-    Cell* err = check_arg_types(a, VAL_INT|VAL_REAL);
+    (void)e;
+    Cell* err = check_arg_types(a, VAL_INT | VAL_REAL | VAL_RAT | VAL_COMPLEX);
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
-    const long double result = VAL_to_ld(a->cell[0]);
-    if (result >= 0) { return make_val_bool(1); }
-    return make_val_bool(0);
+
+    return make_val_bool(cell_is_positive(a->cell[0]));
 }
 
 /* 'negative?' -> VAL_BOOL - returns #t if arg is < 0 else #f */
 Cell* builtin_negative(Lex* e, Cell* a) {
-    Cell* err = check_arg_types(a, VAL_INT | VAL_REAL);
+    (void)e;
+    Cell* err = check_arg_types(a, VAL_INT | VAL_REAL | VAL_RAT | VAL_COMPLEX);
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
-    const long double result = VAL_to_ld(a->cell[0]);
-    if (result < 0) { return make_val_bool(1); }
-    return make_val_bool(0);
+
+    return make_val_bool(cell_is_negative(a->cell[0]));
 }
 
-/* 'odd?' -> VAL_BOOL - returns #t if arg is odd else #f */
+/* 'odd?' -> VAL_BOOL - returns #t if arg is an odd integer else #f */
 Cell* builtin_odd(Lex* e, Cell* a) {
-    Cell* err = check_arg_types(a, VAL_INT);
+    (void)e;
+    Cell* err = check_arg_types(a, VAL_INT | VAL_REAL | VAL_RAT | VAL_COMPLEX);
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
-    const long long n = a->cell[0]->i_val;
-    if (n % 2 == 0) { return make_val_bool(0); }
-    return make_val_bool(1);
+
+    return make_val_bool(cell_is_odd(a->cell[0]));
 }
 
-/* 'even?' -> VAL_BOOL - returns #t if arg is even else #f */
+/* 'even?' -> VAL_BOOL - returns #t if arg is an even integer else #f */
 Cell* builtin_even(Lex* e, Cell* a) {
-    Cell* err = check_arg_types(a, VAL_INT);
+    (void)e;
+    Cell* err = check_arg_types(a, VAL_INT | VAL_REAL | VAL_RAT | VAL_COMPLEX);
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
-    const long long n = a->cell[0]->i_val;
-    if (n % 2 == 0) { return make_val_bool(1); }
-    return make_val_bool(0);
+
+    return make_val_bool(cell_is_even(a->cell[0]));
 }
 
 /* -----------------------------*
@@ -526,6 +665,7 @@ Cell* builtin_even(Lex* e, Cell* a) {
 
 /* 'quote' -> VAL_SEXPR -  returns the sole argument unevaluated */
 Cell* builtin_quote(Lex* e, Cell* a) {
+    (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
     /* Take the first argument and do NOT evaluate it */
@@ -680,6 +820,8 @@ Cell* builtin_cond(Lex* e, Cell* a) {
 
 /* dummy function */
 Cell* builtin_else(Lex* e, Cell* a) {
+    (void)e;
+    (void)a;
     return make_val_bool(1);
 }
 
@@ -692,11 +834,12 @@ Cell* builtin_else(Lex* e, Cell* a) {
  * May not give meaningful results for numbers or characters, since distinct but
  * equal values aren’t guaranteed to be the same object. */
 Cell* builtin_eq(Lex* e, Cell* a) {
+    (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2);
     if (err) return err;
 
-    Cell* x = a->cell[0];
-    Cell* y = a->cell[1];
+    const Cell* x = a->cell[0];
+    const Cell* y = a->cell[1];
 
     /* Strict pointer equality */
     return make_val_bool(x == y);
@@ -771,53 +914,129 @@ Cell* builtin_equal(Lex* e, Cell* a) {
  *     Generic numeric operations     *
  * -----------------------------------*/
 
-/* 'abs' -> VAL_INT|VAL_REAL|VAL_RAT - returns the absolute value of its argument */
+/* 'abs' -> VAL_INT|VAL_REAL|VAL_RAT - returns the absolute value (magnitude) of its argument. */
 Cell* builtin_abs(Lex* e, Cell* a) {
     (void)e;
-    Cell* err = check_arg_types(a, VAL_INT|VAL_REAL|VAL_RAT);
+    Cell* err = check_arg_types(a, VAL_INT|VAL_REAL|VAL_RAT|VAL_COMPLEX);
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
-    switch (a->cell[0]->type) {
-        case VAL_INT:
-            return (a->cell[0]->i_val < 0) ? negate_numeric(a->cell[0]) : cell_copy(a->cell[0]);
-        case VAL_REAL:
-            return (a->cell[0]->r_val < 0) ? negate_numeric(a->cell[0]) : cell_copy(a->cell[0]);
-        case VAL_RAT:
-            return (a->cell[0]->num < 0) ? negate_numeric(a->cell[0]) : cell_copy(a->cell[0]);
-        default:
-            return make_val_err("abs: Oops, this isn't right");
+
+    Cell* arg = a->cell[0];
+
+    /* Path 1: Handle all real numbers */
+    if (cell_is_real(arg)) {
+        /* If the number is a complex type, we operate on its real part.
+         * Otherwise, we operate on the number itself. */
+        Cell* real_val = (arg->type == VAL_COMPLEX) ? arg->real : arg;
+
+        if (cell_is_negative(real_val)) {
+            return negate_numeric(real_val);
+        }
+        /* The number is non-negative, so just return a copy. */
+        return cell_copy(real_val);
     }
+    /* Path 2: Handle non-real complex numbers
+     * At this point, we know 'arg' is a VAL_COMPLEX.
+     * Convert real and imaginary parts to long doubles. */
+    long double x = cell_to_long_double(arg->real);
+    long double y = cell_to_long_double(arg->imag);
+
+    /* Calculate the magnitude: sqrt(x² + y²) */
+    const long double magnitude = sqrtl(x * x + y * y);
+
+    /* The result of a magnitude calculation is always an inexact real number. */
+    return make_val_real(magnitude);
+}
+
+/* Helper to bridge expt with complex_apply */
+Cell* expt_complex_op(BuiltinFn op, Lex* e, const Cell* z1, const Cell* z2) {
+    /* Copy z1 to serve as the 'result' parameter that complex_apply will modify. */
+    Cell* result = cell_copy(z1);
+
+    /* Promote the types to be compatible, and pass a pointer to a
+     * temporary Cell* for rhs so numeric_promote can modify it. */
+    Cell* rhs_copy = cell_copy(z2);
+    numeric_promote(&result, &rhs_copy);
+
+    complex_apply(op, e, result, rhs_copy);
+
+    cell_delete(rhs_copy);
+    return result;
 }
 
 /* 'expt' -> VAL_INT|VAL_REAL - returns its first arg calculated
  * to the power of its second arg */
 Cell* builtin_expt(Lex* e, Cell* a) {
     (void)e;
-    Cell* err = check_arg_types(a, VAL_INT | VAL_REAL);
+    Cell* err = check_arg_types(a, VAL_INT | VAL_REAL | VAL_RAT | VAL_COMPLEX);
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 2))) { return err; }
 
-    long double base = VAL_AS_NUM(a->cell[0]);
-    Cell* exp_val = a->cell[1];
-    long double result;
+    const Cell* base = a->cell[0];
+    const Cell* exp = a->cell[1];
 
-    if (exp_val->type == VAL_INT) {
-        /* integer exponent: use fast exponentiation */
-        const long long n = exp_val->i_val;
-        result = 1.0;
-        long long abs_n = n > 0 ? n : -n;
+    /* Handle simple edge cases */
+    if (cell_is_real_zero(exp)) { return make_val_int(1); }
+    if (cell_is_real_zero(base)) { return make_val_int(0); }
 
-        while (abs_n > 0) {
-            if (abs_n & 1) result *= base;
-            base *= base;
-            abs_n >>= 1;
-        }
-        if (n < 0) result = 1.0 / result;
-    } else {
-        /* float exponent: delegate to powl */
-        result = powl(base, VAL_AS_NUM(exp_val));
+    /* Path 1: Base is a non-negative real number */
+    if (cell_is_real(base) && !cell_is_negative(base)) {
+        const long double b = cell_to_long_double(base);
+        const long double x = cell_to_long_double(exp);
+        return make_cell_from_double(powl(b, x));
     }
-    return make_VAL_from_double(result);
+
+    /* Path 2: Base is a negative real number */
+    if (cell_is_real(base)) {
+        if (cell_is_integer(exp)) {
+            const long double b = cell_to_long_double(base);
+            const long double x = cell_to_long_double(exp);
+            return make_cell_from_double(powl(b, x));
+        }
+        const long double x = cell_to_long_double(base);
+        const long double y = cell_to_long_double(exp);
+        const long double magnitude = powl(fabsl(x), y);
+        const long double angle = y * M_PI;
+
+        Cell* real_part = make_cell_from_double(magnitude * cosl(angle));
+        Cell* imag_part = make_cell_from_double(magnitude * sinl(angle));
+        return make_val_complex(real_part, imag_part);
+    }
+
+    /* Path 3: Base is a complex number */
+    if (base->type == VAL_COMPLEX) {
+        if (cell_is_integer(exp)) {
+            const long long n = (long long)cell_to_long_double(exp);
+            Cell* result = make_val_int(1); // Multiplicative identity
+            Cell* current_power = cell_copy(base);
+
+            long long abs_n = n > 0 ? n : -n;
+            while (abs_n > 0) {
+                if (abs_n & 1) { /* If exponent is odd */
+                    Cell* temp = result;
+                    result = expt_complex_op(builtin_mul, e, result, current_power);
+                    cell_delete(temp);
+                }
+                Cell* temp = current_power;
+                current_power = expt_complex_op(builtin_mul, e, current_power, current_power);
+                cell_delete(temp);
+                abs_n >>= 1; /* Halve the exponent */
+            }
+            cell_delete(current_power);
+
+            /* Handle negative exponent: z^-n = 1 / z^n */
+            if (n < 0) {
+                Cell* one = make_val_int(1);
+                Cell* temp = result;
+                result = expt_complex_op(builtin_div, e, one, result);
+                cell_delete(one);
+                cell_delete(temp);
+            }
+            return result;
+        }
+        return make_val_err("expt: complex base with non-integer exponent not implemented");
+    }
+    return make_val_err("expt: unreachable code");
 }
 
 /* 'modulo' -> VAL_INT - returns the remainder of dividing the first argument
@@ -854,80 +1073,118 @@ Cell* builtin_remainder(Lex* e, Cell* a) {
     return make_val_int(a->cell[0]->i_val % a->cell[1]->i_val);
 }
 
-Cell* builtin_lcm(Lex* e, Cell* a) {
-    Cell* err = check_arg_types(a, VAL_INT);
-    if (err) { return err; }
-    if ((err = CHECK_ARITY_EXACT(a, 2))) { return err; }
-
-    const long long int x = a->cell[0]->i_val;
-    const long long int y = a->cell[1]->i_val;
-
-    Cell* gcd = builtin_gcd(e, make_sexpr_len2(make_val_int(x), make_val_int(y)));
-    long long int tmp = x * y / gcd->i_val;
-    /* return only positive value */
-    if (tmp < 0) {
-        tmp = -tmp;
+/* Helper for the core GCD algorithm (Euclidean) for two integers. */
+long long gcd_helper(long long x, long long y) {
+    x = llabs(x);
+    y = llabs(y);
+    while (x != 0) {
+        const long long tmp = x;
+        x = y % x;
+        y = tmp;
     }
-    cell_delete(gcd);
-    return make_val_int(tmp);
+    return y;
+}
+
+/* Helper for the core LCM logic (using the overflow-safe formula). */
+long long lcm_helper(long long x, long long y) {
+    if (x == 0 || y == 0) return 0;
+    x = llabs(x);
+    y = llabs(y);
+    return (x / gcd_helper(x, y)) * y;
 }
 
 Cell* builtin_gcd(Lex* e, Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, VAL_INT);
     if (err) return err;
-    if ((err = CHECK_ARITY_EXACT(a, 2))) return err;
 
-    long long x = a->cell[0]->i_val;
-    long long y = a->cell[1]->i_val;
-
-    while (x != 0) {
-        const long long tmp = x;
-        x = y % x;
-        y = tmp;
+    if (a->count == 0) {
+        return make_val_int(0); /* Identity for GCD */
     }
 
-    /* return only positive value */
-    if (y < 0) {
-        y = -y;
+    long long result = a->cell[0]->i_val;
+    for (int i = 1; i < a->count; i++) {
+        result = gcd_helper(result, a->cell[i]->i_val);
     }
-    return make_val_int(y);
+
+    return make_val_int(llabs(result)); /* Final result must be non-negative */
 }
 
-/* 'max' -> */
+Cell* builtin_lcm(Lex* e, Cell* a) {
+    (void)e;
+    Cell* err = check_arg_types(a, VAL_INT);
+    if (err) { return err; }
+
+    if (a->count == 0) {
+        return make_val_int(1); /* Identity for LCM */
+    }
+
+    long long result = a->cell[0]->i_val;
+    for (int i = 1; i < a->count; i++) {
+        result = lcm_helper(result, a->cell[i]->i_val);
+    }
+
+    return make_val_int(llabs(result)); /* Final result must be non-negative */
+}
+
+/* 'max' -> VAL_INT|VAL_RAT|VAL_REAL - return the largest value in numeric args */
 Cell* builtin_max(Lex* e, Cell* a) {
     (void)e;
-    Cell* err = check_arg_types(a, VAL_INT|VAL_RAT|VAL_REAL);
+    Cell* err = check_arg_types(a, VAL_INT|VAL_RAT|VAL_REAL|VAL_COMPLEX);
     if (err) { return err; }
-    Cell* largest_so_far = cell_copy(a->cell[0]);
-    for (int i = 0; i < a->count - 1; i++) {
-        Cell* rhs = cell_copy(a->cell[i+1]);
-        Cell* result = builtin_lt_op(e, make_sexpr_len2(largest_so_far, rhs));
-        if (result->b_val == 1) {
-            largest_so_far = cell_copy(rhs);
+    if ((err = CHECK_ARITY_MIN(a, 1))) { return err; }
+
+    /* Validate that all arguments are real numbers. */
+    for (int i = 0; i < a->count; i++) {
+        if (!cell_is_real(a->cell[i])) {
+            return make_val_err("max: all arguments must be real numbers");
         }
-        cell_delete(rhs);
+    }
+
+    Cell* largest_so_far = a->cell[0];
+    for (int i = 1; i < a->count; i++) {
+        Cell* rhs = a->cell[i];
+
+        Cell* arg_list = make_sexpr_len2(largest_so_far, rhs);
+        Cell* result = builtin_lt_op(e, arg_list);
+        cell_delete(arg_list);
+
+        if (result->b_val == 1) { /* if (largest_so_far < rhs) */
+            largest_so_far = rhs;
+        }
         cell_delete(result);
     }
-    return largest_so_far;
+    return cell_copy(largest_so_far);
 }
 
-/* 'min' -> */
+/* 'min' -> VAL_INT|VAL_RAT|VAL_REAL - return the smallest value in numeric args */
 Cell* builtin_min(Lex* e, Cell* a) {
     (void)e;
-    Cell* err = check_arg_types(a, VAL_INT|VAL_RAT|VAL_REAL);
+    Cell* err = check_arg_types(a, VAL_INT|VAL_RAT|VAL_REAL|VAL_COMPLEX);
     if (err) { return err; }
-    Cell* smallest_so_far = cell_copy(a->cell[0]);
-    for (int i = 0; i < a->count - 1; i++) {
-        Cell* rhs = cell_copy(a->cell[i+1]);
-        Cell* result = builtin_gt_op(e, make_sexpr_len2(smallest_so_far, rhs));
-        if (result->b_val == 1) {
-            smallest_so_far = cell_copy(rhs);
+    if ((err = CHECK_ARITY_MIN(a, 1))) { return err; }
+
+    for (int i = 0; i < a->count; i++) {
+        if (!cell_is_real(a->cell[i])) {
+            return make_val_err("min: all arguments must be real numbers");
         }
-        cell_delete(rhs);
+    }
+
+    Cell* smallest_so_far = a->cell[0];
+    for (int i = 1; i < a->count; i++) {
+        Cell* rhs = a->cell[i];
+
+        Cell* arg_list = make_sexpr_len2(smallest_so_far, rhs);
+        Cell* result = builtin_gt_op(e, arg_list); /* Using > for min */
+        cell_delete(arg_list);
+
+        if (result->b_val == 1) { /* if (smallest_so_far > rhs) */
+            smallest_so_far = rhs;
+        }
         cell_delete(result);
     }
-    return smallest_so_far;
+
+    return cell_copy(smallest_so_far);
 }
 
 /* -------------------------------------------------*
@@ -950,6 +1207,7 @@ Cell* builtin_number_pred(Lex* e, Cell* a) {
 /* 'boolean?' -> VAL_BOOL  - returns #t if obj is either #t or #f
     and returns #f otherwise. */
 Cell* builtin_boolean_pred(Lex* e, Cell* a) {
+    (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
     return make_val_bool(a->cell[0]->type == VAL_BOOL);
@@ -957,6 +1215,7 @@ Cell* builtin_boolean_pred(Lex* e, Cell* a) {
 
 /* 'null?' -> VAL_BOOL - return #t if obj is null, else #f */
 Cell* builtin_null_pred(Lex* e, Cell* a) {
+    (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
     return make_val_bool(a->cell[0]->type == VAL_NIL);
@@ -964,6 +1223,7 @@ Cell* builtin_null_pred(Lex* e, Cell* a) {
 
 /* 'pair?' -> VAL_BOOL - return #t if obj is a pair, else #f */
 Cell* builtin_pair_pred(Lex* e, Cell* a) {
+    (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
     return make_val_bool(a->cell[0]->type == VAL_PAIR);
@@ -971,6 +1231,7 @@ Cell* builtin_pair_pred(Lex* e, Cell* a) {
 
 /* 'procedure?' -> VAL_BOOL - return #t if obj is a procedure, else #f */
 Cell* builtin_proc_pred(Lex* e, Cell* a) {
+    (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
     return make_val_bool(a->cell[0]->type == VAL_PROC);
@@ -978,6 +1239,7 @@ Cell* builtin_proc_pred(Lex* e, Cell* a) {
 
 /* 'symbol?' -> VAL_BOOL - return #t if obj is a symbol, else #f */
 Cell* builtin_sym_pred(Lex* e, Cell* a) {
+    (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
     return make_val_bool(a->cell[0]->type == VAL_SYM);
@@ -985,6 +1247,7 @@ Cell* builtin_sym_pred(Lex* e, Cell* a) {
 
 /* 'string?' -> VAL_BOOL - return #t if obj is a string, else #f */
 Cell* builtin_string_pred(Lex* e, Cell* a) {
+    (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
     return make_val_bool(a->cell[0]->type == VAL_STR);
@@ -992,6 +1255,7 @@ Cell* builtin_string_pred(Lex* e, Cell* a) {
 
 /* 'char?' -> VAL_BOOL - return #t if obj is a char, else #f */
 Cell* builtin_char_pred(Lex* e, Cell* a) {
+    (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
     return make_val_bool(a->cell[0]->type == VAL_CHAR);
@@ -999,6 +1263,7 @@ Cell* builtin_char_pred(Lex* e, Cell* a) {
 
 /* 'vector?' -> VAL_BOOL - return #t if obj is a vector, else #f */
 Cell* builtin_vector_pred(Lex* e, Cell* a) {
+    (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
     return make_val_bool(a->cell[0]->type == VAL_VEC);
@@ -1006,6 +1271,7 @@ Cell* builtin_vector_pred(Lex* e, Cell* a) {
 
 /* 'bytevector?' -> VAL_BOOL - return #t if obj is a byte vector, else #f */
 Cell* builtin_byte_vector_pred(Lex* e, Cell* a) {
+    (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
     return make_val_bool(a->cell[0]->type == VAL_BYTEVEC);
@@ -1013,6 +1279,7 @@ Cell* builtin_byte_vector_pred(Lex* e, Cell* a) {
 
 /* 'port?' -> VAL_BOOL - return #t if obj is a port, else #f */
 Cell* builtin_port_pred(Lex* e, Cell* a) {
+    (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
     return make_val_bool(a->cell[0]->type == VAL_PORT);
@@ -1020,6 +1287,7 @@ Cell* builtin_port_pred(Lex* e, Cell* a) {
 
 /* 'eof-object?' -> VAL_BOOL - return #t if obj is an eof, else #f */
 Cell* builtin_eof_pred(Lex* e, Cell* a) {
+    (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
     return make_val_err("Not implemented yet");
@@ -1031,6 +1299,7 @@ Cell* builtin_eof_pred(Lex* e, Cell* a) {
 
 /* 'exact?' -> VAL_BOOL -  */
 Cell* builtin_exact(Lex *e, Cell* a) {
+    (void)e;
     Cell* err = check_arg_types(a, VAL_INT|VAL_REAL|VAL_RAT|VAL_COMPLEX);
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
@@ -1046,6 +1315,7 @@ Cell* builtin_exact(Lex *e, Cell* a) {
 
 /* 'inexact?' -> VAL_BOOL -  */
 Cell* builtin_inexact(Lex *e, Cell* a) {
+    (void)e;
     Cell* err = check_arg_types(a, VAL_INT|VAL_REAL|VAL_RAT|VAL_COMPLEX);
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
@@ -1067,65 +1337,83 @@ Cell* builtin_inexact(Lex *e, Cell* a) {
  * they simply return true if the underlying Cell type
  * matches */
 
-/* 'complex?' -> VAL_BOOL -  */
+/* 'complex?' -> VAL_BOOL - R7RS compliant */
 Cell* builtin_complex(Lex *e, Cell* a) {
+    (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
 
-    const int mask = VAL_COMPLEX;
+    // All numbers are complex numbers.
+    const int mask = VAL_INT | VAL_RAT | VAL_REAL | VAL_COMPLEX;
     if (a->cell[0]->type & mask) {
         return make_val_bool(1);
     }
     return make_val_bool(0);
 }
 
-/* 'real?' -> VAL_BOOL -  */
+/* 'real?' -> VAL_BOOL - R7RS compliant */
 Cell* builtin_real(Lex *e, Cell* a) {
+    (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
 
-    const int mask = VAL_REAL;
-    if (a->cell[0]->type & mask) {
-        return make_val_bool(1);
+    Cell* arg = a->cell[0];
+    switch (arg->type) {
+        case VAL_INT:
+        case VAL_RAT:
+        case VAL_REAL:
+            return make_val_bool(1);
+        case VAL_COMPLEX:
+            // A complex number is real if its imaginary part is zero.
+            return make_val_bool(cell_is_real_zero(arg->imag));
+        default:
+            return make_val_bool(0);
     }
-    return make_val_bool(0);
 }
 
-/* 'rational?' -> VAL_BOOL -  */
+/* 'rational?' -> VAL_BOOL - R7RS compliant */
 Cell* builtin_rational(Lex *e, Cell* a) {
+    (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
 
-    const int mask = VAL_RAT;
-    if (a->cell[0]->type & mask) {
-        return make_val_bool(1);
+    Cell* arg = a->cell[0];
+    switch (arg->type) {
+        case VAL_INT:
+        case VAL_RAT:
+        case VAL_REAL:
+            // In an implementation using standard C floats, all reals
+            // are inherently rational.
+            return make_val_bool(1);
+        case VAL_COMPLEX:
+            // A complex number is rational if its imaginary part is zero
+            // and its real part is rational (which it is, see above).
+            return make_val_bool(cell_is_real_zero(arg->imag));
+        default:
+            return make_val_bool(0);
     }
-    return make_val_bool(0);
 }
 
-/* 'integer?' -> VAL_BOOL -  */
+/* 'integer?' -> VAL_BOOL - R7RS compliant */
 Cell* builtin_integer(Lex *e, Cell* a) {
+    (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
 
-    const int mask = VAL_INT;
-    if (a->cell[0]->type & mask) {
-        return make_val_bool(1);
-    }
-    return make_val_bool(0);
+    return make_val_bool(cell_is_integer(a->cell[0]));
 }
 
-/* 'exact-integer?' -> VAL_BOOL -  */
+/* 'exact-integer?' -> VAL_BOOL - R7RS compliant */
 Cell* builtin_exact_integer(Lex *e, Cell* a) {
+    (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
 
-    const int mask = VAL_INT;
-    if ((a->cell[0]->type & mask) && (a->cell[0]->exact)) {
-        return make_val_bool(1);
-    }
-    return make_val_bool(0);
+    Cell* arg = a->cell[0];
+    // The value must be an integer AND the number must be exact.
+    return make_val_bool(cell_is_integer(arg) && arg->exact);
 }
+
 /* 'finite?' -> VAL_BOOL -  */
 
 /* 'infinite?' -> VAL_BOOL -  */
@@ -1137,6 +1425,7 @@ Cell* builtin_exact_integer(Lex *e, Cell* a) {
 
 /* 'not' -> VAL_BOOL - returns #t if obj is false, and returns #f otherwise */
 Cell* builtin_not(Lex* e, Cell* a) {
+    (void)e;
     Cell* err;
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
     const int is_false = (a->cell[0]->type == VAL_BOOL && a->cell[0]->b_val == 0);
@@ -1145,6 +1434,7 @@ Cell* builtin_not(Lex* e, Cell* a) {
 
 /* 'boolean' -> VAL_BOOL - converts any value to a strict boolean */
 Cell* builtin_boolean(Lex* e, Cell* a) {
+    (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
     int result = (a->cell[0]->type == VAL_BOOL)
@@ -1158,6 +1448,7 @@ Cell* builtin_boolean(Lex* e, Cell* a) {
  * evaluate to true values, the values of the last expression are returned.
  * If there are no expressions, then #t is returned.*/
 Cell* builtin_and(Lex* e, Cell* a) {
+    (void)e;
     for (int i = 0; i < a->count; i++) {
         if (a->cell[i]->type == VAL_BOOL && a->cell[i]->b_val == 0) {
             /* first #f encountered → return a copy of it */
@@ -1172,6 +1463,7 @@ Cell* builtin_and(Lex* e, Cell* a) {
  * to true is returned. Any remaining expressions are not evaluated. If all
  * expressions evaluate to #f or if there are no expressions, #f is returned */
 Cell* builtin_or(Lex* e, Cell* a) {
+    (void)e;
     for (int i = 0; i < a->count; i++) {
         if (!(a->cell[i]->type == VAL_BOOL && a->cell[i]->b_val == 0)) {
             /* first truthy value → return a copy */
@@ -1188,6 +1480,7 @@ Cell* builtin_or(Lex* e, Cell* a) {
 
 /* 'cons' -> VAL_PAIR - returns a pair made from two arguments */
 Cell* builtin_cons(Lex* e, Cell* a) {
+    (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2);
     if (err) return err;
     return make_val_pair(cell_copy(a->cell[0]), cell_copy(a->cell[1]));
@@ -1195,6 +1488,7 @@ Cell* builtin_cons(Lex* e, Cell* a) {
 
 /* 'car' -> ANY - returns the first member of a pair */
 Cell* builtin_car(Lex* e, Cell* a) {
+    (void)e;
     Cell* err = check_arg_types(a, VAL_PAIR|VAL_SEXPR);
     if (err) { return err; }
 
@@ -1227,6 +1521,7 @@ Cell* builtin_cdr(Lex* e, Cell* a) {
 
 /* 'list' -> VAL_PAIR - returns a nil-terminated proper list */
 Cell* builtin_list(Lex* e, Cell* a) {
+    (void)e;
     /* start with nil */
     Cell* result = make_val_nil();
 
@@ -1239,6 +1534,7 @@ Cell* builtin_list(Lex* e, Cell* a) {
 
 /* 'length' -> VAL_INT - returns the member count of a proper list */
 Cell* builtin_list_length(Lex* e, Cell* a) {
+    (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
     err = check_arg_types(a, VAL_PAIR|VAL_SEXPR|VAL_NIL);
@@ -1268,6 +1564,7 @@ Cell* builtin_list_length(Lex* e, Cell* a) {
 /* 'list-ref' -> ANY - returns the list member at the zero-indexed
  * integer specified in the second arg. First arg is the list to act on*/
 Cell* builtin_list_ref(Lex* e, Cell* a) {
+    (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2);
     if (err) return err;
 
@@ -1299,6 +1596,7 @@ Cell* builtin_list_ref(Lex* e, Cell* a) {
  * ------------------------------------------------------*/
 
 Cell* builtin_vector(Lex* e, Cell* a) {
+    (void)e;
     Cell* err = CHECK_ARITY_MIN(a, 1);
     if (err) return err;
 
@@ -1310,6 +1608,7 @@ Cell* builtin_vector(Lex* e, Cell* a) {
 }
 
 Cell* builtin_vector_length(Lex* e, Cell* a) {
+    (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
     err = check_arg_types(a, VAL_VEC);
@@ -1319,6 +1618,7 @@ Cell* builtin_vector_length(Lex* e, Cell* a) {
 }
 
 Cell* builtin_vector_ref(Lex* e, Cell* a) {
+    (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2);
     if (err) return err;
     if (a->cell[0]->type != VAL_VEC) {
