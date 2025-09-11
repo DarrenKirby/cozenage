@@ -1,0 +1,4 @@
+#ifndef COZENAGE_CHAR_LIB_H
+#define COZENAGE_CHAR_LIB_H
+
+#endif //COZENAGE_CHAR_LIB_H

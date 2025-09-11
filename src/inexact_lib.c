@@ -1,0 +1,17 @@
+#include "inexact_lib.h"
+
+/*
+acos
+atan
+exp
+infinite?
+nan?
+sqrt
+asin
+cos
+finite?
+log
+sin
+tan
+*/
+
