@@ -170,10 +170,8 @@ void lex_add_builtins(Lex* e) {
     /* Generic numeric operations */
     lex_add_builtin(e, "abs", builtin_abs);
     lex_add_builtin(e, "expt", builtin_expt);
-    lex_add_builtin(e, "^", builtin_expt); /* non-standard alias for expt */
     lex_add_builtin(e, "remainder", builtin_remainder);
     lex_add_builtin(e, "modulo", builtin_modulo);
-    lex_add_builtin(e, "%", builtin_modulo); /* non-standard alias for modulo */
     lex_add_builtin(e, "quotient", builtin_quotient);
     lex_add_builtin(e, "lcm", builtin_lcm);
     lex_add_builtin(e, "gcd", builtin_gcd);
