@@ -52,7 +52,19 @@ add_executable(cozenage src/main.c
         src/ops.c
         src/ops.h
         src/eval.c
-        src/eval.h)
+        src/eval.h
+        src/file_lib.h
+        src/file_lib.c
+        src/coz_ext_lib.h
+        src/coz_ext_lib.c
+        src/char_lib.c
+        src/char_lib.h
+        src/complex_lib.c
+        src/complex_lib.h
+        src/process_context_lib.c
+        src/process_context_lib.h
+        src/inexact_lib.c
+        src/inexact_lib.h)
 
 # Find math library
 find_library(M_LIB m)
