@@ -7,11 +7,38 @@
 #include "types.h"
 #include "environment.h"
 #include "eval.h"
+#include "coz_ext_lib.h"
+#include "file_lib.h"
+#include "process_context_lib.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <signal.h>
+#include <getopt.h>
 
+
+extern char **environ;
+
+struct lib_load {
+    unsigned int coz_ext:1;
+    unsigned int case_lambda:1;
+    unsigned int char_lib:1;
+    unsigned int complex:1;
+    unsigned int cxr:1;
+    unsigned int eval:1;
+    unsigned int file:1;
+    unsigned int inexact:1;
+    unsigned int lazy:1;
+    unsigned int load:1;
+    unsigned int process_context:1;
+    unsigned int read:1;
+    unsigned int repl:1;
+    unsigned int time:1;
+    unsigned int write:1;
+} load_libs = {0,0,0,0,
+    0,0,0, 0,
+    0,0,0,
+    0,0,0,0};
 
 static volatile sig_atomic_t got_sigint = 0;
 #ifdef __linux__
@@ -124,6 +151,15 @@ void coz_print(const Cell* v) {
 void repl() {
     Lex* e = lex_initialize();
     lex_add_builtins(e);
+    if (load_libs.coz_ext) {
+        lex_add_coz_ext(e);
+    }
+    if (load_libs.file) {
+        lex_add_file_lib(e);
+    }
+    if (load_libs.process_context) {
+        lex_add_proc_con_lib(e);
+    }
 
     for (;;) {
         Cell *val = coz_read(e);
@@ -139,9 +175,103 @@ void repl() {
     }
 }
 
-int main(int argc, char** argv) {
+static void show_help(void) {
+    printf("Usage: %s [<options>]\n\n\
+A (not yet) R7RS-compliant Scheme REPL\n\n\
+Options:\n\
+    -l, --library\t preload scheme libraries at startup\n\
+    -h, --help\t\t display this help\n\
+    -V, --version\t display version information\n\n\
+\n\
+    '-l' and '--library' accept a required comma-delimited list of\n\
+    libraries to pre-load. Accepted values are:\n\
+    coz_ext,case_lambda,char,complex,cxr,eval,file,inexact\n\
+    lazy,load,process_context,read,repl,time,write\n\n\
+Report bugs to <bulliver@gmail.com>\n", APP_NAME);
+}
+
+
+
+void process_library_arg(struct lib_load *l, const char *arg) {
+    char *arg_copy = strdup(arg);
+    if (!arg_copy) {
+        perror("Failed to allocate memory");
+        exit(EXIT_FAILURE);
+    }
+    char *token = strtok(arg_copy, ",");
+
+    while (token != NULL) {
+        if (strcmp(token, "coz_ext") == 0) {
+            l->coz_ext = 1;
+        } else if (strcmp(token, "case_lambda") == 0) {
+            l->case_lambda = 1;
+        } else if (strcmp(token, "char") == 0) {
+            l->char_lib = 1;
+        } else if (strcmp(token, "complex") == 0) {
+            l->complex = 1;
+        } else if (strcmp(token, "cxr") == 0) {
+            l->cxr = 1;
+        } else if (strcmp(token, "eval") == 0) {
+            l->eval = 1;
+        } else if (strcmp(token, "file") == 0) {
+            l->file = 1;
+        } else if (strcmp(token, "inexact") == 0) {
+            l->inexact = 1;
+        } else if (strcmp(token, "lazy") == 0) {
+            l->lazy = 1;
+        } else if (strcmp(token, "load") == 0) {
+            l->load = 1;
+        } else if (strcmp(token, "process_context") == 0) {
+            l->process_context = 1;
+        } else if (strcmp(token, "read") == 0) {
+            l->read = 1;
+        } else if (strcmp(token, "repl") == 0) {
+            l->repl = 1;
+        } else if (strcmp(token, "time") == 0) {
+            l->time = 1;
+        } else if (strcmp(token, "write") == 0) {
+            l->write = 1;
+        } else {
+            fprintf(stderr, "Error: Unknown library name '%s' specified.\n", token);
+            fprintf(stderr, "Run with -h for a list of valid library names.\n");
+            free(arg_copy); /* Clean up before exiting */
+            exit(EXIT_FAILURE);
+        }
+        /* Get the next token */
+        token = strtok(NULL, ",");
+    }
+    free(arg_copy);
+}
+
+int main(const int argc, char** argv) {
+    int opt;
+
+    const struct option long_opts[] = {
+        {"help", 0, NULL, 'h'},
+        {"version", 0, NULL, 'V'},
+        {"library", required_argument, NULL, 'l'},
+        {NULL,0,NULL,0}
+    };
+
+    while ((opt = getopt_long(argc, argv, "Vhl:", long_opts, NULL)) != -1) {
+        switch(opt) {
+            case 'V':
+                printf("%s%s%s version %s\n", ANSI_BLUE_B, APP_NAME, ANSI_RESET, APP_VERSION);
+                printf(" Compiled on %s at %s\n", __DATE__, __TIME__);
+                exit(EXIT_SUCCESS);
+            case 'h':
+                show_help();
+                exit(EXIT_SUCCESS);
+            case 'l':
+                process_library_arg(&load_libs, optarg);
+                break;
+            default:
+                ;
+        }
+    }
+
     /* Print Version and Exit Information */
-    printf("  %s%s%s Version %s\n", ANSI_BLUE_B, APP_NAME, ANSI_RESET, APP_VERSION);
+    printf("  %s%s%s version %s\n", ANSI_BLUE_B, APP_NAME, ANSI_RESET, APP_VERSION);
     printf("  Press <Ctrl+d> or type 'exit' to quit\n\n");
 
     /* Set up keybinding and signal for Ctrl-G and CTRL-C */
