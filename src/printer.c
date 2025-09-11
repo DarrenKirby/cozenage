@@ -77,8 +77,7 @@ void print_cell(const Cell* v) {
     case VAL_COMPLEX: {
         print_cell(v->real);
 
-        /* FIXME: remove use of cell_to_ld() */
-        long double im = cell_to_ld(v->imag);
+        const long double im = cell_to_long_double(v->imag);
         if (im < 0) {
             print_cell(v->imag);  /* already negative */
         } else {
