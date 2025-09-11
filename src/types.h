@@ -22,6 +22,11 @@ check_arg_arity((a), -1, (lo), (hi))
 #define VAL_AS_NUM(v) \
 ((v)->type == VAL_INT ? (long double)(v)->i_val : (v)->r_val)
 
+enum {
+    GEN_ERR,
+    FILE_ERR,
+    READ_ERR,
+};
 
 typedef enum {
     VAL_INT     = 1 << 0,   /* integer */
