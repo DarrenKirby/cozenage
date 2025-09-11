@@ -135,6 +135,7 @@ Cell* make_val_bytevec(void) {
 Cell* make_val_err(const char* m) {
     Cell* v = calloc(1, sizeof(Cell));
     v->type = VAL_ERR;
+    v->exact = GEN_ERR;
     v->str = strdup(m);
     return v;
 }
