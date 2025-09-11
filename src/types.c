@@ -8,6 +8,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
+#include <limits.h>
 
 #include "printer.h"
 
@@ -765,4 +767,27 @@ void complex_apply(BuiltinFn fn, Lex* e, Cell* result, Cell* rhs) {
     /* Assign the newly calculated, type-correct components. */
     result->real = new_real;
     result->imag = new_imag;
+}
+
+/* Helper to convert any real-valued cell to a C long double. */
+long double cell_to_long_double(const Cell* c) {
+    switch (c->type) {
+        case VAL_INT:
+            return (long double)c->i_val;
+        case VAL_RAT:
+            return (long double)c->num / c->den;
+        case VAL_REAL:
+            return c->r_val;
+        default:
+            /* This case should ideally not be reached if inputs are valid numbers. */
+            return 0.0L;
+    }
+}
+
+/* Helper to construct appropriate cell from a long double */
+Cell* make_cell_from_double(long double d) {
+    if (d == floorl(d) && d >= LLONG_MIN && d <= LLONG_MAX) {
+        return make_val_int((long long)d);
+    }
+    return make_val_real(d);
 }

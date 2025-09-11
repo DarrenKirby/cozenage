@@ -124,7 +124,8 @@ Cell* make_sexpr_len2(const Cell* a, const Cell* b);
 Cell* make_sexpr_len4(const Cell* a, const Cell* b, const Cell* c, const Cell* d);
 Cell* negate_numeric(Cell* x);
 Cell* simplify_rational(Cell* v);
-long double cell_to_ld(Cell* c);
 void complex_apply(BuiltinFn fn, Lex* e, Cell* result, Cell* rhs);
+long double cell_to_long_double(const Cell* c);
+Cell* make_cell_from_double(long double d);
 
 #endif //COZENAGE_TYPES_H
