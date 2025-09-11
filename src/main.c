@@ -10,6 +10,7 @@
 #include "coz_ext_lib.h"
 #include "file_lib.h"
 #include "process_context_lib.h"
+#include "inexact_lib.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -17,7 +18,31 @@
 #include <getopt.h>
 
 
-extern char **environ;
+//extern char **environ;
+
+/* set up readline history file loading and saving */
+char history_file[] = "~/.cozenage_history";
+
+void read_history_from_file() {
+    char *hf = tilde_expand(history_file);
+    if (access(hf, R_OK) == -1) {
+        /* create empty file if it does not exist */
+        FILE* f = fopen(hf, "w");
+
+        if (f == NULL) {
+            printf("Error: Could not read, open, or create history file `~/cozenage_history`.\n");
+        }
+        fclose(f);
+    }
+    read_history(hf);
+    free(hf);
+}
+
+void save_history_to_file() {
+    char *hf = tilde_expand(history_file);
+    write_history(hf);
+    free(hf);
+}
 
 struct lib_load {
     unsigned int coz_ext:1;
@@ -120,6 +145,7 @@ Cell* coz_read(Lex* e) {
     printf("%s", ANSI_RESET);
     if (!input || strcmp(input, "exit") == 0) {
         printf("\n");
+        save_history_to_file();
         lex_delete(e);
         exit(0);
     }
@@ -149,8 +175,14 @@ void coz_print(const Cell* v) {
  * Read-Evaluate-Print loop
  * */
 void repl() {
+    /* load history */
+    read_history_from_file();
+    /* Initialize global environment */
     Lex* e = lex_initialize();
+    /* Load (scheme base) procedures */
     lex_add_builtins(e);
+
+    /* Load additional library procedures as specified by -l args */
     if (load_libs.coz_ext) {
         lex_add_coz_ext(e);
     }
@@ -159,6 +191,9 @@ void repl() {
     }
     if (load_libs.process_context) {
         lex_add_proc_con_lib(e);
+    }
+    if (load_libs.inexact) {
+        lex_add_inexact_lib(e);
     }
 
     for (;;) {
@@ -185,8 +220,8 @@ Options:\n\
 \n\
     '-l' and '--library' accept a required comma-delimited list of\n\
     libraries to pre-load. Accepted values are:\n\
-    coz_ext,case_lambda,char,complex,cxr,eval,file,inexact\n\
-    lazy,load,process_context,read,repl,time,write\n\n\
+    coz-ext, case-lambda, char, complex, cxr, eval, file, inexact\n\
+    lazy, load, process-context, read, repl, time, write\n\n\
 Report bugs to <bulliver@gmail.com>\n", APP_NAME);
 }
 
@@ -201,9 +236,9 @@ void process_library_arg(struct lib_load *l, const char *arg) {
     char *token = strtok(arg_copy, ",");
 
     while (token != NULL) {
-        if (strcmp(token, "coz_ext") == 0) {
+        if (strcmp(token, "coz-ext") == 0) {
             l->coz_ext = 1;
-        } else if (strcmp(token, "case_lambda") == 0) {
+        } else if (strcmp(token, "case-lambda") == 0) {
             l->case_lambda = 1;
         } else if (strcmp(token, "char") == 0) {
             l->char_lib = 1;
@@ -221,7 +256,7 @@ void process_library_arg(struct lib_load *l, const char *arg) {
             l->lazy = 1;
         } else if (strcmp(token, "load") == 0) {
             l->load = 1;
-        } else if (strcmp(token, "process_context") == 0) {
+        } else if (strcmp(token, "process-context") == 0) {
             l->process_context = 1;
         } else if (strcmp(token, "read") == 0) {
             l->read = 1;
