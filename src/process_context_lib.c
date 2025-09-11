@@ -6,15 +6,9 @@
 #include <stdio.h>
 
 extern char **environ;
-/*
-command-line
-exit
-get-environment-variable
-get-environment-variables
-emergency-exit
-*/
 
 Cell* builtin_command_line(Lex* e, Cell* a) {
+    (void)e; (void)a;
     return make_val_err("not implemented yet");
 }
 
@@ -23,11 +17,17 @@ Cell* builtin_exit(Lex* e, Cell* a) {
     Cell* err = check_arg_types(a, VAL_INT|VAL_BOOL);
     if (err) { return err; }
 
+    /* TODO: run dynamic-wind /after/ procedure here when implemented */
     if (a->count == 1) {
-        if (a->type ==VAL_BOOL) {
-            exit(a->b_val);
+        if (a->cell[0]->type == VAL_BOOL) {
+            const int es = a->cell[0]->b_val;
+            if (es) {
+                exit(0); /* flip boolean 1 (#t) to exit success (0) */
+            }
+            exit(1);
         }
-        exit((int)a->i_val);
+        /* If not bool, int. Just return directly */
+        exit((int)a->cell[0]->i_val);
     }
     exit(0); /* exit success if no arg */
 }
@@ -36,12 +36,16 @@ Cell* builtin_emergency_exit(Lex* e, Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, VAL_INT|VAL_BOOL);
     if (err) { return err; }
-
     if (a->count == 1) {
-        if (a->type ==VAL_BOOL) {
-            exit(a->b_val);
+        if (a->cell[0]->type == VAL_BOOL) {
+            const int es = a->cell[0]->b_val;
+            if (es) {
+                exit(0); /* flip boolean 1 (#t) to exit success (0) */
+            }
+            exit(1);
         }
-        exit((int)a->i_val);
+    /* If not bool, int. Just return directly */
+        exit((int)a->cell[0]->i_val);
     }
     exit(0); /* exit success if no arg */
 }
@@ -68,6 +72,7 @@ Cell* builtin_get_env_vars(Lex* e, Cell* a) {
     Cell* result = make_val_nil();
 
     for (char **env = environ; *env != NULL; env++) {
+        /* Bad form to mutate env */
         char* var_string = strdup(*env);
         const char *var = strtok(var_string, "=");
         const char *val = strtok(NULL, "=");
