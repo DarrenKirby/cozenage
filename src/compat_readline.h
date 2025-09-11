@@ -25,10 +25,16 @@ void add_history(char* unused) {}
 
 #include <stdio.h>
 
-#if __has_include(<readline/readline.h>)
+/* editline does not provide tilde.h, so given certain system's
+ * propensity to provide fake readline stub files, this should
+ * be a safe way to determine if we are actually using GNU readline */
+#if __has_include(<readline/tilde.h.h>)
+#  define HAS_GNU_READLINE 1
 #  include <readline/readline.h>
 #  include <readline/history.h>
+#  include <readline/tilde.h>
 #elif __has_include(<editline/readline.h>)
+#  define HAS_GNU_READLINE 0
 #  include <editline/readline.h>
 #else
 #  error "No readline-compatible headers found"
