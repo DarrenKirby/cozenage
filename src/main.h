@@ -5,6 +5,7 @@
 #define APP_VERSION "0.5.3"
 #define PS1_PROMPT "--> \x1b[37;1m"
 #define PS2_PROMPT "...    \x1b[37;1m"
+#define HIST_FILE "~/.cozenage_history"
 
 /* ANSI colour codes */
 /* normal */

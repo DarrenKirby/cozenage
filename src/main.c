@@ -13,18 +13,17 @@
 #include "inexact_lib.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <string.h>
 #include <signal.h>
 #include <getopt.h>
 
 
-//extern char **environ;
-
 /* set up readline history file loading and saving */
-char history_file[] = "~/.cozenage_history";
+//char history_file[] = HIST_FILE;
 
 void read_history_from_file() {
-    char *hf = tilde_expand(history_file);
+    char *hf = tilde_expand(HIST_FILE);
     if (access(hf, R_OK) == -1) {
         /* create empty file if it does not exist */
         FILE* f = fopen(hf, "w");
@@ -39,7 +38,7 @@ void read_history_from_file() {
 }
 
 void save_history_to_file() {
-    char *hf = tilde_expand(history_file);
+    char *hf = tilde_expand(HIST_FILE);
     write_history(hf);
     free(hf);
 }
@@ -224,8 +223,6 @@ Options:\n\
     lazy, load, process-context, read, repl, time, write\n\n\
 Report bugs to <bulliver@gmail.com>\n", APP_NAME);
 }
-
-
 
 void process_library_arg(struct lib_load *l, const char *arg) {
     char *arg_copy = strdup(arg);
