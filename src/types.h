@@ -53,7 +53,7 @@ typedef enum {
 } Cell_t;
 
 typedef struct Cell {
-    Cell_t type;               /* type of data the l_val holds */
+    Cell_t type;               /* type of data the Cell holds */
     int exact;                 /* exact/inexact flag for numerics */
 
     union {
@@ -67,6 +67,7 @@ typedef struct Cell {
         struct {               /* pairs */
             Cell* car;           /* first member */
             Cell* cdr;           /* second member */
+            int len;             /* track length of proper list (-1 for improper) */
         };
 
         struct {               /* rationals */

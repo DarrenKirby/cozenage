@@ -109,12 +109,13 @@ Cell* make_val_char(char c) {
 Cell* make_val_pair(Cell* car, Cell* cdr) {
     Cell* v = calloc(1,sizeof(Cell));
     if (!v) {
-        fprintf(stderr, "ENOMEM: lval_pair failed\n");
+        fprintf(stderr, "ENOMEM: calloc failed\n");
         exit(EXIT_FAILURE);
     }
     v->type = VAL_PAIR;
     v->car = car;
     v->cdr = cdr;
+    v->len = -1;
     return v;
 }
 
@@ -340,6 +341,7 @@ Cell* cell_copy(const Cell* v) {
     case VAL_PAIR: {
         copy->car = cell_copy(v->car);
         copy->cdr = cell_copy(v->cdr);
+        copy->len = v->len;
         break;
         }
 
