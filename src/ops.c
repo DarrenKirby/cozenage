@@ -6,7 +6,10 @@
 #include "eval.h"
 #include <string.h>
 #include <math.h>
+#include <stdio.h>
 #include <stdlib.h>
+
+#include "printer.h"
 
 
 /* Note: cell_to_long_double() and make_cell_from_long_double() moved to types.c */
@@ -343,7 +346,7 @@ Cell* builtin_div(Lex* e, Cell* a) {
         case VAL_INT:
             if (rhs->i_val == 0) {
                 cell_delete(rhs);
-                cell_delete(result);  // Free result before returning error
+                cell_delete(result);
                 return make_val_err("Division by zero.");
             }
             /* pretty hacky way to get (/ 9 3) -> 3 but (/ 10 3) -> 10/3 */
@@ -352,7 +355,7 @@ Cell* builtin_div(Lex* e, Cell* a) {
                 result->i_val /= rhs->i_val;
             } else {
                 Cell* new_rat = make_val_rat(result->i_val, rhs->i_val, 1);
-                cell_delete(result);  // Free the old integer cell
+                cell_delete(result);
                 result = new_rat;
             }
             break;
@@ -377,7 +380,7 @@ Cell* builtin_div(Lex* e, Cell* a) {
             return make_val_err("<builtin '/'> Oops, this shouldn't have happened.");
         }
         result->exact = result->exact && rhs->exact;
-        cell_delete(rhs); /* free temp */
+        cell_delete(rhs);
     }
     return result;
 }
@@ -582,7 +585,7 @@ Cell* builtin_lte_op(Lex* e, Cell* a) {
 /* 'zero?' -> VAL_BOOL - returns #t if arg is == 0 else #f */
 Cell* builtin_zero(Lex* e, Cell* a) {
     (void)e;
-    Cell* err = check_arg_types(a, VAL_INT | VAL_REAL | VAL_RAT | VAL_COMPLEX);
+    Cell* err = check_arg_types(a, VAL_INT|VAL_REAL|VAL_RAT|VAL_COMPLEX);
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
 
@@ -600,7 +603,7 @@ Cell* builtin_zero(Lex* e, Cell* a) {
 /* 'positive?' -> VAL_BOOL - returns #t if arg is > 0 else #f */
 Cell* builtin_positive(Lex* e, Cell* a) {
     (void)e;
-    Cell* err = check_arg_types(a, VAL_INT | VAL_REAL | VAL_RAT | VAL_COMPLEX);
+    Cell* err = check_arg_types(a, VAL_INT|VAL_REAL|VAL_RAT|VAL_COMPLEX);
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
 
@@ -610,7 +613,7 @@ Cell* builtin_positive(Lex* e, Cell* a) {
 /* 'negative?' -> VAL_BOOL - returns #t if arg is < 0 else #f */
 Cell* builtin_negative(Lex* e, Cell* a) {
     (void)e;
-    Cell* err = check_arg_types(a, VAL_INT | VAL_REAL | VAL_RAT | VAL_COMPLEX);
+    Cell* err = check_arg_types(a, VAL_INT|VAL_REAL|VAL_RAT|VAL_COMPLEX);
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
 
@@ -620,7 +623,7 @@ Cell* builtin_negative(Lex* e, Cell* a) {
 /* 'odd?' -> VAL_BOOL - returns #t if arg is an odd integer else #f */
 Cell* builtin_odd(Lex* e, Cell* a) {
     (void)e;
-    Cell* err = check_arg_types(a, VAL_INT | VAL_REAL | VAL_RAT | VAL_COMPLEX);
+    Cell* err = check_arg_types(a, VAL_INT|VAL_REAL|VAL_RAT|VAL_COMPLEX);
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
 
@@ -630,7 +633,7 @@ Cell* builtin_odd(Lex* e, Cell* a) {
 /* 'even?' -> VAL_BOOL - returns #t if arg is an even integer else #f */
 Cell* builtin_even(Lex* e, Cell* a) {
     (void)e;
-    Cell* err = check_arg_types(a, VAL_INT | VAL_REAL | VAL_RAT | VAL_COMPLEX);
+    Cell* err = check_arg_types(a, VAL_INT|VAL_REAL|VAL_RAT|VAL_COMPLEX);
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
 
@@ -1310,19 +1313,14 @@ Cell* builtin_inexact(Lex *e, Cell* a) {
     return make_val_bool(1);
 }
 
-/* NOTE: these do not yet match the Scheme standard,
- * in terms of the 'tower of numeric types'. For now,
- * they simply return true if the underlying Cell type
- * matches */
-
 /* 'complex?' -> VAL_BOOL - R7RS compliant */
 Cell* builtin_complex(Lex *e, Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
 
-    // All numbers are complex numbers.
-    const int mask = VAL_INT | VAL_RAT | VAL_REAL | VAL_COMPLEX;
+    /* All numbers are complex numbers. */
+    const int mask = VAL_INT|VAL_RAT|VAL_REAL|VAL_COMPLEX;
     if (a->cell[0]->type & mask) {
         return make_val_bool(1);
     }
@@ -1335,14 +1333,14 @@ Cell* builtin_real(Lex *e, Cell* a) {
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
 
-    Cell* arg = a->cell[0];
+    const Cell* arg = a->cell[0];
     switch (arg->type) {
         case VAL_INT:
         case VAL_RAT:
         case VAL_REAL:
             return make_val_bool(1);
         case VAL_COMPLEX:
-            // A complex number is real if its imaginary part is zero.
+            /* A complex number is real if its imaginary part is zero. */
             return make_val_bool(cell_is_real_zero(arg->imag));
         default:
             return make_val_bool(0);
@@ -1360,12 +1358,10 @@ Cell* builtin_rational(Lex *e, Cell* a) {
         case VAL_INT:
         case VAL_RAT:
         case VAL_REAL:
-            // In an implementation using standard C floats, all reals
-            // are inherently rational.
+            /* all reals are inherently rational. */
             return make_val_bool(1);
         case VAL_COMPLEX:
-            // A complex number is rational if its imaginary part is zero
-            // and its real part is rational (which it is, see above).
+            /* A complex number is rational if its imaginary part is zero. */
             return make_val_bool(cell_is_real_zero(arg->imag));
         default:
             return make_val_bool(0);
@@ -1391,11 +1387,6 @@ Cell* builtin_exact_integer(Lex *e, Cell* a) {
     // The value must be an integer AND the number must be exact.
     return make_val_bool(cell_is_integer(arg) && arg->exact);
 }
-
-/* 'finite?' -> VAL_BOOL -  */
-
-/* 'infinite?' -> VAL_BOOL -  */
-
 
 /* ---------------------------------------*
  *     Boolean and logical procedures     *
@@ -1503,9 +1494,11 @@ Cell* builtin_list(Lex* e, Cell* a) {
     /* start with nil */
     Cell* result = make_val_nil();
 
+    const int len = a->count;
     /* build backwards so it comes out in the right order */
-    for (int i = a->count - 1; i >= 0; i--) {
+    for (int i = len - 1; i >= 0; i--) {
         result = make_val_pair(cell_copy(a->cell[i]), result);
+        result->len = len - i;
     }
     return result;
 }
@@ -1515,28 +1508,13 @@ Cell* builtin_list_length(Lex* e, Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
-    err = check_arg_types(a, VAL_PAIR|VAL_SEXPR|VAL_NIL);
+    err = check_arg_types(a, VAL_PAIR|VAL_NIL);
     if (err) { return err; }
 
     if (a->cell[0]->type == VAL_NIL) {
         return make_val_int(0);
     }
-    if (a->cell[0]->type == VAL_PAIR) {
-        int len = 0;
-        Cell* p = a->cell[0];
-        while (p->type == VAL_PAIR) {
-            len++;
-            p = p->cdr;
-        }
-        if (p->type != VAL_NIL) {
-            return make_val_err("Improper list");
-        }
-        return make_val_int(len);
-    }
-    if (a->cell[0]->type == VAL_SEXPR) {
-        return make_val_int(a->cell[0]->count);
-    }
-    return make_val_err("Oops, this shouldn't be\n");
+    return make_val_int(a->cell[0]->len);
 }
 
 /* 'list-ref' -> ANY - returns the list member at the zero-indexed
@@ -1546,27 +1524,211 @@ Cell* builtin_list_ref(Lex* e, Cell* a) {
     Cell* err = CHECK_ARITY_EXACT(a, 2);
     if (err) return err;
 
+    if (a->cell[0]->type != VAL_PAIR) {
+        return make_val_err("list-ref: arg 1 must be a list");
+    }
     if (a->cell[1]->type != VAL_INT) {
         return make_val_err("list-ref: arg 2 must be an integer");
     }
     int i = (int)a->cell[1]->i_val;
+    const int len = a->cell[0]->len;
 
-    if (a->cell[0]->type == VAL_PAIR) {
-        Cell* p = a->cell[0];
-        if (p->type != VAL_PAIR) {
-            return make_val_err("list-ref: index out of bounds");
+    if (i >= len) {
+        return make_val_err("list-ref: arg 2 out of range");
+    }
+
+    Cell* p = a->cell[0];
+    while (i > 0) {
+        p = p->cdr;
+        i--;
+    }
+    return cell_copy(p->car);
+}
+Cell* list_deep_copy(const Cell* original) {
+    /* If it's not a list, a normal copy is sufficient. */
+    if (original->type != VAL_PAIR) {
+        return cell_copy(original);
+    }
+
+    /* Walk the list to find its length and its true tail */
+    long long list_len = 0;
+    const Cell* p = original;
+    while (p->type == VAL_PAIR) {
+        list_len++;
+        p = p->cdr;
+    }
+    /* After the loop, 'p' holds the actual tail of the list. */
+    const Cell* tail_val = p;
+
+    /* Build the new list. */
+    Cell* new_head = make_val_nil();
+    Cell* new_tail = NULL;
+    p = original; /* Reset walker to the start of the original list. */
+
+    while (p->type == VAL_PAIR) {
+        Cell* new_pair = make_val_pair(cell_copy(p->car), make_val_nil());
+
+        /* The len of the current pair is the number of pairs left to copy. */
+        new_pair->len = (int)list_len--;
+
+        /* Append the new pair to our new list. */
+        if (new_tail == NULL) {
+            new_head = new_tail = new_pair;
+        } else {
+            new_tail->cdr = new_pair;
+            new_tail = new_pair;
         }
-        while (i > 0) {
+        p = p->cdr;
+    }
+
+    /* Attach a copy of the original tail to the new list's tail. */
+    new_tail->cdr = cell_copy(tail_val);
+
+    /* If the list is improper, the length of the last pair should be -1. */
+    if (tail_val->type != VAL_NIL && tail_val->type != VAL_PAIR) {
+        new_tail->len = -1;
+    }
+    return new_head;
+}
+
+Cell* builtin_list_append(Lex* e, Cell* a) {
+    (void)e;
+    /* Base case: (append) -> '() */
+    if (a->count == 0) {
+        return make_val_nil();
+    }
+    /* Base case: (append x) -> x */
+    if (a->count == 1) {
+        return cell_copy(a->cell[0]);
+    }
+
+    /* Validate args and calculate total length of copied lists. */
+    long long total_copied_len = 0;
+    for (int i = 0; i < a->count - 1; i++) {
+        const Cell* current_list = a->cell[i];
+        if (current_list->type == VAL_NIL) {
+            continue; /* This is a proper, empty list. */
+        }
+        /* All but the last argument must be a list. */
+        if (current_list->type != VAL_PAIR) {
+            return make_val_err("append: argument is not a list");
+        }
+
+        /* Walk the list to ensure it's a *proper* list. */
+        const Cell* p = current_list;
+        while (p->type == VAL_PAIR) {
             p = p->cdr;
-            i--;
         }
-        return cell_copy(p->car);
+        if (p->type != VAL_NIL) {
+            return make_val_err("append: middle argument is not a proper list");
+        }
+
+        /* If we get here, the list is proper. Add its length.*/
+        total_copied_len += current_list->len;
     }
-    if (a->cell[0]->type == VAL_SEXPR) {
-        /* else the list is buried in an VAL_SEXPR */
-        return cell_copy(a->cell[0]->cell[i]);
+
+    /* Determine the final list's properties based on the last argument */
+    const Cell* last_arg = a->cell[a->count - 1];
+    long long final_total_len = -1; /* -1 to signify an improper list. */
+
+    if (last_arg->type == VAL_NIL) {
+        final_total_len = total_copied_len;
+    } else if (last_arg->type == VAL_PAIR) {
+        /* If the last arg has a valid length, the result will be a proper list. */
+        if (last_arg->len != -1) {
+             final_total_len = total_copied_len + last_arg->len;
+        }
     }
-    return make_val_err("list-ref: arg 1 must be list or pair.");
+
+    /* Build the new list structure */
+    Cell* result_head = make_val_nil();
+    Cell* result_tail = NULL;
+    long long len_countdown = final_total_len;
+
+    for (int i = 0; i < a->count - 1; i++) {
+        const Cell* p = a->cell[i];
+        while (p->type == VAL_PAIR) {
+            /* Create a new pair with a copy of the element. */
+            Cell* new_pair = make_val_pair(cell_copy(p->car), make_val_nil());
+
+            /* Assign the length based on pre-calculated total. */
+            if (final_total_len != -1) {
+                new_pair->len = (int)len_countdown--;
+            } else {
+                new_pair->len = -1;
+            }
+
+            /* Append the new pair to our result list. */
+            if (result_tail == NULL) {
+                result_head = result_tail = new_pair;
+            } else {
+                result_tail->cdr = new_pair;
+                result_tail = new_pair;
+            }
+            p = p->cdr;
+        }
+    }
+
+    /* Link the last argument and return */
+    if (result_tail == NULL) {
+        /* This happens if all arguments before the last were '(). */
+        return list_deep_copy(last_arg);
+    }
+    /* Splice a DEEP COPY of the last argument onto the end. */
+    result_tail->cdr = list_deep_copy(last_arg);
+    return result_head;
+}
+
+Cell* builtin_list_reverse(Lex* e, Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    if (err) return err;
+    err = check_arg_types(a, VAL_PAIR|VAL_NIL);
+    if (err) { return err; }
+
+    const Cell* original_list = a->cell[0];
+    if (original_list->type == VAL_NIL) {
+        return make_val_nil();
+    }
+
+    Cell* reversed_list = make_val_nil();
+    const Cell* current = original_list;
+    int length_so_far = 0;
+
+    while (current->type == VAL_PAIR) {
+        reversed_list = make_val_pair(cell_copy(current->car), reversed_list);
+        length_so_far++;
+        reversed_list->len = length_so_far;
+        current = current->cdr;
+    }
+
+    /* `reverse` should only accept proper lists */
+    if (current->type != VAL_NIL) {
+        return make_val_err("reverse: cannot reverse improper list");
+    }
+    return reversed_list;
+}
+
+Cell* builtin_list_tail(Lex* e, Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 2);
+    if (err) return err;
+    if (a->cell[0]->type != VAL_PAIR) {
+        return make_val_err("list-tail: arg 1 must be a list");
+    }
+    if (a->cell[1]->type != VAL_INT) {
+        return make_val_err("list-tail: arg 2 must be an integer");
+    }
+    int i = (int)a->cell[1]->i_val;
+    if (a->cell[0]->len <= i) {
+        return  make_val_err("list-tail: arg 2 out of range");
+    }
+    const Cell* p = a->cell[0];
+    while (i > 1) {
+        p = p->cdr;
+        i--;
+    }
+    return cell_copy(p->cdr);
 }
 
 /*-------------------------------------------------------*
@@ -1605,7 +1767,7 @@ Cell* builtin_vector_ref(Lex* e, Cell* a) {
     if (a->cell[1]->type != VAL_INT) {
         return make_val_err("list-ref: arg 2 must be an integer");
     }
-    int i = (int)a->cell[1]->i_val;
+    const int i = (int)a->cell[1]->i_val;
 
     if (i >= a->cell[0]->count) {
         return make_val_err("vector-ref: index out of bounds");

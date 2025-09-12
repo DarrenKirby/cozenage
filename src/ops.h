@@ -75,6 +75,9 @@ Cell* builtin_cdr(Lex* e, Cell* a);
 Cell* builtin_list(Lex* e, Cell* a);
 Cell* builtin_list_length(Lex* e, Cell* a);
 Cell* builtin_list_ref(Lex* e, Cell* a);
+Cell* builtin_list_append(Lex* e, Cell* a);
+Cell* builtin_list_reverse(Lex* e, Cell* a);
+Cell* builtin_list_tail(Lex* e, Cell* a);
 /* Vector constructors, selectors, and procedures */
 Cell* builtin_vector(Lex* e, Cell* a);
 Cell* builtin_vector_length(Lex* e, Cell* a);

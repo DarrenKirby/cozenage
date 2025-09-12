@@ -203,14 +203,17 @@ void lex_add_builtins(Lex* e) {
     lex_add_builtin(e, "and", builtin_and);
     lex_add_builtin(e, "or", builtin_or);
     lex_add_builtin(e, "boolean", builtin_boolean);
-    /* Pair/list constructors and selectors */
+    /* Pair/list procedures */
     lex_add_builtin(e, "cons", builtin_cons);
     lex_add_builtin(e, "car", builtin_car);
     lex_add_builtin(e, "cdr", builtin_cdr);
     lex_add_builtin(e, "list", builtin_list);
     lex_add_builtin(e, "length", builtin_list_length);
     lex_add_builtin(e, "list-ref", builtin_list_ref);
-    /* Vector constructors, selectors, and procedures */
+    lex_add_builtin(e, "append", builtin_list_append);
+    lex_add_builtin(e, "reverse", builtin_list_reverse);
+    lex_add_builtin(e, "list-tail", builtin_list_tail);
+    /* Vector procedures */
     lex_add_builtin(e, "vector", builtin_vector);
     lex_add_builtin(e, "vector-length", builtin_vector_length);
     lex_add_builtin(e, "vector-ref", builtin_vector_ref);
