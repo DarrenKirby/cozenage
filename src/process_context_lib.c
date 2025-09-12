@@ -70,6 +70,7 @@ Cell* builtin_get_env_vars(Lex* e, Cell* a) {
 
     /* start with nil */
     Cell* result = make_val_nil();
+    int len = 0;
 
     for (char **env = environ; *env != NULL; env++) {
         /* Bad form to mutate env */
@@ -79,6 +80,8 @@ Cell* builtin_get_env_vars(Lex* e, Cell* a) {
         Cell* vr = make_val_str(var);
         Cell* vl = make_val_str(val);
         result = make_val_pair(make_val_pair(vr, vl), result);
+        result->len = len;
+        len++;
         free(var_string);
     }
     return result;
