@@ -68,14 +68,16 @@ Cell* sexpr_to_list(const Cell* c) {
     }
     /* Handle Proper List */
     Cell* list_head = make_val_nil();
+    const int len = c->count;
 
-    for (int i = c->count - 1; i >= 0; i--) {
+    for (int i = len - 1; i >= 0; i--) {
         /* Recursively call this function on each element to ensure
          * any nested S-expressions are also converted. */
         Cell* element = sexpr_to_list(c->cell[i]);
 
         /* Prepend the new element to the head of our list. */
         list_head = make_val_pair(element, list_head);
+        list_head->len = len - i;
     }
     return list_head;
 }
