@@ -37,11 +37,11 @@ CFLAGS_TEST = -fsanitize=address,undefined -Wall -Wextra -g -O0 -DTESTING__
 # --- Libraries ---
 # Auto-detect readline or libedit for manual and test builds
 ifeq ($(shell pkg-config --exists readline && echo yes),yes)
-    BASE_LIBS = -lreadline -lm
+    BASE_LIBS = -lreadline -lm -lgc
 else ifeq ($(shell pkg-config --exists edit && echo yes),yes)
-    BASE_LIBS = -ledit -lm
+    BASE_LIBS = -ledit -lm -lgc
 else
-    BASE_LIBS = -lreadline -lm
+    BASE_LIBS = -lreadline -lm -lgc
 endif
 
 # Test-specific libraries
@@ -100,5 +100,5 @@ $(TEST_BINARY): $(TEST_OBJECTS)
 # It finds sources in VPATH (src/ or tests/) and inherits CFLAGS from the
 # target that triggered the build (nocmake or test).
 %.o: %.c
-	@echo "Compiling: $<"
+#	@echo "Compiling: $<"
 	$(CC) $(CFLAGS) -Isrc -c $< -o $@

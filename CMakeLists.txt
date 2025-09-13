@@ -68,6 +68,7 @@ add_executable(cozenage src/main.c
 
 # Find math library
 find_library(M_LIB m)
+find_library(GC_LIB gc)
 
-target_link_libraries(cozenage PRIVATE ${READLINE_LIBRARY} ${M_LIB})
+target_link_libraries(cozenage PRIVATE ${READLINE_LIBRARY} ${M_LIB} ${GC_LIB})
 
