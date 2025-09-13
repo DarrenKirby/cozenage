@@ -3,6 +3,7 @@
 #include "main.h"
 #include "parser.h"
 #include "types.h"
+#include <gc.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -69,9 +70,9 @@ long double parse_float_checked(const char* str, char* err_buf, size_t err_buf_s
  * */
 char **lexer(const char *input, int *count) {
     int capacity = 8;
-    char **tokens = malloc(capacity * sizeof(char *));
+    char **tokens = GC_MALLOC(capacity * sizeof(char *));
     if (!tokens) {
-        fprintf(stderr, "ENOMEM: malloc failed\n");
+        fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
         return NULL;
     }
 
@@ -90,12 +91,11 @@ char **lexer(const char *input, int *count) {
         }
 
         /* Allocate more space if needed */
-        //if (n >= capacity) {
         if (n + 1 >= capacity) {
             capacity *= 2;
-            char **tmp_tokens = realloc(tokens, capacity * sizeof(char *));
+            char **tmp_tokens = GC_REALLOC(tokens, capacity * sizeof(char *));
             if (!tmp_tokens) {
-                fprintf(stderr, "ENOMEM: realloc failed\n");
+                fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
                 exit(EXIT_FAILURE);
             }
             tokens = tmp_tokens;
@@ -105,10 +105,10 @@ char **lexer(const char *input, int *count) {
         if (*p == '\'') {
             /* '() - null */
             if (*(p+1) == '(' && *(p+2) == ')') {
-                tokens[n++] = strdup("'()\0");
+                tokens[n++] = GC_strdup("'()\0");
                 p += 3;
             } else {
-                tokens[n++] = strdup("'");  /* emit a single-quote token */
+                tokens[n++] = GC_strdup("'");  /* emit a single-quote token */
                 p++;
             }
             continue;
@@ -117,14 +117,14 @@ char **lexer(const char *input, int *count) {
         /* Parentheses as single-char tokens */
         if (*p == '(' || *p == ')') {
             char buf[2] = {*p, '\0'};
-            tokens[n++] = strdup(buf);
+            tokens[n++] = GC_strdup(buf);
             p++;
         }
         /* String literal */
         else if (*p == '"') {
             p++; /* skip opening quote */
             size_t buf_size = 64;
-            char *tok = malloc(buf_size);
+            char *tok = GC_MALLOC(buf_size);
             if (!tok) exit(EXIT_FAILURE);
             size_t len = 0;
             tok[len++] = '"';
@@ -132,7 +132,7 @@ char **lexer(const char *input, int *count) {
                 if (*p == '\\' && *(p+1)) {
                     if (len + 2 >= buf_size) {
                         buf_size *= 2;
-                        tok = realloc(tok, buf_size);
+                        tok = GC_REALLOC(tok, buf_size);
                         if (!tok) exit(EXIT_FAILURE);
                     }
                     tok[len++] = *p++;
@@ -140,7 +140,7 @@ char **lexer(const char *input, int *count) {
                 } else {
                     if (len + 1 >= buf_size) {
                         buf_size *= 2;
-                        tok = realloc(tok, buf_size);
+                        tok = GC_REALLOC(tok, buf_size);
                         if (!tok) exit(EXIT_FAILURE);
                     }
                     tok[len++] = *p++;
@@ -154,7 +154,7 @@ char **lexer(const char *input, int *count) {
         /* Hash literals: booleans #t/#f, characters #\x, numeric bases #b #o #d #x */
         else if (*p == '#') {
             const char *start = p;
-            p++;  // skip '#'
+            p++;  /* skip '#' */
 
             /* Consume entire token until whitespace, paren, or quote */
             while (*p && !isspace((unsigned char)*p) &&
@@ -163,7 +163,7 @@ char **lexer(const char *input, int *count) {
                    }
 
             const size_t len = p - start;
-            char *tok = malloc(len + 1);
+            char *tok = GC_MALLOC(len + 1);
             if (!tok) exit(EXIT_FAILURE);
             memcpy(tok, start, len);
             tok[len] = '\0';
@@ -178,7 +178,7 @@ char **lexer(const char *input, int *count) {
                 p++;
             }
             const long len = p - start;
-            char *tok = malloc(len + 1);
+            char *tok = GC_MALLOC(len + 1);
             memcpy(tok, start, len);
             tok[len] = '\0';
             tokens[n++] = tok;
@@ -204,7 +204,7 @@ char **lexer(const char *input, int *count) {
 void free_tokens(char **tokens, const int count) {
     if (!tokens) return;
     for (int i = 0; i < count; i++) {
-        free(tokens[i]);  /* Free each strdup’d string */
+        free(tokens[i]);  /* Free each GC_strdup’d string */
     }
     free(tokens); /* Then free the array */
 }
@@ -218,7 +218,7 @@ Parser *parse_str(const char *input) {;
     char **tokens = lexer(input, &count);
     if (!tokens) return NULL;
 
-    Parser *p = malloc(sizeof(Parser));
+    Parser *p = GC_MALLOC(sizeof(Parser));
     if (!p) { free_tokens(tokens, count); return NULL; }
 
     p->array = tokens;
@@ -275,7 +275,6 @@ Cell *parse_tokens(Parser *p) {
             cell_add(bv, parse_tokens(p));
         }
         if (!peek(p)) {
-            cell_delete(bv);
             return make_val_err("Unmatched '(' in bytevector literal");
         }
         advance(p); /* skip ')' */
@@ -296,7 +295,6 @@ Cell *parse_tokens(Parser *p) {
                 cell_add(vec, parse_tokens(p));
             }
             if (!peek(p)) {
-                cell_delete(vec);
                 return make_val_err("Unmatched '(' in vector literal");
             }
             advance(p); /* skip ')' */
@@ -313,7 +311,6 @@ Cell *parse_tokens(Parser *p) {
             cell_add(sexpr, parse_tokens(p));
         }
         if (!peek(p)) {
-            cell_delete(sexpr);
             return make_val_err("Unmatched '('");
         }
 
@@ -434,10 +431,8 @@ Cell* parse_atom(const char *tok) {
 
     /* String literal */
     if (tok[0] == '"' && tok[len-1] == '"') {
-        char *str = strndup(tok+1, len-2);
-        Cell* result = make_val_str(str);
-        free(str);
-        return result;
+        const char *str = GC_strndup(tok+1, len-2);
+        return make_val_str(str);
     }
 
     if ((tok[0] == '#' && strchr("bodx", tok[1])) ||  /* #b101, #o666, #d123, #x0ff */
@@ -450,7 +445,7 @@ Cell* parse_atom(const char *tok) {
 
         /* complex numbers */
         if (tok[len-1] == 'i') {
-            char *copy = strdup(tok);
+            char *copy = GC_strdup(tok);
             char *p = copy;
 
             /* strip trailing 'i' */
@@ -496,13 +491,12 @@ Cell* parse_atom(const char *tok) {
                 i = parse_atom(buf);
             }
             Cell* result = make_val_complex(r, i);
-            free(copy);
             return result;
         }
         /* Rational numbers */
         if (strchr(tok, '/')) {
-            char *p, *to_free;
-            p = to_free = strdup(tok);
+            char *p;
+            p = GC_strdup(tok);
 
             const char *tok1 = strsep(&p, "/");
             const char *tok2 = strsep(&p, "/");
@@ -515,8 +509,6 @@ Cell* parse_atom(const char *tok) {
 
             const long long n = parse_int_checked(tok1, err_buf, sizeof(err_buf), 10, &ok);
             const long long d = parse_int_checked(tok2, err_buf, sizeof(err_buf), 10, &ok);
-
-            free(to_free);
 
             if (d == 0) {
                 return make_val_err("Cannot have zero-value denominator in rational");

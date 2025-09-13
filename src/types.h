@@ -3,6 +3,7 @@
 
 #include "parser.h"
 #include "environment.h"
+#include <stddef.h>
 #include <stdbool.h>
 
 
@@ -113,7 +114,7 @@ Cell* make_val_nil(void);
 Cell* make_val_pair(Cell* car, Cell* cdr);
 Cell* make_val_err(const char* m);
 Cell* cell_add(Cell* v, Cell* x);
-void cell_delete(Cell* v);
+//void cell_delete(Cell* v);
 Cell* cell_copy(const Cell* v);
 Cell* cell_pop(Cell* v, int i);
 Cell* cell_take(Cell* v, int i);
@@ -128,5 +129,7 @@ Cell* simplify_rational(Cell* v);
 void complex_apply(BuiltinFn fn, Lex* e, Cell* result, Cell* rhs);
 long double cell_to_long_double(const Cell* c);
 Cell* make_cell_from_double(long double d);
+char* GC_strdup(const char* s);
+char* GC_strndup(const char* s, size_t n);
 
 #endif //COZENAGE_TYPES_H

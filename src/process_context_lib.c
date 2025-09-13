@@ -60,7 +60,8 @@ Cell* builtin_get_env_var(Lex* e, Cell* a) {
     if (env == NULL) {
         return make_val_bool(0);
     }
-    return make_val_str(env);
+    char* var_string = GC_strdup(env);
+    return make_val_str(var_string);
 }
 
 Cell* builtin_get_env_vars(Lex* e, Cell* a) {
@@ -74,7 +75,7 @@ Cell* builtin_get_env_vars(Lex* e, Cell* a) {
 
     for (char **env = environ; *env != NULL; env++) {
         /* Bad form to mutate env */
-        char* var_string = strdup(*env);
+        char* var_string = GC_strdup(*env);
         const char *var = strtok(var_string, "=");
         const char *val = strtok(NULL, "=");
         Cell* vr = make_val_str(var);
@@ -82,7 +83,6 @@ Cell* builtin_get_env_vars(Lex* e, Cell* a) {
         result = make_val_pair(make_val_pair(vr, vl), result);
         result->len = len;
         len++;
-        free(var_string);
     }
     return result;
 }

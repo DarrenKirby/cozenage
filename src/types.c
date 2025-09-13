@@ -3,6 +3,7 @@
 #include "types.h"
 #include "parser.h"
 #include "ops.h"
+#include <gc.h>
 #include <ctype.h>
 #include <errno.h>
 #include <stdio.h>
@@ -23,7 +24,7 @@ Cell* val_nil = NULL;
 
 Cell* make_val_nil(void) {
     if (!val_nil) {
-        val_nil = malloc(sizeof(Cell));
+        val_nil = GC_MALLOC(sizeof(Cell));
         val_nil->type = VAL_NIL;
         /* no other fields needed */
     }
@@ -31,7 +32,7 @@ Cell* make_val_nil(void) {
 }
 
 Cell* make_val_real(const long double n) {
-    Cell* v = calloc(1, sizeof(Cell));
+    Cell* v = GC_MALLOC(sizeof(Cell));
     v->type = VAL_REAL;
     v->exact = false;
     v->r_val = n;
@@ -39,7 +40,7 @@ Cell* make_val_real(const long double n) {
 }
 
 Cell* make_val_int(const long long int n) {
-    Cell* v = calloc(1, sizeof(Cell));
+    Cell* v = GC_MALLOC(sizeof(Cell));
     v->type = VAL_INT;
     v->exact = true;
     v->i_val = n;
@@ -47,7 +48,7 @@ Cell* make_val_int(const long long int n) {
 }
 
 Cell* make_val_rat(const long int num, const long int den, const bool simplify) {
-    Cell* v = calloc(1, sizeof(Cell));
+    Cell* v = GC_MALLOC(sizeof(Cell));
     v->type = VAL_RAT;
     v->exact = true;
     v->num = num;
@@ -62,7 +63,7 @@ Cell* make_val_complex(Cell* real, Cell *imag) {
     if (real->type == VAL_COMPLEX || imag->type == VAL_COMPLEX) {
         return make_val_err("Cannot have complex real or imaginary parts.");
     }
-    Cell* v = calloc(1, sizeof(Cell));
+    Cell* v = GC_MALLOC(sizeof(Cell));
     v->type = VAL_COMPLEX;
     v->real = real;
     v->imag = imag;
@@ -71,28 +72,28 @@ Cell* make_val_complex(Cell* real, Cell *imag) {
 }
 
 Cell* make_val_bool(const int b) {
-    Cell* v = calloc(1, sizeof(Cell));
+    Cell* v = GC_MALLOC(sizeof(Cell));
     v->type = VAL_BOOL;
     v->b_val = b ? 1 : 0;
     return v;
 }
 
 Cell* make_val_sym(const char* s) {
-    Cell* v = calloc(1, sizeof(Cell));
+    Cell* v = GC_MALLOC(sizeof(Cell));
     v->type = VAL_SYM;
-    v->sym = strdup(s);
+    v->sym = GC_strdup(s);
     return v;
 }
 
 Cell* make_val_str(const char* s) {
-    Cell* v = calloc(1, sizeof(Cell));
+    Cell* v = GC_MALLOC(sizeof(Cell));
     v->type = VAL_STR;
-    v->str = strdup(s);
+    v->str = GC_strdup(s);
     return v;
 }
 
 Cell* make_val_sexpr(void) {
-    Cell* v = calloc(1, sizeof(Cell));
+    Cell* v = GC_MALLOC(sizeof(Cell));
     v->type = VAL_SEXPR;
     v->count = 0;
     v->cell = NULL;
@@ -100,16 +101,16 @@ Cell* make_val_sexpr(void) {
 }
 
 Cell* make_val_char(char c) {
-    Cell* v = calloc(1, sizeof(Cell));
+    Cell* v = GC_MALLOC(sizeof(Cell));
     v->type = VAL_CHAR;
     v->c_val = c;
     return v;
 }
 
 Cell* make_val_pair(Cell* car, Cell* cdr) {
-    Cell* v = calloc(1,sizeof(Cell));
+    Cell* v = GC_MALLOC(sizeof(Cell));
     if (!v) {
-        fprintf(stderr, "ENOMEM: calloc failed\n");
+        fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
         exit(EXIT_FAILURE);
     }
     v->type = VAL_PAIR;
@@ -120,7 +121,7 @@ Cell* make_val_pair(Cell* car, Cell* cdr) {
 }
 
 Cell* make_val_vect(void) {
-    Cell* v = calloc(1, sizeof(Cell));
+    Cell* v = GC_MALLOC(sizeof(Cell));
     v->type = VAL_VEC;
     v->cell = NULL;
     v->count = 0;
@@ -128,7 +129,7 @@ Cell* make_val_vect(void) {
 }
 
 Cell* make_val_bytevec(void) {
-    Cell* v = calloc(1, sizeof(Cell));
+    Cell* v = GC_MALLOC(sizeof(Cell));
     v->type = VAL_BYTEVEC;
     v->cell = NULL;
     v->count = 0;
@@ -136,10 +137,10 @@ Cell* make_val_bytevec(void) {
 }
 
 Cell* make_val_err(const char* m) {
-    Cell* v = calloc(1, sizeof(Cell));
+    Cell* v = GC_MALLOC(sizeof(Cell));
     v->type = VAL_ERR;
     v->exact = GEN_ERR;
-    v->str = strdup(m);
+    v->str = GC_strdup(m);
     return v;
 }
 
@@ -149,7 +150,7 @@ Cell* make_val_err(const char* m) {
 
 Cell* cell_add(Cell* v, Cell* x) {
     v->count++;
-    v->cell = realloc(v->cell, sizeof(Cell*) * v->count);
+    v->cell = GC_REALLOC(v->cell, sizeof(Cell*) * v->count);
     v->cell[v->count-1] = x;
     return v;
 }
@@ -170,13 +171,12 @@ Cell* cell_pop(Cell* v, const int i) {
     v->count--;
 
     /* If there are no elements left, free the array and set to NULL.
-       Do NOT call realloc(..., 0). */
+       Do NOT call GC_REALLOC(..., 0). */
     if (v->count == 0) {
-        free(v->cell);
         v->cell = NULL;
     } else {
         /* Try to shrink the allocation; keep old pointer on OOM */
-        Cell** tmp = realloc(v->cell, sizeof(Cell*) * v->count);
+        Cell** tmp = GC_REALLOC(v->cell, sizeof(Cell*) * v->count);
         if (tmp) {
             v->cell = tmp;
         } /* else: on OOM we keep the old block (safe) */
@@ -191,84 +191,84 @@ Cell* cell_take(Cell* v, const int i) {
 }
 
 /* Recursively delete components of an Cell */
-void cell_delete(Cell* v) {
-    if (!v) return;
-
-    switch (v->type) {
-    case VAL_INT:
-    case VAL_REAL:
-    case VAL_RAT:
-    case VAL_BOOL:
-    case VAL_CHAR:
-        /* nothing heap-allocated */
-        break;
-
-    case VAL_NIL:
-        /* NIL is a singleton; never free */
-        return;
-
-    case VAL_SYM:
-        free(v->sym);
-        break;
-
-    case VAL_STR:
-    case VAL_ERR:
-        free(v->str);
-        break;
-
-    case VAL_SEXPR:
-    case VAL_VEC:
-    case VAL_BYTEVEC:
-        if (v->cell) {
-            for (int i = 0; i < v->count; i++) {
-                /* guard against NULL children just in case */
-                if (v->cell[i]) cell_delete(v->cell[i]);
-            }
-            free(v->cell);
-            v->cell = NULL;
-        }
-        v->count = 0;
-        break;
-
-    case VAL_PAIR:
-        cell_delete(v->car);
-        cell_delete(v->cdr);
-        break;
-
-    case VAL_COMPLEX:
-        cell_delete(v->real);
-        cell_delete(v->imag);
-        break;
-
-    case VAL_PROC:
-        if (v->builtin) {
-            if (v->name) free(v->name);
-            /* builtin has no formals/body/env to free */
-        } else {
-            /* user lambda: free deep-copied formals and body, but NOT env */
-            if (v->formals) cell_delete(v->formals);
-            if (v->body)    cell_delete(v->body);
-            /* v->env is NOT owned here, do not free it */
-        }
-        break;
-
-    case VAL_PORT:
-    case VAL_CONT:
-        /* not implemented yet */
-        break;
-
-    default:
-        fprintf(stderr, "cell_delete: unknown type %d\n", v->type);
-        break;
-    }
-    free(v);
-}
+// void cell_delete(Cell* v) {
+//     if (!v) return;
+//
+//     switch (v->type) {
+//     case VAL_INT:
+//     case VAL_REAL:
+//     case VAL_RAT:
+//     case VAL_BOOL:
+//     case VAL_CHAR:
+//         /* nothing heap-allocated */
+//         break;
+//
+//     case VAL_NIL:
+//         /* NIL is a singleton; never free */
+//         return;
+//
+//     case VAL_SYM:
+//         free(v->sym);
+//         break;
+//
+//     case VAL_STR:
+//     case VAL_ERR:
+//         free(v->str);
+//         break;
+//
+//     case VAL_SEXPR:
+//     case VAL_VEC:
+//     case VAL_BYTEVEC:
+//         if (v->cell) {
+//             for (int i = 0; i < v->count; i++) {
+//                 /* guard against NULL children just in case */
+//                 if (v->cell[i]) cell_delete(v->cell[i]);
+//             }
+//             free(v->cell);
+//             v->cell = NULL;
+//         }
+//         v->count = 0;
+//         break;
+//
+//     case VAL_PAIR:
+//         cell_delete(v->car);
+//         cell_delete(v->cdr);
+//         break;
+//
+//     case VAL_COMPLEX:
+//         cell_delete(v->real);
+//         cell_delete(v->imag);
+//         break;
+//
+//     case VAL_PROC:
+//         if (v->builtin) {
+//             if (v->name) free(v->name);
+//             /* builtin has no formals/body/env to free */
+//         } else {
+//             /* user lambda: free deep-copied formals and body, but NOT env */
+//             if (v->formals) cell_delete(v->formals);
+//             if (v->body)    cell_delete(v->body);
+//             /* v->env is NOT owned here, do not free it */
+//         }
+//         break;
+//
+//     case VAL_PORT:
+//     case VAL_CONT:
+//         /* not implemented yet */
+//         break;
+//
+//     default:
+//         fprintf(stderr, "cell_delete: unknown type %d\n", v->type);
+//         break;
+//     }
+//     free(v);
+// }
 
 /* Recursively deep-copy all components of a Cell */
 Cell* cell_copy(const Cell* v) {
     if (!v) return NULL;
 
-    Cell* copy = calloc(1, sizeof(Cell));
+    Cell* copy = GC_MALLOC(sizeof(Cell));
     if (!copy) {
         fprintf(stderr, "ENOMEM: cell_copy failed\n");
         exit(EXIT_FAILURE);
@@ -292,18 +292,18 @@ Cell* cell_copy(const Cell* v) {
         break;
 
     case VAL_SYM:
-        copy->sym = strdup(v->sym);
+        copy->sym = GC_strdup(v->sym);
         break;
 
     case VAL_STR:
     case VAL_ERR:
-        copy->str = strdup(v->str);
+        copy->str = GC_strdup(v->str);
         break;
 
     case VAL_PROC:
         /* If it's a builtin, keep the function pointer; copy the name if present. */
         copy->builtin = v->builtin;
-        copy->name = v->name ? strdup(v->name) : NULL;
+        copy->name = v->name ? GC_strdup(v->name) : NULL;
 
         if (v->builtin) {
             /* builtin: nothing else to deep-copy */
@@ -324,7 +324,7 @@ Cell* cell_copy(const Cell* v) {
     case VAL_BYTEVEC:
         copy->count = v->count;
         if (v->count) {
-            copy->cell = malloc(sizeof(Cell*) * v->count);
+            copy->cell = GC_MALLOC(sizeof(Cell*) * v->count);
         } else {
             copy->cell = NULL;
         }
@@ -335,7 +335,6 @@ Cell* cell_copy(const Cell* v) {
 
     case VAL_NIL:
         /* return the singleton instead of allocating */
-        free(copy);
         return make_val_nil();
 
     case VAL_PAIR: {
@@ -363,8 +362,7 @@ Cell* cell_copy(const Cell* v) {
         break;
 
     default:
-        fprintf(stderr, "lval_copy: unknown type %d\n", v->type);
-        free(copy);
+        fprintf(stderr, "cell_copy: unknown type %d\n", v->type);
         return NULL;
     }
     return copy;
@@ -501,41 +499,34 @@ void numeric_promote(Cell** lhs, Cell** rhs) {
 
     if (a->type == VAL_COMPLEX || b->type == VAL_COMPLEX) {
         if (a->type != VAL_COMPLEX) {
-            Cell* old = a;
+            //Cell* old = a;
             a = to_complex(a);
-            cell_delete(old);
         }
         if (b->type != VAL_COMPLEX) {
-            Cell* old = b;
+            //Cell* old = b;
             b = to_complex(b);
-            cell_delete(old);
         }
     }
     else if (a->type == VAL_REAL || b->type == VAL_REAL) {
         if (a->type == VAL_INT || a->type == VAL_RAT) {
-            Cell* old = a;
+            //Cell* old = a;
             a = (a->type == VAL_INT) ? int_to_real(a) : rat_to_real(a);
-            cell_delete(old);
         }
         if (b->type == VAL_INT || b->type == VAL_RAT) {
-            Cell* old = b;
+            //Cell* old = b;
             b = (b->type == VAL_INT) ? int_to_real(b) : rat_to_real(b);
-            cell_delete(old);
         }
     }
     else if (a->type == VAL_RAT || b->type == VAL_RAT) {
         if (a->type == VAL_INT) {
-            Cell* old = a;
+            //Cell* old = a;
             a = int_to_rat(a);
-            cell_delete(old);
         }
         if (b->type == VAL_INT) {
-            Cell* old = b;
+            //Cell* old = b;
             b = int_to_rat(b);
-            cell_delete(old);
         }
     }
-
     *lhs = a;
     *rhs = b;
 }
@@ -548,7 +539,7 @@ void numeric_promote(Cell** lhs, Cell** rhs) {
 Cell* make_sexpr_len1(const Cell* a) {
     Cell* v = make_val_sexpr();
     v->count = 1;
-    v->cell = malloc(sizeof(Cell*));
+    v->cell = GC_MALLOC(sizeof(Cell*));
     v->cell[0] = cell_copy(a);
     return v;
 }
@@ -557,7 +548,7 @@ Cell* make_sexpr_len1(const Cell* a) {
 Cell* make_sexpr_len2(const Cell* a, const Cell* b) {
     Cell* v = make_val_sexpr();
     v->count = 2;
-    v->cell = malloc(sizeof(Cell*) * 2);
+    v->cell = GC_MALLOC(sizeof(Cell*) * 2);
     v->cell[0] = cell_copy(a);
     v->cell[1] = cell_copy(b);
     return v;
@@ -567,7 +558,7 @@ Cell* make_sexpr_len2(const Cell* a, const Cell* b) {
 Cell* make_sexpr_len4(const Cell* a, const Cell* b, const Cell* c, const Cell* d) {
     Cell* v = make_val_sexpr();
     v->count = 4;
-    v->cell = malloc(sizeof(Cell*) * 4);
+    v->cell = GC_MALLOC(sizeof(Cell*) * 4);
     v->cell[0] = cell_copy(a);
     v->cell[1] = cell_copy(b);
     v->cell[2] = cell_copy(c);
@@ -627,18 +618,15 @@ Cell* simplify_rational(Cell* v) {
     if (v->den == 0) {
         /* undefined fraction, return an error */
         Cell* err = make_val_err("simplify_rational: denominator is zero!");
-        cell_delete(v);
         return err;
     }
     if (v->num == v->den) {
         /* Return as integer 1 */
-        cell_delete(v);
         return make_val_int(1);
     }
     if (v->den == 1) {
         /* Return as integer */
         Cell* int_cell = make_val_int(v->num);
-        cell_delete(v);
         return int_cell;
     }
     return v;
@@ -664,12 +652,6 @@ void complex_apply(BuiltinFn fn, Lex* e, Cell* result, Cell* rhs) {
         Cell* new_real = fn(e, real_args);
         Cell* new_imag = fn(e, imag_args);
 
-        cell_delete(real_args);
-        cell_delete(imag_args);
-
-        cell_delete(result->real);
-        cell_delete(result->imag);
-
         result->real = new_real;
         result->imag = new_imag;
         return;
@@ -692,12 +674,6 @@ void complex_apply(BuiltinFn fn, Lex* e, Cell* result, Cell* rhs) {
     Cell* ad = builtin_mul(e, ad_args);
     Cell* bc = builtin_mul(e, bc_args);
 
-    /* Free the temporary argument lists */
-    cell_delete(ac_args);
-    cell_delete(bd_args);
-    cell_delete(ad_args);
-    cell_delete(bc_args);
-
     Cell* new_real = NULL;
     Cell* new_imag = NULL;
 
@@ -708,10 +684,6 @@ void complex_apply(BuiltinFn fn, Lex* e, Cell* result, Cell* rhs) {
 
         new_real = builtin_sub(e, real_args);
         new_imag = builtin_add(e, imag_args);
-
-        /* Free the temporary argument lists */
-        cell_delete(real_args);
-        cell_delete(imag_args);
     }
     else if (fn == builtin_div) {
         /* Create temporary argument lists for denominator calculation */
@@ -721,12 +693,8 @@ void complex_apply(BuiltinFn fn, Lex* e, Cell* result, Cell* rhs) {
         Cell* c_sq = builtin_mul(e, c_sq_args);
         Cell* d_sq = builtin_mul(e, d_sq_args);
 
-        cell_delete(c_sq_args);
-        cell_delete(d_sq_args);
-
         Cell* denom_args = make_sexpr_len2(c_sq, d_sq);
         Cell* denom = builtin_add(e, denom_args);
-        cell_delete(denom_args);
 
         /* Create temporary argument lists for numerators */
         Cell* real_num_args = make_sexpr_len2(ac, bd);
@@ -735,37 +703,13 @@ void complex_apply(BuiltinFn fn, Lex* e, Cell* result, Cell* rhs) {
         Cell* real_num = builtin_add(e, real_num_args);
         Cell* imag_num = builtin_sub(e, imag_num_args);
 
-        cell_delete(real_num_args);
-        cell_delete(imag_num_args);
-
         /* Create temporary argument lists for final division */
         Cell* final_real_args = make_sexpr_len2(real_num, denom);
         Cell* final_imag_args = make_sexpr_len2(imag_num, denom);
 
         new_real = builtin_div(e, final_real_args);
         new_imag = builtin_div(e, final_imag_args);
-
-        cell_delete(final_real_args);
-        cell_delete(final_imag_args);
-
-        /* Cleanup for division-specific intermediates */
-        cell_delete(c_sq);
-        cell_delete(d_sq);
-        cell_delete(denom);
-        cell_delete(real_num);
-        cell_delete(imag_num);
     }
-
-    /* Cleanup for common intermediate results */
-    cell_delete(ac);
-    cell_delete(bd);
-    cell_delete(ad);
-    cell_delete(bc);
-
-    /* Clean up the old components from the result cell. */
-    cell_delete(result->real);
-    cell_delete(result->imag);
-
     /* Assign the newly calculated, type-correct components. */
     result->real = new_real;
     result->imag = new_imag;
@@ -792,4 +736,46 @@ Cell* make_cell_from_double(long double d) {
         return make_val_int((long long)d);
     }
     return make_val_real(d);
+}
+
+/**
+ * A version of strdup that allocates memory using the garbage collector.
+ */
+char* GC_strdup(const char* s) {
+    if (s == NULL) {
+        return NULL;
+    }
+    /* Allocate GC-managed memory for the new string. */
+    size_t len = strlen(s) + 1;
+    char* new_str = (char*) GC_MALLOC_ATOMIC(len);
+    if (new_str == NULL) {
+        /* Handle allocation failure if necessary */
+        return NULL;
+    }
+    /* Copy the string content. */
+    memcpy(new_str, s, len);
+    return new_str;
+}
+
+/**
+ * A version of strndup that allocates memory using the garbage collector.
+ */
+char* GC_strndup(const char* s, const size_t n) {
+    // if (s == NULL) {
+    //     return NULL;
+    // }
+    /* Find the actual length of the substring, up to n. */
+    size_t len = strnlen(s, n);
+
+    // Allocate GC-managed memory.
+    char* new_str = (char*) GC_MALLOC_ATOMIC(len + 1);
+    if (new_str == NULL) {
+        return NULL;
+    }
+
+    // Copy the content and null-terminate.
+    memcpy(new_str, s, len);
+    new_str[len] = '\0';
+
+    return new_str;
 }

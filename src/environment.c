@@ -5,6 +5,7 @@
 #include "environment.h"
 #include "ops.h"
 #include "types.h"
+#include <gc.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -12,7 +13,7 @@
 
 /* Initializes an environment, and returns a pointer to it. */
 Lex* lex_initialize(void) {
-    Lex* top_env = malloc(sizeof(Lex));
+    Lex* top_env = GC_MALLOC(sizeof(Lex));
     top_env->count = 0;
     top_env->syms = NULL;
     top_env->vals = NULL;
@@ -22,7 +23,7 @@ Lex* lex_initialize(void) {
 
 /* Initialize a new local environment */
 Lex* lex_new_child(Lex* parent) {
-    Lex* e = malloc(sizeof(Lex));
+    Lex* e = GC_MALLOC(sizeof(Lex));
     e->count = 0;
     e->syms = NULL;
     e->vals = NULL;
@@ -31,22 +32,21 @@ Lex* lex_new_child(Lex* parent) {
 }
 
 /* Delete the environment upon program exit */
-void lex_delete(Lex* e) {
-    if (!e) return;
-    for (int i = 0; i < e->count; i++) {
-        /* Free symbols properly */
-        if (e->syms[i]) {
-            free(e->syms[i]);
-        }
-        /* Free values */
-        if (e->vals[i]) {
-            cell_delete(e->vals[i]);
-        }
-    }
-    free(e->syms);
-    free(e->vals);
-    free(e);
-}
+// void lex_delete(Lex* e) {
+//     if (!e) return;
+//     for (int i = 0; i < e->count; i++) {
+//         /* Free symbols properly */
+//         if (e->syms[i]) {
+//             free(e->syms[i]);
+//         }
+//         /* Free values */
+//         if (e->vals[i]) {
+//         }
+//     }
+//     free(e->syms);
+//     free(e->vals);
+//     free(e);
+// }
 
 Cell* lex_get(const Lex* e, const Cell* k) {
     if (!e || !k || k->type != VAL_SYM) return NULL;
@@ -77,7 +77,6 @@ void lex_put(Lex* e, const Cell* k, const Cell* v) {
     for (int i = 0; i < e->count; i++) {
         if (strcmp(e->syms[i], k->sym) == 0) {
             /* Free the old value and replace it with a copy of v */
-            cell_delete(e->vals[i]);
             e->vals[i] = cell_copy(v);
             return;
         }
@@ -85,20 +84,20 @@ void lex_put(Lex* e, const Cell* k, const Cell* v) {
 
     /* Symbol not found; append new entry */
     e->count++;
-    e->syms = realloc(e->syms, sizeof(char*) * e->count);
-    e->vals = realloc(e->vals, sizeof(Cell*) * e->count);
+    e->syms = GC_REALLOC(e->syms, sizeof(char*) * e->count);
+    e->vals = GC_REALLOC(e->vals, sizeof(Cell*) * e->count);
     if (!e->syms || !e->vals) {
         fprintf(stderr, "ENOMEM: lex_put failed\n");
         exit(EXIT_FAILURE);
     }
-    e->syms[e->count - 1] = strdup(k->sym);
+    e->syms[e->count - 1] = GC_strdup(k->sym);
     e->vals[e->count - 1] = cell_copy(v);
 }
 
 Cell* lex_make_builtin(const char* name, Cell* (*func)(Lex*, Cell*)) {
-    Cell* c = calloc(1, sizeof(Cell));
+    Cell* c = GC_MALLOC(sizeof(Cell));
     c->type = VAL_PROC;
-    c->name = strdup(name);
+    c->name = GC_strdup(name);
     c->builtin = func;
     c->formals = NULL;
     c->body = NULL;
@@ -107,9 +106,9 @@ Cell* lex_make_builtin(const char* name, Cell* (*func)(Lex*, Cell*)) {
 }
 
 Cell* lex_make_named_lambda(const char* name, const Cell* formals, const Cell* body, Lex* env) {
-    Cell* c = calloc(1, sizeof(Cell));
+    Cell* c = GC_MALLOC(sizeof(Cell));
     c->type = VAL_PROC;
-    c->name = strdup(name);  /* optional */
+    c->name = GC_strdup(name);  /* optional */
     c->builtin = NULL;
     c->formals = cell_copy(formals);
     c->body = cell_copy(body);
@@ -118,7 +117,7 @@ Cell* lex_make_named_lambda(const char* name, const Cell* formals, const Cell* b
 }
 
 Cell* lex_make_lambda(const Cell* formals, const Cell* body, Lex* env) {
-    Cell* c = calloc(1, sizeof(Cell));
+    Cell* c = GC_MALLOC(sizeof(Cell));
     c->type = VAL_PROC;
     c->name = NULL;  /* optional */
     c->builtin = NULL;
@@ -130,11 +129,9 @@ Cell* lex_make_lambda(const Cell* formals, const Cell* body, Lex* env) {
 
 void lex_add_builtin(Lex* e, const char* name,
                       Cell* (*func)(Lex*, Cell*)) {
-    Cell* fn = lex_make_builtin(name, func);
-    Cell* k = make_val_sym(name);
+    const Cell* fn = lex_make_builtin(name, func);
+    const Cell* k = make_val_sym(name);
     lex_put(e, k, fn);
-    cell_delete(k);
-    cell_delete(fn);  /* env makes its own copy */
 }
 
 void lex_add_builtins(Lex* e) {

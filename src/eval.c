@@ -4,6 +4,7 @@
 #include "ops.h"
 #include "printer.h"
 #include "main.h"
+#include <gc.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -22,19 +23,17 @@ Cell* apply_lambda(Cell* lambda, Cell* args) {
     }
 
     for (int i = 0; i < args->count; i++) {
-        Cell* sym = lambda->formals->cell[i];
-        Cell* val = args->cell[i];
+        const Cell* sym = lambda->formals->cell[i];
+        const Cell* val = args->cell[i];
         lex_put(local_env, sym, val);  /* sym should be VAL_SYM, val evaluated */
     }
 
     /* Evaluate body expressions in this environment */
     Cell* result = NULL;
     for (int i = 0; i < lambda->body->count; i++) {
-        if (result) cell_delete(result);
         result = coz_eval(local_env, cell_copy(lambda->body->cell[i]));
     }
-
-    lex_delete(local_env);
+    //lex_delete(local_env);
     return result;
 }
 
@@ -47,7 +46,7 @@ Cell* sexpr_to_list(const Cell* c) {
     /* It is an S-expression. Check for improper list syntax. */
     int dot_pos = -1;
     if (c->count > 1) {
-        Cell* dot_candidate = c->cell[c->count - 2];
+        const Cell* dot_candidate = c->cell[c->count - 2];
         if (dot_candidate->type == VAL_SYM && strcmp(dot_candidate->sym, ".") == 0) {
             dot_pos = c->count - 2;
         }
@@ -94,7 +93,6 @@ Cell* coz_eval(Lex* e, Cell* v) {
         /* Symbols: look them up in the environment */
         case VAL_SYM: {
             Cell* x = lex_get(e, v);
-            cell_delete(v);
             return x;
         }
 
@@ -143,81 +141,61 @@ Cell* eval_sexpr(Lex* e, Cell* v) {
 
     /* special form: define */
     if (first->type == VAL_SYM && strcmp(first->sym, "define") == 0) {
-        cell_delete(first);
         return builtin_define(e, v);
     }
 
     /* Special form: quote */
     if (first->type == VAL_SYM && strcmp(first->sym, "quote") == 0) {
-        cell_delete(first);
         if (v->count != 1) {
-            cell_delete(v);
             return make_val_err("quote takes exactly one argument");
         }
         /* Extract the S-expression that was quoted. */
-        Cell* quoted_sexpr = cell_take(v, 0);
-        cell_delete(v); /* Delete the (quote ...) wrapper. */
+        const Cell* quoted_sexpr = cell_take(v, 0);
 
         /* Convert the VAL_SEXPR into a proper VAL_PAIR list. */
         Cell* result = sexpr_to_list(quoted_sexpr);
-
-        /* Clean up the original VAL_SEXPR. */
-        cell_delete(quoted_sexpr);
-
         return result;
     }
 
     /* Special form: lambda */
     if (first->type == VAL_SYM && strcmp(first->sym, "lambda") == 0) {
-        cell_delete(first);
 
         if (v->count < 2) {
-            cell_delete(v);
             return make_val_err("lambda requires formals and a body");
         }
 
-        Cell* formals = cell_pop(v, 0);   /* first arg */
-        Cell* body    = cell_copy(v);       /* remaining args */
+        const Cell* formals = cell_pop(v, 0);   /* first arg */
+        const Cell* body    = cell_copy(v);       /* remaining args */
 
         /* formals should be a list of symbols */
         for (int i = 0; i < formals->count; i++) {
             if (formals->cell[i]->type != VAL_SYM) {
-                cell_delete(formals);
-                cell_delete(body);
                 return make_val_err("lambda formals must be symbols");
             }
         }
 
         /* Build the lambda cell */
         Cell* lambda = lex_make_lambda(formals, body, e);
-
-        cell_delete(formals);
-        cell_delete(body);  /* make_lambda deep-copies body and formals */
-        cell_delete(v);
         return lambda;
     }
 
     /* special form - if */
     if (first->type == VAL_SYM && strcmp(first->sym, "if") == 0) {
-        cell_delete(first);
         return builtin_if(e, v);
     }
 
     /* special form - when */
     if (first->type == VAL_SYM && strcmp(first->sym, "when") == 0) {
-        cell_delete(first);
         return builtin_when(e, v);
     }
 
     /* special form - unless */
     if (first->type == VAL_SYM && strcmp(first->sym, "unless") == 0) {
-        cell_delete(first);
         return builtin_unless(e, v);
     }
 
     /* special form - cond */
     if (first->type == VAL_SYM && strcmp(first->sym, "cond") == 0) {
-        cell_delete(first);
         return builtin_cond(e, v);
     }
 
@@ -228,8 +206,6 @@ Cell* eval_sexpr(Lex* e, Cell* v) {
         printf(ANSI_RED_B);
         print_cell(f);
         printf("%s: ", ANSI_RESET);
-        cell_delete(f);
-        cell_delete(v);
         return make_val_err("S-expression does not start with a procedure");
     }
 
@@ -237,7 +213,6 @@ Cell* eval_sexpr(Lex* e, Cell* v) {
     for (int i = 0; i < v->count; i++) {
         v->cell[i] = coz_eval(e, v->cell[i]);
         if (v->cell[i]->type == VAL_ERR) {
-            cell_delete(f);
             return cell_take(v, i);
         }
     }
@@ -249,7 +224,5 @@ Cell* eval_sexpr(Lex* e, Cell* v) {
     } else {
         result = apply_lambda(f, v);
     }
-    cell_delete(v);
-    cell_delete(f);
     return result;
 }

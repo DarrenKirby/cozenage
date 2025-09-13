@@ -16,7 +16,7 @@ void setup_suite(void) {
 }
 
 void teardown_suite(void) {
-    lex_delete(test_env);
+    //lex_delete(test_env);
 }
 
 void suite_setup_wrapper(void) {
@@ -29,15 +29,11 @@ char* t_eval(const char* input) {
     Parser *p = parse_str(input);
     Cell *v = parse_tokens(p);
 
-    Cell *result = coz_eval(test_env, v);
+    const Cell *result = coz_eval(test_env, v);
 
     /* Print the result to stdout, and push stdout into the capture pipe */
     print_cell(result);
     fflush(stdout);
-
-    free_tokens(p->array, p->size);
-    free(p);
-    cell_delete(result);
 
     /* Capture the result from stdout */
     static char buffer[4096];

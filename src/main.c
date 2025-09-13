@@ -11,6 +11,7 @@
 #include "file_lib.h"
 #include "process_context_lib.h"
 #include "inexact_lib.h"
+#include <gc.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -19,11 +20,8 @@
 #include <getopt.h>
 
 
-/* set up readline history file loading and saving */
-//char history_file[] = HIST_FILE;
-
 void read_history_from_file() {
-    char *hf = tilde_expand(HIST_FILE);
+    const char *hf = tilde_expand(HIST_FILE);
     if (access(hf, R_OK) == -1) {
         /* create empty file if it does not exist */
         FILE* f = fopen(hf, "w");
@@ -34,13 +32,13 @@ void read_history_from_file() {
         fclose(f);
     }
     read_history(hf);
-    free(hf);
+    /* free(hf)? */
 }
 
 void save_history_to_file() {
-    char *hf = tilde_expand(HIST_FILE);
+    const char *hf = tilde_expand(HIST_FILE);
     write_history(hf);
-    free(hf);
+    /* free(hf)? */
 }
 
 struct lib_load {
@@ -99,12 +97,12 @@ static char* read_multiline(const char* prompt, const char* cont_prompt) {
     if (got_sigint) {
         free(line);
         got_sigint = 0;
-        return strdup("");  /* return empty input so REPL just re-prompts */
+        return GC_strdup("");  /* return empty input so REPL just re-prompts */
     }
 
     balance += paren_balance(line, &in_string);
 
-    input = strdup(line);
+    input = GC_strdup(line);
     total_len = strlen(line);
     free(line);
 
@@ -113,15 +111,14 @@ static char* read_multiline(const char* prompt, const char* cont_prompt) {
         if (!line) break;
         if (got_sigint) {
             free(line);
-            free(input);
             got_sigint = 0;
-            return strdup("");  /* abort multiline and reset prompt */
+            return GC_strdup("");  /* abort multiline and reset prompt */
         }
 
         balance += paren_balance(line, &in_string);
 
         const size_t line_len = strlen(line);
-        char *tmp = realloc(input, total_len + line_len + 2);
+        char *tmp = GC_REALLOC(input, total_len + line_len + 2);
         if (!tmp) { fprintf(stderr, "ENOMEM: malloc failed\n"); exit(EXIT_FAILURE); }
         input = tmp;
         input[total_len] = '\n';
@@ -139,26 +136,21 @@ static char* read_multiline(const char* prompt, const char* cont_prompt) {
  * the value to a Cell struct.
  * */
 Cell* coz_read(Lex* e) {
+    (void)e;
     char *input = read_multiline(PS1_PROMPT, PS2_PROMPT);
     /* reset bold input */
     printf("%s", ANSI_RESET);
     if (!input || strcmp(input, "exit") == 0) {
         printf("\n");
         save_history_to_file();
-        lex_delete(e);
+        //lex_delete(e);
         exit(0);
     }
 
     Parser *p = parse_str(input);
-    if (!p) { free(input); return NULL; }
-
+    if (!p) { return NULL; }
     Cell *v = parse_tokens(p);
-
-    free_tokens(p->array, p->size);
-    free(p);
     if (v) add_history(input);
-    free(input);
-
     return v;
 }
 
@@ -205,7 +197,6 @@ void repl() {
             continue;
         }
         coz_print(result);
-        cell_delete(result);
     }
 }
 
@@ -225,7 +216,7 @@ Report bugs to <bulliver@gmail.com>\n", APP_NAME);
 }
 
 void process_library_arg(struct lib_load *l, const char *arg) {
-    char *arg_copy = strdup(arg);
+    char *arg_copy = GC_strdup(arg);
     if (!arg_copy) {
         perror("Failed to allocate memory");
         exit(EXIT_FAILURE);
@@ -266,16 +257,16 @@ void process_library_arg(struct lib_load *l, const char *arg) {
         } else {
             fprintf(stderr, "Error: Unknown library name '%s' specified.\n", token);
             fprintf(stderr, "Run with -h for a list of valid library names.\n");
-            free(arg_copy); /* Clean up before exiting */
             exit(EXIT_FAILURE);
         }
         /* Get the next token */
         token = strtok(NULL, ",");
     }
-    free(arg_copy);
 }
 
 int main(const int argc, char** argv) {
+    /* initialize GC */
+    GC_INIT();
     int opt;
 
     const struct option long_opts[] = {

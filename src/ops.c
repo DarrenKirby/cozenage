@@ -6,10 +6,7 @@
 #include "eval.h"
 #include <string.h>
 #include <math.h>
-#include <stdio.h>
 #include <stdlib.h>
-
-#include "printer.h"
 
 
 /* Note: cell_to_long_double() and make_cell_from_long_double() moved to types.c */
@@ -183,7 +180,6 @@ Cell* builtin_add(Lex* e, Cell* a) {
                 return make_val_err("<builtin '+'> Oops, this shouldn't have happened.");
         }
         result->exact = result->exact && rhs->exact;
-        cell_delete(rhs); /* free temp */
     }
     return result;
 }
@@ -226,7 +222,6 @@ Cell* builtin_sub(Lex* e, Cell* a) {
                 return make_val_err("<builtin '-'> Oops, this shouldn't have happened.");
         }
         result->exact = result->exact && rhs->exact;
-        cell_delete(rhs); /* free temp */
     }
     return result;
 }
@@ -265,7 +260,6 @@ Cell* builtin_mul(Lex* e, Cell* a) {
                 return make_val_err("<builtin '*'> Oops, this shouldn't have happened.");
         }
         result->exact = result->exact && rhs->exact;
-        cell_delete(rhs); /* free temp */
     }
     return result;
 }
@@ -290,48 +284,34 @@ Cell* builtin_div(Lex* e, Cell* a) {
             return make_val_real(1.0L / a->cell[0]->r_val);
         }
         if (a->cell[0]->type == VAL_COMPLEX) {
-            Cell* z = a->cell[0];
-            Cell* a_part = z->real;
-            Cell* b_part = z->imag;
+            const Cell* z = a->cell[0];
+            const Cell* a_part = z->real;
+            const Cell* b_part = z->imag;
 
             /* Calculate the denominator: a^2 + b^2 */
             Cell* a_sq_args = make_sexpr_len2(a_part, a_part);
-            Cell* a_sq = builtin_mul(e, a_sq_args);
-            cell_delete(a_sq_args);
+            const Cell* a_sq = builtin_mul(e, a_sq_args);
 
             Cell* b_sq_args = make_sexpr_len2(b_part, b_part);
-            Cell* b_sq = builtin_mul(e, b_sq_args);
-            cell_delete(b_sq_args);
+            const Cell* b_sq = builtin_mul(e, b_sq_args);
 
             Cell* denom_args = make_sexpr_len2(a_sq, b_sq);
-            Cell* denom = builtin_add(e, denom_args);
-            cell_delete(denom_args);
+            const Cell* denom = builtin_add(e, denom_args);
 
             /* Calculate the new real part: a / (a^2 + b^2) */
             Cell* new_real_args = make_sexpr_len2(a_part, denom);
             Cell* new_real = builtin_div(e, new_real_args);
-            cell_delete(new_real_args);
 
             /* Calculate the new imaginary part: -b / (a^2 + b^2) */
-            Cell* zero = make_val_int(0);
+            const Cell* zero = make_val_int(0);
             Cell* neg_b_args = make_sexpr_len2(zero, b_part);
-            Cell* neg_b = builtin_sub(e, neg_b_args);
-            cell_delete(neg_b_args);
+            const Cell* neg_b = builtin_sub(e, neg_b_args);
 
             Cell* new_imag_args = make_sexpr_len2(neg_b, denom);
             Cell* new_imag = builtin_div(e, new_imag_args);
-            cell_delete(new_imag_args);
 
             /* Create the final result */
             Cell* result = make_val_complex(new_real, new_imag);
-
-            /* Clean up all intermediate cells */
-            cell_delete(a_sq);
-            cell_delete(b_sq);
-            cell_delete(denom);
-            cell_delete(zero);
-            cell_delete(neg_b);
-
             return result;
         }
     }
@@ -345,8 +325,6 @@ Cell* builtin_div(Lex* e, Cell* a) {
         switch (result->type) {
         case VAL_INT:
             if (rhs->i_val == 0) {
-                cell_delete(rhs);
-                cell_delete(result);
                 return make_val_err("Division by zero.");
             }
             /* pretty hacky way to get (/ 9 3) -> 3 but (/ 10 3) -> 10/3 */
@@ -355,7 +333,6 @@ Cell* builtin_div(Lex* e, Cell* a) {
                 result->i_val /= rhs->i_val;
             } else {
                 Cell* new_rat = make_val_rat(result->i_val, rhs->i_val, 1);
-                cell_delete(result);
                 result = new_rat;
             }
             break;
@@ -367,8 +344,6 @@ Cell* builtin_div(Lex* e, Cell* a) {
             break;
         case VAL_REAL:
             if (rhs->r_val == 0) {
-                cell_delete(rhs);
-                cell_delete(result);
                 return make_val_err("Division by zero.");
             }
             result->r_val /= rhs->r_val;
@@ -380,7 +355,6 @@ Cell* builtin_div(Lex* e, Cell* a) {
             return make_val_err("<builtin '/'> Oops, this shouldn't have happened.");
         }
         result->exact = result->exact && rhs->exact;
-        cell_delete(rhs);
     }
     return result;
 }
@@ -390,20 +364,14 @@ Cell* builtin_div(Lex* e, Cell* a) {
  * -----------------------------*/
 
 /* Helper for '=' which recursively compares complex numbers */
-static int complex_eq_op(Lex* e, Cell* lhs, Cell* rhs) {
+static int complex_eq_op(Lex* e, const Cell* lhs, const Cell* rhs) {
     Cell* args_real = make_sexpr_len2(lhs->real, rhs->real);
     Cell* args_imag = make_sexpr_len2(lhs->imag, rhs->imag);
 
-    Cell* real_result = builtin_eq_op(e, args_real);
-    Cell* imag_result = builtin_eq_op(e, args_imag);
+    const Cell* real_result = builtin_eq_op(e, args_real);
+    const Cell* imag_result = builtin_eq_op(e, args_imag);
 
-    const int eq = (real_result->b_val && imag_result->b_val);
-
-    cell_delete(real_result);
-    cell_delete(imag_result);
-    cell_delete(args_real);
-    cell_delete(args_imag);
-
+    const int eq = real_result->b_val && imag_result->b_val;
     return eq;
 }
 
@@ -423,7 +391,7 @@ Cell* builtin_eq_op(Lex* e, Cell* a) {
                 if (lhs->i_val == rhs->i_val) { the_same = 1; }
                 break;
             case VAL_RAT:
-                if ((lhs->den == rhs->den) && (lhs->num == rhs->num)) { the_same = 1; }
+                if (lhs->den == rhs->den && lhs->num == rhs->num) { the_same = 1; }
                 break;
             case VAL_REAL:
                 if (lhs->r_val == rhs->r_val) { the_same = 1; }
@@ -433,8 +401,6 @@ Cell* builtin_eq_op(Lex* e, Cell* a) {
                 break;
             default: ; /* this will never run as the types are pre-checked, but without the linter complains */
         }
-        cell_delete(lhs);
-        cell_delete(rhs);
         if (!the_same) {
             return make_val_bool(0);
         }
@@ -467,8 +433,6 @@ Cell* builtin_gt_op(Lex* e, Cell* a) {
             }
             default: ;
         }
-        cell_delete(lhs);
-        cell_delete(rhs);
         if (!ok) {
             return make_val_bool(0);
         }
@@ -501,8 +465,6 @@ Cell* builtin_lt_op(Lex* e, Cell* a) {
             }
             default: ;
         }
-        cell_delete(lhs);
-        cell_delete(rhs);
         if (!ok) {
             return make_val_bool(0);
         }
@@ -535,8 +497,6 @@ Cell* builtin_gte_op(Lex* e, Cell* a) {
             }
             default: ;
         }
-        cell_delete(lhs);
-        cell_delete(rhs);
         if (!ok) {
             return make_val_bool(0);
         }
@@ -569,8 +529,6 @@ Cell* builtin_lte_op(Lex* e, Cell* a) {
             }
             default: ;
         }
-        cell_delete(lhs);
-        cell_delete(rhs);
         if (!ok) {
             return make_val_bool(0);
         }
@@ -659,7 +617,7 @@ Cell* builtin_define(Lex* e, Cell* a) {
     if (a->count < 2) {
         return make_val_err("define requires at least 2 arguments");
     }
-    Cell* target = a->cell[0];
+    const Cell* target = a->cell[0];
 
     /* (define <symbol> <expr>) */
     if (target->type == VAL_SYM) {
@@ -667,7 +625,7 @@ Cell* builtin_define(Lex* e, Cell* a) {
         /* Grab the name for the un-sugared define lambda */
         if (val->type == VAL_PROC) {
             if (!val->name) {
-                val->name = strdup(target->name);
+                val->name = GC_strdup(target->name);
             }
         }
         lex_put(e, target, val);
@@ -679,7 +637,7 @@ Cell* builtin_define(Lex* e, Cell* a) {
         target->cell[0]->type == VAL_SYM) {
 
         /* first element is function name */
-        Cell* fname = target->cell[0];
+        const Cell* fname = target->cell[0];
 
         /* rest are formal args */
         Cell* formals = make_val_sexpr();
@@ -698,11 +656,6 @@ Cell* builtin_define(Lex* e, Cell* a) {
 
         Cell* lam = lex_make_named_lambda(fname->sym, formals, body, e);
         lex_put(e, fname, lam);
-
-        cell_delete(formals);
-        cell_delete(body);
-        cell_delete(fname);
-
         return lam;
         }
 
@@ -713,9 +666,8 @@ Cell* builtin_if(Lex* e, Cell* a) {
     Cell* err = CHECK_ARITY_RANGE(a, 2, 3);
     if (err) return err;
 
-    Cell* test = coz_eval(e, a->cell[0]);
+    const Cell* test = coz_eval(e, a->cell[0]);
     if (test->type != VAL_BOOL) {
-        cell_delete(test);
         return make_val_err("'if' test must be a predicate");
     }
     Cell* result;
@@ -728,7 +680,6 @@ Cell* builtin_if(Lex* e, Cell* a) {
             result = coz_eval(e, a->cell[2]);
         }
     }
-    cell_delete(test);
     return result;
 }
 
@@ -736,9 +687,8 @@ Cell* builtin_when(Lex* e, Cell* a) {
     Cell* err = CHECK_ARITY_MIN(a, 2);
     if (err) return err;
 
-    Cell* test = coz_eval(e, a->cell[0]);
+    const Cell* test = coz_eval(e, a->cell[0]);
     if (test->type != VAL_BOOL) {
-        cell_delete(test);
         return make_val_err("'when' test must be a predicate");
     }
     Cell* result = NULL;
@@ -747,7 +697,6 @@ Cell* builtin_when(Lex* e, Cell* a) {
             result = coz_eval(e, a->cell[i]);
         }
     }
-    cell_delete(test);
     return result;
 }
 
@@ -755,9 +704,8 @@ Cell* builtin_unless(Lex* e, Cell* a) {
     Cell* err = CHECK_ARITY_MIN(a, 2);
     if (err) return err;
 
-    Cell* test = coz_eval(e, a->cell[0]);
+    const Cell* test = coz_eval(e, a->cell[0]);
     if (test->type != VAL_BOOL) {
-        cell_delete(test);
         return make_val_err("'unless' test must be a predicate");
     }
     Cell* result = NULL;
@@ -766,7 +714,6 @@ Cell* builtin_unless(Lex* e, Cell* a) {
             result = coz_eval(e, a->cell[i]);
         }
     }
-    cell_delete(test);
     return result;
 }
 
@@ -775,8 +722,8 @@ Cell* builtin_cond(Lex* e, Cell* a) {
     if (err) return err;
 
     Cell* result = NULL;
-    Cell* clause = NULL;
-    Cell* test = NULL;
+    const Cell* clause = NULL;
+    const Cell* test = NULL;
     for (int i = 0; i < a->count; i++) {
         clause = a->cell[i];
         test = coz_eval(e, clause->cell[0]);
@@ -795,7 +742,6 @@ Cell* builtin_cond(Lex* e, Cell* a) {
         }
 
     }
-    cell_delete(test);
     return result;
 }
 
@@ -835,8 +781,8 @@ Cell* builtin_eqv(Lex* e, Cell* a) {
     Cell* err = CHECK_ARITY_EXACT(a, 2);
     if (err) return err;
 
-    Cell* x = a->cell[0];
-    Cell* y = a->cell[1];
+    const Cell* x = a->cell[0];
+    const Cell* y = a->cell[1];
 
     if (x->type != y->type) return make_val_bool(0);
 
@@ -869,9 +815,8 @@ Cell* val_equal(Lex* e, Cell* x, Cell* y) {
         case VAL_VEC:
             if (x->count != y->count) return make_val_bool(0);
             for (int i = 0; i < x->count; i++) {
-                Cell* eq = val_equal(e, x->cell[i], y->cell[i]);
-                if (!eq->b_val) { cell_delete(eq); return make_val_bool(0); }
-                cell_delete(eq);
+                const Cell* eq = val_equal(e, x->cell[i], y->cell[i]);
+                if (!eq->b_val) { return make_val_bool(0); }
             }
             return make_val_bool(1);
 
@@ -919,8 +864,8 @@ Cell* builtin_abs(Lex* e, Cell* a) {
     /* Path 2: Handle non-real complex numbers
      * At this point, we know 'arg' is a VAL_COMPLEX.
      * Convert real and imaginary parts to long doubles. */
-    long double x = cell_to_long_double(arg->real);
-    long double y = cell_to_long_double(arg->imag);
+    const long double x = cell_to_long_double(arg->real);
+    const long double y = cell_to_long_double(arg->imag);
 
     /* Calculate the magnitude: sqrt(x² + y²) */
     const long double magnitude = sqrtl(x * x + y * y);
@@ -938,10 +883,7 @@ Cell* expt_complex_op(BuiltinFn op, Lex* e, const Cell* z1, const Cell* z2) {
      * temporary Cell* for rhs so numeric_promote can modify it. */
     Cell* rhs_copy = cell_copy(z2);
     numeric_promote(&result, &rhs_copy);
-
     complex_apply(op, e, result, rhs_copy);
-
-    cell_delete(rhs_copy);
     return result;
 }
 
@@ -960,14 +902,14 @@ Cell* builtin_expt(Lex* e, Cell* a) {
     if (cell_is_real_zero(exp)) { return make_val_int(1); }
     if (cell_is_real_zero(base)) { return make_val_int(0); }
 
-    /* Path 1: Base is a non-negative real number */
+    /* Base is a non-negative real number */
     if (cell_is_real(base) && !cell_is_negative(base)) {
         const long double b = cell_to_long_double(base);
         const long double x = cell_to_long_double(exp);
         return make_cell_from_double(powl(b, x));
     }
 
-    /* Path 2: Base is a negative real number */
+    /* Base is a negative real number */
     if (cell_is_real(base)) {
         if (cell_is_integer(exp)) {
             const long double b = cell_to_long_double(base);
@@ -984,34 +926,26 @@ Cell* builtin_expt(Lex* e, Cell* a) {
         return make_val_complex(real_part, imag_part);
     }
 
-    /* Path 3: Base is a complex number */
+    /* Base is a complex number */
     if (base->type == VAL_COMPLEX) {
         if (cell_is_integer(exp)) {
             const long long n = (long long)cell_to_long_double(exp);
             Cell* result = make_val_int(1); // Multiplicative identity
-            Cell* current_power = cell_copy(base);
+            const Cell* current_power = cell_copy(base);
 
             long long abs_n = n > 0 ? n : -n;
             while (abs_n > 0) {
                 if (abs_n & 1) { /* If exponent is odd */
-                    Cell* temp = result;
                     result = expt_complex_op(builtin_mul, e, result, current_power);
-                    cell_delete(temp);
                 }
-                Cell* temp = current_power;
                 current_power = expt_complex_op(builtin_mul, e, current_power, current_power);
-                cell_delete(temp);
                 abs_n >>= 1; /* Halve the exponent */
             }
-            cell_delete(current_power);
 
             /* Handle negative exponent: z^-n = 1 / z^n */
             if (n < 0) {
-                Cell* one = make_val_int(1);
-                Cell* temp = result;
+                const Cell* one = make_val_int(1);
                 result = expt_complex_op(builtin_div, e, one, result);
-                cell_delete(one);
-                cell_delete(temp);
             }
             return result;
         }
@@ -1028,7 +962,7 @@ Cell* builtin_modulo(Lex* e, Cell* a) {
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 2))) { return err; }
     long long r = a->cell[0]->i_val % a->cell[1]->i_val;
-    if ((r != 0) && ((a->cell[1]->i_val > 0 && r < 0) || (a->cell[1]->i_val < 0 && r > 0))) {
+    if (r != 0 && ((a->cell[1]->i_val > 0 && r < 0) || (a->cell[1]->i_val < 0 && r > 0))) {
         r += a->cell[1]->i_val;
     }
     return make_val_int(r);
@@ -1122,18 +1056,16 @@ Cell* builtin_max(Lex* e, Cell* a) {
         }
     }
 
-    Cell* largest_so_far = a->cell[0];
+    const Cell* largest_so_far = a->cell[0];
     for (int i = 1; i < a->count; i++) {
-        Cell* rhs = a->cell[i];
+        const Cell* rhs = a->cell[i];
 
         Cell* arg_list = make_sexpr_len2(largest_so_far, rhs);
-        Cell* result = builtin_lt_op(e, arg_list);
-        cell_delete(arg_list);
+        const Cell* result = builtin_lt_op(e, arg_list);
 
         if (result->b_val == 1) { /* if (largest_so_far < rhs) */
             largest_so_far = rhs;
         }
-        cell_delete(result);
     }
     return cell_copy(largest_so_far);
 }
@@ -1151,20 +1083,17 @@ Cell* builtin_min(Lex* e, Cell* a) {
         }
     }
 
-    Cell* smallest_so_far = a->cell[0];
+    const Cell* smallest_so_far = a->cell[0];
     for (int i = 1; i < a->count; i++) {
-        Cell* rhs = a->cell[i];
+        const Cell* rhs = a->cell[i];
 
         Cell* arg_list = make_sexpr_len2(smallest_so_far, rhs);
-        Cell* result = builtin_gt_op(e, arg_list); /* Using > for min */
-        cell_delete(arg_list);
+        const Cell* result = builtin_gt_op(e, arg_list); /* Using > for min */
 
         if (result->b_val == 1) { /* if (smallest_so_far > rhs) */
             smallest_so_far = rhs;
         }
-        cell_delete(result);
     }
-
     return cell_copy(smallest_so_far);
 }
 
@@ -1353,7 +1282,7 @@ Cell* builtin_rational(Lex *e, Cell* a) {
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
 
-    Cell* arg = a->cell[0];
+    const Cell* arg = a->cell[0];
     switch (arg->type) {
         case VAL_INT:
         case VAL_RAT:
@@ -1373,7 +1302,6 @@ Cell* builtin_integer(Lex *e, Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
-
     return make_val_bool(cell_is_integer(a->cell[0]));
 }
 
@@ -1383,8 +1311,8 @@ Cell* builtin_exact_integer(Lex *e, Cell* a) {
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
 
-    Cell* arg = a->cell[0];
-    // The value must be an integer AND the number must be exact.
+    const Cell* arg = a->cell[0];
+    /* The value must be an integer AND the number must be exact. */
     return make_val_bool(cell_is_integer(arg) && arg->exact);
 }
 
@@ -1406,7 +1334,7 @@ Cell* builtin_boolean(Lex* e, Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
-    int result = (a->cell[0]->type == VAL_BOOL)
+    const int result = (a->cell[0]->type == VAL_BOOL)
                  ? a->cell[0]->b_val
                  : 1; /* everything except #f is true */
     return make_val_bool(result);
@@ -1468,7 +1396,6 @@ Cell* builtin_car(Lex* e, Cell* a) {
      * It needs to be transformed into a list before taking the car */
     Cell* list = builtin_list(e, a->cell[0]);
     Cell* result = cell_copy(list->car);
-    cell_delete(list);
     return result;
 }
 
@@ -1482,9 +1409,8 @@ Cell* builtin_cdr(Lex* e, Cell* a) {
     }
     /* This is for the case where the argument list was quoted.
      * It needs to be transformed into a list before taking the cdr */
-    Cell* list = builtin_list(e, a->cell[0]);
+    const Cell* list = builtin_list(e, a->cell[0]);
     Cell* result = cell_copy(list->cdr);
-    cell_delete(list);
     return result;
 }
 
@@ -1544,52 +1470,6 @@ Cell* builtin_list_ref(Lex* e, Cell* a) {
     }
     return cell_copy(p->car);
 }
-Cell* list_deep_copy(const Cell* original) {
-    /* If it's not a list, a normal copy is sufficient. */
-    if (original->type != VAL_PAIR) {
-        return cell_copy(original);
-    }
-
-    /* Walk the list to find its length and its true tail */
-    long long list_len = 0;
-    const Cell* p = original;
-    while (p->type == VAL_PAIR) {
-        list_len++;
-        p = p->cdr;
-    }
-    /* After the loop, 'p' holds the actual tail of the list. */
-    const Cell* tail_val = p;
-
-    /* Build the new list. */
-    Cell* new_head = make_val_nil();
-    Cell* new_tail = NULL;
-    p = original; /* Reset walker to the start of the original list. */
-
-    while (p->type == VAL_PAIR) {
-        Cell* new_pair = make_val_pair(cell_copy(p->car), make_val_nil());
-
-        /* The len of the current pair is the number of pairs left to copy. */
-        new_pair->len = (int)list_len--;
-
-        /* Append the new pair to our new list. */
-        if (new_tail == NULL) {
-            new_head = new_tail = new_pair;
-        } else {
-            new_tail->cdr = new_pair;
-            new_tail = new_pair;
-        }
-        p = p->cdr;
-    }
-
-    /* Attach a copy of the original tail to the new list's tail. */
-    new_tail->cdr = cell_copy(tail_val);
-
-    /* If the list is improper, the length of the last pair should be -1. */
-    if (tail_val->type != VAL_NIL && tail_val->type != VAL_PAIR) {
-        new_tail->len = -1;
-    }
-    return new_head;
-}
 
 Cell* builtin_list_append(Lex* e, Cell* a) {
     (void)e;
@@ -1602,19 +1482,19 @@ Cell* builtin_list_append(Lex* e, Cell* a) {
         return cell_copy(a->cell[0]);
     }
 
-    /* Validate args and calculate total length of copied lists. */
+    /* Validate args and calculate total length of copied lists */
     long long total_copied_len = 0;
     for (int i = 0; i < a->count - 1; i++) {
         const Cell* current_list = a->cell[i];
         if (current_list->type == VAL_NIL) {
             continue; /* This is a proper, empty list. */
         }
-        /* All but the last argument must be a list. */
+        /* All but the last argument must be a list */
         if (current_list->type != VAL_PAIR) {
             return make_val_err("append: argument is not a list");
         }
 
-        /* Walk the list to ensure it's a *proper* list. */
+        /* Now, walk the list to ensure it's a *proper* list */
         const Cell* p = current_list;
         while (p->type == VAL_PAIR) {
             p = p->cdr;
@@ -1623,13 +1503,13 @@ Cell* builtin_list_append(Lex* e, Cell* a) {
             return make_val_err("append: middle argument is not a proper list");
         }
 
-        /* If we get here, the list is proper. Add its length.*/
+        /* If we get here, the list is proper. Add its length. */
         total_copied_len += current_list->len;
     }
 
     /* Determine the final list's properties based on the last argument */
     const Cell* last_arg = a->cell[a->count - 1];
-    long long final_total_len = -1; /* -1 to signify an improper list. */
+    long long final_total_len = -1; /* Use -1 to signify an improper list. */
 
     if (last_arg->type == VAL_NIL) {
         final_total_len = total_copied_len;
@@ -1651,7 +1531,7 @@ Cell* builtin_list_append(Lex* e, Cell* a) {
             /* Create a new pair with a copy of the element. */
             Cell* new_pair = make_val_pair(cell_copy(p->car), make_val_nil());
 
-            /* Assign the length based on pre-calculated total. */
+            /* Assign the correct length based on our pre-calculated total. */
             if (final_total_len != -1) {
                 new_pair->len = (int)len_countdown--;
             } else {
@@ -1669,13 +1549,13 @@ Cell* builtin_list_append(Lex* e, Cell* a) {
         }
     }
 
-    /* Link the last argument and return */
+    /* Finalize: Link the last argument and return */
     if (result_tail == NULL) {
         /* This happens if all arguments before the last were '(). */
-        return list_deep_copy(last_arg);
+        return cell_copy(last_arg);
     }
-    /* Splice a DEEP COPY of the last argument onto the end. */
-    result_tail->cdr = list_deep_copy(last_arg);
+    /* Splice the last argument onto the end of our newly created list. */
+    result_tail->cdr = (Cell*)last_arg;
     return result_head;
 }
 
