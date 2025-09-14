@@ -2,7 +2,7 @@
 #define COZENAGE_H
 
 #define APP_NAME "Cozenage"
-#define APP_VERSION "0.5.3"
+#define APP_VERSION "0.6.1"
 #define PS1_PROMPT "--> \x1b[37;1m"
 #define PS2_PROMPT "...    \x1b[37;1m"
 #define HIST_FILE "~/.cozenage_history"
