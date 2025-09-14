@@ -42,7 +42,7 @@ Test(end_to_end_lists, test_list_length) {
     cr_assert_str_eq(t_eval("(length (list (* 2 3) (cons 1 2) '()))"), "3");
 }
 
-Test(end_to_end_lists, test_list_and_pair_selectors) {
+Test(end_to_end_lists, test_list_ref) {
     /* Test list-ref */
     cr_assert_str_eq(t_eval("(list-ref (list 1 2 3 4) 2)"), "3");
     cr_assert_str_eq(t_eval("(list-ref '(a b c d) 0)"), "a");
@@ -77,4 +77,44 @@ Test(end_to_end_lists, test_car_cdr) {
     cr_assert_str_eq(t_eval("(cdr (car (cdr '(a (b . c) d))))"), "c");
 }
 
+Test(end_to_end_lists, test_append) {
+    /* Test append */
+    cr_assert_str_eq(t_eval("(append '(1 2 3) '(4 5 6))"), "(1 2 3 4 5 6)");
+    cr_assert_str_eq(t_eval("(append '(a b c) '(d e))"), "(a b c d e)");
+    cr_assert_str_eq(t_eval("(append '() '(1 2 3))"), "(1 2 3)");
+    cr_assert_str_eq(t_eval("(append '(1 2 3) '())"), "(1 2 3)");
+    cr_assert_str_eq(t_eval("(append '() '())"), "()");
+    cr_assert_str_eq(t_eval("(append)"), "()");
+    cr_assert_str_eq(t_eval("(append '(1 2 3))"), "(1 2 3)");
+    cr_assert_str_eq(t_eval("(append '(a) '(b c d) '(e f))"), "(a b c d e f)");
 
+    /* Per R7RS, the last argument to append can be any object */
+    cr_assert_str_eq(t_eval("(append '(1 2 3) 4)"), "(1 2 3 . 4)");
+    cr_assert_str_eq(t_eval("(append '(a b) 'c)"), "(a b . c)");
+
+    /* Nested lists */
+    cr_assert_str_eq(t_eval("(append '((1 2)) '((3 4)))"), "((1 2) (3 4))");
+}
+
+Test(end_to_end_lists, test_reverse) {
+    /* Test reverse */
+    cr_assert_str_eq(t_eval("(reverse '(1 2 3 4))"), "(4 3 2 1)");
+    cr_assert_str_eq(t_eval("(reverse '(a b c))"), "(c b a)");
+    cr_assert_str_eq(t_eval("(reverse '(a (b c) d (e (f))))"), "((e (f)) d (b c) a)");
+    cr_assert_str_eq(t_eval("(reverse '())"), "()");
+    cr_assert_str_eq(t_eval("(reverse '(1))"), "(1)");
+    cr_assert_str_eq(t_eval("(reverse (list 1 \"hello\" #t))"), "(#true \"hello\" 1)");
+    cr_assert_str_eq(t_eval("(reverse (reverse '(1 2 3)))"), "(1 2 3)");
+    cr_assert_str_eq(t_eval("(reverse (cons 1 (cons 2 '())))"), "(2 1)");
+}
+
+Test(end_to_end_lists, test_list_tail) {
+    /* Test list-tail */
+    cr_assert_str_eq(t_eval("(list-tail '(a b c d) 0)"), "(a b c d)");
+    cr_assert_str_eq(t_eval("(list-tail '(a b c d) 2)"), "(c d)");
+    cr_assert_str_eq(t_eval("(list-tail '(a b c d) 4)"), "()");
+    cr_assert_str_eq(t_eval("(list-tail '() 0)"), "()");
+    cr_assert_str_eq(t_eval("(list-tail '(1) 1)"), "()");
+    cr_assert_str_eq(t_eval("(list-tail '(a (b c) d) 1)"), "((b c) d)");
+    cr_assert_str_eq(t_eval("(list-tail '(10 20 30) (+ 1 1))"), "(30)");
+}

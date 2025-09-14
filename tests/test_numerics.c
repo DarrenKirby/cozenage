@@ -359,6 +359,256 @@ Test(end_to_end_numerics, test_div_mixed) {
     cr_assert_str_eq(t_eval("(/ 40+0i 2.0 5)"), "4.0+0.0i");
 }
 
+Test(end_to_end_numerics, test_numeric_equals) {
+    /* Test = */
+    // Basic integers
+    cr_assert_str_eq(t_eval("(= 2 2)"), "#true");
+    cr_assert_str_eq(t_eval("(= 2 3)"), "#false");
+    cr_assert_str_eq(t_eval("(= -5 -5)"), "#true");
+
+    // Mixed types
+    cr_assert_str_eq(t_eval("(= 2 2.0)"), "#true");
+    cr_assert_str_eq(t_eval("(= 2.5 5/2)"), "#true");
+    cr_assert_str_eq(t_eval("(= 10/2 5)"), "#true");
+    cr_assert_str_eq(t_eval("(= 1/2 2/4)"), "#true");
+    cr_assert_str_eq(t_eval("(= 0 0.0)"), "#true");
+
+    // Multiple arguments
+    cr_assert_str_eq(t_eval("(= 3 3 3 3)"), "#true");
+    cr_assert_str_eq(t_eval("(= 3 3 4 3)"), "#false");
+    cr_assert_str_eq(t_eval("(= 2 2.0 4/2)"), "#true");
+
+    /* Complex number tests */
+    cr_assert_str_eq(t_eval("(= 3+4i 3+4i)"), "#true");
+    cr_assert_str_eq(t_eval("(= 3+4i 3-4i)"), "#false");
+    cr_assert_str_eq(t_eval("(= 5+0i 5)"), "#true");
+    cr_assert_str_eq(t_eval("(= 2.5+1/2i 5/2+0.5i)"), "#true");
+    cr_assert_str_eq(t_eval("(= 2+3i 2+3i 2+3i)"), "#true");
+    cr_assert_str_eq(t_eval("(= 2+3i 2+3i 1+3i)"), "#false");
+
+    // Arity edge cases (R7RS says these return #true)
+    cr_assert_str_eq(t_eval("(=)"), "#true");
+    cr_assert_str_eq(t_eval("(= 10)"), "#true");
+
+    // Nested expressions
+    cr_assert_str_eq(t_eval("(= (* 2 3) 6)"), "#true");
+    cr_assert_str_eq(t_eval("(= (+ 1 1) (- 4 2))"), "#true");
+}
+
+Test(end_to_end_numerics, test_numeric_greater_than) {
+    /* Test > */
+    // Basic integers
+    cr_assert_str_eq(t_eval("(> 3 2)"), "#true");
+    cr_assert_str_eq(t_eval("(> 2 3)"), "#false");
+    cr_assert_str_eq(t_eval("(> 2 2)"), "#false");
+    cr_assert_str_eq(t_eval("(> -1 -2)"), "#true");
+
+    // Mixed types
+    cr_assert_str_eq(t_eval("(> 3 2.5)"), "#true");
+    cr_assert_str_eq(t_eval("(> 1 1/2)"), "#true");
+    cr_assert_str_eq(t_eval("(> 1/2 0.4)"), "#true");
+
+    // Multiple arguments (must be monotonically decreasing)
+    cr_assert_str_eq(t_eval("(> 5 4 3 2)"), "#true");
+    cr_assert_str_eq(t_eval("(> 5 4 4 2)"), "#false");
+    cr_assert_str_eq(t_eval("(> 5 3 4 2)"), "#false");
+    cr_assert_str_eq(t_eval("(> 4 3.0 5/2 1)"), "#true");
+
+    // Arity edge cases
+    cr_assert_str_eq(t_eval("(>)"), "#true");
+    cr_assert_str_eq(t_eval("(> 10)"), "#true");
+
+    // Nested expressions
+    cr_assert_str_eq(t_eval("(> (* 2 3) 5)"), "#true");
+}
+
+Test(end_to_end_numerics, test_numeric_less_than) {
+    /* Test < */
+    // Basic integers
+    cr_assert_str_eq(t_eval("(< 2 3)"), "#true");
+    cr_assert_str_eq(t_eval("(< 3 2)"), "#false");
+    cr_assert_str_eq(t_eval("(< 2 2)"), "#false");
+    cr_assert_str_eq(t_eval("(< -2 -1)"), "#true");
+
+    // Mixed types
+    cr_assert_str_eq(t_eval("(< 2.5 3)"), "#true");
+    cr_assert_str_eq(t_eval("(< 1/2 1)"), "#true");
+    cr_assert_str_eq(t_eval("(< 0.4 1/2)"), "#true");
+
+    // Multiple arguments (must be monotonically increasing)
+    cr_assert_str_eq(t_eval("(< 2 3 4 5)"), "#true");
+    cr_assert_str_eq(t_eval("(< 2 3 3 5)"), "#false");
+    cr_assert_str_eq(t_eval("(< 2 4 3 5)"), "#false");
+    cr_assert_str_eq(t_eval("(< 1 3/2 2.0 3)"), "#true");
+
+    // Arity edge cases
+    cr_assert_str_eq(t_eval("(<)"), "#true");
+    cr_assert_str_eq(t_eval("(< 10)"), "#true");
+
+    // Nested expressions
+    cr_assert_str_eq(t_eval("(< (* 2 3) 7)"), "#true");
+}
+
+Test(end_to_end_numerics, test_numeric_greater_than_equal) {
+    /* Test >= */
+    // Basic integers
+    cr_assert_str_eq(t_eval("(>= 3 2)"), "#true");
+    cr_assert_str_eq(t_eval("(>= 2 3)"), "#false");
+    cr_assert_str_eq(t_eval("(>= 2 2)"), "#true");
+    cr_assert_str_eq(t_eval("(>= -1 -2)"), "#true");
+
+    // Mixed types
+    cr_assert_str_eq(t_eval("(>= 3 2.5)"), "#true");
+    cr_assert_str_eq(t_eval("(>= 1 1/2)"), "#true");
+    cr_assert_str_eq(t_eval("(>= 1/2 0.5)"), "#true");
+    cr_assert_str_eq(t_eval("(>= 4/2 2)"), "#true");
+
+    // Multiple arguments (must be monotonically non-increasing)
+    cr_assert_str_eq(t_eval("(>= 5 4 3 2)"), "#true");
+    cr_assert_str_eq(t_eval("(>= 5 4 4 2)"), "#true");
+    cr_assert_str_eq(t_eval("(>= 5 3 4 2)"), "#false");
+    cr_assert_str_eq(t_eval("(>= 4 3.0 3 5/2 1)"), "#true");
+
+    // Arity edge cases
+    cr_assert_str_eq(t_eval("(>=)"), "#true");
+    cr_assert_str_eq(t_eval("(>= 10)"), "#true");
+
+    // Nested expressions
+    cr_assert_str_eq(t_eval("(>= (* 2 3) 6)"), "#true");
+}
+
+Test(end_to_end_numerics, test_numeric_less_than_equal) {
+    /* Test <= */
+    // Basic integers
+    cr_assert_str_eq(t_eval("(<= 2 3)"), "#true");
+    cr_assert_str_eq(t_eval("(<= 3 2)"), "#false");
+    cr_assert_str_eq(t_eval("(<= 2 2)"), "#true");
+    cr_assert_str_eq(t_eval("(<= -2 -1)"), "#true");
+
+    // Mixed types
+    cr_assert_str_eq(t_eval("(<= 2.5 3)"), "#true");
+    cr_assert_str_eq(t_eval("(<= 1/2 1)"), "#true");
+    cr_assert_str_eq(t_eval("(<= 0.5 1/2)"), "#true");
+    cr_assert_str_eq(t_eval("(<= 2 4/2)"), "#true");
+
+    // Multiple arguments (must be monotonically non-decreasing)
+    cr_assert_str_eq(t_eval("(<= 2 3 4 5)"), "#true");
+    cr_assert_str_eq(t_eval("(<= 2 3 3 5)"), "#true");
+    cr_assert_str_eq(t_eval("(<= 2 4 3 5)"), "#false");
+    cr_assert_str_eq(t_eval("(<= 1 3/2 1.5 2 3)"), "#true");
+
+    // Arity edge cases
+    cr_assert_str_eq(t_eval("(<=)"), "#true");
+    cr_assert_str_eq(t_eval("(<= 10)"), "#true");
+
+    // Nested expressions
+    cr_assert_str_eq(t_eval("(<= (* 2 3) 6)"), "#true");
+}
+
+Test(end_to_end_numerics, test_zero_predicate) {
+    /* Test zero? */
+    cr_assert_str_eq(t_eval("(zero? 0)"), "#true");
+    cr_assert_str_eq(t_eval("(zero? 1)"), "#false");
+    cr_assert_str_eq(t_eval("(zero? -1)"), "#false");
+
+    // Real numbers
+    cr_assert_str_eq(t_eval("(zero? 0.0)"), "#true");
+    cr_assert_str_eq(t_eval("(zero? -0.0)"), "#true");
+    cr_assert_str_eq(t_eval("(zero? 1.5)"), "#false");
+    cr_assert_str_eq(t_eval("(zero? 0/10)"), "#true");
+
+    // Complex numbers
+    cr_assert_str_eq(t_eval("(zero? 0+0i)"), "#true");
+    cr_assert_str_eq(t_eval("(zero? 0-0i)"), "#true");
+    cr_assert_str_eq(t_eval("(zero? 1+0i)"), "#false");
+    cr_assert_str_eq(t_eval("(zero? 0+1i)"), "#false");
+
+    // Nested expressions
+    cr_assert_str_eq(t_eval("(zero? (- 5 5))"), "#true");
+    cr_assert_str_eq(t_eval("(zero? (* 0 100))"), "#true");
+}
+
+Test(end_to_end_numerics, test_negative_predicate) {
+    /* Test negative? */
+    cr_assert_str_eq(t_eval("(negative? -1)"), "#true");
+    cr_assert_str_eq(t_eval("(negative? 0)"), "#false");
+    cr_assert_str_eq(t_eval("(negative? 1)"), "#false");
+
+    // Real numbers (R7RS specifies this is for reals only)
+    cr_assert_str_eq(t_eval("(negative? -0.5)"), "#true");
+    cr_assert_str_eq(t_eval("(negative? -1/100)"), "#true");
+    cr_assert_str_eq(t_eval("(negative? 0.0)"), "#false");
+    cr_assert_str_eq(t_eval("(negative? 1e-10)"), "#false");
+
+    // Nested expressions
+    cr_assert_str_eq(t_eval("(negative? (- 1 10))"), "#true");
+    cr_assert_str_eq(t_eval("(negative? (+ -1 -2))"), "#true");
+}
+
+Test(end_to_end_numerics, test_positive_predicate) {
+    /* Test positive? */
+    cr_assert_str_eq(t_eval("(positive? 1)"), "#true");
+    cr_assert_str_eq(t_eval("(positive? 0)"), "#false");
+    cr_assert_str_eq(t_eval("(positive? -1)"), "#false");
+
+    // Real numbers (R7RS specifies this is for reals only)
+    cr_assert_str_eq(t_eval("(positive? 0.5)"), "#true");
+    cr_assert_str_eq(t_eval("(positive? 1/100)"), "#true");
+    cr_assert_str_eq(t_eval("(positive? 0.0)"), "#false");
+    cr_assert_str_eq(t_eval("(positive? -1e-10)"), "#false");
+
+    // Nested expressions
+    cr_assert_str_eq(t_eval("(positive? (- 10 1))"), "#true");
+    cr_assert_str_eq(t_eval("(positive? (+ 1 2))"), "#true");
+}
+
+Test(end_to_end_numerics, test_even_predicate) {
+    /* Test even? */
+    // R7RS specifies this procedure is for integers only.
+    cr_assert_str_eq(t_eval("(even? 2)"), "#true");
+    cr_assert_str_eq(t_eval("(even? 0)"), "#true");
+    cr_assert_str_eq(t_eval("(even? -10)"), "#true");
+    cr_assert_str_eq(t_eval("(even? 3)"), "#false");
+    cr_assert_str_eq(t_eval("(even? -7)"), "#false");
+
+    // Nested expressions
+    cr_assert_str_eq(t_eval("(even? (* 2 4))"), "#true");
+    cr_assert_str_eq(t_eval("(even? (+ 5 5))"), "#true");
+    cr_assert_str_eq(t_eval("(even? (+ 2 3))"), "#false");
+
+    // Not integer literals, but (integer? n) => #t
+    cr_assert_str_eq(t_eval("(even? 2.0)"), "#true");
+    cr_assert_str_eq(t_eval("(even? 2/1)"), "#true");
+    cr_assert_str_eq(t_eval("(even? 2+0i)"), "#true");
+    cr_assert_str_eq(t_eval("(even? 3.0)"), "#false");
+    cr_assert_str_eq(t_eval("(even? 2+2i)"), "#false");
+}
+
+Test(end_to_end_numerics, test_odd_predicate) {
+    /* Test odd? */
+    // R7RS specifies this procedure is for integers only.
+    cr_assert_str_eq(t_eval("(odd? 3)"), "#true");
+    cr_assert_str_eq(t_eval("(odd? -7)"), "#true");
+    cr_assert_str_eq(t_eval("(odd? 1)"), "#true");
+    cr_assert_str_eq(t_eval("(odd? 2)"), "#false");
+    cr_assert_str_eq(t_eval("(odd? 0)"), "#false");
+    cr_assert_str_eq(t_eval("(odd? -10)"), "#false");
+
+    // Nested expressions
+    cr_assert_str_eq(t_eval("(odd? (* 3 3))"), "#true");
+    cr_assert_str_eq(t_eval("(odd? (+ 4 5))"), "#true");
+    cr_assert_str_eq(t_eval("(odd? (+ 2 4))"), "#false");
+
+    // Not integer literals, but (integer? n) => #t
+    cr_assert_str_eq(t_eval("(odd? 3.0)"), "#true");
+    cr_assert_str_eq(t_eval("(odd? 7/1)"), "#true");
+    cr_assert_str_eq(t_eval("(odd? 1+0i)"), "#true");
+    cr_assert_str_eq(t_eval("(odd? 2.0)"), "#false");
+    cr_assert_str_eq(t_eval("(odd? 2+0i)"), "#false");
+    cr_assert_str_eq(t_eval("(odd? -10+0i)"), "#false");
+}
+
+
 //
 // Test(end_to_end_numerics), test_add_complex) {
 //     /* Test integer addition. */
