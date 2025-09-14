@@ -11,6 +11,7 @@
 #include "file_lib.h"
 #include "process_context_lib.h"
 #include "inexact_lib.h"
+#include "complex_lib.h"
 #include <gc.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -185,6 +186,9 @@ void repl() {
     }
     if (load_libs.inexact) {
         lex_add_inexact_lib(e);
+    }
+    if (load_libs.complex) {
+        lex_add_complex_lib(e);
     }
 
     for (;;) {
