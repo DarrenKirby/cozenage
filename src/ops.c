@@ -6,6 +6,7 @@
 #include "eval.h"
 #include <string.h>
 #include <math.h>
+#include <stdio.h>
 #include <stdlib.h>
 
 
@@ -1437,10 +1438,33 @@ Cell* builtin_list_length(Lex* e, Cell* a) {
     err = check_arg_types(a, VAL_PAIR|VAL_NIL);
     if (err) { return err; }
 
-    if (a->cell[0]->type == VAL_NIL) {
+    const Cell* list = a->cell[0];
+
+    if (list->type == VAL_NIL) {
         return make_val_int(0);
     }
-    return make_val_int(a->cell[0]->len);
+
+    /* If len is not -1, we can trust the cached value. */
+    if (list->len != -1) {
+        return make_val_int(list->len);
+    }
+
+    /* If len is -1, this could be an improper list or a proper list
+     * built with `cons`. We need to traverse it to find out. */
+    int count = 0;
+    const Cell* p = list;
+    while (p->type == VAL_PAIR) {
+        count++;
+        p = p->cdr;
+    }
+    /* The R7RS standard for `length` requires a proper list.
+     * If the list doesn't end in `nil`, it's an error. */
+    if (p->type != VAL_NIL) {
+        return make_val_err("length: proper list required");
+    }
+
+    /* It's a proper list. */
+    return make_val_int(count);
 }
 
 /* 'list-ref' -> ANY - returns the list member at the zero-indexed
@@ -1459,7 +1483,7 @@ Cell* builtin_list_ref(Lex* e, Cell* a) {
     int i = (int)a->cell[1]->i_val;
     const int len = a->cell[0]->len;
 
-    if (i >= len) {
+    if (i >= len && len != -1) {
         return make_val_err("list-ref: arg 2 out of range");
     }
 
@@ -1593,22 +1617,34 @@ Cell* builtin_list_tail(Lex* e, Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2);
     if (err) return err;
-    if (a->cell[0]->type != VAL_PAIR) {
+    //printf("type: %d\n", a->cell[0]->type);
+    if (a->cell[0]->type != VAL_PAIR &&
+        a->cell[0]->type != VAL_SEXPR &&
+        a->cell[0]->type != VAL_NIL) {
         return make_val_err("list-tail: arg 1 must be a list");
     }
     if (a->cell[1]->type != VAL_INT) {
         return make_val_err("list-tail: arg 2 must be an integer");
     }
-    int i = (int)a->cell[1]->i_val;
-    if (a->cell[0]->len <= i) {
-        return  make_val_err("list-tail: arg 2 out of range");
+
+    Cell* lst = a->cell[0];
+    const long k = a->cell[1]->i_val;
+
+    if (k < 0) {
+        return make_val_err("list-tail: arg 2 must be non-negative");
     }
-    const Cell* p = a->cell[0];
-    while (i > 1) {
+
+    Cell* p = lst;
+    for (long i = 0; i < k; i++) {
+        if (p->type != VAL_PAIR) {
+            return make_val_err("list-tail: arg 2 out of range");
+        }
+        /* Move to the next element in the list */
         p = p->cdr;
-        i--;
     }
-    return cell_copy(p->cdr);
+
+    /* After the loop, p is pointing at the k-th cdr of the original list. */
+    return p;
 }
 
 /*-------------------------------------------------------*
