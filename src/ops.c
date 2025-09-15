@@ -4,10 +4,13 @@
 #include "types.h"
 #include "environment.h"
 #include "eval.h"
+#include "load_library.h"
 #include <string.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <gc/gc.h>
+#include "printer.h"
 
 
 /* Note: cell_to_long_double() and make_cell_from_long_double() moved to types.c */
@@ -751,6 +754,31 @@ Cell* builtin_else(Lex* e, Cell* a) {
     (void)e;
     (void)a;
     return make_val_bool(1);
+}
+
+Cell* builtin_import(Lex* e, Cell* a) {
+    Cell* err = CHECK_ARITY_MIN(a, 1);
+    if (err) return err;
+    err = check_arg_types(a, VAL_PAIR);
+    if (err) return err;
+
+    Cell* result = NULL;
+    for (int i = 0; i < a->count; i++) {
+        const char* library_type = a->cell[i]->car->str;
+        const char* library_name = a->cell[i]->cdr->str;
+
+        if (strcmp(library_type, "scheme") == 0) {
+            /* Load the Library */
+            result = load_scheme_library(library_name, e);
+        } else if (strcmp(library_type, "cozenage") == 0){
+            result = load_scheme_library(library_name, e);
+        } else {
+            /* TODO: Handle User Libraries Here
+             * For example, (import (my-libs utils)). */
+            return make_val_err("import: user-defined libraries not yet supported");
+        }
+    }
+    return result;
 }
 
 /* ------------------------------------------*

@@ -7,11 +7,7 @@
 #include "types.h"
 #include "environment.h"
 #include "eval.h"
-#include "coz_ext_lib.h"
-#include "file_lib.h"
-#include "process_context_lib.h"
-#include "inexact_lib.h"
-#include "complex_lib.h"
+#include "load_library.h"
 #include <gc.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -176,19 +172,19 @@ void repl() {
 
     /* Load additional library procedures as specified by -l args */
     if (load_libs.coz_ext) {
-        lex_add_coz_ext(e);
+        (void)load_scheme_library("coz-ext", e);
     }
     if (load_libs.file) {
-        lex_add_file_lib(e);
+        (void)load_scheme_library("file", e);
     }
     if (load_libs.process_context) {
-        lex_add_proc_con_lib(e);
+        (void)load_scheme_library("process_context", e);
     }
     if (load_libs.inexact) {
-        lex_add_inexact_lib(e);
+        (void)load_scheme_library("inexact", e);
     }
     if (load_libs.complex) {
-        lex_add_complex_lib(e);
+        (void)load_scheme_library("complex", e);
     }
 
     for (;;) {

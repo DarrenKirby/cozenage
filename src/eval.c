@@ -199,6 +199,25 @@ Cell* eval_sexpr(Lex* e, Cell* v) {
         return builtin_cond(e, v);
     }
 
+    /* special form - import */
+    if (first->type == VAL_SYM && strcmp(first->sym, "import") == 0) {
+
+        Cell* import_set = make_val_sexpr();
+        import_set->cell = GC_MALLOC(sizeof(Cell*) * v->count);
+        /* 'v' is a sexpr of sexpr's. Make a new sexpr which contains
+         * pairs of (library . name), and pass to builtin_import */
+        int i;
+        for (i = 0; i < v->count; i++) {
+            const char* lib = GC_strdup(v->cell[i]->cell[0]->sym);
+            const char* name = GC_strdup(v->cell[i]->cell[1]->sym);
+            import_set->cell[i] = make_val_pair(make_val_str(lib),
+                         make_val_str(name));
+        }
+        import_set->count = i;
+
+        return builtin_import(e, import_set);
+    }
+
     /* Otherwise, evaluate first element normally (should become a function) */
     Cell* f = coz_eval(e, first);
     if (f->type != VAL_PROC) {

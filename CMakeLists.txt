@@ -64,7 +64,9 @@ add_executable(cozenage src/main.c
         src/process_context_lib.c
         src/process_context_lib.h
         src/inexact_lib.c
-        src/inexact_lib.h)
+        src/inexact_lib.h
+        src/load_library.c
+        src/load_library.h)
 
 # Find math library
 find_library(M_LIB m)

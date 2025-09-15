@@ -31,23 +31,6 @@ Lex* lex_new_child(Lex* parent) {
     return e;
 }
 
-/* Delete the environment upon program exit */
-// void lex_delete(Lex* e) {
-//     if (!e) return;
-//     for (int i = 0; i < e->count; i++) {
-//         /* Free symbols properly */
-//         if (e->syms[i]) {
-//             free(e->syms[i]);
-//         }
-//         /* Free values */
-//         if (e->vals[i]) {
-//         }
-//     }
-//     free(e->syms);
-//     free(e->vals);
-//     free(e);
-// }
-
 Cell* lex_get(const Lex* e, const Cell* k) {
     if (!e || !k || k->type != VAL_SYM) return NULL;
 
@@ -160,6 +143,7 @@ void lex_add_builtins(Lex* e) {
     lex_add_builtin(e, "unless", builtin_unless);
     lex_add_builtin(e, "cond", builtin_cond);
     lex_add_builtin(e, "else", builtin_else);
+    lex_add_builtin(e, "import", builtin_import);
     /* Equality and equivalence comparators */
     lex_add_builtin(e, "eq?", builtin_eq);
     lex_add_builtin(e, "eqv?", builtin_eqv);
