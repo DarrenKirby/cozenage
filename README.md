@@ -113,6 +113,9 @@ Then run `./cozenage` to enter the funhouse.
 - `vector`
 - `vector-length`
 - `vector-ref`
+- `make-vector`
+- `list->vector`
+- `vector->list`
 
 ## Complex Library (scheme complex)
 

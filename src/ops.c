@@ -1839,6 +1839,93 @@ Cell* builtin_vector_ref(Lex* e, Cell* a) {
     return cell_copy(a->cell[0]->cell[i]);
 }
 
+Cell* builtin_make_vector(Lex* e, Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_RANGE(a, 1, 2);
+    if (err) return err;
+    if (a->cell[0]->type != VAL_INT) {
+        return make_val_err("make-vector: arg 1 must be an integer");
+    }
+    long long n = a->cell[0]->i_val;
+    if (n < 1) {
+        return make_val_err("make-vector: arg 1 must be non-negative");
+    }
+    Cell* fill = NULL;
+    if (a->count == 2) {
+        fill = a->cell[1];
+    } else {
+        fill = make_val_int(0);
+    }
+    Cell *vec = make_val_vect();
+    for (int i = 0; i < n; i++) {
+        cell_add(vec, cell_copy(fill));
+    }
+    return vec;
+}
+
+Cell* builtin_list_to_vector(Lex* e, Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    if (err) return err;
+    if (a->cell[0]->type != VAL_PAIR) {
+        return make_val_err("list->vector: arg 1 must be a list");
+    }
+    int list_len = a->cell[0]->len;
+    if (list_len == -1) {
+        return make_val_err("list->vector: arg 1 must be a proper list");
+    }
+    Cell* lst = a->cell[0];
+    Cell *vec = make_val_vect();
+    for (int i = 0; i < list_len; i++) {
+        cell_add(vec, cell_copy(lst->car));
+        lst = lst->cdr;
+    }
+    return vec;
+}
+
+Cell* builtin_vector_to_list(Lex* e, Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_RANGE(a, 1, 3);
+    if (err) return err;
+    if (a->cell[0]->type != VAL_VEC) {
+        return make_val_err("vector->list: arg 1 must be a vector");
+    }
+    int start = 0;
+    int end = a->cell[0]->count;
+
+    if (a->count == 2) {
+        if (a->cell[1]->type != VAL_INT) {
+            return make_val_err("vector->list: arg 2 must be an integer");
+        }
+        start = (int)a->cell[1]->i_val;
+        if (start < 0) {
+            return make_val_err("vector->list: arg 2 must be non-negative");
+        }
+    }
+
+    if (a->count == 3) {
+        if (a->cell[2]->type != VAL_INT) {
+            return make_val_err("vector->list: arg 2 must be an integer");
+        }
+        start = (int)a->cell[1]->i_val;
+        end = (int)a->cell[2]->i_val + 1;
+        if (end < 0) {
+            return make_val_err("vector->list: arg 2 must be non-negative");
+        }
+        if (end > a->cell[0]->count) {
+            return make_val_err("vector->list: index out of bounds");
+        }
+    }
+
+    Cell* result = make_val_nil();
+    Cell* vec = a->cell[0];
+    for (int i = end - 1; i >= start; i--) {
+        result = make_val_pair(cell_copy(vec->cell[i]), result);
+        result->len = end - i;
+    }
+    return result;
+}
+
 /*------------------------------------------------------------*
  *     Byte vector constructors, selectors, and procedures    *
  * -----------------------------------------------------------*/
