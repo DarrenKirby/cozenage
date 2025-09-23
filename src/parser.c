@@ -278,6 +278,16 @@ Cell *parse_tokens(Parser *p) {
             return make_val_err("Unmatched '(' in bytevector literal");
         }
         advance(p); /* skip ')' */
+
+        /* ensure members in range */
+        for (int i = 0; i < bv->count; i++) {
+            if (bv->cell[i]->type != VAL_INT) {
+                return make_val_err("bytevector members must be integers");
+            }
+            if (bv->cell[i]->i_val < 0 || bv->cell[i]->i_val > 255) {
+                return make_val_err("bytevector members must be between 0 and 255 (inclusive)");
+            }
+        }
         return bv;
     }
 
