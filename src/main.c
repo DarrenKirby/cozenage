@@ -184,6 +184,9 @@ void repl() {
     if (load_libs.complex) {
         (void)load_scheme_library("complex", e);
     }
+    if (load_libs.char_lib) {
+        (void)load_scheme_library("char", e);
+    }
 
     for (;;) {
         Cell *val = coz_read(e);

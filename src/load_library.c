@@ -19,6 +19,7 @@ static const LibraryRegistryEntry library_registry[] = {
     {"file", lex_add_file_lib},
     {"inexact", lex_add_inexact_lib},
     {"process-context", lex_add_proc_con_lib},
+    {"char", lex_add_char_lib},
     {NULL, NULL}
 };
 
