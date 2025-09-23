@@ -158,6 +158,18 @@ void lex_add_builtins(Lex* e) {
     lex_add_builtin(e, "gcd", builtin_gcd);
     lex_add_builtin(e, "max", builtin_max);
     lex_add_builtin(e, "min", builtin_min);
+    lex_add_builtin(e, "floor", builtin_floor);
+    lex_add_builtin(e, "ceiling", builtin_ceiling);
+    lex_add_builtin(e, "round", builtin_round);
+    lex_add_builtin(e, "truncate", builtin_truncate);
+    lex_add_builtin(e, "numerator", builtin_numerator);
+    lex_add_builtin(e, "denominator", builtin_denominator);
+    lex_add_builtin(e, "truncate-quotient", builtin_quotient);
+    lex_add_builtin(e, "truncate-remainder", builtin_remainder);
+    lex_add_builtin(e, "floor-remainder", builtin_modulo);
+    lex_add_builtin(e, "square", builtin_square);
+    lex_add_builtin(e, "exact", builtin_exact);
+    lex_add_builtin(e, "inexact", builtin_inexact);
     /* Type identity predicate procedures */
     lex_add_builtin(e, "number?", builtin_number_pred);
     lex_add_builtin(e, "boolean?", builtin_boolean_pred);
@@ -171,9 +183,9 @@ void lex_add_builtins(Lex* e) {
     lex_add_builtin(e, "bytevector?", builtin_byte_vector_pred);
     lex_add_builtin(e, "port?", builtin_port_pred);
     lex_add_builtin(e, "eof-object?", builtin_eof_pred);
-    /* Numeric identity procedures */
-    lex_add_builtin(e, "exact?", builtin_exact);
-    lex_add_builtin(e, "inexact?", builtin_inexact);
+    /* Numeric identity predicate procedures */
+    lex_add_builtin(e, "exact?", builtin_exact_pred);
+    lex_add_builtin(e, "inexact?", builtin_inexact_pred);
     lex_add_builtin(e, "complex?", builtin_complex);
     lex_add_builtin(e, "real?", builtin_real);
     lex_add_builtin(e, "rational?", builtin_rational);

@@ -29,13 +29,11 @@ void read_history_from_file() {
         fclose(f);
     }
     read_history(hf);
-    /* free(hf)? */
 }
 
 void save_history_to_file() {
     const char *hf = tilde_expand(HIST_FILE);
     write_history(hf);
-    /* free(hf)? */
 }
 
 struct lib_load {

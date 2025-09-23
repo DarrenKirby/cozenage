@@ -1126,6 +1126,126 @@ Cell* builtin_min(Lex* e, Cell* a) {
     return cell_copy(smallest_so_far);
 }
 
+Cell* builtin_floor(Lex* e, Cell* a) {
+    (void)e;
+    Cell* err = check_arg_types(a, VAL_INT|VAL_RAT|VAL_REAL);
+    if (err) { return err; }
+    if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
+
+    long double val = cell_to_long_double(a->cell[0]);
+    val = floorl(val);
+    printf("val: %Lg\n", val);
+
+    return make_cell_from_double(val);
+}
+
+Cell* builtin_ceiling(Lex* e, Cell* a) {
+    (void)e;
+    Cell* err = check_arg_types(a, VAL_INT|VAL_RAT|VAL_REAL);
+    if (err) { return err; }
+    if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
+
+    long double val = cell_to_long_double(a->cell[0]);
+    val = ceill(val);
+
+    return make_cell_from_double(val);
+}
+
+Cell* builtin_round(Lex* e, Cell* a) {
+    (void)e;
+    Cell* err = check_arg_types(a, VAL_INT|VAL_RAT|VAL_REAL);
+    if (err) { return err; }
+    if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
+
+    long double val = cell_to_long_double(a->cell[0]);
+    val = roundl(val);
+
+    return make_cell_from_double(val);
+}
+
+Cell* builtin_truncate(Lex* e, Cell* a) {
+    (void)e;
+    Cell* err = check_arg_types(a, VAL_INT|VAL_RAT|VAL_REAL);
+    if (err) { return err; }
+    if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
+
+    long double val = cell_to_long_double(a->cell[0]);
+    val = truncl(val);
+
+    return make_cell_from_double(val);
+}
+
+Cell* builtin_numerator(Lex* e, Cell* a) {
+    (void)e;
+    Cell* err = check_arg_types(a, VAL_INT|VAL_RAT);
+    if (err) { return err; }
+    if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
+
+    /* return ints unchanged */
+    if (a->cell[0]->type == VAL_INT) {
+        return a->cell[0];
+    }
+    return make_val_int(a->cell[0]->num);
+}
+
+Cell* builtin_denominator(Lex* e, Cell* a) {
+    (void)e;
+    Cell* err = check_arg_types(a, VAL_INT|VAL_RAT);
+    if (err) { return err; }
+    if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
+
+    /* denominator of int always 1 */
+    if (a->cell[0]->type == VAL_INT) {
+        return make_val_int(1);
+    }
+    return make_val_int(a->cell[0]->den);
+}
+
+Cell* builtin_square(Lex* e, Cell* a) {
+    (void)e;
+    Cell* err = check_arg_types(a, VAL_INT|VAL_RAT|VAL_REAL|VAL_COMPLEX);
+    if (err) { return err; }
+    if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
+
+    Cell* args = make_sexpr_len2(a->cell[0], a->cell[0]);
+    return builtin_mul(e, args);
+}
+
+Cell* builtin_exact(Lex* e, Cell* a) {
+    (void)e;
+    Cell* err = check_arg_types(a, VAL_INT|VAL_RAT|VAL_REAL|VAL_COMPLEX);
+    if (err) { return err; }
+    if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
+
+    /* Just return if it's already exact */
+    if (a->cell[0]->exact) {
+        return a->cell[0];
+    }
+    if (a->cell[0]->type == VAL_COMPLEX) {
+        a->cell[0]->real->exact = 1;
+        a->cell[0]->imag->exact = 1;
+    }
+    a->cell[0]->exact = 1;
+    return a->cell[0];
+}
+
+Cell* builtin_inexact(Lex* e, Cell* a) {
+    (void)e;
+    Cell* err = check_arg_types(a, VAL_INT|VAL_RAT|VAL_REAL|VAL_COMPLEX);
+    if (err) { return err; }
+    if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
+
+    /* Just return if it's already inexact */
+    if (a->cell[0]->exact == 0) {
+        return a->cell[0];
+    }
+    if (a->cell[0]->type == VAL_COMPLEX) {
+        a->cell[0]->real->exact = 0;
+        a->cell[0]->imag->exact = 0;
+    }
+    a->cell[0]->exact = 0;
+    return a->cell[0];
+}
 /* -------------------------------------------------*
  *       Type identity predicate procedures         *
  * -------------------------------------------------*/
@@ -1237,7 +1357,7 @@ Cell* builtin_eof_pred(Lex* e, Cell* a) {
  * ---------------------------------------*/
 
 /* 'exact?' -> VAL_BOOL -  */
-Cell* builtin_exact(Lex *e, Cell* a) {
+Cell* builtin_exact_pred(Lex *e, Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, VAL_INT|VAL_REAL|VAL_RAT|VAL_COMPLEX);
     if (err) { return err; }
@@ -1253,7 +1373,7 @@ Cell* builtin_exact(Lex *e, Cell* a) {
 }
 
 /* 'inexact?' -> VAL_BOOL -  */
-Cell* builtin_inexact(Lex *e, Cell* a) {
+Cell* builtin_inexact_pred(Lex *e, Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, VAL_INT|VAL_REAL|VAL_RAT|VAL_COMPLEX);
     if (err) { return err; }

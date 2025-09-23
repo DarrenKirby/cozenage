@@ -43,6 +43,15 @@ Cell* builtin_lcm(Lex* e, Cell* a);
 Cell* builtin_gcd(Lex* e, Cell* a);
 Cell* builtin_max(Lex* e, Cell* a);
 Cell* builtin_min(Lex* e, Cell* a);
+Cell* builtin_floor(Lex* e, Cell* a);
+Cell* builtin_ceiling(Lex* e, Cell* a);
+Cell* builtin_round(Lex* e, Cell* a);
+Cell* builtin_truncate(Lex* e, Cell* a);
+Cell* builtin_numerator(Lex* e, Cell* a);
+Cell* builtin_denominator(Lex* e, Cell* a);
+Cell* builtin_square(Lex* e, Cell* a);
+Cell* builtin_exact(Lex* e, Cell* a);
+Cell* builtin_inexact(Lex* e, Cell* a);
 /* Type identity predicate procedures */
 Cell* builtin_number_pred(Lex* e, Cell* a);
 Cell* builtin_boolean_pred(Lex* e, Cell* a);
@@ -57,8 +66,8 @@ Cell* builtin_byte_vector_pred(Lex* e, Cell* a);
 Cell* builtin_port_pred(Lex* e, Cell* a);
 Cell* builtin_eof_pred(Lex* e, Cell* a);
 /* Numeric identity procedures */
-Cell* builtin_exact(Lex *e, Cell* a);
-Cell* builtin_inexact(Lex *e, Cell* a);
+Cell* builtin_exact_pred(Lex *e, Cell* a);
+Cell* builtin_inexact_pred(Lex *e, Cell* a);
 Cell* builtin_complex(Lex *e, Cell* a);
 Cell* builtin_real(Lex *e, Cell* a);
 Cell* builtin_rational(Lex *e, Cell* a);
