@@ -9,7 +9,7 @@ To delete objects and binaries run `make clean`
 
 Then run `./cozenage` to enter the funhouse.
 
-## Status of Builtin Procedures
+## Builtin Procedures (scheme base)
 
 ### Basic arithmetic operators
 - `+`
@@ -39,6 +39,7 @@ Then run `./cozenage` to enter the funhouse.
 - `unless`
 - `cond`
 - `else`
+- `import`
 
 ### Equality and equivalence comparators
 - `eq?`
@@ -48,15 +49,25 @@ Then run `./cozenage` to enter the funhouse.
 ### Generic numeric operations
 - `abs`
 - `expt`
-- `^`
 - `remainder`
 - `modulo`
-- `%`
 - `quotient`
 - `lcm`
 - `gcd`
 - `max`
 - `min`
+- `floor`
+- `ceiling`
+- `round`
+- `truncate`
+- `numerator`
+- `denominator`
+- `truncate-quotient`
+- `truncate-remainder`
+- `floor-remainder`
+- `square`
+- `exact`
+- `inexact`
 
 ### Type identity predicate procedures
 - `number?`
@@ -72,7 +83,7 @@ Then run `./cozenage` to enter the funhouse.
 - `port?`
 - `eof-object?`
 
-### Numeric identity procedures
+### Numeric identity predicate procedures
 - `exact?`
 - `inexact?`
 - `complex?`
@@ -87,15 +98,51 @@ Then run `./cozenage` to enter the funhouse.
 - `or`
 - `boolean`
 
-### Pair/list constructors and selectors
+### Pair/list procedures
 - `cons`
 - `car`
 - `cdr`
 - `list`
 - `length`
 - `list-ref`
+- `append`
+- `reverse`
+- `list-tail`
 
-### Vector constructors, selectors, and procedures
+### Vector procedures
 - `vector`
 - `vector-length`
 - `vector-ref`
+
+## Complex Library (scheme complex)
+
+- `real-part`
+- `imag-part`
+- `make-rectangular`
+- `magnitude`
+- `angle`
+- `make-polar`
+
+## File Library (scheme file)
+- `file-exists?`
+- `delete-file`
+
+## Inexact Library (scheme inexact)
+- `cos`
+- `acos`
+- `sin`
+- `asin`
+- `tan`
+- `atan`
+- `exp`
+- `log`
+- `log2`
+- `log10`
+- `sqrt`
+- `cbrt`
+
+## Process-Context Library (scheme process-context)
+- `exit`
+- `emergency-exit`
+- `get-environment-variable`
+- `get-environment-variables`
