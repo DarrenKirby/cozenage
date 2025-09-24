@@ -100,7 +100,7 @@ Cell* make_val_sexpr(void) {
     return v;
 }
 
-Cell* make_val_char(char c) {
+Cell* make_val_char(const UChar32 c) {
     Cell* v = GC_MALLOC(sizeof(Cell));
     v->type = VAL_CHAR;
     v->c_val = c;

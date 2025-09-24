@@ -28,7 +28,7 @@ Cell* builtin_char_alphabetic(Lex* e, Cell* a) {
     if (a->cell[0]->type != VAL_CHAR) {
         return make_val_err("char-alphabetic?: arg 1 must be a char");
     }
-    return make_val_bool(isalpha(a->cell[0]->c_val));
+    return make_val_bool(u_isalpha(a->cell[0]->c_val));
 }
 
 Cell* builtin_char_whitespace(Lex* e, Cell* a) {
@@ -38,7 +38,7 @@ Cell* builtin_char_whitespace(Lex* e, Cell* a) {
     if (a->cell[0]->type != VAL_CHAR) {
         return make_val_err("char-whitespace?: arg 1 must be a char");
     }
-    return make_val_bool(isspace(a->cell[0]->c_val));
+    return make_val_bool(u_isspace(a->cell[0]->c_val));
 }
 
 Cell* builtin_char_numeric(Lex* e, Cell* a) {
@@ -48,7 +48,7 @@ Cell* builtin_char_numeric(Lex* e, Cell* a) {
     if (a->cell[0]->type != VAL_CHAR) {
         return make_val_err("char-numeric?: arg 1 must be a char");
     }
-    return make_val_bool(isdigit(a->cell[0]->c_val));
+    return make_val_bool(u_isdigit(a->cell[0]->c_val));
 }
 
 Cell* builtin_char_upper_case(Lex* e, Cell* a) {
@@ -58,7 +58,7 @@ Cell* builtin_char_upper_case(Lex* e, Cell* a) {
     if (a->cell[0]->type != VAL_CHAR) {
         return make_val_err("char-upper-case?: arg 1 must be a char");
     }
-    return make_val_bool(isupper(a->cell[0]->c_val));
+    return make_val_bool(u_isupper(a->cell[0]->c_val));
 }
 
 Cell* builtin_char_lower_case(Lex* e, Cell* a) {
@@ -68,7 +68,7 @@ Cell* builtin_char_lower_case(Lex* e, Cell* a) {
     if (a->cell[0]->type != VAL_CHAR) {
         return make_val_err("char-lower-case?: arg 1 must be a char");
     }
-    return make_val_bool(islower(a->cell[0]->c_val));
+    return make_val_bool(u_islower(a->cell[0]->c_val));
 }
 
 Cell* builtin_char_upcase(Lex* e, Cell* a) {
@@ -79,7 +79,7 @@ Cell* builtin_char_upcase(Lex* e, Cell* a) {
         return make_val_err("char-upcase: arg 1 must be a char");
     }
     const unsigned char c = a->cell[0]->c_val;
-    return make_val_char((char)toupper(c));
+    return make_val_char(u_toupper(c));
 }
 
 Cell* builtin_char_downcase(Lex* e, Cell* a) {
@@ -90,7 +90,7 @@ Cell* builtin_char_downcase(Lex* e, Cell* a) {
         return make_val_err("char-downcase: arg 1 must be a char");
     }
     const unsigned char c = a->cell[0]->c_val;
-    return make_val_char((char)tolower(c));
+    return make_val_char(u_tolower(c));
 }
 
 Cell*builtin_char_foldcase(Lex* e, Cell* a) {

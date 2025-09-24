@@ -120,7 +120,7 @@ void print_cell(const Cell* v) {
         case 0x7f: printf("#\\delete");    break;
         case '\0': printf("#\\null");      break;
 
-        default:   printf("#\\%c", v->c_val); break;
+        default:   printf("#\\%C", v->c_val); break;
         }
         break;
 

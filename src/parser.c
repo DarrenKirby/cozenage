@@ -10,6 +10,8 @@
 #include <ctype.h>
 #include <errno.h>
 #include <limits.h>
+#include <wctype.h>
+#include <unicode/uchar.h>
 
 #include "printer.h"
 
@@ -328,44 +330,6 @@ Cell *parse_tokens(Parser *p) {
         return sexpr;
     }
 
-    /* FIXME: will eventually have to use this logic where 'all data/code is a list'
-     * but am deferring for now, as it requires refactoring all builtins and special forms */
-    // if (strcmp(tok, "(") == 0) {
-    //     advance(p);  /* consume '(' */
-    //
-    //     // Handle the empty list '()'
-    //     if (strcmp(peek(p), ")") == 0) {
-    //         advance(p); // consume ')'
-    //         return make_val_nil();
-    //     }
-    //
-    //     // --- Logic to build a VAL_PAIR chain ---
-    //
-    //     // 1. Parse the first element to create the head of the list.
-    //     Cell* first_element = parse_tokens(p);
-    //     Cell* head = make_val_pair(first_element, make_val_nil());
-    //     Cell* tail = head; // 'tail' will always point to the last pair in our chain.
-    //
-    //     // 2. Loop through the rest of the elements.
-    //     while (strcmp(peek(p), ")") != 0) {
-    //         Cell* next_element = parse_tokens(p);
-    //
-    //         // Create a new pair for this element.
-    //         Cell* new_pair = make_val_pair(next_element, make_val_nil());
-    //
-    //         // Append it to the end of our list.
-    //         tail->cdr = new_pair;
-    //
-    //         // Update the tail pointer to the new end of the list.
-    //         tail = new_pair;
-    //     }
-    //
-    //     // 3. Consume the final ')' token.
-    //     advance(p);
-    //
-    //     return head; // Return the head of the newly constructed proper list.
-    // }
-
     /* Otherwise, atom (number, boolean, char, string, symbol) */
     advance(p);
     return parse_atom(tok);
@@ -389,54 +353,53 @@ Cell* parse_atom(const char *tok) {
 
     /* Character literal */
     if (tok[0] == '#' && tok[1] == '\\') {
-        /* the oddball case where '#\ ' is considered a 'space'
-         * char literal, but the lexer will only return '#\'
-         * as the token */
-        if (strcmp(tok, "#\\") == 0) {
+        const char* payload = tok + 2;
+        const size_t payload_len = len - 2;
+
+        /* Handle the special '#\' -> space case */
+        if (len == 2) {
             return make_val_char(' ');
         }
-        /* single char in the ascii set */
-        if (isascii(tok[2]) && len == 3) {
-            return make_val_char(tok[2]);
+
+        /* Handle named characters first */
+        if (payload_len > 1) { /* All named chars are longer than 1 char */
+            if (strcmp(payload, "space") == 0) return make_val_char(' ');
+            if (strcmp(payload, "newline") == 0) return make_val_char('\n');
+            if (strcmp(payload, "alarm") == 0) return make_val_char(0x7);
+            if (strcmp(payload, "backspace") == 0) return make_val_char(0x8);
+            if (strcmp(payload, "delete") == 0) return make_val_char(0x7f);
+            if (strcmp(payload, "escape") == 0) return make_val_char(0x1b);
+            if (strcmp(payload, "null") == 0) return make_val_char('\0');
+            if (strcmp(payload, "return") == 0) return make_val_char(0xd);
+            if (strcmp(payload, "tab") == 0) return make_val_char('\t');
         }
-        /* named chars */
-        if (strcmp(tok, "#\\alarm") == 0) {
-            return make_val_char(0x7);
-        }
-        if (strcmp(tok, "#\\backspace") == 0) {
-            return make_val_char(0x8);
-        }
-        if (strcmp(tok, "#\\delete") == 0) {
-            return make_val_char(0x7f);
-        }
-        if (strcmp(tok, "#\\escape") == 0) {
-            return make_val_char(0x1b);
-        }
-        if (strcmp(tok, "#\\newline") == 0) {
-            return make_val_char('\n');
-        }
-        if (strcmp(tok, "#\\null") == 0) {
-            return make_val_char('\0');
-        }
-        if (strcmp(tok, "#\\return") == 0) {
-            return make_val_char(0xd);
-        }
-        if (strcmp(tok, "#\\space") == 0) {
-            return make_val_char(' ');
-        }
-        if (strcmp(tok, "#\\tab") == 0) {
-            return make_val_char('\t');
-        }
-        /* valid hex codes: 0x00 to 0x7f */
-        if (tok[2] == 'x' && len >= 4) {
-            unsigned int code = 0;
-            const int items_read = sscanf(tok, "#\\x%x", &code);
-            if (items_read != 1) { return make_val_err("Invalid token"); }
-            if (code > 0x7f) {
-                return make_val_err("Invalid ASCII hex value");
+
+        /* Handle hex literals: #\x... */
+        if (payload[0] == 'x' && payload_len > 1) {
+            char* end_ptr;
+            long code = strtol(payload + 1, &end_ptr, 16);
+
+            /* Check if parsing consumed the whole string and the value is valid */
+            if (*end_ptr != '\0' || code < 0 || code > 0x10FFFF) {
+                return make_val_err("Invalid Unicode hex value");
             }
-            return make_val_char((char)code);
+            return make_val_char((UChar32)code);
         }
+
+        /* If it's not named or hex, it must be a single UTF-8 character */
+        UChar32 code_point;
+        int32_t i = 0;
+
+        /* Decode the first code point from the payload */
+        U8_NEXT_UNSAFE(payload, i, code_point);
+
+        /* If 'i' is not equal to the payload length, it means there was
+         * more than one character after #\ (e.g., #\ab), which is an error. */
+        if (i != (int)payload_len) {
+            return make_val_err("Invalid character literal: multiple characters");
+        }
+
+        return make_val_char(code_point);
     }
 
     /* String literal */

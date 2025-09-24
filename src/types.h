@@ -5,6 +5,7 @@
 #include "environment.h"
 #include <stddef.h>
 #include <stdbool.h>
+#include <unicode/umachine.h>
 
 
 /* Convenience macros for readability */
@@ -61,7 +62,7 @@ typedef struct Cell {
         long double r_val;    /* reals */
         long long int i_val;  /* integers */
         int b_val;            /* 0 = false, 1 = true */
-        char c_val;           /* character literal #\a */
+        UChar32 c_val;          /* character literal #\a */
         char* sym;              /* symbols */
         char* str;              /* strings */
 
@@ -104,7 +105,7 @@ Cell* make_val_int(long long n);
 Cell* make_val_rat(long int num, long int den, bool simplify);
 Cell* make_val_complex(Cell* real, Cell *imag);
 Cell* make_val_bool(int b);
-Cell* make_val_char(char c);
+Cell* make_val_char(UChar32 c);
 Cell* make_val_vect(void);
 Cell* make_val_bytevec(void);
 Cell* make_val_sym(const char* s);
