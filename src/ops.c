@@ -1934,3 +1934,24 @@ Cell* builtin_vector_to_list(Lex* e, Cell* a) {
 /*-------------------------------------------------------*
  *     String constructors, selectors, and procedures    *
  * ------------------------------------------------------*/
+
+Cell* builtin_string_to_symbol(Lex* e, Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    if (err) return err;
+    if (a->cell[0]->type != VAL_STR) {
+        return make_val_err("string->symbol: arg 1 must be a string");
+    }
+    return make_val_sym(a->cell[0]->str);
+}
+
+Cell* builtin_symbol_to_string(Lex* e, Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    if (err) return err;
+    if (a->cell[0]->type != VAL_SYM) {
+        return make_val_err("symbol->string: arg 1 must be a symbol");
+    }
+    return make_val_str(a->cell[0]->sym);
+}
+

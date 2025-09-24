@@ -95,5 +95,9 @@ Cell* builtin_vector_ref(Lex* e, Cell* a);
 Cell* builtin_make_vector(Lex* e, Cell* a);
 Cell* builtin_list_to_vector(Lex* e, Cell* a);
 Cell* builtin_vector_to_list(Lex* e, Cell* a);
+/* Bytevector constructors, selectors,and procedures */
+/* String constructors, selectors, and procedures */
+Cell* builtin_string_to_symbol(Lex* e, Cell* a);
+Cell* builtin_symbol_to_string(Lex* e, Cell* a);
 
 #endif //COZENAGE_OPS_H

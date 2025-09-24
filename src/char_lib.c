@@ -8,8 +8,6 @@
 /*
 char-ci<?
 char-ci>=?
-char-downcase
-char-upcase
 string-ci<=?
 string-ci=?
 string-ci>?

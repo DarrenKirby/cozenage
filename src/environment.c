@@ -213,4 +213,8 @@ void lex_add_builtins(Lex* e) {
     lex_add_builtin(e, "make-vector", builtin_make_vector);
     lex_add_builtin(e, "list->vector", builtin_list_to_vector);
     lex_add_builtin(e, "vector->list", builtin_vector_to_list);
+    /* Bytevector procedures */
+    /* String procedures */
+    lex_add_builtin(e, "symbol->string", builtin_symbol_to_string);
+    lex_add_builtin(e, "string->symbol", builtin_string_to_symbol);
 }
