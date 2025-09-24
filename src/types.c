@@ -425,31 +425,25 @@ void numeric_promote(Cell** lhs, Cell** rhs) {
 
     if (a->type == VAL_COMPLEX || b->type == VAL_COMPLEX) {
         if (a->type != VAL_COMPLEX) {
-            //Cell* old = a;
             a = to_complex(a);
         }
         if (b->type != VAL_COMPLEX) {
-            //Cell* old = b;
             b = to_complex(b);
         }
     }
     else if (a->type == VAL_REAL || b->type == VAL_REAL) {
         if (a->type == VAL_INT || a->type == VAL_RAT) {
-            //Cell* old = a;
             a = (a->type == VAL_INT) ? int_to_real(a) : rat_to_real(a);
         }
         if (b->type == VAL_INT || b->type == VAL_RAT) {
-            //Cell* old = b;
             b = (b->type == VAL_INT) ? int_to_real(b) : rat_to_real(b);
         }
     }
     else if (a->type == VAL_RAT || b->type == VAL_RAT) {
         if (a->type == VAL_INT) {
-            //Cell* old = a;
             a = int_to_rat(a);
         }
         if (b->type == VAL_INT) {
-            //Cell* old = b;
             b = int_to_rat(b);
         }
     }
@@ -664,9 +658,7 @@ Cell* make_cell_from_double(long double d) {
     return make_val_real(d);
 }
 
-/**
- * A version of strdup that allocates memory using the garbage collector.
- */
+/* A version of strdup that allocates memory using the garbage collector. */
 char* GC_strdup(const char* s) {
     if (s == NULL) {
         return NULL;
@@ -683,25 +675,70 @@ char* GC_strdup(const char* s) {
     return new_str;
 }
 
-/**
- * A version of strndup that allocates memory using the garbage collector.
- */
+/* A version of strndup that allocates memory using the garbage collector. */
 char* GC_strndup(const char* s, const size_t n) {
-    // if (s == NULL) {
-    //     return NULL;
-    // }
     /* Find the actual length of the substring, up to n. */
     size_t len = strnlen(s, n);
 
-    // Allocate GC-managed memory.
+    /* Allocate GC-managed memory. */
     char* new_str = (char*) GC_MALLOC_ATOMIC(len + 1);
     if (new_str == NULL) {
         return NULL;
     }
 
-    // Copy the content and null-terminate.
+    /* Copy the content and null-terminate. */
     memcpy(new_str, s, len);
     new_str[len] = '\0';
 
     return new_str;
+}
+
+/* Mapping of char names to Unicode codepoints.
+ * This array MUST be kept sorted alphabetically by the 'name' field. */
+static const NamedChar named_chars[] = {
+    {"Alpha",     0x0391},
+    {"Beta",      0x0392},
+    {"Delta",     0x0394},
+    {"Gamma",     0x0393},
+    {"Iota",      0x0399},
+    {"Lambda",    0x039B},
+    {"Theta",     0x0398},
+    {"Xi",        0x039E},
+    {"alpha",     0x03B1},
+    {"beta",      0x03B2},
+    {"copy",      0x00A9},
+    {"curren",    0x00A4},
+    {"deg",       0x00B0},
+    {"divide",    0x00F7},
+    {"euro",      0x20AC},
+    {"iota",      0x03B9},
+    {"iquest",    0x00BF},
+    {"lambda",    0x03BB},
+    {"micro",     0x00B5},
+    {"para",      0x00B6},
+    {"plusnm",    0x00B1},
+    {"pound",     0x00A3},
+    {"reg",       0x00AE},
+    {"sect",      0x00A7},
+    {"times",     0x00D7},
+    {"yen",       0x00A5}
+};
+
+/* This function is required by bsearch to compare a key (the string name)
+ * with an element in the NamedChar array. */
+int compare_named_chars(const void* key, const void* element) {
+    const char* name_key = (const char*)key;
+    const NamedChar* char_element = (const NamedChar*)element;
+    return strcmp(name_key, char_element->name);
+}
+
+/* Returns a pointer to the found NamedChar, or NULL if not found. */
+const NamedChar* find_named_char(const char* name) {
+    return (const NamedChar*)bsearch(
+        name,                                      /* The key to search for */
+        named_chars,                              /* The array to search in */
+        sizeof(named_chars) / sizeof(NamedChar),   /* Number of elements in the array */
+        sizeof(NamedChar),                       /* The size of each element */
+        compare_named_chars                            /* The comparison function */
+    );
 }

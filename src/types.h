@@ -24,12 +24,14 @@ check_arg_arity((a), -1, (lo), (hi))
 #define VAL_AS_NUM(v) \
 ((v)->type == VAL_INT ? (long double)(v)->i_val : (v)->r_val)
 
+/* enum for error types */
 enum {
     GEN_ERR,
     FILE_ERR,
     READ_ERR,
 };
 
+/* Cell_t type enum */
 typedef enum {
     VAL_INT     = 1 << 0,   /* integer */
     VAL_RAT     = 1 << 1,   /* rational */
@@ -97,6 +99,12 @@ typedef struct Cell {
     };
 } Cell;
 
+/* For named chars */
+typedef struct {
+    const char* name;
+    UChar32     codepoint;
+} NamedChar;
+
 extern Cell* val_nil;  /* declare the global singleton */
 typedef Cell* (*BuiltinFn)(Lex* e, Cell* args);
 
@@ -132,5 +140,7 @@ long double cell_to_long_double(const Cell* c);
 Cell* make_cell_from_double(long double d);
 char* GC_strdup(const char* s);
 char* GC_strndup(const char* s, size_t n);
+int compare_named_chars(const void* key, const void* element);
+const NamedChar* find_named_char(const char* name);
 
 #endif //COZENAGE_TYPES_H

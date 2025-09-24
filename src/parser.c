@@ -361,8 +361,8 @@ Cell* parse_atom(const char *tok) {
             return make_val_char(' ');
         }
 
-        /* Handle named characters first */
-        if (payload_len > 1) { /* All named chars are longer than 1 char */
+        /* Handle (R7RS required) named characters first */
+        if (payload[0] !='x' && payload_len > 1) { /* All named chars are longer than 1 char */
             if (strcmp(payload, "space") == 0) return make_val_char(' ');
             if (strcmp(payload, "newline") == 0) return make_val_char('\n');
             if (strcmp(payload, "alarm") == 0) return make_val_char(0x7);
@@ -372,6 +372,15 @@ Cell* parse_atom(const char *tok) {
             if (strcmp(payload, "null") == 0) return make_val_char('\0');
             if (strcmp(payload, "return") == 0) return make_val_char(0xd);
             if (strcmp(payload, "tab") == 0) return make_val_char('\t');
+
+            /* Check mapping of implementation-specific named chars */
+            const NamedChar* named_char = find_named_char(payload);
+            if (!named_char) {
+                snprintf(err_buf, sizeof(err_buf), "Invalid token: '%s%s%s'",
+            ANSI_RED_B, tok, ANSI_RESET);
+                return make_val_err(err_buf);
+            }
+            return make_val_char(named_char->codepoint);
         }
 
         /* Handle hex literals: #\x... */
