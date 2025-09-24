@@ -1,10 +1,8 @@
 #include "char_lib.h"
-
-#include <ctype.h>
-
 #include "environment.h"
 #include "types.h"
-
+#include <ctype.h>
+#include <unicode/uchar.h>
 /*
 char-ci<?
 char-ci>=?
@@ -95,6 +93,17 @@ Cell* builtin_char_downcase(Lex* e, Cell* a) {
     return make_val_char((char)tolower(c));
 }
 
+Cell*builtin_char_foldcase(Lex* e, Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    if (err) return err;
+    if (a->cell[0]->type != VAL_CHAR) {
+        return make_val_err("char-foldcase: arg 1 must be a char");
+    }
+    const unsigned char c = a->cell[0]->c_val;
+    return make_val_char(u_foldCase(c, U_FOLD_CASE_DEFAULT));
+}
+
 void lex_add_char_lib(Lex* e) {
     lex_add_builtin(e, "char-alphabetic?", builtin_char_alphabetic);
     lex_add_builtin(e, "char-whitespace?", builtin_char_whitespace);
@@ -103,4 +112,5 @@ void lex_add_char_lib(Lex* e) {
     lex_add_builtin(e, "char-lower-case?", builtin_char_lower_case);
     lex_add_builtin(e, "char-upcase", builtin_char_upcase);
     lex_add_builtin(e, "char-downcase", builtin_char_downcase);
+    lex_add_builtin(e, "char-foldcase", builtin_char_foldcase);
 }

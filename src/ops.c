@@ -1930,6 +1930,30 @@ Cell* builtin_vector_to_list(Lex* e, Cell* a) {
  *     Byte vector constructors, selectors, and procedures    *
  * -----------------------------------------------------------*/
 
+Cell* builtin_bytevector(Lex* e, Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_MIN(a, 1);
+    if (err) return err;
+
+    Cell *vec = make_val_bytevec();
+    for (int i = 0; i < a->count; i++) {
+        if (a->cell[i]->type != VAL_INT || a->cell[i]->i_val < 0 || a->cell[i]->i_val > 255) {
+            return make_val_err("bytevector: args must be integers 0 to 255 inclusive");
+        }
+        cell_add(vec, cell_copy(a->cell[i]));
+    }
+    return vec;
+}
+
+Cell* builtin_bytevector_length(Lex* e, Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    if (err) return err;
+    err = check_arg_types(a, VAL_BYTEVEC);
+    if (err) return err;
+
+    return make_val_int(a->cell[0]->count);
+}
 
 /*-------------------------------------------------------*
  *     String constructors, selectors, and procedures    *
