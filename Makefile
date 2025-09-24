@@ -29,20 +29,25 @@ TEST_SOURCES = $(wildcard tests/*.c)
 TEST_OBJECTS = $(patsubst src/%.c, %.o, $(APP_SOURCES_FOR_TEST)) \
                $(patsubst tests/%.c, %.o, $(TEST_SOURCES))
 
+# Detect ICU flags using pkg-config
+ICU_CFLAGS = $(shell pkg-config --cflags icu-uc)
+ICU_LIBS = $(shell pkg-config --libs icu-uc)
+
 # --- Compiler Flags ---
 # CFLAGS are set per-target later on
-CFLAGS_DEFAULT = -Wall -Wextra -O2 -std=gnu2x
-CFLAGS_TEST = -fsanitize=address,undefined -Wall -Wextra -g -O0 -DTESTING__
+CFLAGS_DEFAULT = -Wall -Wextra -O2 -std=gnu2x $(ICU_CFLAGS)
+CFLAGS_TEST = -fsanitize=address,undefined -Wall -Wextra -g -O0 -DTESTING__ $(ICU_CFLAGS)
 
 # --- Libraries ---
 # Auto-detect readline or libedit for manual and test builds
 ifeq ($(shell pkg-config --exists readline && echo yes),yes)
-    BASE_LIBS = -lreadline -lm -lgc
+    BASE_LIBS = -lreadline -lm -lgc $(ICU_LIBS)
 else ifeq ($(shell pkg-config --exists edit && echo yes),yes)
-    BASE_LIBS = -ledit -lm -lgc
+    BASE_LIBS = -ledit -lm -lgc $(ICU_LIBS)
 else
-    BASE_LIBS = -lreadline -lm -lgc
+    BASE_LIBS = -lreadline -lm -lgc $(ICU_LIBS)
 endif
+
 
 # Test-specific libraries
 TEST_LIBS = -lcriterion $(BASE_LIBS)
@@ -82,7 +87,6 @@ clean:
 
 # Target to clean and then rebuild using the default method
 rebuild: clean all
-
 
 # --- File-Generating Rules ---
 
