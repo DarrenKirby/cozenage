@@ -3,6 +3,7 @@
 #include "types.h"
 #include <ctype.h>
 #include <unicode/uchar.h>
+
 /*
 char-ci<?
 char-ci>=?
@@ -13,8 +14,6 @@ string-foldcase
 char-ci<=?
 char-ci=?
 char-ci>?
-char-foldcase
-digit-value
 string-ci<?
 string-ci>=?
 string-downcase
@@ -91,7 +90,7 @@ Cell* builtin_char_downcase(Lex* e, Cell* a) {
     return make_val_char(u_tolower(a->cell[0]->c_val));
 }
 
-Cell*builtin_char_foldcase(Lex* e, Cell* a) {
+Cell* builtin_char_foldcase(Lex* e, Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
@@ -100,6 +99,22 @@ Cell*builtin_char_foldcase(Lex* e, Cell* a) {
     }
     const unsigned char c = a->cell[0]->c_val;
     return make_val_char(u_foldCase(c, U_FOLD_CASE_DEFAULT));
+}
+
+Cell* builtin_digit_value(Lex* e, Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    if (err) return err;
+    if (a->cell[0]->type != VAL_CHAR) {
+        return make_val_err("digit-value: arg 1 must be a char");
+    }
+
+    const int32_t value = u_charDigitValue(a->cell[0]->c_val);
+
+    if (value == -1) {
+        return make_val_bool(0);
+    }
+    return make_val_int(value);
 }
 
 void lex_add_char_lib(Lex* e) {
@@ -111,4 +126,5 @@ void lex_add_char_lib(Lex* e) {
     lex_add_builtin(e, "char-upcase", builtin_char_upcase);
     lex_add_builtin(e, "char-downcase", builtin_char_downcase);
     lex_add_builtin(e, "char-foldcase", builtin_char_foldcase);
+    lex_add_builtin(e, "digit-value", builtin_digit_value);
 }

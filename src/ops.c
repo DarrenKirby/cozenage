@@ -1956,6 +1956,34 @@ Cell* builtin_bytevector_length(Lex* e, Cell* a) {
 }
 
 /*-------------------------------------------------------*
+ *      Char constructors, selectors, and procedures     *
+ * ------------------------------------------------------*/
+
+Cell* builtin_char_to_int(Lex* e, Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    if (err) return err;
+    err = check_arg_types(a, VAL_CHAR);
+    if (err) return err;
+
+    return make_val_int((long long)a->cell[0]->c_val);
+}
+
+Cell* builtin_int_to_char(Lex* e, Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    if (err) return err;
+    err = check_arg_types(a, VAL_INT);
+    if (err) return err;
+
+    const UChar32 val = (int)a->cell[0]->i_val;
+    if (val < 0 || val > 0x10FFFF) {
+        return make_val_err("Invalid Unicode hex value");
+    }
+    return make_val_char(val);
+}
+
+/*-------------------------------------------------------*
  *     String constructors, selectors, and procedures    *
  * ------------------------------------------------------*/
 

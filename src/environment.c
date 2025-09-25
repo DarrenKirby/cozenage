@@ -216,6 +216,9 @@ void lex_add_builtins(Lex* e) {
     /* Bytevector procedures */
     lex_add_builtin(e, "bytevector", builtin_bytevector);
     lex_add_builtin(e, "bytevector-length", builtin_bytevector_length);
+    /* Char procedures */
+    lex_add_builtin(e, "char->int", builtin_char_to_int);
+    lex_add_builtin(e, "int->char", builtin_int_to_char);
     /* String procedures */
     lex_add_builtin(e, "symbol->string", builtin_symbol_to_string);
     lex_add_builtin(e, "string->symbol", builtin_string_to_symbol);
