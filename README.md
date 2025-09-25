@@ -2,12 +2,23 @@
 
 *Getting close to being ready for prime time*
 
+`Cozenage` requires one of [readline](https://tiswww.cwru.edu/php/chet/readline/rltop.html) or 
+libedit for the REPL. It requires [ICU](https://github.com/unicode-org/icu) for Unicode.
+These will almost certainly be installed already on any sort of development rig. It requires the [Boehm-Demers-Weiser Garbage Collector](https://github.com/bdwgc/bdwgc)
+which may or may not be installed already on your system.
+
 If you have cmake, run `make`.
+
 If you do not have cmake, run `make nocmake`.
+
 To build the tests run `make tests`. You will need `criterion` installed.
+
 To delete objects and binaries run `make clean`
 
 Then run `./cozenage` to enter the funhouse.
+
+You can add the `-l/--library` flag with a comma-delimited list of libraries to load on startup
+(ie: complex,inexact,char etc.).
 
 ## Builtin Procedures (scheme base)
 
@@ -34,6 +45,7 @@ Then run `./cozenage` to enter the funhouse.
 ### Special forms
 - `quote`
 - `define`
+- `lambda`
 - `if`
 - `when`
 - `unless`
@@ -129,7 +141,9 @@ Then run `./cozenage` to enter the funhouse.
 - `symbol->string`
 - `string->symbol`
 
-## Complex Library (scheme complex)
+## Library procedures
+
+### Complex Library (scheme complex)
 
 - `real-part`
 - `imag-part`
@@ -138,11 +152,11 @@ Then run `./cozenage` to enter the funhouse.
 - `angle`
 - `make-polar`
 
-## File Library (scheme file)
+### File Library (scheme file)
 - `file-exists?`
 - `delete-file`
 
-## Inexact Library (scheme inexact)
+### Inexact Library (scheme inexact)
 - `cos`
 - `acos`
 - `sin`
@@ -156,13 +170,13 @@ Then run `./cozenage` to enter the funhouse.
 - `sqrt`
 - `cbrt`
 
-## Process-Context Library (scheme process-context)
+### Process-Context Library (scheme process-context)
 - `exit`
 - `emergency-exit`
 - `get-environment-variable`
 - `get-environment-variables`
 
-## Char library (scheme char)
+### Char library (scheme char)
 - `char-alphabetic?`
 - `char-whitespace?`
 - `char-numeric?`
