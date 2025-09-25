@@ -117,6 +117,18 @@ Then run `./cozenage` to enter the funhouse.
 - `list->vector`
 - `vector->list`
 
+### Bytevector procedures
+- `bytevector`
+- `bytevector-length`
+
+### Char procedures
+- `char->int`
+- `int->char`
+
+### String procedures
+- `symbol->string`
+- `string->symbol`
+
 ## Complex Library (scheme complex)
 
 - `real-part`
@@ -149,3 +161,14 @@ Then run `./cozenage` to enter the funhouse.
 - `emergency-exit`
 - `get-environment-variable`
 - `get-environment-variables`
+
+## Char library (scheme char)
+- `char-alphabetic?`
+- `char-whitespace?`
+- `char-numeric?`
+- `char-upper-case?`
+- `char-lower-case?`
+- `char-upcase`
+- `char-downcase`
+- `char-foldcase`
+- `digit-value`
