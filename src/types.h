@@ -56,9 +56,10 @@ typedef enum {
     VAL_ERR     = 1 << 16   /* error (interpreter-internal) */
 } Cell_t;
 
+/* Definition of the Cell struct/tagged union */
 typedef struct Cell {
-    Cell_t type;               /* type of data the Cell holds */
-    int exact;                 /* exact/inexact flag for numerics */
+    Cell_t type;              /* type of data the Cell holds */
+    int exact;                /* exact/inexact flag for numerics */
 
     union {
         long double r_val;    /* reals */
@@ -123,7 +124,6 @@ Cell* make_val_nil(void);
 Cell* make_val_pair(Cell* car, Cell* cdr);
 Cell* make_val_err(const char* m);
 Cell* cell_add(Cell* v, Cell* x);
-//void cell_delete(Cell* v);
 Cell* cell_copy(const Cell* v);
 Cell* cell_pop(Cell* v, int i);
 Cell* cell_take(Cell* v, int i);

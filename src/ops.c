@@ -2006,4 +2006,3 @@ Cell* builtin_symbol_to_string(Lex* e, Cell* a) {
     }
     return make_val_str(a->cell[0]->sym);
 }
-
