@@ -128,10 +128,16 @@ You can add the `-l/--library` flag with a comma-delimited list of libraries to 
 - `make-vector`
 - `list->vector`
 - `vector->list`
+- `vector-copy`
+- `string->vector`
+- `vector->string`
 
 ### Bytevector procedures
 - `bytevector`
 - `bytevector-length`
+- `bytevector-u8--ref`
+- `make-bytevector`
+- `bytevector-copy`
 
 ### Char procedures
 - `char->int`
@@ -140,6 +146,9 @@ You can add the `-l/--library` flag with a comma-delimited list of libraries to 
 ### String procedures
 - `symbol->string`
 - `string->symbol`
+
+### Control features
+- `apply`
 
 ## Library procedures
 
