@@ -213,13 +213,22 @@ void lex_add_builtins(Lex* e) {
     lex_add_builtin(e, "make-vector", builtin_make_vector);
     lex_add_builtin(e, "list->vector", builtin_list_to_vector);
     lex_add_builtin(e, "vector->list", builtin_vector_to_list);
+    lex_add_builtin(e, "vector-copy", builtin_vector_copy);
+    lex_add_builtin(e, "vector->string", builtin_vector_to_string);
+    lex_add_builtin(e, "string->vector", builtin_string_to_vector);
     /* Bytevector procedures */
     lex_add_builtin(e, "bytevector", builtin_bytevector);
     lex_add_builtin(e, "bytevector-length", builtin_bytevector_length);
+    lex_add_builtin(e, "bytevector-u8-ref", builtin_bytevector_ref);
+    lex_add_builtin(e, "make-bytevector", builtin_make_bytevector);
+    lex_add_builtin(e, "bytevector-copy", builtin_bytevector_copy);
     /* Char procedures */
     lex_add_builtin(e, "char->int", builtin_char_to_int);
     lex_add_builtin(e, "int->char", builtin_int_to_char);
     /* String procedures */
     lex_add_builtin(e, "symbol->string", builtin_symbol_to_string);
     lex_add_builtin(e, "string->symbol", builtin_string_to_symbol);
+    /* Control features */
+    lex_add_builtin(e, "apply", builtin_apply);
+    lex_add_builtin(e, "eval", builtin_eval);
 }

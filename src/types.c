@@ -486,6 +486,59 @@ Cell* make_sexpr_len4(const Cell* a, const Cell* b, const Cell* c, const Cell* d
     return v;
 }
 
+Cell* make_sexpr_from_list(Cell* v) {
+    Cell* result = make_val_sexpr();
+    result->count = v->len;
+    result->cell = GC_MALLOC(sizeof(Cell*) * v->len);
+
+    Cell* p = v;
+    for (int i = 0; i < v->len; i++) {
+        result->cell[i] = cell_copy(p->car);
+        p = p->cdr;
+    }
+    return result;
+}
+
+Cell* flatten_sexpr(const Cell* sexpr) {
+    /* Calculate the total size of the flattened S-expression */
+    int new_count = 0;
+    for (int i = 0; i < sexpr->count; i++) {
+        const Cell* current_item = sexpr->cell[i];
+        if (current_item->type == VAL_SEXPR) {
+            /* If the item is an inner s-expr, add the count of its children. */
+            new_count += current_item->count;
+        } else {
+            new_count++;
+        }
+    }
+
+    /* Allocation */
+    Cell* result = make_val_sexpr();
+    result->count = new_count;
+    if (new_count == 0) {
+        return result;
+    }
+    result->cell = GC_MALLOC(sizeof(Cell*) * new_count);
+
+    /* Populate the new S-expression's cell array */
+    int result_idx = 0;
+    for (int i = 0; i < sexpr->count; i++) {
+        const Cell* current_item = sexpr->cell[i];
+        if (current_item->type == VAL_SEXPR) {
+            /* It's an inner s-expr, so copy its children over. */
+            for (int j = 0; j < current_item->count; j++) {
+                result->cell[result_idx] = cell_copy(current_item->cell[j]);
+                result_idx++;
+            }
+        } else {
+            /* It's an atom, so copy it directly. */
+            result->cell[result_idx] = cell_copy(current_item);
+            result_idx++;
+        }
+    }
+    return result;
+}
+
 /*-------------------------------------------*
  *       Miscellaneous numeric helpers       *
  * ------------------------------------------*/

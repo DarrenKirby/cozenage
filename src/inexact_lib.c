@@ -3,19 +3,9 @@
 #include <math.h>
 
 /*
-acos
-atan
-exp
 infinite?
 nan?
-sqrt
-asin
-cos
 finite?
-log
-sin
-tan
-(exp z) (log z) (log z1 z2) (sin z) (cos z) (tan z) (asin z) (acos z) (atan z) (atan y x)
 */
 
 /* Returns the cosine of arg (arg is in radians). */
@@ -26,7 +16,7 @@ Cell* builtin_cos(Lex* e, Cell* a) {
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
     /* TODO: add complex support */
 
-    long double n = cell_to_long_double(a->cell[0]);
+    const long double n = cell_to_long_double(a->cell[0]);
     Cell* result = make_cell_from_double(cosl(n));
     return result;
 }
@@ -39,7 +29,7 @@ Cell* builtin_acos(Lex* e, Cell* a) {
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
     /* TODO: add complex support */
 
-    long double n = cell_to_long_double(a->cell[0]);
+    const long double n = cell_to_long_double(a->cell[0]);
     Cell* result = make_cell_from_double(acosl(n));
     return result;
 }
@@ -52,7 +42,7 @@ Cell* builtin_sin(Lex* e, Cell* a) {
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
     /* TODO: add complex support */
 
-    long double n = cell_to_long_double(a->cell[0]);
+    const long double n = cell_to_long_double(a->cell[0]);
     Cell* result = make_cell_from_double(sinl(n));
     return result;
 }
@@ -65,7 +55,7 @@ Cell* builtin_asin(Lex* e, Cell* a) {
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
     /* TODO: add complex support */
 
-    long double n = cell_to_long_double(a->cell[0]);
+    const long double n = cell_to_long_double(a->cell[0]);
     Cell* result = make_cell_from_double(asinl(n));
     return result;
 }
@@ -78,7 +68,7 @@ Cell* builtin_tan(Lex* e, Cell* a) {
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
     /* TODO: add complex support */
 
-    long double n = cell_to_long_double(a->cell[0]);
+    const long double n = cell_to_long_double(a->cell[0]);
     Cell* result = make_cell_from_double(tanl(n));
     return result;
 }
@@ -94,13 +84,13 @@ Cell* builtin_atan(Lex* e, Cell* a) {
     /* TODO: add complex support */
 
     if (a->count == 1) {
-        long double n = cell_to_long_double(a->cell[0]);
+        const long double n = cell_to_long_double(a->cell[0]);
         Cell* result = make_cell_from_double(atanl(n));
         return result;
     }
     /* two args */
-    long double x = cell_to_long_double(a->cell[0]);
-    long double y = cell_to_long_double(a->cell[1]);
+    const long double x = cell_to_long_double(a->cell[0]);
+    const long double y = cell_to_long_double(a->cell[1]);
     Cell* result = make_cell_from_double(atan2l(x, y));
     return result;
 }
@@ -113,7 +103,7 @@ Cell* builtin_exp(Lex* e, Cell* a) {
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
     /* TODO: add complex support */
 
-    long double n = cell_to_long_double(a->cell[0]);
+    const long double n = cell_to_long_double(a->cell[0]);
     Cell* result = make_cell_from_double(expl(n));
     return result;
 }
@@ -127,12 +117,12 @@ Cell* builtin_log(Lex* e, Cell* a) {
     if ((err = CHECK_ARITY_RANGE(a, 1, 2))) { return err; }
     /* TODO: add complex support */
     if (a->count == 1) {
-        long double n = cell_to_long_double(a->cell[0]);
+        const long double n = cell_to_long_double(a->cell[0]);
         Cell* result = make_cell_from_double(logl(n));
         return result;
     }
-    long double n = cell_to_long_double(a->cell[0]);
-    long double b = cell_to_long_double(a->cell[1]);
+    const long double n = cell_to_long_double(a->cell[0]);
+    const long double b = cell_to_long_double(a->cell[1]);
     Cell* result = make_cell_from_double(logl(n)/logl(b));
     return result;
 }
@@ -145,7 +135,7 @@ Cell* builtin_log2(Lex* e, Cell* a) {
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
     /* TODO: add complex support */
 
-    long double n = cell_to_long_double(a->cell[0]);
+    const long double n = cell_to_long_double(a->cell[0]);
     Cell* result = make_cell_from_double(log2l(n));
     return result;
 }
@@ -158,7 +148,7 @@ Cell* builtin_log10(Lex* e, Cell* a) {
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
     /* TODO: add complex support */
 
-    long double n = cell_to_long_double(a->cell[0]);
+    const long double n = cell_to_long_double(a->cell[0]);
     Cell* result = make_cell_from_double(log10l(n));
     return result;
 }
@@ -171,7 +161,7 @@ Cell* builtin_sqrt(Lex* e, Cell* a) {
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
     /* TODO: add complex support */
 
-    long double n = cell_to_long_double(a->cell[0]);
+    const long double n = cell_to_long_double(a->cell[0]);
     Cell* result = make_cell_from_double(sqrtl(n));
     return result;
 }
@@ -184,7 +174,7 @@ Cell* builtin_cbrt(Lex* e, Cell* a) {
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
     /* TODO: add complex support */
 
-    long double n = cell_to_long_double(a->cell[0]);
+    const long double n = cell_to_long_double(a->cell[0]);
     Cell* result = make_cell_from_double(cbrtl(n));
     return result;
 }
@@ -201,5 +191,5 @@ void lex_add_inexact_lib(Lex* e) {
     lex_add_builtin(e, "log2", builtin_log2);
     lex_add_builtin(e, "log10", builtin_log10);
     lex_add_builtin(e, "sqrt", builtin_sqrt);
-    lex_add_builtin(e, "cbrt", builtin_sqrt);
+    lex_add_builtin(e, "cbrt", builtin_cbrt);
 }

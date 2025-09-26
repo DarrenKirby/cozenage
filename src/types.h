@@ -133,6 +133,8 @@ void numeric_promote(Cell** lhs, Cell** rhs);
 Cell* make_sexpr_len1(const Cell* a);
 Cell* make_sexpr_len2(const Cell* a, const Cell* b);
 Cell* make_sexpr_len4(const Cell* a, const Cell* b, const Cell* c, const Cell* d);
+Cell* make_sexpr_from_list(Cell* v);
+Cell* flatten_sexpr(const Cell* sexpr);
 Cell* negate_numeric(Cell* x);
 Cell* simplify_rational(Cell* v);
 void complex_apply(BuiltinFn fn, Lex* e, Cell* result, Cell* rhs);

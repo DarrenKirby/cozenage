@@ -108,7 +108,7 @@ Cell* coz_eval(Lex* e, Cell* v) {
         case VAL_BOOL:
         case VAL_CHAR:
         case VAL_STR:
-        /* case VAL_PAIR: is not necessary - no concept of 'pair literal' */
+        case VAL_PAIR:
         case VAL_VEC:
         case VAL_BYTEVEC:
         case VAL_NIL:

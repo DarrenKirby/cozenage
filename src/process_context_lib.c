@@ -3,7 +3,7 @@
 #include "types.h"
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
+
 
 extern char **environ;
 
@@ -60,7 +60,7 @@ Cell* builtin_get_env_var(Lex* e, Cell* a) {
     if (env == NULL) {
         return make_val_bool(0);
     }
-    char* var_string = GC_strdup(env);
+    const char* var_string = GC_strdup(env);
     return make_val_str(var_string);
 }
 

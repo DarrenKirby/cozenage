@@ -9,6 +9,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unicode/utf8.h>
 #include <gc/gc.h>
 #include "printer.h"
 
@@ -770,8 +771,8 @@ Cell* builtin_import(Lex* e, Cell* a) {
         if (strcmp(library_type, "scheme") == 0) {
             /* Load the Library */
             result = load_scheme_library(library_name, e);
-        } else if (strcmp(library_type, "cozenage") == 0){
-            result = load_scheme_library(library_name, e);
+        // } else if (strcmp(library_type, "cozenage") == 0){
+        //     result = load_scheme_library(library_name, e);
         } else {
             /* TODO: Handle User Libraries Here
              * For example, (import (my-libs utils)). */
@@ -1112,9 +1113,9 @@ Cell* builtin_min(Lex* e, Cell* a) {
         }
     }
 
-    const Cell* smallest_so_far = a->cell[0];
+    Cell* smallest_so_far = a->cell[0];
     for (int i = 1; i < a->count; i++) {
-        const Cell* rhs = a->cell[i];
+        Cell* rhs = a->cell[i];
 
         Cell* arg_list = make_sexpr_len2(smallest_so_far, rhs);
         const Cell* result = builtin_gt_op(e, arg_list); /* Using > for min */
@@ -1123,7 +1124,7 @@ Cell* builtin_min(Lex* e, Cell* a) {
             smallest_so_far = rhs;
         }
     }
-    return cell_copy(smallest_so_far);
+    return smallest_so_far;
 }
 
 Cell* builtin_floor(Lex* e, Cell* a) {
@@ -1134,7 +1135,7 @@ Cell* builtin_floor(Lex* e, Cell* a) {
 
     long double val = cell_to_long_double(a->cell[0]);
     val = floorl(val);
-    printf("val: %Lg\n", val);
+    //printf("val: %Lg\n", val);
 
     return make_cell_from_double(val);
 }
@@ -1826,10 +1827,10 @@ Cell* builtin_vector_ref(Lex* e, Cell* a) {
     Cell* err = CHECK_ARITY_EXACT(a, 2);
     if (err) return err;
     if (a->cell[0]->type != VAL_VEC) {
-        return make_val_err("list-ref: arg 1 must be a vector");
+        return make_val_err("vector-ref: arg 1 must be a vector");
     }
     if (a->cell[1]->type != VAL_INT) {
-        return make_val_err("list-ref: arg 2 must be an integer");
+        return make_val_err("vector-ref: arg 2 must be an integer");
     }
     const int i = (int)a->cell[1]->i_val;
 
@@ -1926,6 +1927,84 @@ Cell* builtin_vector_to_list(Lex* e, Cell* a) {
     return result;
 }
 
+Cell* builtin_vector_copy(Lex* e, Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_RANGE(a, 1, 3);
+    if (err) return err;
+    if (a->cell[0]->type != VAL_VEC) {
+        return make_val_err("vector->copy: arg 1 must be a vector");
+    }
+    if (a->count == 1) {
+        return cell_copy(a->cell[0]);
+    }
+    const long long start = a->cell[1]->i_val;
+    if (a->count == 2) {
+        return cell_copy(a->cell[0]->cell[start]);
+    }
+    const long long end = a->cell[2]->i_val;
+    Cell* vec = make_val_vect();
+    for (long long i = start; i < end; i++) {
+        cell_add(vec, cell_copy(a->cell[0]->cell[i]));
+    }
+    return vec;
+}
+
+Cell* builtin_vector_to_string(Lex* e, Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_RANGE(a, 1, 3);
+    if (err) return err;
+    if (a->cell[0]->type != VAL_VEC) {
+        return make_val_err("vector->string: arg must be a vector");
+    }
+    int start = 0;
+    int end = a->cell[0]->count;
+    char the_string[end+1];
+    if (a->count == 2) {
+        start = (int)a->cell[1]->i_val;
+    }
+    if (a->count == 3) {
+        end = (int)a->cell[2]->i_val;
+    }
+
+    int32_t j = 0;
+    for (int i = start; i < end; i++) {
+        const Cell* char_cell = a->cell[0]->cell[i];
+        if (char_cell->type != VAL_CHAR) {
+            return make_val_err("vector->string: vector must have only chars as members");
+        }
+        const UChar32 code_point = char_cell->c_val;
+        U8_APPEND_UNSAFE(the_string, j, code_point);
+    }
+    the_string[j] = '\0';
+    return make_val_str(the_string);
+}
+
+Cell* builtin_string_to_vector(Lex* e, Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_RANGE(a, 1, 3);
+    if (err) return err;
+    if (a->cell[0]->type != VAL_STR) {
+        return make_val_err("string->vector: arg must be a string");
+    }
+    int start = 0;
+    const char* the_string = a->cell[0]->str;
+    int end = (int)strlen(the_string);
+    if (a->count == 2) {
+        start = (int)a->cell[1]->i_val;
+    }
+    if (a->count == 3) {
+        end = (int)a->cell[2]->i_val;
+    }
+    Cell* vec = make_val_vect();
+    int32_t i = start;
+    UChar32 code_point;
+    while (i < end && the_string[i] != '\0') {
+        U8_NEXT_UNSAFE(the_string, i, code_point);
+        cell_add(vec, make_val_char(code_point));
+    }
+    return vec;
+}
+
 /*------------------------------------------------------------*
  *     Byte vector constructors, selectors, and procedures    *
  * -----------------------------------------------------------*/
@@ -1953,6 +2032,73 @@ Cell* builtin_bytevector_length(Lex* e, Cell* a) {
     if (err) return err;
 
     return make_val_int(a->cell[0]->count);
+}
+
+Cell* builtin_bytevector_ref(Lex* e, Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 2);
+    if (err) return err;
+    if (a->cell[0]->type != VAL_BYTEVEC) {
+        return make_val_err("bytevector-ref: arg 1 must be a vector");
+    }
+    if (a->cell[1]->type != VAL_INT) {
+        return make_val_err("bytevector-ref: arg 2 must be an integer");
+    }
+    const int i = (int)a->cell[1]->i_val;
+
+    if (i >= a->cell[0]->count) {
+        return make_val_err("bytevector-ref: index out of bounds");
+    }
+    return cell_copy(a->cell[0]->cell[i]);
+}
+
+Cell* builtin_make_bytevector(Lex* e, Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_RANGE(a, 1, 2);
+    if (err) return err;
+    if (a->cell[0]->type != VAL_INT) {
+        return make_val_err("make-bytevector: arg 1 must be an integer");
+    }
+    const long long n = a->cell[0]->i_val;
+    if (n < 1) {
+        return make_val_err("make-bytevector: arg 1 must be non-negative");
+    }
+    const Cell* fill = NULL;
+    if (a->count == 2) {
+        fill = a->cell[1];
+        if (fill->i_val < 0 || fill->i_val > 255) {
+            return make_val_err("make-bytevector: arg 2 must be between 0 and 255 inclusive");
+        }
+    } else {
+        fill = make_val_int(0);
+    }
+    Cell *vec = make_val_bytevec();
+    for (int i = 0; i < n; i++) {
+        cell_add(vec, cell_copy(fill));
+    }
+    return vec;
+}
+
+Cell* builtin_bytevector_copy(Lex* e, Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_RANGE(a, 1, 3);
+    if (err) return err;
+    if (a->cell[0]->type != VAL_BYTEVEC) {
+        return make_val_err("bytevector->copy: arg 1 must be a vector");
+    }
+    if (a->count == 1) {
+        return cell_copy(a->cell[0]);
+    }
+    const long long start = a->cell[1]->i_val;
+    if (a->count == 2) {
+        return cell_copy(a->cell[0]->cell[start]);
+    }
+    const long long end = a->cell[2]->i_val;
+    Cell* vec = make_val_bytevec();
+    for (long long i = start; i < end; i++) {
+        cell_add(vec, cell_copy(a->cell[0]->cell[i]));
+    }
+    return vec;
 }
 
 /*-------------------------------------------------------*
@@ -2005,4 +2151,29 @@ Cell* builtin_symbol_to_string(Lex* e, Cell* a) {
         return make_val_err("symbol->string: arg 1 must be a symbol");
     }
     return make_val_str(a->cell[0]->sym);
+}
+
+/*-------------------------------------------------------*
+ *                   Control features                    *
+ * ------------------------------------------------------*/
+
+Cell* builtin_apply(Lex* e, Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 2);
+    if (err) return err;
+    if (a->cell[0]->type != VAL_PROC) {
+        return make_val_err("apply: arg 1 must be a procedure");
+    }
+    if (a->cell[1]->type != VAL_PAIR && a->cell[1]->len == -1) {
+        return make_val_err("apply: arg 2 must be a proper list");
+    }
+
+    const Cell* composition = make_sexpr_len2(a->cell[0], make_sexpr_from_list(a->cell[1]));
+    return coz_eval(e, flatten_sexpr(composition));
+}
+
+Cell* builtin_eval(Lex* e, Cell* a) {
+    /* FIXME: broken! */
+    (void)e;
+    return coz_eval(e, make_sexpr_from_list(a->cell[0]));
 }
