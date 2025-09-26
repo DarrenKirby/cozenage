@@ -1650,6 +1650,8 @@ Cell* builtin_list_ref(Lex* e, Cell* a) {
     return cell_copy(p->car);
 }
 
+/* 'list-append' -> VAL_PAIR - returns a proper list of all
+ * args appended to the result, in order */
 Cell* builtin_list_append(Lex* e, Cell* a) {
     (void)e;
     /* Base case: (append) -> '() */
@@ -1738,6 +1740,8 @@ Cell* builtin_list_append(Lex* e, Cell* a) {
     return result_head;
 }
 
+/* 'reverse' -> VAL_PAIR - returns a proper list with members of
+ * arg reversed */
 Cell* builtin_list_reverse(Lex* e, Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
@@ -1768,11 +1772,13 @@ Cell* builtin_list_reverse(Lex* e, Cell* a) {
     return reversed_list;
 }
 
+/* 'list-tail' -> VAL_PAIR - returns a proper list of the last nth
+ * members of arg */
 Cell* builtin_list_tail(Lex* e, Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2);
     if (err) return err;
-    //printf("type: %d\n", a->cell[0]->type);
+
     if (a->cell[0]->type != VAL_PAIR &&
         a->cell[0]->type != VAL_SEXPR &&
         a->cell[0]->type != VAL_NIL) {
@@ -1806,6 +1812,7 @@ Cell* builtin_list_tail(Lex* e, Cell* a) {
  *     Vector constructors, selectors, and procedures    *
  * ------------------------------------------------------*/
 
+/* 'vector' -> VAL_VECT - returns a vector of all arg objects */
 Cell* builtin_vector(Lex* e, Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_MIN(a, 1);
@@ -1818,6 +1825,7 @@ Cell* builtin_vector(Lex* e, Cell* a) {
     return vec;
 }
 
+/* 'vector-length' -> VAL_INT- returns the number of members of arg */
 Cell* builtin_vector_length(Lex* e, Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
@@ -1877,11 +1885,11 @@ Cell* builtin_list_to_vector(Lex* e, Cell* a) {
     if (a->cell[0]->type != VAL_PAIR) {
         return make_val_err("list->vector: arg 1 must be a list");
     }
-    int list_len = a->cell[0]->len;
+    const int list_len = a->cell[0]->len;
     if (list_len == -1) {
         return make_val_err("list->vector: arg 1 must be a proper list");
     }
-    Cell* lst = a->cell[0];
+    const Cell* lst = a->cell[0];
     Cell *vec = make_val_vect();
     for (int i = 0; i < list_len; i++) {
         cell_add(vec, cell_copy(lst->car));
@@ -1925,7 +1933,7 @@ Cell* builtin_vector_to_list(Lex* e, Cell* a) {
     }
 
     Cell* result = make_val_nil();
-    Cell* vec = a->cell[0];
+    const Cell* vec = a->cell[0];
     for (int i = end - 1; i >= start; i--) {
         result = make_val_pair(cell_copy(vec->cell[i]), result);
         result->len = end - i;
@@ -1933,6 +1941,7 @@ Cell* builtin_vector_to_list(Lex* e, Cell* a) {
     return result;
 }
 
+/* 'vector-copy' -> VAL_VECT - returns a newly allocated copy of arg vector */
 Cell* builtin_vector_copy(Lex* e, Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_RANGE(a, 1, 3);
@@ -1955,6 +1964,8 @@ Cell* builtin_vector_copy(Lex* e, Cell* a) {
     return vec;
 }
 
+/* 'vector->string' -> VAL_STR - returns a str containing all char members
+ * of arg */
 Cell* builtin_vector_to_string(Lex* e, Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_RANGE(a, 1, 3);
@@ -1964,11 +1975,17 @@ Cell* builtin_vector_to_string(Lex* e, Cell* a) {
     }
     int start = 0;
     int end = a->cell[0]->count;
-    char the_string[end+1];
+    char* the_string = GC_MALLOC_ATOMIC(end * 4 + 1);
     if (a->count == 2) {
+        if (a->cell[1]->type != VAL_INT) {
+            return make_val_err("vector->string: arg2 must be an integer");
+        }
         start = (int)a->cell[1]->i_val;
     }
     if (a->count == 3) {
+        if (a->cell[1]->type != VAL_INT) {
+            return make_val_err("vector->string: arg3 must be an integer");
+        }
         end = (int)a->cell[2]->i_val;
     }
 
@@ -1985,28 +2002,56 @@ Cell* builtin_vector_to_string(Lex* e, Cell* a) {
     return make_val_str(the_string);
 }
 
+/* 'string->vector' -> VAL_VECT - returns a vector of all chars in arg */
 Cell* builtin_string_to_vector(Lex* e, Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_RANGE(a, 1, 3);
     if (err) return err;
     if (a->cell[0]->type != VAL_STR) {
-        return make_val_err("string->vector: arg must be a string");
+        return make_val_err("string->vector: arg1 must be a string");
     }
-    int start = 0;
+
     const char* the_string = a->cell[0]->str;
-    int end = (int)strlen(the_string);
-    if (a->count == 2) {
-        start = (int)a->cell[1]->i_val;
+    const size_t string_byte_len = strlen(the_string);
+
+    /* Get optional start/end character indices from args */
+    int start_char_idx = 0;
+    int end_char_idx = -1; /* Use -1 to signify 'to the end' */
+
+    if (a->count >= 2) {
+        if (a->cell[1]->type != VAL_INT) {
+            return make_val_err("string->vector: arg2 must be an integer");
+        }
+        start_char_idx = (int)a->cell[1]->i_val;
     }
     if (a->count == 3) {
-        end = (int)a->cell[2]->i_val;
+        if (a->cell[2]->type != VAL_INT) {
+            return make_val_err("string->vector: arg3 must be an integer");
+        }
+        end_char_idx = (int)a->cell[2]->i_val;
     }
+
     Cell* vec = make_val_vect();
-    int32_t i = start;
+    int32_t byte_idx = 0;
+    int32_t char_idx = 0;
     UChar32 code_point;
-    while (i < end && the_string[i] != '\0') {
-        U8_NEXT_UNSAFE(the_string, i, code_point);
+
+    /* Advance to the starting character position. */
+    while (char_idx < start_char_idx && byte_idx < (int)string_byte_len) {
+        U8_NEXT_UNSAFE(the_string, byte_idx, code_point);
+        char_idx++;
+    }
+
+    /* Grab characters until we reach the end. */
+    while (byte_idx < (int)string_byte_len) {
+        /* Stop if we've reached the user-specified end character index */
+        if (end_char_idx != -1 && char_idx >= end_char_idx) {
+            break;
+        }
+
+        U8_NEXT_UNSAFE(the_string, byte_idx, code_point);
         cell_add(vec, make_val_char(code_point));
+        char_idx++;
     }
     return vec;
 }
@@ -2181,5 +2226,7 @@ Cell* builtin_apply(Lex* e, Cell* a) {
 Cell* builtin_eval(Lex* e, Cell* a) {
     /* FIXME: broken! */
     (void)e;
+    Cell* args = make_sexpr_from_list(a->cell[0]);
+    println_cell(args);
     return coz_eval(e, make_sexpr_from_list(a->cell[0]));
 }
