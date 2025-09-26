@@ -1496,6 +1496,9 @@ Cell* builtin_boolean(Lex* e, Cell* a) {
  * If there are no expressions, then #t is returned.*/
 Cell* builtin_and(Lex* e, Cell* a) {
     (void)e;
+    if (a->count == 0) {
+        return make_val_bool(1);
+    }
     for (int i = 0; i < a->count; i++) {
         if (a->cell[i]->type == VAL_BOOL && a->cell[i]->b_val == 0) {
             /* first #f encountered → return a copy of it */
@@ -1511,6 +1514,9 @@ Cell* builtin_and(Lex* e, Cell* a) {
  * expressions evaluate to #f or if there are no expressions, #f is returned */
 Cell* builtin_or(Lex* e, Cell* a) {
     (void)e;
+    if (a->count == 0) {
+        return make_val_bool(0);
+    }
     for (int i = 0; i < a->count; i++) {
         if (!(a->cell[i]->type == VAL_BOOL && a->cell[i]->b_val == 0)) {
             /* first truthy value → return a copy */

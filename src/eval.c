@@ -158,6 +158,10 @@ Cell* eval_sexpr(Lex* e, Cell* v) {
     }
 
     /* Special form: lambda */
+
+    /* FIXME:
+     *     --> lambda
+     *      Error: Unbound symbol: 'lambda' */
     if (first->type == VAL_SYM && strcmp(first->sym, "lambda") == 0) {
 
         if (v->count < 2) {
