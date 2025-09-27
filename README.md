@@ -22,13 +22,15 @@ You can add the `-l/--library` flag with a comma-delimited list of libraries to 
 
 ## Builtin Procedures (scheme base)
 
-### Basic arithmetic operators
+### Basic arithmetic 
+
 - `+`
 - `-`
 - `*`
 - `/`
 
 ### Comparison operators
+
 - `=`
 - `>`
 - `<`
@@ -36,6 +38,7 @@ You can add the `-l/--library` flag with a comma-delimited list of libraries to 
 - `<=`
 
 ### Numeric predicate procedures
+
 - `zero?`
 - `positive?`
 - `negative?`
@@ -43,6 +46,7 @@ You can add the `-l/--library` flag with a comma-delimited list of libraries to 
 - `even?`
 
 ### Special forms
+
 - `quote`
 - `define`
 - `lambda`
@@ -54,11 +58,13 @@ You can add the `-l/--library` flag with a comma-delimited list of libraries to 
 - `import`
 
 ### Equality and equivalence comparators
+
 - `eq?`
 - `eqv?`
 - `equal?`
 
 ### Generic numeric operations
+
 - `abs`
 - `expt`
 - `remainder`
@@ -82,6 +88,7 @@ You can add the `-l/--library` flag with a comma-delimited list of libraries to 
 - `inexact`
 
 ### Type identity predicate procedures
+
 - `number?`
 - `boolean?`
 - `null?`
@@ -96,6 +103,7 @@ You can add the `-l/--library` flag with a comma-delimited list of libraries to 
 - `eof-object?`
 
 ### Numeric identity predicate procedures
+
 - `exact?`
 - `inexact?`
 - `complex?`
@@ -105,12 +113,14 @@ You can add the `-l/--library` flag with a comma-delimited list of libraries to 
 - `exact-integer?`
 
 ### Boolean and logical procedures
+
 - `not`
 - `and`
 - `or`
 - `boolean`
 
 ### Pair/list procedures
+
 - `cons`
 - `car`
 - `cdr`
@@ -122,6 +132,7 @@ You can add the `-l/--library` flag with a comma-delimited list of libraries to 
 - `list-tail`
 
 ### Vector procedures
+
 - `vector`
 - `vector-length`
 - `vector-ref`
@@ -133,6 +144,7 @@ You can add the `-l/--library` flag with a comma-delimited list of libraries to 
 - `vector->string`
 
 ### Bytevector procedures
+
 - `bytevector`
 - `bytevector-length`
 - `bytevector-u8--ref`
@@ -140,15 +152,19 @@ You can add the `-l/--library` flag with a comma-delimited list of libraries to 
 - `bytevector-copy`
 
 ### Char procedures
+
 - `char->int`
 - `int->char`
 
 ### String procedures
+
 - `symbol->string`
 - `string->symbol`
 
 ### Control features
+
 - `apply`
+- `eval`
 
 ## Library procedures
 
@@ -162,10 +178,12 @@ You can add the `-l/--library` flag with a comma-delimited list of libraries to 
 - `make-polar`
 
 ### File Library (scheme file)
+
 - `file-exists?`
 - `delete-file`
 
 ### Inexact Library (scheme inexact)
+
 - `cos`
 - `acos`
 - `sin`
@@ -180,12 +198,14 @@ You can add the `-l/--library` flag with a comma-delimited list of libraries to 
 - `cbrt`
 
 ### Process-Context Library (scheme process-context)
+
 - `exit`
 - `emergency-exit`
 - `get-environment-variable`
 - `get-environment-variables`
 
 ### Char library (scheme char)
+
 - `char-alphabetic?`
 - `char-whitespace?`
 - `char-numeric?`

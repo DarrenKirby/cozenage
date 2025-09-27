@@ -2224,9 +2224,22 @@ Cell* builtin_apply(Lex* e, Cell* a) {
 }
 
 Cell* builtin_eval(Lex* e, Cell* a) {
-    /* FIXME: broken! */
     (void)e;
-    Cell* args = make_sexpr_from_list(a->cell[0]);
-    println_cell(args);
-    return coz_eval(e, make_sexpr_from_list(a->cell[0]));
+    Cell* err = CHECK_ARITY_MIN(a, 1);
+    if (err) return err;
+    Cell* args = NULL;
+    /* Convert list to s-expr if we are handed a quote */
+    if (a->cell[0]->type == VAL_PAIR) {
+        args = make_sexpr_from_list(a->cell[0]);
+        for (int i = 0; i < args->count; i++ ) {
+            if (args->cell[i]->type == VAL_PAIR && args->cell[i]->len != -1) {
+                Cell* tmp = cell_copy(args->cell[i]);
+                args->cell[i] = make_sexpr_from_list(tmp);
+            }
+        }
+    /* Otherwise just send straight to eval */
+    } else {
+        args = a->cell[0];
+    }
+    return coz_eval(e, args);
 }
