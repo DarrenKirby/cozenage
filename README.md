@@ -2,6 +2,11 @@
 
 *Getting close to being ready for prime time*
 
+This started as a 'toy' Lisp, but I am steadily, if slowly, working towards a full
+R7RS [Scheme implementation](https://standards.scheme.org/). After the bulk of the R7RS standard is implemented,
+I plan to add several `(cozenage foo)` libraries to interface with the OS, and eventually morph this
+into some kind of usable shell with Scheme syntax.
+
 `Cozenage` requires one of [readline](https://tiswww.cwru.edu/php/chet/readline/rltop.html) or 
 libedit for the REPL. It requires [ICU](https://github.com/unicode-org/icu) for Unicode.
 These will almost certainly be installed already on any sort of development rig. It requires the [Boehm-Demers-Weiser Garbage Collector](https://github.com/bdwgc/bdwgc)
@@ -18,7 +23,13 @@ To delete objects and binaries run `make clean`
 Then run `./cozenage` to enter the funhouse.
 
 You can add the `-l/--library` flag with a comma-delimited list of libraries to load on startup
-(ie: complex,inexact,char etc.).
+(ie: complex,inexact,char etc.). Otherwise, you can load them from the REPL using the usual Scheme syntax: 
+`(import (scheme char))`. User-defined libraries are not yet supported.
+
+Note that not all built-in procedures are implemented yet. Not all base libraries are implemented yet, and not all procedures in
+the libraries I have started are implemented yet.
+
+This is a list of what *is* implemented so far. I try to keep it up to date:
 
 ## Builtin Procedures (scheme base)
 
