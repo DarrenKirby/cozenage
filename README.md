@@ -178,6 +178,11 @@ This is a list of what *is* implemented so far. I try to keep it up to date:
 - `string->symbol`
 - `string`
 - `string-length`
+- `string=?`
+- `string<?`
+- `string<=?`
+- `string>?`
+- `string>=?`
 
 ### Control features and list iteration
 

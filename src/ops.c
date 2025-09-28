@@ -2323,6 +2323,121 @@ Cell* builtin_string_length(Lex* e, Cell* a) {
     return make_val_int(code_point_count);
 }
 
+Cell* builtin_string_eq_pred(Lex* e, Cell* a) {
+    (void)e;
+    Cell* err = check_arg_types(a, VAL_STR);
+    if (err) return err;
+    err = CHECK_ARITY_MIN(a, 1);
+    if (err) return err;
+
+    for (int i = 0; i < a->count - 1; i++) {
+        const char* lhs = a->cell[i]->str;
+        const char* rhs = a->cell[i+1]->str;
+
+        /* quick exit before conversion: if the len is not the same,
+         * the strings are not the same */
+        if (strlen(lhs) != strlen(rhs)) {
+            return make_val_bool(0);
+        }
+        /* convert to UTF-16 */
+        const UChar* U_lhs = convert_to_utf16(lhs);
+        const UChar* U_rhs = convert_to_utf16(rhs);
+        if (u_strcmpCodePointOrder(U_lhs, U_rhs) != 0)  {
+            return make_val_bool(0);
+        }
+    }
+    /* If we get here, we're equal */
+    return make_val_bool(1);
+}
+
+Cell* builtin_string_lt_pred(Lex* e, Cell* a) {
+    (void)e;
+    Cell* err = check_arg_types(a, VAL_STR);
+    if (err) return err;
+    err = CHECK_ARITY_MIN(a, 1);
+    if (err) return err;
+
+    for (int i = 0; i < a->count - 1; i++) {
+        const char* lhs = a->cell[i]->str;
+        const char* rhs = a->cell[i+1]->str;
+
+        /* convert to UTF-16 */
+        const UChar* U_lhs = convert_to_utf16(lhs);
+        const UChar* U_rhs = convert_to_utf16(rhs);
+        if (u_strcmpCodePointOrder(U_lhs, U_rhs) >= 0)  {
+            return make_val_bool(0);
+        }
+    }
+    /* If we get here, s1 < s2 < sn ... */
+    return make_val_bool(1);
+}
+
+Cell* builtin_string_lte_pred(Lex* e, Cell* a) {
+    (void)e;
+    Cell* err = check_arg_types(a, VAL_STR);
+    if (err) return err;
+    err = CHECK_ARITY_MIN(a, 1);
+    if (err) return err;
+
+    for (int i = 0; i < a->count - 1; i++) {
+        const char* lhs = a->cell[i]->str;
+        const char* rhs = a->cell[i+1]->str;
+
+        /* convert to UTF-16 */
+        const UChar* U_lhs = convert_to_utf16(lhs);
+        const UChar* U_rhs = convert_to_utf16(rhs);
+        if (u_strcmpCodePointOrder(U_lhs, U_rhs) > 0)  {
+            return make_val_bool(0);
+        }
+    }
+    /* If we get here, s1 <= s2 <= sn ... */
+    return make_val_bool(1);
+}
+
+Cell* builtin_string_gt_pred(Lex* e, Cell* a) {
+    (void)e;
+    Cell* err = check_arg_types(a, VAL_STR);
+    if (err) return err;
+    err = CHECK_ARITY_MIN(a, 1);
+    if (err) return err;
+
+    for (int i = 0; i < a->count - 1; i++) {
+        const char* lhs = a->cell[i]->str;
+        const char* rhs = a->cell[i+1]->str;
+
+        /* convert to UTF-16 */
+        const UChar* U_lhs = convert_to_utf16(lhs);
+        const UChar* U_rhs = convert_to_utf16(rhs);
+        if (u_strcmpCodePointOrder(U_lhs, U_rhs) <= 0)  {
+            return make_val_bool(0);
+        }
+    }
+    /* If we get here, s1 > s2 > sn ... */
+    return make_val_bool(1);
+}
+
+Cell* builtin_string_gte_pred(Lex* e, Cell* a) {
+    (void)e;
+    Cell* err = check_arg_types(a, VAL_STR);
+    if (err) return err;
+    err = CHECK_ARITY_MIN(a, 1);
+    if (err) return err;
+
+    for (int i = 0; i < a->count - 1; i++) {
+        const char* lhs = a->cell[i]->str;
+        const char* rhs = a->cell[i+1]->str;
+
+        /* convert to UTF-16 */
+        const UChar* U_lhs = convert_to_utf16(lhs);
+        const UChar* U_rhs = convert_to_utf16(rhs);
+        if (u_strcmpCodePointOrder(U_lhs, U_rhs) >= 0)  {
+            return make_val_bool(0);
+        }
+    }
+    /* If we get here, s1 >= s2 >= sn ... */
+    return make_val_bool(1);
+}
+
 /*-------------------------------------------------------*
  *    Control features and list iteration procedures     *
  * ------------------------------------------------------*/
@@ -2436,6 +2551,7 @@ Cell* builtin_filter(Lex* e, Cell* a) {
     if (a->cell[1]->type != VAL_PAIR && a->cell[1]->len == -1) {
         return make_val_err("filter: arg 2 must be a proper list");
     }
+
     const Cell* proc = a->cell[0];
     Cell* result = make_val_nil();
     const Cell* val = a->cell[1];

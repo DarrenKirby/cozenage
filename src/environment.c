@@ -235,6 +235,11 @@ void lex_add_builtins(Lex* e) {
     lex_add_builtin(e, "string->symbol", builtin_string_to_symbol);
     lex_add_builtin(e, "string", builtin_string);
     lex_add_builtin(e, "string-length", builtin_string_length);
+    lex_add_builtin(e, "string=?", builtin_string_eq_pred);
+    lex_add_builtin(e, "string<?", builtin_string_lt_pred);
+    lex_add_builtin(e, "string<=?", builtin_string_lte_pred);
+    lex_add_builtin(e, "string>?", builtin_string_gt_pred);
+    lex_add_builtin(e, "string>=?", builtin_string_gte_pred);
     /* Control features */
     lex_add_builtin(e, "apply", builtin_apply);
     lex_add_builtin(e, "eval", builtin_eval);
