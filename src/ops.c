@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unicode/utf8.h>
+#include <unicode/ustring.h>
 #include <gc/gc.h>
 #include "printer.h"
 
@@ -2278,8 +2279,52 @@ Cell* builtin_symbol_to_string(Lex* e, Cell* a) {
     return make_val_str(a->cell[0]->sym);
 }
 
+Cell* builtin_string(Lex* e, Cell* a) {
+    (void)e;
+    Cell* err = check_arg_types(a, VAL_CHAR);
+    if (err) return err;
+
+    const int str_len = a->count;
+    char* the_string = GC_MALLOC_ATOMIC(str_len * 4 + 1);
+    int32_t j = 0;
+    for (int i = 0; i < str_len; i++) {
+        const Cell* char_cell = a->cell[i];
+        const UChar32 code_point = char_cell->c_val;
+        U8_APPEND_UNSAFE(the_string, j, code_point);
+    }
+    the_string[j] = '\0';
+    return make_val_str(the_string);
+}
+
+Cell* builtin_string_length(Lex* e, Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    if (err) return err;
+    if (a->cell[0]->type != VAL_STR) {
+        return make_val_err("string-length: arg 1 must be a string");
+    }
+
+    const char* s = a->cell[0]->str;
+    const int32_t len_bytes = (int)strlen(s); // Or your own length property
+
+    int32_t i = 0;
+    int32_t code_point_count = 0;
+    UChar32 c;
+
+    /* Iterate through the string one code point at a time */
+    while (i < len_bytes) {
+        U8_NEXT(s, i, len_bytes, c);
+        /* A negative value for 'c' indicates an invalid UTF-8 sequence */
+        if (c < 0) {
+            return make_val_err("string-length: invalid UTF-8 sequence in string");
+        }
+        code_point_count++;
+    }
+    return make_val_int(code_point_count);
+}
+
 /*-------------------------------------------------------*
- *                   Control features                    *
+ *    Control features and list iteration procedures     *
  * ------------------------------------------------------*/
 
 Cell* builtin_apply(Lex* e, Cell* a) {
@@ -2379,4 +2424,31 @@ Cell* builtin_map(Lex* e, Cell* a) {
 
     /* Reverse the final list to get the correct order and return */
     return builtin_list_reverse(e, make_sexpr_len1(final_result));
+}
+
+Cell* builtin_filter(Lex* e, Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 2);
+    if (err) return err;
+    if (a->cell[0]->type != VAL_PROC) {
+        return make_val_err("filter: arg 1 must be a procedure");
+    }
+    if (a->cell[1]->type != VAL_PAIR && a->cell[1]->len == -1) {
+        return make_val_err("filter: arg 2 must be a proper list");
+    }
+    const Cell* proc = a->cell[0];
+    Cell* result = make_val_nil();
+    const Cell* val = a->cell[1];
+    for (int i = 0; i < a->cell[1]->len; i++) {
+        Cell* pred_outcome = coz_eval(e, make_sexpr_len2(proc, val->car));
+        if (pred_outcome->type == VAL_ERR) {
+            return pred_outcome;
+        }
+        /* Copy val to result list if pred is true */
+        if (pred_outcome->b_val == 1) {
+            result = make_val_pair(cell_copy(val->car), result);
+        }
+        val = val->cdr;
+    }
+    return builtin_list_reverse(e, make_sexpr_len1(result));
 }

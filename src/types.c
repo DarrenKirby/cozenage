@@ -11,6 +11,7 @@
 #include <string.h>
 #include <math.h>
 #include <limits.h>
+#include <unicode/ustring.h>
 
 #include "printer.h"
 
@@ -834,7 +835,6 @@ const NamedChar* find_named_char(const char* name) {
     );
 }
 
-
 /* helper to get a pointer to the value in the Nth node of a list.
  * Returns NULL if the index is out of bounds or the input is not a list. */
 Cell* list_get_nth_cell_ptr(Cell* list, long n) {
@@ -851,7 +851,57 @@ Cell* list_get_nth_cell_ptr(Cell* list, long n) {
     if (current->type != VAL_PAIR) {
         return NULL;
     }
-
     /* The value we want is the CAR of this final pair */
     return current->car;
+}
+
+char* convert_to_utf8(const UChar* ustr) {
+    UErrorCode status = U_ZERO_ERROR;
+    int32_t char_len = 0;
+    char* result_utf8_str = NULL;
+
+    // 1. Pre-flight: Get required buffer length in bytes
+    u_strToUTF8(NULL, 0, &char_len, ustr, -1, &status);
+
+    if (status == U_BUFFER_OVERFLOW_ERROR) {
+        status = U_ZERO_ERROR;
+
+        // 2. Allocate the buffer (plus 1 for null terminator)
+        result_utf8_str = (char*)GC_malloc(sizeof(char) * (char_len + 1));
+
+        // 3. Actual Conversion
+        u_strToUTF8(result_utf8_str, char_len + 1, NULL, ustr, -1, &status);
+
+        if (U_FAILURE(status)) {
+            return NULL;
+        }
+    }
+    return result_utf8_str;
+}
+
+UChar* convert_to_utf16(const char* str) {
+    UErrorCode status = U_ZERO_ERROR;
+    int32_t uchar_len = 0;
+    UChar* my_utf16_str = NULL;
+
+    // 1. Pre-flight: Get the required buffer length in UChars
+    // We pass NULL for the destination buffer and 0 for the capacity.
+    u_strFromUTF8(NULL, 0, &uchar_len, str, -1, &status);
+
+    // The pre-flight call sets an error code that we expect.
+    if (status == U_BUFFER_OVERFLOW_ERROR) {
+        status = U_ZERO_ERROR; // Reset status for the next call
+
+        // 2. Allocate the buffer (plus 1 for a null terminator)
+        my_utf16_str = (UChar*)GC_malloc(sizeof(UChar) * (uchar_len + 1));
+        if (!my_utf16_str) { return NULL; }
+
+        // 3. Actual Conversion: Call the function again with the allocated buffer
+        u_strFromUTF8(my_utf16_str, uchar_len + 1, NULL, str, -1, &status);
+
+        if (U_FAILURE(status)) {
+            return NULL;
+        }
+    }
+    return my_utf16_str;
 }

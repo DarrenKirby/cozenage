@@ -115,9 +115,12 @@ Cell* builtin_char_gte_pred(Lex* e, Cell* a);
 /* String constructors, selectors, and procedures */
 Cell* builtin_string_to_symbol(Lex* e, Cell* a);
 Cell* builtin_symbol_to_string(Lex* e, Cell* a);
-/* Control features */
+Cell* builtin_string(Lex* e, Cell* a);
+Cell* builtin_string_length(Lex* e, Cell* a);
+/* Control features and list iteration procedures */
 Cell* builtin_apply(Lex* e, Cell* a);
 Cell* builtin_eval(Lex* e, Cell* a);
 Cell* builtin_map(Lex* e, Cell* a);
+Cell* builtin_filter(Lex* e, Cell* a);
 
 #endif //COZENAGE_OPS_H

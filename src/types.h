@@ -146,5 +146,7 @@ char* GC_strndup(const char* s, size_t n);
 int compare_named_chars(const void* key, const void* element);
 const NamedChar* find_named_char(const char* name);
 Cell* list_get_nth_cell_ptr(Cell* list, long n);
+char* convert_to_utf8(const UChar* ustr);
+UChar* convert_to_utf16(const char* str);
 
 #endif //COZENAGE_TYPES_H
