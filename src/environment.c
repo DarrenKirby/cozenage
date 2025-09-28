@@ -225,6 +225,11 @@ void lex_add_builtins(Lex* e) {
     /* Char procedures */
     lex_add_builtin(e, "char->int", builtin_char_to_int);
     lex_add_builtin(e, "int->char", builtin_int_to_char);
+    lex_add_builtin(e, "char=?", builtin_char_equal_pred);
+    lex_add_builtin(e, "char<?", builtin_char_lt_pred);
+    lex_add_builtin(e, "char<=?", builtin_char_lte_pred);
+    lex_add_builtin(e, "char>?", builtin_char_gt_pred);
+    lex_add_builtin(e, "char>=?", builtin_char_gte_pred);
     /* String procedures */
     lex_add_builtin(e, "symbol->string", builtin_symbol_to_string);
     lex_add_builtin(e, "string->symbol", builtin_string_to_symbol);

@@ -2189,9 +2189,70 @@ Cell* builtin_char_equal_pred(Lex* e, Cell* a) {
     Cell* err = check_arg_types(a, VAL_CHAR);
     if (err) return err;
 
-    return make_val_err("Not implemented yet");
+    Cell** cells = GC_MALLOC(sizeof(Cell*) * a->count);;
+    for (int i = 0; i < a->count; i++) {
+        cells[i] = make_val_int(a->cell[i]->c_val);
+    }
+
+    Cell* cell_sexpr = make_sexpr_from_array(a->count, cells);
+    return builtin_eq_op(e, cell_sexpr);
 }
 
+Cell* builtin_char_lt_pred(Lex* e, Cell* a) {
+    (void)e;
+    Cell* err = check_arg_types(a, VAL_CHAR);
+    if (err) return err;
+
+    Cell** cells = GC_MALLOC(sizeof(Cell*) * a->count);;
+    for (int i = 0; i < a->count; i++) {
+        cells[i] = make_val_int(a->cell[i]->c_val);
+    }
+
+    Cell* cell_sexpr = make_sexpr_from_array(a->count, cells);
+    return builtin_lt_op(e, cell_sexpr);
+}
+
+Cell* builtin_char_lte_pred(Lex* e, Cell* a) {
+    (void)e;
+    Cell* err = check_arg_types(a, VAL_CHAR);
+    if (err) return err;
+
+    Cell** cells = GC_MALLOC(sizeof(Cell*) * a->count);;
+    for (int i = 0; i < a->count; i++) {
+        cells[i] = make_val_int(a->cell[i]->c_val);
+    }
+
+    Cell* cell_sexpr = make_sexpr_from_array(a->count, cells);
+    return builtin_lte_op(e, cell_sexpr);
+}
+
+Cell* builtin_char_gt_pred(Lex* e, Cell* a) {
+    (void)e;
+    Cell* err = check_arg_types(a, VAL_CHAR);
+    if (err) return err;
+
+    Cell** cells = GC_MALLOC(sizeof(Cell*) * a->count);;
+    for (int i = 0; i < a->count; i++) {
+        cells[i] = make_val_int(a->cell[i]->c_val);
+    }
+
+    Cell* cell_sexpr = make_sexpr_from_array(a->count, cells);
+    return builtin_gt_op(e, cell_sexpr);
+}
+
+Cell* builtin_char_gte_pred(Lex* e, Cell* a) {
+    (void)e;
+    Cell* err = check_arg_types(a, VAL_CHAR);
+    if (err) return err;
+
+    Cell** cells = GC_MALLOC(sizeof(Cell*) * a->count);;
+    for (int i = 0; i < a->count; i++) {
+        cells[i] = make_val_int(a->cell[i]->c_val);
+    }
+
+    Cell* cell_sexpr = make_sexpr_from_array(a->count, cells);
+    return builtin_gte_op(e, cell_sexpr);
+}
 
 /*-------------------------------------------------------*
  *     String constructors, selectors, and procedures    *

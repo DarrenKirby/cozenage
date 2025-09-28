@@ -155,6 +155,11 @@ You can add the `-l/--library` flag with a comma-delimited list of libraries to 
 
 - `char->int`
 - `int->char`
+- `char=?`
+- `char<?`
+- `char<=?`
+- `char>?`
+- `char>=?`
 
 ### String procedures
 
@@ -216,3 +221,8 @@ You can add the `-l/--library` flag with a comma-delimited list of libraries to 
 - `char-downcase`
 - `char-foldcase`
 - `digit-value`
+- `char-ci=?`
+- `char-ci<?`
+- `char-ci<=?`
+- `char-ci>?`
+- `char-ci>=?`

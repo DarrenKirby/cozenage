@@ -499,6 +499,20 @@ Cell* make_sexpr_from_list(Cell* v) {
     return result;
 }
 
+/* Constructs an S-expression from a C array of Cell pointers. */
+Cell* make_sexpr_from_array(const int count, Cell** cells) {
+    Cell* v = make_val_sexpr();
+    v->count = count;
+    v->cell = GC_MALLOC(sizeof(Cell*) * count);
+
+    /* Copy each cell pointer from the source array */
+    for (int i = 0; i < count; i++) {
+        v->cell[i] = cell_copy(cells[i]);
+    }
+
+    return v;
+}
+
 Cell* flatten_sexpr(const Cell* sexpr) {
     /* Calculate the total size of the flattened S-expression */
     int new_count = 0;

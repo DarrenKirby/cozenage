@@ -1,9 +1,10 @@
 #include "char_lib.h"
 #include "environment.h"
 #include "types.h"
+#include "ops.h"
 #include <ctype.h>
 #include <unicode/uchar.h>
-
+#include <gc/gc.h>
 /*
 char-ci<?
 char-ci>=?
@@ -117,6 +118,78 @@ Cell* builtin_digit_value(Lex* e, Cell* a) {
     return make_val_int(value);
 }
 
+Cell* builtin_char_equal_ci(Lex* e, Cell* a) {
+    (void)e;
+    Cell* err = check_arg_types(a, VAL_CHAR);
+    if (err) return err;
+
+    Cell** cells = GC_MALLOC(sizeof(Cell*) * a->count);;
+    for (int i = 0; i < a->count; i++) {
+        const Cell* the_char = a->cell[i];
+        const Cell* the_char_fc = builtin_char_foldcase(e, make_sexpr_len1(the_char));
+        cells[i] = make_val_int(the_char_fc->c_val);
+    }
+
+    Cell* cell_sexpr = make_sexpr_from_array(a->count, cells);
+    return builtin_eq_op(e, cell_sexpr);
+}
+
+Cell* builtin_char_lt_ci(Lex* e, Cell* a) {
+    (void)e;
+    Cell* err = check_arg_types(a, VAL_CHAR);
+    if (err) return err;
+
+    Cell** cells = GC_MALLOC(sizeof(Cell*) * a->count);;
+    for (int i = 0; i < a->count; i++) {
+        cells[i] = make_val_int(a->cell[i]->c_val);
+    }
+
+    Cell* cell_sexpr = make_sexpr_from_array(a->count, cells);
+    return builtin_lt_op(e, cell_sexpr);
+}
+
+Cell* builtin_char_lte_ci(Lex* e, Cell* a) {
+    (void)e;
+    Cell* err = check_arg_types(a, VAL_CHAR);
+    if (err) return err;
+
+    Cell** cells = GC_MALLOC(sizeof(Cell*) * a->count);;
+    for (int i = 0; i < a->count; i++) {
+        cells[i] = make_val_int(a->cell[i]->c_val);
+    }
+
+    Cell* cell_sexpr = make_sexpr_from_array(a->count, cells);
+    return builtin_lte_op(e, cell_sexpr);
+}
+
+Cell* builtin_char_gt_ci(Lex* e, Cell* a) {
+    (void)e;
+    Cell* err = check_arg_types(a, VAL_CHAR);
+    if (err) return err;
+
+    Cell** cells = GC_MALLOC(sizeof(Cell*) * a->count);;
+    for (int i = 0; i < a->count; i++) {
+        cells[i] = make_val_int(a->cell[i]->c_val);
+    }
+
+    Cell* cell_sexpr = make_sexpr_from_array(a->count, cells);
+    return builtin_gt_op(e, cell_sexpr);
+}
+
+Cell* builtin_char_gte_ci(Lex* e, Cell* a) {
+    (void)e;
+    Cell* err = check_arg_types(a, VAL_CHAR);
+    if (err) return err;
+
+    Cell** cells = GC_MALLOC(sizeof(Cell*) * a->count);;
+    for (int i = 0; i < a->count; i++) {
+        cells[i] = make_val_int(a->cell[i]->c_val);
+    }
+
+    Cell* cell_sexpr = make_sexpr_from_array(a->count, cells);
+    return builtin_gte_op(e, cell_sexpr);
+}
+
 void lex_add_char_lib(Lex* e) {
     lex_add_builtin(e, "char-alphabetic?", builtin_char_alphabetic);
     lex_add_builtin(e, "char-whitespace?", builtin_char_whitespace);
@@ -127,4 +200,9 @@ void lex_add_char_lib(Lex* e) {
     lex_add_builtin(e, "char-downcase", builtin_char_downcase);
     lex_add_builtin(e, "char-foldcase", builtin_char_foldcase);
     lex_add_builtin(e, "digit-value", builtin_digit_value);
+    lex_add_builtin(e, "char-ci=?", builtin_char_equal_ci);
+    lex_add_builtin(e, "char-ci<?", builtin_char_lt_ci);
+    lex_add_builtin(e, "char-ci<=?", builtin_char_lte_ci);
+    lex_add_builtin(e, "char-ci>?", builtin_char_gt_ci);
+    lex_add_builtin(e, "char-ci>=?", builtin_char_gte_ci);
 }
