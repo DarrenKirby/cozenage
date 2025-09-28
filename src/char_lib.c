@@ -4,6 +4,7 @@
 #include "ops.h"
 #include <ctype.h>
 #include <unicode/uchar.h>
+#include <unicode/ustring.h>
 #include <gc/gc.h>
 
 
@@ -11,11 +12,8 @@
 string-ci<=?
 string-ci=?
 string-ci>?
-string-foldcase
 string-ci<?
 string-ci>=?
-string-downcase
-string-upcase
 */
 
 Cell* builtin_char_alphabetic(Lex* e, Cell* a) {
@@ -195,6 +193,88 @@ Cell* builtin_char_gte_ci(Lex* e, Cell* a) {
     return builtin_gte_op(e, cell_sexpr);
 }
 
+Cell* builtin_string_downcase(Lex* e, Cell* a) {
+    (void)e;
+    Cell* err = check_arg_types(a, VAL_STR);
+    if (err) return err;
+    err = CHECK_ARITY_EXACT(a, 1);
+    if (err) return err;
+
+    UErrorCode status = U_ZERO_ERROR;
+    UChar* src = convert_to_utf16(a->cell[0]->str);
+    if (!src) return make_val_err("string-downcase: malformed UTF-8 string");
+
+    const int32_t src_len = u_countChar32(src, -1);
+
+    UChar* dst = GC_MALLOC(sizeof(UChar) * src_len + 1);;
+    int32_t dest_len = u_strToLower(dst, src_len + 1, src, -1, NULL, &status);
+
+    if (dest_len < src_len) {
+        return make_val_err("string-downcase: some chars not copied!!!");
+    }
+
+    char* result = convert_to_utf8(dst);
+    if (!result) {
+        return make_val_err("string-downcase: malformed UTF-8 string");
+    }
+    return make_val_str(result);
+}
+
+Cell* builtin_string_upcase(Lex* e, Cell* a) {
+    (void)e;
+    Cell* err = check_arg_types(a, VAL_STR);
+    if (err) return err;
+    err = CHECK_ARITY_EXACT(a, 1);
+    if (err) return err;
+
+    UErrorCode status = U_ZERO_ERROR;
+    UChar* src = convert_to_utf16(a->cell[0]->str);
+    if (!src) return make_val_err("string-upcase: malformed UTF-8 string");
+
+    const int32_t src_len = u_countChar32(src, -1);
+
+    UChar* dst = GC_MALLOC(sizeof(UChar) * src_len + 1);;
+    int32_t dest_len = u_strToUpper(dst, src_len + 1, src, -1, NULL, &status);
+
+    if (dest_len < src_len) {
+        return make_val_err("string-upcase: some chars not copied!!!");
+    }
+
+    char* result = convert_to_utf8(dst);
+    if (!result) {
+        return make_val_err("string-upcase: malformed UTF-8 string");
+    }
+    return make_val_str(result);
+}
+
+Cell* builtin_string_foldcase(Lex* e, Cell* a) {
+    (void)e;
+    Cell* err = check_arg_types(a, VAL_STR);
+    if (err) return err;
+    err = CHECK_ARITY_EXACT(a, 1);
+    if (err) return err;
+
+    UErrorCode status = U_ZERO_ERROR;
+    UChar* src = convert_to_utf16(a->cell[0]->str);
+    if (!src) return make_val_err("string-foldcase: malformed UTF-8 string");
+
+    const int32_t src_len = u_countChar32(src, -1);
+
+    UChar* dst = GC_MALLOC(sizeof(UChar) * src_len + 1);;
+    int32_t dest_len = u_strFoldCase(dst, src_len + 1, src, -1, U_FOLD_CASE_DEFAULT, &status);
+
+    if (dest_len < src_len) {
+        return make_val_err("string-foldcase: some chars not copied!!!");
+    }
+
+    char* result = convert_to_utf8(dst);
+    if (!result) {
+        return make_val_err("string-foldcase: malformed UTF-8 string");
+    }
+    return make_val_str(result);
+}
+
+
 void lex_add_char_lib(Lex* e) {
     lex_add_builtin(e, "char-alphabetic?", builtin_char_alphabetic);
     lex_add_builtin(e, "char-whitespace?", builtin_char_whitespace);
@@ -210,4 +290,7 @@ void lex_add_char_lib(Lex* e) {
     lex_add_builtin(e, "char-ci<=?", builtin_char_lte_ci);
     lex_add_builtin(e, "char-ci>?", builtin_char_gt_ci);
     lex_add_builtin(e, "char-ci>=?", builtin_char_gte_ci);
+    lex_add_builtin(e, "string-downcase", builtin_string_downcase);
+    lex_add_builtin(e, "string-upcase", builtin_string_upcase);
+    lex_add_builtin(e, "string-foldcase", builtin_string_foldcase);
 }

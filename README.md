@@ -176,12 +176,15 @@ This is a list of what *is* implemented so far. I try to keep it up to date:
 
 - `symbol->string`
 - `string->symbol`
+- `string`
+- `string-length`
 
-### Control features
+### Control features and list iteration
 
 - `apply`
 - `eval`
 - `map`
+- `filter`
 
 ## Library procedures
 
@@ -237,3 +240,6 @@ This is a list of what *is* implemented so far. I try to keep it up to date:
 - `char-ci<=?`
 - `char-ci>?`
 - `char-ci>=?`
+- `string-downcase`
+- `string-upcase`
+- `string-foldcase`

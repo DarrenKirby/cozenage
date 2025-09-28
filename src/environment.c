@@ -233,8 +233,11 @@ void lex_add_builtins(Lex* e) {
     /* String procedures */
     lex_add_builtin(e, "symbol->string", builtin_symbol_to_string);
     lex_add_builtin(e, "string->symbol", builtin_string_to_symbol);
+    lex_add_builtin(e, "string", builtin_string);
+    lex_add_builtin(e, "string-length", builtin_string_length);
     /* Control features */
     lex_add_builtin(e, "apply", builtin_apply);
     lex_add_builtin(e, "eval", builtin_eval);
     lex_add_builtin(e, "map", builtin_map);
+    lex_add_builtin(e, "filter", builtin_filter);
 }
