@@ -248,3 +248,8 @@ This is a list of what *is* implemented so far. I try to keep it up to date:
 - `string-downcase`
 - `string-upcase`
 - `string-foldcase`
+- `string-ci=?`
+- `string-ci<?`
+- `string-ci<=?`
+- `string-ci>?`
+- `string-ci>=?`

@@ -3,6 +3,7 @@
 #include "types.h"
 #include "ops.h"
 #include <ctype.h>
+#include <string.h>
 #include <unicode/uchar.h>
 #include <unicode/ustring.h>
 #include <gc/gc.h>
@@ -207,7 +208,9 @@ Cell* builtin_string_downcase(Lex* e, Cell* a) {
     const int32_t src_len = u_countChar32(src, -1);
 
     UChar* dst = GC_MALLOC(sizeof(UChar) * src_len + 1);;
-    int32_t dest_len = u_strToLower(dst, src_len + 1, src, -1, NULL, &status);
+    const int32_t dest_len = u_strToLower(dst,
+        src_len + 1,
+        src, -1, NULL, &status);
 
     if (dest_len < src_len) {
         return make_val_err("string-downcase: some chars not copied!!!");
@@ -234,7 +237,9 @@ Cell* builtin_string_upcase(Lex* e, Cell* a) {
     const int32_t src_len = u_countChar32(src, -1);
 
     UChar* dst = GC_MALLOC(sizeof(UChar) * src_len + 1);;
-    int32_t dest_len = u_strToUpper(dst, src_len + 1, src, -1, NULL, &status);
+    const int32_t dest_len = u_strToUpper(dst,
+        src_len + 1,
+        src, -1, NULL, &status);
 
     if (dest_len < src_len) {
         return make_val_err("string-upcase: some chars not copied!!!");
@@ -261,7 +266,8 @@ Cell* builtin_string_foldcase(Lex* e, Cell* a) {
     const int32_t src_len = u_countChar32(src, -1);
 
     UChar* dst = GC_MALLOC(sizeof(UChar) * src_len + 1);;
-    int32_t dest_len = u_strFoldCase(dst, src_len + 1, src, -1, U_FOLD_CASE_DEFAULT, &status);
+    int32_t dest_len = u_strFoldCase(dst, src_len + 1, src, -1,
+        U_FOLD_CASE_DEFAULT, &status);
 
     if (dest_len < src_len) {
         return make_val_err("string-foldcase: some chars not copied!!!");
@@ -274,6 +280,130 @@ Cell* builtin_string_foldcase(Lex* e, Cell* a) {
     return make_val_str(result);
 }
 
+Cell* builtin_string_eq_ci(Lex* e, Cell* a) {
+    (void)e;
+    Cell* err = check_arg_types(a, VAL_STR);
+    if (err) return err;
+    err = CHECK_ARITY_MIN(a, 1);
+    if (err) return err;
+
+    for (int i = 0; i < a->count - 1; i++) {
+        const char* lhs = a->cell[i]->str;
+        const char* rhs = a->cell[i+1]->str;
+
+        /* quick exit before conversion: if the len is not the same,
+         * the strings are not the same */
+        if (strlen(lhs) != strlen(rhs)) {
+            return make_val_bool(0);
+        }
+        /* convert to UTF-16 */
+        const UChar* U_lhs = convert_to_utf16(lhs);
+        const UChar* U_rhs = convert_to_utf16(rhs);
+        UErrorCode status = U_ZERO_ERROR;
+        if (u_strCaseCompare(U_lhs, -1, U_rhs, -1,
+            U_FOLD_CASE_DEFAULT, &status) != 0)  {
+            return make_val_bool(0);
+        }
+    }
+    /* If we get here, we're equal */
+    return make_val_bool(1);
+}
+
+Cell* builtin_string_lt_ci(Lex* e, Cell* a) {
+    (void)e;
+    Cell* err = check_arg_types(a, VAL_STR);
+    if (err) return err;
+    err = CHECK_ARITY_MIN(a, 1);
+    if (err) return err;
+
+    for (int i = 0; i < a->count - 1; i++) {
+        const char* lhs = a->cell[i]->str;
+        const char* rhs = a->cell[i+1]->str;
+
+        /* convert to UTF-16 */
+        const UChar* U_lhs = convert_to_utf16(lhs);
+        const UChar* U_rhs = convert_to_utf16(rhs);
+        UErrorCode status = U_ZERO_ERROR;
+        if (u_strCaseCompare(U_lhs, -1, U_rhs, -1,
+            U_FOLD_CASE_DEFAULT, &status) >= 0)  {
+            return make_val_bool(0);
+        }
+    }
+    /* If we get here, s1 < s2 < sn ... */
+    return make_val_bool(1);
+}
+
+Cell* builtin_string_lte_ci(Lex* e, Cell* a) {
+    (void)e;
+    Cell* err = check_arg_types(a, VAL_STR);
+    if (err) return err;
+    err = CHECK_ARITY_MIN(a, 1);
+    if (err) return err;
+
+    for (int i = 0; i < a->count - 1; i++) {
+        const char* lhs = a->cell[i]->str;
+        const char* rhs = a->cell[i+1]->str;
+
+        /* convert to UTF-16 */
+        const UChar* U_lhs = convert_to_utf16(lhs);
+        const UChar* U_rhs = convert_to_utf16(rhs);
+        UErrorCode status = U_ZERO_ERROR;
+        if (u_strCaseCompare(U_lhs, -1, U_rhs, -1,
+            U_FOLD_CASE_DEFAULT, &status) > 0)  {
+            return make_val_bool(0);
+        }
+    }
+    /* If we get here, s1 <= s2 <= sn ... */
+    return make_val_bool(1);
+}
+
+Cell* builtin_string_gt_ci(Lex* e, Cell* a) {
+    (void)e;
+    Cell* err = check_arg_types(a, VAL_STR);
+    if (err) return err;
+    err = CHECK_ARITY_MIN(a, 1);
+    if (err) return err;
+
+    for (int i = 0; i < a->count - 1; i++) {
+        const char* lhs = a->cell[i]->str;
+        const char* rhs = a->cell[i+1]->str;
+
+        /* convert to UTF-16 */
+        const UChar* U_lhs = convert_to_utf16(lhs);
+        const UChar* U_rhs = convert_to_utf16(rhs);
+        UErrorCode status = U_ZERO_ERROR;
+        if (u_strCaseCompare(U_lhs, -1, U_rhs, -1,
+            U_FOLD_CASE_DEFAULT, &status) <= 0)  {
+            return make_val_bool(0);
+        }
+    }
+    /* If we get here, s1 > s2 > sn ... */
+    return make_val_bool(1);
+}
+
+Cell* builtin_string_gte_ci(Lex* e, Cell* a) {
+    (void)e;
+    Cell* err = check_arg_types(a, VAL_STR);
+    if (err) return err;
+    err = CHECK_ARITY_MIN(a, 1);
+    if (err) return err;
+
+    for (int i = 0; i < a->count - 1; i++) {
+        const char* lhs = a->cell[i]->str;
+        const char* rhs = a->cell[i+1]->str;
+
+        /* convert to UTF-16 */
+        const UChar* U_lhs = convert_to_utf16(lhs);
+        const UChar* U_rhs = convert_to_utf16(rhs);
+        UErrorCode status = U_ZERO_ERROR;
+        if (u_strCaseCompare(U_lhs, -1, U_rhs, -1,
+            U_FOLD_CASE_DEFAULT, &status) >= 0)  {
+            return make_val_bool(0);
+        }
+    }
+    /* If we get here, s1 >= s2 >= sn ... */
+    return make_val_bool(1);
+}
 
 void lex_add_char_lib(Lex* e) {
     lex_add_builtin(e, "char-alphabetic?", builtin_char_alphabetic);
@@ -293,4 +423,9 @@ void lex_add_char_lib(Lex* e) {
     lex_add_builtin(e, "string-downcase", builtin_string_downcase);
     lex_add_builtin(e, "string-upcase", builtin_string_upcase);
     lex_add_builtin(e, "string-foldcase", builtin_string_foldcase);
+    lex_add_builtin(e, "string-ci=?", builtin_string_eq_ci);
+    lex_add_builtin(e, "string-ci<?", builtin_string_lt_ci);
+    lex_add_builtin(e, "string-ci<=?", builtin_string_lte_ci);
+    lex_add_builtin(e, "string-ci>?", builtin_string_gt_ci);
+    lex_add_builtin(e, "string-ci>=?", builtin_string_gte_ci);
 }
