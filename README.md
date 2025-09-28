@@ -165,6 +165,7 @@ You can add the `-l/--library` flag with a comma-delimited list of libraries to 
 
 - `apply`
 - `eval`
+- `map`
 
 ## Library procedures
 

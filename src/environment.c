@@ -231,4 +231,5 @@ void lex_add_builtins(Lex* e) {
     /* Control features */
     lex_add_builtin(e, "apply", builtin_apply);
     lex_add_builtin(e, "eval", builtin_eval);
+    lex_add_builtin(e, "map", builtin_map);
 }

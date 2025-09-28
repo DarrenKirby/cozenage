@@ -1756,21 +1756,26 @@ Cell* builtin_list_reverse(Lex* e, Cell* a) {
 
     Cell* reversed_list = make_val_nil();
     const Cell* current = original_list;
-    int length_so_far = 0;
+    int length = 0;
 
     while (current->type == VAL_PAIR) {
         reversed_list = make_val_pair(cell_copy(current->car), reversed_list);
-        length_so_far++;
-        reversed_list->len = length_so_far;
+        length++;
         current = current->cdr;
     }
 
-    /* `reverse` should only accept proper lists */
     if (current->type != VAL_NIL) {
         return make_val_err("reverse: cannot reverse improper list");
     }
+
+    /* Set the length on the final result. */
+    if (reversed_list->type != VAL_NIL) {
+        reversed_list->len = length;
+    }
+
     return reversed_list;
 }
+
 
 /* 'list-tail' -> VAL_PAIR - returns a proper list of the last nth
  * members of arg */
@@ -1803,7 +1808,6 @@ Cell* builtin_list_tail(Lex* e, Cell* a) {
         /* Move to the next element in the list */
         p = p->cdr;
     }
-
     /* After the loop, p is pointing at the k-th cdr of the original list. */
     return p;
 }
@@ -2180,6 +2184,15 @@ Cell* builtin_int_to_char(Lex* e, Cell* a) {
     return make_val_char(val);
 }
 
+Cell* builtin_char_equal_pred(Lex* e, Cell* a) {
+    (void)e;
+    Cell* err = check_arg_types(a, VAL_CHAR);
+    if (err) return err;
+
+    return make_val_err("Not implemented yet");
+}
+
+
 /*-------------------------------------------------------*
  *     String constructors, selectors, and procedures    *
  * ------------------------------------------------------*/
@@ -2242,4 +2255,67 @@ Cell* builtin_eval(Lex* e, Cell* a) {
         args = a->cell[0];
     }
     return coz_eval(e, args);
+}
+
+Cell* builtin_map(Lex* e, Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_MIN(a, 2);
+    if (err) return err;
+    if (a->cell[0]->type != VAL_PROC) {
+        return make_val_err("map: arg 1 must be a procedure");
+    }
+    int shortest_list_length = INT32_MAX;
+    if (a->count >= 2) {
+        for (int i = 1; i < a->count; i++) {
+            char buf[34];
+            if (a->cell[i]->type != VAL_PAIR && a->cell[i]->len == -1) {
+                snprintf(buf, 34, "map: arg %d must be a proper list", i);
+                return make_val_err(buf);
+            }
+            if (a->cell[i]->len < shortest_list_length) {
+                shortest_list_length = a->cell[i]->len;
+            }
+        }
+    }
+
+    const int shortest_len = shortest_list_length;
+    const int num_lists = a->count - 1;
+    Cell* proc = a->cell[0];
+
+    Cell* final_result = make_val_nil();
+
+    for (int i = 0; i < shortest_len; i++) {
+        /* Build a (reversed) list of the i-th arguments */
+        Cell* arg_list = make_val_nil();
+        for (int j = 0; j < num_lists; j++) {
+            Cell* current_list = a->cell[j + 1];
+            Cell* nth_item = list_get_nth_cell_ptr(current_list, i);
+            arg_list = make_val_pair(nth_item, arg_list);
+            arg_list->len = j + 1;
+        }
+
+        /* Correct the argument order */
+        Cell* reversed_arg_list = builtin_list_reverse(e, make_sexpr_len1(arg_list));
+
+        /* Prepend the procedure to create the application form */
+        Cell* application_list = make_val_pair(proc, reversed_arg_list);
+        application_list->len = arg_list->len + 1;
+
+        /* Convert the Scheme list to an S-expression for eval */
+        Cell* application_sexpr = make_sexpr_from_list(application_list);
+
+        /* Evaluate it */
+        Cell* tmp_result = coz_eval(e, application_sexpr);
+        if (tmp_result->type == VAL_ERR) {
+            /* Propagate any evaluation errors */
+            return tmp_result;
+        }
+
+        /* Cons the result onto our (reversed) final list */
+        final_result = make_val_pair(tmp_result, final_result);
+        final_result->len = i + 1;
+    }
+
+    /* Reverse the final list to get the correct order and return */
+    return builtin_list_reverse(e, make_sexpr_len1(final_result));
 }

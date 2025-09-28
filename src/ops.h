@@ -113,5 +113,6 @@ Cell* builtin_symbol_to_string(Lex* e, Cell* a);
 /* Control features */
 Cell* builtin_apply(Lex* e, Cell* a);
 Cell* builtin_eval(Lex* e, Cell* a);
+Cell* builtin_map(Lex* e, Cell* a);
 
 #endif //COZENAGE_OPS_H
