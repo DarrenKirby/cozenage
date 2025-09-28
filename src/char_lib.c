@@ -5,16 +5,13 @@
 #include <ctype.h>
 #include <unicode/uchar.h>
 #include <gc/gc.h>
+
+
 /*
-char-ci<?
-char-ci>=?
 string-ci<=?
 string-ci=?
 string-ci>?
 string-foldcase
-char-ci<=?
-char-ci=?
-char-ci>?
 string-ci<?
 string-ci>=?
 string-downcase
@@ -141,7 +138,9 @@ Cell* builtin_char_lt_ci(Lex* e, Cell* a) {
 
     Cell** cells = GC_MALLOC(sizeof(Cell*) * a->count);;
     for (int i = 0; i < a->count; i++) {
-        cells[i] = make_val_int(a->cell[i]->c_val);
+        const Cell* the_char = a->cell[i];
+        const Cell* the_char_fc = builtin_char_foldcase(e, make_sexpr_len1(the_char));
+        cells[i] = make_val_int(the_char_fc->c_val);
     }
 
     Cell* cell_sexpr = make_sexpr_from_array(a->count, cells);
@@ -155,7 +154,9 @@ Cell* builtin_char_lte_ci(Lex* e, Cell* a) {
 
     Cell** cells = GC_MALLOC(sizeof(Cell*) * a->count);;
     for (int i = 0; i < a->count; i++) {
-        cells[i] = make_val_int(a->cell[i]->c_val);
+        const Cell* the_char = a->cell[i];
+        const Cell* the_char_fc = builtin_char_foldcase(e, make_sexpr_len1(the_char));
+        cells[i] = make_val_int(the_char_fc->c_val);
     }
 
     Cell* cell_sexpr = make_sexpr_from_array(a->count, cells);
@@ -169,7 +170,9 @@ Cell* builtin_char_gt_ci(Lex* e, Cell* a) {
 
     Cell** cells = GC_MALLOC(sizeof(Cell*) * a->count);;
     for (int i = 0; i < a->count; i++) {
-        cells[i] = make_val_int(a->cell[i]->c_val);
+        const Cell* the_char = a->cell[i];
+        const Cell* the_char_fc = builtin_char_foldcase(e, make_sexpr_len1(the_char));
+        cells[i] = make_val_int(the_char_fc->c_val);
     }
 
     Cell* cell_sexpr = make_sexpr_from_array(a->count, cells);
@@ -183,7 +186,9 @@ Cell* builtin_char_gte_ci(Lex* e, Cell* a) {
 
     Cell** cells = GC_MALLOC(sizeof(Cell*) * a->count);;
     for (int i = 0; i < a->count; i++) {
-        cells[i] = make_val_int(a->cell[i]->c_val);
+        const Cell* the_char = a->cell[i];
+        const Cell* the_char_fc = builtin_char_foldcase(e, make_sexpr_len1(the_char));
+        cells[i] = make_val_int(the_char_fc->c_val);
     }
 
     Cell* cell_sexpr = make_sexpr_from_array(a->count, cells);
