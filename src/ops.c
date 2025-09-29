@@ -183,7 +183,7 @@ Cell* builtin_add(Lex* e, Cell* a) {
                 complex_apply(builtin_add, e, result, rhs);
                 break;
             default:
-                return make_val_err("<builtin '+'> Oops, this shouldn't have happened.");
+                return make_val_err("<builtin '+'> Oops, this shouldn't have happened.", GEN_ERR);
         }
         result->exact = result->exact && rhs->exact;
     }
@@ -225,7 +225,7 @@ Cell* builtin_sub(Lex* e, Cell* a) {
                 complex_apply(builtin_sub, e, result, rhs);
                 break;
             default:
-                return make_val_err("<builtin '-'> Oops, this shouldn't have happened.");
+                return make_val_err("<builtin '-'> Oops, this shouldn't have happened.", GEN_ERR);
         }
         result->exact = result->exact && rhs->exact;
     }
@@ -263,7 +263,7 @@ Cell* builtin_mul(Lex* e, Cell* a) {
                 complex_apply(builtin_mul, e, result, rhs);
                 break;
             default:
-                return make_val_err("<builtin '*'> Oops, this shouldn't have happened.");
+                return make_val_err("<builtin '*'> Oops, this shouldn't have happened.", GEN_ERR);
         }
         result->exact = result->exact && rhs->exact;
     }
@@ -331,7 +331,7 @@ Cell* builtin_div(Lex* e, Cell* a) {
         switch (result->type) {
         case VAL_INT:
             if (rhs->i_val == 0) {
-                return make_val_err("Division by zero.");
+                return make_val_err("Division by zero.", GEN_ERR);
             }
             /* pretty hacky way to get (/ 9 3) -> 3 but (/ 10 3) -> 10/3 */
             const double r = remainder((double)result->i_val, (double)rhs->i_val);
@@ -350,7 +350,7 @@ Cell* builtin_div(Lex* e, Cell* a) {
             break;
         case VAL_REAL:
             if (rhs->r_val == 0) {
-                return make_val_err("Division by zero.");
+                return make_val_err("Division by zero.", GEN_ERR);
             }
             result->r_val /= rhs->r_val;
             break;
@@ -358,7 +358,7 @@ Cell* builtin_div(Lex* e, Cell* a) {
             complex_apply(builtin_div, e, result, rhs);
             break;
         default:
-            return make_val_err("<builtin '/'> Oops, this shouldn't have happened.");
+            return make_val_err("<builtin '/'> Oops, this shouldn't have happened.", GEN_ERR);
         }
         result->exact = result->exact && rhs->exact;
     }
@@ -621,7 +621,7 @@ Cell* builtin_quote(Lex* e, Cell* a) {
  * into the environment */
 Cell* builtin_define(Lex* e, Cell* a) {
     if (a->count < 2) {
-        return make_val_err("define requires at least 2 arguments");
+        return make_val_err("define requires at least 2 arguments", GEN_ERR);
     }
     const Cell* target = a->cell[0];
 
@@ -634,6 +634,7 @@ Cell* builtin_define(Lex* e, Cell* a) {
                 val->name = GC_strdup(target->name);
             }
         }
+        printf("in define --- val->type: %d\n", val->type);
         lex_put(e, target, val);
         return val;
     }
@@ -649,7 +650,7 @@ Cell* builtin_define(Lex* e, Cell* a) {
         Cell* formals = make_val_sexpr();
         for (int i = 1; i < target->count; i++) {
             if (target->cell[i]->type != VAL_SYM) {
-                return make_val_err("lambda formals must be symbols");
+                return make_val_err("lambda formals must be symbols", GEN_ERR);
             }
             cell_add(formals, cell_copy(target->cell[i]));
         }
@@ -665,7 +666,7 @@ Cell* builtin_define(Lex* e, Cell* a) {
         return lam;
         }
 
-    return make_val_err("invalid define syntax");
+    return make_val_err("invalid define syntax", GEN_ERR);
 }
 
 Cell* builtin_if(Lex* e, Cell* a) {
@@ -674,7 +675,7 @@ Cell* builtin_if(Lex* e, Cell* a) {
 
     const Cell* test = coz_eval(e, a->cell[0]);
     if (test->type != VAL_BOOL) {
-        return make_val_err("'if' test must be a predicate");
+        return make_val_err("'if' test must be a predicate", GEN_ERR);
     }
     Cell* result;
     if (test->b_val == 1) {
@@ -695,7 +696,7 @@ Cell* builtin_when(Lex* e, Cell* a) {
 
     const Cell* test = coz_eval(e, a->cell[0]);
     if (test->type != VAL_BOOL) {
-        return make_val_err("'when' test must be a predicate");
+        return make_val_err("'when' test must be a predicate", GEN_ERR);
     }
     Cell* result = NULL;
     if (test->b_val == 1) {
@@ -712,7 +713,7 @@ Cell* builtin_unless(Lex* e, Cell* a) {
 
     const Cell* test = coz_eval(e, a->cell[0]);
     if (test->type != VAL_BOOL) {
-        return make_val_err("'unless' test must be a predicate");
+        return make_val_err("'unless' test must be a predicate", GEN_ERR);
     }
     Cell* result = NULL;
     if (test->b_val == 0) {
@@ -738,7 +739,7 @@ Cell* builtin_cond(Lex* e, Cell* a) {
             break;
         }
         if (test->type != VAL_BOOL) {
-            result = make_val_err("'cond' test must be a predicate");
+            result = make_val_err("'cond' test must be a predicate", GEN_ERR);
         }
         if (test->b_val == 1) {
             for (int j = 1; j < clause->count; j++) {
@@ -777,7 +778,7 @@ Cell* builtin_import(Lex* e, Cell* a) {
         } else {
             /* TODO: Handle User Libraries Here
              * For example, (import (my-libs utils)). */
-            return make_val_err("import: user-defined libraries not yet supported");
+            return make_val_err("import: user-defined libraries not yet supported", GEN_ERR);
         }
     }
     return result;
@@ -980,9 +981,9 @@ Cell* builtin_expt(Lex* e, Cell* a) {
             }
             return result;
         }
-        return make_val_err("expt: complex base with non-integer exponent not implemented");
+        return make_val_err("expt: complex base with non-integer exponent not implemented", GEN_ERR);
     }
-    return make_val_err("expt: unreachable code");
+    return make_val_err("expt: unreachable code", GEN_ERR);
 }
 
 /* 'modulo' -> VAL_INT - returns the remainder of dividing the first argument
@@ -1083,7 +1084,7 @@ Cell* builtin_max(Lex* e, Cell* a) {
     /* Validate that all arguments are real numbers. */
     for (int i = 0; i < a->count; i++) {
         if (!cell_is_real(a->cell[i])) {
-            return make_val_err("max: all arguments must be real numbers");
+            return make_val_err("max: all arguments must be real numbers", GEN_ERR);
         }
     }
 
@@ -1110,7 +1111,7 @@ Cell* builtin_min(Lex* e, Cell* a) {
 
     for (int i = 0; i < a->count; i++) {
         if (!cell_is_real(a->cell[i])) {
-            return make_val_err("min: all arguments must be real numbers");
+            return make_val_err("min: all arguments must be real numbers", GEN_ERR);
         }
     }
 
@@ -1351,7 +1352,7 @@ Cell* builtin_eof_pred(Lex* e, Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
-    return make_val_err("Not implemented yet");
+    return make_val_bool(a->cell[0]->type == VAL_EOF);
 }
 
 /* ---------------------------------------*
@@ -1616,7 +1617,7 @@ Cell* builtin_list_length(Lex* e, Cell* a) {
     /* The R7RS standard for `length` requires a proper list.
      * If the list doesn't end in `nil`, it's an error. */
     if (p->type != VAL_NIL) {
-        return make_val_err("length: proper list required");
+        return make_val_err("length: proper list required", GEN_ERR);
     }
 
     /* It's a proper list. */
@@ -1631,16 +1632,16 @@ Cell* builtin_list_ref(Lex* e, Cell* a) {
     if (err) return err;
 
     if (a->cell[0]->type != VAL_PAIR) {
-        return make_val_err("list-ref: arg 1 must be a list");
+        return make_val_err("list-ref: arg 1 must be a list", GEN_ERR);
     }
     if (a->cell[1]->type != VAL_INT) {
-        return make_val_err("list-ref: arg 2 must be an integer");
+        return make_val_err("list-ref: arg 2 must be an integer", GEN_ERR);
     }
     int i = (int)a->cell[1]->i_val;
     const int len = a->cell[0]->len;
 
     if (i >= len && len != -1) {
-        return make_val_err("list-ref: arg 2 out of range");
+        return make_val_err("list-ref: arg 2 out of range", GEN_ERR);
     }
 
     Cell* p = a->cell[0];
@@ -1673,7 +1674,7 @@ Cell* builtin_list_append(Lex* e, Cell* a) {
         }
         /* All but the last argument must be a list */
         if (current_list->type != VAL_PAIR) {
-            return make_val_err("append: argument is not a list");
+            return make_val_err("append: argument is not a list", GEN_ERR);
         }
 
         /* Now, walk the list to ensure it's a *proper* list */
@@ -1682,7 +1683,7 @@ Cell* builtin_list_append(Lex* e, Cell* a) {
             p = p->cdr;
         }
         if (p->type != VAL_NIL) {
-            return make_val_err("append: middle argument is not a proper list");
+            return make_val_err("append: middle argument is not a proper list", GEN_ERR);
         }
 
         /* If we get here, the list is proper. Add its length. */
@@ -1766,7 +1767,7 @@ Cell* builtin_list_reverse(Lex* e, Cell* a) {
     }
 
     if (current->type != VAL_NIL) {
-        return make_val_err("reverse: cannot reverse improper list");
+        return make_val_err("reverse: cannot reverse improper list", GEN_ERR);
     }
 
     /* Set the length on the final result. */
@@ -1788,23 +1789,23 @@ Cell* builtin_list_tail(Lex* e, Cell* a) {
     if (a->cell[0]->type != VAL_PAIR &&
         a->cell[0]->type != VAL_SEXPR &&
         a->cell[0]->type != VAL_NIL) {
-        return make_val_err("list-tail: arg 1 must be a list");
+        return make_val_err("list-tail: arg 1 must be a list", GEN_ERR);
     }
     if (a->cell[1]->type != VAL_INT) {
-        return make_val_err("list-tail: arg 2 must be an integer");
+        return make_val_err("list-tail: arg 2 must be an integer", GEN_ERR);
     }
 
     Cell* lst = a->cell[0];
     const long k = a->cell[1]->i_val;
 
     if (k < 0) {
-        return make_val_err("list-tail: arg 2 must be non-negative");
+        return make_val_err("list-tail: arg 2 must be non-negative", GEN_ERR);
     }
 
     Cell* p = lst;
     for (long i = 0; i < k; i++) {
         if (p->type != VAL_PAIR) {
-            return make_val_err("list-tail: arg 2 out of range");
+            return make_val_err("list-tail: arg 2 out of range", GEN_ERR);
         }
         /* Move to the next element in the list */
         p = p->cdr;
@@ -1846,15 +1847,15 @@ Cell* builtin_vector_ref(Lex* e, Cell* a) {
     Cell* err = CHECK_ARITY_EXACT(a, 2);
     if (err) return err;
     if (a->cell[0]->type != VAL_VEC) {
-        return make_val_err("vector-ref: arg 1 must be a vector");
+        return make_val_err("vector-ref: arg 1 must be a vector", GEN_ERR);
     }
     if (a->cell[1]->type != VAL_INT) {
-        return make_val_err("vector-ref: arg 2 must be an integer");
+        return make_val_err("vector-ref: arg 2 must be an integer", GEN_ERR);
     }
     const int i = (int)a->cell[1]->i_val;
 
     if (i >= a->cell[0]->count) {
-        return make_val_err("vector-ref: index out of bounds");
+        return make_val_err("vector-ref: index out of bounds", GEN_ERR);
     }
     return cell_copy(a->cell[0]->cell[i]);
 }
@@ -1864,11 +1865,11 @@ Cell* builtin_make_vector(Lex* e, Cell* a) {
     Cell* err = CHECK_ARITY_RANGE(a, 1, 2);
     if (err) return err;
     if (a->cell[0]->type != VAL_INT) {
-        return make_val_err("make-vector: arg 1 must be an integer");
+        return make_val_err("make-vector: arg 1 must be an integer", GEN_ERR);
     }
     long long n = a->cell[0]->i_val;
     if (n < 1) {
-        return make_val_err("make-vector: arg 1 must be non-negative");
+        return make_val_err("make-vector: arg 1 must be non-negative", GEN_ERR);
     }
     Cell* fill = NULL;
     if (a->count == 2) {
@@ -1888,11 +1889,11 @@ Cell* builtin_list_to_vector(Lex* e, Cell* a) {
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
     if (a->cell[0]->type != VAL_PAIR) {
-        return make_val_err("list->vector: arg 1 must be a list");
+        return make_val_err("list->vector: arg 1 must be a list", GEN_ERR);
     }
     const int list_len = a->cell[0]->len;
     if (list_len == -1) {
-        return make_val_err("list->vector: arg 1 must be a proper list");
+        return make_val_err("list->vector: arg 1 must be a proper list", GEN_ERR);
     }
     const Cell* lst = a->cell[0];
     Cell *vec = make_val_vect();
@@ -1908,32 +1909,32 @@ Cell* builtin_vector_to_list(Lex* e, Cell* a) {
     Cell* err = CHECK_ARITY_RANGE(a, 1, 3);
     if (err) return err;
     if (a->cell[0]->type != VAL_VEC) {
-        return make_val_err("vector->list: arg 1 must be a vector");
+        return make_val_err("vector->list: arg 1 must be a vector", GEN_ERR);
     }
     int start = 0;
     int end = a->cell[0]->count;
 
     if (a->count == 2) {
         if (a->cell[1]->type != VAL_INT) {
-            return make_val_err("vector->list: arg 2 must be an integer");
+            return make_val_err("vector->list: arg 2 must be an integer", GEN_ERR);
         }
         start = (int)a->cell[1]->i_val;
         if (start < 0) {
-            return make_val_err("vector->list: arg 2 must be non-negative");
+            return make_val_err("vector->list: arg 2 must be non-negative", GEN_ERR);
         }
     }
 
     if (a->count == 3) {
         if (a->cell[2]->type != VAL_INT) {
-            return make_val_err("vector->list: arg 2 must be an integer");
+            return make_val_err("vector->list: arg 2 must be an integer", GEN_ERR);
         }
         start = (int)a->cell[1]->i_val;
         end = (int)a->cell[2]->i_val + 1;
         if (end < 0) {
-            return make_val_err("vector->list: arg 2 must be non-negative");
+            return make_val_err("vector->list: arg 2 must be non-negative", GEN_ERR);
         }
         if (end > a->cell[0]->count) {
-            return make_val_err("vector->list: index out of bounds");
+            return make_val_err("vector->list: index out of bounds", GEN_ERR);
         }
     }
 
@@ -1952,7 +1953,7 @@ Cell* builtin_vector_copy(Lex* e, Cell* a) {
     Cell* err = CHECK_ARITY_RANGE(a, 1, 3);
     if (err) return err;
     if (a->cell[0]->type != VAL_VEC) {
-        return make_val_err("vector->copy: arg 1 must be a vector");
+        return make_val_err("vector->copy: arg 1 must be a vector", GEN_ERR);
     }
     if (a->count == 1) {
         return cell_copy(a->cell[0]);
@@ -1976,20 +1977,20 @@ Cell* builtin_vector_to_string(Lex* e, Cell* a) {
     Cell* err = CHECK_ARITY_RANGE(a, 1, 3);
     if (err) return err;
     if (a->cell[0]->type != VAL_VEC) {
-        return make_val_err("vector->string: arg must be a vector");
+        return make_val_err("vector->string: arg must be a vector", GEN_ERR);
     }
     int start = 0;
     int end = a->cell[0]->count;
     char* the_string = GC_MALLOC_ATOMIC(end * 4 + 1);
     if (a->count == 2) {
         if (a->cell[1]->type != VAL_INT) {
-            return make_val_err("vector->string: arg2 must be an integer");
+            return make_val_err("vector->string: arg2 must be an integer", GEN_ERR);
         }
         start = (int)a->cell[1]->i_val;
     }
     if (a->count == 3) {
         if (a->cell[1]->type != VAL_INT) {
-            return make_val_err("vector->string: arg3 must be an integer");
+            return make_val_err("vector->string: arg3 must be an integer", GEN_ERR);
         }
         end = (int)a->cell[2]->i_val;
     }
@@ -1998,7 +1999,7 @@ Cell* builtin_vector_to_string(Lex* e, Cell* a) {
     for (int i = start; i < end; i++) {
         const Cell* char_cell = a->cell[0]->cell[i];
         if (char_cell->type != VAL_CHAR) {
-            return make_val_err("vector->string: vector must have only chars as members");
+            return make_val_err("vector->string: vector must have only chars as members", GEN_ERR);
         }
         const UChar32 code_point = char_cell->c_val;
         U8_APPEND_UNSAFE(the_string, j, code_point);
@@ -2013,7 +2014,7 @@ Cell* builtin_string_to_vector(Lex* e, Cell* a) {
     Cell* err = CHECK_ARITY_RANGE(a, 1, 3);
     if (err) return err;
     if (a->cell[0]->type != VAL_STR) {
-        return make_val_err("string->vector: arg1 must be a string");
+        return make_val_err("string->vector: arg1 must be a string", GEN_ERR);
     }
 
     const char* the_string = a->cell[0]->str;
@@ -2025,13 +2026,13 @@ Cell* builtin_string_to_vector(Lex* e, Cell* a) {
 
     if (a->count >= 2) {
         if (a->cell[1]->type != VAL_INT) {
-            return make_val_err("string->vector: arg2 must be an integer");
+            return make_val_err("string->vector: arg2 must be an integer", GEN_ERR);
         }
         start_char_idx = (int)a->cell[1]->i_val;
     }
     if (a->count == 3) {
         if (a->cell[2]->type != VAL_INT) {
-            return make_val_err("string->vector: arg3 must be an integer");
+            return make_val_err("string->vector: arg3 must be an integer", GEN_ERR);
         }
         end_char_idx = (int)a->cell[2]->i_val;
     }
@@ -2073,7 +2074,7 @@ Cell* builtin_bytevector(Lex* e, Cell* a) {
     Cell *vec = make_val_bytevec();
     for (int i = 0; i < a->count; i++) {
         if (a->cell[i]->type != VAL_INT || a->cell[i]->i_val < 0 || a->cell[i]->i_val > 255) {
-            return make_val_err("bytevector: args must be integers 0 to 255 inclusive");
+            return make_val_err("bytevector: args must be integers 0 to 255 inclusive", GEN_ERR);
         }
         cell_add(vec, cell_copy(a->cell[i]));
     }
@@ -2095,15 +2096,15 @@ Cell* builtin_bytevector_ref(Lex* e, Cell* a) {
     Cell* err = CHECK_ARITY_EXACT(a, 2);
     if (err) return err;
     if (a->cell[0]->type != VAL_BYTEVEC) {
-        return make_val_err("bytevector-ref: arg 1 must be a vector");
+        return make_val_err("bytevector-ref: arg 1 must be a vector", GEN_ERR);
     }
     if (a->cell[1]->type != VAL_INT) {
-        return make_val_err("bytevector-ref: arg 2 must be an integer");
+        return make_val_err("bytevector-ref: arg 2 must be an integer", GEN_ERR);
     }
     const int i = (int)a->cell[1]->i_val;
 
     if (i >= a->cell[0]->count) {
-        return make_val_err("bytevector-ref: index out of bounds");
+        return make_val_err("bytevector-ref: index out of bounds", GEN_ERR);
     }
     return cell_copy(a->cell[0]->cell[i]);
 }
@@ -2113,17 +2114,17 @@ Cell* builtin_make_bytevector(Lex* e, Cell* a) {
     Cell* err = CHECK_ARITY_RANGE(a, 1, 2);
     if (err) return err;
     if (a->cell[0]->type != VAL_INT) {
-        return make_val_err("make-bytevector: arg 1 must be an integer");
+        return make_val_err("make-bytevector: arg 1 must be an integer", GEN_ERR);
     }
     const long long n = a->cell[0]->i_val;
     if (n < 1) {
-        return make_val_err("make-bytevector: arg 1 must be non-negative");
+        return make_val_err("make-bytevector: arg 1 must be non-negative", GEN_ERR);
     }
     const Cell* fill = NULL;
     if (a->count == 2) {
         fill = a->cell[1];
         if (fill->i_val < 0 || fill->i_val > 255) {
-            return make_val_err("make-bytevector: arg 2 must be between 0 and 255 inclusive");
+            return make_val_err("make-bytevector: arg 2 must be between 0 and 255 inclusive", GEN_ERR);
         }
     } else {
         fill = make_val_int(0);
@@ -2140,7 +2141,7 @@ Cell* builtin_bytevector_copy(Lex* e, Cell* a) {
     Cell* err = CHECK_ARITY_RANGE(a, 1, 3);
     if (err) return err;
     if (a->cell[0]->type != VAL_BYTEVEC) {
-        return make_val_err("bytevector->copy: arg 1 must be a vector");
+        return make_val_err("bytevector->copy: arg 1 must be a vector", GEN_ERR);
     }
     if (a->count == 1) {
         return cell_copy(a->cell[0]);
@@ -2180,7 +2181,7 @@ Cell* builtin_int_to_char(Lex* e, Cell* a) {
 
     const UChar32 val = (int)a->cell[0]->i_val;
     if (val < 0 || val > 0x10FFFF) {
-        return make_val_err("Invalid Unicode hex value");
+        return make_val_err("Invalid Unicode hex value", GEN_ERR);
     }
     return make_val_char(val);
 }
@@ -2264,7 +2265,7 @@ Cell* builtin_string_to_symbol(Lex* e, Cell* a) {
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
     if (a->cell[0]->type != VAL_STR) {
-        return make_val_err("string->symbol: arg 1 must be a string");
+        return make_val_err("string->symbol: arg 1 must be a string", GEN_ERR);
     }
     return make_val_sym(a->cell[0]->str);
 }
@@ -2274,7 +2275,7 @@ Cell* builtin_symbol_to_string(Lex* e, Cell* a) {
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
     if (a->cell[0]->type != VAL_SYM) {
-        return make_val_err("symbol->string: arg 1 must be a symbol");
+        return make_val_err("symbol->string: arg 1 must be a symbol", GEN_ERR);
     }
     return make_val_str(a->cell[0]->sym);
 }
@@ -2301,7 +2302,7 @@ Cell* builtin_string_length(Lex* e, Cell* a) {
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
     if (a->cell[0]->type != VAL_STR) {
-        return make_val_err("string-length: arg 1 must be a string");
+        return make_val_err("string-length: arg 1 must be a string", GEN_ERR);
     }
 
     const char* s = a->cell[0]->str;
@@ -2316,7 +2317,7 @@ Cell* builtin_string_length(Lex* e, Cell* a) {
         U8_NEXT(s, i, len_bytes, c);
         /* A negative value for 'c' indicates an invalid UTF-8 sequence */
         if (c < 0) {
-            return make_val_err("string-length: invalid UTF-8 sequence in string");
+            return make_val_err("string-length: invalid UTF-8 sequence in string", GEN_ERR);
         }
         code_point_count++;
     }
@@ -2447,10 +2448,10 @@ Cell* builtin_apply(Lex* e, Cell* a) {
     Cell* err = CHECK_ARITY_EXACT(a, 2);
     if (err) return err;
     if (a->cell[0]->type != VAL_PROC) {
-        return make_val_err("apply: arg 1 must be a procedure");
+        return make_val_err("apply: arg 1 must be a procedure", GEN_ERR);
     }
     if (a->cell[1]->type != VAL_PAIR && a->cell[1]->len == -1) {
-        return make_val_err("apply: arg 2 must be a proper list");
+        return make_val_err("apply: arg 2 must be a proper list", GEN_ERR);
     }
 
     const Cell* composition = make_sexpr_len2(a->cell[0], make_sexpr_from_list(a->cell[1]));
@@ -2483,7 +2484,7 @@ Cell* builtin_map(Lex* e, Cell* a) {
     Cell* err = CHECK_ARITY_MIN(a, 2);
     if (err) return err;
     if (a->cell[0]->type != VAL_PROC) {
-        return make_val_err("map: arg 1 must be a procedure");
+        return make_val_err("map: arg 1 must be a procedure", GEN_ERR);
     }
     int shortest_list_length = INT32_MAX;
     if (a->count >= 2) {
@@ -2491,7 +2492,7 @@ Cell* builtin_map(Lex* e, Cell* a) {
             char buf[34];
             if (a->cell[i]->type != VAL_PAIR && a->cell[i]->len == -1) {
                 snprintf(buf, 34, "map: arg %d must be a proper list", i);
-                return make_val_err(buf);
+                return make_val_err(buf, GEN_ERR);
             }
             if (a->cell[i]->len < shortest_list_length) {
                 shortest_list_length = a->cell[i]->len;
@@ -2546,10 +2547,10 @@ Cell* builtin_filter(Lex* e, Cell* a) {
     Cell* err = CHECK_ARITY_EXACT(a, 2);
     if (err) return err;
     if (a->cell[0]->type != VAL_PROC) {
-        return make_val_err("filter: arg 1 must be a procedure");
+        return make_val_err("filter: arg 1 must be a procedure", GEN_ERR);
     }
     if (a->cell[1]->type != VAL_PAIR && a->cell[1]->len == -1) {
-        return make_val_err("filter: arg 2 must be a proper list");
+        return make_val_err("filter: arg 2 must be a proper list", GEN_ERR);
     }
 
     const Cell* proc = a->cell[0];
@@ -2567,4 +2568,87 @@ Cell* builtin_filter(Lex* e, Cell* a) {
         val = val->cdr;
     }
     return builtin_list_reverse(e, make_sexpr_len1(result));
+}
+
+/*-------------------------------------------------------*
+ *                Input/output and ports                 *
+ * ------------------------------------------------------*/
+
+Cell* builtin_current_input_port(Lex* e, Cell* a) {
+    (void)e; (void)a;
+    return default_input_port;
+}
+
+Cell* builtin_current_output_port(Lex* e, Cell* a) {
+    (void)e; (void)a;
+    return default_output_port;
+}
+
+Cell* builtin_current_error_port(Lex* e, Cell* a) {
+    (void)e; (void)a;
+    return default_error_port;
+}
+
+Cell* builtin_input_port_pred(Lex* e, Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    if (err) return err;
+    if (a->cell[0]->type != VAL_PORT || a->cell[0]->port_t != INPUT_PORT) {
+        return make_val_bool(0);
+    }
+    return make_val_bool(1);
+}
+
+Cell* builtin_output_port_pred(Lex* e, Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    if (err) return err;
+    if (a->cell[0]->type != VAL_PORT || a->cell[0]->port_t != OUTPUT_PORT) {
+        return make_val_bool(0);
+    }
+    return make_val_bool(1);
+}
+
+Cell* builtin_text_port_pred(Lex* e, Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    if (err) return err;
+    if (a->cell[0]->type != VAL_PORT || a->cell[0]->stream_t != TEXT_PORT) {
+        return make_val_bool(0);
+    }
+    return make_val_bool(1);
+}
+
+Cell* builtin_binary_port_pred(Lex* e, Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    if (err) return err;
+    if (a->cell[0]->type != VAL_PORT || a->cell[0]->stream_t != BINARY_PORT) {
+        return make_val_bool(0);
+    }
+    return make_val_bool(1);
+}
+
+Cell* builtin_input_port_open(Lex* e, Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    if (err) return err;
+    if (a->cell[0]->type == VAL_PORT ||
+        a->cell[0]->port_t != INPUT_PORT ||
+        a->cell[0]->is_open == true) {
+        return make_val_bool(1);
+        }
+    return make_val_bool(0);
+}
+
+Cell* builtin_output_port_open(Lex* e, Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    if (err) return err;
+    if (a->cell[0]->type == VAL_PORT ||
+        a->cell[0]->port_t != OUTPUT_PORT ||
+        a->cell[0]->is_open == true) {
+        return make_val_bool(1);
+    }
+    return make_val_bool(0);
 }

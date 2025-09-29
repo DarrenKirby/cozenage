@@ -249,7 +249,7 @@ Cell *parse_tokens(Parser *p) {
     }
 
     if (left_count != right_count) {
-        return make_val_err("Unbalanced parentheses");
+        return make_val_err("Unbalanced parentheses", GEN_ERR);
     }
 
     const char *tok = peek(p);
@@ -259,7 +259,7 @@ Cell *parse_tokens(Parser *p) {
     if (strcmp(tok, "'") == 0) {
         advance(p);  /* consume ' */
         Cell *quoted = parse_tokens(p);
-        if (!quoted) return make_val_err("Expected expression after quote");
+        if (!quoted) return make_val_err("Expected expression after quote", GEN_ERR);
         Cell *qexpr = make_val_sexpr();
         cell_add(qexpr, make_val_sym("quote"));
         cell_add(qexpr, quoted);
@@ -271,23 +271,23 @@ Cell *parse_tokens(Parser *p) {
         advance(p); /* consume '#u8' */
         const char *paren = advance(p); /* must be '(' */
         if (!paren || strcmp(paren, "(") != 0)
-            return make_val_err("Expected '(' after #u8");
+            return make_val_err("Expected '(' after #u8", GEN_ERR);
         Cell *bv = make_val_bytevec();
         while (peek(p) && strcmp(peek(p), ")") != 0) {
             cell_add(bv, parse_tokens(p));
         }
         if (!peek(p)) {
-            return make_val_err("Unmatched '(' in bytevector literal");
+            return make_val_err("Unmatched '(' in bytevector literal", GEN_ERR);
         }
         advance(p); /* skip ')' */
 
         /* ensure members in range */
         for (int i = 0; i < bv->count; i++) {
             if (bv->cell[i]->type != VAL_INT) {
-                return make_val_err("bytevector members must be integers");
+                return make_val_err("bytevector members must be integers", GEN_ERR);
             }
             if (bv->cell[i]->i_val < 0 || bv->cell[i]->i_val > 255) {
-                return make_val_err("bytevector members must be between 0 and 255 (inclusive)");
+                return make_val_err("bytevector members must be between 0 and 255 (inclusive)", GEN_ERR);
             }
         }
         return bv;
@@ -297,7 +297,7 @@ Cell *parse_tokens(Parser *p) {
     if (strcmp(tok, "#") == 0) {
         advance(p);  /* consume '#' */
         const char *next = peek(p);
-        if (!next) return make_val_err("Invalid token: '#'");
+        if (!next) return make_val_err("Invalid token: '#'", GEN_ERR);
 
         /* plain vector: #( ... ) */
         if (strcmp(next, "(") == 0) {
@@ -307,12 +307,12 @@ Cell *parse_tokens(Parser *p) {
                 cell_add(vec, parse_tokens(p));
             }
             if (!peek(p)) {
-                return make_val_err("Unmatched '(' in vector literal");
+                return make_val_err("Unmatched '(' in vector literal", GEN_ERR);
             }
             advance(p); /* skip ')' */
             return vec;
         }
-        return make_val_err("Invalid token");
+        return make_val_err("Invalid token", GEN_ERR);
     }
 
     /* Handle S-expressions '(' ... ')' */
@@ -323,7 +323,7 @@ Cell *parse_tokens(Parser *p) {
             cell_add(sexpr, parse_tokens(p));
         }
         if (!peek(p)) {
-            return make_val_err("Unmatched '('");
+            return make_val_err("Unmatched '('", GEN_ERR);
         }
 
         advance(p); /* skip ')' */
@@ -336,7 +336,7 @@ Cell *parse_tokens(Parser *p) {
 }
 
 Cell* parse_atom(const char *tok) {
-    if (!tok) return make_val_err("NULL token");
+    if (!tok) return make_val_err("NULL token", GEN_ERR);
     char err_buf[128] = {0};
     const size_t len = strlen(tok);
 
@@ -378,7 +378,7 @@ Cell* parse_atom(const char *tok) {
             if (!named_char) {
                 snprintf(err_buf, sizeof(err_buf), "Invalid token: '%s%s%s'",
             ANSI_RED_B, tok, ANSI_RESET);
-                return make_val_err(err_buf);
+                return make_val_err(err_buf, GEN_ERR);
             }
             return make_val_char(named_char->codepoint);
         }
@@ -390,7 +390,7 @@ Cell* parse_atom(const char *tok) {
 
             /* Check if parsing consumed the whole string and the value is valid */
             if (*end_ptr != '\0' || code < 0 || code > 0x10FFFF) {
-                return make_val_err("Invalid Unicode hex value");
+                return make_val_err("Invalid Unicode hex value", GEN_ERR);
             }
             return make_val_char((UChar32)code);
         }
@@ -405,7 +405,7 @@ Cell* parse_atom(const char *tok) {
         /* If 'i' is not equal to the payload length, it means there was
          * more than one character after #\ (e.g., #\ab), which is an error. */
         if (i != (int)payload_len) {
-            return make_val_err("Invalid character literal: multiple characters");
+            return make_val_err("Invalid character literal: multiple characters", GEN_ERR);
         }
 
         return make_val_char(code_point);
@@ -486,14 +486,14 @@ Cell* parse_atom(const char *tok) {
             if (p != NULL) {
                 snprintf(err_buf, sizeof(err_buf), "Invalid token: '%s%s%s'",
                     ANSI_RED_B, tok, ANSI_RESET);
-                return make_val_err(err_buf);
+                return make_val_err(err_buf, GEN_ERR);
             }
 
             const long long n = parse_int_checked(tok1, err_buf, sizeof(err_buf), 10, &ok);
             const long long d = parse_int_checked(tok2, err_buf, sizeof(err_buf), 10, &ok);
 
             if (d == 0) {
-                return make_val_err("Cannot have zero-value denominator in rational");
+                return make_val_err("Cannot have zero-value denominator in rational", GEN_ERR);
             }
             return make_val_rat(n, d, 1);
         }
@@ -526,14 +526,14 @@ Cell* parse_atom(const char *tok) {
         }
 
         /* If parsing fails but there is a numeric-like string, return error */
-        if (!ok) return make_val_err(err_buf);
+        if (!ok) return make_val_err(err_buf, GEN_ERR);
     }
 
     /* reject all other hash prefixes and single '#' */
     if (tok[0] == '#') {
         snprintf(err_buf, sizeof(err_buf), "Invalid token: '%s%s%s'",
             ANSI_RED_B, tok, ANSI_RESET);
-        return make_val_err(err_buf);
+        return make_val_err(err_buf, GEN_ERR);
     }
 
     /* Otherwise, treat as symbol */

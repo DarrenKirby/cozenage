@@ -5,6 +5,7 @@
 #include "environment.h"
 #include <stddef.h>
 #include <stdbool.h>
+#include <stdio.h>
 #include <unicode/umachine.h>
 
 
@@ -25,11 +26,22 @@ check_arg_arity((a), -1, (lo), (hi))
 ((v)->type == VAL_INT ? (long double)(v)->i_val : (v)->r_val)
 
 /* enum for error types */
-enum {
+typedef enum {
     GEN_ERR,
     FILE_ERR,
     READ_ERR,
-};
+} err_t;
+
+/* enums for port types */
+typedef enum {
+    INPUT_PORT,
+    OUTPUT_PORT,
+} port_t;
+
+typedef enum {
+    TEXT_PORT,
+    BINARY_PORT,
+} stream_t;
 
 /* Cell_t type enum */
 typedef enum {
@@ -53,7 +65,8 @@ typedef enum {
     VAL_PORT    = 1 << 14,  /* port */
     VAL_CONT    = 1 << 15,  /* continuation (maybe) */
 
-    VAL_ERR     = 1 << 16   /* error (interpreter-internal) */
+    VAL_ERR     = 1 << 16,   /* error */
+    VAL_EOF     = 1 << 17    /* EOF object */
 } Cell_t;
 
 /* Definition of the Cell struct/tagged union */
@@ -69,6 +82,11 @@ typedef struct Cell {
         char* sym;              /* symbols */
         char* str;              /* strings */
 
+        struct {              /* errors */
+            int err_t;
+            char* err;
+        };
+
         struct {               /* pairs */
             Cell* car;           /* first member */
             Cell* cdr;           /* second member */
@@ -83,6 +101,14 @@ typedef struct Cell {
         struct {               /* complex numbers */
             Cell* real;          /* real part */
             Cell* imag;          /* imaginary part */
+        };
+
+        struct {               /* Ports */
+            bool is_open;         /* open/closed status */
+            int port_t;           /* input or output */
+            int stream_t;         /* binary or textual */
+            char* path;           /* file path of associated fh */
+            FILE* fh;             /* the file handle */
         };
 
         struct {               /* for compound types (sexpr, vectors, etc.) */
@@ -107,6 +133,10 @@ typedef struct {
 } NamedChar;
 
 extern Cell* val_nil;  /* declare the global singleton */
+extern Cell* default_input_port;
+extern Cell* default_output_port;
+extern Cell* default_error_port;
+void init_default_ports(void);
 typedef Cell* (*BuiltinFn)(Lex* e, Cell* args);
 
 Cell* make_val_real(long double n);
@@ -122,7 +152,8 @@ Cell* make_val_str(const char* s);
 Cell* make_val_sexpr(void);
 Cell* make_val_nil(void);
 Cell* make_val_pair(Cell* car, Cell* cdr);
-Cell* make_val_err(const char* m);
+Cell* make_val_err(const char* m, err_t t);
+Cell* make_val_port(const char* path, FILE* fh, int io_t, int stream_t);
 Cell* cell_add(Cell* v, Cell* x);
 Cell* cell_copy(const Cell* v);
 Cell* cell_pop(Cell* v, int i);

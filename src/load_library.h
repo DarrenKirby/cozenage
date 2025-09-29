@@ -7,6 +7,7 @@
 #include "file_lib.h"
 #include "inexact_lib.h"
 #include "process_context_lib.h"
+#include "io_lib.h"
 
 #define MAX_LOADED_LIBS 32
 

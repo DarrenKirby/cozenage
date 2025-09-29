@@ -20,6 +20,8 @@ static const LibraryRegistryEntry library_registry[] = {
     {"inexact", lex_add_inexact_lib},
     {"process-context", lex_add_proc_con_lib},
     {"char", lex_add_char_lib},
+    {"read", lex_add_read_lib},
+    {"write", lex_add_write_lib},
     {NULL, NULL}
 };
 
@@ -49,5 +51,5 @@ Cell* load_scheme_library(const char* lib_name, Lex* env) {
     /* If we get here, the library wasn't found. */
     char buf[512];
     snprintf(buf, 511, "library '%s' not found.", lib_name);
-    return make_val_err(buf);
+    return make_val_err(buf, GEN_ERR);
 }

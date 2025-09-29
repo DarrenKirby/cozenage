@@ -47,7 +47,7 @@ Cell* lex_get(const Lex* e, const Cell* k) {
 
     char buf[128];
     snprintf(buf, sizeof(buf), "Unbound symbol: '%s'", k->sym);
-    return make_val_err(buf);
+    return make_val_err(buf, GEN_ERR);
 }
 
 void lex_put(Lex* e, const Cell* k, const Cell* v) {
@@ -245,4 +245,8 @@ void lex_add_builtins(Lex* e) {
     lex_add_builtin(e, "eval", builtin_eval);
     lex_add_builtin(e, "map", builtin_map);
     lex_add_builtin(e, "filter", builtin_filter);
+    /* input/output and ports */
+    lex_add_builtin(e, "current-input-port", builtin_current_input_port);
+    lex_add_builtin(e, "current-output-port", builtin_current_output_port);
+    lex_add_builtin(e, "current-error-port", builtin_current_error_port);
 }

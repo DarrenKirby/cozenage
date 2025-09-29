@@ -101,10 +101,10 @@ void print_cell(const Cell* v) {
 
     case VAL_ERR:
 #ifdef TESTING__
-        printf(" Error: %s", v->str);
+        printf(" %s: %s", v->err_t == GEN_ERR ? "Error" : "File error", v->err);
         break;
 #else
-        printf(" %sError:%s %s", ANSI_RED_B, ANSI_RESET, v->str);
+        printf(" %s%s:%s %s", ANSI_RED_B, v->err_t == GEN_ERR ? "Error" : "File error", ANSI_RESET, v->err);
         break;
 #endif
 
@@ -134,6 +134,13 @@ void print_cell(const Cell* v) {
         } else {
             printf("<lambda '%s%s%s'>", ANSI_GREEN_B, v->name, ANSI_RESET);
         }
+        break;
+
+    case VAL_PORT:
+        printf("<%s%s %s-port '%s%s%s'>", v->is_open ? "open:" : "closed: ",
+            v->stream_t == TEXT_PORT ? "text" : "binary",
+            v->port_t == INPUT_PORT ? "input" : "output",
+            ANSI_BLUE_B, v->path, ANSI_RESET);
         break;
 
     case VAL_SYM:

@@ -127,5 +127,15 @@ Cell* builtin_apply(Lex* e, Cell* a);
 Cell* builtin_eval(Lex* e, Cell* a);
 Cell* builtin_map(Lex* e, Cell* a);
 Cell* builtin_filter(Lex* e, Cell* a);
+/* Input/output and ports */
+Cell* builtin_current_input_port(Lex* e, Cell* a);
+Cell* builtin_current_output_port(Lex* e, Cell* a);
+Cell* builtin_current_error_port(Lex* e, Cell* a);
+Cell* builtin_input_port_pred(Lex* e, Cell* a);
+Cell* builtin_output_port_pred(Lex* e, Cell* a);
+Cell* builtin_text_port_pred(Lex* e, Cell* a);
+Cell* builtin_binary_port_pred(Lex* e, Cell* a);
+Cell* builtin_input_port_open(Lex* e, Cell* a);
+Cell* builtin_output_port_open(Lex* e, Cell* a);
 
 #endif //COZENAGE_OPS_H

@@ -163,6 +163,8 @@ void coz_print(const Cell* v) {
 void repl() {
     /* load history */
     read_history_from_file();
+    /* initialize default ports */
+    init_default_ports();
     /* Initialize global environment */
     Lex* e = lex_initialize();
     /* Load (scheme base) procedures */
@@ -186,6 +188,12 @@ void repl() {
     }
     if (load_libs.char_lib) {
         (void)load_scheme_library("char", e);
+    }
+    if (load_libs.read) {
+        (void)load_scheme_library("read", e);
+    }
+    if (load_libs.write) {
+        (void)load_scheme_library("write", e);
     }
 
     for (;;) {

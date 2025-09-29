@@ -11,7 +11,7 @@
 
 Cell* apply_lambda(Cell* lambda, Cell* args) {
     if (!lambda || lambda->type != VAL_PROC || lambda->builtin) {
-        return make_val_err("Not a lambda");
+        return make_val_err("Not a lambda", GEN_ERR);
     }
 
     /* Create a new child environment */
@@ -19,7 +19,7 @@ Cell* apply_lambda(Cell* lambda, Cell* args) {
 
     /* Bind formals to arguments */
     if (lambda->formals->count != args->count) {
-        return make_val_err("Lambda: wrong number of arguments");
+        return make_val_err("Lambda: wrong number of arguments", GEN_ERR);
     }
 
     for (int i = 0; i < args->count; i++) {
@@ -120,7 +120,7 @@ Cell* coz_eval(Lex* e, Cell* v) {
             return v;
 
         default:
-            return make_val_err("Unknown val type in eval()");
+            return make_val_err("Unknown val type in eval()", GEN_ERR);
     }
 }
 
@@ -147,7 +147,7 @@ Cell* eval_sexpr(Lex* e, Cell* v) {
     /* Special form: quote */
     if (first->type == VAL_SYM && strcmp(first->sym, "quote") == 0) {
         if (v->count != 1) {
-            return make_val_err("quote takes exactly one argument");
+            return make_val_err("quote takes exactly one argument", GEN_ERR);
         }
         /* Extract the S-expression that was quoted. */
         const Cell* quoted_sexpr = cell_take(v, 0);
@@ -165,7 +165,7 @@ Cell* eval_sexpr(Lex* e, Cell* v) {
     if (first->type == VAL_SYM && strcmp(first->sym, "lambda") == 0) {
 
         if (v->count < 2) {
-            return make_val_err("lambda requires formals and a body");
+            return make_val_err("lambda requires formals and a body", GEN_ERR);
         }
 
         const Cell* formals = cell_pop(v, 0);   /* first arg */
@@ -174,7 +174,7 @@ Cell* eval_sexpr(Lex* e, Cell* v) {
         /* formals should be a list of symbols */
         for (int i = 0; i < formals->count; i++) {
             if (formals->cell[i]->type != VAL_SYM) {
-                return make_val_err("lambda formals must be symbols");
+                return make_val_err("lambda formals must be symbols", GEN_ERR);
             }
         }
 
@@ -229,7 +229,7 @@ Cell* eval_sexpr(Lex* e, Cell* v) {
         printf(ANSI_RED_B);
         print_cell(f);
         printf("%s: ", ANSI_RESET);
-        return make_val_err("S-expression does not start with a procedure");
+        return make_val_err("S-expression does not start with a procedure", GEN_ERR);
     }
 
     /* Now evaluate arguments (since it's not a special form) */

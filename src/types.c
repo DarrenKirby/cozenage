@@ -19,6 +19,17 @@
 /* define the global nil */
 Cell* val_nil = NULL;
 
+/* default ports */
+Cell* default_input_port  = NULL;
+Cell* default_output_port = NULL;
+Cell* default_error_port  = NULL;
+
+void init_default_ports(void) {
+    default_input_port  = make_val_port("stdin",  stdin,  INPUT_PORT, TEXT_PORT);
+    default_output_port = make_val_port("stdout", stdout, OUTPUT_PORT, TEXT_PORT);
+    default_error_port  = make_val_port("stderr", stderr, OUTPUT_PORT, TEXT_PORT);
+}
+
 /*------------------------------------*
  *       Cell type constructors       *
  * -----------------------------------*/
@@ -62,7 +73,7 @@ Cell* make_val_rat(const long int num, const long int den, const bool simplify) 
 
 Cell* make_val_complex(Cell* real, Cell *imag) {
     if (real->type == VAL_COMPLEX || imag->type == VAL_COMPLEX) {
-        return make_val_err("Cannot have complex real or imaginary parts.");
+        return make_val_err("Cannot have complex real or imaginary parts.", GEN_ERR);
     }
     Cell* v = GC_MALLOC(sizeof(Cell));
     v->type = VAL_COMPLEX;
@@ -137,11 +148,22 @@ Cell* make_val_bytevec(void) {
     return v;
 }
 
-Cell* make_val_err(const char* m) {
+Cell* make_val_err(const char* m, err_t t) {
     Cell* v = GC_MALLOC(sizeof(Cell));
     v->type = VAL_ERR;
-    v->exact = GEN_ERR;
-    v->str = GC_strdup(m);
+    v->err_t = t;
+    v->err = GC_strdup(m);
+    return v;
+}
+
+Cell* make_val_port(const char* path, FILE* fh, const int io_t, const int stream_t) {
+    Cell* v = GC_MALLOC(sizeof(Cell));
+    v->is_open = true;
+    v->type = VAL_PORT;
+    v->path = GC_strdup(path);
+    v->port_t = io_t;
+    v->stream_t = stream_t;
+    v->fh = fh;
     return v;
 }
 
@@ -283,7 +305,14 @@ Cell* cell_copy(const Cell* v) {
         break;
         }
 
-    case VAL_PORT:
+    case VAL_PORT: {
+        copy->port_t = v->port_t;
+        copy->stream_t = v->stream_t;
+        copy->fh = v->fh;
+        copy->path = GC_strdup(v->path);
+        break;
+    }
+
     case VAL_CONT:
         /* shallow copy (all fields remain zeroed) */
         break;
@@ -365,7 +394,7 @@ Cell* check_arg_types(const Cell* a, const int mask) {
                      i+1,
                      cell_type_name(arg->type),
                      cell_mask_types(mask));
-            return make_val_err(buf);
+            return make_val_err(buf, GEN_ERR);
         }
     }
     return NULL;
@@ -379,21 +408,21 @@ Cell* check_arg_arity(const Cell* a, const int exact, const int min, const int m
         snprintf(buf, sizeof(buf),
                  "Arity error: expected exactly %d arg%s, got %d",
                  exact, exact == 1 ? "" : "s", argc);
-        return make_val_err(buf);
+        return make_val_err(buf, GEN_ERR);
     }
     if (min >= 0 && argc < min) {
         char buf[128];
         snprintf(buf, sizeof(buf),
                  "Arity error: expected at least %d arg%s, got %d",
                  min, min == 1 ? "" : "s", argc);
-        return make_val_err(buf);
+        return make_val_err(buf, GEN_ERR);
     }
     if (max >= 0 && argc > max) {
         char buf[128];
         snprintf(buf, sizeof(buf),
                  "Arity error: expected at most %d arg%s, got %d",
                  max, max == 1 ? "" : "s", argc);
-        return make_val_err(buf);
+        return make_val_err(buf, GEN_ERR);
     }
     return NULL; /* all good */
 }
@@ -571,7 +600,7 @@ Cell* negate_numeric(Cell* x) {
                 negate_numeric(x->imag)
             );
         default:
-            return make_val_err("negate_numeric: Oops, this isn't right!");
+            return make_val_err("negate_numeric: Oops, this isn't right!", GEN_ERR);
     }
 }
 
@@ -605,7 +634,7 @@ Cell* simplify_rational(Cell* v) {
 
     if (v->den == 0) {
         /* undefined fraction, return an error */
-        Cell* err = make_val_err("simplify_rational: denominator is zero!");
+        Cell* err = make_val_err("simplify_rational: denominator is zero!", GEN_ERR);
         return err;
     }
     if (v->num == v->den) {
@@ -860,16 +889,14 @@ char* convert_to_utf8(const UChar* ustr) {
     int32_t char_len = 0;
     char* result_utf8_str = NULL;
 
-    // 1. Pre-flight: Get required buffer length in bytes
+    /* Get required buffer length in bytes */
     u_strToUTF8(NULL, 0, &char_len, ustr, -1, &status);
 
     if (status == U_BUFFER_OVERFLOW_ERROR) {
         status = U_ZERO_ERROR;
-
-        // 2. Allocate the buffer (plus 1 for null terminator)
         result_utf8_str = (char*)GC_malloc(sizeof(char) * (char_len + 1));
 
-        // 3. Actual Conversion
+        /* Actual Conversion */
         u_strToUTF8(result_utf8_str, char_len + 1, NULL, ustr, -1, &status);
 
         if (U_FAILURE(status)) {
@@ -884,19 +911,16 @@ UChar* convert_to_utf16(const char* str) {
     int32_t uchar_len = 0;
     UChar* my_utf16_str = NULL;
 
-    // 1. Pre-flight: Get the required buffer length in UChars
-    // We pass NULL for the destination buffer and 0 for the capacity.
+    /* Pre-flight: Get the required buffer length in UChars */
     u_strFromUTF8(NULL, 0, &uchar_len, str, -1, &status);
 
-    // The pre-flight call sets an error code that we expect.
+    /* The pre-flight call sets an error code that we expect. */
     if (status == U_BUFFER_OVERFLOW_ERROR) {
         status = U_ZERO_ERROR; // Reset status for the next call
-
-        // 2. Allocate the buffer (plus 1 for a null terminator)
         my_utf16_str = (UChar*)GC_malloc(sizeof(UChar) * (uchar_len + 1));
         if (!my_utf16_str) { return NULL; }
 
-        // 3. Actual Conversion: Call the function again with the allocated buffer
+        /* Call the function again with the allocated buffer */
         u_strFromUTF8(my_utf16_str, uchar_len + 1, NULL, str, -1, &status);
 
         if (U_FAILURE(status)) {

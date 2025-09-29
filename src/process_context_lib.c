@@ -9,7 +9,7 @@ extern char **environ;
 
 Cell* builtin_command_line(Lex* e, Cell* a) {
     (void)e; (void)a;
-    return make_val_err("not implemented yet");
+    return make_val_err("not implemented yet", GEN_ERR);
 }
 
 Cell* builtin_exit(Lex* e, Cell* a) {
