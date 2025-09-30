@@ -158,12 +158,18 @@ Cell* make_val_err(const char* m, err_t t) {
 
 Cell* make_val_port(const char* path, FILE* fh, const int io_t, const int stream_t) {
     Cell* v = GC_MALLOC(sizeof(Cell));
-    v->is_open = true;
+    v->is_open = 1;
     v->type = VAL_PORT;
     v->path = GC_strdup(path);
     v->port_t = io_t;
     v->stream_t = stream_t;
     v->fh = fh;
+    return v;
+}
+
+Cell* make_val_eof(void) {
+    Cell* v = GC_MALLOC(sizeof(Cell));
+    v->type = VAL_EOF;
     return v;
 }
 
@@ -306,6 +312,7 @@ Cell* cell_copy(const Cell* v) {
         }
 
     case VAL_PORT: {
+        copy->is_open = v->is_open;
         copy->port_t = v->port_t;
         copy->stream_t = v->stream_t;
         copy->fh = v->fh;

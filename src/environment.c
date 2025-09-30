@@ -36,7 +36,8 @@ Cell* lex_get(const Lex* e, const Cell* k) {
 
     for (int i = 0; i < e->count; i++) {
         if (strcmp(e->syms[i], k->sym) == 0) {
-            return cell_copy(e->vals[i]);
+            //return cell_copy(e->vals[i]);
+            return e->vals[i];
         }
     }
 
@@ -249,4 +250,16 @@ void lex_add_builtins(Lex* e) {
     lex_add_builtin(e, "current-input-port", builtin_current_input_port);
     lex_add_builtin(e, "current-output-port", builtin_current_output_port);
     lex_add_builtin(e, "current-error-port", builtin_current_error_port);
+    lex_add_builtin(e, "input-port?", builtin_input_port_pred);
+    lex_add_builtin(e, "output-port?", builtin_output_port_pred);
+    lex_add_builtin(e, "textual-port?", builtin_text_port_pred);
+    lex_add_builtin(e, "binary-port?", builtin_binary_port_pred);
+    lex_add_builtin(e, "input-port-open?", builtin_input_port_open);
+    lex_add_builtin(e, "output-port-open?", builtin_output_port_open);
+    lex_add_builtin(e, "close-port", builtin_close_port);
+    lex_add_builtin(e, "close-input-port", builtin_close_port); /* no distinction yet... */
+    lex_add_builtin(e, "close-output-port", builtin_close_port);
+    lex_add_builtin(e, "read-line", builtin_read_line);
+    lex_add_builtin(e, "write-string", builtin_write_string);
+    lex_add_builtin(e, "newline", builtin_newline);
 }

@@ -137,7 +137,7 @@ void print_cell(const Cell* v) {
         break;
 
     case VAL_PORT:
-        printf("<%s%s %s-port '%s%s%s'>", v->is_open ? "open:" : "closed: ",
+        printf("<%s%s %s-port '%s%s%s'>", v->is_open ? "open:" : "closed:",
             v->stream_t == TEXT_PORT ? "text" : "binary",
             v->port_t == INPUT_PORT ? "input" : "output",
             ANSI_BLUE_B, v->path, ANSI_RESET);
@@ -153,6 +153,10 @@ void print_cell(const Cell* v) {
 
     case VAL_NIL:
         printf("()");
+        break;
+
+    case VAL_EOF:
+        printf("!EOF");
         break;
 
     case VAL_SEXPR:

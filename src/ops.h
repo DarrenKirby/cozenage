@@ -137,5 +137,9 @@ Cell* builtin_text_port_pred(Lex* e, Cell* a);
 Cell* builtin_binary_port_pred(Lex* e, Cell* a);
 Cell* builtin_input_port_open(Lex* e, Cell* a);
 Cell* builtin_output_port_open(Lex* e, Cell* a);
+Cell* builtin_close_port(Lex* e, Cell* a);
+Cell* builtin_read_line(Lex* e, Cell* a);
+Cell* builtin_write_string(Lex* e, Cell* a);
+Cell* builtin_newline(Lex* e, Cell* a);
 
 #endif //COZENAGE_OPS_H

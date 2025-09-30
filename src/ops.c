@@ -9,6 +9,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <errno.h>
 #include <unicode/utf8.h>
 #include <unicode/ustring.h>
 #include <gc/gc.h>
@@ -628,13 +629,16 @@ Cell* builtin_define(Lex* e, Cell* a) {
     /* (define <symbol> <expr>) */
     if (target->type == VAL_SYM) {
         Cell* val = coz_eval(e, a->cell[1]);
+        /* Bail out if error encountered during evaluation */
+        if (val->type == VAL_ERR) {
+            return val;
+        }
         /* Grab the name for the un-sugared define lambda */
         if (val->type == VAL_PROC) {
             if (!val->name) {
                 val->name = GC_strdup(target->name);
             }
         }
-        printf("in define --- val->type: %d\n", val->type);
         lex_put(e, target, val);
         return val;
     }
@@ -2651,4 +2655,89 @@ Cell* builtin_output_port_open(Lex* e, Cell* a) {
         return make_val_bool(1);
     }
     return make_val_bool(0);
+}
+
+Cell* builtin_close_port(Lex* e, Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    if (err) return err;
+    if (a->cell[0]->type != VAL_PORT) {
+        return make_val_err("arg1 is not a port", GEN_ERR);
+    }
+
+    if (a->cell[0]->is_open == 1) {
+        fclose(a->cell[0]->fh);
+        a->cell[0]->is_open = 0;
+    }
+    return make_val_bool(1);
+}
+
+Cell* builtin_read_line(Lex* e, Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_RANGE(a, 0, 1);
+    if (err) return err;
+    err = check_arg_types(a, VAL_PORT);
+    if (err) return err;
+
+    Cell* port = NULL;
+    if (a->count == 0) {
+        port = builtin_current_input_port(e, a);
+    } else {
+        port = a->cell[0];
+    }
+
+    if (port->is_open == 0 || port->port_t != INPUT_PORT)
+        return make_val_err("port is not open for input", GEN_ERR);
+
+    char *line = NULL;
+    size_t n = 0;
+    const ssize_t len = getline(&line, &n, port->fh);
+    if (len <= 0) { free(line); return make_val_eof(); }
+    /* remove newline if present */
+    if (line[len-1] == '\n') line[len-1] = '\0';
+
+    Cell* result = make_val_str(line);
+    free(line);
+    return result;
+}
+
+Cell* builtin_write_string(Lex* e, Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_RANGE(a, 1, 4);
+    if (err) return err;
+    if (a->cell[0]->type != VAL_STR) {
+        return make_val_err("arg1 must be a string", GEN_ERR);
+    }
+    if (a->count >= 2) {
+        if (a->cell[1]->type != VAL_PORT) {
+            return make_val_err("arg2 must be a port", GEN_ERR);
+        }
+    }
+    Cell* port = NULL;
+    if (a->count == 1) {
+        port = builtin_current_output_port(e, a);
+    } else {
+        port = a->cell[1];
+    }
+    if (fputs(a->cell[0]->str, port->fh) == EOF) {
+        return make_val_err(strerror(errno), FILE_ERR);
+    }
+    return make_val_bool(1);
+}
+
+Cell* builtin_newline(Lex* e, Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_RANGE(a, 0, 1);
+    if (err) return err;
+
+    Cell* port = NULL;
+    if (a->count == 0) {
+        port = builtin_current_output_port(e, a);
+    } else {
+        port = a->cell[0];
+    }
+    if (fputs("\n", port->fh) == EOF) {
+        return make_val_err(strerror(errno), FILE_ERR);
+    }
+    return make_val_bool(1);
 }

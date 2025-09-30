@@ -14,6 +14,3 @@ void lex_add_write_lib(Lex* e) {
     lex_add_builtin(e, "display", builtin_display);
 }
 
-void lex_add_read_lib(Lex* e) {
-    ;
-}

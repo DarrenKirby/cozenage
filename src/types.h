@@ -104,7 +104,7 @@ typedef struct Cell {
         };
 
         struct {               /* Ports */
-            bool is_open;         /* open/closed status */
+            int is_open;          /* open/closed status */
             int port_t;           /* input or output */
             int stream_t;         /* binary or textual */
             char* path;           /* file path of associated fh */
@@ -154,6 +154,7 @@ Cell* make_val_nil(void);
 Cell* make_val_pair(Cell* car, Cell* cdr);
 Cell* make_val_err(const char* m, err_t t);
 Cell* make_val_port(const char* path, FILE* fh, int io_t, int stream_t);
+Cell* make_val_eof(void);
 Cell* cell_add(Cell* v, Cell* x);
 Cell* cell_copy(const Cell* v);
 Cell* cell_pop(Cell* v, int i);
