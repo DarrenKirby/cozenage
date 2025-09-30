@@ -1,3 +1,22 @@
+/*
+ * 'src/file_lib.c'
+ * This file is part of Cozenage - https://github.com/DarrenKirby/cozenage
+ * Copyright © 2025  Darren Kirby <darren@dragonbyte.ca>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 #include "file_lib.h"
 #include "environment.h"
 #include <unistd.h>
@@ -8,17 +27,14 @@
 #include <limits.h>
 
 
-/*
+/* TODO:
 call-with-input-file
-open-binary-input-file
-open-input-file
 with-input-from-file
 call-with-output-file
-open-binary-output-file
-open-output-file
 with-output-to-file
 */
 
+/* 'file-exists?' -> VAL_BOOL - file exists predicate */
 Cell* builtin_file_exists(Lex* e, Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, VAL_STR);
@@ -32,6 +48,7 @@ Cell* builtin_file_exists(Lex* e, Cell* a) {
     return make_val_bool(0);
 }
 
+/* 'delete-file -> VAL_BOOL - delete a file, and return a bool confirming outcome */
 Cell* builtin_delete_file(Lex* e, Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, VAL_STR);
@@ -47,6 +64,7 @@ Cell* builtin_delete_file(Lex* e, Cell* a) {
     return make_val_bool(1);
 }
 
+/* 'open-input-file' -> VAL_PORT - open a file and bind it to a text port */
 Cell* builtin_open_input_file(Lex* e, Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, VAL_STR);
@@ -70,6 +88,7 @@ Cell* builtin_open_input_file(Lex* e, Cell* a) {
     return p;
 }
 
+/* 'open-binary-input-file' -> VAL_PORT - open a file and bind it to a binary port */
 Cell* builtin_open_binary_input_file(Lex* e, Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, VAL_STR);
@@ -129,6 +148,7 @@ Cell* builtin_open_binary_output_file(Lex* e, Cell* a) {
     return p;
 }
 
+/* Register the procedures in the environment */
 void lex_add_file_lib(Lex* e) {
     lex_add_builtin(e, "file-exists?", builtin_file_exists);
     lex_add_builtin(e, "delete-file", builtin_delete_file);

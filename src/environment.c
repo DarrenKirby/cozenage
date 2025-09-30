@@ -1,6 +1,21 @@
-/* environment.c - functions for getting and setting values in the environment
- *               - also, mapping from Scheme procedure to C implementation
- */
+/*
+ * 'src/environment.c'
+ * This file is part of Cozenage - https://github.com/DarrenKirby/cozenage
+ * Copyright © 2025  Darren Kirby <darren@dragonbyte.ca>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
 
 #include "environment.h"
 #include "ops.h"
@@ -11,7 +26,7 @@
 #include <string.h>
 
 
-/* Initializes an environment, and returns a pointer to it. */
+/* Initialize an environment, and return a pointer to it. */
 Lex* lex_initialize(void) {
     Lex* top_env = GC_MALLOC(sizeof(Lex));
     top_env->count = 0;
@@ -31,6 +46,7 @@ Lex* lex_new_child(Lex* parent) {
     return e;
 }
 
+/* Retrieve a Cell* value from an environment */
 Cell* lex_get(const Lex* e, const Cell* k) {
     if (!e || !k || k->type != VAL_SYM) return NULL;
 
@@ -50,6 +66,7 @@ Cell* lex_get(const Lex* e, const Cell* k) {
     return make_val_err(buf, GEN_ERR);
 }
 
+/* Place a Cell* value into an environment */
 void lex_put(Lex* e, const Cell* k, const Cell* v) {
     if (!e || !k || !v || k->type != VAL_SYM) {
         fprintf(stderr, "lex_put: invalid arguments\n");
@@ -77,6 +94,7 @@ void lex_put(Lex* e, const Cell* k, const Cell* v) {
     e->vals[e->count - 1] = cell_copy(v);
 }
 
+/* Populate the VAL_PROC struct of a Cell* object for builtin procedures */
 Cell* lex_make_builtin(const char* name, Cell* (*func)(Lex*, Cell*)) {
     Cell* c = GC_MALLOC(sizeof(Cell));
     c->type = VAL_PROC;
@@ -88,6 +106,7 @@ Cell* lex_make_builtin(const char* name, Cell* (*func)(Lex*, Cell*)) {
     return c;
 }
 
+/* Populate the VAL_PROC struct of a Cell* object for a named lambda procedure */
 Cell* lex_make_named_lambda(const char* name, const Cell* formals, const Cell* body, Lex* env) {
     Cell* c = GC_MALLOC(sizeof(Cell));
     c->type = VAL_PROC;
@@ -99,10 +118,11 @@ Cell* lex_make_named_lambda(const char* name, const Cell* formals, const Cell* b
     return c;
 }
 
+/* Populate the VAL_PROC struct of a Cell* object for an anonymous lambda procedure */
 Cell* lex_make_lambda(const Cell* formals, const Cell* body, Lex* env) {
     Cell* c = GC_MALLOC(sizeof(Cell));
     c->type = VAL_PROC;
-    c->name = NULL;  /* optional */
+    c->name = NULL;  /* No name */
     c->builtin = NULL;
     c->formals = cell_copy(formals);
     c->body = cell_copy(body);
@@ -110,6 +130,7 @@ Cell* lex_make_lambda(const Cell* formals, const Cell* body, Lex* env) {
     return c;
 }
 
+/* Register a procedure in an environment */
 void lex_add_builtin(Lex* e, const char* name,
                       Cell* (*func)(Lex*, Cell*)) {
     const Cell* fn = lex_make_builtin(name, func);
@@ -117,6 +138,7 @@ void lex_add_builtin(Lex* e, const char* name,
     lex_put(e, k, fn);
 }
 
+/* Register all builtin procedures in the global environment */
 void lex_add_builtins(Lex* e) {
     /* Basic arithmetic operators */
     lex_add_builtin(e, "+", builtin_add);
