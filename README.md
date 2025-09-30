@@ -190,6 +190,7 @@ This is a list of what *is* implemented so far. I try to keep it up to date:
 - `eval`
 - `map`
 - `filter`
+- `foldl`
 
 ### input/output and ports
 
@@ -243,6 +244,9 @@ This is a list of what *is* implemented so far. I try to keep it up to date:
 - `log10`
 - `sqrt`
 - `cbrt`
+- `nan?`
+- `infinite?`
+- `finite`
 
 ### Process-Context Library (scheme process-context)
 
