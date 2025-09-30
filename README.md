@@ -191,6 +191,24 @@ This is a list of what *is* implemented so far. I try to keep it up to date:
 - `map`
 - `filter`
 
+### input/output and ports
+
+- `current-input-port`
+- `current-output-port`
+- `current-error-port`
+- `input-port?`
+- `output-port?`
+- `textual-port?`
+- `binary-port?`
+- `input-port-open?`
+- `output-port-open?`
+- `close-port`
+- `close-input-port`
+- `close-output-port`
+- `read-line`
+- `write-string`
+- `newline`
+
 ## Library procedures
 
 ### Complex Library (scheme complex)
@@ -206,6 +224,10 @@ This is a list of what *is* implemented so far. I try to keep it up to date:
 
 - `file-exists?`
 - `delete-file`
+- `open-input-file`
+- `open-binary-input-file`
+- `open-output-file`
+- `open-binary-output-file`
 
 ### Inexact Library (scheme inexact)
 
