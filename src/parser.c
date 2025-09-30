@@ -7,13 +7,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ctype.h>
 #include <errno.h>
 #include <limits.h>
 #include <wctype.h>
 #include <unicode/uchar.h>
-
-#include "printer.h"
 
 
 long long parse_int_checked(const char* str, char* err_buf, size_t err_buf_sz, const int base, int* ok) {
@@ -56,6 +53,12 @@ long double parse_float_checked(const char* str, char* err_buf, size_t err_buf_s
             ANSI_RED_B, str, ANSI_RESET);
         *ok = 0; return 0;
     }
+    /* early exit for nan.0, +inf.0, -inf.0 */
+    if (*end_ptr == '.') {
+        *ok = 1;
+        return val;
+    }
+    /* Raises syntax error for things like "1234HELLO" */
     if (*end_ptr != '\0') {
         snprintf(err_buf, err_buf_sz, "Invalid trailing characters in numeric: '%s%s%s'",
             ANSI_RED_B, str, ANSI_RESET);
@@ -420,7 +423,11 @@ Cell* parse_atom(const char *tok) {
     if ((tok[0] == '#' && strchr("bodx", tok[1])) ||  /* #b101, #o666, #d123, #x0ff */
         isdigit(tok[0]) ||                              /*  123,  5/4,  123+23i */
         (tok[0] == '+' && isdigit(tok[1])) ||           /* +123, +5/4, +123+23i */
-        (tok[0] == '-' && isdigit(tok[1]))              /* -123, -5/4, -123+23i */
+        (tok[0] == '-' && isdigit(tok[1])) ||           /* -123, -5/4, -123+23i */
+        strcmp(tok, "nan.0") == 0 ||
+        strcmp(tok, "inf.0") == 0 ||
+        strcmp(tok, "-inf.0") == 0 ||
+        strcmp(tok, "+inf.0") == 0
         ) {
         int ok = 0; /* error flag */
         const char* num_start = tok;

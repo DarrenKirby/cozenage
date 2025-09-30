@@ -2,7 +2,7 @@
 #define COZENAGE_PARSER_H
 
 /* for debug output */
-#define DEBUG 0
+#define DEBUG 1
 
 typedef struct Cell Cell;
 
