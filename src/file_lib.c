@@ -5,7 +5,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <gc/gc.h>
-#include <sys/syslimits.h>
+#include <limits.h>
 
 
 /*
