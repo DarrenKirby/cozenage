@@ -127,6 +127,7 @@ Cell* builtin_apply(Lex* e, Cell* a);
 Cell* builtin_eval(Lex* e, Cell* a);
 Cell* builtin_map(Lex* e, Cell* a);
 Cell* builtin_filter(Lex* e, Cell* a);
+Cell* builtin_foldl(Lex* e, Cell* a);
 /* Input/output and ports */
 Cell* builtin_current_input_port(Lex* e, Cell* a);
 Cell* builtin_current_output_port(Lex* e, Cell* a);

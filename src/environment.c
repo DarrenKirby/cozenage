@@ -36,7 +36,6 @@ Cell* lex_get(const Lex* e, const Cell* k) {
 
     for (int i = 0; i < e->count; i++) {
         if (strcmp(e->syms[i], k->sym) == 0) {
-            //return cell_copy(e->vals[i]);
             return e->vals[i];
         }
     }
@@ -246,6 +245,7 @@ void lex_add_builtins(Lex* e) {
     lex_add_builtin(e, "eval", builtin_eval);
     lex_add_builtin(e, "map", builtin_map);
     lex_add_builtin(e, "filter", builtin_filter);
+    lex_add_builtin(e, "foldl", builtin_foldl);
     /* input/output and ports */
     lex_add_builtin(e, "current-input-port", builtin_current_input_port);
     lex_add_builtin(e, "current-output-port", builtin_current_output_port);
