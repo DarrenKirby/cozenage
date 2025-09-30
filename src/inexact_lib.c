@@ -1,12 +1,26 @@
+/*
+ * 'src/inexact_lib.c'
+ * This file is part of Cozenage - https://github.com/DarrenKirby/cozenage
+ * Copyright © 2025  Darren Kirby <darren@dragonbyte.ca>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 #include "inexact_lib.h"
 #include "types.h"
 #include <math.h>
 
-/*
-infinite?
-nan?
-finite?
-*/
 
 /* Returns the cosine of arg (arg is in radians). */
 Cell* builtin_cos(Lex* e, Cell* a) {
@@ -179,6 +193,51 @@ Cell* builtin_cbrt(Lex* e, Cell* a) {
     return result;
 }
 
+/* Predicate to test if val is infinite */
+Cell* builtin_infinite(Lex* e, Cell* a) {
+    (void)e;
+    Cell* err = check_arg_types(a, VAL_INT|VAL_RAT|VAL_REAL);
+    if (err) { return err; }
+    if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
+    /* TODO: add complex support */
+
+    const long double n = cell_to_long_double(a->cell[0]);
+    if (isinf(n)) {
+        return make_val_bool(1);
+    }
+    return make_val_bool(0);
+}
+
+/* Predicate to test if val is finite */
+Cell* builtin_finite(Lex* e, Cell* a) {
+    (void)e;
+    Cell* err = check_arg_types(a, VAL_INT|VAL_RAT|VAL_REAL);
+    if (err) { return err; }
+    if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
+    /* TODO: add complex support */
+
+    const long double n = cell_to_long_double(a->cell[0]);
+    if (isinf(n)) {
+        return make_val_bool(0);
+    }
+    return make_val_bool(1);
+}
+
+/* Predicate to test if val is nan */
+Cell* builtin_nan(Lex* e, Cell* a) {
+    (void)e;
+    Cell* err = check_arg_types(a, VAL_INT|VAL_RAT|VAL_REAL);
+    if (err) { return err; }
+    if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
+    /* TODO: add complex support */
+
+    const long double n = cell_to_long_double(a->cell[0]);
+    if (isnan(n)) {
+        return make_val_bool(1);
+    }
+    return make_val_bool(0);
+}
+
 void lex_add_inexact_lib(Lex* e) {
     lex_add_builtin(e, "cos", builtin_cos);
     lex_add_builtin(e, "acos", builtin_acos);
@@ -188,8 +247,11 @@ void lex_add_inexact_lib(Lex* e) {
     lex_add_builtin(e, "atan", builtin_atan);
     lex_add_builtin(e, "exp", builtin_exp);
     lex_add_builtin(e, "log", builtin_log);
-    lex_add_builtin(e, "log2", builtin_log2);
-    lex_add_builtin(e, "log10", builtin_log10);
+    lex_add_builtin(e, "log2", builtin_log2); /* Non-standard. Move elsewhere? */
+    lex_add_builtin(e, "log10", builtin_log10); /* Non-standard. Move elsewhere? */
     lex_add_builtin(e, "sqrt", builtin_sqrt);
-    lex_add_builtin(e, "cbrt", builtin_cbrt);
+    lex_add_builtin(e, "cbrt", builtin_cbrt); /* Non-standard. Move elsewhere? */
+    lex_add_builtin(e, "infinite?", builtin_infinite);
+    lex_add_builtin(e, "finite?", builtin_finite);
+    lex_add_builtin(e, "nan", builtin_nan);
 }
