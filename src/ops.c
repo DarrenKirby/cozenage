@@ -2493,9 +2493,9 @@ Cell* builtin_map(Lex* e, Cell* a) {
     int shortest_list_length = INT32_MAX;
     if (a->count >= 2) {
         for (int i = 1; i < a->count; i++) {
-            char buf[34];
+            char buf[100];
             if (a->cell[i]->type != VAL_PAIR && a->cell[i]->len == -1) {
-                snprintf(buf, 34, "map: arg %d must be a proper list", i);
+                snprintf(buf, 100, "map: arg %d must be a proper list", i);
                 return make_val_err(buf, GEN_ERR);
             }
             if (a->cell[i]->len < shortest_list_length) {
