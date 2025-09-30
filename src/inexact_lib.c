@@ -253,5 +253,5 @@ void lex_add_inexact_lib(Lex* e) {
     lex_add_builtin(e, "cbrt", builtin_cbrt); /* Non-standard. Move elsewhere? */
     lex_add_builtin(e, "infinite?", builtin_infinite);
     lex_add_builtin(e, "finite?", builtin_finite);
-    lex_add_builtin(e, "nan", builtin_nan);
+    lex_add_builtin(e, "nan?", builtin_nan);
 }
