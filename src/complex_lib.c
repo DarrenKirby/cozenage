@@ -1,8 +1,29 @@
+/*
+* 'src/complex_lib.c'
+ * This file is part of Cozenage - https://github.com/DarrenKirby/cozenage
+ * Copyright © 2025  Darren Kirby <darren@dragonbyte.ca>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 #include "complex_lib.h"
 #include "ops.h"
 #include <math.h>
 
 
+/* 'real-part' -> VAL_REAL|VAL_RAT|VAL_INT - returns the real part of a
+ * complex number */
 Cell* builtin_real_part(Lex* e, Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
@@ -16,9 +37,12 @@ Cell* builtin_real_part(Lex* e, Cell* a) {
     if (sub->type == VAL_COMPLEX) {
         return sub->real;
     }
+    /* If we didn't return early, we have the wrong arg type */
     return check_arg_types(make_sexpr_len1(sub), VAL_COMPLEX|VAL_REAL|VAL_RAT|VAL_INT);
 }
 
+/* 'imag-part' -> VAL_REAL|VAL_RAT|VAL_INT - returns the imaginary part of a
+ * complex number */
 Cell* builtin_imag_part(Lex* e, Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
@@ -32,9 +56,11 @@ Cell* builtin_imag_part(Lex* e, Cell* a) {
     if (sub->type == VAL_COMPLEX) {
         return sub->imag;
     }
+    /* If we didn't return early, we have the wrong arg type */
     return check_arg_types(make_sexpr_len1(sub), VAL_COMPLEX|VAL_REAL|VAL_RAT|VAL_INT);
 }
 
+/* 'make-rectangular' -> VAL_COMPLEX - convert a complex number to rectangular form */
 Cell* builtin_make_rectangular(Lex* e, Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2);
@@ -45,6 +71,7 @@ Cell* builtin_make_rectangular(Lex* e, Cell* a) {
     return make_val_complex(a->cell[0], a->cell[1]);
 }
 
+/* 'angle' -> VAL_REAL- calculate angle 'θ' of complex number */
 Cell* builtin_angle(Lex* e, Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
@@ -64,6 +91,7 @@ Cell* builtin_angle(Lex* e, Cell* a) {
     }
 }
 
+/* 'make-polar' -> VAL_COMPLEX - convert a complex number to polar form */
 Cell* builtin_make_polar(Lex* e, Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2);
@@ -83,10 +111,13 @@ Cell* builtin_make_polar(Lex* e, Cell* a) {
         );
 }
 
+/* Loader for our (scheme complex) library procedures */
 void lex_add_complex_lib(Lex* e) {
     lex_add_builtin(e, "real-part", builtin_real_part);
     lex_add_builtin(e, "imag-part", builtin_imag_part);
     lex_add_builtin(e,"make-rectangular", builtin_make_rectangular);
+    /* 'magnitude' is identical to 'abs' for real/complex numbers -
+     * so we just make an alias */
     lex_add_builtin(e,"magnitude", builtin_abs);
     lex_add_builtin(e,"angle", builtin_angle);
     lex_add_builtin(e,"make-polar", builtin_make_polar);
