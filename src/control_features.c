@@ -1,0 +1,108 @@
+/*
+ * 'control_features.c'
+ * This file is part of Cozenage - https://github.com/DarrenKirby/cozenage
+ * Copyright © 2025  Darren Kirby <darren@dragonbyte.ca>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+#include "control_features.h"
+#include "eval.h"
+#include "pairs.h"
+
+/*-------------------------------------------------------*
+ *    Control features and list iteration procedures     *
+ * ------------------------------------------------------*/
+
+Cell* builtin_apply(Lex* e, Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 2);
+    if (err) return err;
+    if (a->cell[0]->type != VAL_PROC) {
+        return make_val_err("apply: arg 1 must be a procedure", GEN_ERR);
+    }
+    if (a->cell[1]->type != VAL_PAIR && a->cell[1]->len == -1) {
+        return make_val_err("apply: arg 2 must be a proper list", GEN_ERR);
+    }
+
+    const Cell* composition = make_sexpr_len2(a->cell[0], make_sexpr_from_list(a->cell[1]));
+    return coz_eval(e, flatten_sexpr(composition));
+}
+
+Cell* builtin_map(Lex* e, Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_MIN(a, 2);
+    if (err) return err;
+    if (a->cell[0]->type != VAL_PROC) {
+        return make_val_err("map: arg 1 must be a procedure", GEN_ERR);
+    }
+    int shortest_list_length = INT32_MAX;
+    for (int i = 1; i < a->count; i++) {
+        char buf[100];
+        if (a->cell[i]->type != VAL_PAIR && a->cell[i]->len == -1) {
+            snprintf(buf, 100, "map: arg %d must be a proper list", i);
+            return make_val_err(buf, GEN_ERR);
+        }
+        if (a->cell[i]->len < shortest_list_length) {
+            shortest_list_length = a->cell[i]->len;
+        }
+    }
+
+    const int shortest_len = shortest_list_length;
+    const int num_lists = a->count - 1;
+    Cell* proc = a->cell[0];
+
+    Cell* final_result = make_val_nil();
+
+    for (int i = 0; i < shortest_len; i++) {
+        /* Build a (reversed) list of the i-th arguments */
+        Cell* arg_list = make_val_nil();
+        for (int j = 0; j < num_lists; j++) {
+            Cell* current_list = a->cell[j + 1];
+            Cell* nth_item = list_get_nth_cell_ptr(current_list, i);
+            arg_list = make_val_pair(nth_item, arg_list);
+            arg_list->len = j + 1;
+        }
+
+        /* Correct the argument order */
+        Cell* reversed_arg_list = builtin_list_reverse(e, make_sexpr_len1(arg_list));
+
+        Cell* tmp_result = NULL;
+        if (proc->builtin) {
+            Cell* (*func)(Lex *, Cell *) = proc->builtin;
+            tmp_result = func(e, make_sexpr_from_list(arg_list));
+        } else {
+            /* Prepend the procedure to create the application form */
+            Cell* application_list = make_val_pair(proc, reversed_arg_list);
+            application_list->len = arg_list->len + 1;
+
+            /* Convert the Scheme list to an S-expression for eval */
+            Cell* application_sexpr = make_sexpr_from_list(application_list);
+
+            /* Evaluate it */
+            tmp_result = coz_eval(e, application_sexpr);
+        }
+        if (tmp_result->type == VAL_ERR) {
+            /* Propagate any evaluation errors */
+            return tmp_result;
+        }
+
+        /* Cons the result onto our (reversed) final list */
+        final_result = make_val_pair(tmp_result, final_result);
+        final_result->len = i + 1;
+    }
+
+    /* Reverse the final list to get the correct order and return */
+    return builtin_list_reverse(e, make_sexpr_len1(final_result));
+}
