@@ -187,6 +187,13 @@ Cell* make_sexpr_len4(const Cell* a, const Cell* b, const Cell* c, const Cell* d
 Cell* make_sexpr_from_list(Cell* v);
 Cell* make_sexpr_from_array(int count, Cell** cells);
 Cell* flatten_sexpr(const Cell* sexpr);
+bool cell_is_real_zero(const Cell* c);
+bool cell_is_integer(const Cell* c);
+bool cell_is_real(const Cell* c);
+bool cell_is_positive(const Cell* c);
+bool cell_is_negative(const Cell* c);
+bool cell_is_odd(const Cell* c);
+bool cell_is_even(const Cell* c);
 Cell* negate_numeric(Cell* x);
 Cell* simplify_rational(Cell* v);
 void complex_apply(BuiltinFn fn, Lex* e, Cell* result, Cell* rhs);

@@ -29,12 +29,7 @@ Cell* builtin_sub(Lex* e, Cell* a);
 Cell* builtin_mul(Lex* e, Cell* a);
 Cell* builtin_div(Lex* e, Cell* a);
 
-/* Numeric predicate procedures */
-Cell* builtin_zero(Lex* e, Cell* a);
-Cell* builtin_positive(Lex* e, Cell* a);
-Cell* builtin_negative(Lex* e, Cell* a);
-Cell* builtin_odd(Lex* e, Cell* a);
-Cell* builtin_even(Lex* e, Cell* a);
+
 
 
 /* Generic numeric operations */
@@ -56,27 +51,7 @@ Cell* builtin_denominator(Lex* e, Cell* a);
 Cell* builtin_square(Lex* e, Cell* a);
 Cell* builtin_exact(Lex* e, Cell* a);
 Cell* builtin_inexact(Lex* e, Cell* a);
-/* Type identity predicate procedures */
-Cell* builtin_number_pred(Lex* e, Cell* a);
-Cell* builtin_boolean_pred(Lex* e, Cell* a);
-Cell* builtin_null_pred(Lex* e, Cell* a);
-Cell* builtin_pair_pred(Lex* e, Cell* a);
-Cell* builtin_proc_pred(Lex* e, Cell* a);
-Cell* builtin_sym_pred(Lex* e, Cell* a);
-Cell* builtin_string_pred(Lex* e, Cell* a);
-Cell* builtin_char_pred(Lex* e, Cell* a);
-Cell* builtin_vector_pred(Lex* e, Cell* a);
-Cell* builtin_byte_vector_pred(Lex* e, Cell* a);
-Cell* builtin_port_pred(Lex* e, Cell* a);
-Cell* builtin_eof_pred(Lex* e, Cell* a);
-/* Numeric identity predicate procedures */
-Cell* builtin_exact_pred(Lex *e, Cell* a);
-Cell* builtin_inexact_pred(Lex *e, Cell* a);
-Cell* builtin_complex(Lex *e, Cell* a);
-Cell* builtin_real(Lex *e, Cell* a);
-Cell* builtin_rational(Lex *e, Cell* a);
-Cell* builtin_integer(Lex *e, Cell* a);
-Cell* builtin_exact_integer(Lex *e, Cell* a);
+
 /* Boolean and logical procedures */
 Cell* builtin_not(Lex* e, Cell* a);
 Cell* builtin_boolean(Lex* e, Cell* a);

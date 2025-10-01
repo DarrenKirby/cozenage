@@ -360,7 +360,7 @@ const char* cell_type_name(const int t) {
         case VAL_STR:     return "string";
         case VAL_SEXPR:   return "sexpr";
         case VAL_NIL:     return "nil";
-        case VAL_PROC:     return "function";
+        case VAL_PROC:     return "procedure";
         case VAL_ERR:     return "error";
         case VAL_PAIR:    return "pair";
         case VAL_VEC:    return "vector";
@@ -610,6 +610,137 @@ Cell* flatten_sexpr(const Cell* sexpr) {
 /*-------------------------------------------*
  *       Miscellaneous numeric helpers       *
  * ------------------------------------------*/
+
+/* Helper to check if a non-complex numeric cell has a value of zero. */
+bool cell_is_real_zero(const Cell* c) {
+    if (!c) return false;
+    switch (c->type) {
+        case VAL_INT:
+            return c->i_val == 0;
+        case VAL_RAT:
+            /* Assumes simplified rational where numerator would be 0. */
+            return c->num == 0;
+        case VAL_REAL:
+            return c->r_val == 0.0L;
+        default:
+            return false;
+    }
+}
+
+/* Helper to check if a cell represents an integer value, per R7RS tower. */
+bool cell_is_integer(const Cell* c) {
+    if (!c) return false;
+    switch (c->type) {
+        case VAL_INT:
+            return true;
+        case VAL_RAT:
+            /* A simplified rational is an integer if its denominator is 1. */
+            return c->den == 1;
+        case VAL_REAL:
+            /* A real is an integer if it has no fractional part. */
+            return c->r_val == floorl(c->r_val);
+        case VAL_COMPLEX:
+            /* A complex is an integer if its imaginary part is zero
+             * and its real part is an integer. */
+            return cell_is_real_zero(c->imag) && cell_is_integer(c->real);
+        default:
+            return false;
+    }
+}
+
+/* Checks if a number is real-valued (i.e., has a zero imaginary part). */
+bool cell_is_real(const Cell* c) {
+    if (!c) return false;
+    switch (c->type) {
+        case VAL_INT:
+        case VAL_RAT:
+        case VAL_REAL:
+            return true;
+        case VAL_COMPLEX:
+            /* A complex number is real if its imaginary part is zero. */
+            return cell_is_real_zero(c->imag);
+        default:
+            return false;
+    }
+}
+
+/* Helper for positive? (> 0)
+ * Note: R7RS 'positive?' is strictly greater than 0. */
+bool cell_is_positive(const Cell* c) {
+    if (!c) return false;
+
+    const Cell* val_to_check = c;
+    if (c->type == VAL_COMPLEX) {
+        /* Must be a real number to be positive */
+        if (!cell_is_real_zero(c->imag)) return false;
+        val_to_check = c->real;
+    }
+
+    switch (val_to_check->type) {
+        case VAL_INT:  return val_to_check->i_val > 0;
+        case VAL_REAL: return val_to_check->r_val > 0.0L;
+        case VAL_RAT:  return val_to_check->num > 0; /* Assumes den is always positive */
+        default:       return false;
+    }
+}
+
+/* Helper for negative? (< 0) */
+bool cell_is_negative(const Cell* c) {
+    if (!c) return false;
+
+    const Cell* val_to_check = c;
+    if (c->type == VAL_COMPLEX) {
+        /* Must be a real number to be negative */
+        if (!cell_is_real_zero(c->imag)) return false;
+        val_to_check = c->real;
+    }
+
+    switch (val_to_check->type) {
+        case VAL_INT:  return val_to_check->i_val < 0;
+        case VAL_REAL: return val_to_check->r_val < 0.0L;
+        case VAL_RAT:  return val_to_check->num < 0; /* Assumes den is always positive */
+        default:       return false;
+    }
+}
+
+/* Helper for odd? */
+bool cell_is_odd(const Cell* c) {
+    /* Must be an integer to be odd or even. */
+    if (!cell_is_integer(c)) {
+        return false;
+    }
+
+    const Cell* int_cell = (c->type == VAL_COMPLEX) ? c->real : c;
+
+    long long val;
+    switch (int_cell->type) {
+        case VAL_INT:  val = int_cell->i_val; break;
+        case VAL_REAL: val = (long long)int_cell->r_val; break;
+        case VAL_RAT:  val = int_cell->num; break; /* den is 1 if it's an integer */
+        default: return false; /* Unreachable */
+    }
+    return (val % 2 != 0);
+}
+
+/* Helper for even? */
+bool cell_is_even(const Cell* c) {
+    /* Must be an integer to be odd or even. */
+    if (!cell_is_integer(c)) {
+        return false;
+    }
+
+    const Cell* int_cell = (c->type == VAL_COMPLEX) ? c->real : c;
+
+    long long val;
+    switch (int_cell->type) {
+        case VAL_INT:  val = int_cell->i_val; break;
+        case VAL_REAL: val = (long long)int_cell->r_val; break;
+        case VAL_RAT:  val = int_cell->num; break; /* den is 1 if it's an integer */
+        default: return false; /* Unreachable */
+    }
+    return (val % 2 == 0);
+}
+
 
 Cell* negate_numeric(Cell* x) {
     switch (x->type) {
