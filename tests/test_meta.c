@@ -2,7 +2,6 @@
 #include "test_meta.h"
 #include <criterion/criterion.h>
 #include <criterion/redirect.h>
-#include "../src/ops.h"
 #include "../src/eval.h"
 #include "../src/parser.h"
 #include "../src/printer.h"
