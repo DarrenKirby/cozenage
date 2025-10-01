@@ -51,7 +51,7 @@ Cell* builtin_inexact(Lex* e, Cell* a);
 
 /* Control features and list iteration procedures */
 Cell* builtin_apply(Lex* e, Cell* a);
-Cell* builtin_eval(Lex* e, Cell* a);
+
 Cell* builtin_map(Lex* e, Cell* a);
 Cell* builtin_filter(Lex* e, Cell* a);
 Cell* builtin_foldl(Lex* e, Cell* a);

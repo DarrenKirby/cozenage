@@ -1,5 +1,5 @@
 /*
- * 'src/load_library.h'
+ * 'eval_lib.h'
  * This file is part of Cozenage - https://github.com/DarrenKirby/cozenage
  * Copyright © 2025  Darren Kirby <darren@dragonbyte.ca>
  *
@@ -17,14 +17,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef COZENAGE_LOAD_LIBRARY_H
-#define COZENAGE_LOAD_LIBRARY_H
+#ifndef COZENAGE_EVAL_LIB_H
+#define COZENAGE_EVAL_LIB_H
 
 #include "types.h"
 
-#define MAX_LOADED_LIBS 32
 
+Cell* builtin_eval(Lex* e, Cell* a);
+void lex_add_eval_lib(Lex* e);
 
-Cell* load_scheme_library(const char* lib_name, Lex* env);
-
-#endif //COZENAGE_LOAD_LIBRARY_H
+#endif //COZENAGE_EVAL_LIB_H

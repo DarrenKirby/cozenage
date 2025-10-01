@@ -18,8 +18,15 @@
 */
 
 #include "load_library.h"
+#include "char_lib.h"
+#include "complex_lib.h"
+#include "coz_ext_lib.h"
+#include "file_lib.h"
+#include "inexact_lib.h"
+#include "process_context_lib.h"
+#include "io_lib.h"
+#include "eval_lib.h"
 #include <string.h>
-#include <stdio.h>
 
 
 char* loaded_libs[MAX_LOADED_LIBS];
@@ -39,7 +46,7 @@ static const LibraryRegistryEntry library_registry[] = {
     {"inexact", lex_add_inexact_lib},
     {"process-context", lex_add_proc_con_lib},
     {"char", lex_add_char_lib},
-    //{"read", lex_add_read_lib},
+    {"eval", lex_add_eval_lib},
     {"write", lex_add_write_lib},
     {NULL, NULL}
 };

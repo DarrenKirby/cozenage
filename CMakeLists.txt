@@ -88,7 +88,9 @@ add_executable(cozenage src/main.c
         src/predicates.c
         src/predicates.h
         src/bools.c
-        src/bools.h)
+        src/bools.h
+        src/eval_lib.c
+        src/eval_lib.h)
 
 # Find math library
 find_library(M_LIB m)

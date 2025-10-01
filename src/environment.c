@@ -275,7 +275,7 @@ void lex_add_builtins(Lex* e) {
     lex_add_builtin(e, "string-append", builtin_string_append);
     /* Control features */
     lex_add_builtin(e, "apply", builtin_apply);
-    lex_add_builtin(e, "eval", builtin_eval);
+
     lex_add_builtin(e, "map", builtin_map);
     lex_add_builtin(e, "filter", builtin_filter);
     lex_add_builtin(e, "foldl", builtin_foldl);
