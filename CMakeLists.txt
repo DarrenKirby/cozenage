@@ -38,63 +38,80 @@ endif()
 
 include_directories(${READLINE_INCLUDE_DIR})
 
-add_executable(cozenage src/main.c
-        src/main.h
-        src/compat_readline.h
-        src/parser.h
-        src/parser.c
-        src/printer.h
-        src/printer.c
-        src/types.c
-        src/types.h
-        src/environment.c
-        src/environment.h
-        src/ops.c
-        src/ops.h
-        src/eval.c
-        src/eval.h
-        src/file_lib.h
-        src/file_lib.c
-        src/coz_ext_lib.h
-        src/coz_ext_lib.c
-        src/char_lib.c
-        src/char_lib.h
-        src/complex_lib.c
-        src/complex_lib.h
-        src/process_context_lib.c
-        src/process_context_lib.h
-        src/inexact_lib.c
-        src/inexact_lib.h
-        src/load_library.c
-        src/load_library.h
-        src/io_lib.c
-        src/io_lib.h
-        src/ports.c
-        src/ports.h
-        src/strings.c
-        src/strings.h
-        src/chars.c
-        src/chars.h
-        src/special_forms.c
-        src/special_forms.h
-        src/comparators.c
-        src/comparators.h
-        src/bytevectors.c
-        src/bytevectors.h
-        src/vectors.c
-        src/vectors.h
-        src/pairs.c
-        src/pairs.h
-        src/predicates.c
-        src/predicates.h
-        src/bools.c
-        src/bools.h
-        src/eval_lib.c
-        src/eval_lib.h)
+# --- Find ICU Library
 
-# Find math library
+# 1. First, try CMake's standard "find module". This works for standard installs.
+#    We request the 'uc' component specifically.
+find_package(ICU COMPONENTS uc QUIET)
+
+# 2. If the find module fails, then we try to fall back to pkg-config.
+if(NOT ICU_FOUND)
+    message(STATUS "CMake's FindICU module failed. Falling back to pkg-config...")
+    find_package(PkgConfig QUIET)
+
+    if(PKG_CONFIG_FOUND)
+        pkg_check_modules(PC_ICU QUIET icu-uc)
+    endif()
+endif()
+
+# 3. Create a single, unified 'icu::uc' alias target so we can link to it
+#    in the same way regardless of how it was found.
+if(ICU_FOUND OR PC_ICU_FOUND)
+    if(NOT TARGET icu::uc)
+        add_library(icu::uc INTERFACE IMPORTED)
+    endif()
+
+    if(ICU_FOUND)
+        # The library was found by the standard find_package(ICU) command.
+        # Its target is ICU::uc, so we link our alias to it.
+        message(STATUS "Found ICU via standard find_package.")
+        target_link_libraries(icu::uc INTERFACE ICU::uc)
+    else()
+        # The library was found using pkg-config. We configure our alias
+        # with the properties discovered by pkg_check_modules.
+        message(STATUS "Found ICU via pkg-config.")
+        target_include_directories(icu::uc INTERFACE ${PC_ICU_INCLUDE_DIRS})
+        target_link_directories(icu::uc INTERFACE ${PC_ICU_LIBRARY_DIRS}) # <-- THIS IS THE FIX
+        target_link_libraries(icu::uc INTERFACE ${PC_ICU_LIBRARIES})
+    endif()
+else()
+    # 4. If both methods fail, stop the build with a helpful error message.
+    message(FATAL_ERROR "Could not find the ICU library.\n"
+            "Please ensure ICU is installed.\n"
+            "- For standard installs, check your system PATH.\n"
+            "- For Homebrew/custom installs, ensure 'pkg-config' is installed and can find 'icu-uc'.")
+endif()
+
+# Find math/gc library
 find_library(M_LIB m)
 find_library(GC_LIB gc)
 
-target_link_libraries(cozenage PRIVATE ${READLINE_LIBRARY} ${M_LIB} ${GC_LIB})
+add_executable(cozenage src/bools.c
+        src/bytevectors.c
+        src/char_lib.c
+        src/chars.c
+        src/comparators.c
+        src/complex_lib.c
+        src/control_features.c
+        src/coz_ext_lib.c
+        src/environment.c
+        src/eval.c
+        src/eval_lib.c
+        src/file_lib.c
+        src/inexact_lib.c
+        src/io_lib.c
+        src/load_library.c
+        src/main.c
+        src/numerics.c
+        src/pairs.c
+        src/parser.c
+        src/ports.c
+        src/predicates.c
+        src/printer.c
+        src/process_context_lib.c
+        src/special_forms.c
+        src/strings.c
+        src/types.c
+        src/vectors.c)
 
+target_link_libraries(cozenage PRIVATE ${READLINE_LIBRARY} ${M_LIB} ${GC_LIB} icu::uc)

@@ -48,10 +48,8 @@ else
     BASE_LIBS = -lreadline -lm -lgc $(ICU_LIBS)
 endif
 
-
 # Test-specific libraries
 TEST_LIBS = -lcriterion $(BASE_LIBS)
-
 
 # --- Phony Targets (Commands) ---
 .PHONY: all cmake_build nocmake test clean rebuild
