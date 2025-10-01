@@ -18,7 +18,7 @@
 */
 
 #include "chars.h"
-#include "ops.h"
+#include "comparators.h"
 #include <gc/gc.h>
 
 /*-------------------------------------------------------*

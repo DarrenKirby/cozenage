@@ -28,12 +28,7 @@ Cell* builtin_add(Lex* e, Cell* a);
 Cell* builtin_sub(Lex* e, Cell* a);
 Cell* builtin_mul(Lex* e, Cell* a);
 Cell* builtin_div(Lex* e, Cell* a);
-/* Comparison operators */
-Cell* builtin_eq_op(Lex* e, Cell* a);
-Cell* builtin_gt_op(Lex* e, Cell* a);
-Cell* builtin_lt_op(Lex* e, Cell* a);
-Cell* builtin_gte_op(Lex* e, Cell* a);
-Cell* builtin_lte_op(Lex* e, Cell* a);
+
 /* Numeric predicate procedures */
 Cell* builtin_zero(Lex* e, Cell* a);
 Cell* builtin_positive(Lex* e, Cell* a);
@@ -41,10 +36,7 @@ Cell* builtin_negative(Lex* e, Cell* a);
 Cell* builtin_odd(Lex* e, Cell* a);
 Cell* builtin_even(Lex* e, Cell* a);
 
-/* Equality and equivalence comparators */
-Cell* builtin_equal(Lex* e, Cell* a);
-Cell* builtin_eqv(Lex* e, Cell* a);
-Cell* builtin_eq(Lex* e, Cell* a);
+
 /* Generic numeric operations */
 Cell* builtin_abs(Lex* e, Cell* a);
 Cell* builtin_expt(Lex* e, Cell* a);

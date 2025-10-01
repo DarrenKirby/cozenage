@@ -20,7 +20,7 @@
 #include "char_lib.h"
 #include "environment.h"
 #include "types.h"
-#include "ops.h"
+#include "comparators.h"
 #include <ctype.h>
 #include <string.h>
 #include <unicode/uchar.h>
