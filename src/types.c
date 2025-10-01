@@ -19,7 +19,7 @@
 
 #include "types.h"
 #include "parser.h"
-#include "ops.h"
+#include "numerics.h"
 #include <gc.h>
 #include <ctype.h>
 #include <errno.h>
@@ -29,8 +29,6 @@
 #include <math.h>
 #include <limits.h>
 #include <unicode/ustring.h>
-
-#include "printer.h"
 
 
 /* define the global nil */

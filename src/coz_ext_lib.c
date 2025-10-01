@@ -19,9 +19,9 @@
 
 #include "coz_ext_lib.h"
 #include "environment.h"
-#include "ops.h"
+#include "numerics.h"
 #include "printer.h"
-#include "types.h"
+
 
 /* These are non-R7RS procedures that don't fit well elsewhere */
 

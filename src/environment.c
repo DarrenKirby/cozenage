@@ -18,9 +18,10 @@
 */
 
 #include "environment.h"
-#include "ops.h"
+#include "numerics.h"
 #include "types.h"
 #include "comparators.h"
+#include "control_features.h"
 #include "bools.h"
 #include "predicates.h"
 #include "special_forms.h"
@@ -238,6 +239,8 @@ void lex_add_builtins(Lex* e) {
     lex_add_builtin(e, "append", builtin_list_append);
     lex_add_builtin(e, "reverse", builtin_list_reverse);
     lex_add_builtin(e, "list-tail", builtin_list_tail);
+    lex_add_builtin(e, "filter", builtin_filter);
+    lex_add_builtin(e, "foldl", builtin_foldl);
     /* Vector procedures */
     lex_add_builtin(e, "vector", builtin_vector);
     lex_add_builtin(e, "vector-length", builtin_vector_length);
@@ -275,10 +278,7 @@ void lex_add_builtins(Lex* e) {
     lex_add_builtin(e, "string-append", builtin_string_append);
     /* Control features */
     lex_add_builtin(e, "apply", builtin_apply);
-
     lex_add_builtin(e, "map", builtin_map);
-    lex_add_builtin(e, "filter", builtin_filter);
-    lex_add_builtin(e, "foldl", builtin_foldl);
     /* input/output and ports */
     lex_add_builtin(e, "current-input-port", builtin_current_input_port);
     lex_add_builtin(e, "current-output-port", builtin_current_output_port);

@@ -1,5 +1,5 @@
 /*
- * 'src/ops.h'
+ * 'src/numerics.h'
  * This file is part of Cozenage - https://github.com/DarrenKirby/cozenage
  * Copyright © 2025  Darren Kirby <darren@dragonbyte.ca>
  *
@@ -17,10 +17,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef COZENAGE_OPS_H
-#define COZENAGE_OPS_H
+#ifndef COZENAGE_NUMERICS_H
+#define COZENAGE_NUMERICS_H
 
-#include "environment.h"
+#include "types.h"
 
 
 /* Basic arithmetic operators */
@@ -48,12 +48,4 @@ Cell* builtin_square(Lex* e, Cell* a);
 Cell* builtin_exact(Lex* e, Cell* a);
 Cell* builtin_inexact(Lex* e, Cell* a);
 
-
-/* Control features and list iteration procedures */
-Cell* builtin_apply(Lex* e, Cell* a);
-
-Cell* builtin_map(Lex* e, Cell* a);
-
-
-
-#endif //COZENAGE_OPS_H
+#endif //COZENAGE_NUMERICS_H
