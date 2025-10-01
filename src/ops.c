@@ -2471,16 +2471,25 @@ Cell* builtin_string_append(Lex* e, Cell* a) {
         return a->cell[0];
     }
 
-    const char* init = a->cell[0]->str;
-    UChar* result = convert_to_utf16(init);
+    /* Calculate length needed for buffer */
+    u_int32_t total_len = 0;
+    for (int i = 0; i < a->count; i++) {
+        total_len += strlen(a->cell[i]->str);
+    }
+
+    UChar* result = GC_MALLOC(sizeof(UChar) * (total_len + 1));
+    if (strcmp(a->cell[0]->str, "") != 0) {
+        result = convert_to_utf16(a->cell[0]->str);
+    } else {
+        result[0] = L'\0';
+    }
+
     for (int i = 1; i < a->count; i++) {
         const char* rhs = a->cell[i]->str;
-        /* u_strcat segfaults if 'src' is an emptystring */
-        if (strcmp(rhs, "") == 0) {
-            continue;
-        }
         const UChar* U_rhs = convert_to_utf16(rhs);
-        result = u_strcat(result, U_rhs);
+        if (U_rhs && U_rhs[0] != L'\0') {
+            u_strcat(result, U_rhs);
+        }
     }
     return make_val_str(convert_to_utf8(result));
 }
@@ -2651,7 +2660,7 @@ Cell* builtin_foldl(Lex* e, Cell* a) {
         /* cons the initial/accumulator */
         arg_list = make_val_pair(init, arg_list);
         /* Grab vals starting from the last list, so that after the
-         * 'reversed' list is constructed,, order is correct */
+         * 'reversed' list is constructed, order is correct */
         for (int j = num_lists + 1; j >= 2; j--) {
             Cell* current_list = a->cell[j];
             Cell* nth_item = list_get_nth_cell_ptr(current_list, i);
