@@ -2459,6 +2459,32 @@ Cell* builtin_string_gte_pred(Lex* e, Cell* a) {
     return make_val_bool(1);
 }
 
+Cell* builtin_string_append(Lex* e, Cell* a) {
+    (void)e;
+    Cell* err = check_arg_types(a, VAL_STR);
+    if (err) return err;
+    err = CHECK_ARITY_MIN(a, 1);
+    if (err) return err;
+
+    /* (string-append "foo") -> "foo */
+    if (a->count == 1) {
+        return a->cell[0];
+    }
+
+    const char* init = a->cell[0]->str;
+    UChar* result = convert_to_utf16(init);
+    for (int i = 1; i < a->count; i++) {
+        const char* rhs = a->cell[i]->str;
+        /* u_strcat segfaults if 'src' is an emptystring */
+        if (strcmp(rhs, "") == 0) {
+            continue;
+        }
+        const UChar* U_rhs = convert_to_utf16(rhs);
+        result = u_strcat(result, U_rhs);
+    }
+    return make_val_str(convert_to_utf8(result));
+}
+
 /*-------------------------------------------------------*
  *    Control features and list iteration procedures     *
  * ------------------------------------------------------*/
@@ -2507,16 +2533,14 @@ Cell* builtin_map(Lex* e, Cell* a) {
         return make_val_err("map: arg 1 must be a procedure", GEN_ERR);
     }
     int shortest_list_length = INT32_MAX;
-    if (a->count >= 2) {
-        for (int i = 1; i < a->count; i++) {
-            char buf[100];
-            if (a->cell[i]->type != VAL_PAIR && a->cell[i]->len == -1) {
-                snprintf(buf, 100, "map: arg %d must be a proper list", i);
-                return make_val_err(buf, GEN_ERR);
-            }
-            if (a->cell[i]->len < shortest_list_length) {
-                shortest_list_length = a->cell[i]->len;
-            }
+    for (int i = 1; i < a->count; i++) {
+        char buf[100];
+        if (a->cell[i]->type != VAL_PAIR && a->cell[i]->len == -1) {
+            snprintf(buf, 100, "map: arg %d must be a proper list", i);
+            return make_val_err(buf, GEN_ERR);
+        }
+        if (a->cell[i]->len < shortest_list_length) {
+            shortest_list_length = a->cell[i]->len;
         }
     }
 
@@ -2539,15 +2563,21 @@ Cell* builtin_map(Lex* e, Cell* a) {
         /* Correct the argument order */
         Cell* reversed_arg_list = builtin_list_reverse(e, make_sexpr_len1(arg_list));
 
-        /* Prepend the procedure to create the application form */
-        Cell* application_list = make_val_pair(proc, reversed_arg_list);
-        application_list->len = arg_list->len + 1;
+        Cell* tmp_result = NULL;
+        if (proc->builtin) {
+            Cell* (*func)(Lex *, Cell *) = proc->builtin;
+            tmp_result = func(e, make_sexpr_from_list(arg_list));
+        } else {
+            /* Prepend the procedure to create the application form */
+            Cell* application_list = make_val_pair(proc, reversed_arg_list);
+            application_list->len = arg_list->len + 1;
 
-        /* Convert the Scheme list to an S-expression for eval */
-        Cell* application_sexpr = make_sexpr_from_list(application_list);
+            /* Convert the Scheme list to an S-expression for eval */
+            Cell* application_sexpr = make_sexpr_from_list(application_list);
 
-        /* Evaluate it */
-        Cell* tmp_result = coz_eval(e, application_sexpr);
+            /* Evaluate it */
+            tmp_result = coz_eval(e, application_sexpr);
+        }
         if (tmp_result->type == VAL_ERR) {
             /* Propagate any evaluation errors */
             return tmp_result;
@@ -2613,7 +2643,6 @@ Cell* builtin_foldl(Lex* e, Cell* a) {
     const int shortest_len = shortest_list_length;
     const int num_lists = a->count - 2;
     Cell* proc = a->cell[0];
-    printf("proc builtin? %p\n", proc->builtin);
     Cell* init = a->cell[1];
 
     for (int i = 0; i < shortest_len; i++) {
