@@ -82,7 +82,9 @@ add_executable(cozenage src/main.c
         src/bytevectors.c
         src/bytevectors.h
         src/vectors.c
-        src/vectors.h)
+        src/vectors.h
+        src/pairs.c
+        src/pairs.h)
 
 # Find math library
 find_library(M_LIB m)

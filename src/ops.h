@@ -69,7 +69,7 @@ Cell* builtin_vector_pred(Lex* e, Cell* a);
 Cell* builtin_byte_vector_pred(Lex* e, Cell* a);
 Cell* builtin_port_pred(Lex* e, Cell* a);
 Cell* builtin_eof_pred(Lex* e, Cell* a);
-/* Numeric identity procedures */
+/* Numeric identity predicate procedures */
 Cell* builtin_exact_pred(Lex *e, Cell* a);
 Cell* builtin_inexact_pred(Lex *e, Cell* a);
 Cell* builtin_complex(Lex *e, Cell* a);
@@ -82,16 +82,7 @@ Cell* builtin_not(Lex* e, Cell* a);
 Cell* builtin_boolean(Lex* e, Cell* a);
 Cell* builtin_or(Lex* e, Cell* a);
 Cell* builtin_and(Lex* e, Cell* a);
-/* pair/list constructors, selectors, and procedures */
-Cell* builtin_cons(Lex* e, Cell* a);
-Cell* builtin_car(Lex* e, Cell* a);
-Cell* builtin_cdr(Lex* e, Cell* a);
-Cell* builtin_list(Lex* e, Cell* a);
-Cell* builtin_list_length(Lex* e, Cell* a);
-Cell* builtin_list_ref(Lex* e, Cell* a);
-Cell* builtin_list_append(Lex* e, Cell* a);
-Cell* builtin_list_reverse(Lex* e, Cell* a);
-Cell* builtin_list_tail(Lex* e, Cell* a);
+
 
 
 
