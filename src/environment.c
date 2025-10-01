@@ -20,6 +20,7 @@
 #include "environment.h"
 #include "ops.h"
 #include "types.h"
+#include "special_forms.h"
 #include "ports.h"
 #include "strings.h"
 #include "chars.h"

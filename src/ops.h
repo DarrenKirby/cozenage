@@ -40,15 +40,7 @@ Cell* builtin_positive(Lex* e, Cell* a);
 Cell* builtin_negative(Lex* e, Cell* a);
 Cell* builtin_odd(Lex* e, Cell* a);
 Cell* builtin_even(Lex* e, Cell* a);
-/* Special forms */
-Cell* builtin_quote(Lex* e, Cell* a);
-Cell* builtin_define(Lex* e, Cell* a);
-Cell* builtin_if(Lex* e, Cell* a);
-Cell* builtin_when(Lex* e, Cell* a);
-Cell* builtin_unless(Lex* e, Cell* a);
-Cell* builtin_cond(Lex* e, Cell* a);
-Cell* builtin_else(Lex* e, Cell* a);
-Cell* builtin_import(Lex* e, Cell* a);
+
 /* Equality and equivalence comparators */
 Cell* builtin_equal(Lex* e, Cell* a);
 Cell* builtin_eqv(Lex* e, Cell* a);

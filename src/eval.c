@@ -18,7 +18,7 @@
 */
 
 #include "eval.h"
-#include "ops.h"
+#include "special_forms.h"
 #include "printer.h"
 #include "main.h"
 #include <gc.h>
