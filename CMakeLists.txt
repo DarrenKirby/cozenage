@@ -70,7 +70,9 @@ add_executable(cozenage src/main.c
         src/io_lib.c
         src/io_lib.h
         src/ports.c
-        src/ports.h)
+        src/ports.h
+        src/strings.c
+        src/strings.h)
 
 # Find math library
 find_library(M_LIB m)
