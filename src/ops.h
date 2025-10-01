@@ -102,12 +102,7 @@ Cell* builtin_vector_to_list(Lex* e, Cell* a);
 Cell* builtin_vector_copy(Lex* e, Cell* a);
 Cell* builtin_vector_to_string(Lex* e, Cell* a);
 Cell* builtin_string_to_vector(Lex* e, Cell* a);
-/* Bytevector constructors, selectors,and procedures */
-Cell* builtin_bytevector(Lex* e, Cell* a);
-Cell* builtin_bytevector_length(Lex* e, Cell* a);
-Cell* builtin_bytevector_ref(Lex* e, Cell* a);
-Cell* builtin_make_bytevector(Lex* e, Cell* a);
-Cell* builtin_bytevector_copy(Lex* e, Cell* a);
+
 
 
 /* Control features and list iteration procedures */

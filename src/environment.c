@@ -22,6 +22,7 @@
 #include "types.h"
 #include "comparators.h"
 #include "special_forms.h"
+#include "bytevectors.h"
 #include "ports.h"
 #include "strings.h"
 #include "chars.h"

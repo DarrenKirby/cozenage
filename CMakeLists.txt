@@ -78,7 +78,9 @@ add_executable(cozenage src/main.c
         src/special_forms.c
         src/special_forms.h
         src/comparators.c
-        src/comparators.h)
+        src/comparators.h
+        src/bytevectors.c
+        src/bytevectors.h)
 
 # Find math library
 find_library(M_LIB m)
