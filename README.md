@@ -247,7 +247,7 @@ This is a list of what *is* implemented so far. I try to keep it up to date:
 - `cbrt`
 - `nan?`
 - `infinite?`
-- `finite`
+- `finite?`
 
 ### Process-Context Library (scheme process-context)
 
