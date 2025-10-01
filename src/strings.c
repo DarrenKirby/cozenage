@@ -220,7 +220,7 @@ Cell* builtin_string_append(Lex* e, Cell* a) {
     }
 
     /* Calculate length needed for buffer */
-    u_int32_t total_len = 0;
+    uint32_t total_len = 0;
     for (int i = 0; i < a->count; i++) {
         total_len += strlen(a->cell[i]->str);
     }
