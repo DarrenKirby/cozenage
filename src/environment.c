@@ -22,6 +22,7 @@
 #include "types.h"
 #include "ports.h"
 #include "strings.h"
+#include "chars.h"
 #include <gc.h>
 #include <stdio.h>
 #include <stdlib.h>

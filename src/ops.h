@@ -124,14 +124,7 @@ Cell* builtin_bytevector_length(Lex* e, Cell* a);
 Cell* builtin_bytevector_ref(Lex* e, Cell* a);
 Cell* builtin_make_bytevector(Lex* e, Cell* a);
 Cell* builtin_bytevector_copy(Lex* e, Cell* a);
-/* Char constructors, selectors, and procedures */
-Cell* builtin_char_to_int(Lex* e, Cell* a);
-Cell* builtin_int_to_char(Lex* e, Cell* a);
-Cell* builtin_char_equal_pred(Lex* e, Cell* a);
-Cell* builtin_char_lt_pred(Lex* e, Cell* a);
-Cell* builtin_char_lte_pred(Lex* e, Cell* a);
-Cell* builtin_char_gt_pred(Lex* e, Cell* a);
-Cell* builtin_char_gte_pred(Lex* e, Cell* a);
+
 
 /* Control features and list iteration procedures */
 Cell* builtin_apply(Lex* e, Cell* a);
