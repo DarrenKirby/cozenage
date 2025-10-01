@@ -26,6 +26,7 @@
 #include <string.h>
 #include <errno.h>
 #include <limits.h>
+#include <ctype.h>
 #include <wctype.h>
 #include <unicode/uchar.h>
 
