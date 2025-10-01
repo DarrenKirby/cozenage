@@ -92,16 +92,7 @@ Cell* builtin_list_ref(Lex* e, Cell* a);
 Cell* builtin_list_append(Lex* e, Cell* a);
 Cell* builtin_list_reverse(Lex* e, Cell* a);
 Cell* builtin_list_tail(Lex* e, Cell* a);
-/* Vector constructors, selectors, and procedures */
-Cell* builtin_vector(Lex* e, Cell* a);
-Cell* builtin_vector_length(Lex* e, Cell* a);
-Cell* builtin_vector_ref(Lex* e, Cell* a);
-Cell* builtin_make_vector(Lex* e, Cell* a);
-Cell* builtin_list_to_vector(Lex* e, Cell* a);
-Cell* builtin_vector_to_list(Lex* e, Cell* a);
-Cell* builtin_vector_copy(Lex* e, Cell* a);
-Cell* builtin_vector_to_string(Lex* e, Cell* a);
-Cell* builtin_string_to_vector(Lex* e, Cell* a);
+
 
 
 

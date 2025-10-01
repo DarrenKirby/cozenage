@@ -24,6 +24,10 @@
 #include <unicode/ustring.h>
 
 
+/*-------------------------------------------------------*
+ *     String constructors, selectors, and procedures    *
+ * ------------------------------------------------------*/
+
 Cell* builtin_string_to_symbol(Lex* e, Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
