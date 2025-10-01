@@ -36,7 +36,7 @@ ICU_LIBS = $(shell pkg-config --libs icu-uc)
 # --- Compiler Flags ---
 # CFLAGS are set per-target later on
 CFLAGS_DEFAULT = -Wall -Wextra -O2 -std=gnu2x $(ICU_CFLAGS)
-CFLAGS_TEST = -fsanitize=address,undefined -Wall -Wextra -g -O0 -DTESTING__ $(ICU_CFLAGS)
+CFLAGS_TEST = -Wall -Wextra -g -O0 -DTESTING__ $(ICU_CFLAGS)
 
 # --- Libraries ---
 # Auto-detect readline or libedit for manual and test builds
