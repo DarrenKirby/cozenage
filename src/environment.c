@@ -21,6 +21,7 @@
 #include "ops.h"
 #include "types.h"
 #include "comparators.h"
+#include "bools.h"
 #include "predicates.h"
 #include "special_forms.h"
 #include "pairs.h"

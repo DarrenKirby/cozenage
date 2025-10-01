@@ -28,10 +28,6 @@ Cell* builtin_add(Lex* e, Cell* a);
 Cell* builtin_sub(Lex* e, Cell* a);
 Cell* builtin_mul(Lex* e, Cell* a);
 Cell* builtin_div(Lex* e, Cell* a);
-
-
-
-
 /* Generic numeric operations */
 Cell* builtin_abs(Lex* e, Cell* a);
 Cell* builtin_expt(Lex* e, Cell* a);
@@ -51,15 +47,6 @@ Cell* builtin_denominator(Lex* e, Cell* a);
 Cell* builtin_square(Lex* e, Cell* a);
 Cell* builtin_exact(Lex* e, Cell* a);
 Cell* builtin_inexact(Lex* e, Cell* a);
-
-/* Boolean and logical procedures */
-Cell* builtin_not(Lex* e, Cell* a);
-Cell* builtin_boolean(Lex* e, Cell* a);
-Cell* builtin_or(Lex* e, Cell* a);
-Cell* builtin_and(Lex* e, Cell* a);
-
-
-
 
 
 /* Control features and list iteration procedures */

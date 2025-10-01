@@ -23,6 +23,10 @@
 #include <errno.h>
 
 
+/*-------------------------------------------------------*
+ *                Input/output and ports                 *
+ * ------------------------------------------------------*/
+
 Cell* builtin_current_input_port(Lex* e, Cell* a) {
     (void)e; (void)a;
     return default_input_port;
