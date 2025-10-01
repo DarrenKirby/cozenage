@@ -53,8 +53,7 @@ Cell* builtin_inexact(Lex* e, Cell* a);
 Cell* builtin_apply(Lex* e, Cell* a);
 
 Cell* builtin_map(Lex* e, Cell* a);
-Cell* builtin_filter(Lex* e, Cell* a);
-Cell* builtin_foldl(Lex* e, Cell* a);
+
 
 
 #endif //COZENAGE_OPS_H

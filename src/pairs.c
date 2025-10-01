@@ -18,6 +18,7 @@
 */
 
 #include "pairs.h"
+#include "eval.h"
 
 
 /* ----------------------------------------------------------*
@@ -302,4 +303,105 @@ Cell* builtin_list_tail(Lex* e, Cell* a) {
     }
     /* After the loop, p is pointing at the k-th cdr of the original list. */
     return p;
+}
+
+/* ----------------------------------------------------------*
+ *                 List iteration procedures                 *
+ * ----------------------------------------------------------*/
+
+
+Cell* builtin_filter(Lex* e, Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 2);
+    if (err) return err;
+    if (a->cell[0]->type != VAL_PROC) {
+        return make_val_err("filter: arg 1 must be a procedure", GEN_ERR);
+    }
+    if (a->cell[1]->type != VAL_PAIR && a->cell[1]->len == -1) {
+        return make_val_err("filter: arg 2 must be a proper list", GEN_ERR);
+    }
+
+    const Cell* proc = a->cell[0];
+    Cell* result = make_val_nil();
+    const Cell* val = a->cell[1];
+    for (int i = 0; i < a->cell[1]->len; i++) {
+        Cell* pred_outcome = coz_eval(e, make_sexpr_len2(proc, val->car));
+        if (pred_outcome->type == VAL_ERR) {
+            return pred_outcome;
+        }
+        /* Copy val to result list if pred is true */
+        if (pred_outcome->b_val == 1) {
+            result = make_val_pair(cell_copy(val->car), result);
+        }
+        val = val->cdr;
+    }
+    return builtin_list_reverse(e, make_sexpr_len1(result));
+}
+
+Cell* builtin_foldl(Lex* e, Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_MIN(a, 3);
+    if (err) return err;
+    if (a->cell[0]->type != VAL_PROC) {
+        return make_val_err("foldl: arg 1 must be a procedure", GEN_ERR);
+    }
+    int shortest_list_length = INT32_MAX;
+
+    for (int i = 2; i < a->count; i++) {
+        char buf[128];
+        if (a->cell[i]->type != VAL_PAIR || a->cell[i]->len == -1) {
+            snprintf(buf, 128, "foldl: arg %d must be a proper list", i+1);
+            return make_val_err(buf, GEN_ERR);
+        }
+        if (a->cell[i]->len < shortest_list_length) {
+            shortest_list_length = a->cell[i]->len;
+        }
+    }
+
+    const int shortest_len = shortest_list_length;
+    const int num_lists = a->count - 2;
+    Cell* proc = a->cell[0];
+    Cell* init = a->cell[1];
+
+    for (int i = 0; i < shortest_len; i++) {
+        /* Build a list of the i-th arguments */
+        Cell* arg_list = make_val_nil();
+        /* cons the initial/accumulator */
+        arg_list = make_val_pair(init, arg_list);
+        /* Grab vals starting from the last list, so that after the
+         * 'reversed' list is constructed, order is correct */
+        for (int j = num_lists + 1; j >= 2; j--) {
+            Cell* current_list = a->cell[j];
+            Cell* nth_item = list_get_nth_cell_ptr(current_list, i);
+            arg_list = make_val_pair(nth_item, arg_list);
+            /* len is the number of lists plus the accumulator */
+            arg_list->len = num_lists + 1;
+        }
+
+        Cell* tmp_result = NULL;
+        /* If the procedure is a builtin - grab a pointer to it and call it directly
+         * otherwise - it is a lambda and needs to be evaluated */
+        if (proc->builtin) {
+            Cell* (*func)(Lex *, Cell *) = proc->builtin;
+            tmp_result = func(e, make_sexpr_from_list(arg_list));
+        } else {
+            /* Prepend the procedure to create the application form */
+            Cell* application_list = make_val_pair(proc, arg_list);
+            application_list->len = arg_list->len + 1;
+
+            /* Convert the Scheme list to an S-expression for eval */
+            Cell* application_sexpr = make_sexpr_from_list(application_list);
+
+            /* Evaluate it */
+            tmp_result = coz_eval(e, application_sexpr);
+        }
+        if (tmp_result->type == VAL_ERR) {
+            /* Propagate any evaluation errors */
+            return tmp_result;
+        }
+        /* assign the result to the accumulator */
+        init = tmp_result;
+    }
+    /* Return the accumulator after all list args are evaluated */
+    return init;
 }

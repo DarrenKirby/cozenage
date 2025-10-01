@@ -33,5 +33,7 @@ Cell* builtin_list_ref(Lex* e, Cell* a);
 Cell* builtin_list_append(Lex* e, Cell* a);
 Cell* builtin_list_reverse(Lex* e, Cell* a);
 Cell* builtin_list_tail(Lex* e, Cell* a);
+Cell* builtin_filter(Lex* e, Cell* a);
+Cell* builtin_foldl(Lex* e, Cell* a);
 
 #endif //COZENAGE_PAIRS_H
