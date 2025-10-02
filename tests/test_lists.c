@@ -118,3 +118,116 @@ Test(end_to_end_lists, test_list_tail) {
     cr_assert_str_eq(t_eval("(list-tail '(a (b c) d) 1)"), "((b c) d)");
     cr_assert_str_eq(t_eval("(list-tail '(10 20 30) (+ 1 1))"), "(30)");
 }
+
+Test(end_to_end_lists, test_filter_procedure) {
+    /* Test filter with basic predicates */
+    cr_assert_str_eq(t_eval("(filter odd? '(1 2 3 4 5 6))"), "(1 3 5)");
+    cr_assert_str_eq(t_eval("(filter even? '(1 2 3 4 5 6))"), "(2 4 6)");
+    cr_assert_str_eq(t_eval("(filter symbol? '(a 1 \"b\" #\\c d))"), "(a d)");
+    cr_assert_str_eq(t_eval("(filter string? '(\"a\" 1 \"b\" #\\c d))"), "(\"a\" \"b\")");
+    cr_assert_str_eq(t_eval("(filter number? '(a 1.5 2 #f))"), "(1.5 2)");
+    cr_assert_str_eq(t_eval("(filter pair? '((1 . 2) 3 (4) ()))"), "((1 . 2) (4))");
+
+    /* Test with lambda procedures */
+    cr_assert_str_eq(t_eval("(filter (lambda (x) (> x 5)) '(1 10 3 8 5 0))"), "(10 8)");
+    cr_assert_str_eq(t_eval("(filter (lambda (x) (<= (string-length x) 2)) '(\"a\" \"bb\" \"ccc\" \"\"))"), "(\"a\" \"bb\" \"\")");
+    cr_assert_str_eq(t_eval("(filter (lambda (lst) (memq 'a lst)) '((x y) (a b) (c d) (e a)))"), "((a b) (e a))");
+
+    /* Test edge cases */
+    cr_assert_str_eq(t_eval("(filter odd? '())"), "()");
+    cr_assert_str_eq(t_eval("(filter even? '(1 3 5))"), "()");
+    cr_assert_str_eq(t_eval("(filter integer? '(1 2 3))"), "(1 2 3)");
+
+    /* Test truthiness: any value other than #f is true */
+    cr_assert_str_eq(t_eval("(filter (lambda (x) x) '(1 #f \"hello\" () 0))"), "(1 \"hello\" () 0)");
+    cr_assert_str_eq(t_eval("(filter (lambda (x) #t) '(a b c))"), "(a b c)");
+    cr_assert_str_eq(t_eval("(filter (lambda (x) #f) '(a b c))"), "()");
+
+    /* Ensure filter does not modify the original list */
+    cr_assert_str_eq(t_eval("(define my-list '(1 2 3 4)) (filter even? my-list) my-list"), "(1 2 3 4)");
+
+    /*
+     * NOTE: The following tests are for error conditions.
+     * The exact error message string will depend on your interpreter's
+     * error handling implementation. You may need to adjust these.
+     */
+    // cr_assert_str_eq(t_eval("(filter)"), "Error: filter: wrong number of arguments");
+    // cr_assert_str_eq(t_eval("(filter odd?)"), "Error: filter: wrong number of arguments");
+    // cr_assert_str_eq(t_eval("(filter 1 '(1 2 3))"), "Error: filter: expected a procedure as its first argument");
+    // cr_assert_str_eq(t_eval("(filter odd? 123)"), "Error: filter: expected a list as its second argument");
+    // cr_assert_str_eq(t_eval("(filter odd? '(1 . 2))"), "Error: filter: expected a proper list");
+}
+
+Test(end_to_end_lists, test_foldl_procedure) {
+    /* Test foldl with a single list */
+    cr_assert_str_eq(t_eval("(foldl + 0 '(1 2 3 4 5))"), "15");
+    cr_assert_str_eq(t_eval("(foldl * 1 '(2 3 4 5))"), "120");
+    /* Use a non-commutative operation to verify left-to-right order */
+    cr_assert_str_eq(t_eval("(foldl - 10 '(1 2 3))"), "-8");
+    /* A classic use case: reversing a list */
+    cr_assert_str_eq(t_eval("(foldl (lambda (acc elem) (cons acc elem)) '() '(a b c d))"), "(d c b a)");
+
+    /* Test with different initial values */
+    cr_assert_str_eq(t_eval("(foldl + 100 '(1 2 3))"), "106");
+    cr_assert_str_eq(t_eval("(foldl cons '(z) '(a b c))"), "(c b a z)");
+
+    /* Test foldl with multiple lists */
+    cr_assert_str_eq(t_eval("(foldl + 0 '(1 2 3) '(10 20 30))"), "66"); /* (+ (+ (+ 0 1 10) 2 20) 3 30) */
+    cr_assert_str_eq(t_eval("(foldl list '() '(a b c) '(1 2 3))"), "(c 3 (b 2 (a 1 ())))");
+    cr_assert_str_eq(t_eval("(foldl + 0 '(1 2 3) '(4 5) '(6))"), "11"); /* Stops when the shortest list is exhausted */
+
+    /* Test with mixed types */
+    cr_assert_str_eq(t_eval("(foldl (lambda (acc x) (if (number? x) (+ acc x) acc)) 0 '(a 1 b 2 c 3))"), "6");
+
+    /* Edge cases */
+    cr_assert_str_eq(t_eval("(foldl + 42 '())"), "42");
+    cr_assert_str_eq(t_eval("(foldl + 0 '(10))"), "10");
+    cr_assert_str_eq(t_eval("(foldl + 0 '() '(1 2 3))"), "0"); /* Returns init immediately if any list is empty */
+
+    /*
+     * NOTE: The following tests are for error conditions.
+     * The exact error message string will depend on your interpreter's
+     * error handling implementation. You may need to adjust these.
+     */
+    // cr_assert_str_eq(t_eval("(foldl)"), "Error: foldl: wrong number of arguments");
+    // cr_assert_str_eq(t_eval("(foldl +)"), "Error: foldl: wrong number of arguments");
+    // cr_assert_str_eq(t_eval("(foldl + 0)"), "Error: foldl: wrong number of arguments");
+    // cr_assert_str_eq(t_eval("(foldl 1 0 '(1 2 3))"), "Error: foldl: expected a procedure as its first argument");
+    // cr_assert_str_eq(t_eval("(foldl + 0 '(a . b))"), "Error: foldl: expected a proper list");
+    // cr_assert_str_eq(t_eval("(foldl + 0 '(1 2) '(a . b))"), "Error: foldl: expected a proper list");
+}
+
+Test(end_to_end_lists, test_map_procedure) {
+    /* Test map with a single list argument */
+    cr_assert_str_eq(t_eval("(map (lambda (x) (* x 2)) '(1 2 3 4))"), "(2 4 6 8)");
+    cr_assert_str_eq(t_eval("(map car '((a 1) (b 2) (c 3)))"), "(a b c)");
+    cr_assert_str_eq(t_eval("(map cdr '((a 1) (b 2) (c 3)))"), "((1) (2) (3))");
+    cr_assert_str_eq(t_eval("(map (lambda (x) (cons x '())) '(a b c))"), "((a) (b) (c))");
+
+    /* Test map with multiple list arguments */
+    cr_assert_str_eq(t_eval("(map + '(1 2 3) '(10 20 30))"), "(11 22 33)");
+    cr_assert_str_eq(t_eval("(map list '(a b c) '(1 2 3))"), "((a 1) (b 2) (c 3))");
+    cr_assert_str_eq(t_eval("(map + '(1 2 3) '(4 5) '(6 7))"), "(11 14)"); /* Stops when shortest list is exhausted */
+    cr_assert_str_eq(t_eval("(map * '(1 2 3 4) '(10 20))"), "(10 40)");
+    cr_assert_str_eq(t_eval("(map + '(1) '(2) '(3) '(4))"), "(10)");
+
+    /* Edge cases */
+    cr_assert_str_eq(t_eval("(map (lambda (x) x) '())"), "()");
+    cr_assert_str_eq(t_eval("(map + '() '(1 2 3))"), "()");
+    cr_assert_str_eq(t_eval("(map + '(1 2 3) '())"), "()");
+
+    /* Test that map returns a newly allocated list */
+    cr_assert_str_eq(t_eval("(define a '(1 2 3)) (define b (map (lambda (x) x) a)) (eq? a b)"), "#false");
+
+    /*
+     * NOTE: The following tests are for error conditions.
+     * The exact error message string will depend on your interpreter's
+     * error handling implementation. You may need to adjust these.
+     */
+    // cr_assert_str_eq(t_eval("(map)"), "Error: map: wrong number of arguments");
+    // cr_assert_str_eq(t_eval("(map +)"), "Error: map: wrong number of arguments");
+    // cr_assert_str_eq(t_eval("(map 1 '(1 2 3))"), "Error: map: expected a procedure as its first argument");
+    // cr_assert_str_eq(t_eval("(map + '(1 2) 3)"), "Error: map: expected a list as an argument");
+    // cr_assert_str_eq(t_eval("(map + '(1 . 2))"), "Error: map: expected a proper list");
+    // cr_assert_str_eq(t_eval("(map + '(1 2) '(3 . 4))"), "Error: map: expected a proper list");
+}
