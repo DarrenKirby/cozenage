@@ -81,7 +81,7 @@ Cell* builtin_map(Lex* e, Cell* a) {
         Cell* tmp_result = NULL;
         if (proc->builtin) {
             Cell* (*func)(Lex *, Cell *) = proc->builtin;
-            tmp_result = func(e, make_sexpr_from_list(arg_list));
+            tmp_result = func(e, make_sexpr_from_list(reversed_arg_list));
         } else {
             /* Prepend the procedure to create the application form */
             Cell* application_list = make_val_pair(proc, reversed_arg_list);
