@@ -21,7 +21,96 @@
 #include "eval.h"
 #include "load_library.h"
 #include <string.h>
+#include <gc/gc.h>
 
+
+/* A helper to check if a symbol name is a reserved syntactic keyword */
+int is_syntactic_keyword(const char* s) {
+    const char* keywords[] = {
+        "define", "quote", "lambda", "if", "when", "unless",
+        "cond", "import", "set!", "let", "let*" ,"letrec", NULL
+    };
+
+    for (int i = 0; keywords[i] != NULL; i++) {
+        if (strcmp(s, keywords[i]) == 0) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+/* Convert a VAL_SEXPR to a proper VAL_PAIR linked-list */
+Cell* sexpr_to_list(const Cell* c) {
+    /* If the item is not an S-expression, it's an atom. Return a copy. */
+    if (c->type != VAL_SEXPR) {
+        return cell_copy(c);
+    }
+
+    /* It is an S-expression. Check for improper list syntax. */
+    int dot_pos = -1;
+    if (c->count > 1) {
+        const Cell* dot_candidate = c->cell[c->count - 2];
+        if (dot_candidate->type == VAL_SYM && strcmp(dot_candidate->sym, ".") == 0) {
+            dot_pos = c->count - 2;
+        }
+    }
+
+    /* Handle Improper List */
+    if (dot_pos != -1) {
+        /* The final cdr is the very last element in the S-expression. */
+        Cell* final_cdr = sexpr_to_list(c->cell[c->count - 1]);
+
+        /* Build the list chain backwards from the element *before* the dot. */
+        Cell* list_head = final_cdr;
+        for (int i = dot_pos - 1; i >= 0; i--) {
+            Cell* element = sexpr_to_list(c->cell[i]);
+            list_head = make_val_pair(element, list_head);
+        }
+        return list_head;
+    }
+    /* Handle Proper List */
+    Cell* list_head = make_val_nil();
+    const int len = c->count;
+
+    for (int i = len - 1; i >= 0; i--) {
+        /* Recursively call this function on each element to ensure
+         * any nested S-expressions are also converted. */
+        Cell* element = sexpr_to_list(c->cell[i]);
+
+        /* Prepend the new element to the head of our list. */
+        list_head = make_val_pair(element, list_head);
+        list_head->len = len - i;
+    }
+    return list_head;
+}
+
+/* Evaluate a lambda call, and return the value */
+Cell* apply_lambda(Cell* lambda, const Cell* args) {
+    if (!lambda || lambda->type != VAL_PROC || lambda->builtin) {
+        return make_val_err("Not a lambda", GEN_ERR);
+    }
+
+    /* Create a new child environment */
+    Lex* local_env = lex_new_child(lambda->env);
+
+    /* Bind formals to arguments */
+    if (lambda->formals->count != args->count) {
+        return make_val_err("Lambda: wrong number of arguments", GEN_ERR);
+    }
+
+    for (int i = 0; i < args->count; i++) {
+        const Cell* sym = lambda->formals->cell[i];
+        const Cell* val = args->cell[i];
+        lex_put(local_env, sym, val);  /* sym should be VAL_SYM, val evaluated */
+    }
+
+    /* Evaluate body expressions in this environment */
+    Cell* result = NULL;
+    for (int i = 0; i < lambda->body->count; i++) {
+        result = coz_eval(local_env, cell_copy(lambda->body->cell[i]));
+    }
+    return result;
+}
 
 /* -----------------------------*
  *         Special forms        *
@@ -29,11 +118,19 @@
 
 /* 'define' -> binds a value (or proc) to a symbol, and places it
  * into the environment */
-Cell* builtin_define(Lex* e, Cell* a) {
+Cell* sf_define(Lex* e, Cell* a) {
     if (a->count < 2) {
         return make_val_err("define requires at least 2 arguments", GEN_ERR);
     }
     const Cell* target = a->cell[0];
+
+    /* Disallow rebinding of keywords */
+    if (is_syntactic_keyword(target->sym)) {
+        char err_buf[128];
+        snprintf(err_buf, sizeof(err_buf),
+                 "Syntax keyword '%s' cannot be used as a variable", target->sym);
+        return make_val_err(err_buf, GEN_ERR);
+    }
 
     /* (define <symbol> <expr>) */
     if (target->type == VAL_SYM) {
@@ -82,7 +179,46 @@ Cell* builtin_define(Lex* e, Cell* a) {
     return make_val_err("invalid define syntax", GEN_ERR);
 }
 
-Cell* builtin_if(Lex* e, Cell* a) {
+Cell* sf_quote(Lex* e, Cell* a) {
+    if (a->count != 1) {
+        return make_val_err("quote takes exactly one argument", GEN_ERR);
+    }
+    /* Extract the S-expression that was quoted. */
+    const Cell* quoted_sexpr = cell_take(a, 0);
+
+    /* Flag whether to do env lookup */
+    for (int i = 0; i < quoted_sexpr->count; i++) {
+        if (quoted_sexpr->cell[i]->type == VAL_SYM) {
+            quoted_sexpr->cell[i]->exact = 0;
+        }
+    }
+
+    /* Convert the VAL_SEXPR into a proper VAL_PAIR list. */
+    Cell* result = sexpr_to_list(quoted_sexpr);
+    return result;
+}
+
+Cell* sf_lambda(Lex* e, Cell* a) {
+    if (a->count < 2) {
+        return make_val_err("lambda requires formals and a body", GEN_ERR);
+    }
+
+    const Cell* formals = cell_pop(a, 0);   /* first arg */
+    const Cell* body    = cell_copy(a);       /* remaining args */
+
+    /* formals should be a list of symbols */
+    for (int i = 0; i < formals->count; i++) {
+        if (formals->cell[i]->type != VAL_SYM) {
+            return make_val_err("lambda formals must be symbols", GEN_ERR);
+        }
+    }
+
+    /* Build the lambda cell */
+    Cell* lambda = lex_make_lambda(formals, body, e);
+    return lambda;
+}
+
+Cell* sf_if(Lex* e, Cell* a) {
     Cell* err = CHECK_ARITY_RANGE(a, 2, 3);
     if (err) return err;
 
@@ -103,7 +239,7 @@ Cell* builtin_if(Lex* e, Cell* a) {
     return result;
 }
 
-Cell* builtin_when(Lex* e, Cell* a) {
+Cell* sf_when(Lex* e, Cell* a) {
     Cell* err = CHECK_ARITY_MIN(a, 2);
     if (err) return err;
 
@@ -120,7 +256,7 @@ Cell* builtin_when(Lex* e, Cell* a) {
     return result;
 }
 
-Cell* builtin_unless(Lex* e, Cell* a) {
+Cell* sf_unless(Lex* e, Cell* a) {
     Cell* err = CHECK_ARITY_MIN(a, 2);
     if (err) return err;
 
@@ -137,7 +273,7 @@ Cell* builtin_unless(Lex* e, Cell* a) {
     return result;
 }
 
-Cell* builtin_cond(Lex* e, Cell* a) {
+Cell* sf_cond(Lex* e, Cell* a) {
     Cell* err = CHECK_ARITY_MIN(a, 2);
     if (err) return err;
 
@@ -166,22 +302,30 @@ Cell* builtin_cond(Lex* e, Cell* a) {
 }
 
 /* dummy function */
-Cell* builtin_else(Lex* e, Cell* a) {
+Cell* sf_else(Lex* e, Cell* a) {
     (void)e;
     (void)a;
     return make_val_bool(1);
 }
 
-Cell* builtin_import(Lex* e, Cell* a) {
-    Cell* err = CHECK_ARITY_MIN(a, 1);
-    if (err) return err;
-    err = check_arg_types(a, VAL_PAIR);
-    if (err) return err;
+Cell* sf_import(Lex* e, Cell* a) {
+    Cell* import_set = make_val_sexpr();
+    import_set->cell = GC_MALLOC(sizeof(Cell*) * a->count);
+    /* 'a' is a sexpr of sexpr's. Make a new sexpr which contains
+     * pairs of (library . name), */
+    int i;
+    for (i = 0; i < a->count; i++) {
+        const char* lib = GC_strdup(a->cell[i]->cell[0]->sym);
+        const char* name = GC_strdup(a->cell[i]->cell[1]->sym);
+        import_set->cell[i] = make_val_pair(make_val_str(lib),
+                     make_val_str(name));
+    }
+    import_set->count = i;
 
     Cell* result = NULL;
-    for (int i = 0; i < a->count; i++) {
-        const char* library_type = a->cell[i]->car->str;
-        const char* library_name = a->cell[i]->cdr->str;
+    for (int j = 0; j < import_set->count; j++) {
+        const char* library_type = import_set->cell[j]->car->str;
+        const char* library_name = import_set->cell[j]->cdr->str;
 
         if (strcmp(library_type, "scheme") == 0) {
             /* Load the Library */

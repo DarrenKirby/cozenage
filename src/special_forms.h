@@ -23,13 +23,18 @@
 #include "types.h"
 
 
+int is_syntactic_keyword(const char* s);
+Cell* sexpr_to_list(const Cell* c);
+Cell* apply_lambda(Cell* lambda, const Cell* args);
 /* Special forms */
-Cell* builtin_define(Lex* e, Cell* a);
-Cell* builtin_if(Lex* e, Cell* a);
-Cell* builtin_when(Lex* e, Cell* a);
-Cell* builtin_unless(Lex* e, Cell* a);
-Cell* builtin_cond(Lex* e, Cell* a);
-Cell* builtin_else(Lex* e, Cell* a);
-Cell* builtin_import(Lex* e, Cell* a);
+Cell* sf_define(Lex* e, Cell* a);
+Cell* sf_quote(Lex* e, Cell* a);
+Cell* sf_lambda(Lex* e, Cell* a);;
+Cell* sf_if(Lex* e, Cell* a);
+Cell* sf_when(Lex* e, Cell* a);
+Cell* sf_unless(Lex* e, Cell* a);
+Cell* sf_cond(Lex* e, Cell* a);
+Cell* sf_else(Lex* e, Cell* a);
+Cell* sf_import(Lex* e, Cell* a);
 
 #endif //COZENAGE_SPECIAL_FORMS_H

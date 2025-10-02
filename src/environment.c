@@ -24,7 +24,6 @@
 #include "control_features.h"
 #include "bools.h"
 #include "predicates.h"
-#include "special_forms.h"
 #include "pairs.h"
 #include "vectors.h"
 #include "bytevectors.h"
@@ -41,9 +40,9 @@
 Lex* lex_initialize(void) {
     Lex* top_env = GC_MALLOC(sizeof(Lex));
     top_env->count = 0;
-    top_env->syms = NULL;
-    top_env->vals = NULL;
-    top_env->parent = NULL;  /* top-level has no parent */
+    top_env->syms = nullptr;
+    top_env->vals = nullptr;
+    top_env->parent = nullptr;  /* top-level has no parent */
     return top_env;
 }
 
@@ -51,15 +50,15 @@ Lex* lex_initialize(void) {
 Lex* lex_new_child(Lex* parent) {
     Lex* e = GC_MALLOC(sizeof(Lex));
     e->count = 0;
-    e->syms = NULL;
-    e->vals = NULL;
+    e->syms = nullptr;
+    e->vals = nullptr;
     e->parent = parent;
     return e;
 }
 
 /* Retrieve a Cell* value from an environment */
 Cell* lex_get(const Lex* e, const Cell* k) {
-    if (!e || !k || k->type != VAL_SYM) return NULL;
+    if (!e || !k || k->type != VAL_SYM) return nullptr;
 
     for (int i = 0; i < e->count; i++) {
         if (strcmp(e->syms[i], k->sym) == 0) {
@@ -111,9 +110,9 @@ Cell* lex_make_builtin(const char* name, Cell* (*func)(Lex*, Cell*)) {
     c->type = VAL_PROC;
     c->name = GC_strdup(name);
     c->builtin = func;
-    c->formals = NULL;
-    c->body = NULL;
-    c->env = NULL;
+    c->formals = nullptr;
+    c->body = nullptr;
+    c->env = nullptr;
     return c;
 }
 
@@ -122,7 +121,7 @@ Cell* lex_make_named_lambda(const char* name, const Cell* formals, const Cell* b
     Cell* c = GC_MALLOC(sizeof(Cell));
     c->type = VAL_PROC;
     c->name = GC_strdup(name);  /* optional */
-    c->builtin = NULL;
+    c->builtin = nullptr;
     c->formals = cell_copy(formals);
     c->body = cell_copy(body);
     c->env = env;  /* do NOT copy, just store pointer */
@@ -133,8 +132,8 @@ Cell* lex_make_named_lambda(const char* name, const Cell* formals, const Cell* b
 Cell* lex_make_lambda(const Cell* formals, const Cell* body, Lex* env) {
     Cell* c = GC_MALLOC(sizeof(Cell));
     c->type = VAL_PROC;
-    c->name = NULL;  /* No name */
-    c->builtin = NULL;
+    c->name = nullptr;  /* No name */
+    c->builtin = nullptr;
     c->formals = cell_copy(formals);
     c->body = cell_copy(body);
     c->env = env;  /* do NOT copy, just store pointer */
@@ -167,15 +166,6 @@ void lex_add_builtins(Lex* e) {
     lex_add_builtin(e, "negative?", builtin_negative);
     lex_add_builtin(e, "odd?", builtin_odd);
     lex_add_builtin(e, "even?", builtin_even);
-    /* Special forms - note: will have to dispatch these directly from
-     * eval_sexpr(), as they should not be in the env */
-    lex_add_builtin(e, "define", builtin_define);
-    lex_add_builtin(e, "if", builtin_if);
-    lex_add_builtin(e, "when", builtin_when);
-    lex_add_builtin(e, "unless", builtin_unless);
-    lex_add_builtin(e, "cond", builtin_cond);
-    lex_add_builtin(e, "else", builtin_else);
-    lex_add_builtin(e, "import", builtin_import);
     /* Equality and equivalence comparators */
     lex_add_builtin(e, "eq?", builtin_eq);
     lex_add_builtin(e, "eqv?", builtin_eqv);
