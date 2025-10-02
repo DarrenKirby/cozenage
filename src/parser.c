@@ -378,12 +378,13 @@ Cell* parse_atom(const char *tok) {
         const size_t payload_len = len - 2;
 
         /* Handle the special '#\' -> space case */
-        if (len == 2) {
+        if (payload_len == 0) {
             return make_val_char(' ');
         }
 
-        /* Handle (R7RS required) named characters first */
-        if (payload[0] !='x' && payload_len > 1) { /* All named chars are longer than 1 char */
+        /* 1. Check for multi-letter named characters and hex literals FIRST. */
+        if (payload_len > 1 || payload[0] == 'x') {
+            /* Handle (R7RS required) named characters */
             if (strcmp(payload, "space") == 0) return make_val_char(' ');
             if (strcmp(payload, "newline") == 0) return make_val_char('\n');
             if (strcmp(payload, "alarm") == 0) return make_val_char(0x7);
@@ -396,37 +397,38 @@ Cell* parse_atom(const char *tok) {
 
             /* Check mapping of implementation-specific named chars */
             const NamedChar* named_char = find_named_char(payload);
-            if (!named_char) {
-                snprintf(err_buf, sizeof(err_buf), "Invalid token: '%s%s%s'",
-            ANSI_RED_B, tok, ANSI_RESET);
-                return make_val_err(err_buf, GEN_ERR);
+            if (named_char) {
+                return make_val_char(named_char->codepoint);
             }
-            return make_val_char(named_char->codepoint);
+
+            /* Handle hex literals: #\x... */
+            if (payload[0] == 'x' && payload_len > 1) {
+                char* end_ptr;
+                long code = strtol(payload + 1, &end_ptr, 16);
+
+                if (*end_ptr != '\0' || code < 0 || code > 0x10FFFF) {
+                    return make_val_err("Invalid Unicode hex value", GEN_ERR);
+                }
+                return make_val_char((UChar32)code);
+            }
         }
 
-        /* Handle hex literals: #\x... */
-        if (payload[0] == 'x' && payload_len > 1) {
-            char* end_ptr;
-            long code = strtol(payload + 1, &end_ptr, 16);
-
-            /* Check if parsing consumed the whole string and the value is valid */
-            if (*end_ptr != '\0' || code < 0 || code > 0x10FFFF) {
-                return make_val_err("Invalid Unicode hex value", GEN_ERR);
-            }
-            return make_val_char((UChar32)code);
-        }
-
-        /* If it's not named or hex, it must be a single UTF-8 character */
+        /* If it wasn't a recognized multi-letter name or hex,
+         * THEN treat it as a single character literal. */
         UChar32 code_point;
         int32_t i = 0;
 
         /* Decode the first code point from the payload */
         U8_NEXT_UNSAFE(payload, i, code_point);
 
-        /* If 'i' is not equal to the payload length, it means there was
-         * more than one character after #\ (e.g., #\ab), which is an error. */
+        /* CRITICAL VALIDATION:
+         * If 'i' is not equal to the payload length, it means there was
+         * more than one character after #\ (e.g., #\ab or #\λa),
+         * which is an error according to the R7RS standard. */
         if (i != (int)payload_len) {
-            return make_val_err("Invalid character literal: multiple characters", GEN_ERR);
+            snprintf(err_buf, sizeof(err_buf), "Invalid character literal: '%s%s%s'",
+                     ANSI_RED_B, tok, ANSI_RESET);
+            return make_val_err(err_buf, GEN_ERR);
         }
 
         return make_val_char(code_point);
