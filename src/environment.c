@@ -168,8 +168,8 @@ void lex_add_builtins(Lex* e) {
     lex_add_builtin(e, "negative?", builtin_negative);
     lex_add_builtin(e, "odd?", builtin_odd);
     lex_add_builtin(e, "even?", builtin_even);
-    /* Special forms */
-    lex_add_builtin(e, "quote", builtin_quote);
+    /* Special forms - note: will have to dispatch these directly from
+     * eval_sexpr(), as they should not be in the env */
     lex_add_builtin(e, "define", builtin_define);
     lex_add_builtin(e, "if", builtin_if);
     lex_add_builtin(e, "when", builtin_when);
@@ -258,8 +258,8 @@ void lex_add_builtins(Lex* e) {
     lex_add_builtin(e, "make-bytevector", builtin_make_bytevector);
     lex_add_builtin(e, "bytevector-copy", builtin_bytevector_copy);
     /* Char procedures */
-    lex_add_builtin(e, "char->int", builtin_char_to_int);
-    lex_add_builtin(e, "int->char", builtin_int_to_char);
+    lex_add_builtin(e, "char->integer", builtin_char_to_int);
+    lex_add_builtin(e, "integer->char", builtin_int_to_char);
     lex_add_builtin(e, "char=?", builtin_char_equal_pred);
     lex_add_builtin(e, "char<?", builtin_char_lt_pred);
     lex_add_builtin(e, "char<=?", builtin_char_lte_pred);
