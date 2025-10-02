@@ -108,6 +108,7 @@ Cell* make_val_bool(const int b) {
 Cell* make_val_sym(const char* s) {
     Cell* v = GC_MALLOC(sizeof(Cell));
     v->type = VAL_SYM;
+    v->exact = 1; /* Hack to flag env lookup of symbol: 1 = lookup 0 = don't */
     v->sym = GC_strdup(s);
     return v;
 }

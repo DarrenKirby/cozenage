@@ -98,6 +98,21 @@ Cell* sexpr_to_list(const Cell* c) {
     return list_head;
 }
 
+/* A helper to check if a symbol name is a reserved syntactic keyword */
+static int is_syntactic_keyword(const char* s) {
+    const char* keywords[] = {
+        "define", "quote", "lambda", "if", "when", "unless",
+        "cond", "import", "set!", "let", "let*" ,"letrec", NULL
+    };
+
+    for (int i = 0; keywords[i] != NULL; i++) {
+        if (strcmp(s, keywords[i]) == 0) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
 /* coz_eval()
  * Evaluate a Cell in the given environment.
  * Literals evaluate to themselves; symbols are looked up.
@@ -107,10 +122,19 @@ Cell* coz_eval(Lex* e, Cell* v) {
     if (!v) return NULL;
 
     switch (v->type) {
-        /* Symbols: look them up in the environment */
+        /* Symbols: look them up in the environment unless quoted */
         case VAL_SYM: {
-            Cell* x = lex_get(e, v);
-            return x;
+            if (is_syntactic_keyword(v->sym)) {
+                char err_buf[128];
+                snprintf(err_buf, sizeof(err_buf),
+                         "Syntax keyword '%s' cannot be used as a variable", v->sym);
+                return make_val_err(err_buf, GEN_ERR);
+            }
+            if (v->exact) {
+                Cell* x = lex_get(e, v);
+                return x;
+            }
+            return v;
         }
 
         /* S-expressions: recursively evaluate */
@@ -158,6 +182,13 @@ Cell* eval_sexpr(Lex* e, Cell* v) {
 
     /* special form: define */
     if (first->type == VAL_SYM && strcmp(first->sym, "define") == 0) {
+        /* Disallow rebinding of keywords */
+        if (is_syntactic_keyword(v->cell[0]->sym)) {
+            char err_buf[128];
+            snprintf(err_buf, sizeof(err_buf),
+                     "Syntax keyword '%s' cannot be used as a variable", v->cell[0]->sym);
+            return make_val_err(err_buf, GEN_ERR);
+        }
         return builtin_define(e, v);
     }
 
@@ -169,16 +200,19 @@ Cell* eval_sexpr(Lex* e, Cell* v) {
         /* Extract the S-expression that was quoted. */
         const Cell* quoted_sexpr = cell_take(v, 0);
 
+        /* Flag whether to do env lookup */
+        for (int i = 0; i < quoted_sexpr->count; i++) {
+            if (quoted_sexpr->cell[i]->type == VAL_SYM) {
+                quoted_sexpr->cell[i]->exact = 0;
+            }
+        }
+
         /* Convert the VAL_SEXPR into a proper VAL_PAIR list. */
         Cell* result = sexpr_to_list(quoted_sexpr);
         return result;
     }
 
     /* Special form: lambda */
-
-    /* FIXME:
-     *     --> lambda
-     *      Error: Unbound symbol: 'lambda' */
     if (first->type == VAL_SYM && strcmp(first->sym, "lambda") == 0) {
 
         if (v->count < 2) {

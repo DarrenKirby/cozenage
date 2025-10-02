@@ -24,7 +24,6 @@
 
 
 /* Special forms */
-Cell* builtin_quote(Lex* e, Cell* a);
 Cell* builtin_define(Lex* e, Cell* a);
 Cell* builtin_if(Lex* e, Cell* a);
 Cell* builtin_when(Lex* e, Cell* a);

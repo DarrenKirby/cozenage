@@ -27,15 +27,6 @@
  *         Special forms        *
  * -----------------------------*/
 
-/* 'quote' -> VAL_SEXPR -  returns the sole argument unevaluated */
-Cell* builtin_quote(Lex* e, Cell* a) {
-    (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 1);
-    if (err) return err;
-    /* Take the first argument and do NOT evaluate it */
-    return cell_take(a, 0);
-}
-
 /* 'define' -> binds a value (or proc) to a symbol, and places it
  * into the environment */
 Cell* builtin_define(Lex* e, Cell* a) {
