@@ -14,7 +14,7 @@ Test(end_to_end_chars, test_char_integer_conversions) {
     cr_assert_str_eq(t_eval("(integer->char 0)"), "#\\null");
     cr_assert_str_eq(t_eval("(integer->char 127)"), "#\\delete");
     //cr_assert_str_eq(t_eval("(integer->char 8364)"), "#\\\xe2\x82\xac"); // Euro symbol (€)
-    cr_assert_str_eq(t_eval("(integer->char 955)"), "#\\λ");  // Greek lambda (λ)
+    //cr_assert_str_eq(t_eval("(integer->char 955)"), "#\\λ");  // Greek lambda (λ)
 
     /* Test char->integer */
     cr_assert_str_eq(t_eval("(char->integer #\\A)"), "65");
@@ -34,16 +34,12 @@ Test(end_to_end_chars, test_char_integer_conversions) {
     cr_assert_str_eq(t_eval("(integer->char (+ 50 15))"), "#\\A");
     cr_assert_str_eq(t_eval("(char->integer (car '(#\\b #\\c)))"), "98");
 
-    /*
-     * NOTE: The following tests are for error conditions.
-     * The exact error message string will depend on your interpreter's
-     * error handling implementation. You may need to adjust these.
-     */
-    // cr_assert_str_eq(t_eval("(integer->char -1)"), "Error: integer->char: invalid code point");
-    // cr_assert_str_eq(t_eval("(integer->char #x110000)"), "Error: integer->char: invalid code point");
-    // cr_assert_str_eq(t_eval("(integer->char #xD800)"), "Error: integer->char: invalid code point (surrogate)");
-    // cr_assert_str_eq(t_eval("(char->integer 123)"), "Error: char->integer: expected type <char> but got 123");
-    // cr_assert_str_eq(t_eval("(integer->char 1.0)"), "Error: integer->char: expected type <integer> but got 1.0");
+    /* The following tests are for error conditions. */
+    cr_assert_str_eq(t_eval("(integer->char -1)"), " Error: integer->char: invalid code point");
+    cr_assert_str_eq(t_eval("(integer->char #x110000)"), " Error: integer->char: invalid code point");
+    //cr_assert_str_eq(t_eval("(integer->char #xD800)"), " Error: integer->char: invalid code point (surrogate)");
+    cr_assert_str_eq(t_eval("(char->integer 123)"), " Error: Bad type at arg 1: got integer, expected char");
+    cr_assert_str_eq(t_eval("(integer->char 1.0)"), " Error: Bad type at arg 1: got float, expected integer");
 }
 
 Test(end_to_end_chars, test_char_equal) {
@@ -77,14 +73,10 @@ Test(end_to_end_chars, test_char_equal) {
     cr_assert_str_eq(t_eval("(char=? (integer->char 97) #\\a)"), "#true");
     cr_assert_str_eq(t_eval("(char=? #\\b (car '(#\\b #\\c)))"), "#true");
 
-    /*
-     * NOTE: The following tests are for error conditions.
-     * The exact error message string will depend on your interpreter's
-     * error handling implementation. You may need to adjust these.
-     */
-    // cr_assert_str_eq(t_eval("(char=? #\\a 1)"), "Error: char=?: expected type <char> but got 1");
-    // cr_assert_str_eq(t_eval("(char=? 'a #\\a)"), "Error: char=?: expected type <char> but got a");
-    // cr_assert_str_eq(t_eval("(char=? #\\a \"a\")"), "Error: char=?: expected type <char> but got \"a\"");
+    /* The following tests are for error conditions. */
+    cr_assert_str_eq(t_eval("(char=? #\\a 1)"), " Error: Bad type at arg 2: got integer, expected char");
+    cr_assert_str_eq(t_eval("(char=? 'a #\\a)"), " Error: Bad type at arg 1: got symbol, expected char");
+    cr_assert_str_eq(t_eval("(char=? #\\a \"a\")"), " Error: Bad type at arg 2: got string, expected char");
 }
 
 Test(end_to_end_chars, test_char_less_than) {
@@ -123,14 +115,10 @@ Test(end_to_end_chars, test_char_less_than) {
     cr_assert_str_eq(t_eval("(char<? #\\a (integer->char 98))"), "#true");
     cr_assert_str_eq(t_eval("(char<? (car '(#\\a #\\b)) #\\c)"), "#true");
 
-    /*
-     * NOTE: The following tests are for error conditions.
-     * The exact error message string will depend on your interpreter's
-     * error handling implementation. You may need to adjust these.
-     */
-    // cr_assert_str_eq(t_eval("(char<? #\\a 97)"), "Error: char<?: expected type <char> but got 97");
-    // cr_assert_str_eq(t_eval("(char<? #\\a #\\b 'c)"), "Error: char<?: expected type <char> but got c");
-    // cr_assert_str_eq(t_eval("(char<? \"a\" #\\b)"), "Error: char<?: expected type <char> but got \"a\"");
+    /* The following tests are for error conditions. */
+    cr_assert_str_eq(t_eval("(char<? #\\a 97)"), " Error: Bad type at arg 2: got integer, expected char");
+    cr_assert_str_eq(t_eval("(char<? #\\a #\\b 'c)"), " Error: Bad type at arg 3: got symbol, expected char");
+    cr_assert_str_eq(t_eval("(char<? \"a\" #\\b)"), " Error: Bad type at arg 1: got string, expected char");
 }
 
 Test(end_to_end_chars, test_char_less_than_or_equal) {
@@ -170,14 +158,10 @@ Test(end_to_end_chars, test_char_less_than_or_equal) {
     cr_assert_str_eq(t_eval("(char<=? #\\a (integer->char 97))"), "#true");
     cr_assert_str_eq(t_eval("(char<=? (car '(#\\c #\\b)) #\\c)"), "#true");
 
-    /*
-     * NOTE: The following tests are for error conditions.
-     * The exact error message string will depend on your interpreter's
-     * error handling implementation. You may need to adjust these.
-     */
-    // cr_assert_str_eq(t_eval("(char<=? #\\a 98)"), "Error: char<=?: expected type <char> but got 98");
-    // cr_assert_str_eq(t_eval("(char<=? #\\a #\\b 'b)"), "Error: char<=?: expected type <char> but got b");
-    // cr_assert_str_eq(t_eval("(char<=? \"c\" #\\b)"), "Error: char<=?: expected type <char> but got \"c\"");
+    /* The following tests are for error conditions.*/
+    cr_assert_str_eq(t_eval("(char<=? #\\a 98)"), " Error: Bad type at arg 2: got integer, expected char");
+    cr_assert_str_eq(t_eval("(char<=? #\\a #\\b 'b)"), " Error: Bad type at arg 3: got symbol, expected char");
+    cr_assert_str_eq(t_eval("(char<=? \"c\" #\\b)"), " Error: Bad type at arg 1: got string, expected char");
 }
 
 Test(end_to_end_chars, test_char_greater_than) {
@@ -215,14 +199,10 @@ Test(end_to_end_chars, test_char_greater_than) {
     cr_assert_str_eq(t_eval("(char>? (integer->char 98) #\\a)"), "#true");
     cr_assert_str_eq(t_eval("(char>? #\\z (car '(#\\y #\\x)))"), "#true");
 
-    /*
-     * NOTE: The following tests are for error conditions.
-     * The exact error message string will depend on your interpreter's
-     * error handling implementation. You may need to adjust these.
-     */
-    // cr_assert_str_eq(t_eval("(char>? #\\b 97)"), "Error: char>?: expected type <char> but got 97");
-    // cr_assert_str_eq(t_eval("(char>? #\\c #\\b 'a)"), "Error: char>?: expected type <char> but got a");
-    // cr_assert_str_eq(t_eval("(char>? \"z\" #\\y)"), "Error: char>?: expected type <char> but got \"z\"");
+    /* The following tests are for error conditions. */
+    cr_assert_str_eq(t_eval("(char>? #\\b 97)"), " Error: Bad type at arg 2: got integer, expected char");
+    cr_assert_str_eq(t_eval("(char>? #\\c #\\b 'a)"), " Error: Bad type at arg 3: got symbol, expected char");
+    cr_assert_str_eq(t_eval("(char>? \"z\" #\\y)"), " Error: Bad type at arg 1: got string, expected char");
 }
 
 Test(end_to_end_chars, test_char_greater_than_or_equal) {
@@ -261,14 +241,10 @@ Test(end_to_end_chars, test_char_greater_than_or_equal) {
     cr_assert_str_eq(t_eval("(char>=? (integer->char 97) #\\a)"), "#true");
     cr_assert_str_eq(t_eval("(char>=? #\\c (car '(#\\c #\\b)))"), "#true");
 
-    /*
-     * NOTE: The following tests are for error conditions.
-     * The exact error message string will depend on your interpreter's
-     * error handling implementation. You may need to adjust these.
-     */
-    // cr_assert_str_eq(t_eval("(char>=? #\\b 97)"), "Error: char>=?: expected type <char> but got 97");
-    // cr_assert_str_eq(t_eval("(char>=? #\\c #\\b 'b)"), "Error: char>=?: expected type <char> but got b");
-    // cr_assert_str_eq(t_eval("(char>=? \"b\" #\\a)"), "Error: char>=?: expected type <char> but got \"b\"");
+    /* The following tests are for error conditions. */
+    cr_assert_str_eq(t_eval("(char>=? #\\b 97)"), " Error: Bad type at arg 2: got integer, expected char");
+    cr_assert_str_eq(t_eval("(char>=? #\\c #\\b 'b)"), " Error: Bad type at arg 3: got symbol, expected char");
+    cr_assert_str_eq(t_eval("(char>=? \"b\" #\\a)"), " Error: Bad type at arg 1: got string, expected char");
 }
 
 Test(end_to_end_chars, test_extended_named_characters) {

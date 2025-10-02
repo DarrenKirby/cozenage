@@ -142,8 +142,7 @@ Cell* lex_make_lambda(const Cell* formals, const Cell* body, Lex* env) {
 }
 
 /* Register a procedure in an environment */
-void lex_add_builtin(Lex* e, const char* name,
-                      Cell* (*func)(Lex*, Cell*)) {
+void lex_add_builtin(Lex* e, const char* name, Cell* (*func)(Lex*, Cell*)) {
     const Cell* fn = lex_make_builtin(name, func);
     const Cell* k = make_val_sym(name);
     lex_put(e, k, fn);

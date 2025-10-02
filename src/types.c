@@ -403,8 +403,7 @@ const char* cell_mask_types(const int mask) {
  *      Procedure argument arity and type validators       *
  * --------------------------------------------------------*/
 
-/* Return NULL if all args are valid, else return an error lval*
- * 'a' is expected to be VAL_SEXPR holding the args */
+/* Return NULL if all args are valid, else return a VAL_ERR */
 Cell* check_arg_types(const Cell* a, const int mask) {
     for (int i = 0; i < a->count; i++) {
         const Cell* arg = a->cell[i];

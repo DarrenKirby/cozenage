@@ -21,6 +21,7 @@
 #include "comparators.h"
 #include <gc/gc.h>
 
+
 /*-------------------------------------------------------*
  *      Char constructors, selectors, and procedures     *
  * ------------------------------------------------------*/
@@ -32,7 +33,7 @@ Cell* builtin_char_to_int(Lex* e, Cell* a) {
     err = check_arg_types(a, VAL_CHAR);
     if (err) return err;
 
-    return make_val_int((long long)a->cell[0]->c_val);
+    return make_val_int(a->cell[0]->c_val);
 }
 
 Cell* builtin_int_to_char(Lex* e, Cell* a) {
@@ -44,7 +45,7 @@ Cell* builtin_int_to_char(Lex* e, Cell* a) {
 
     const UChar32 val = (int)a->cell[0]->i_val;
     if (val < 0 || val > 0x10FFFF) {
-        return make_val_err("Invalid Unicode hex value", GEN_ERR);
+        return make_val_err("integer->char: invalid code point", GEN_ERR);
     }
     return make_val_char(val);
 }
