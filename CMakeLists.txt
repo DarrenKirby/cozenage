@@ -4,6 +4,7 @@ cmake_minimum_required(VERSION 3.10)
 # C compiler on the system will be used
 project(cozenage C)
 set(CMAKE_C_STANDARD 23)
+set(CMAKE_C_FLAGS "-Wall -Wextra -O2")
 
 # Option to force libedit
 option(USE_LIBEDIT "Force using libedit instead of GNU readline" OFF)
