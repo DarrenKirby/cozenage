@@ -33,6 +33,18 @@ This is a list of what *is* implemented so far. I try to keep it up to date:
 
 ## Builtin Procedures (scheme base)
 
+### Special forms
+
+- `quote`
+- `define`
+- `lambda`
+- `if`
+- `when`
+- `unless`
+- `cond`
+- `else`
+- `import`
+
 ### Basic arithmetic 
 
 - `+`
@@ -55,18 +67,6 @@ This is a list of what *is* implemented so far. I try to keep it up to date:
 - `negative?`
 - `odd?`
 - `even?`
-
-### Special forms
-
-- `quote`
-- `define`
-- `lambda`
-- `if`
-- `when`
-- `unless`
-- `cond`
-- `else`
-- `import`
 
 ### Equality and equivalence comparators
 
@@ -135,6 +135,10 @@ This is a list of what *is* implemented so far. I try to keep it up to date:
 - `cons`
 - `car`
 - `cdr`
+- `caar`
+- `cadr`
+- `cdar`
+- `cddr`
 - `list`
 - `length`
 - `list-ref`

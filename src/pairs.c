@@ -19,6 +19,7 @@
 
 #include "pairs.h"
 #include "eval.h"
+#include "printer.h"
 
 
 /* ----------------------------------------------------------*
@@ -51,6 +52,34 @@ Cell* builtin_cdr(const Lex* e, const Cell* a) {
     err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
     return a->cell[0]->cdr;
+}
+
+Cell* builtin_caar(const Lex* e, const Cell* a) {
+    Cell* err = check_arg_types(a, VAL_PAIR);
+    if (err) { return err; }
+    const Cell* car = a->cell[0]->car;
+    return builtin_car(e, make_sexpr_len1(car));
+}
+
+Cell* builtin_cadr(const Lex* e, const Cell* a) {
+    Cell* err = check_arg_types(a, VAL_PAIR);
+    if (err) { return err; }
+    const Cell* cdr = a->cell[0]->cdr;
+    return builtin_car(e, make_sexpr_len1(cdr));
+}
+
+Cell* builtin_cdar(const Lex* e, const Cell* a) {
+    Cell* err = check_arg_types(a, VAL_PAIR);
+    if (err) { return err; }
+    const Cell* car = a->cell[0]->car;
+    return builtin_cdr(e, make_sexpr_len1(car));
+}
+
+Cell* builtin_cddr(const Lex* e, const Cell* a) {
+    Cell* err = check_arg_types(a, VAL_PAIR);
+    if (err) { return err; }
+    const Cell* cdr = a->cell[0]->cdr;
+    return builtin_cdr(e, make_sexpr_len1(cdr));
 }
 
 /* 'list' -> VAL_PAIR - returns a nil-terminated proper list */

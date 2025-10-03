@@ -27,6 +27,10 @@
 Cell* builtin_cons(const Lex* e, const Cell* a);
 Cell* builtin_car(const Lex* e, const Cell* a);
 Cell* builtin_cdr(const Lex* e, const Cell* a);
+Cell* builtin_caar(const Lex* e, const Cell* a);
+Cell* builtin_cadr(const Lex* e, const Cell* a);
+Cell* builtin_cdar(const Lex* e, const Cell* a);
+Cell* builtin_cddr(const Lex* e, const Cell* a);
 Cell* builtin_list(const Lex* e, const Cell* a);
 Cell* builtin_list_length(const Lex* e, const Cell* a);
 Cell* builtin_list_ref(const Lex* e, const Cell* a);

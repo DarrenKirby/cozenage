@@ -223,6 +223,10 @@ void lex_add_builtins(Lex* e) {
     lex_add_builtin(e, "cons", builtin_cons);
     lex_add_builtin(e, "car", builtin_car);
     lex_add_builtin(e, "cdr", builtin_cdr);
+    lex_add_builtin(e, "caar", builtin_caar);
+    lex_add_builtin(e, "cadr", builtin_cadr);
+    lex_add_builtin(e, "cdar", builtin_cdar);
+    lex_add_builtin(e, "cddr", builtin_cddr);
     lex_add_builtin(e, "list", builtin_list);
     lex_add_builtin(e, "length", builtin_list_length);
     lex_add_builtin(e, "list-ref", builtin_list_ref);
