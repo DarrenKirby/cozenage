@@ -26,12 +26,12 @@
 
 extern char **environ;
 
-Cell* builtin_command_line(Lex* e, Cell* a) {
+Cell* builtin_command_line(const Lex* e, const Cell* a) {
     (void)e; (void)a;
     return make_val_err("not implemented yet", GEN_ERR);
 }
 
-Cell* builtin_exit(Lex* e, Cell* a) {
+Cell* builtin_exit(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, VAL_INT|VAL_BOOL);
     if (err) { return err; }
@@ -51,7 +51,7 @@ Cell* builtin_exit(Lex* e, Cell* a) {
     exit(0); /* exit success if no arg */
 }
 
-Cell* builtin_emergency_exit(Lex* e, Cell* a) {
+Cell* builtin_emergency_exit(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, VAL_INT|VAL_BOOL);
     if (err) { return err; }
@@ -69,7 +69,7 @@ Cell* builtin_emergency_exit(Lex* e, Cell* a) {
     exit(0); /* exit success if no arg */
 }
 
-Cell* builtin_get_env_var(Lex* e, Cell* a) {
+Cell* builtin_get_env_var(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, VAL_STR);
     if (err) { return err; }
@@ -83,7 +83,7 @@ Cell* builtin_get_env_var(Lex* e, Cell* a) {
     return make_val_str(var_string);
 }
 
-Cell* builtin_get_env_vars(Lex* e, Cell* a) {
+Cell* builtin_get_env_vars(const Lex* e, const Cell* a) {
     (void)e; (void)a;
     Cell* err = CHECK_ARITY_EXACT(a, 0);
     if (err) { return err; }

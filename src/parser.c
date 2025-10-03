@@ -94,9 +94,9 @@ long double parse_float_checked(const char* str, char* err_buf, size_t err_buf_s
 char **lexer(const char *input, int *count) {
     int capacity = 8;
     char **tokens = GC_MALLOC(capacity * sizeof(char *));
-    if (!tokens) {
+    if (tokens == NULL) {
         fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
-        return NULL;
+        exit(EXIT_FAILURE);
     }
 
     int n = 0;
@@ -117,7 +117,7 @@ char **lexer(const char *input, int *count) {
         if (n + 1 >= capacity) {
             capacity *= 2;
             char **tmp_tokens = GC_REALLOC(tokens, capacity * sizeof(char *));
-            if (!tmp_tokens) {
+            if (tmp_tokens == NULL) {
                 fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
                 exit(EXIT_FAILURE);
             }
@@ -139,7 +139,7 @@ char **lexer(const char *input, int *count) {
 
         /* Parentheses as single-char tokens */
         if (*p == '(' || *p == ')') {
-            char buf[2] = {*p, '\0'};
+            const char buf[2] = {*p, '\0'};
             tokens[n++] = GC_strdup(buf);
             p++;
         }
@@ -148,7 +148,10 @@ char **lexer(const char *input, int *count) {
             p++; /* skip opening quote */
             size_t buf_size = 64;
             char *tok = GC_MALLOC(buf_size);
-            if (!tok) exit(EXIT_FAILURE);
+            if (tok == NULL) {
+                fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
+                exit(EXIT_FAILURE);
+            }
             size_t len = 0;
             tok[len++] = '"';
             while (*p && *p != '"') {
@@ -156,7 +159,10 @@ char **lexer(const char *input, int *count) {
                     if (len + 2 >= buf_size) {
                         buf_size *= 2;
                         tok = GC_REALLOC(tok, buf_size);
-                        if (!tok) exit(EXIT_FAILURE);
+                        if (tok == NULL) {
+                            fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
+                            exit(EXIT_FAILURE);
+                        }
                     }
                     tok[len++] = *p++;
                     tok[len++] = *p++;
@@ -164,7 +170,10 @@ char **lexer(const char *input, int *count) {
                     if (len + 1 >= buf_size) {
                         buf_size *= 2;
                         tok = GC_REALLOC(tok, buf_size);
-                        if (!tok) exit(EXIT_FAILURE);
+                        if (tok == NULL) {
+                            fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
+                            exit(EXIT_FAILURE);
+                        }
                     }
                     tok[len++] = *p++;
                 }
@@ -187,7 +196,10 @@ char **lexer(const char *input, int *count) {
 
             const size_t len = p - start;
             char *tok = GC_MALLOC(len + 1);
-            if (!tok) exit(EXIT_FAILURE);
+            if (tok == NULL) {
+                fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
+                exit(EXIT_FAILURE);
+            }
             memcpy(tok, start, len);
             tok[len] = '\0';
             tokens[n++] = tok;
@@ -209,7 +221,7 @@ char **lexer(const char *input, int *count) {
     }
 
     /* Null-terminate array */
-    tokens[n] = NULL;
+    tokens[n] = nullptr;
     if (count) *count = n;
 
     /* Debug print */
@@ -224,13 +236,13 @@ char **lexer(const char *input, int *count) {
 /* free_tokens() -> void
  * Destroy an array of tokens.
  * */
-void free_tokens(char **tokens, const int count) {
-    if (!tokens) return;
-    for (int i = 0; i < count; i++) {
-        free(tokens[i]);  /* Free each GC_strdup’d string */
-    }
-    free(tokens); /* Then free the array */
-}
+// void free_tokens(char **tokens, const int count) {
+//     if (!tokens) return;
+//     for (int i = 0; i < count; i++) {
+//         free(tokens[i]);  /* Free each GC_strdup’d string */
+//     }
+//     free(tokens); /* Then free the array */
+// }
 
 /* parse_str() -> Parser
  * Take a raw line, run it through the lexer,
@@ -239,10 +251,12 @@ void free_tokens(char **tokens, const int count) {
 Parser *parse_str(const char *input) {;
     int count;
     char **tokens = lexer(input, &count);
-    if (!tokens) return NULL;
 
     Parser *p = GC_MALLOC(sizeof(Parser));
-    if (!p) { free_tokens(tokens, count); return NULL; }
+    if (p == NULL) {
+        fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
+        exit(EXIT_FAILURE);
+    }
 
     p->array = tokens;
     p->position = 0;
@@ -251,17 +265,17 @@ Parser *parse_str(const char *input) {;
     return p;
 }
 
-static const char *peek(Parser *p) {
+static const char *peek(const Parser *p) {
     if (p->position < p->size) return p->array[p->position];
-    return NULL;
+    return nullptr;
 }
 
 static const char *advance(Parser *p) {
     if (p->position < p->size) return p->array[p->position++];
-    return NULL;
+    return nullptr;
 }
 
-Cell *parse_tokens(Parser *p) {
+Cell* parse_tokens(Parser *p) {
     int left_count = 0, right_count = 0;
 
     for (int i = 0; i < p->size; i++) {
@@ -274,7 +288,7 @@ Cell *parse_tokens(Parser *p) {
     }
 
     const char *tok = peek(p);
-    if (!tok) return NULL;
+    if (!tok) return nullptr;
 
     /* Handle quote (') */
     if (strcmp(tok, "'") == 0) {
@@ -460,11 +474,11 @@ Cell* parse_atom(const char *tok) {
             /* strip trailing 'i' */
             p[len-1] = '\0';
 
-            Cell* r = NULL;
-            Cell* i = NULL;
+            Cell* r;
+            Cell* i;
 
             /* Find the last '+' or '-' (but not the leading sign) */
-            char *sep = NULL;
+            char *sep = nullptr;
             for (char *q = p + 1; *q; q++) {
                 if (*q == '+' || *q == '-') {
                     sep = q;
@@ -568,7 +582,7 @@ Cell* parse_atom(const char *tok) {
 }
 
 /* Count '(' and ')' while ignoring:
-   - anything inside string literals (with \" escapes),
+   - anything inside string literals
    - character literals starting with "#\..." (including #\()/#\)),
    - line comments starting with ';' to end-of-line.
 */

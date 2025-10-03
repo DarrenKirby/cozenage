@@ -24,7 +24,7 @@
 
 
 /* Control features  */
-Cell* builtin_apply(Lex* e, Cell* a);
-Cell* builtin_map(Lex* e, Cell* a);
+Cell* builtin_apply(const Lex* e, const Cell* a);
+Cell* builtin_map(const Lex* e, const Cell* a);
 
 #endif //COZENAGE_CONTROL_FEATURES_H

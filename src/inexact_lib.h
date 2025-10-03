@@ -23,21 +23,21 @@
 #include "types.h"
 
 
-Cell* builtin_cos(Lex* e, Cell* a);
-Cell* builtin_acos(Lex* e, Cell* a);
-Cell* builtin_sin(Lex* e, Cell* a);
-Cell* builtin_asin(Lex* e, Cell* a);
-Cell* builtin_tan(Lex* e, Cell* a);
-Cell* builtin_atan(Lex* e, Cell* a);
-Cell* builtin_exp(Lex* e, Cell* a);
-Cell* builtin_log(Lex* e, Cell* a);
-Cell* builtin_log2(Lex* e, Cell* a);
-Cell* builtin_log10(Lex* e, Cell* a);
-Cell* builtin_sqrt(Lex* e, Cell* a);
-Cell* builtin_cbrt(Lex* e, Cell* a);
-Cell* builtin_infinite(Lex* e, Cell* a);
-Cell* builtin_finite(Lex* e, Cell* a);
-Cell* builtin_nan(Lex* e, Cell* a);
+Cell* builtin_cos(const Lex* e, const Cell* a);
+Cell* builtin_acos(const Lex* e, const Cell* a);
+Cell* builtin_sin(const Lex* e, const Cell* a);
+Cell* builtin_asin(const Lex* e, const Cell* a);
+Cell* builtin_tan(const Lex* e, const Cell* a);
+Cell* builtin_atan(const Lex* e, const Cell* a);
+Cell* builtin_exp(const Lex* e, const Cell* a);
+Cell* builtin_log(const Lex* e, const Cell* a);
+Cell* builtin_log2(const Lex* e, const Cell* a);
+Cell* builtin_log10(const Lex* e, const Cell* a);
+Cell* builtin_sqrt(const Lex* e, const Cell* a);
+Cell* builtin_cbrt(const Lex* e, const Cell* a);
+Cell* builtin_infinite(const Lex* e, const Cell* a);
+Cell* builtin_finite(const Lex* e, const Cell* a);
+Cell* builtin_nan(const Lex* e, const Cell* a);
 void lex_add_inexact_lib(Lex* e);
 
 #endif //COZENAGE_INEXACT_LIB_H

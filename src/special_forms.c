@@ -28,7 +28,7 @@
 int is_syntactic_keyword(const char* s) {
     const char* keywords[] = {
         "define", "quote", "lambda", "if", "when", "unless",
-        "cond", "import", "set!", "let", "let*" ,"letrec", NULL
+        "cond", "import", "set!", "let", "let*" ,"letrec", nullptr
     };
 
     for (int i = 0; keywords[i] != NULL; i++) {
@@ -40,10 +40,10 @@ int is_syntactic_keyword(const char* s) {
 }
 
 /* Convert a VAL_SEXPR to a proper VAL_PAIR linked-list */
-Cell* sexpr_to_list(const Cell* c) {
-    /* If the item is not an S-expression, it's an atom. Return a copy. */
+Cell* sexpr_to_list(Cell* c) {
+    /* If the item is not an S-expression, it's an atom. Return it */
     if (c->type != VAL_SEXPR) {
-        return cell_copy(c);
+        return c;
     }
 
     /* It is an S-expression. Check for improper list syntax. */
@@ -105,7 +105,7 @@ Cell* apply_lambda(Cell* lambda, const Cell* args) {
     }
 
     /* Evaluate body expressions in this environment */
-    Cell* result = NULL;
+    Cell* result = nullptr;
     for (int i = 0; i < lambda->body->count; i++) {
         result = coz_eval(local_env, cell_copy(lambda->body->cell[i]));
     }
@@ -118,7 +118,7 @@ Cell* apply_lambda(Cell* lambda, const Cell* args) {
 
 /* 'define' -> binds a value (or proc) to a symbol, and places it
  * into the environment */
-Cell* sf_define(Lex* e, Cell* a) {
+Cell* sf_define(Lex* e, const Cell* a) {
     if (a->count < 2) {
         return make_val_err("define requires at least 2 arguments", GEN_ERR);
     }
@@ -179,12 +179,13 @@ Cell* sf_define(Lex* e, Cell* a) {
     return make_val_err("invalid define syntax", GEN_ERR);
 }
 
-Cell* sf_quote(Lex* e, Cell* a) {
+Cell* sf_quote(const Lex* e, Cell* a) {
+    (void)e;
     if (a->count != 1) {
         return make_val_err("quote takes exactly one argument", GEN_ERR);
     }
     /* Extract the S-expression that was quoted. */
-    const Cell* quoted_sexpr = cell_take(a, 0);
+    Cell* quoted_sexpr = cell_take(a, 0);
 
     /* Flag whether to do env lookup */
     for (int i = 0; i < quoted_sexpr->count; i++) {
@@ -218,7 +219,7 @@ Cell* sf_lambda(Lex* e, Cell* a) {
     return lambda;
 }
 
-Cell* sf_if(Lex* e, Cell* a) {
+Cell* sf_if(Lex* e, const Cell* a) {
     Cell* err = CHECK_ARITY_RANGE(a, 2, 3);
     if (err) return err;
 
@@ -231,7 +232,7 @@ Cell* sf_if(Lex* e, Cell* a) {
         result = coz_eval(e, a->cell[1]);
     } else {
         if (a->count == 2) {
-            result = NULL;
+            result = nullptr;
         } else {
             result = coz_eval(e, a->cell[2]);
         }
@@ -239,7 +240,7 @@ Cell* sf_if(Lex* e, Cell* a) {
     return result;
 }
 
-Cell* sf_when(Lex* e, Cell* a) {
+Cell* sf_when(Lex* e, const Cell* a) {
     Cell* err = CHECK_ARITY_MIN(a, 2);
     if (err) return err;
 
@@ -247,7 +248,7 @@ Cell* sf_when(Lex* e, Cell* a) {
     if (test->type != VAL_BOOL) {
         return make_val_err("'when' test must be a predicate", GEN_ERR);
     }
-    Cell* result = NULL;
+    Cell* result = nullptr;
     if (test->b_val == 1) {
         for (int i = 1; i < a->count; i++) {
             result = coz_eval(e, a->cell[i]);
@@ -256,7 +257,7 @@ Cell* sf_when(Lex* e, Cell* a) {
     return result;
 }
 
-Cell* sf_unless(Lex* e, Cell* a) {
+Cell* sf_unless(Lex* e, const Cell* a) {
     Cell* err = CHECK_ARITY_MIN(a, 2);
     if (err) return err;
 
@@ -264,7 +265,7 @@ Cell* sf_unless(Lex* e, Cell* a) {
     if (test->type != VAL_BOOL) {
         return make_val_err("'unless' test must be a predicate", GEN_ERR);
     }
-    Cell* result = NULL;
+    Cell* result = nullptr;
     if (test->b_val == 0) {
         for (int i = 1; i < a->count; i++) {
             result = coz_eval(e, a->cell[i]);
@@ -273,16 +274,14 @@ Cell* sf_unless(Lex* e, Cell* a) {
     return result;
 }
 
-Cell* sf_cond(Lex* e, Cell* a) {
+Cell* sf_cond(Lex* e, const Cell* a) {
     Cell* err = CHECK_ARITY_MIN(a, 2);
     if (err) return err;
 
-    Cell* result = NULL;
-    const Cell* clause = NULL;
-    const Cell* test = NULL;
+    Cell* result = nullptr;
     for (int i = 0; i < a->count; i++) {
-        clause = a->cell[i];
-        test = coz_eval(e, clause->cell[0]);
+        const Cell* clause = a->cell[i];
+        const Cell* test = coz_eval(e, clause->cell[0]);
         if (test->type == VAL_PROC && strcmp(test->name, "else") == 0) {
             result = coz_eval(e, clause->cell[1]);
             break;
@@ -296,23 +295,21 @@ Cell* sf_cond(Lex* e, Cell* a) {
             }
             break;
         }
-
     }
     return result;
 }
 
 /* dummy function */
-Cell* sf_else(Lex* e, Cell* a) {
+Cell* sf_else(const Lex* e, const Cell* a) {
     (void)e;
     (void)a;
     return make_val_bool(1);
 }
 
-Cell* sf_import(Lex* e, Cell* a) {
+Cell* sf_import(Lex* e, const Cell* a) {
     Cell* import_set = make_val_sexpr();
     import_set->cell = GC_MALLOC(sizeof(Cell*) * a->count);
-    /* 'a' is a sexpr of sexpr's. Make a new sexpr which contains
-     * pairs of (library . name), */
+    /* Make a new sexpr which contains pairs of (library . name), */
     int i;
     for (i = 0; i < a->count; i++) {
         const char* lib = GC_strdup(a->cell[i]->cell[0]->sym);
@@ -322,7 +319,7 @@ Cell* sf_import(Lex* e, Cell* a) {
     }
     import_set->count = i;
 
-    Cell* result = NULL;
+    Cell* result = nullptr;
     for (int j = 0; j < import_set->count; j++) {
         const char* library_type = import_set->cell[j]->car->str;
         const char* library_name = import_set->cell[j]->cdr->str;

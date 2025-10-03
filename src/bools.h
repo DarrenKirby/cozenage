@@ -24,9 +24,9 @@
 
 
 /* Boolean and logical procedures */
-Cell* builtin_not(Lex* e, Cell* a);
-Cell* builtin_boolean(Lex* e, Cell* a);
-Cell* builtin_or(Lex* e, Cell* a);
-Cell* builtin_and(Lex* e, Cell* a);
+Cell* builtin_not(const Lex* e, const Cell* a);
+Cell* builtin_boolean(const Lex* e, const Cell* a);
+Cell* builtin_or(const Lex* e, const Cell* a);
+Cell* builtin_and(const Lex* e, const Cell* a);
 
 #endif //COZENAGE_BOOLS_H

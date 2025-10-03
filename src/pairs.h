@@ -24,16 +24,16 @@
 
 
 /* pair/list constructors, selectors, and procedures */
-Cell* builtin_cons(Lex* e, Cell* a);
-Cell* builtin_car(Lex* e, Cell* a);
-Cell* builtin_cdr(Lex* e, Cell* a);
-Cell* builtin_list(Lex* e, Cell* a);
-Cell* builtin_list_length(Lex* e, Cell* a);
-Cell* builtin_list_ref(Lex* e, Cell* a);
-Cell* builtin_list_append(Lex* e, Cell* a);
-Cell* builtin_list_reverse(Lex* e, Cell* a);
-Cell* builtin_list_tail(Lex* e, Cell* a);
-Cell* builtin_filter(Lex* e, Cell* a);
-Cell* builtin_foldl(Lex* e, Cell* a);
+Cell* builtin_cons(const Lex* e, const Cell* a);
+Cell* builtin_car(const Lex* e, const Cell* a);
+Cell* builtin_cdr(const Lex* e, const Cell* a);
+Cell* builtin_list(const Lex* e, const Cell* a);
+Cell* builtin_list_length(const Lex* e, const Cell* a);
+Cell* builtin_list_ref(const Lex* e, const Cell* a);
+Cell* builtin_list_append(const Lex* e, const Cell* a);
+Cell* builtin_list_reverse(const Lex* e, const Cell* a);
+Cell* builtin_list_tail(const Lex* e, const Cell* a);
+Cell* builtin_filter(const Lex* e, const Cell* a);
+Cell* builtin_foldl(const Lex* e, const Cell* a);
 
 #endif //COZENAGE_PAIRS_H

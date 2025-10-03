@@ -35,7 +35,7 @@ with-output-to-file
 */
 
 /* 'file-exists?' -> VAL_BOOL - file exists predicate */
-Cell* builtin_file_exists(Lex* e, Cell* a) {
+Cell* builtin_file_exists(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, VAL_STR);
     if (err) { return err; }
@@ -49,7 +49,7 @@ Cell* builtin_file_exists(Lex* e, Cell* a) {
 }
 
 /* 'delete-file -> VAL_BOOL - delete a file, and return a bool confirming outcome */
-Cell* builtin_delete_file(Lex* e, Cell* a) {
+Cell* builtin_delete_file(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, VAL_STR);
     if (err) { return err; }
@@ -65,7 +65,7 @@ Cell* builtin_delete_file(Lex* e, Cell* a) {
 }
 
 /* 'open-input-file' -> VAL_PORT - open a file and bind it to a text port */
-Cell* builtin_open_input_file(Lex* e, Cell* a) {
+Cell* builtin_open_input_file(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, VAL_STR);
     if (err) { return err; }
@@ -89,7 +89,7 @@ Cell* builtin_open_input_file(Lex* e, Cell* a) {
 }
 
 /* 'open-binary-input-file' -> VAL_PORT - open a file and bind it to a binary port */
-Cell* builtin_open_binary_input_file(Lex* e, Cell* a) {
+Cell* builtin_open_binary_input_file(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, VAL_STR);
     if (err) { return err; }
@@ -105,7 +105,7 @@ Cell* builtin_open_binary_input_file(Lex* e, Cell* a) {
     return p;
 }
 
-Cell* builtin_open_output_file(Lex* e, Cell* a) {
+Cell* builtin_open_output_file(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, VAL_STR);
     if (err) { return err; }
@@ -132,7 +132,7 @@ Cell* builtin_open_output_file(Lex* e, Cell* a) {
     return p;
 }
 
-Cell* builtin_open_binary_output_file(Lex* e, Cell* a) {
+Cell* builtin_open_binary_output_file(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, VAL_STR);
     if (err) { return err; }

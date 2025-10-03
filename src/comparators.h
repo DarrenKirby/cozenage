@@ -24,14 +24,14 @@
 
 
 /* Comparison operators */
-Cell* builtin_eq_op(Lex* e, Cell* a);
-Cell* builtin_gt_op(Lex* e, Cell* a);
-Cell* builtin_lt_op(Lex* e, Cell* a);
-Cell* builtin_gte_op(Lex* e, Cell* a);
-Cell* builtin_lte_op(Lex* e, Cell* a);
+Cell* builtin_eq_op(const Lex* e, const Cell* a);
+Cell* builtin_gt_op(const Lex* e, const Cell* a);
+Cell* builtin_lt_op(const Lex* e, const Cell* a);
+Cell* builtin_gte_op(const Lex* e, const Cell* a);
+Cell* builtin_lte_op(const Lex* e, const Cell* a);
 /* Equality and equivalence comparators */
-Cell* builtin_equal(Lex* e, Cell* a);
-Cell* builtin_eqv(Lex* e, Cell* a);
-Cell* builtin_eq(Lex* e, Cell* a);
+Cell* builtin_equal(const Lex* e, const Cell* a);
+Cell* builtin_eqv(const Lex* e, const Cell* a);
+Cell* builtin_eq(const Lex* e, const Cell* a);
 
 #endif //COZENAGE_COMPARATORS_H

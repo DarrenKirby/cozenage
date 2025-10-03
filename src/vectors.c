@@ -28,20 +28,20 @@
  * ------------------------------------------------------*/
 
 /* 'vector' -> VAL_VECT - returns a vector of all arg objects */
-Cell* builtin_vector(Lex* e, Cell* a) {
+Cell* builtin_vector(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_MIN(a, 1);
     if (err) return err;
 
     Cell *vec = make_val_vect();
     for (int i = 0; i < a->count; i++) {
-        cell_add(vec, cell_copy(a->cell[i]));
+        cell_add(vec, a->cell[i]);
     }
     return vec;
 }
 
 /* 'vector-length' -> VAL_INT- returns the number of members of arg */
-Cell* builtin_vector_length(Lex* e, Cell* a) {
+Cell* builtin_vector_length(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
@@ -51,7 +51,7 @@ Cell* builtin_vector_length(Lex* e, Cell* a) {
     return make_val_int(a->cell[0]->count);
 }
 
-Cell* builtin_vector_ref(Lex* e, Cell* a) {
+Cell* builtin_vector_ref(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2);
     if (err) return err;
@@ -66,10 +66,10 @@ Cell* builtin_vector_ref(Lex* e, Cell* a) {
     if (i >= a->cell[0]->count) {
         return make_val_err("vector-ref: index out of bounds", GEN_ERR);
     }
-    return cell_copy(a->cell[0]->cell[i]);
+    return a->cell[0]->cell[i];
 }
 
-Cell* builtin_make_vector(Lex* e, Cell* a) {
+Cell* builtin_make_vector(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_RANGE(a, 1, 2);
     if (err) return err;
@@ -80,7 +80,7 @@ Cell* builtin_make_vector(Lex* e, Cell* a) {
     if (n < 1) {
         return make_val_err("make-vector: arg 1 must be non-negative", GEN_ERR);
     }
-    Cell* fill = NULL;
+    Cell* fill;
     if (a->count == 2) {
         fill = a->cell[1];
     } else {
@@ -88,12 +88,12 @@ Cell* builtin_make_vector(Lex* e, Cell* a) {
     }
     Cell *vec = make_val_vect();
     for (int i = 0; i < n; i++) {
-        cell_add(vec, cell_copy(fill));
+        cell_add(vec, fill);
     }
     return vec;
 }
 
-Cell* builtin_list_to_vector(Lex* e, Cell* a) {
+Cell* builtin_list_to_vector(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
@@ -107,13 +107,13 @@ Cell* builtin_list_to_vector(Lex* e, Cell* a) {
     const Cell* lst = a->cell[0];
     Cell *vec = make_val_vect();
     for (int i = 0; i < list_len; i++) {
-        cell_add(vec, cell_copy(lst->car));
+        cell_add(vec, lst->car);
         lst = lst->cdr;
     }
     return vec;
 }
 
-Cell* builtin_vector_to_list(Lex* e, Cell* a) {
+Cell* builtin_vector_to_list(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_RANGE(a, 1, 3);
     if (err) return err;
@@ -150,38 +150,40 @@ Cell* builtin_vector_to_list(Lex* e, Cell* a) {
     Cell* result = make_val_nil();
     const Cell* vec = a->cell[0];
     for (int i = end - 1; i >= start; i--) {
-        result = make_val_pair(cell_copy(vec->cell[i]), result);
+        result = make_val_pair(vec->cell[i], result);
         result->len = end - i;
     }
     return result;
 }
 
 /* 'vector-copy' -> VAL_VECT - returns a newly allocated copy of arg vector */
-Cell* builtin_vector_copy(Lex* e, Cell* a) {
+Cell* builtin_vector_copy(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_RANGE(a, 1, 3);
     if (err) return err;
     if (a->cell[0]->type != VAL_VEC) {
         return make_val_err("vector->copy: arg 1 must be a vector", GEN_ERR);
     }
-    if (a->count == 1) {
-        return cell_copy(a->cell[0]);
-    }
-    const long long start = a->cell[1]->i_val;
+    int start = 0;
+    int end = a->cell[0]->count;
+
     if (a->count == 2) {
-        return cell_copy(a->cell[0]->cell[start]);
+        start = (int)a->cell[1]->i_val;
     }
-    const long long end = a->cell[2]->i_val;
+    if (a->count == 3) {
+        start = (int)a->cell[1]->i_val;
+        end = (int)a->cell[2]->i_val;
+    }
     Cell* vec = make_val_vect();
-    for (long long i = start; i < end; i++) {
-        cell_add(vec, cell_copy(a->cell[0]->cell[i]));
+    for (int i = start; i < end; i++) {
+        cell_add(vec, a->cell[0]->cell[i]);
     }
     return vec;
 }
 
 /* 'vector->string' -> VAL_STR - returns a str containing all char members
  * of arg */
-Cell* builtin_vector_to_string(Lex* e, Cell* a) {
+Cell* builtin_vector_to_string(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_RANGE(a, 1, 3);
     if (err) return err;
@@ -218,7 +220,7 @@ Cell* builtin_vector_to_string(Lex* e, Cell* a) {
 }
 
 /* 'string->vector' -> VAL_VECT - returns a vector of all chars in arg */
-Cell* builtin_string_to_vector(Lex* e, Cell* a) {
+Cell* builtin_string_to_vector(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_RANGE(a, 1, 3);
     if (err) return err;

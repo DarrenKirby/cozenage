@@ -23,7 +23,7 @@
 #include "types.h"
 
 
-Cell* builtin_eval(Lex* e, Cell* a);
+Cell* builtin_eval(const Lex* e, const Cell* a);
 void lex_add_eval_lib(Lex* e);
 
 #endif //COZENAGE_EVAL_LIB_H

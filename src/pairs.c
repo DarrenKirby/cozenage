@@ -26,46 +26,35 @@
  * ----------------------------------------------------------*/
 
 /* 'cons' -> VAL_PAIR - returns a pair made from two arguments */
-Cell* builtin_cons(Lex* e, Cell* a) {
+Cell* builtin_cons(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2);
     if (err) return err;
-    return make_val_pair(cell_copy(a->cell[0]), cell_copy(a->cell[1]));
+    return make_val_pair(a->cell[0], a->cell[1]);
 }
 
 /* 'car' -> ANY - returns the first member of a pair */
-Cell* builtin_car(Lex* e, Cell* a) {
+Cell* builtin_car(const Lex* e, const Cell* a) {
     (void)e;
-    Cell* err = check_arg_types(a, VAL_PAIR|VAL_SEXPR);
+    Cell* err = check_arg_types(a, VAL_PAIR);
     if (err) { return err; }
-
-    if (a->cell[0]->type == VAL_PAIR) {
-        return cell_copy(a->cell[0]->car);
-    }
-    /* This is for the case where the argument list was quoted.
-     * It needs to be transformed into a list before taking the car */
-    Cell* list = builtin_list(e, a->cell[0]);
-    Cell* result = cell_copy(list->car);
-    return result;
+    err = CHECK_ARITY_EXACT(a, 1);
+    if (err) return err;
+    return a->cell[0]->car;
 }
 
 /* 'cdr' -> ANY - returns the second member of a pair */
-Cell* builtin_cdr(Lex* e, Cell* a) {
-    Cell* err = check_arg_types(a, VAL_PAIR|VAL_SEXPR);
+Cell* builtin_cdr(const Lex* e, const Cell* a) {
+    (void)e;
+    Cell* err = check_arg_types(a, VAL_PAIR);
     if (err) { return err; }
-
-    if (a->cell[0]->type == VAL_PAIR) {
-        return cell_copy(a->cell[0]->cdr);
-    }
-    /* This is for the case where the argument list was quoted.
-     * It needs to be transformed into a list before taking the cdr */
-    const Cell* list = builtin_list(e, a->cell[0]);
-    Cell* result = cell_copy(list->cdr);
-    return result;
+    err = CHECK_ARITY_EXACT(a, 1);
+    if (err) return err;
+    return a->cell[0]->cdr;
 }
 
 /* 'list' -> VAL_PAIR - returns a nil-terminated proper list */
-Cell* builtin_list(Lex* e, Cell* a) {
+Cell* builtin_list(const Lex* e, const Cell* a) {
     (void)e;
     /* start with nil */
     Cell* result = make_val_nil();
@@ -73,14 +62,14 @@ Cell* builtin_list(Lex* e, Cell* a) {
     const int len = a->count;
     /* build backwards so it comes out in the right order */
     for (int i = len - 1; i >= 0; i--) {
-        result = make_val_pair(cell_copy(a->cell[i]), result);
+        result = make_val_pair(a->cell[i], result);
         result->len = len - i;
     }
     return result;
 }
 
 /* 'length' -> VAL_INT - returns the member count of a proper list */
-Cell* builtin_list_length(Lex* e, Cell* a) {
+Cell* builtin_list_length(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
@@ -118,7 +107,7 @@ Cell* builtin_list_length(Lex* e, Cell* a) {
 
 /* 'list-ref' -> ANY - returns the list member at the zero-indexed
  * integer specified in the second arg. First arg is the list to act on*/
-Cell* builtin_list_ref(Lex* e, Cell* a) {
+Cell* builtin_list_ref(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2);
     if (err) return err;
@@ -141,12 +130,12 @@ Cell* builtin_list_ref(Lex* e, Cell* a) {
         p = p->cdr;
         i--;
     }
-    return cell_copy(p->car);
+    return p->car;
 }
 
 /* 'list-append' -> VAL_PAIR - returns a proper list of all
  * args appended to the result, in order */
-Cell* builtin_list_append(Lex* e, Cell* a) {
+Cell* builtin_list_append(const Lex* e, const Cell* a) {
     (void)e;
     /* Base case: (append) -> '() */
     if (a->count == 0) {
@@ -154,7 +143,7 @@ Cell* builtin_list_append(Lex* e, Cell* a) {
     }
     /* Base case: (append x) -> x */
     if (a->count == 1) {
-        return cell_copy(a->cell[0]);
+        return a->cell[0];
     }
 
     /* Validate args and calculate total length of copied lists */
@@ -166,7 +155,9 @@ Cell* builtin_list_append(Lex* e, Cell* a) {
         }
         /* All but the last argument must be a list */
         if (current_list->type != VAL_PAIR) {
-            return make_val_err("append: argument is not a list", GEN_ERR);
+            char buf[128];
+            sprintf(buf, "append: arg%d is not a list", i+1);
+            return make_val_err(buf, GEN_ERR);
         }
 
         /* Now, walk the list to ensure it's a *proper* list */
@@ -175,7 +166,9 @@ Cell* builtin_list_append(Lex* e, Cell* a) {
             p = p->cdr;
         }
         if (p->type != VAL_NIL) {
-            return make_val_err("append: middle argument is not a proper list", GEN_ERR);
+            char buf[128];
+            sprintf(buf, "append: arg%d is not a proper list", i+1);
+            return make_val_err(buf, GEN_ERR);
         }
 
         /* If we get here, the list is proper. Add its length. */
@@ -197,14 +190,14 @@ Cell* builtin_list_append(Lex* e, Cell* a) {
 
     /* Build the new list structure */
     Cell* result_head = make_val_nil();
-    Cell* result_tail = NULL;
+    Cell* result_tail = nullptr;
     long long len_countdown = final_total_len;
 
     for (int i = 0; i < a->count - 1; i++) {
         const Cell* p = a->cell[i];
         while (p->type == VAL_PAIR) {
             /* Create a new pair with a copy of the element. */
-            Cell* new_pair = make_val_pair(cell_copy(p->car), make_val_nil());
+            Cell* new_pair = make_val_pair(p->car, make_val_nil());
 
             /* Assign the correct length based on our pre-calculated total. */
             if (final_total_len != -1) {
@@ -227,7 +220,7 @@ Cell* builtin_list_append(Lex* e, Cell* a) {
     /* Finalize: Link the last argument and return */
     if (result_tail == NULL) {
         /* This happens if all arguments before the last were '(). */
-        return cell_copy(last_arg);
+        return (Cell*)last_arg;
     }
     /* Splice the last argument onto the end of our newly created list. */
     result_tail->cdr = (Cell*)last_arg;
@@ -236,7 +229,7 @@ Cell* builtin_list_append(Lex* e, Cell* a) {
 
 /* 'reverse' -> VAL_PAIR - returns a proper list with members of
  * arg reversed */
-Cell* builtin_list_reverse(Lex* e, Cell* a) {
+Cell* builtin_list_reverse(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
@@ -253,7 +246,7 @@ Cell* builtin_list_reverse(Lex* e, Cell* a) {
     int length = 0;
 
     while (current->type == VAL_PAIR) {
-        reversed_list = make_val_pair(cell_copy(current->car), reversed_list);
+        reversed_list = make_val_pair(current->car, reversed_list);
         length++;
         current = current->cdr;
     }
@@ -269,10 +262,9 @@ Cell* builtin_list_reverse(Lex* e, Cell* a) {
     return reversed_list;
 }
 
-
 /* 'list-tail' -> VAL_PAIR - returns a proper list of the last nth
  * members of arg */
-Cell* builtin_list_tail(Lex* e, Cell* a) {
+Cell* builtin_list_tail(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2);
     if (err) return err;
@@ -310,7 +302,7 @@ Cell* builtin_list_tail(Lex* e, Cell* a) {
  * ----------------------------------------------------------*/
 
 
-Cell* builtin_filter(Lex* e, Cell* a) {
+Cell* builtin_filter(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2);
     if (err) return err;
@@ -325,20 +317,20 @@ Cell* builtin_filter(Lex* e, Cell* a) {
     Cell* result = make_val_nil();
     const Cell* val = a->cell[1];
     for (int i = 0; i < a->cell[1]->len; i++) {
-        Cell* pred_outcome = coz_eval(e, make_sexpr_len2(proc, val->car));
+        Cell* pred_outcome = coz_eval((Lex*)e, make_sexpr_len2(proc, val->car));
         if (pred_outcome->type == VAL_ERR) {
             return pred_outcome;
         }
-        /* Copy val to result list if pred is true */
+        /* Create pointer to val in result list if pred is true */
         if (pred_outcome->b_val == 1) {
-            result = make_val_pair(cell_copy(val->car), result);
+            result = make_val_pair(val->car, result);
         }
         val = val->cdr;
     }
     return builtin_list_reverse(e, make_sexpr_len1(result));
 }
 
-Cell* builtin_foldl(Lex* e, Cell* a) {
+Cell* builtin_foldl(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_MIN(a, 3);
     if (err) return err;
@@ -378,11 +370,11 @@ Cell* builtin_foldl(Lex* e, Cell* a) {
             arg_list->len = num_lists + 1;
         }
 
-        Cell* tmp_result = NULL;
+        Cell* tmp_result;
         /* If the procedure is a builtin - grab a pointer to it and call it directly
          * otherwise - it is a lambda and needs to be evaluated */
         if (proc->builtin) {
-            Cell* (*func)(Lex *, Cell *) = proc->builtin;
+            Cell* (*func)(const Lex *, const Cell *) = proc->builtin;
             tmp_result = func(e, make_sexpr_from_list(arg_list));
         } else {
             /* Prepend the procedure to create the application form */
@@ -393,7 +385,7 @@ Cell* builtin_foldl(Lex* e, Cell* a) {
             Cell* application_sexpr = make_sexpr_from_list(application_list);
 
             /* Evaluate it */
-            tmp_result = coz_eval(e, application_sexpr);
+            tmp_result = coz_eval((Lex*)e, application_sexpr);
         }
         if (tmp_result->type == VAL_ERR) {
             /* Propagate any evaluation errors */

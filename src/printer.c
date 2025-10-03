@@ -176,7 +176,7 @@ void print_cell(const Cell* v) {
         break;
 
     case VAL_SEXPR:
-        print_sequence(v, NULL, '(', ')');
+        print_sequence(v, nullptr, '(', ')');
         break;
     case VAL_VEC:
         print_sequence(v, "#", '(', ')');

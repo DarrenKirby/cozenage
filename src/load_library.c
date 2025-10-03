@@ -48,7 +48,7 @@ static const LibraryRegistryEntry library_registry[] = {
     {"char", lex_add_char_lib},
     {"eval", lex_add_eval_lib},
     {"write", lex_add_write_lib},
-    {NULL, NULL}
+    {nullptr, nullptr}
 };
 
 /* look up and load a library */

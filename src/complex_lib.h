@@ -23,11 +23,11 @@
 #include "types.h"
 
 
-Cell* builtin_real_part(Lex* e, Cell* a);
-Cell* builtin_imag_part(Lex* e, Cell* a);
-Cell* builtin_make_rectangular(Lex* e, Cell* a);
-Cell* builtin_angle(Lex* e, Cell* a);
-Cell* builtin_make_polar(Lex* e, Cell* a);
+Cell* builtin_real_part(const Lex* e, const Cell* a);
+Cell* builtin_imag_part(const Lex* e, const Cell* a);
+Cell* builtin_make_rectangular(const Lex* e, const Cell* a);
+Cell* builtin_angle(const Lex* e, const Cell* a);
+Cell* builtin_make_polar(const Lex* e, const Cell* a);
 void lex_add_complex_lib(Lex* e);
 
 #endif //COZENAGE_COMPLEX_LIB_H

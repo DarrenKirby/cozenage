@@ -79,40 +79,40 @@ Cell* eval_sexpr(Lex* e, Cell* v) {
 
     /* NOTE: These special forms need to be dispatched out of
      * eval_sexpr() early, so that their arguments are not evaluated */
-
-    /* special form: define */
-    if (first->type == VAL_SYM && strcmp(first->sym, "define") == 0) {
-        return sf_define(e, v);
+    if (first->type == VAL_SYM) {
+        /* special form: define */
+        if (strcmp(first->sym, "define") == 0) {
+            return sf_define(e, v);
+        }
+        /* Special form: quote */
+        if (strcmp(first->sym, "quote") == 0) {
+            return sf_quote(e, v);
+        }
+        /* Special form: lambda */
+        if (strcmp(first->sym, "lambda") == 0) {
+            return sf_lambda(e, v);
+        }
+        /* special form - if */
+        if (strcmp(first->sym, "if") == 0) {
+            return sf_if(e, v);
+        }
+        /* special form - when */
+        if (strcmp(first->sym, "when") == 0) {
+            return sf_when(e, v);
+        }
+        /* special form - unless */
+        if (strcmp(first->sym, "unless") == 0) {
+            return sf_unless(e, v);
+        }
+        /* special form - cond */
+        if (strcmp(first->sym, "cond") == 0) {
+            return sf_cond(e, v);
+        }
+        /* special form - import */
+        if (strcmp(first->sym, "import") == 0) {
+            return sf_import(e, v);
+        }
     }
-    /* Special form: quote */
-    if (first->type == VAL_SYM && strcmp(first->sym, "quote") == 0) {
-        return sf_quote(e, v);
-    }
-    /* Special form: lambda */
-    if (first->type == VAL_SYM && strcmp(first->sym, "lambda") == 0) {
-        return sf_lambda(e, v);
-    }
-    /* special form - if */
-    if (first->type == VAL_SYM && strcmp(first->sym, "if") == 0) {
-        return sf_if(e, v);
-    }
-    /* special form - when */
-    if (first->type == VAL_SYM && strcmp(first->sym, "when") == 0) {
-        return sf_when(e, v);
-    }
-    /* special form - unless */
-    if (first->type == VAL_SYM && strcmp(first->sym, "unless") == 0) {
-        return sf_unless(e, v);
-    }
-    /* special form - cond */
-    if (first->type == VAL_SYM && strcmp(first->sym, "cond") == 0) {
-        return sf_cond(e, v);
-    }
-    /* special form - import */
-    if (first->type == VAL_SYM && strcmp(first->sym, "import") == 0) {
-        return sf_import(e, v);
-    }
-
     /* Otherwise, evaluate first element normally (should become a function) */
     Cell* f = coz_eval(e, first);
     if (f->type != VAL_PROC) {

@@ -25,7 +25,7 @@
  * -------------------------------------------------*/
 
 /* 'number?' -> VAL_BOOL - returns #t if obj is numeric, else #f  */
-Cell* builtin_number_pred(Lex* e, Cell* a) {
+Cell* builtin_number_pred(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
@@ -39,7 +39,7 @@ Cell* builtin_number_pred(Lex* e, Cell* a) {
 
 /* 'boolean?' -> VAL_BOOL  - returns #t if obj is either #t or #f
     and returns #f otherwise. */
-Cell* builtin_boolean_pred(Lex* e, Cell* a) {
+Cell* builtin_boolean_pred(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
@@ -47,7 +47,7 @@ Cell* builtin_boolean_pred(Lex* e, Cell* a) {
 }
 
 /* 'null?' -> VAL_BOOL - return #t if obj is null, else #f */
-Cell* builtin_null_pred(Lex* e, Cell* a) {
+Cell* builtin_null_pred(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
@@ -55,7 +55,7 @@ Cell* builtin_null_pred(Lex* e, Cell* a) {
 }
 
 /* 'pair?' -> VAL_BOOL - return #t if obj is a pair, else #f */
-Cell* builtin_pair_pred(Lex* e, Cell* a) {
+Cell* builtin_pair_pred(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
@@ -63,7 +63,7 @@ Cell* builtin_pair_pred(Lex* e, Cell* a) {
 }
 
 /* 'procedure?' -> VAL_BOOL - return #t if obj is a procedure, else #f */
-Cell* builtin_proc_pred(Lex* e, Cell* a) {
+Cell* builtin_proc_pred(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
@@ -71,7 +71,7 @@ Cell* builtin_proc_pred(Lex* e, Cell* a) {
 }
 
 /* 'symbol?' -> VAL_BOOL - return #t if obj is a symbol, else #f */
-Cell* builtin_sym_pred(Lex* e, Cell* a) {
+Cell* builtin_sym_pred(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
@@ -79,7 +79,7 @@ Cell* builtin_sym_pred(Lex* e, Cell* a) {
 }
 
 /* 'string?' -> VAL_BOOL - return #t if obj is a string, else #f */
-Cell* builtin_string_pred(Lex* e, Cell* a) {
+Cell* builtin_string_pred(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
@@ -87,7 +87,7 @@ Cell* builtin_string_pred(Lex* e, Cell* a) {
 }
 
 /* 'char?' -> VAL_BOOL - return #t if obj is a char, else #f */
-Cell* builtin_char_pred(Lex* e, Cell* a) {
+Cell* builtin_char_pred(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
@@ -95,7 +95,7 @@ Cell* builtin_char_pred(Lex* e, Cell* a) {
 }
 
 /* 'vector?' -> VAL_BOOL - return #t if obj is a vector, else #f */
-Cell* builtin_vector_pred(Lex* e, Cell* a) {
+Cell* builtin_vector_pred(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
@@ -103,7 +103,7 @@ Cell* builtin_vector_pred(Lex* e, Cell* a) {
 }
 
 /* 'bytevector?' -> VAL_BOOL - return #t if obj is a byte vector, else #f */
-Cell* builtin_byte_vector_pred(Lex* e, Cell* a) {
+Cell* builtin_byte_vector_pred(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
@@ -111,7 +111,7 @@ Cell* builtin_byte_vector_pred(Lex* e, Cell* a) {
 }
 
 /* 'port?' -> VAL_BOOL - return #t if obj is a port, else #f */
-Cell* builtin_port_pred(Lex* e, Cell* a) {
+Cell* builtin_port_pred(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
@@ -119,7 +119,7 @@ Cell* builtin_port_pred(Lex* e, Cell* a) {
 }
 
 /* 'eof-object?' -> VAL_BOOL - return #t if obj is an eof, else #f */
-Cell* builtin_eof_pred(Lex* e, Cell* a) {
+Cell* builtin_eof_pred(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
@@ -131,7 +131,7 @@ Cell* builtin_eof_pred(Lex* e, Cell* a) {
  * ---------------------------------------*/
 
 /* 'exact?' -> VAL_BOOL -  */
-Cell* builtin_exact_pred(Lex *e, Cell* a) {
+Cell* builtin_exact_pred(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, VAL_INT|VAL_REAL|VAL_RAT|VAL_COMPLEX);
     if (err) { return err; }
@@ -147,7 +147,7 @@ Cell* builtin_exact_pred(Lex *e, Cell* a) {
 }
 
 /* 'inexact?' -> VAL_BOOL -  */
-Cell* builtin_inexact_pred(Lex *e, Cell* a) {
+Cell* builtin_inexact_pred(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, VAL_INT|VAL_REAL|VAL_RAT|VAL_COMPLEX);
     if (err) { return err; }
@@ -166,7 +166,7 @@ Cell* builtin_inexact_pred(Lex *e, Cell* a) {
 }
 
 /* 'complex?' -> VAL_BOOL - R7RS compliant */
-Cell* builtin_complex(Lex *e, Cell* a) {
+Cell* builtin_complex(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
@@ -180,7 +180,7 @@ Cell* builtin_complex(Lex *e, Cell* a) {
 }
 
 /* 'real?' -> VAL_BOOL - R7RS compliant */
-Cell* builtin_real(Lex *e, Cell* a) {
+Cell* builtin_real(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
@@ -200,7 +200,7 @@ Cell* builtin_real(Lex *e, Cell* a) {
 }
 
 /* 'rational?' -> VAL_BOOL - R7RS compliant */
-Cell* builtin_rational(Lex *e, Cell* a) {
+Cell* builtin_rational(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
@@ -221,7 +221,7 @@ Cell* builtin_rational(Lex *e, Cell* a) {
 }
 
 /* 'integer?' -> VAL_BOOL - R7RS compliant */
-Cell* builtin_integer(Lex *e, Cell* a) {
+Cell* builtin_integer(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
@@ -229,7 +229,7 @@ Cell* builtin_integer(Lex *e, Cell* a) {
 }
 
 /* 'exact-integer?' -> VAL_BOOL - R7RS compliant */
-Cell* builtin_exact_integer(Lex *e, Cell* a) {
+Cell* builtin_exact_integer(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
@@ -244,7 +244,7 @@ Cell* builtin_exact_integer(Lex *e, Cell* a) {
  * ---------------------------------------*/
 
 /* 'zero?' -> VAL_BOOL - returns #t if arg is == 0 else #f */
-Cell* builtin_zero(Lex* e, Cell* a) {
+Cell* builtin_zero(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, VAL_INT|VAL_REAL|VAL_RAT|VAL_COMPLEX);
     if (err) { return err; }
@@ -262,7 +262,7 @@ Cell* builtin_zero(Lex* e, Cell* a) {
 }
 
 /* 'positive?' -> VAL_BOOL - returns #t if arg is > 0 else #f */
-Cell* builtin_positive(Lex* e, Cell* a) {
+Cell* builtin_positive(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, VAL_INT|VAL_REAL|VAL_RAT|VAL_COMPLEX);
     if (err) { return err; }
@@ -272,7 +272,7 @@ Cell* builtin_positive(Lex* e, Cell* a) {
 }
 
 /* 'negative?' -> VAL_BOOL - returns #t if arg is < 0 else #f */
-Cell* builtin_negative(Lex* e, Cell* a) {
+Cell* builtin_negative(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, VAL_INT|VAL_REAL|VAL_RAT|VAL_COMPLEX);
     if (err) { return err; }
@@ -282,7 +282,7 @@ Cell* builtin_negative(Lex* e, Cell* a) {
 }
 
 /* 'odd?' -> VAL_BOOL - returns #t if arg is an odd integer else #f */
-Cell* builtin_odd(Lex* e, Cell* a) {
+Cell* builtin_odd(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, VAL_INT|VAL_REAL|VAL_RAT|VAL_COMPLEX);
     if (err) { return err; }
@@ -292,7 +292,7 @@ Cell* builtin_odd(Lex* e, Cell* a) {
 }
 
 /* 'even?' -> VAL_BOOL - returns #t if arg is an even integer else #f */
-Cell* builtin_even(Lex* e, Cell* a) {
+Cell* builtin_even(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, VAL_INT|VAL_REAL|VAL_RAT|VAL_COMPLEX);
     if (err) { return err; }

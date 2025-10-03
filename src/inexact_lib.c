@@ -23,7 +23,7 @@
 
 
 /* Returns the cosine of arg (arg is in radians). */
-Cell* builtin_cos(Lex* e, Cell* a) {
+Cell* builtin_cos(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, VAL_INT|VAL_RAT|VAL_REAL);
     if (err) { return err; }
@@ -36,7 +36,7 @@ Cell* builtin_cos(Lex* e, Cell* a) {
 }
 
 /* Returns the arccosine of arg, in radians */
-Cell* builtin_acos(Lex* e, Cell* a) {
+Cell* builtin_acos(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, VAL_INT|VAL_RAT|VAL_REAL);
     if (err) { return err; }
@@ -49,7 +49,7 @@ Cell* builtin_acos(Lex* e, Cell* a) {
 }
 
 /* Returns the sine of arg (arg is in radians) */
-Cell* builtin_sin(Lex* e, Cell* a) {
+Cell* builtin_sin(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, VAL_INT|VAL_RAT|VAL_REAL);
     if (err) { return err; }
@@ -62,7 +62,7 @@ Cell* builtin_sin(Lex* e, Cell* a) {
 }
 
 /* Returns the arcsine of arg, in radians */
-Cell* builtin_asin(Lex* e, Cell* a) {
+Cell* builtin_asin(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, VAL_INT|VAL_RAT|VAL_REAL);
     if (err) { return err; }
@@ -75,7 +75,7 @@ Cell* builtin_asin(Lex* e, Cell* a) {
 }
 
 /* Returns the tangent of arg (arg is in radians) */
-Cell* builtin_tan(Lex* e, Cell* a) {
+Cell* builtin_tan(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, VAL_INT|VAL_RAT|VAL_REAL);
     if (err) { return err; }
@@ -90,7 +90,7 @@ Cell* builtin_tan(Lex* e, Cell* a) {
 /* With one arg: Returns the arctangent of arg as a numeric value between -PI/2 and PI/2 radians
  * With two args: Returns the angle theta from the conversion of rectangular coordinates (x, y)
  * to polar coordinates (r, theta) */
-Cell* builtin_atan(Lex* e, Cell* a) {
+Cell* builtin_atan(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, VAL_INT|VAL_RAT|VAL_REAL);
     if (err) { return err; }
@@ -110,7 +110,7 @@ Cell* builtin_atan(Lex* e, Cell* a) {
 }
 
 /* Returns the value of E raised to arg power */
-Cell* builtin_exp(Lex* e, Cell* a) {
+Cell* builtin_exp(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, VAL_INT|VAL_RAT|VAL_REAL);
     if (err) { return err; }
@@ -124,7 +124,7 @@ Cell* builtin_exp(Lex* e, Cell* a) {
 
 /* With one arg: Returns the natural logarithm of arg
  * With two args (n, b): Returns log n base b */
-Cell* builtin_log(Lex* e, Cell* a) {
+Cell* builtin_log(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, VAL_INT|VAL_RAT|VAL_REAL);
     if (err) { return err; }
@@ -142,7 +142,7 @@ Cell* builtin_log(Lex* e, Cell* a) {
 }
 
 /* Equivalent to (log n 2) */
-Cell* builtin_log2(Lex* e, Cell* a) {
+Cell* builtin_log2(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, VAL_INT|VAL_RAT|VAL_REAL);
     if (err) { return err; }
@@ -155,7 +155,7 @@ Cell* builtin_log2(Lex* e, Cell* a) {
 }
 
 /* Equivalent to (log n 10) */
-Cell* builtin_log10(Lex* e, Cell* a) {
+Cell* builtin_log10(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, VAL_INT|VAL_RAT|VAL_REAL);
     if (err) { return err; }
@@ -168,7 +168,7 @@ Cell* builtin_log10(Lex* e, Cell* a) {
 }
 
 /* Returns the square root of arg */
-Cell* builtin_sqrt(Lex* e, Cell* a) {
+Cell* builtin_sqrt(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, VAL_INT|VAL_RAT|VAL_REAL);
     if (err) { return err; }
@@ -181,7 +181,7 @@ Cell* builtin_sqrt(Lex* e, Cell* a) {
 }
 
 /* Returns the cube root of arg */
-Cell* builtin_cbrt(Lex* e, Cell* a) {
+Cell* builtin_cbrt(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, VAL_INT|VAL_RAT|VAL_REAL);
     if (err) { return err; }
@@ -194,7 +194,7 @@ Cell* builtin_cbrt(Lex* e, Cell* a) {
 }
 
 /* Predicate to test if val is infinite */
-Cell* builtin_infinite(Lex* e, Cell* a) {
+Cell* builtin_infinite(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, VAL_INT|VAL_RAT|VAL_REAL);
     if (err) { return err; }
@@ -209,7 +209,7 @@ Cell* builtin_infinite(Lex* e, Cell* a) {
 }
 
 /* Predicate to test if val is finite */
-Cell* builtin_finite(Lex* e, Cell* a) {
+Cell* builtin_finite(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, VAL_INT|VAL_RAT|VAL_REAL);
     if (err) { return err; }
@@ -224,7 +224,7 @@ Cell* builtin_finite(Lex* e, Cell* a) {
 }
 
 /* Predicate to test if val is nan */
-Cell* builtin_nan(Lex* e, Cell* a) {
+Cell* builtin_nan(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, VAL_INT|VAL_RAT|VAL_REAL);
     if (err) { return err; }

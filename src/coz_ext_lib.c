@@ -25,7 +25,7 @@
 
 /* These are non-R7RS procedures that don't fit well elsewhere */
 
-Cell* builtin_print_env(Lex* e, Cell* a) {
+Cell* builtin_print_env(const Lex* e, const Cell* a) {
     (void)a;
     print_env(e);
     /* for side effects - no useful return value */

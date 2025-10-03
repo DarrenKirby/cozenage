@@ -24,15 +24,15 @@
 
 
 /* String constructors, selectors, and procedures */
-Cell* builtin_string_to_symbol(Lex* e, Cell* a);
-Cell* builtin_symbol_to_string(Lex* e, Cell* a);
-Cell* builtin_string(Lex* e, Cell* a);
-Cell* builtin_string_length(Lex* e, Cell* a);
-Cell* builtin_string_eq_pred(Lex* e, Cell* a);
-Cell* builtin_string_lt_pred(Lex* e, Cell* a);
-Cell* builtin_string_lte_pred(Lex* e, Cell* a);
-Cell* builtin_string_gt_pred(Lex* e, Cell* a);
-Cell* builtin_string_gte_pred(Lex* e, Cell* a);
-Cell* builtin_string_append(Lex* e, Cell* a);
+Cell* builtin_string_to_symbol(const Lex* e, const Cell* a);
+Cell* builtin_symbol_to_string(const Lex* e, const Cell* a);
+Cell* builtin_string(const Lex* e, const Cell* a);
+Cell* builtin_string_length(const Lex* e, const Cell* a);
+Cell* builtin_string_eq_pred(const Lex* e, const Cell* a);
+Cell* builtin_string_lt_pred(const Lex* e, const Cell* a);
+Cell* builtin_string_lte_pred(const Lex* e, const Cell* a);
+Cell* builtin_string_gt_pred(const Lex* e, const Cell* a);
+Cell* builtin_string_gte_pred(const Lex* e, const Cell* a);
+Cell* builtin_string_append(const Lex* e, const Cell* a);
 
 #endif //COZENAGE_STRINGS_H

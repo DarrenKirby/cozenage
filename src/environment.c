@@ -87,7 +87,8 @@ void lex_put(Lex* e, const Cell* k, const Cell* v) {
     for (int i = 0; i < e->count; i++) {
         if (strcmp(e->syms[i], k->sym) == 0) {
             /* Free the old value and replace it with a copy of v */
-            e->vals[i] = cell_copy(v);
+            GC_FREE(e->vals[i]);
+            e->vals[i] = (Cell*)v;
             return;
         }
     }
@@ -101,11 +102,11 @@ void lex_put(Lex* e, const Cell* k, const Cell* v) {
         exit(EXIT_FAILURE);
     }
     e->syms[e->count - 1] = GC_strdup(k->sym);
-    e->vals[e->count - 1] = cell_copy(v);
+    e->vals[e->count - 1] = (Cell*)v;
 }
 
 /* Populate the VAL_PROC struct of a Cell* object for builtin procedures */
-Cell* lex_make_builtin(const char* name, Cell* (*func)(Lex*, Cell*)) {
+Cell* lex_make_builtin(const char* name, Cell* (*func)(const Lex*, const Cell*)) {
     Cell* c = GC_MALLOC(sizeof(Cell));
     c->type = VAL_PROC;
     c->name = GC_strdup(name);
@@ -141,7 +142,7 @@ Cell* lex_make_lambda(const Cell* formals, const Cell* body, Lex* env) {
 }
 
 /* Register a procedure in an environment */
-void lex_add_builtin(Lex* e, const char* name, Cell* (*func)(Lex*, Cell*)) {
+void lex_add_builtin(Lex* e, const char* name, Cell* (*func)(const Lex*, const Cell*)) {
     const Cell* fn = lex_make_builtin(name, func);
     const Cell* k = make_val_sym(name);
     lex_put(e, k, fn);

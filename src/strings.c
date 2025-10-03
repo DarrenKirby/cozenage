@@ -28,7 +28,7 @@
  *     String constructors, selectors, and procedures    *
  * ------------------------------------------------------*/
 
-Cell* builtin_string_to_symbol(Lex* e, Cell* a) {
+Cell* builtin_string_to_symbol(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
@@ -38,7 +38,7 @@ Cell* builtin_string_to_symbol(Lex* e, Cell* a) {
     return make_val_sym(a->cell[0]->str);
 }
 
-Cell* builtin_symbol_to_string(Lex* e, Cell* a) {
+Cell* builtin_symbol_to_string(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
@@ -48,7 +48,7 @@ Cell* builtin_symbol_to_string(Lex* e, Cell* a) {
     return make_val_str(a->cell[0]->sym);
 }
 
-Cell* builtin_string(Lex* e, Cell* a) {
+Cell* builtin_string(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, VAL_CHAR);
     if (err) return err;
@@ -65,7 +65,7 @@ Cell* builtin_string(Lex* e, Cell* a) {
     return make_val_str(the_string);
 }
 
-Cell* builtin_string_length(Lex* e, Cell* a) {
+Cell* builtin_string_length(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
@@ -74,7 +74,7 @@ Cell* builtin_string_length(Lex* e, Cell* a) {
     }
 
     const char* s = a->cell[0]->str;
-    const int32_t len_bytes = (int)strlen(s); // Or your own length property
+    const int32_t len_bytes = (int)strlen(s);
 
     int32_t i = 0;
     int32_t code_point_count = 0;
@@ -92,7 +92,7 @@ Cell* builtin_string_length(Lex* e, Cell* a) {
     return make_val_int(code_point_count);
 }
 
-Cell* builtin_string_eq_pred(Lex* e, Cell* a) {
+Cell* builtin_string_eq_pred(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, VAL_STR);
     if (err) return err;
@@ -119,7 +119,7 @@ Cell* builtin_string_eq_pred(Lex* e, Cell* a) {
     return make_val_bool(1);
 }
 
-Cell* builtin_string_lt_pred(Lex* e, Cell* a) {
+Cell* builtin_string_lt_pred(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, VAL_STR);
     if (err) return err;
@@ -141,7 +141,7 @@ Cell* builtin_string_lt_pred(Lex* e, Cell* a) {
     return make_val_bool(1);
 }
 
-Cell* builtin_string_lte_pred(Lex* e, Cell* a) {
+Cell* builtin_string_lte_pred(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, VAL_STR);
     if (err) return err;
@@ -163,7 +163,7 @@ Cell* builtin_string_lte_pred(Lex* e, Cell* a) {
     return make_val_bool(1);
 }
 
-Cell* builtin_string_gt_pred(Lex* e, Cell* a) {
+Cell* builtin_string_gt_pred(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, VAL_STR);
     if (err) return err;
@@ -185,7 +185,7 @@ Cell* builtin_string_gt_pred(Lex* e, Cell* a) {
     return make_val_bool(1);
 }
 
-Cell* builtin_string_gte_pred(Lex* e, Cell* a) {
+Cell* builtin_string_gte_pred(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, VAL_STR);
     if (err) return err;
@@ -207,7 +207,7 @@ Cell* builtin_string_gte_pred(Lex* e, Cell* a) {
     return make_val_bool(1);
 }
 
-Cell* builtin_string_append(Lex* e, Cell* a) {
+Cell* builtin_string_append(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, VAL_STR);
     if (err) return err;

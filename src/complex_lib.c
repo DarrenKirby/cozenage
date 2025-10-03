@@ -24,7 +24,7 @@
 
 /* 'real-part' -> VAL_REAL|VAL_RAT|VAL_INT - returns the real part of a
  * complex number */
-Cell* builtin_real_part(Lex* e, Cell* a) {
+Cell* builtin_real_part(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
@@ -43,7 +43,7 @@ Cell* builtin_real_part(Lex* e, Cell* a) {
 
 /* 'imag-part' -> VAL_REAL|VAL_RAT|VAL_INT - returns the imaginary part of a
  * complex number */
-Cell* builtin_imag_part(Lex* e, Cell* a) {
+Cell* builtin_imag_part(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
@@ -61,7 +61,7 @@ Cell* builtin_imag_part(Lex* e, Cell* a) {
 }
 
 /* 'make-rectangular' -> VAL_COMPLEX - convert a complex number to rectangular form */
-Cell* builtin_make_rectangular(Lex* e, Cell* a) {
+Cell* builtin_make_rectangular(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2);
     if (err) return err;
@@ -72,7 +72,7 @@ Cell* builtin_make_rectangular(Lex* e, Cell* a) {
 }
 
 /* 'angle' -> VAL_REAL- calculate angle 'θ' of complex number */
-Cell* builtin_angle(Lex* e, Cell* a) {
+Cell* builtin_angle(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
@@ -92,7 +92,7 @@ Cell* builtin_angle(Lex* e, Cell* a) {
 }
 
 /* 'make-polar' -> VAL_COMPLEX - convert a complex number to polar form */
-Cell* builtin_make_polar(Lex* e, Cell* a) {
+Cell* builtin_make_polar(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2);
     if (err) return err;

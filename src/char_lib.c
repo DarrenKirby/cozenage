@@ -28,7 +28,7 @@
 #include <gc/gc.h>
 
 
-Cell* builtin_char_alphabetic(Lex* e, Cell* a) {
+Cell* builtin_char_alphabetic(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
@@ -38,7 +38,7 @@ Cell* builtin_char_alphabetic(Lex* e, Cell* a) {
     return make_val_bool(u_isalpha(a->cell[0]->c_val));
 }
 
-Cell* builtin_char_whitespace(Lex* e, Cell* a) {
+Cell* builtin_char_whitespace(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
@@ -48,7 +48,7 @@ Cell* builtin_char_whitespace(Lex* e, Cell* a) {
     return make_val_bool(u_isspace(a->cell[0]->c_val));
 }
 
-Cell* builtin_char_numeric(Lex* e, Cell* a) {
+Cell* builtin_char_numeric(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
@@ -58,7 +58,7 @@ Cell* builtin_char_numeric(Lex* e, Cell* a) {
     return make_val_bool(u_isdigit(a->cell[0]->c_val));
 }
 
-Cell* builtin_char_upper_case(Lex* e, Cell* a) {
+Cell* builtin_char_upper_case(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
@@ -68,7 +68,7 @@ Cell* builtin_char_upper_case(Lex* e, Cell* a) {
     return make_val_bool(u_isupper(a->cell[0]->c_val));
 }
 
-Cell* builtin_char_lower_case(Lex* e, Cell* a) {
+Cell* builtin_char_lower_case(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
@@ -78,7 +78,7 @@ Cell* builtin_char_lower_case(Lex* e, Cell* a) {
     return make_val_bool(u_islower(a->cell[0]->c_val));
 }
 
-Cell* builtin_char_upcase(Lex* e, Cell* a) {
+Cell* builtin_char_upcase(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
@@ -88,7 +88,7 @@ Cell* builtin_char_upcase(Lex* e, Cell* a) {
     return make_val_char(u_toupper(a->cell[0]->c_val));
 }
 
-Cell* builtin_char_downcase(Lex* e, Cell* a) {
+Cell* builtin_char_downcase(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
@@ -98,7 +98,7 @@ Cell* builtin_char_downcase(Lex* e, Cell* a) {
     return make_val_char(u_tolower(a->cell[0]->c_val));
 }
 
-Cell* builtin_char_foldcase(Lex* e, Cell* a) {
+Cell* builtin_char_foldcase(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
@@ -109,7 +109,7 @@ Cell* builtin_char_foldcase(Lex* e, Cell* a) {
     return make_val_char(u_foldCase(c, U_FOLD_CASE_DEFAULT));
 }
 
-Cell* builtin_digit_value(Lex* e, Cell* a) {
+Cell* builtin_digit_value(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
@@ -125,7 +125,7 @@ Cell* builtin_digit_value(Lex* e, Cell* a) {
     return make_val_int(value);
 }
 
-Cell* builtin_char_equal_ci(Lex* e, Cell* a) {
+Cell* builtin_char_equal_ci(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, VAL_CHAR);
     if (err) return err;
@@ -141,7 +141,7 @@ Cell* builtin_char_equal_ci(Lex* e, Cell* a) {
     return builtin_eq_op(e, cell_sexpr);
 }
 
-Cell* builtin_char_lt_ci(Lex* e, Cell* a) {
+Cell* builtin_char_lt_ci(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, VAL_CHAR);
     if (err) return err;
@@ -157,7 +157,7 @@ Cell* builtin_char_lt_ci(Lex* e, Cell* a) {
     return builtin_lt_op(e, cell_sexpr);
 }
 
-Cell* builtin_char_lte_ci(Lex* e, Cell* a) {
+Cell* builtin_char_lte_ci(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, VAL_CHAR);
     if (err) return err;
@@ -173,7 +173,7 @@ Cell* builtin_char_lte_ci(Lex* e, Cell* a) {
     return builtin_lte_op(e, cell_sexpr);
 }
 
-Cell* builtin_char_gt_ci(Lex* e, Cell* a) {
+Cell* builtin_char_gt_ci(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, VAL_CHAR);
     if (err) return err;
@@ -189,7 +189,7 @@ Cell* builtin_char_gt_ci(Lex* e, Cell* a) {
     return builtin_gt_op(e, cell_sexpr);
 }
 
-Cell* builtin_char_gte_ci(Lex* e, Cell* a) {
+Cell* builtin_char_gte_ci(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, VAL_CHAR);
     if (err) return err;
@@ -205,7 +205,7 @@ Cell* builtin_char_gte_ci(Lex* e, Cell* a) {
     return builtin_gte_op(e, cell_sexpr);
 }
 
-Cell* builtin_string_downcase(Lex* e, Cell* a) {
+Cell* builtin_string_downcase(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, VAL_STR);
     if (err) return err;
@@ -234,7 +234,7 @@ Cell* builtin_string_downcase(Lex* e, Cell* a) {
     return make_val_str(result);
 }
 
-Cell* builtin_string_upcase(Lex* e, Cell* a) {
+Cell* builtin_string_upcase(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, VAL_STR);
     if (err) return err;
@@ -263,7 +263,7 @@ Cell* builtin_string_upcase(Lex* e, Cell* a) {
     return make_val_str(result);
 }
 
-Cell* builtin_string_foldcase(Lex* e, Cell* a) {
+Cell* builtin_string_foldcase(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, VAL_STR);
     if (err) return err;
@@ -291,7 +291,7 @@ Cell* builtin_string_foldcase(Lex* e, Cell* a) {
     return make_val_str(result);
 }
 
-Cell* builtin_string_eq_ci(Lex* e, Cell* a) {
+Cell* builtin_string_equal_ci(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, VAL_STR);
     if (err) return err;
@@ -320,7 +320,7 @@ Cell* builtin_string_eq_ci(Lex* e, Cell* a) {
     return make_val_bool(1);
 }
 
-Cell* builtin_string_lt_ci(Lex* e, Cell* a) {
+Cell* builtin_string_lt_ci(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, VAL_STR);
     if (err) return err;
@@ -344,7 +344,7 @@ Cell* builtin_string_lt_ci(Lex* e, Cell* a) {
     return make_val_bool(1);
 }
 
-Cell* builtin_string_lte_ci(Lex* e, Cell* a) {
+Cell* builtin_string_lte_ci(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, VAL_STR);
     if (err) return err;
@@ -368,7 +368,7 @@ Cell* builtin_string_lte_ci(Lex* e, Cell* a) {
     return make_val_bool(1);
 }
 
-Cell* builtin_string_gt_ci(Lex* e, Cell* a) {
+Cell* builtin_string_gt_ci(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, VAL_STR);
     if (err) return err;
@@ -392,7 +392,7 @@ Cell* builtin_string_gt_ci(Lex* e, Cell* a) {
     return make_val_bool(1);
 }
 
-Cell* builtin_string_gte_ci(Lex* e, Cell* a) {
+Cell* builtin_string_gte_ci(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, VAL_STR);
     if (err) return err;
@@ -434,7 +434,7 @@ void lex_add_char_lib(Lex* e) {
     lex_add_builtin(e, "string-downcase", builtin_string_downcase);
     lex_add_builtin(e, "string-upcase", builtin_string_upcase);
     lex_add_builtin(e, "string-foldcase", builtin_string_foldcase);
-    lex_add_builtin(e, "string-ci=?", builtin_string_eq_ci);
+    lex_add_builtin(e, "string-ci=?", builtin_string_equal_ci);
     lex_add_builtin(e, "string-ci<?", builtin_string_lt_ci);
     lex_add_builtin(e, "string-ci<=?", builtin_string_lte_ci);
     lex_add_builtin(e, "string-ci>?", builtin_string_gt_ci);

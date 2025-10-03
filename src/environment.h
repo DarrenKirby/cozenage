@@ -42,10 +42,10 @@ Cell* lex_get(const Lex* e, const Cell* k);
 void lex_put(Lex* e, const Cell* k, const Cell* v);
 
 /* Builtin helpers */
-Cell* lex_make_builtin(const char* name, Cell* (*func)(Lex*, Cell*));
+Cell* lex_make_builtin(const char* name, Cell* (*func)(const Lex*, const Cell*));
 Cell* lex_make_named_lambda(const char* name, const Cell* formals, const Cell* body, Lex* env);
 Cell* lex_make_lambda(const Cell* formals, const Cell* body, Lex* env);
-void lex_add_builtin(Lex* e, const char* name, Cell* (*func)(Lex*, Cell*));
+void lex_add_builtin(Lex* e, const char* name, Cell* (*func)(const Lex*, const Cell*));
 void lex_add_builtins(Lex* e);
 
 #endif //COZENAGE_ENVIRONMENT_H

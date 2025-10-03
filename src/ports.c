@@ -27,22 +27,22 @@
  *                Input/output and ports                 *
  * ------------------------------------------------------*/
 
-Cell* builtin_current_input_port(Lex* e, Cell* a) {
+Cell* builtin_current_input_port(const Lex* e, const Cell* a) {
     (void)e; (void)a;
     return default_input_port;
 }
 
-Cell* builtin_current_output_port(Lex* e, Cell* a) {
+Cell* builtin_current_output_port(const Lex* e, const Cell* a) {
     (void)e; (void)a;
     return default_output_port;
 }
 
-Cell* builtin_current_error_port(Lex* e, Cell* a) {
+Cell* builtin_current_error_port(const Lex* e, const Cell* a) {
     (void)e; (void)a;
     return default_error_port;
 }
 
-Cell* builtin_input_port_pred(Lex* e, Cell* a) {
+Cell* builtin_input_port_pred(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
@@ -52,7 +52,7 @@ Cell* builtin_input_port_pred(Lex* e, Cell* a) {
     return make_val_bool(1);
 }
 
-Cell* builtin_output_port_pred(Lex* e, Cell* a) {
+Cell* builtin_output_port_pred(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
@@ -62,7 +62,7 @@ Cell* builtin_output_port_pred(Lex* e, Cell* a) {
     return make_val_bool(1);
 }
 
-Cell* builtin_text_port_pred(Lex* e, Cell* a) {
+Cell* builtin_text_port_pred(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
@@ -72,7 +72,7 @@ Cell* builtin_text_port_pred(Lex* e, Cell* a) {
     return make_val_bool(1);
 }
 
-Cell* builtin_binary_port_pred(Lex* e, Cell* a) {
+Cell* builtin_binary_port_pred(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
@@ -82,7 +82,7 @@ Cell* builtin_binary_port_pred(Lex* e, Cell* a) {
     return make_val_bool(1);
 }
 
-Cell* builtin_input_port_open(Lex* e, Cell* a) {
+Cell* builtin_input_port_open(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
@@ -94,7 +94,7 @@ Cell* builtin_input_port_open(Lex* e, Cell* a) {
     return make_val_bool(0);
 }
 
-Cell* builtin_output_port_open(Lex* e, Cell* a) {
+Cell* builtin_output_port_open(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
@@ -106,7 +106,7 @@ Cell* builtin_output_port_open(Lex* e, Cell* a) {
     return make_val_bool(0);
 }
 
-Cell* builtin_close_port(Lex* e, Cell* a) {
+Cell* builtin_close_port(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
@@ -121,7 +121,7 @@ Cell* builtin_close_port(Lex* e, Cell* a) {
     return make_val_bool(1);
 }
 
-Cell* builtin_read_line(Lex* e, Cell* a) {
+Cell* builtin_read_line(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_RANGE(a, 0, 1);
     if (err) return err;
@@ -150,7 +150,7 @@ Cell* builtin_read_line(Lex* e, Cell* a) {
     return result;
 }
 
-Cell* builtin_write_string(Lex* e, Cell* a) {
+Cell* builtin_write_string(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_RANGE(a, 1, 4);
     if (err) return err;
@@ -175,7 +175,7 @@ Cell* builtin_write_string(Lex* e, Cell* a) {
     return NULL;
 }
 
-Cell* builtin_newline(Lex* e, Cell* a) {
+Cell* builtin_newline(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_RANGE(a, 0, 1);
     if (err) return err;

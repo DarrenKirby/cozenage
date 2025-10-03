@@ -23,18 +23,18 @@
 #include "types.h"
 
 /* Input/output and ports */
-Cell* builtin_current_input_port(Lex* e, Cell* a);
-Cell* builtin_current_output_port(Lex* e, Cell* a);
-Cell* builtin_current_error_port(Lex* e, Cell* a);
-Cell* builtin_input_port_pred(Lex* e, Cell* a);
-Cell* builtin_output_port_pred(Lex* e, Cell* a);
-Cell* builtin_text_port_pred(Lex* e, Cell* a);
-Cell* builtin_binary_port_pred(Lex* e, Cell* a);
-Cell* builtin_input_port_open(Lex* e, Cell* a);
-Cell* builtin_output_port_open(Lex* e, Cell* a);
-Cell* builtin_close_port(Lex* e, Cell* a);
-Cell* builtin_read_line(Lex* e, Cell* a);
-Cell* builtin_write_string(Lex* e, Cell* a);
-Cell* builtin_newline(Lex* e, Cell* a);
+Cell* builtin_current_input_port(const Lex* e, const Cell* a);
+Cell* builtin_current_output_port(const Lex* e, const Cell* a);
+Cell* builtin_current_error_port(const Lex* e, const Cell* a);
+Cell* builtin_input_port_pred(const Lex* e, const Cell* a);
+Cell* builtin_output_port_pred(const Lex* e, const Cell* a);
+Cell* builtin_text_port_pred(const Lex* e, const Cell* a);
+Cell* builtin_binary_port_pred(const Lex* e, const Cell* a);
+Cell* builtin_input_port_open(const Lex* e, const Cell* a);
+Cell* builtin_output_port_open(const Lex* e, const Cell* a);
+Cell* builtin_close_port(const Lex* e, const Cell* a);
+Cell* builtin_read_line(const Lex* e, const Cell* a);
+Cell* builtin_write_string(const Lex* e, const Cell* a);
+Cell* builtin_newline(const Lex* e, const Cell* a);
 
 #endif //COZENAGE_PORTS_H

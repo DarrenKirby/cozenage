@@ -23,7 +23,7 @@
 #include "types.h"
 
 
-Cell* builtin_display(Lex* e, Cell* a);
+Cell* builtin_display(const Lex* e, const Cell* a);
 void lex_add_write_lib(Lex* e);
 void lex_add_read_lib(Lex* e);
 

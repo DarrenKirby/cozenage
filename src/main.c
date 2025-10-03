@@ -98,14 +98,12 @@ int discard_continuation(const int count, const int key) {
 
 /* Allow multi-line input in the REPL */
 static char* read_multiline(const char* prompt, const char* cont_prompt) {
-    char *line = NULL;
-    char *input = NULL;
     size_t total_len = 0;
     int balance = 0;
     int in_string = 0;   /* track string literal state across lines */
 
-    line = readline(prompt);
-    if (!line) return NULL;
+    char *line = readline(prompt);
+    if (!line) return nullptr;
     if (got_sigint) {
         free(line);
         got_sigint = 0;
@@ -114,7 +112,7 @@ static char* read_multiline(const char* prompt, const char* cont_prompt) {
 
     balance += paren_balance(line, &in_string);
 
-    input = GC_strdup(line);
+    char *input = GC_strdup(line);
     total_len = strlen(line);
     free(line);
 
@@ -155,12 +153,11 @@ Cell* coz_read(Lex* e) {
     if (!input || strcmp(input, "exit") == 0) {
         printf("\n");
         save_history_to_file();
-        //lex_delete(e);
         exit(0);
     }
 
     Parser *p = parse_str(input);
-    if (!p) { return NULL; }
+    if (!p) { return nullptr; }
     Cell *v = parse_tokens(p);
     if (v) add_history(input);
     return v;
@@ -289,7 +286,7 @@ void process_library_arg(struct lib_load *l, const char *arg) {
             exit(EXIT_FAILURE);
         }
         /* Get the next token */
-        token = strtok(NULL, ",");
+        token = strtok(nullptr, ",");
     }
 }
 
@@ -299,13 +296,13 @@ int main(const int argc, char** argv) {
     int opt;
 
     const struct option long_opts[] = {
-        {"help", 0, NULL, 'h'},
-        {"version", 0, NULL, 'V'},
-        {"library", required_argument, NULL, 'l'},
-        {NULL,0,NULL,0}
+        {"help", 0, nullptr, 'h'},
+        {"version", 0, nullptr, 'V'},
+        {"library", required_argument, nullptr, 'l'},
+        {nullptr,0,nullptr,0}
     };
 
-    while ((opt = getopt_long(argc, argv, "Vhl:", long_opts, NULL)) != -1) {
+    while ((opt = getopt_long(argc, argv, "Vhl:", long_opts, nullptr)) != -1) {
         switch(opt) {
             case 'V':
                 printf("%s%s%s version %s\n", ANSI_BLUE_B, APP_NAME, ANSI_RESET, APP_VERSION);

@@ -137,7 +137,7 @@ typedef struct Cell {
 
         struct {                      /* built-in and user-defined procedures */
             char* name;                    /* optional, for printing name of builtins */
-            Cell* (*builtin)(Lex*, Cell*); /* non-NULL → builtin, ignore formals/body/env */
+            Cell* (*builtin)(const Lex*, const Cell*); /* non-NULL → builtin, ignore formals/body/env */
             Cell* formals;                 /* non-NULL → user-defined lambda */
             Cell* body;                    /* S-expression for lambda */
             Lex* env;                      /* closure environment */
@@ -156,7 +156,7 @@ extern Cell* default_input_port;
 extern Cell* default_output_port;
 extern Cell* default_error_port;
 void init_default_ports(void);
-typedef Cell* (*BuiltinFn)(Lex* e, Cell* args);
+typedef Cell* (*BuiltinFn)(const Lex* e, const Cell* args);
 
 Cell* make_val_real(long double n);
 Cell* make_val_int(long long n);
@@ -194,9 +194,9 @@ bool cell_is_positive(const Cell* c);
 bool cell_is_negative(const Cell* c);
 bool cell_is_odd(const Cell* c);
 bool cell_is_even(const Cell* c);
-Cell* negate_numeric(Cell* x);
+Cell* negate_numeric(const Cell* x);
 Cell* simplify_rational(Cell* v);
-void complex_apply(BuiltinFn fn, Lex* e, Cell* result, Cell* rhs);
+void complex_apply(BuiltinFn fn, const Lex* e, Cell* result, const Cell* rhs);
 long double cell_to_long_double(const Cell* c);
 Cell* make_cell_from_double(long double d);
 char* GC_strdup(const char* s);

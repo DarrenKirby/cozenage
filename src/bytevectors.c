@@ -24,7 +24,7 @@
  *     Byte vector constructors, selectors, and procedures    *
  * -----------------------------------------------------------*/
 
-Cell* builtin_bytevector(Lex* e, Cell* a) {
+Cell* builtin_bytevector(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_MIN(a, 1);
     if (err) return err;
@@ -34,12 +34,12 @@ Cell* builtin_bytevector(Lex* e, Cell* a) {
         if (a->cell[i]->type != VAL_INT || a->cell[i]->i_val < 0 || a->cell[i]->i_val > 255) {
             return make_val_err("bytevector: args must be integers 0 to 255 inclusive", GEN_ERR);
         }
-        cell_add(vec, cell_copy(a->cell[i]));
+        cell_add(vec, a->cell[i]);
     }
     return vec;
 }
 
-Cell* builtin_bytevector_length(Lex* e, Cell* a) {
+Cell* builtin_bytevector_length(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
@@ -49,7 +49,7 @@ Cell* builtin_bytevector_length(Lex* e, Cell* a) {
     return make_val_int(a->cell[0]->count);
 }
 
-Cell* builtin_bytevector_ref(Lex* e, Cell* a) {
+Cell* builtin_bytevector_ref(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2);
     if (err) return err;
@@ -64,10 +64,10 @@ Cell* builtin_bytevector_ref(Lex* e, Cell* a) {
     if (i >= a->cell[0]->count) {
         return make_val_err("bytevector-ref: index out of bounds", GEN_ERR);
     }
-    return cell_copy(a->cell[0]->cell[i]);
+    return a->cell[0]->cell[i];
 }
 
-Cell* builtin_make_bytevector(Lex* e, Cell* a) {
+Cell* builtin_make_bytevector(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_RANGE(a, 1, 2);
     if (err) return err;
@@ -78,7 +78,7 @@ Cell* builtin_make_bytevector(Lex* e, Cell* a) {
     if (n < 1) {
         return make_val_err("make-bytevector: arg 1 must be non-negative", GEN_ERR);
     }
-    const Cell* fill = NULL;
+    Cell* fill;
     if (a->count == 2) {
         fill = a->cell[1];
         if (fill->i_val < 0 || fill->i_val > 255) {
@@ -89,29 +89,31 @@ Cell* builtin_make_bytevector(Lex* e, Cell* a) {
     }
     Cell *vec = make_val_bytevec();
     for (int i = 0; i < n; i++) {
-        cell_add(vec, cell_copy(fill));
+        cell_add(vec, fill);
     }
     return vec;
 }
 
-Cell* builtin_bytevector_copy(Lex* e, Cell* a) {
+Cell* builtin_bytevector_copy(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_RANGE(a, 1, 3);
     if (err) return err;
     if (a->cell[0]->type != VAL_BYTEVEC) {
         return make_val_err("bytevector->copy: arg 1 must be a vector", GEN_ERR);
     }
-    if (a->count == 1) {
-        return cell_copy(a->cell[0]);
-    }
-    const long long start = a->cell[1]->i_val;
+    int start = 0;
+    int end = a->cell[0]->count;
+
     if (a->count == 2) {
-        return cell_copy(a->cell[0]->cell[start]);
+        start = (int)a->cell[1]->i_val;
     }
-    const long long end = a->cell[2]->i_val;
-    Cell* vec = make_val_bytevec();
-    for (long long i = start; i < end; i++) {
-        cell_add(vec, cell_copy(a->cell[0]->cell[i]));
+    if (a->count == 3) {
+        start = (int)a->cell[1]->i_val;
+        end = (int)a->cell[2]->i_val;
+    }
+    Cell* vec = make_val_vect();
+    for (int i = start; i < end; i++) {
+        cell_add(vec, a->cell[0]->cell[i]);
     }
     return vec;
 }

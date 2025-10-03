@@ -22,23 +22,28 @@
 
 #include "types.h"
 
-Cell* builtin_char_alphabetic(Lex* e, Cell* a);
-Cell* builtin_char_whitespace(Lex* e, Cell* a);
-Cell* builtin_char_numeric(Lex* e, Cell* a);
-Cell* builtin_char_upper_case(Lex* e, Cell* a);
-Cell* builtin_char_lower_case(Lex* e, Cell* a);
-Cell* builtin_char_upcase(Lex* e, Cell* a);
-Cell* builtin_char_downcase(Lex* e, Cell* a);
-Cell* builtin_char_foldcase(Lex* e, Cell* a);
-Cell* builtin_digit_value(Lex* e, Cell* a);
-Cell* builtin_char_equal_ci(Lex* e, Cell* a);
-Cell* builtin_char_lt_ci(Lex* e, Cell* a);
-Cell* builtin_char_lte_ci(Lex* e, Cell* a);
-Cell* builtin_char_gt_ci(Lex* e, Cell* a);
-Cell* builtin_char_gte_ci(Lex* e, Cell* a);
-Cell* builtin_string_downcase(Lex* e, Cell* a);
-Cell* builtin_string_upcase(Lex* e, Cell* a);
-Cell* builtin_string_foldcase(Lex* e, Cell* a);
+Cell* builtin_char_alphabetic(const Lex* e, const Cell* a);
+Cell* builtin_char_whitespace(const Lex* e, const Cell* a);
+Cell* builtin_char_numeric(const Lex* e, const Cell* a);
+Cell* builtin_char_upper_case(const Lex* e, const Cell* a);
+Cell* builtin_char_lower_case(const Lex* e, const Cell* a);
+Cell* builtin_char_upcase(const Lex* e, const Cell* a);
+Cell* builtin_char_downcase(const Lex* e, const Cell* a);
+Cell* builtin_char_foldcase(const Lex* e, const Cell* a);
+Cell* builtin_digit_value(const Lex* e, const Cell* a);
+Cell* builtin_char_equal_ci(const Lex* e, const Cell* a);
+Cell* builtin_char_lt_ci(const Lex* e, const Cell* a);
+Cell* builtin_char_lte_ci(const Lex* e, const Cell* a);
+Cell* builtin_char_gt_ci(const Lex* e, const Cell* a);
+Cell* builtin_char_gte_ci(const Lex* e, const Cell* a);
+Cell* builtin_string_downcase(const Lex* e, const Cell* a);
+Cell* builtin_string_upcase(const Lex* e, const Cell* a);
+Cell* builtin_string_foldcase(const Lex* e, const Cell* a);
+Cell* builtin_string_equal_ci(const Lex* e, const Cell* a);
+Cell* builtin_string_lt_ci(const Lex* e, const Cell* a);
+Cell* builtin_string_lte_ci(const Lex* e, const Cell* a);
+Cell* builtin_string_gt_ci(const Lex* e, const Cell* a);
+Cell* builtin_string_gte_ci(const Lex* e, const Cell* a);
 void lex_add_char_lib(Lex* e);
 
 #endif //COZENAGE_CHAR_LIB_H

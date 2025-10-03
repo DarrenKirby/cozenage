@@ -32,12 +32,12 @@
 
 
 /* define the global nil */
-Cell* val_nil = NULL;
+Cell* val_nil = nullptr;
 
 /* default ports */
-Cell* default_input_port  = NULL;
-Cell* default_output_port = NULL;
-Cell* default_error_port  = NULL;
+Cell* default_input_port  = nullptr;
+Cell* default_output_port = nullptr;
+Cell* default_error_port  = nullptr;
 
 void init_default_ports(void) {
     default_input_port  = make_val_port("stdin",  stdin,  INPUT_PORT, TEXT_PORT);
@@ -60,6 +60,10 @@ Cell* make_val_nil(void) {
 
 Cell* make_val_real(const long double n) {
     Cell* v = GC_MALLOC(sizeof(Cell));
+    if (!v) {
+        fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
+        exit(EXIT_FAILURE);
+    }
     v->type = VAL_REAL;
     v->exact = false;
     v->r_val = n;
@@ -68,6 +72,10 @@ Cell* make_val_real(const long double n) {
 
 Cell* make_val_int(const long long int n) {
     Cell* v = GC_MALLOC(sizeof(Cell));
+    if (!v) {
+        fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
+        exit(EXIT_FAILURE);
+    }
     v->type = VAL_INT;
     v->exact = true;
     v->i_val = n;
@@ -76,6 +84,10 @@ Cell* make_val_int(const long long int n) {
 
 Cell* make_val_rat(const long int num, const long int den, const bool simplify) {
     Cell* v = GC_MALLOC(sizeof(Cell));
+    if (!v) {
+        fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
+        exit(EXIT_FAILURE);
+    }
     v->type = VAL_RAT;
     v->exact = true;
     v->num = num;
@@ -91,6 +103,10 @@ Cell* make_val_complex(Cell* real, Cell *imag) {
         return make_val_err("Cannot have complex real or imaginary parts.", GEN_ERR);
     }
     Cell* v = GC_MALLOC(sizeof(Cell));
+    if (!v) {
+        fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
+        exit(EXIT_FAILURE);
+    }
     v->type = VAL_COMPLEX;
     v->real = real;
     v->imag = imag;
@@ -100,6 +116,10 @@ Cell* make_val_complex(Cell* real, Cell *imag) {
 
 Cell* make_val_bool(const int b) {
     Cell* v = GC_MALLOC(sizeof(Cell));
+    if (!v) {
+        fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
+        exit(EXIT_FAILURE);
+    }
     v->type = VAL_BOOL;
     v->b_val = b ? 1 : 0;
     return v;
@@ -107,6 +127,10 @@ Cell* make_val_bool(const int b) {
 
 Cell* make_val_sym(const char* s) {
     Cell* v = GC_MALLOC(sizeof(Cell));
+    if (!v) {
+        fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
+        exit(EXIT_FAILURE);
+    }
     v->type = VAL_SYM;
     v->exact = 1; /* Hack to flag env lookup of symbol: 1 = lookup 0 = don't */
     v->sym = GC_strdup(s);
@@ -115,6 +139,10 @@ Cell* make_val_sym(const char* s) {
 
 Cell* make_val_str(const char* s) {
     Cell* v = GC_MALLOC(sizeof(Cell));
+    if (!v) {
+        fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
+        exit(EXIT_FAILURE);
+    }
     v->type = VAL_STR;
     v->str = GC_strdup(s);
     return v;
@@ -122,14 +150,22 @@ Cell* make_val_str(const char* s) {
 
 Cell* make_val_sexpr(void) {
     Cell* v = GC_MALLOC(sizeof(Cell));
+    if (!v) {
+        fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
+        exit(EXIT_FAILURE);
+    }
     v->type = VAL_SEXPR;
     v->count = 0;
-    v->cell = NULL;
+    v->cell = nullptr;
     return v;
 }
 
 Cell* make_val_char(const UChar32 c) {
     Cell* v = GC_MALLOC(sizeof(Cell));
+    if (!v) {
+        fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
+        exit(EXIT_FAILURE);
+    }
     v->type = VAL_CHAR;
     v->c_val = c;
     return v;
@@ -150,22 +186,34 @@ Cell* make_val_pair(Cell* car, Cell* cdr) {
 
 Cell* make_val_vect(void) {
     Cell* v = GC_MALLOC(sizeof(Cell));
+    if (!v) {
+        fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
+        exit(EXIT_FAILURE);
+    }
     v->type = VAL_VEC;
-    v->cell = NULL;
+    v->cell = nullptr;
     v->count = 0;
     return v;
 }
 
 Cell* make_val_bytevec(void) {
     Cell* v = GC_MALLOC(sizeof(Cell));
+    if (!v) {
+        fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
+        exit(EXIT_FAILURE);
+    }
     v->type = VAL_BYTEVEC;
-    v->cell = NULL;
+    v->cell = nullptr;
     v->count = 0;
     return v;
 }
 
 Cell* make_val_err(const char* m, err_t t) {
     Cell* v = GC_MALLOC(sizeof(Cell));
+    if (!v) {
+        fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
+        exit(EXIT_FAILURE);
+    }
     v->type = VAL_ERR;
     v->err_t = t;
     v->err = GC_strdup(m);
@@ -174,6 +222,10 @@ Cell* make_val_err(const char* m, err_t t) {
 
 Cell* make_val_port(const char* path, FILE* fh, const int io_t, const int stream_t) {
     Cell* v = GC_MALLOC(sizeof(Cell));
+    if (!v) {
+        fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
+        exit(EXIT_FAILURE);
+    }
     v->is_open = 1;
     v->type = VAL_PORT;
     v->path = GC_strdup(path);
@@ -185,6 +237,10 @@ Cell* make_val_port(const char* path, FILE* fh, const int io_t, const int stream
 
 Cell* make_val_eof(void) {
     Cell* v = GC_MALLOC(sizeof(Cell));
+    if (!v) {
+        fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
+        exit(EXIT_FAILURE);
+    }
     v->type = VAL_EOF;
     return v;
 }
@@ -201,7 +257,7 @@ Cell* cell_add(Cell* v, Cell* x) {
 }
 
 Cell* cell_pop(Cell* v, const int i) {
-    if (i < 0 || i >= v->count) return NULL; /* defensive */
+    if (i < 0 || i >= v->count) return nullptr; /* defensive */
 
     /* Grab item */
     Cell* x = v->cell[i];
@@ -218,7 +274,7 @@ Cell* cell_pop(Cell* v, const int i) {
     /* If there are no elements left, free the array and set to NULL.
        Do NOT call GC_REALLOC(..., 0). */
     if (v->count == 0) {
-        v->cell = NULL;
+        v->cell = nullptr;
     } else {
         /* Try to shrink the allocation; keep old pointer on OOM */
         Cell** tmp = GC_REALLOC(v->cell, sizeof(Cell*) * v->count);
@@ -237,7 +293,7 @@ Cell* cell_take(Cell* v, const int i) {
 
 /* Recursively deep-copy all components of a Cell */
 Cell* cell_copy(const Cell* v) {
-    if (!v) return NULL;
+    if (!v) return nullptr;
 
     Cell* copy = GC_MALLOC(sizeof(Cell));
     if (!copy) {
@@ -274,18 +330,18 @@ Cell* cell_copy(const Cell* v) {
     case VAL_PROC:
         /* If it's a builtin, keep the function pointer; copy the name if present. */
         copy->builtin = v->builtin;
-        copy->name = v->name ? GC_strdup(v->name) : NULL;
+        copy->name = v->name ? GC_strdup(v->name) : nullptr;
 
         if (v->builtin) {
             /* builtin: nothing else to deep-copy */
-            copy->formals = NULL;
-            copy->body = NULL;
-            copy->env = NULL;
+            copy->formals = nullptr;
+            copy->body = nullptr;
+            copy->env = nullptr;
         } else {
             /* user lambda: deep copy formals and body; keep env pointer (closure) */
-            copy->builtin = NULL;
-            copy->formals = v->formals ? cell_copy(v->formals) : NULL;
-            copy->body   = v->body   ? cell_copy(v->body)   : NULL;
+            copy->builtin = nullptr;
+            copy->formals = v->formals ? cell_copy(v->formals) : nullptr;
+            copy->body   = v->body   ? cell_copy(v->body)   : nullptr;
             copy->env    = v->env;   /* DO NOT copy environments; share the pointer */
         }
         break;
@@ -297,7 +353,7 @@ Cell* cell_copy(const Cell* v) {
         if (v->count) {
             copy->cell = GC_MALLOC(sizeof(Cell*) * v->count);
         } else {
-            copy->cell = NULL;
+            copy->cell = nullptr;
         }
         for (int i = 0; i < v->count; i++) {
             copy->cell[i] = cell_copy(v->cell[i]);
@@ -342,7 +398,7 @@ Cell* cell_copy(const Cell* v) {
 
     default:
         fprintf(stderr, "cell_copy: unknown type %d\n", v->type);
-        return NULL;
+        return nullptr;
     }
     return copy;
 }
@@ -419,7 +475,7 @@ Cell* check_arg_types(const Cell* a, const int mask) {
             return make_val_err(buf, GEN_ERR);
         }
     }
-    return NULL;
+    return nullptr;
 }
 
 Cell* check_arg_arity(const Cell* a, const int exact, const int min, const int max) {
@@ -446,7 +502,7 @@ Cell* check_arg_arity(const Cell* a, const int exact, const int min, const int m
                  max, max == 1 ? "" : "s", argc);
         return make_val_err(buf, GEN_ERR);
     }
-    return NULL; /* all good */
+    return nullptr; /* all good */
 }
 
 /*---------------------------------------------------------*
@@ -454,20 +510,20 @@ Cell* check_arg_arity(const Cell* a, const int exact, const int min, const int m
  * --------------------------------------------------------*/
 
 /* Convertors */
-Cell* int_to_rat(Cell* v) {
+Cell* int_to_rat(const Cell* v) {
     return make_val_rat(v->i_val, 1, 0);
 }
 
-Cell* int_to_real(Cell* v) {
+Cell* int_to_real(const Cell* v) {
     return make_val_real((long double)v->i_val);
 }
 
-Cell* rat_to_real(Cell* v) {
+Cell* rat_to_real(const Cell* v) {
     return make_val_real((long double)v->num / (long double)v->den);
 }
 
 Cell* to_complex(Cell* v) {
-    return make_val_complex(cell_copy(v), make_val_int(0));
+    return make_val_complex(v, make_val_int(0));
 }
 
 /* Promote two numbers to the same type, modifying lhs and rhs in-place. */
@@ -485,10 +541,10 @@ void numeric_promote(Cell** lhs, Cell** rhs) {
     }
     else if (a->type == VAL_REAL || b->type == VAL_REAL) {
         if (a->type == VAL_INT || a->type == VAL_RAT) {
-            a = (a->type == VAL_INT) ? int_to_real(a) : rat_to_real(a);
+            a = a->type == VAL_INT ? int_to_real(a) : rat_to_real(a);
         }
         if (b->type == VAL_INT || b->type == VAL_RAT) {
-            b = (b->type == VAL_INT) ? int_to_real(b) : rat_to_real(b);
+            b = b->type == VAL_INT ? int_to_real(b) : rat_to_real(b);
         }
     }
     else if (a->type == VAL_RAT || b->type == VAL_RAT) {
@@ -740,9 +796,10 @@ bool cell_is_even(const Cell* c) {
 }
 
 
-Cell* negate_numeric(Cell* x) {
+Cell* negate_numeric(const Cell* x) {
     switch (x->type) {
-        case VAL_INT: return make_val_int(-x->i_val);
+        case VAL_INT:
+            return make_val_int(-x->i_val);
         case VAL_RAT:
             return make_val_rat(-x->num, x->den, 1);
         case VAL_REAL:
@@ -803,7 +860,7 @@ Cell* simplify_rational(Cell* v) {
 }
 
 /* Helper: convert numeric Cell to long double */
-long double cell_to_ld(Cell* c) {
+long double cell_to_ld(const Cell* c) {
     switch (c->type) {
         case VAL_INT:  return (long double)c->i_val;
         case VAL_RAT:  return (long double)c->num / (long double)c->den;
@@ -813,11 +870,11 @@ long double cell_to_ld(Cell* c) {
 }
 
 /* Helper for performing arithmetic on complex numbers */
-void complex_apply(BuiltinFn fn, Lex* e, Cell* result, Cell* rhs) {
+void complex_apply(BuiltinFn fn, const Lex* e, Cell* result, const Cell* rhs) {
     if (fn == builtin_add || fn == builtin_sub) {
         /* addition/subtraction: elementwise using recursion */
-        Cell* real_args = make_sexpr_len2(result->real, rhs->real);
-        Cell* imag_args = make_sexpr_len2(result->imag, rhs->imag);
+        const Cell* real_args = make_sexpr_len2(result->real, rhs->real);
+        const Cell* imag_args = make_sexpr_len2(result->imag, rhs->imag);
 
         Cell* new_real = fn(e, real_args);
         Cell* new_imag = fn(e, imag_args);
@@ -828,54 +885,54 @@ void complex_apply(BuiltinFn fn, Lex* e, Cell* result, Cell* rhs) {
     }
 
     /* Pointers to the four numeric components (a, b, c, d). */
-    Cell* a = result->real;
-    Cell* b = result->imag;
-    Cell* c = rhs->real;
-    Cell* d = rhs->imag;
+    const Cell* a = result->real;
+    const Cell* b = result->imag;
+    const Cell* c = rhs->real;
+    const Cell* d = rhs->imag;
 
     /* Create temporary argument lists and perform calculations */
-    Cell* ac_args = make_sexpr_len2(a, c);
-    Cell* bd_args = make_sexpr_len2(b, d);
-    Cell* ad_args = make_sexpr_len2(a, d);
-    Cell* bc_args = make_sexpr_len2(b, c);
+    const Cell* ac_args = make_sexpr_len2(a, c);
+    const Cell* bd_args = make_sexpr_len2(b, d);
+    const Cell* ad_args = make_sexpr_len2(a, d);
+    const Cell* bc_args = make_sexpr_len2(b, c);
 
-    Cell* ac = builtin_mul(e, ac_args);
-    Cell* bd = builtin_mul(e, bd_args);
-    Cell* ad = builtin_mul(e, ad_args);
-    Cell* bc = builtin_mul(e, bc_args);
+    const Cell* ac = builtin_mul(e, ac_args);
+    const Cell* bd = builtin_mul(e, bd_args);
+    const Cell* ad = builtin_mul(e, ad_args);
+    const Cell* bc = builtin_mul(e, bc_args);
 
-    Cell* new_real = NULL;
-    Cell* new_imag = NULL;
+    Cell* new_real = nullptr;
+    Cell* new_imag = nullptr;
 
     if (fn == builtin_mul) {
         /* Create temporary argument lists for final operations */
-        Cell* real_args = make_sexpr_len2(ac, bd);
-        Cell* imag_args = make_sexpr_len2(ad, bc);
+        const Cell* real_args = make_sexpr_len2(ac, bd);
+        const Cell* imag_args = make_sexpr_len2(ad, bc);
 
         new_real = builtin_sub(e, real_args);
         new_imag = builtin_add(e, imag_args);
     }
     else if (fn == builtin_div) {
         /* Create temporary argument lists for denominator calculation */
-        Cell* c_sq_args = make_sexpr_len2(c, c);
-        Cell* d_sq_args = make_sexpr_len2(d, d);
+        const Cell* c_sq_args = make_sexpr_len2(c, c);
+        const Cell* d_sq_args = make_sexpr_len2(d, d);
 
-        Cell* c_sq = builtin_mul(e, c_sq_args);
-        Cell* d_sq = builtin_mul(e, d_sq_args);
+        const Cell* c_sq = builtin_mul(e, c_sq_args);
+        const Cell* d_sq = builtin_mul(e, d_sq_args);
 
-        Cell* denom_args = make_sexpr_len2(c_sq, d_sq);
-        Cell* denom = builtin_add(e, denom_args);
+        const Cell* denom_args = make_sexpr_len2(c_sq, d_sq);
+        const Cell* denom = builtin_add(e, denom_args);
 
         /* Create temporary argument lists for numerators */
-        Cell* real_num_args = make_sexpr_len2(ac, bd);
-        Cell* imag_num_args = make_sexpr_len2(bc, ad);
+        const Cell* real_num_args = make_sexpr_len2(ac, bd);
+        const Cell* imag_num_args = make_sexpr_len2(bc, ad);
 
-        Cell* real_num = builtin_add(e, real_num_args);
-        Cell* imag_num = builtin_sub(e, imag_num_args);
+        const Cell* real_num = builtin_add(e, real_num_args);
+        const Cell* imag_num = builtin_sub(e, imag_num_args);
 
         /* Create temporary argument lists for final division */
-        Cell* final_real_args = make_sexpr_len2(real_num, denom);
-        Cell* final_imag_args = make_sexpr_len2(imag_num, denom);
+        const Cell* final_real_args = make_sexpr_len2(real_num, denom);
+        const Cell* final_imag_args = make_sexpr_len2(imag_num, denom);
 
         new_real = builtin_div(e, final_real_args);
         new_imag = builtin_div(e, final_imag_args);
@@ -911,14 +968,15 @@ Cell* make_cell_from_double(long double d) {
 /* A version of strdup that allocates memory using the garbage collector. */
 char* GC_strdup(const char* s) {
     if (s == NULL) {
-        return NULL;
+        return nullptr;
     }
     /* Allocate GC-managed memory for the new string. */
     size_t len = strlen(s) + 1;
-    char* new_str = (char*) GC_MALLOC_ATOMIC(len);
+    char* new_str = GC_MALLOC_ATOMIC(len);
     if (new_str == NULL) {
         /* Handle allocation failure if necessary */
-        return NULL;
+        fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
+        exit(EXIT_FAILURE);
     }
     /* Copy the string content. */
     memcpy(new_str, s, len);
@@ -933,7 +991,8 @@ char* GC_strndup(const char* s, const size_t n) {
     /* Allocate GC-managed memory. */
     char* new_str = (char*) GC_MALLOC_ATOMIC(len + 1);
     if (new_str == NULL) {
-        return NULL;
+        fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
+        exit(EXIT_FAILURE);
     }
 
     /* Copy the content and null-terminate. */
@@ -1001,14 +1060,14 @@ static const NamedChar named_chars[] = {
 /* This function is required by bsearch to compare a key (the string name)
  * with an element in the NamedChar array. */
 int compare_named_chars(const void* key, const void* element) {
-    const char* name_key = (const char*)key;
-    const NamedChar* char_element = (const NamedChar*)element;
+    const char* name_key = key;
+    const NamedChar* char_element = element;
     return strcmp(name_key, char_element->name);
 }
 
 /* Returns a pointer to the found NamedChar, or NULL if not found. */
 const NamedChar* find_named_char(const char* name) {
-    return (const NamedChar*)bsearch(
+    return bsearch(
         name,                                      /* The key to search for */
         named_chars,                              /* The array to search in */
         sizeof(named_chars) / sizeof(NamedChar),   /* Number of elements in the array */
@@ -1024,14 +1083,14 @@ Cell* list_get_nth_cell_ptr(Cell* list, long n) {
     for (long i = 0; i < n; i++) {
         /* Make sure we are still on a pair before trying to get the cdr */
         if (current->type != VAL_PAIR) {
-            return NULL;
+            return nullptr;
         }
         current = current->cdr;
     }
 
     /* After the loop, `current` should be the pair holding our desired element */
     if (current->type != VAL_PAIR) {
-        return NULL;
+        return nullptr;
     }
     /* The value we want is the CAR of this final pair */
     return current->car;
@@ -1040,20 +1099,20 @@ Cell* list_get_nth_cell_ptr(Cell* list, long n) {
 char* convert_to_utf8(const UChar* ustr) {
     UErrorCode status = U_ZERO_ERROR;
     int32_t char_len = 0;
-    char* result_utf8_str = NULL;
+    char* result_utf8_str = nullptr;
 
     /* Get required buffer length in bytes */
-    u_strToUTF8(NULL, 0, &char_len, ustr, -1, &status);
+    u_strToUTF8(nullptr, 0, &char_len, ustr, -1, &status);
 
     if (status == U_BUFFER_OVERFLOW_ERROR) {
         status = U_ZERO_ERROR;
         result_utf8_str = (char*)GC_malloc(sizeof(char) * (char_len + 1));
 
         /* Actual Conversion */
-        u_strToUTF8(result_utf8_str, char_len + 1, NULL, ustr, -1, &status);
+        u_strToUTF8(result_utf8_str, char_len + 1, nullptr, ustr, -1, &status);
 
         if (U_FAILURE(status)) {
-            return NULL;
+            return nullptr;
         }
     }
     return result_utf8_str;
@@ -1062,22 +1121,22 @@ char* convert_to_utf8(const UChar* ustr) {
 UChar* convert_to_utf16(const char* str) {
     UErrorCode status = U_ZERO_ERROR;
     int32_t uchar_len = 0;
-    UChar* my_utf16_str = NULL;
+    UChar* my_utf16_str = nullptr;
 
     /* Pre-flight: Get the required buffer length in UChars */
-    u_strFromUTF8(NULL, 0, &uchar_len, str, -1, &status);
+    u_strFromUTF8(nullptr, 0, &uchar_len, str, -1, &status);
 
     /* The pre-flight call sets an error code that we expect. */
     if (status == U_BUFFER_OVERFLOW_ERROR) {
         status = U_ZERO_ERROR; // Reset status for the next call
         my_utf16_str = (UChar*)GC_malloc(sizeof(UChar) * (uchar_len + 1));
-        if (!my_utf16_str) { return NULL; }
+        if (!my_utf16_str) { return nullptr; }
 
         /* Call the function again with the allocated buffer */
-        u_strFromUTF8(my_utf16_str, uchar_len + 1, NULL, str, -1, &status);
+        u_strFromUTF8(my_utf16_str, uchar_len + 1, nullptr, str, -1, &status);
 
         if (U_FAILURE(status)) {
-            return NULL;
+            return nullptr;
         }
     }
     return my_utf16_str;

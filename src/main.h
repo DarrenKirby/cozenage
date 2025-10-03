@@ -21,9 +21,9 @@
 #define COZENAGE_H
 
 #define APP_NAME "Cozenage"
-#define APP_VERSION "0.7.2"
-#define PS1_PROMPT "--> \x1b[37;1m"
-#define PS2_PROMPT "...    \x1b[37;1m"
+#define APP_VERSION "0.7.5"
+#define PS1_PROMPT "--> \001\x1b[37;1m\002"
+#define PS2_PROMPT "...    \001\x1b[37;1m\002"
 #define HIST_FILE "~/.cozenage_history"
 
 /* ANSI colour codes */

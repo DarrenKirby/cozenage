@@ -24,7 +24,7 @@
 #include <errno.h>
 
 
-Cell* builtin_display(Lex* e, Cell* a) {
+Cell* builtin_display(const Lex* e, const Cell* a) {
     /* FIXME: only works with strings
     Will have to change/copy/edit printing functions to write to a port */
     (void)e;

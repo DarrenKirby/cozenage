@@ -25,7 +25,7 @@
  *    Control features and list iteration procedures     *
  * ------------------------------------------------------*/
 
-Cell* builtin_apply(Lex* e, Cell* a) {
+Cell* builtin_apply(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2);
     if (err) return err;
@@ -37,10 +37,10 @@ Cell* builtin_apply(Lex* e, Cell* a) {
     }
 
     const Cell* composition = make_sexpr_len2(a->cell[0], make_sexpr_from_list(a->cell[1]));
-    return coz_eval(e, flatten_sexpr(composition));
+    return coz_eval((Lex*)e, flatten_sexpr(composition));
 }
 
-Cell* builtin_map(Lex* e, Cell* a) {
+Cell* builtin_map(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_MIN(a, 2);
     if (err) return err;
@@ -80,7 +80,7 @@ Cell* builtin_map(Lex* e, Cell* a) {
 
         Cell* tmp_result = NULL;
         if (proc->builtin) {
-            Cell* (*func)(Lex *, Cell *) = proc->builtin;
+            Cell* (*func)(const Lex *, const Cell *) = proc->builtin;
             tmp_result = func(e, make_sexpr_from_list(reversed_arg_list));
         } else {
             /* Prepend the procedure to create the application form */
@@ -91,7 +91,7 @@ Cell* builtin_map(Lex* e, Cell* a) {
             Cell* application_sexpr = make_sexpr_from_list(application_list);
 
             /* Evaluate it */
-            tmp_result = coz_eval(e, application_sexpr);
+            tmp_result = coz_eval((Lex*)e, application_sexpr);
         }
         if (tmp_result->type == VAL_ERR) {
             /* Propagate any evaluation errors */

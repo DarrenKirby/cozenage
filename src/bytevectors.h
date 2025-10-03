@@ -24,10 +24,10 @@
 
 
 /* Bytevector constructors, selectors,and procedures */
-Cell* builtin_bytevector(Lex* e, Cell* a);
-Cell* builtin_bytevector_length(Lex* e, Cell* a);
-Cell* builtin_bytevector_ref(Lex* e, Cell* a);
-Cell* builtin_make_bytevector(Lex* e, Cell* a);
-Cell* builtin_bytevector_copy(Lex* e, Cell* a);
+Cell* builtin_bytevector(const Lex* e, const Cell* a);
+Cell* builtin_bytevector_length(const Lex* e, const Cell* a);
+Cell* builtin_bytevector_ref(const Lex* e, const Cell* a);
+Cell* builtin_make_bytevector(const Lex* e, const Cell* a);
+Cell* builtin_bytevector_copy(const Lex* e, const Cell* a);
 
 #endif //COZENAGE_BYTEVECTORS_H

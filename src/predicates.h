@@ -24,31 +24,31 @@
 
 
 /* Type identity predicate procedures */
-Cell* builtin_number_pred(Lex* e, Cell* a);
-Cell* builtin_boolean_pred(Lex* e, Cell* a);
-Cell* builtin_null_pred(Lex* e, Cell* a);
-Cell* builtin_pair_pred(Lex* e, Cell* a);
-Cell* builtin_proc_pred(Lex* e, Cell* a);
-Cell* builtin_sym_pred(Lex* e, Cell* a);
-Cell* builtin_string_pred(Lex* e, Cell* a);
-Cell* builtin_char_pred(Lex* e, Cell* a);
-Cell* builtin_vector_pred(Lex* e, Cell* a);
-Cell* builtin_byte_vector_pred(Lex* e, Cell* a);
-Cell* builtin_port_pred(Lex* e, Cell* a);
-Cell* builtin_eof_pred(Lex* e, Cell* a);
+Cell* builtin_number_pred(const Lex* e, const Cell* a);
+Cell* builtin_boolean_pred(const Lex* e, const Cell* a);
+Cell* builtin_null_pred(const Lex* e, const Cell* a);
+Cell* builtin_pair_pred(const Lex* e, const Cell* a);
+Cell* builtin_proc_pred(const Lex* e, const Cell* a);
+Cell* builtin_sym_pred(const Lex* e, const Cell* a);
+Cell* builtin_string_pred(const Lex* e, const Cell* a);
+Cell* builtin_char_pred(const Lex* e, const Cell* a);
+Cell* builtin_vector_pred(const Lex* e, const Cell* a);
+Cell* builtin_byte_vector_pred(const Lex* e, const Cell* a);
+Cell* builtin_port_pred(const Lex* e, const Cell* a);
+Cell* builtin_eof_pred(const Lex* e, const Cell* a);
 /* Numeric identity predicate procedures */
-Cell* builtin_exact_pred(Lex *e, Cell* a);
-Cell* builtin_inexact_pred(Lex *e, Cell* a);
-Cell* builtin_complex(Lex *e, Cell* a);
-Cell* builtin_real(Lex *e, Cell* a);
-Cell* builtin_rational(Lex *e, Cell* a);
-Cell* builtin_integer(Lex *e, Cell* a);
-Cell* builtin_exact_integer(Lex *e, Cell* a);
+Cell* builtin_exact_pred(const Lex* e, const Cell* a);
+Cell* builtin_inexact_pred(const Lex* e, const Cell* a);
+Cell* builtin_complex(const Lex* e, const Cell* a);
+Cell* builtin_real(const Lex* e, const Cell* a);
+Cell* builtin_rational(const Lex* e, const Cell* a);
+Cell* builtin_integer(const Lex* e, const Cell* a);
+Cell* builtin_exact_integer(const Lex* e, const Cell* a);
 /* Numeric predicate procedures */
-Cell* builtin_zero(Lex* e, Cell* a);
-Cell* builtin_positive(Lex* e, Cell* a);
-Cell* builtin_negative(Lex* e, Cell* a);
-Cell* builtin_odd(Lex* e, Cell* a);
-Cell* builtin_even(Lex* e, Cell* a);
+Cell* builtin_zero(const Lex* e, const Cell* a);
+Cell* builtin_positive(const Lex* e, const Cell* a);
+Cell* builtin_negative(const Lex* e, const Cell* a);
+Cell* builtin_odd(const Lex* e, const Cell* a);
+Cell* builtin_even(const Lex* e, const Cell* a);
 
 #endif //COZENAGE_PREDICATES_H

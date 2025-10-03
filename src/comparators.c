@@ -26,9 +26,9 @@
  * -----------------------------*/
 
 /* Helper for '=' which recursively compares complex numbers */
-static int complex_eq_op(Lex* e, const Cell* lhs, const Cell* rhs) {
-    Cell* args_real = make_sexpr_len2(lhs->real, rhs->real);
-    Cell* args_imag = make_sexpr_len2(lhs->imag, rhs->imag);
+static int complex_eq_op(const Lex* e, const Cell* lhs, const Cell* rhs) {
+    const Cell* args_real = make_sexpr_len2(lhs->real, rhs->real);
+    const Cell* args_imag = make_sexpr_len2(lhs->imag, rhs->imag);
 
     const Cell* real_result = builtin_eq_op(e, args_real);
     const Cell* imag_result = builtin_eq_op(e, args_imag);
@@ -38,14 +38,14 @@ static int complex_eq_op(Lex* e, const Cell* lhs, const Cell* rhs) {
 }
 
 /* '=' -> VAL_BOOL - returns true if all arguments are equal. */
-Cell* builtin_eq_op(Lex* e, Cell* a) {
+Cell* builtin_eq_op(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, VAL_INT|VAL_REAL|VAL_RAT|VAL_COMPLEX);
     if (err) { return err; }
     for (int i = 0; i < a->count - 1; i++) {
         int the_same = 0;
-        Cell* lhs = cell_copy(a->cell[i]);
-        Cell* rhs = cell_copy(a->cell[i+1]);
+        Cell* lhs = a->cell[i];
+        Cell* rhs = a->cell[i+1];
         numeric_promote(&lhs, &rhs);
 
         switch (lhs->type) {
@@ -71,14 +71,14 @@ Cell* builtin_eq_op(Lex* e, Cell* a) {
 }
 
 /* '>' -> VAL_BOOL - returns true if each argument is greater than the one that follows. */
-Cell* builtin_gt_op(Lex* e, Cell* a) {
+Cell* builtin_gt_op(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, VAL_INT|VAL_REAL|VAL_RAT);
     if (err) { return err; }
     for (int i = 0; i < a->count - 1; i++) {
         int ok = 0;
-        Cell* lhs = cell_copy(a->cell[i]);
-        Cell* rhs = cell_copy(a->cell[i+1]);
+        Cell* lhs = a->cell[i];
+        Cell* rhs = a->cell[i+1];
         numeric_promote(&lhs, &rhs);
         switch (lhs->type) {
             case VAL_INT: {
@@ -90,7 +90,7 @@ Cell* builtin_gt_op(Lex* e, Cell* a) {
                 break;
             }
             case VAL_RAT: {
-                if ((lhs->num * rhs->den) > (lhs->den * rhs->num)) { ok = 1; }
+                if (lhs->num * rhs->den > lhs->den * rhs->num) { ok = 1; }
                 break;
             }
             default: ;
@@ -103,14 +103,14 @@ Cell* builtin_gt_op(Lex* e, Cell* a) {
 }
 
 /* '<' -> VAL_BOOL - returns true if each argument is less than the one that follows. */
-Cell* builtin_lt_op(Lex* e, Cell* a) {
+Cell* builtin_lt_op(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, VAL_INT|VAL_REAL|VAL_RAT);
     if (err) { return err; }
     for (int i = 0; i < a->count - 1; i++) {
         int ok = 0;
-        Cell* lhs = cell_copy(a->cell[i]);
-        Cell* rhs = cell_copy(a->cell[i+1]);
+        Cell* lhs = a->cell[i];
+        Cell* rhs = a->cell[i+1];
         numeric_promote(&lhs, &rhs);
         switch (lhs->type) {
             case VAL_INT: {
@@ -122,7 +122,7 @@ Cell* builtin_lt_op(Lex* e, Cell* a) {
                 break;
             }
             case VAL_RAT: {
-                if ((lhs->num * rhs->den) < (lhs->den * rhs->num)) { ok = 1; }
+                if (lhs->num * rhs->den < lhs->den * rhs->num) { ok = 1; }
                 break;
             }
             default: ;
@@ -135,14 +135,14 @@ Cell* builtin_lt_op(Lex* e, Cell* a) {
 }
 
 /* '>=' -> VAL_BOOL - */
-Cell* builtin_gte_op(Lex* e, Cell* a) {
+Cell* builtin_gte_op(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, VAL_INT|VAL_REAL|VAL_RAT);
     if (err) { return err; }
     for (int i = 0; i < a->count - 1; i++) {
         int ok = 0;
-        Cell* lhs = cell_copy(a->cell[i]);
-        Cell* rhs = cell_copy(a->cell[i+1]);
+        Cell* lhs = a->cell[i];
+        Cell* rhs = a->cell[i+1];
         numeric_promote(&lhs, &rhs);
         switch (lhs->type) {
             case VAL_INT: {
@@ -154,7 +154,7 @@ Cell* builtin_gte_op(Lex* e, Cell* a) {
                 break;
             }
             case VAL_RAT: {
-                if ((lhs->num * rhs->den) >= (lhs->den * rhs->num)) { ok = 1; }
+                if (lhs->num * rhs->den >= (lhs->den * rhs->num)) { ok = 1; }
                 break;
             }
             default: ;
@@ -167,14 +167,14 @@ Cell* builtin_gte_op(Lex* e, Cell* a) {
 }
 
 /* '<=' -> VAL_BOOL - */
-Cell* builtin_lte_op(Lex* e, Cell* a) {
+Cell* builtin_lte_op(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, VAL_INT|VAL_REAL|VAL_RAT);
     if (err) { return err; }
     for (int i = 0; i < a->count - 1; i++) {
         int ok = 0;
-        Cell* lhs = cell_copy(a->cell[i]);
-        Cell* rhs = cell_copy(a->cell[i+1]);
+        Cell* lhs = a->cell[i];
+        Cell* rhs = a->cell[i+1];
         numeric_promote(&lhs, &rhs);
         switch (lhs->type) {
             case VAL_INT: {
@@ -186,7 +186,7 @@ Cell* builtin_lte_op(Lex* e, Cell* a) {
                 break;
             }
             case VAL_RAT: {
-                if ((lhs->num * rhs->den) <= (lhs->den * rhs->num)) { ok = 1; }
+                if (lhs->num * rhs->den <= lhs->den * rhs->num) { ok = 1; }
                 break;
             }
             default: ;
@@ -206,7 +206,7 @@ Cell* builtin_lte_op(Lex* e, Cell* a) {
  * (pointer equality). Typically used for symbols and other non-numeric atoms.
  * May not give meaningful results for numbers or characters, since distinct but
  * equal values aren’t guaranteed to be the same object. */
-Cell* builtin_eq(Lex* e, Cell* a) {
+Cell* builtin_eq(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2);
     if (err) return err;
@@ -223,7 +223,7 @@ Cell* builtin_eq(Lex* e, Cell* a) {
  * not the same object. Use when: you want a general-purpose equality predicate
  * that works for numbers, characters, and symbols, but you don’t need deep
  * structural comparison. */
-Cell* builtin_eqv(Lex* e, Cell* a) {
+Cell* builtin_eqv(const Lex* e, const Cell* a) {
     Cell* err = CHECK_ARITY_EXACT(a, 2);
     if (err) return err;
 
@@ -244,7 +244,7 @@ Cell* builtin_eqv(Lex* e, Cell* a) {
 }
 
 /* Helper for equal? */
-Cell* val_equal(Lex* e, Cell* x, Cell* y) {
+Cell* val_equal(const Lex* e, const Cell* x, const Cell* y) {
     if (x->type != y->type) return make_val_bool(0);
 
     switch (x->type) {
@@ -275,7 +275,7 @@ Cell* val_equal(Lex* e, Cell* x, Cell* y) {
  * recursively in lists, vectors, and strings. (equal? '(1 2 3) '(1 2 3)) → true,
  * even though the two lists are distinct objects.
  * Use when: you want to compare data structures by content, not identity.*/
-Cell* builtin_equal(Lex* e, Cell* a) {
+Cell* builtin_equal(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2);
     if (err) return err;

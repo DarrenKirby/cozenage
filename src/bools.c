@@ -25,7 +25,7 @@
  * ---------------------------------------*/
 
 /* 'not' -> VAL_BOOL - returns #t if obj is false, and returns #f otherwise */
-Cell* builtin_not(Lex* e, Cell* a) {
+Cell* builtin_not(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err;
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
@@ -34,7 +34,7 @@ Cell* builtin_not(Lex* e, Cell* a) {
 }
 
 /* 'boolean' -> VAL_BOOL - converts any value to a strict boolean */
-Cell* builtin_boolean(Lex* e, Cell* a) {
+Cell* builtin_boolean(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
@@ -48,7 +48,7 @@ Cell* builtin_boolean(Lex* e, Cell* a) {
  * returned. Any remaining expressions are not evaluated. If all the expressions
  * evaluate to true values, the values of the last expression are returned.
  * If there are no expressions, then #t is returned.*/
-Cell* builtin_and(Lex* e, Cell* a) {
+Cell* builtin_and(const Lex* e, const Cell* a) {
     (void)e;
     if (a->count == 0) {
         return make_val_bool(1);
@@ -66,7 +66,7 @@ Cell* builtin_and(Lex* e, Cell* a) {
 /* 'or' -> VAL_BOOL|ANY - the value of the first expression that evaluates
  * to true is returned. Any remaining expressions are not evaluated. If all
  * expressions evaluate to #f or if there are no expressions, #f is returned */
-Cell* builtin_or(Lex* e, Cell* a) {
+Cell* builtin_or(const Lex* e, const Cell* a) {
     (void)e;
     if (a->count == 0) {
         return make_val_bool(0);

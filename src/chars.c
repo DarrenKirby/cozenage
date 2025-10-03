@@ -26,7 +26,7 @@
  *      Char constructors, selectors, and procedures     *
  * ------------------------------------------------------*/
 
-Cell* builtin_char_to_int(Lex* e, Cell* a) {
+Cell* builtin_char_to_int(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
@@ -36,7 +36,7 @@ Cell* builtin_char_to_int(Lex* e, Cell* a) {
     return make_val_int(a->cell[0]->c_val);
 }
 
-Cell* builtin_int_to_char(Lex* e, Cell* a) {
+Cell* builtin_int_to_char(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
@@ -50,7 +50,7 @@ Cell* builtin_int_to_char(Lex* e, Cell* a) {
     return make_val_char(val);
 }
 
-Cell* builtin_char_equal_pred(Lex* e, Cell* a) {
+Cell* builtin_char_equal_pred(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, VAL_CHAR);
     if (err) return err;
@@ -64,7 +64,7 @@ Cell* builtin_char_equal_pred(Lex* e, Cell* a) {
     return builtin_eq_op(e, cell_sexpr);
 }
 
-Cell* builtin_char_lt_pred(Lex* e, Cell* a) {
+Cell* builtin_char_lt_pred(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, VAL_CHAR);
     if (err) return err;
@@ -78,7 +78,7 @@ Cell* builtin_char_lt_pred(Lex* e, Cell* a) {
     return builtin_lt_op(e, cell_sexpr);
 }
 
-Cell* builtin_char_lte_pred(Lex* e, Cell* a) {
+Cell* builtin_char_lte_pred(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, VAL_CHAR);
     if (err) return err;
@@ -92,7 +92,7 @@ Cell* builtin_char_lte_pred(Lex* e, Cell* a) {
     return builtin_lte_op(e, cell_sexpr);
 }
 
-Cell* builtin_char_gt_pred(Lex* e, Cell* a) {
+Cell* builtin_char_gt_pred(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, VAL_CHAR);
     if (err) return err;
@@ -106,7 +106,7 @@ Cell* builtin_char_gt_pred(Lex* e, Cell* a) {
     return builtin_gt_op(e, cell_sexpr);
 }
 
-Cell* builtin_char_gte_pred(Lex* e, Cell* a) {
+Cell* builtin_char_gte_pred(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, VAL_CHAR);
     if (err) return err;

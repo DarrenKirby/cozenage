@@ -21,11 +21,11 @@
 #include "eval.h"
 
 
-Cell* builtin_eval(Lex* e, Cell* a) {
+Cell* builtin_eval(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_MIN(a, 1);
     if (err) return err;
-    Cell* args = NULL;
+    Cell* args;
     /* Convert list to s-expr if we are handed a quote */
     if (a->cell[0]->type == VAL_PAIR) {
         args = make_sexpr_from_list(a->cell[0]);
@@ -39,7 +39,7 @@ Cell* builtin_eval(Lex* e, Cell* a) {
     } else {
         args = a->cell[0];
     }
-    return coz_eval(e, args);
+    return coz_eval((Lex*)e, args);
 }
 
 void lex_add_eval_lib(Lex* e) {

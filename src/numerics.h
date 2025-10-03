@@ -24,28 +24,28 @@
 
 
 /* Basic arithmetic operators */
-Cell* builtin_add(Lex* e, Cell* a);
-Cell* builtin_sub(Lex* e, Cell* a);
-Cell* builtin_mul(Lex* e, Cell* a);
-Cell* builtin_div(Lex* e, Cell* a);
+Cell* builtin_add(const Lex* e, const Cell* a);
+Cell* builtin_sub(const Lex* e, const Cell* a);
+Cell* builtin_mul(const Lex* e, const Cell* a);
+Cell* builtin_div(const Lex* e, const Cell* a);
 /* Generic numeric operations */
-Cell* builtin_abs(Lex* e, Cell* a);
-Cell* builtin_expt(Lex* e, Cell* a);
-Cell* builtin_modulo(Lex* e, Cell* a);
-Cell* builtin_quotient(Lex* e, Cell* a);
-Cell* builtin_remainder(Lex* e, Cell* a);
-Cell* builtin_lcm(Lex* e, Cell* a);
-Cell* builtin_gcd(Lex* e, Cell* a);
-Cell* builtin_max(Lex* e, Cell* a);
-Cell* builtin_min(Lex* e, Cell* a);
-Cell* builtin_floor(Lex* e, Cell* a);
-Cell* builtin_ceiling(Lex* e, Cell* a);
-Cell* builtin_round(Lex* e, Cell* a);
-Cell* builtin_truncate(Lex* e, Cell* a);
-Cell* builtin_numerator(Lex* e, Cell* a);
-Cell* builtin_denominator(Lex* e, Cell* a);
-Cell* builtin_square(Lex* e, Cell* a);
-Cell* builtin_exact(Lex* e, Cell* a);
-Cell* builtin_inexact(Lex* e, Cell* a);
+Cell* builtin_abs(const Lex* e, const Cell* a);
+Cell* builtin_expt(const Lex* e, const Cell* a);
+Cell* builtin_modulo(const Lex* e, const Cell* a);
+Cell* builtin_quotient(const Lex* e, const Cell* a);
+Cell* builtin_remainder(const Lex* e, const Cell* a);
+Cell* builtin_lcm(const Lex* e, const Cell* a);
+Cell* builtin_gcd(const Lex* e, const Cell* a);
+Cell* builtin_max(const Lex* e, const Cell* a);
+Cell* builtin_min(const Lex* e, const Cell* a);
+Cell* builtin_floor(const Lex* e, const Cell* a);
+Cell* builtin_ceiling(const Lex* e, const Cell* a);
+Cell* builtin_round(const Lex* e, const Cell* a);
+Cell* builtin_truncate(const Lex* e, const Cell* a);
+Cell* builtin_numerator(const Lex* e, const Cell* a);
+Cell* builtin_denominator(const Lex* e, const Cell* a);
+Cell* builtin_square(const Lex* e, const Cell* a);
+Cell* builtin_exact(const Lex* e, const Cell* a);
+Cell* builtin_inexact(const Lex* e, const Cell* a);
 
 #endif //COZENAGE_NUMERICS_H

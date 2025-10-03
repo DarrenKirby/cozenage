@@ -24,14 +24,14 @@
 
 
 /* Vector constructors, selectors, and procedures */
-Cell* builtin_vector(Lex* e, Cell* a);
-Cell* builtin_vector_length(Lex* e, Cell* a);
-Cell* builtin_vector_ref(Lex* e, Cell* a);
-Cell* builtin_make_vector(Lex* e, Cell* a);
-Cell* builtin_list_to_vector(Lex* e, Cell* a);
-Cell* builtin_vector_to_list(Lex* e, Cell* a);
-Cell* builtin_vector_copy(Lex* e, Cell* a);
-Cell* builtin_vector_to_string(Lex* e, Cell* a);
-Cell* builtin_string_to_vector(Lex* e, Cell* a);
+Cell* builtin_vector(const Lex* e, const Cell* a);
+Cell* builtin_vector_length(const Lex* e, const Cell* a);
+Cell* builtin_vector_ref(const Lex* e, const Cell* a);
+Cell* builtin_make_vector(const Lex* e, const Cell* a);
+Cell* builtin_list_to_vector(const Lex* e, const Cell* a);
+Cell* builtin_vector_to_list(const Lex* e, const Cell* a);
+Cell* builtin_vector_copy(const Lex* e, const Cell* a);
+Cell* builtin_vector_to_string(const Lex* e, const Cell* a);
+Cell* builtin_string_to_vector(const Lex* e, const Cell* a);
 
 #endif //COZENAGE_VECTORS_H
