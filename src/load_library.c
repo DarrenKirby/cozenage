@@ -26,6 +26,7 @@
 #include "process_context_lib.h"
 #include "io_lib.h"
 #include "eval_lib.h"
+#include "cxr_lib.h"
 #include <string.h>
 
 
@@ -48,6 +49,7 @@ static const LibraryRegistryEntry library_registry[] = {
     {"char", lex_add_char_lib},
     {"eval", lex_add_eval_lib},
     {"write", lex_add_write_lib},
+    {"cxr", lex_add_cxr_lib},
     {nullptr, nullptr}
 };
 

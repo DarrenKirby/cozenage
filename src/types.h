@@ -178,6 +178,8 @@ Cell* cell_add(Cell* v, Cell* x);
 Cell* cell_copy(const Cell* v);
 Cell* cell_pop(Cell* v, int i);
 Cell* cell_take(Cell* v, int i);
+const char* cell_type_name(int t);
+const char* cell_mask_types(int mask);
 Cell* check_arg_types(const Cell* a, int mask);
 Cell* check_arg_arity(const Cell* a, int exact, int min, int max);
 void numeric_promote(Cell** lhs, Cell** rhs);
@@ -203,7 +205,7 @@ char* GC_strdup(const char* s);
 char* GC_strndup(const char* s, size_t n);
 int compare_named_chars(const void* key, const void* element);
 const NamedChar* find_named_char(const char* name);
-Cell* list_get_nth_cell_ptr(Cell* list, long n);
+Cell* list_get_nth_cell_ptr(const Cell* list, long n);
 char* convert_to_utf8(const UChar* ustr);
 UChar* convert_to_utf16(const char* str);
 

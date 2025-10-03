@@ -212,6 +212,9 @@ void repl() {
     if (load_libs.eval) {
         (void)load_scheme_library("eval", e);
     }
+    if (load_libs.cxr) {
+        (void)load_scheme_library("cxr", e);
+    }
 
     for (;;) {
         Cell *val = coz_read(e);

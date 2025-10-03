@@ -1078,8 +1078,8 @@ const NamedChar* find_named_char(const char* name) {
 
 /* helper to get a pointer to the value in the Nth node of a list.
  * Returns NULL if the index is out of bounds or the input is not a list. */
-Cell* list_get_nth_cell_ptr(Cell* list, long n) {
-    Cell* current = list;
+Cell* list_get_nth_cell_ptr(const Cell* list, const long n) {
+    const Cell* current = list;
     for (long i = 0; i < n; i++) {
         /* Make sure we are still on a pair before trying to get the cdr */
         if (current->type != VAL_PAIR) {
@@ -1088,7 +1088,7 @@ Cell* list_get_nth_cell_ptr(Cell* list, long n) {
         current = current->cdr;
     }
 
-    /* After the loop, `current` should be the pair holding our desired element */
+    /* After the loop, `current` is the pair holding our desired element */
     if (current->type != VAL_PAIR) {
         return nullptr;
     }

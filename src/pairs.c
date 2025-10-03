@@ -22,6 +22,31 @@
 #include "printer.h"
 
 
+/* Helpers */
+Cell* car__(const Cell* list) {
+    if (!(list->type & VAL_PAIR)) {
+        char buf[128];
+        snprintf(buf, sizeof(buf),
+                 "car: bad type: got %s, expected %s",
+                 cell_type_name(list->type),
+                 cell_mask_types(VAL_PAIR));
+        return make_val_err(buf, GEN_ERR);
+    }
+    return list->car;
+}
+
+Cell* cdr__(const Cell* list) {
+    if (!(list->type & VAL_PAIR)) {
+        char buf[128];
+        snprintf(buf, sizeof(buf),
+                 "cdr: bad type: got %s, expected %s",
+                 cell_type_name(list->type),
+                 cell_mask_types(VAL_PAIR));
+        return make_val_err(buf, GEN_ERR);
+    }
+    return list->cdr;
+}
+
 /* ----------------------------------------------------------*
  *     pair/list constructors, selectors, and procedures     *
  * ----------------------------------------------------------*/
@@ -37,9 +62,7 @@ Cell* builtin_cons(const Lex* e, const Cell* a) {
 /* 'car' -> ANY - returns the first member of a pair */
 Cell* builtin_car(const Lex* e, const Cell* a) {
     (void)e;
-    Cell* err = check_arg_types(a, VAL_PAIR);
-    if (err) { return err; }
-    err = CHECK_ARITY_EXACT(a, 1);
+    Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
     return a->cell[0]->car;
 }
@@ -55,31 +78,35 @@ Cell* builtin_cdr(const Lex* e, const Cell* a) {
 }
 
 Cell* builtin_caar(const Lex* e, const Cell* a) {
+    (void)e;
     Cell* err = check_arg_types(a, VAL_PAIR);
     if (err) { return err; }
     const Cell* car = a->cell[0]->car;
-    return builtin_car(e, make_sexpr_len1(car));
+    return car__(car);
 }
 
 Cell* builtin_cadr(const Lex* e, const Cell* a) {
+    (void)e;
     Cell* err = check_arg_types(a, VAL_PAIR);
     if (err) { return err; }
     const Cell* cdr = a->cell[0]->cdr;
-    return builtin_car(e, make_sexpr_len1(cdr));
+    return car__(cdr);
 }
 
 Cell* builtin_cdar(const Lex* e, const Cell* a) {
+    (void)e;
     Cell* err = check_arg_types(a, VAL_PAIR);
     if (err) { return err; }
     const Cell* car = a->cell[0]->car;
-    return builtin_cdr(e, make_sexpr_len1(car));
+    return cdr__(car);
 }
 
 Cell* builtin_cddr(const Lex* e, const Cell* a) {
+    (void)e;
     Cell* err = check_arg_types(a, VAL_PAIR);
     if (err) { return err; }
     const Cell* cdr = a->cell[0]->cdr;
-    return builtin_cdr(e, make_sexpr_len1(cdr));
+    return cdr__(cdr);
 }
 
 /* 'list' -> VAL_PAIR - returns a nil-terminated proper list */

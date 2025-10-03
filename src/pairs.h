@@ -22,7 +22,9 @@
 
 #include "types.h"
 
-
+/* Helpers */
+Cell* car__(const Cell* list);
+Cell* cdr__(const Cell* list);
 /* pair/list constructors, selectors, and procedures */
 Cell* builtin_cons(const Lex* e, const Cell* a);
 Cell* builtin_car(const Lex* e, const Cell* a);
