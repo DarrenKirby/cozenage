@@ -86,8 +86,8 @@ Cell* sexpr_to_list(Cell* c) {
 
 /* Evaluate a lambda call, and return the value */
 Cell* apply_lambda(Cell* lambda, const Cell* args) {
-    if (!lambda || lambda->type != VAL_PROC || lambda->builtin) {
-        return make_val_err("Not a lambda", GEN_ERR);
+    if (!lambda || lambda->type != VAL_PROC || lambda->is_builtin) {
+        return make_val_err("Not a lambda", TYPE_ERR);
     }
 
     /* Create a new child environment */
@@ -95,7 +95,7 @@ Cell* apply_lambda(Cell* lambda, const Cell* args) {
 
     /* Bind formals to arguments */
     if (lambda->formals->count != args->count) {
-        return make_val_err("Lambda: wrong number of arguments", GEN_ERR);
+        return make_val_err("Lambda: wrong number of arguments", ARITY_ERR);
     }
 
     for (int i = 0; i < args->count; i++) {
@@ -120,7 +120,7 @@ Cell* apply_lambda(Cell* lambda, const Cell* args) {
  * into the environment */
 Cell* sf_define(Lex* e, const Cell* a) {
     if (a->count < 2) {
-        return make_val_err("define requires at least 2 arguments", GEN_ERR);
+        return make_val_err("define requires at least 2 arguments", ARITY_ERR);
     }
     const Cell* target = a->cell[0];
 
@@ -129,7 +129,7 @@ Cell* sf_define(Lex* e, const Cell* a) {
         char err_buf[128];
         snprintf(err_buf, sizeof(err_buf),
                  "Syntax keyword '%s' cannot be used as a variable", target->sym);
-        return make_val_err(err_buf, GEN_ERR);
+        return make_val_err(err_buf, VALUE_ERR);
     }
 
     /* (define <symbol> <expr>) */
@@ -141,9 +141,7 @@ Cell* sf_define(Lex* e, const Cell* a) {
         }
         /* Grab the name for the un-sugared define lambda */
         if (val->type == VAL_PROC) {
-            if (!val->name) {
-                val->name = GC_strdup(target->name);
-            }
+            val->l_name = GC_strdup(target->sym);
         }
         lex_put(e, target, val);
         return val;
@@ -160,7 +158,7 @@ Cell* sf_define(Lex* e, const Cell* a) {
         Cell* formals = make_val_sexpr();
         for (int i = 1; i < target->count; i++) {
             if (target->cell[i]->type != VAL_SYM) {
-                return make_val_err("lambda formals must be symbols", GEN_ERR);
+                return make_val_err("lambda formals must be symbols", TYPE_ERR);
             }
             cell_add(formals, cell_copy(target->cell[i]));
         }
@@ -176,13 +174,13 @@ Cell* sf_define(Lex* e, const Cell* a) {
         return lam;
         }
 
-    return make_val_err("invalid define syntax", GEN_ERR);
+    return make_val_err("invalid define syntax", SYNTAX_ERR);
 }
 
 Cell* sf_quote(const Lex* e, Cell* a) {
     (void)e;
     if (a->count != 1) {
-        return make_val_err("quote takes exactly one argument", GEN_ERR);
+        return make_val_err("quote takes exactly one argument", ARITY_ERR);
     }
     /* Extract the S-expression that was quoted. */
     Cell* quoted_sexpr = cell_take(a, 0);
@@ -190,7 +188,7 @@ Cell* sf_quote(const Lex* e, Cell* a) {
     /* Flag whether to do env lookup */
     for (int i = 0; i < quoted_sexpr->count; i++) {
         if (quoted_sexpr->cell[i]->type == VAL_SYM) {
-            quoted_sexpr->cell[i]->exact = 0;
+            quoted_sexpr->cell[i]->quoted = true;
         }
     }
 
@@ -201,7 +199,7 @@ Cell* sf_quote(const Lex* e, Cell* a) {
 
 Cell* sf_lambda(Lex* e, Cell* a) {
     if (a->count < 2) {
-        return make_val_err("lambda requires formals and a body", GEN_ERR);
+        return make_val_err("lambda requires formals and a body", SYNTAX_ERR);
     }
 
     const Cell* formals = cell_pop(a, 0);   /* first arg */
@@ -210,7 +208,7 @@ Cell* sf_lambda(Lex* e, Cell* a) {
     /* formals should be a list of symbols */
     for (int i = 0; i < formals->count; i++) {
         if (formals->cell[i]->type != VAL_SYM) {
-            return make_val_err("lambda formals must be symbols", GEN_ERR);
+            return make_val_err("lambda formals must be symbols", TYPE_ERR);
         }
     }
 
@@ -225,7 +223,7 @@ Cell* sf_if(Lex* e, const Cell* a) {
 
     const Cell* test = coz_eval(e, a->cell[0]);
     if (test->type != VAL_BOOL) {
-        return make_val_err("'if' test must be a predicate", GEN_ERR);
+        return make_val_err("'if' test must be a predicate", VALUE_ERR);
     }
     Cell* result;
     if (test->b_val == 1) {
@@ -246,7 +244,7 @@ Cell* sf_when(Lex* e, const Cell* a) {
 
     const Cell* test = coz_eval(e, a->cell[0]);
     if (test->type != VAL_BOOL) {
-        return make_val_err("'when' test must be a predicate", GEN_ERR);
+        return make_val_err("'when' test must be a predicate", VALUE_ERR);
     }
     Cell* result = nullptr;
     if (test->b_val == 1) {
@@ -263,7 +261,7 @@ Cell* sf_unless(Lex* e, const Cell* a) {
 
     const Cell* test = coz_eval(e, a->cell[0]);
     if (test->type != VAL_BOOL) {
-        return make_val_err("'unless' test must be a predicate", GEN_ERR);
+        return make_val_err("'unless' test must be a predicate", VALUE_ERR);
     }
     Cell* result = nullptr;
     if (test->b_val == 0) {
@@ -282,12 +280,12 @@ Cell* sf_cond(Lex* e, const Cell* a) {
     for (int i = 0; i < a->count; i++) {
         const Cell* clause = a->cell[i];
         const Cell* test = coz_eval(e, clause->cell[0]);
-        if (test->type == VAL_PROC && strcmp(test->name, "else") == 0) {
+        if (test->type == VAL_PROC && strcmp(test->f_name, "else") == 0) {
             result = coz_eval(e, clause->cell[1]);
             break;
         }
         if (test->type != VAL_BOOL) {
-            result = make_val_err("'cond' test must be a predicate", GEN_ERR);
+            result = make_val_err("'cond' test must be a predicate", VALUE_ERR);
         }
         if (test->b_val == 1) {
             for (int j = 1; j < clause->count; j++) {

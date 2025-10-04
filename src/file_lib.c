@@ -58,7 +58,6 @@ Cell* builtin_delete_file(const Lex* e, const Cell* a) {
     const char* filename = a->cell[0]->str;
     if (unlink(filename) != 0) {
         Cell* f_err = make_val_err(strerror(errno), FILE_ERR);
-        f_err->exact = FILE_ERR;
         return f_err;
     }
     return make_val_bool(1);
@@ -78,7 +77,7 @@ Cell* builtin_open_input_file(const Lex* e, const Cell* a) {
         return make_val_err(strerror(errno), FILE_ERR);
     }
     char *actual_path = GC_MALLOC(PATH_MAX);
-    char *ptr = realpath(filename, actual_path);
+    const char *ptr = realpath(filename, actual_path);
     if (ptr == NULL) {
         fclose(fp);
         return make_val_err(strerror(errno), FILE_ERR);
@@ -122,7 +121,7 @@ Cell* builtin_open_output_file(const Lex* e, const Cell* a) {
         return make_val_err(strerror(errno), FILE_ERR);
     }
     char *actual_path = GC_MALLOC(PATH_MAX);
-    char *ptr = realpath(filename, actual_path);
+    const char *ptr = realpath(filename, actual_path);
     if (ptr == NULL) {
         fclose(fp);
         return make_val_err(strerror(errno), FILE_ERR);

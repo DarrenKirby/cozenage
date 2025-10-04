@@ -30,10 +30,10 @@ Cell* builtin_apply(const Lex* e, const Cell* a) {
     Cell* err = CHECK_ARITY_EXACT(a, 2);
     if (err) return err;
     if (a->cell[0]->type != VAL_PROC) {
-        return make_val_err("apply: arg 1 must be a procedure", GEN_ERR);
+        return make_val_err("apply: arg 1 must be a procedure", ARITY_ERR);
     }
     if (a->cell[1]->type != VAL_PAIR && a->cell[1]->len == -1) {
-        return make_val_err("apply: arg 2 must be a proper list", GEN_ERR);
+        return make_val_err("apply: arg 2 must be a proper list", TYPE_ERR);
     }
 
     const Cell* composition = make_sexpr_len2(a->cell[0], make_sexpr_from_list(a->cell[1]));
@@ -45,14 +45,14 @@ Cell* builtin_map(const Lex* e, const Cell* a) {
     Cell* err = CHECK_ARITY_MIN(a, 2);
     if (err) return err;
     if (a->cell[0]->type != VAL_PROC) {
-        return make_val_err("map: arg 1 must be a procedure", GEN_ERR);
+        return make_val_err("map: arg 1 must be a procedure", TYPE_ERR);
     }
     int shortest_list_length = INT32_MAX;
     for (int i = 1; i < a->count; i++) {
         char buf[100];
         if (a->cell[i]->type != VAL_PAIR && a->cell[i]->len == -1) {
             snprintf(buf, 100, "map: arg %d must be a proper list", i);
-            return make_val_err(buf, GEN_ERR);
+            return make_val_err(buf, TYPE_ERR);
         }
         if (a->cell[i]->len < shortest_list_length) {
             shortest_list_length = a->cell[i]->len;
@@ -69,7 +69,7 @@ Cell* builtin_map(const Lex* e, const Cell* a) {
         /* Build a (reversed) list of the i-th arguments */
         Cell* arg_list = make_val_nil();
         for (int j = 0; j < num_lists; j++) {
-            Cell* current_list = a->cell[j + 1];
+            const Cell* current_list = a->cell[j + 1];
             Cell* nth_item = list_get_nth_cell_ptr(current_list, i);
             arg_list = make_val_pair(nth_item, arg_list);
             arg_list->len = j + 1;
@@ -78,8 +78,8 @@ Cell* builtin_map(const Lex* e, const Cell* a) {
         /* Correct the argument order */
         Cell* reversed_arg_list = builtin_list_reverse(e, make_sexpr_len1(arg_list));
 
-        Cell* tmp_result = NULL;
-        if (proc->builtin) {
+        Cell* tmp_result;
+        if (proc->is_builtin) {
             Cell* (*func)(const Lex *, const Cell *) = proc->builtin;
             tmp_result = func(e, make_sexpr_from_list(reversed_arg_list));
         } else {

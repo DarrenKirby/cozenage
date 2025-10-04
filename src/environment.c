@@ -73,7 +73,7 @@ Cell* lex_get(const Lex* e, const Cell* k) {
 
     char buf[128];
     snprintf(buf, sizeof(buf), "Unbound symbol: '%s'", k->sym);
-    return make_val_err(buf, GEN_ERR);
+    return make_val_err(buf, VALUE_ERR);
 }
 
 /* Place a Cell* value into an environment */
@@ -109,11 +109,9 @@ void lex_put(Lex* e, const Cell* k, const Cell* v) {
 Cell* lex_make_builtin(const char* name, Cell* (*func)(const Lex*, const Cell*)) {
     Cell* c = GC_MALLOC(sizeof(Cell));
     c->type = VAL_PROC;
-    c->name = GC_strdup(name);
+    c->f_name = GC_strdup(name);
     c->builtin = func;
-    c->formals = nullptr;
-    c->body = nullptr;
-    c->env = nullptr;
+    c->is_builtin = true;
     return c;
 }
 
@@ -121,11 +119,11 @@ Cell* lex_make_builtin(const char* name, Cell* (*func)(const Lex*, const Cell*))
 Cell* lex_make_named_lambda(const char* name, const Cell* formals, const Cell* body, Lex* env) {
     Cell* c = GC_MALLOC(sizeof(Cell));
     c->type = VAL_PROC;
-    c->name = GC_strdup(name);  /* optional */
-    c->builtin = nullptr;
+    c->l_name = GC_strdup(name);  /* optional */
     c->formals = cell_copy(formals);
     c->body = cell_copy(body);
     c->env = env;  /* do NOT copy, just store pointer */
+    c->is_builtin = false;
     return c;
 }
 
@@ -133,11 +131,11 @@ Cell* lex_make_named_lambda(const char* name, const Cell* formals, const Cell* b
 Cell* lex_make_lambda(const Cell* formals, const Cell* body, Lex* env) {
     Cell* c = GC_MALLOC(sizeof(Cell));
     c->type = VAL_PROC;
-    c->name = nullptr;  /* No name */
-    c->builtin = nullptr;
+    c->l_name = nullptr;  /* No name */
     c->formals = cell_copy(formals);
     c->body = cell_copy(body);
     c->env = env;  /* do NOT copy, just store pointer */
+    c->is_builtin = false;
     return c;
 }
 

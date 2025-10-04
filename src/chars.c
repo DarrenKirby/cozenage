@@ -45,7 +45,7 @@ Cell* builtin_int_to_char(const Lex* e, const Cell* a) {
 
     const UChar32 val = (int)a->cell[0]->i_val;
     if (val < 0 || val > 0x10FFFF) {
-        return make_val_err("integer->char: invalid code point", GEN_ERR);
+        return make_val_err("integer->char: invalid code point", VALUE_ERR);
     }
     return make_val_char(val);
 }
@@ -60,7 +60,7 @@ Cell* builtin_char_equal_pred(const Lex* e, const Cell* a) {
         cells[i] = make_val_int(a->cell[i]->c_val);
     }
 
-    Cell* cell_sexpr = make_sexpr_from_array(a->count, cells);
+    const Cell* cell_sexpr = make_sexpr_from_array(a->count, cells);
     return builtin_eq_op(e, cell_sexpr);
 }
 
@@ -74,7 +74,7 @@ Cell* builtin_char_lt_pred(const Lex* e, const Cell* a) {
         cells[i] = make_val_int(a->cell[i]->c_val);
     }
 
-    Cell* cell_sexpr = make_sexpr_from_array(a->count, cells);
+    const Cell* cell_sexpr = make_sexpr_from_array(a->count, cells);
     return builtin_lt_op(e, cell_sexpr);
 }
 
@@ -88,7 +88,7 @@ Cell* builtin_char_lte_pred(const Lex* e, const Cell* a) {
         cells[i] = make_val_int(a->cell[i]->c_val);
     }
 
-    Cell* cell_sexpr = make_sexpr_from_array(a->count, cells);
+    const Cell* cell_sexpr = make_sexpr_from_array(a->count, cells);
     return builtin_lte_op(e, cell_sexpr);
 }
 
@@ -102,7 +102,7 @@ Cell* builtin_char_gt_pred(const Lex* e, const Cell* a) {
         cells[i] = make_val_int(a->cell[i]->c_val);
     }
 
-    Cell* cell_sexpr = make_sexpr_from_array(a->count, cells);
+    const Cell* cell_sexpr = make_sexpr_from_array(a->count, cells);
     return builtin_gt_op(e, cell_sexpr);
 }
 
@@ -116,6 +116,6 @@ Cell* builtin_char_gte_pred(const Lex* e, const Cell* a) {
         cells[i] = make_val_int(a->cell[i]->c_val);
     }
 
-    Cell* cell_sexpr = make_sexpr_from_array(a->count, cells);
+    const Cell* cell_sexpr = make_sexpr_from_array(a->count, cells);
     return builtin_gte_op(e, cell_sexpr);
 }

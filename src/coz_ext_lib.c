@@ -29,7 +29,7 @@ Cell* builtin_print_env(const Lex* e, const Cell* a) {
     (void)a;
     print_env(e);
     /* for side effects - no useful return value */
-    return NULL;
+    return nullptr;
 }
 
 void lex_add_coz_ext(Lex* e) {

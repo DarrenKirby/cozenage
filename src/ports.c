@@ -111,7 +111,7 @@ Cell* builtin_close_port(const Lex* e, const Cell* a) {
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
     if (a->cell[0]->type != VAL_PORT) {
-        return make_val_err("arg1 is not a port", GEN_ERR);
+        return make_val_err("arg1 is not a port", TYPE_ERR);
     }
 
     if (a->cell[0]->is_open == 1) {
@@ -128,7 +128,7 @@ Cell* builtin_read_line(const Lex* e, const Cell* a) {
     err = check_arg_types(a, VAL_PORT);
     if (err) return err;
 
-    Cell* port = NULL;
+    Cell* port;
     if (a->count == 0) {
         port = builtin_current_input_port(e, a);
     } else {
@@ -138,7 +138,7 @@ Cell* builtin_read_line(const Lex* e, const Cell* a) {
     if (port->is_open == 0 || port->port_t != INPUT_PORT)
         return make_val_err("port is not open for input", GEN_ERR);
 
-    char *line = NULL;
+    char *line = nullptr;
     size_t n = 0;
     const ssize_t len = getline(&line, &n, port->fh);
     if (len <= 0) { free(line); return make_val_eof(); }
@@ -155,14 +155,14 @@ Cell* builtin_write_string(const Lex* e, const Cell* a) {
     Cell* err = CHECK_ARITY_RANGE(a, 1, 4);
     if (err) return err;
     if (a->cell[0]->type != VAL_STR) {
-        return make_val_err("arg1 must be a string", GEN_ERR);
+        return make_val_err("arg1 must be a string", TYPE_ERR);
     }
     if (a->count >= 2) {
         if (a->cell[1]->type != VAL_PORT) {
-            return make_val_err("arg2 must be a port", GEN_ERR);
+            return make_val_err("arg2 must be a port", TYPE_ERR);
         }
     }
-    Cell* port = NULL;
+    Cell* port;
     if (a->count == 1) {
         port = builtin_current_output_port(e, a);
     } else {
@@ -172,7 +172,7 @@ Cell* builtin_write_string(const Lex* e, const Cell* a) {
         return make_val_err(strerror(errno), FILE_ERR);
     }
     /* No meaningful return value */
-    return NULL;
+    return nullptr;
 }
 
 Cell* builtin_newline(const Lex* e, const Cell* a) {
@@ -180,7 +180,7 @@ Cell* builtin_newline(const Lex* e, const Cell* a) {
     Cell* err = CHECK_ARITY_RANGE(a, 0, 1);
     if (err) return err;
 
-    Cell* port = NULL;
+    Cell* port;
     if (a->count == 0) {
         port = builtin_current_output_port(e, a);
     } else {
@@ -190,5 +190,5 @@ Cell* builtin_newline(const Lex* e, const Cell* a) {
         return make_val_err(strerror(errno), FILE_ERR);
     }
     /* No meaningful return value */
-    return NULL;
+    return nullptr;
 }

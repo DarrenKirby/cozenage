@@ -32,7 +32,7 @@ Cell* builtin_bytevector(const Lex* e, const Cell* a) {
     Cell *vec = make_val_bytevec();
     for (int i = 0; i < a->count; i++) {
         if (a->cell[i]->type != VAL_INT || a->cell[i]->i_val < 0 || a->cell[i]->i_val > 255) {
-            return make_val_err("bytevector: args must be integers 0 to 255 inclusive", GEN_ERR);
+            return make_val_err("bytevector: args must be integers 0 to 255 inclusive", VALUE_ERR);
         }
         cell_add(vec, a->cell[i]);
     }
@@ -54,15 +54,15 @@ Cell* builtin_bytevector_ref(const Lex* e, const Cell* a) {
     Cell* err = CHECK_ARITY_EXACT(a, 2);
     if (err) return err;
     if (a->cell[0]->type != VAL_BYTEVEC) {
-        return make_val_err("bytevector-ref: arg 1 must be a vector", GEN_ERR);
+        return make_val_err("bytevector-ref: arg 1 must be a vector", TYPE_ERR);
     }
     if (a->cell[1]->type != VAL_INT) {
-        return make_val_err("bytevector-ref: arg 2 must be an integer", GEN_ERR);
+        return make_val_err("bytevector-ref: arg 2 must be an integer", TYPE_ERR);
     }
     const int i = (int)a->cell[1]->i_val;
 
     if (i >= a->cell[0]->count) {
-        return make_val_err("bytevector-ref: index out of bounds", GEN_ERR);
+        return make_val_err("bytevector-ref: index out of bounds", INDEX_ERR);
     }
     return a->cell[0]->cell[i];
 }
@@ -72,17 +72,17 @@ Cell* builtin_make_bytevector(const Lex* e, const Cell* a) {
     Cell* err = CHECK_ARITY_RANGE(a, 1, 2);
     if (err) return err;
     if (a->cell[0]->type != VAL_INT) {
-        return make_val_err("make-bytevector: arg 1 must be an integer", GEN_ERR);
+        return make_val_err("make-bytevector: arg 1 must be an integer", TYPE_ERR);
     }
     const long long n = a->cell[0]->i_val;
     if (n < 1) {
-        return make_val_err("make-bytevector: arg 1 must be non-negative", GEN_ERR);
+        return make_val_err("make-bytevector: arg 1 must be non-negative", VALUE_ERR);
     }
     Cell* fill;
     if (a->count == 2) {
         fill = a->cell[1];
         if (fill->i_val < 0 || fill->i_val > 255) {
-            return make_val_err("make-bytevector: arg 2 must be between 0 and 255 inclusive", GEN_ERR);
+            return make_val_err("make-bytevector: arg 2 must be between 0 and 255 inclusive", VALUE_ERR);
         }
     } else {
         fill = make_val_int(0);
@@ -99,7 +99,7 @@ Cell* builtin_bytevector_copy(const Lex* e, const Cell* a) {
     Cell* err = CHECK_ARITY_RANGE(a, 1, 3);
     if (err) return err;
     if (a->cell[0]->type != VAL_BYTEVEC) {
-        return make_val_err("bytevector->copy: arg 1 must be a vector", GEN_ERR);
+        return make_val_err("bytevector->copy: arg 1 must be a vector", TYPE_ERR);
     }
     int start = 0;
     int end = a->cell[0]->count;

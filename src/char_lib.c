@@ -33,7 +33,7 @@ Cell* builtin_char_alphabetic(const Lex* e, const Cell* a) {
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
     if (a->cell[0]->type != VAL_CHAR) {
-        return make_val_err("char-alphabetic?: arg 1 must be a char", GEN_ERR);
+        return make_val_err("char-alphabetic?: arg 1 must be a char", TYPE_ERR);
     }
     return make_val_bool(u_isalpha(a->cell[0]->c_val));
 }
@@ -43,7 +43,7 @@ Cell* builtin_char_whitespace(const Lex* e, const Cell* a) {
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
     if (a->cell[0]->type != VAL_CHAR) {
-        return make_val_err("char-whitespace?: arg 1 must be a char", GEN_ERR);
+        return make_val_err("char-whitespace?: arg 1 must be a char", TYPE_ERR);
     }
     return make_val_bool(u_isspace(a->cell[0]->c_val));
 }
@@ -53,7 +53,7 @@ Cell* builtin_char_numeric(const Lex* e, const Cell* a) {
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
     if (a->cell[0]->type != VAL_CHAR) {
-        return make_val_err("char-numeric?: arg 1 must be a char", GEN_ERR);
+        return make_val_err("char-numeric?: arg 1 must be a char", TYPE_ERR);
     }
     return make_val_bool(u_isdigit(a->cell[0]->c_val));
 }
@@ -63,7 +63,7 @@ Cell* builtin_char_upper_case(const Lex* e, const Cell* a) {
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
     if (a->cell[0]->type != VAL_CHAR) {
-        return make_val_err("char-upper-case?: arg 1 must be a char", GEN_ERR);
+        return make_val_err("char-upper-case?: arg 1 must be a char", TYPE_ERR);
     }
     return make_val_bool(u_isupper(a->cell[0]->c_val));
 }
@@ -73,7 +73,7 @@ Cell* builtin_char_lower_case(const Lex* e, const Cell* a) {
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
     if (a->cell[0]->type != VAL_CHAR) {
-        return make_val_err("char-lower-case?: arg 1 must be a char", GEN_ERR);
+        return make_val_err("char-lower-case?: arg 1 must be a char", TYPE_ERR);
     }
     return make_val_bool(u_islower(a->cell[0]->c_val));
 }
@@ -83,7 +83,7 @@ Cell* builtin_char_upcase(const Lex* e, const Cell* a) {
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
     if (a->cell[0]->type != VAL_CHAR) {
-        return make_val_err("char-upcase: arg 1 must be a char", GEN_ERR);
+        return make_val_err("char-upcase: arg 1 must be a char", TYPE_ERR);
     }
     return make_val_char(u_toupper(a->cell[0]->c_val));
 }
@@ -93,7 +93,7 @@ Cell* builtin_char_downcase(const Lex* e, const Cell* a) {
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
     if (a->cell[0]->type != VAL_CHAR) {
-        return make_val_err("char-downcase: arg 1 must be a char", GEN_ERR);
+        return make_val_err("char-downcase: arg 1 must be a char", TYPE_ERR);
     }
     return make_val_char(u_tolower(a->cell[0]->c_val));
 }
@@ -103,7 +103,7 @@ Cell* builtin_char_foldcase(const Lex* e, const Cell* a) {
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
     if (a->cell[0]->type != VAL_CHAR) {
-        return make_val_err("char-foldcase: arg 1 must be a char", GEN_ERR);
+        return make_val_err("char-foldcase: arg 1 must be a char", TYPE_ERR);
     }
     const unsigned char c = a->cell[0]->c_val;
     return make_val_char(u_foldCase(c, U_FOLD_CASE_DEFAULT));
@@ -114,7 +114,7 @@ Cell* builtin_digit_value(const Lex* e, const Cell* a) {
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
     if (a->cell[0]->type != VAL_CHAR) {
-        return make_val_err("digit-value: arg 1 must be a char", GEN_ERR);
+        return make_val_err("digit-value: arg 1 must be a char", TYPE_ERR);
     }
 
     const int32_t value = u_charDigitValue(a->cell[0]->c_val);
@@ -214,7 +214,7 @@ Cell* builtin_string_downcase(const Lex* e, const Cell* a) {
 
     UErrorCode status = U_ZERO_ERROR;
     UChar* src = convert_to_utf16(a->cell[0]->str);
-    if (!src) return make_val_err("string-downcase: malformed UTF-8 string", GEN_ERR);
+    if (!src) return make_val_err("string-downcase: malformed UTF-8 string", VALUE_ERR);
 
     const int32_t src_len = u_countChar32(src, -1);
 
@@ -229,7 +229,7 @@ Cell* builtin_string_downcase(const Lex* e, const Cell* a) {
 
     char* result = convert_to_utf8(dst);
     if (!result) {
-        return make_val_err("string-downcase: malformed UTF-8 string", GEN_ERR);
+        return make_val_err("string-downcase: malformed UTF-8 string", VALUE_ERR);
     }
     return make_val_str(result);
 }
@@ -243,7 +243,7 @@ Cell* builtin_string_upcase(const Lex* e, const Cell* a) {
 
     UErrorCode status = U_ZERO_ERROR;
     UChar* src = convert_to_utf16(a->cell[0]->str);
-    if (!src) return make_val_err("string-upcase: malformed UTF-8 string", GEN_ERR);
+    if (!src) return make_val_err("string-upcase: malformed UTF-8 string", VALUE_ERR);
 
     const int32_t src_len = u_countChar32(src, -1);
 
@@ -258,7 +258,7 @@ Cell* builtin_string_upcase(const Lex* e, const Cell* a) {
 
     char* result = convert_to_utf8(dst);
     if (!result) {
-        return make_val_err("string-upcase: malformed UTF-8 string", GEN_ERR);
+        return make_val_err("string-upcase: malformed UTF-8 string", VALUE_ERR);
     }
     return make_val_str(result);
 }
@@ -272,7 +272,7 @@ Cell* builtin_string_foldcase(const Lex* e, const Cell* a) {
 
     UErrorCode status = U_ZERO_ERROR;
     UChar* src = convert_to_utf16(a->cell[0]->str);
-    if (!src) return make_val_err("string-foldcase: malformed UTF-8 string", GEN_ERR);
+    if (!src) return make_val_err("string-foldcase: malformed UTF-8 string", VALUE_ERR);
 
     const int32_t src_len = u_countChar32(src, -1);
 
@@ -286,7 +286,7 @@ Cell* builtin_string_foldcase(const Lex* e, const Cell* a) {
 
     char* result = convert_to_utf8(dst);
     if (!result) {
-        return make_val_err("string-foldcase: malformed UTF-8 string", GEN_ERR);
+        return make_val_err("string-foldcase: malformed UTF-8 string", VALUE_ERR);
     }
     return make_val_str(result);
 }

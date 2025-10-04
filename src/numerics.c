@@ -213,7 +213,7 @@ Cell* builtin_div(const Lex* e, const Cell* a) {
         switch (result->type) {
         case VAL_INT:
             if (rhs->i_val == 0) {
-                return make_val_err("Division by zero.", GEN_ERR);
+                return make_val_err("Division by zero.", VALUE_ERR);
             }
             /* pretty hacky way to get (/ 9 3) -> 3 but (/ 10 3) -> 10/3 */
             const double r = remainder((double)result->i_val, (double)rhs->i_val);
@@ -232,7 +232,7 @@ Cell* builtin_div(const Lex* e, const Cell* a) {
             break;
         case VAL_REAL:
             if (rhs->r_val == 0) {
-                return make_val_err("Division by zero.", GEN_ERR);
+                return make_val_err("Division by zero.", VALUE_ERR);
             }
             result->r_val /= rhs->r_val;
             break;
@@ -464,7 +464,7 @@ Cell* builtin_max(const Lex* e, const Cell* a) {
     /* Validate that all arguments are real numbers. */
     for (int i = 0; i < a->count; i++) {
         if (!cell_is_real(a->cell[i])) {
-            return make_val_err("max: all arguments must be real numbers", GEN_ERR);
+            return make_val_err("max: all arguments must be real numbers", TYPE_ERR);
         }
     }
 
@@ -491,7 +491,7 @@ Cell* builtin_min(const Lex* e, const Cell* a) {
 
     for (int i = 0; i < a->count; i++) {
         if (!cell_is_real(a->cell[i])) {
-            return make_val_err("min: all arguments must be real numbers", GEN_ERR);
+            return make_val_err("min: all arguments must be real numbers", TYPE_ERR);
         }
     }
 

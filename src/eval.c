@@ -36,13 +36,13 @@ Cell* coz_eval(Lex* e, Cell* v) {
                 char err_buf[128];
                 snprintf(err_buf, sizeof(err_buf),
                          "Syntax keyword '%s' cannot be used as a variable", v->sym);
-                return make_val_err(err_buf, GEN_ERR);
+                return make_val_err(err_buf, SYNTAX_ERR);
             }
-            if (v->exact) {
-                Cell* x = lex_get(e, v);
-                return x;
+            if (v->quoted) {
+                return v;
             }
-            return v;
+            Cell* x = lex_get(e, v);
+            return x;
         }
         /* S-expressions: recursively evaluate */
         case VAL_SEXPR:
@@ -120,7 +120,7 @@ Cell* eval_sexpr(Lex* e, Cell* v) {
         printf(ANSI_RED_B);
         print_cell(f);
         printf("%s: ", ANSI_RESET);
-        return make_val_err("S-expression does not start with a procedure", GEN_ERR);
+        return make_val_err("S-expression does not start with a procedure", TYPE_ERR);
     }
 
     /* Evaluate arguments */
@@ -133,7 +133,7 @@ Cell* eval_sexpr(Lex* e, Cell* v) {
 
     /* Apply function */
     Cell* result;
-    if (f->builtin) {
+    if (f->is_builtin) {
         result = f->builtin(e, v);
     } else {
         result = apply_lambda(f, v);

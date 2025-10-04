@@ -36,7 +36,7 @@ Cell* builtin_display(const Lex* e, const Cell* a) {
         port = builtin_current_output_port(e, a);
     } else {
         if (a->cell[1]->type != VAL_PORT) {
-            return make_val_err("arg1 must be a port", GEN_ERR);
+            return make_val_err("arg1 must be a port", TYPE_ERR);
         }
         port = a->cell[1];
     }

@@ -56,15 +56,15 @@ Cell* builtin_vector_ref(const Lex* e, const Cell* a) {
     Cell* err = CHECK_ARITY_EXACT(a, 2);
     if (err) return err;
     if (a->cell[0]->type != VAL_VEC) {
-        return make_val_err("vector-ref: arg 1 must be a vector", GEN_ERR);
+        return make_val_err("vector-ref: arg 1 must be a vector", TYPE_ERR);
     }
     if (a->cell[1]->type != VAL_INT) {
-        return make_val_err("vector-ref: arg 2 must be an integer", GEN_ERR);
+        return make_val_err("vector-ref: arg 2 must be an integer", TYPE_ERR);
     }
     const int i = (int)a->cell[1]->i_val;
 
     if (i >= a->cell[0]->count) {
-        return make_val_err("vector-ref: index out of bounds", GEN_ERR);
+        return make_val_err("vector-ref: index out of bounds", INDEX_ERR);
     }
     return a->cell[0]->cell[i];
 }
@@ -74,11 +74,11 @@ Cell* builtin_make_vector(const Lex* e, const Cell* a) {
     Cell* err = CHECK_ARITY_RANGE(a, 1, 2);
     if (err) return err;
     if (a->cell[0]->type != VAL_INT) {
-        return make_val_err("make-vector: arg 1 must be an integer", GEN_ERR);
+        return make_val_err("make-vector: arg 1 must be an integer", TYPE_ERR);
     }
     long long n = a->cell[0]->i_val;
     if (n < 1) {
-        return make_val_err("make-vector: arg 1 must be non-negative", GEN_ERR);
+        return make_val_err("make-vector: arg 1 must be non-negative", VALUE_ERR);
     }
     Cell* fill;
     if (a->count == 2) {
@@ -98,11 +98,11 @@ Cell* builtin_list_to_vector(const Lex* e, const Cell* a) {
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
     if (a->cell[0]->type != VAL_PAIR) {
-        return make_val_err("list->vector: arg 1 must be a list", GEN_ERR);
+        return make_val_err("list->vector: arg 1 must be a list", TYPE_ERR);
     }
     const int list_len = a->cell[0]->len;
     if (list_len == -1) {
-        return make_val_err("list->vector: arg 1 must be a proper list", GEN_ERR);
+        return make_val_err("list->vector: arg 1 must be a proper list", TYPE_ERR);
     }
     const Cell* lst = a->cell[0];
     Cell *vec = make_val_vect();
@@ -118,32 +118,32 @@ Cell* builtin_vector_to_list(const Lex* e, const Cell* a) {
     Cell* err = CHECK_ARITY_RANGE(a, 1, 3);
     if (err) return err;
     if (a->cell[0]->type != VAL_VEC) {
-        return make_val_err("vector->list: arg 1 must be a vector", GEN_ERR);
+        return make_val_err("vector->list: arg 1 must be a vector", TYPE_ERR);
     }
     int start = 0;
     int end = a->cell[0]->count;
 
     if (a->count == 2) {
         if (a->cell[1]->type != VAL_INT) {
-            return make_val_err("vector->list: arg 2 must be an integer", GEN_ERR);
+            return make_val_err("vector->list: arg 2 must be an integer", TYPE_ERR);
         }
         start = (int)a->cell[1]->i_val;
         if (start < 0) {
-            return make_val_err("vector->list: arg 2 must be non-negative", GEN_ERR);
+            return make_val_err("vector->list: arg 2 must be non-negative", VALUE_ERR);
         }
     }
 
     if (a->count == 3) {
         if (a->cell[2]->type != VAL_INT) {
-            return make_val_err("vector->list: arg 2 must be an integer", GEN_ERR);
+            return make_val_err("vector->list: arg 2 must be an integer", TYPE_ERR);
         }
         start = (int)a->cell[1]->i_val;
         end = (int)a->cell[2]->i_val + 1;
         if (end < 0) {
-            return make_val_err("vector->list: arg 2 must be non-negative", GEN_ERR);
+            return make_val_err("vector->list: arg 2 must be non-negative", VALUE_ERR);
         }
         if (end > a->cell[0]->count) {
-            return make_val_err("vector->list: index out of bounds", GEN_ERR);
+            return make_val_err("vector->list: index out of bounds", INDEX_ERR);
         }
     }
 
@@ -162,7 +162,7 @@ Cell* builtin_vector_copy(const Lex* e, const Cell* a) {
     Cell* err = CHECK_ARITY_RANGE(a, 1, 3);
     if (err) return err;
     if (a->cell[0]->type != VAL_VEC) {
-        return make_val_err("vector->copy: arg 1 must be a vector", GEN_ERR);
+        return make_val_err("vector->copy: arg 1 must be a vector", TYPE_ERR);
     }
     int start = 0;
     int end = a->cell[0]->count;
@@ -188,20 +188,20 @@ Cell* builtin_vector_to_string(const Lex* e, const Cell* a) {
     Cell* err = CHECK_ARITY_RANGE(a, 1, 3);
     if (err) return err;
     if (a->cell[0]->type != VAL_VEC) {
-        return make_val_err("vector->string: arg must be a vector", GEN_ERR);
+        return make_val_err("vector->string: arg must be a vector", TYPE_ERR);
     }
     int start = 0;
     int end = a->cell[0]->count;
     char* the_string = GC_MALLOC_ATOMIC(end * 4 + 1);
     if (a->count == 2) {
         if (a->cell[1]->type != VAL_INT) {
-            return make_val_err("vector->string: arg2 must be an integer", GEN_ERR);
+            return make_val_err("vector->string: arg2 must be an integer", TYPE_ERR);
         }
         start = (int)a->cell[1]->i_val;
     }
     if (a->count == 3) {
         if (a->cell[1]->type != VAL_INT) {
-            return make_val_err("vector->string: arg3 must be an integer", GEN_ERR);
+            return make_val_err("vector->string: arg3 must be an integer", TYPE_ERR);
         }
         end = (int)a->cell[2]->i_val;
     }
@@ -210,7 +210,7 @@ Cell* builtin_vector_to_string(const Lex* e, const Cell* a) {
     for (int i = start; i < end; i++) {
         const Cell* char_cell = a->cell[0]->cell[i];
         if (char_cell->type != VAL_CHAR) {
-            return make_val_err("vector->string: vector must have only chars as members", GEN_ERR);
+            return make_val_err("vector->string: vector must have only chars as members", TYPE_ERR);
         }
         const UChar32 code_point = char_cell->c_val;
         U8_APPEND_UNSAFE(the_string, j, code_point);
@@ -225,7 +225,7 @@ Cell* builtin_string_to_vector(const Lex* e, const Cell* a) {
     Cell* err = CHECK_ARITY_RANGE(a, 1, 3);
     if (err) return err;
     if (a->cell[0]->type != VAL_STR) {
-        return make_val_err("string->vector: arg1 must be a string", GEN_ERR);
+        return make_val_err("string->vector: arg1 must be a string", TYPE_ERR);
     }
 
     const char* the_string = a->cell[0]->str;
@@ -237,13 +237,13 @@ Cell* builtin_string_to_vector(const Lex* e, const Cell* a) {
 
     if (a->count >= 2) {
         if (a->cell[1]->type != VAL_INT) {
-            return make_val_err("string->vector: arg2 must be an integer", GEN_ERR);
+            return make_val_err("string->vector: arg2 must be an integer", TYPE_ERR);
         }
         start_char_idx = (int)a->cell[1]->i_val;
     }
     if (a->count == 3) {
         if (a->cell[2]->type != VAL_INT) {
-            return make_val_err("string->vector: arg3 must be an integer", GEN_ERR);
+            return make_val_err("string->vector: arg3 must be an integer", TYPE_ERR);
         }
         end_char_idx = (int)a->cell[2]->i_val;
     }

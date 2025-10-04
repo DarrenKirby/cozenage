@@ -115,15 +115,26 @@ void print_cell(const Cell* v) {
         break;
 #endif
 
-    case VAL_ERR:
+    case VAL_ERR: {
+        char *err_str;
+        switch (v->err_t) {
+            case FILE_ERR: { err_str = "File error:"; break; }
+            case READ_ERR: { err_str = "Read error:"; break; }
+            case SYNTAX_ERR: { err_str = "Syntax error:"; break; }
+            case ARITY_ERR: { err_str = "Arity error:"; break; }
+            case TYPE_ERR: { err_str = "Type error:"; break; }
+            case INDEX_ERR: { err_str = "Index error:"; break; }
+            case VALUE_ERR: { err_str = "Value error:"; break; }
+            default: { err_str = "Error: "; break; }
+        }
 #ifdef TESTING__
-        printf(" %s: %s", v->err_t == GEN_ERR ? "Error" : "File error", v->err);
+        printf(" %s %s", err_str, v->err);
         break;
 #else
-        printf(" %s%s:%s %s", ANSI_RED_B, v->err_t == GEN_ERR ? "Error" : "File error", ANSI_RESET, v->err);
+        printf(" %s%s %s %s", ANSI_RED_B, err_str, ANSI_RESET, v->err);
         break;
 #endif
-
+    }
     case VAL_CHAR:
         switch (v->c_val) {
         case '\n': printf("#\\newline");   break;
@@ -145,10 +156,10 @@ void print_cell(const Cell* v) {
         break;
 
     case VAL_PROC:
-        if (!v->formals) {
-            printf("<builtin procedure '%s%s%s'>", ANSI_GREEN_B, v->name, ANSI_RESET);
+        if (v->is_builtin) {
+            printf("<builtin procedure '%s%s%s'>", ANSI_GREEN_B, v->f_name, ANSI_RESET);
         } else {
-            printf("<lambda '%s%s%s'>", ANSI_GREEN_B, v->name, ANSI_RESET);
+            printf("<lambda '%s%s%s'>", ANSI_GREEN_B, v->l_name ? v->l_name : "anonymous", ANSI_RESET);
         }
         break;
 
@@ -200,10 +211,6 @@ void print_env(const Lex* e) {
     for (int i = 0; i < e->count; i++) {
         printf("%s -> ", e->syms[i]);
         print_cell(e->vals[i]);
-        if (e->vals[i]->type == VAL_PROC) {
-            printf(" Name:  %s \n", e->vals[i]->name);
-        } else {
-            printf("\n");
-        }
+        printf("\n");
     }
 }

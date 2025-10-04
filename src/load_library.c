@@ -79,5 +79,5 @@ Cell* load_scheme_library(const char* lib_name, Lex* env) {
     /* If we get here, the library wasn't found. */
     char buf[512];
     snprintf(buf, 511, "library '%s' not found.", lib_name);
-    return make_val_err(buf, GEN_ERR);
+    return make_val_err(buf, VALUE_ERR);
 }

@@ -22,8 +22,6 @@
 
 #include "parser.h"
 #include "environment.h"
-#include <stddef.h>
-#include <stdbool.h>
 #include <stdio.h>
 #include <unicode/umachine.h>
 
@@ -41,25 +39,27 @@ check_arg_arity((a), -1, -1, (n))
 #define CHECK_ARITY_RANGE(a, lo, hi) \
 check_arg_arity((a), -1, (lo), (hi))
 
-#define VAL_AS_NUM(v) \
-((v)->type == VAL_INT ? (long double)(v)->i_val : (v)->r_val)
-
 /* enum for error types */
 typedef enum {
     GEN_ERR,
     FILE_ERR,
     READ_ERR,
+    SYNTAX_ERR,
+    ARITY_ERR,
+    TYPE_ERR,
+    INDEX_ERR,
+    VALUE_ERR,
 } err_t;
 
 /* enums for port types */
 typedef enum {
     INPUT_PORT,
-    OUTPUT_PORT,
+    OUTPUT_PORT
 } port_t;
 
 typedef enum {
     TEXT_PORT,
-    BINARY_PORT,
+    BINARY_PORT
 } stream_t;
 
 /* Cell_t type enum */
@@ -79,7 +79,7 @@ typedef enum {
     VAL_VEC     = 1 << 10,  /* vector */
     VAL_BYTEVEC = 1 << 11,  /* byte vector */
 
-    VAL_SEXPR   = 1 << 12,  /* a 'list' of types, used internally */
+    VAL_SEXPR   = 1 << 12,  /* an array of values, used internally */
     VAL_PROC    = 1 << 13,  /* procedure */
     VAL_PORT    = 1 << 14,  /* port */
     VAL_CONT    = 1 << 15,  /* continuation (maybe) */
@@ -90,58 +90,76 @@ typedef enum {
 
 /* Definition of the Cell struct/tagged union */
 typedef struct Cell {
-    Cell_t type;              /* type of data the Cell holds */
-    int exact;                /* exact/inexact flag for numerics */
+    Cell_t type;        /* type of data the Cell holds */
 
     union {
+        struct {
+            int count;   /* length of compound type */
+        };
+        struct {
+            int len;     /* length of proper list (-1 for improper) */
+        };
+        struct {
+            int err_t;    /* error type */
+        };
+        struct {
+            bool exact;    /* exact/inexact flag for numerics*/
+        };
+        struct {
+            bool is_open;  /* port open/closed status */
+        };
+        struct {
+            bool quoted;   /* whether a symbol has been quoted or not */
+        };
+        struct {
+            bool is_builtin;
+        };
+    };
+
+    union {
+        /* Anonymous and named lambdas */
+        struct {
+            char* l_name;     /* name of builtin and named lambda procedures */
+            Cell* formals;    /* non-NULL → user-defined lambda */
+            Cell* body;       /* S-expression for lambda */
+            Lex* env;         /* closure environment */
+        };
+        /* Ports */
+        struct {
+            char* path;       /* file path of associated fh */
+            FILE* fh;         /* the file handle */
+            int port_t;       /* input or output */
+            int stream_t;     /* binary or textual */
+        };
+        /* builtin procedures */
+        struct {
+            char* f_name;      /* name of builtin and named lambda procedures */
+            Cell* (*builtin)(const Lex*, const Cell*); /* builtin procedures */
+        };
+        /* Pairs */
+        struct {
+            Cell* car;        /* first member */
+            Cell* cdr;        /* second member */
+        };
+        /* Rationals */
+        struct {
+            long int num;     /* numerator */
+            long int den;     /* denominator */
+        };
+        /* Complex numbers */
+        struct {
+            Cell* real;       /* real part */
+            Cell* imag;       /* imaginary part */
+        };
+        /* Single-field types */
+        Cell** cell;          /* for compound types (sexpr, vector, bytevector) */
+        char* sym;            /* symbols */
+        char* str;            /* strings */
+        char* err;            /* error string */
         long double r_val;    /* reals */
         long long int i_val;  /* integers */
-        int b_val;            /* 0 = false, 1 = true */
-        UChar32 c_val;          /* character literal #\a */
-        char* sym;              /* symbols */
-        char* str;              /* strings */
-
-        struct {              /* errors */
-            int err_t;
-            char* err;
-        };
-
-        struct {               /* pairs */
-            Cell* car;           /* first member */
-            Cell* cdr;           /* second member */
-            int len;             /* track length of proper list (-1 for improper) */
-        };
-
-        struct {               /* rationals */
-            long int num;        /* numerator */
-            long int den;        /* denominator */
-        };
-
-        struct {               /* complex numbers */
-            Cell* real;          /* real part */
-            Cell* imag;          /* imaginary part */
-        };
-
-        struct {               /* Ports */
-            int is_open;          /* open/closed status */
-            int port_t;           /* input or output */
-            int stream_t;         /* binary or textual */
-            char* path;           /* file path of associated fh */
-            FILE* fh;             /* the file handle */
-        };
-
-        struct {               /* for compound types (sexpr, vectors, etc.) */
-            Cell** cell;
-            int count;
-        };
-
-        struct {                      /* built-in and user-defined procedures */
-            char* name;                    /* optional, for printing name of builtins */
-            Cell* (*builtin)(const Lex*, const Cell*); /* non-NULL → builtin, ignore formals/body/env */
-            Cell* formals;                 /* non-NULL → user-defined lambda */
-            Cell* body;                    /* S-expression for lambda */
-            Lex* env;                      /* closure environment */
-        };
+        UChar32 c_val;        /* character literal */
+        bool b_val;           /* boolean */
     };
 } Cell;
 

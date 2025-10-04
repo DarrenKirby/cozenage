@@ -33,7 +33,7 @@ Cell* builtin_string_to_symbol(const Lex* e, const Cell* a) {
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
     if (a->cell[0]->type != VAL_STR) {
-        return make_val_err("string->symbol: arg 1 must be a string", GEN_ERR);
+        return make_val_err("string->symbol: arg 1 must be a string", TYPE_ERR);
     }
     return make_val_sym(a->cell[0]->str);
 }
@@ -43,7 +43,7 @@ Cell* builtin_symbol_to_string(const Lex* e, const Cell* a) {
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
     if (a->cell[0]->type != VAL_SYM) {
-        return make_val_err("symbol->string: arg 1 must be a symbol", GEN_ERR);
+        return make_val_err("symbol->string: arg 1 must be a symbol", TYPE_ERR);
     }
     return make_val_str(a->cell[0]->sym);
 }
@@ -70,7 +70,7 @@ Cell* builtin_string_length(const Lex* e, const Cell* a) {
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
     if (a->cell[0]->type != VAL_STR) {
-        return make_val_err("string-length: arg 1 must be a string", GEN_ERR);
+        return make_val_err("string-length: arg 1 must be a string", TYPE_ERR);
     }
 
     const char* s = a->cell[0]->str;
@@ -85,7 +85,7 @@ Cell* builtin_string_length(const Lex* e, const Cell* a) {
         U8_NEXT(s, i, len_bytes, c);
         /* A negative value for 'c' indicates an invalid UTF-8 sequence */
         if (c < 0) {
-            return make_val_err("string-length: invalid UTF-8 sequence in string", GEN_ERR);
+            return make_val_err("string-length: invalid UTF-8 sequence in string", VALUE_ERR);
         }
         code_point_count++;
     }

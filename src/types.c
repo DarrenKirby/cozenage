@@ -121,7 +121,7 @@ Cell* make_val_bool(const int b) {
         exit(EXIT_FAILURE);
     }
     v->type = VAL_BOOL;
-    v->b_val = b ? 1 : 0;
+    v->b_val = b;
     return v;
 }
 
@@ -132,7 +132,7 @@ Cell* make_val_sym(const char* s) {
         exit(EXIT_FAILURE);
     }
     v->type = VAL_SYM;
-    v->exact = 1; /* Hack to flag env lookup of symbol: 1 = lookup 0 = don't */
+    v->quoted = false;
     v->sym = GC_strdup(s);
     return v;
 }
@@ -226,7 +226,7 @@ Cell* make_val_port(const char* path, FILE* fh, const int io_t, const int stream
         fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
         exit(EXIT_FAILURE);
     }
-    v->is_open = 1;
+    v->is_open = true;
     v->type = VAL_PORT;
     v->path = GC_strdup(path);
     v->port_t = io_t;
@@ -302,14 +302,15 @@ Cell* cell_copy(const Cell* v) {
     }
 
     copy->type = v->type;
-    copy->exact = v->exact;
 
     switch (v->type) {
     case VAL_INT:
         copy->i_val = v->i_val;
+        copy->exact = v->exact;
         break;
     case VAL_REAL:
         copy->r_val = v->r_val;
+        copy->exact = v->exact;
         break;
     case VAL_BOOL:
         copy->b_val = v->b_val;
@@ -317,35 +318,30 @@ Cell* cell_copy(const Cell* v) {
     case VAL_CHAR:
         copy->c_val = v->c_val;
         break;
-
     case VAL_SYM:
         copy->sym = GC_strdup(v->sym);
+        copy->quoted =  v->quoted;
         break;
-
     case VAL_STR:
-    case VAL_ERR:
         copy->str = GC_strdup(v->str);
         break;
-
+    case VAL_ERR:
+        copy->err = GC_strdup(v->err);
+        copy->err_t = v->err_t;
+        break;
     case VAL_PROC:
-        /* If it's a builtin, keep the function pointer; copy the name if present. */
-        copy->builtin = v->builtin;
-        copy->name = v->name ? GC_strdup(v->name) : nullptr;
-
-        if (v->builtin) {
-            /* builtin: nothing else to deep-copy */
-            copy->formals = nullptr;
-            copy->body = nullptr;
-            copy->env = nullptr;
+        if (v->is_builtin) {
+            copy->is_builtin = true;
+            copy->builtin = v->builtin;
+            copy->f_name    = GC_strdup(v->f_name);
         } else {
-            /* user lambda: deep copy formals and body; keep env pointer (closure) */
-            copy->builtin = nullptr;
-            copy->formals = v->formals ? cell_copy(v->formals) : nullptr;
-            copy->body   = v->body   ? cell_copy(v->body)   : nullptr;
-            copy->env    = v->env;   /* DO NOT copy environments; share the pointer */
+            copy->is_builtin = false;
+            copy->l_name    = v->l_name ? GC_strdup(v->l_name) : nullptr;
+            copy->formals = cell_copy(v->formals) ;
+            copy->body    = cell_copy(v->body);
+            copy->env     = v->env;   /* DO NOT copy environments; share the pointer */
         }
         break;
-
     case VAL_SEXPR:
     case VAL_VEC:
     case VAL_BYTEVEC:
@@ -359,30 +355,27 @@ Cell* cell_copy(const Cell* v) {
             copy->cell[i] = cell_copy(v->cell[i]);
         }
         break;
-
     case VAL_NIL:
         /* return the singleton instead of allocating */
         return make_val_nil();
-
     case VAL_PAIR: {
         copy->car = cell_copy(v->car);
         copy->cdr = cell_copy(v->cdr);
         copy->len = v->len;
         break;
         }
-
     case VAL_RAT: {
+        copy->exact = v->exact;
         copy->num = v->num;
         copy->den = v->den;
         break;
     }
-
     case VAL_COMPLEX: {
+        copy->exact = v->exact;
         copy->real = cell_copy(v->real);
         copy->imag = cell_copy(v->imag);
         break;
         }
-
     case VAL_PORT: {
         copy->is_open = v->is_open;
         copy->port_t = v->port_t;
@@ -391,7 +384,6 @@ Cell* cell_copy(const Cell* v) {
         copy->path = GC_strdup(v->path);
         break;
     }
-
     case VAL_CONT:
         /* shallow copy (all fields remain zeroed) */
         break;
@@ -406,21 +398,21 @@ Cell* cell_copy(const Cell* v) {
 /* Turn a single type into a string (for error reporting) */
 const char* cell_type_name(const int t) {
     switch (t) {
-        case VAL_INT:     return "integer";
-        case VAL_REAL:   return "float";
-        case VAL_RAT:     return "rational";
-        case VAL_COMPLEX:    return "complex";
-        case VAL_BOOL:    return "bool";
-        case VAL_SYM:     return "symbol";
-        case VAL_STR:     return "string";
-        case VAL_SEXPR:   return "sexpr";
-        case VAL_NIL:     return "nil";
+        case VAL_INT:      return "integer";
+        case VAL_REAL:     return "float";
+        case VAL_RAT:      return "rational";
+        case VAL_COMPLEX:  return "complex";
+        case VAL_BOOL:     return "bool";
+        case VAL_SYM:      return "symbol";
+        case VAL_STR:      return "string";
+        case VAL_SEXPR:    return "sexpr";
+        case VAL_NIL:      return "nil";
         case VAL_PROC:     return "procedure";
-        case VAL_ERR:     return "error";
-        case VAL_PAIR:    return "pair";
-        case VAL_VEC:    return "vector";
-        case VAL_CHAR:    return "char";
-        case VAL_BYTEVEC:    return "byte vector";
+        case VAL_ERR:      return "error";
+        case VAL_PAIR:     return "pair";
+        case VAL_VEC:      return "vector";
+        case VAL_CHAR:     return "char";
+        case VAL_BYTEVEC:  return "byte vector";
         default:           return "unknown";
     }
 }
@@ -432,20 +424,20 @@ const char* cell_mask_types(const int mask) {
     buf[0] = '\0';
 
     if (mask & VAL_INT)      strcat(buf, "integer|");
-    if (mask & VAL_REAL)    strcat(buf, "real|");
+    if (mask & VAL_REAL)     strcat(buf, "real|");
     if (mask & VAL_RAT)      strcat(buf, "rational|");
-    if (mask & VAL_COMPLEX)     strcat(buf, "complex|");
+    if (mask & VAL_COMPLEX)  strcat(buf, "complex|");
     if (mask & VAL_BOOL)     strcat(buf, "bool|");
     if (mask & VAL_SYM)      strcat(buf, "symbol|");
     if (mask & VAL_STR)      strcat(buf, "string|");
     if (mask & VAL_SEXPR)    strcat(buf, "sexpr|");
     if (mask & VAL_NIL)      strcat(buf, "nil|");
-    if (mask & VAL_PROC)      strcat(buf, "procedure|");
+    if (mask & VAL_PROC)     strcat(buf, "procedure|");
     if (mask & VAL_ERR)      strcat(buf, "error|");
     if (mask & VAL_PAIR)     strcat(buf, "pair|");
-    if (mask & VAL_VEC)     strcat(buf, "vector|");
+    if (mask & VAL_VEC)      strcat(buf, "vector|");
     if (mask & VAL_CHAR)     strcat(buf, "char|");
-    if (mask & VAL_BYTEVEC)     strcat(buf, "byte vector|");
+    if (mask & VAL_BYTEVEC)  strcat(buf, "byte vector|");
 
     /* remove trailing '|' */
     const size_t len = strlen(buf);
@@ -468,11 +460,11 @@ Cell* check_arg_types(const Cell* a, const int mask) {
         if (!(arg->type & mask)) {
             char buf[128];
             snprintf(buf, sizeof(buf),
-                     "Bad type at arg %d: got %s, expected %s",
+                     "bad type at arg %d: got %s, expected %s",
                      i+1,
                      cell_type_name(arg->type),
                      cell_mask_types(mask));
-            return make_val_err(buf, GEN_ERR);
+            return make_val_err(buf, TYPE_ERR);
         }
     }
     return nullptr;
@@ -484,23 +476,23 @@ Cell* check_arg_arity(const Cell* a, const int exact, const int min, const int m
     if (exact >= 0 && argc != exact) {
         char buf[128];
         snprintf(buf, sizeof(buf),
-                 "Arity error: expected exactly %d arg%s, got %d",
+                 "expected exactly %d arg%s, got %d",
                  exact, exact == 1 ? "" : "s", argc);
-        return make_val_err(buf, GEN_ERR);
+        return make_val_err(buf, ARITY_ERR);
     }
     if (min >= 0 && argc < min) {
         char buf[128];
         snprintf(buf, sizeof(buf),
-                 "Arity error: expected at least %d arg%s, got %d",
+                 "expected at least %d arg%s, got %d",
                  min, min == 1 ? "" : "s", argc);
-        return make_val_err(buf, GEN_ERR);
+        return make_val_err(buf, ARITY_ERR);
     }
     if (max >= 0 && argc > max) {
         char buf[128];
         snprintf(buf, sizeof(buf),
-                 "Arity error: expected at most %d arg%s, got %d",
+                 "expected at most %d arg%s, got %d",
                  max, max == 1 ? "" : "s", argc);
-        return make_val_err(buf, GEN_ERR);
+        return make_val_err(buf, ARITY_ERR);
     }
     return nullptr; /* all good */
 }

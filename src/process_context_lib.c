@@ -96,7 +96,7 @@ Cell* builtin_get_env_vars(const Lex* e, const Cell* a) {
         /* Bad form to mutate env */
         char* var_string = GC_strdup(*env);
         const char *var = strtok(var_string, "=");
-        const char *val = strtok(NULL, "=");
+        const char *val = strtok(nullptr, "=");
         Cell* vr = make_val_str(var);
         Cell* vl = make_val_str(val);
         result = make_val_pair(make_val_pair(vr, vl), result);

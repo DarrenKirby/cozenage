@@ -27,10 +27,10 @@ Cell* car__(const Cell* list) {
     if (!(list->type & VAL_PAIR)) {
         char buf[128];
         snprintf(buf, sizeof(buf),
-                 "car: bad type: got %s, expected %s",
+                 "car: got %s, expected %s",
                  cell_type_name(list->type),
                  cell_mask_types(VAL_PAIR));
-        return make_val_err(buf, GEN_ERR);
+        return make_val_err(buf, TYPE_ERR);
     }
     return list->car;
 }
@@ -39,10 +39,10 @@ Cell* cdr__(const Cell* list) {
     if (!(list->type & VAL_PAIR)) {
         char buf[128];
         snprintf(buf, sizeof(buf),
-                 "cdr: bad type: got %s, expected %s",
+                 "cdr: got %s, expected %s",
                  cell_type_name(list->type),
                  cell_mask_types(VAL_PAIR));
-        return make_val_err(buf, GEN_ERR);
+        return make_val_err(buf, TYPE_ERR);
     }
     return list->cdr;
 }
@@ -154,7 +154,7 @@ Cell* builtin_list_length(const Lex* e, const Cell* a) {
     /* The R7RS standard for `length` requires a proper list.
      * If the list doesn't end in `nil`, it's an error. */
     if (p->type != VAL_NIL) {
-        return make_val_err("length: proper list required", GEN_ERR);
+        return make_val_err("length: proper list required", TYPE_ERR);
     }
 
     /* It's a proper list. */
@@ -169,16 +169,16 @@ Cell* builtin_list_ref(const Lex* e, const Cell* a) {
     if (err) return err;
 
     if (a->cell[0]->type != VAL_PAIR) {
-        return make_val_err("list-ref: arg 1 must be a list", GEN_ERR);
+        return make_val_err("list-ref: arg 1 must be a list", TYPE_ERR);
     }
     if (a->cell[1]->type != VAL_INT) {
-        return make_val_err("list-ref: arg 2 must be an integer", GEN_ERR);
+        return make_val_err("list-ref: arg 2 must be an integer", TYPE_ERR);
     }
     int i = (int)a->cell[1]->i_val;
     const int len = a->cell[0]->len;
 
     if (i >= len && len != -1) {
-        return make_val_err("list-ref: arg 2 out of range", GEN_ERR);
+        return make_val_err("list-ref: arg 2 out of range", INDEX_ERR);
     }
 
     Cell* p = a->cell[0];
@@ -213,7 +213,7 @@ Cell* builtin_list_append(const Lex* e, const Cell* a) {
         if (current_list->type != VAL_PAIR) {
             char buf[128];
             sprintf(buf, "append: arg%d is not a list", i+1);
-            return make_val_err(buf, GEN_ERR);
+            return make_val_err(buf, TYPE_ERR);
         }
 
         /* Now, walk the list to ensure it's a *proper* list */
@@ -224,7 +224,7 @@ Cell* builtin_list_append(const Lex* e, const Cell* a) {
         if (p->type != VAL_NIL) {
             char buf[128];
             sprintf(buf, "append: arg%d is not a proper list", i+1);
-            return make_val_err(buf, GEN_ERR);
+            return make_val_err(buf, TYPE_ERR);
         }
 
         /* If we get here, the list is proper. Add its length. */
@@ -308,7 +308,7 @@ Cell* builtin_list_reverse(const Lex* e, const Cell* a) {
     }
 
     if (current->type != VAL_NIL) {
-        return make_val_err("reverse: cannot reverse improper list", GEN_ERR);
+        return make_val_err("reverse: cannot reverse improper list", TYPE_ERR);
     }
 
     /* Set the length on the final result. */
@@ -328,23 +328,23 @@ Cell* builtin_list_tail(const Lex* e, const Cell* a) {
     if (a->cell[0]->type != VAL_PAIR &&
         a->cell[0]->type != VAL_SEXPR &&
         a->cell[0]->type != VAL_NIL) {
-        return make_val_err("list-tail: arg 1 must be a list", GEN_ERR);
+        return make_val_err("list-tail: arg 1 must be a list", TYPE_ERR);
     }
     if (a->cell[1]->type != VAL_INT) {
-        return make_val_err("list-tail: arg 2 must be an integer", GEN_ERR);
+        return make_val_err("list-tail: arg 2 must be an integer", TYPE_ERR);
     }
 
     Cell* lst = a->cell[0];
     const long k = a->cell[1]->i_val;
 
     if (k < 0) {
-        return make_val_err("list-tail: arg 2 must be non-negative", GEN_ERR);
+        return make_val_err("list-tail: arg 2 must be non-negative", VALUE_ERR);
     }
 
     Cell* p = lst;
     for (long i = 0; i < k; i++) {
         if (p->type != VAL_PAIR) {
-            return make_val_err("list-tail: arg 2 out of range", GEN_ERR);
+            return make_val_err("list-tail: arg 2 out of range", INDEX_ERR);
         }
         /* Move to the next element in the list */
         p = p->cdr;
@@ -363,10 +363,10 @@ Cell* builtin_filter(const Lex* e, const Cell* a) {
     Cell* err = CHECK_ARITY_EXACT(a, 2);
     if (err) return err;
     if (a->cell[0]->type != VAL_PROC) {
-        return make_val_err("filter: arg 1 must be a procedure", GEN_ERR);
+        return make_val_err("filter: arg 1 must be a procedure", TYPE_ERR);
     }
     if (a->cell[1]->type != VAL_PAIR && a->cell[1]->len == -1) {
-        return make_val_err("filter: arg 2 must be a proper list", GEN_ERR);
+        return make_val_err("filter: arg 2 must be a proper list", TYPE_ERR);
     }
 
     const Cell* proc = a->cell[0];
@@ -391,7 +391,7 @@ Cell* builtin_foldl(const Lex* e, const Cell* a) {
     Cell* err = CHECK_ARITY_MIN(a, 3);
     if (err) return err;
     if (a->cell[0]->type != VAL_PROC) {
-        return make_val_err("foldl: arg 1 must be a procedure", GEN_ERR);
+        return make_val_err("foldl: arg 1 must be a procedure", TYPE_ERR);
     }
     int shortest_list_length = INT32_MAX;
 
@@ -399,7 +399,7 @@ Cell* builtin_foldl(const Lex* e, const Cell* a) {
         char buf[128];
         if (a->cell[i]->type != VAL_PAIR || a->cell[i]->len == -1) {
             snprintf(buf, 128, "foldl: arg %d must be a proper list", i+1);
-            return make_val_err(buf, GEN_ERR);
+            return make_val_err(buf, TYPE_ERR);
         }
         if (a->cell[i]->len < shortest_list_length) {
             shortest_list_length = a->cell[i]->len;
@@ -429,7 +429,7 @@ Cell* builtin_foldl(const Lex* e, const Cell* a) {
         Cell* tmp_result;
         /* If the procedure is a builtin - grab a pointer to it and call it directly
          * otherwise - it is a lambda and needs to be evaluated */
-        if (proc->builtin) {
+        if (proc->is_builtin) {
             Cell* (*func)(const Lex *, const Cell *) = proc->builtin;
             tmp_result = func(e, make_sexpr_from_list(arg_list));
         } else {
