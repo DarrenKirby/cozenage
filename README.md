@@ -291,10 +291,6 @@ This is a list of what *is* implemented so far. I try to keep it up to date:
 
 ### Cxr library (scheme cxr)
 
-- `caar`
-- `cadr`
-- `cdar`
-- `cddr`
 - `caaar`
 - `caadr`
 - `cadar`
