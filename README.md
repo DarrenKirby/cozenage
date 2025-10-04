@@ -38,11 +38,15 @@ This is a list of what *is* implemented so far. I try to keep it up to date:
 - `quote`
 - `define`
 - `lambda`
+- `let`
+- `let*`
+- `set!`
 - `if`
 - `when`
 - `unless`
 - `cond`
 - `else`
+- `begin`
 - `import`
 
 ### Basic arithmetic 
@@ -162,7 +166,7 @@ This is a list of what *is* implemented so far. I try to keep it up to date:
 
 - `bytevector`
 - `bytevector-length`
-- `bytevector-u8--ref`
+- `bytevector-u8-ref`
 - `make-bytevector`
 - `bytevector-copy`
 
@@ -284,3 +288,35 @@ This is a list of what *is* implemented so far. I try to keep it up to date:
 - `string-ci<=?`
 - `string-ci>?`
 - `string-ci>=?`
+
+### Cxr library (scheme cxr)
+
+- `caar`
+- `cadr`
+- `cdar`
+- `cddr`
+- `caaar`
+- `caadr`
+- `cadar`
+- `caddr`
+- `cdaar`
+- `cdadr`
+- `cddar`
+- `cdddr`
+- `caaaar`
+- `caaadr`
+- `caadar`
+- `caaddr`
+- `cadaar`
+- `cadadr`
+- `caddar`
+- `cadddr`
+- `cdaaar`
+- `cdaadr`
+- `cdadar`
+- `cdaddr`
+- `cddaar`
+- `cddadr`
+- `cdddar`
+- `cddddr`
+

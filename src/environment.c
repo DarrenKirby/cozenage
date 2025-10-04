@@ -86,7 +86,7 @@ void lex_put(Lex* e, const Cell* k, const Cell* v) {
     /* Check if symbol already exists */
     for (int i = 0; i < e->count; i++) {
         if (strcmp(e->syms[i], k->sym) == 0) {
-            /* Free the old value and replace it with a copy of v */
+            /* Free the old value and replace it with v */
             GC_FREE(e->vals[i]);
             e->vals[i] = (Cell*)v;
             return;

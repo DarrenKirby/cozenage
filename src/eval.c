@@ -112,6 +112,22 @@ Cell* eval_sexpr(Lex* e, Cell* v) {
         if (strcmp(first->sym, "import") == 0) {
             return sf_import(e, v);
         }
+        /* special form - let */
+        if (strcmp(first->sym, "let") == 0) {
+            return sf_let(e, v);
+        }
+        /* special form - let */
+        if (strcmp(first->sym, "let*") == 0) {
+            return sf_let_star(e, v);
+        }
+        /* special form - set! */
+        if (strcmp(first->sym, "set!") == 0) {
+            return sf_set_bang(e, v);
+        }
+        /* special form - begin */
+        if (strcmp(first->sym, "begin") == 0) {
+            return sf_begin(e, v);
+        }
     }
     /* Otherwise, evaluate first element normally (should become a function) */
     Cell* f = coz_eval(e, first);

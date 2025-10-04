@@ -23,12 +23,15 @@
 #include <string.h>
 #include <gc/gc.h>
 
+#include "printer.h"
+
 
 /* A helper to check if a symbol name is a reserved syntactic keyword */
 int is_syntactic_keyword(const char* s) {
     const char* keywords[] = {
         "define", "quote", "lambda", "if", "when", "unless",
-        "cond", "import", "set!", "let", "let*" ,"letrec", nullptr
+        "cond", "import", "set!", "let", "let*" ,"letrec",
+        "begin", "do", "case", nullptr
     };
 
     for (int i = 0; keywords[i] != NULL; i++) {
@@ -332,6 +335,122 @@ Cell* sf_import(Lex* e, const Cell* a) {
              * For example, (import (my-libs utils)). */
             return make_val_err("import: user-defined libraries not yet supported", GEN_ERR);
         }
+    }
+    return result;
+}
+
+Cell* sf_let(Lex* e, Cell* a) {
+    const Cell* bindings = cell_pop(a, 0);
+    if (bindings->type != VAL_SEXPR) {
+        return make_val_err("Bindings must be a list", VALUE_ERR);
+    }
+    const Cell* body = a;
+
+    /* separate formals and args from bindings */
+    Cell* formals = make_val_sexpr();
+    Cell* args = make_val_sexpr();
+    for (int i = 0; i < bindings->count; i++) {
+        const Cell* local_b = bindings->cell[i];
+        if (local_b->type != VAL_SEXPR) {
+            return make_val_err("Bindings must be a list", VALUE_ERR);
+        }
+        if (local_b->count != 2) {
+            return make_val_err("bindings must contain exactly 2 items", VALUE_ERR);
+        }
+        if (local_b->cell[0]->type != VAL_SYM) {
+            return make_val_err("first value in binding must be a symbol", VALUE_ERR);
+        }
+        cell_add(formals, local_b->cell[0]);
+        cell_add(args, local_b->cell[1]);
+    }
+
+    /* Create a new child environment */
+    Lex* local_env = lex_new_child(e);
+
+    for (int i = 0; i < args->count; i++) {
+        const Cell* sym = formals->cell[i];
+        const Cell* val = coz_eval(e, args->cell[i]);
+        lex_put(local_env, sym, val);
+    }
+
+    /* Evaluate body expressions in this environment */
+    Cell* result = nullptr;
+    for (int i = 0; i < body->count; i++) {
+        result = coz_eval(local_env, body->cell[i]);
+    }
+    return result;
+}
+
+Cell* sf_let_star(Lex* e, Cell* a) {
+    const Cell* bindings = cell_pop(a, 0);
+    if (bindings->type != VAL_SEXPR) {
+        return make_val_err("Bindings must be a list", VALUE_ERR);
+    }
+    const Cell* body = a;
+
+    /* Start with the outer environment. */
+    Lex* current_env = e;
+
+    for (int i = 0; i < bindings->count; i++) {
+        const Cell* local_b = bindings->cell[i];
+        if (local_b->type != VAL_SEXPR) {
+            return make_val_err("Bindings must be a list", VALUE_ERR);
+        }
+        if (local_b->count != 2) {
+            return make_val_err("bindings must contain exactly 2 items", VALUE_ERR);
+        }
+        if (local_b->cell[0]->type != VAL_SYM) {
+            return make_val_err("first value in binding must be a symbol", VALUE_ERR);
+        }
+        const Cell* formal = local_b->cell[0];
+        Cell* arg = local_b->cell[1];
+
+        /* Create the new environment for THIS binding.
+         * The parent is the *previous* environment in the chain. */
+        Lex* new_env = lex_new_child(current_env);
+
+        /* Evaluate the argument expression in the *current* environment. */
+        const Cell* val = coz_eval(current_env, arg);
+
+        /* Put the new binding into the new environment. */
+        lex_put(new_env, formal, val);
+
+        /* Update current_env to point to the new environment. */
+        current_env = new_env;
+    }
+
+    /* Evaluate body expressions in this environment */
+    Cell* result = nullptr;
+    for (int i = 0; i < body->count; i++) {
+        result = coz_eval(current_env, body->cell[i]);
+    }
+    return result;
+}
+
+Cell* sf_set_bang(Lex* e, const Cell* a) {
+    Cell* err = CHECK_ARITY_EXACT(a, 2);
+    if (err) return err;
+    const Cell* variable = a->cell[0];
+    if (variable->type != VAL_SYM) {
+        return make_val_err("arg1 must be a symbol", TYPE_ERR);
+    }
+    /* Ensure the variable is already bound in the environment */
+    Cell* result = lex_get(e, variable);
+    if (result->type == VAL_ERR) {
+        return result;
+    }
+    /* Now evaluate new expression */
+    Cell* expr = a->cell[1];
+    const Cell* val = coz_eval(e, expr);
+    /* Rebind the variable with the new value */
+    lex_put(e, variable, val);
+    return nullptr;
+}
+
+Cell* sf_begin(Lex* e, Cell* a) {
+    Cell* result = nullptr;
+    for (int i = 0; i< a->count; i++) {
+        result = coz_eval(e, a->cell[i]);
     }
     return result;
 }

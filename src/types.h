@@ -133,8 +133,8 @@ typedef struct Cell {
         };
         /* builtin procedures */
         struct {
-            char* f_name;      /* name of builtin and named lambda procedures */
-            Cell* (*builtin)(const Lex*, const Cell*); /* builtin procedures */
+            char* f_name;      /* name of builtin and named lambda procedure */
+            Cell* (*builtin)(const Lex*, const Cell*); /* builtin procedure */
         };
         /* Pairs */
         struct {
