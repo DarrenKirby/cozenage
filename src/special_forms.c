@@ -276,7 +276,7 @@ Cell* sf_unless(Lex* e, const Cell* a) {
 
     const Cell* test = coz_eval(e, a->cell[0]);
 
-    /* Check for literal#f */
+    /* Check for literal #f */
     if (test->type == VAL_BOOL && test->b_val == 0) {
         Cell* result = nullptr;
         for (int i = 1; i < a->count; i++) {
@@ -287,36 +287,82 @@ Cell* sf_unless(Lex* e, const Cell* a) {
     return nullptr;
 }
 
+/* (cond ⟨clause1⟩ ⟨clause2⟩ ... )
+ * where ⟨clause⟩ is (⟨test⟩ ⟨expression1⟩ ...) OR (⟨test⟩ => ⟨expression⟩)
+ * The last ⟨clause⟩ can be an “else clause”. A cond expression is evaluated by evaluating the
+ * ⟨test⟩ expressions of successive ⟨clause⟩s in order until one of them evaluates to a true value.
+ * When a ⟨test⟩ evaluates to a true value, the remaining ⟨expression⟩s in its ⟨clause⟩ are
+ * evaluated in order, and the results of the last ⟨expression⟩ in the ⟨clause⟩ are returned as the
+ * results of the entire cond expression
+ *
+ * If the selected ⟨clause⟩ contains only the ⟨test⟩ and no ⟨expression⟩s, then the value of the
+ * ⟨test⟩ is returned as the result. If the selected ⟨clause⟩ uses the => alternate form, then the
+ * ⟨expression⟩ is evaluated. It is an error if its value is not a procedure that accepts one
+ * argument. This procedure is then called on the value of the ⟨test⟩ and the values returned by
+ * this procedure are returned by the cond expression.
+ *
+ * If all ⟨test⟩s evaluate to #f, and there is no else clause, then the result of the conditional
+ * expression is unspecified; if there is an else clause, then its ⟨expression⟩s are evaluated in
+ * order, and the values of the last one are returned.
+ */
 Cell* sf_cond(Lex* e, const Cell* a) {
-    Cell* err = CHECK_ARITY_MIN(a, 2);
-    if (err) return err;
+    //Cell* err = CHECK_ARITY_MIN(a, 1);
+    //if (err) return err;
+    if (a->count == 0) {
+        return make_val_err("ill-formed cond expression", VALUE_ERR);
+    }
 
     Cell* result = nullptr;
     for (int i = 0; i < a->count; i++) {
         const Cell* clause = a->cell[i];
-        const Cell* test = coz_eval(e, clause->cell[0]);
-        if (test->type == VAL_PROC && strcmp(test->f_name, "else") == 0) {
-            result = coz_eval(e, clause->cell[1]);
-            break;
-        }
-        if (test->type != VAL_BOOL) {
-            result = make_val_err("'cond' test must be a predicate", VALUE_ERR);
-        }
-        if (test->b_val == 1) {
+        /* Check for 'else' clause and if found evaluate any expressions*/
+        if (clause->cell[0]->type == VAL_SYM && strcmp(clause->cell[0]->sym, "else") == 0) {
+            /* else clause must be last */
+            if (i != a->count-1) {
+                return make_val_err("'else' clause must be last in the cond expression",
+                                     SYNTAX_ERR);
+            }
             for (int j = 1; j < clause->count; j++) {
                 result = coz_eval(e, clause->cell[j]);
             }
             break;
         }
+        /* Not an else, so evaluate the test */
+        Cell* test = coz_eval(e, clause->cell[0]);
+        /* Move along if current test is #f */
+        if (test->type == VAL_BOOL && test->b_val == 0) {
+            continue;
+        }
+        /* Test is truthy - first see if there is an expression */
+        if (clause->count == 1) {
+            /* No expression, return the test result */
+            return test;
+        }
+        /* Check for cond '=>' form */
+        if (clause->cell[1]->type == VAL_SYM && strcmp(clause->cell[1]->sym, "=>") == 0) {
+            if (clause->count <= 2) {
+                return make_val_err("cond '=>' form must have an expression", SYNTAX_ERR);
+            }
+            /* '=>' form can only have one expression after the test */
+            if (clause->count > 3) {
+                return make_val_err("cond '=>' form can only have 1 expression after the test",
+                                     SYNTAX_ERR);
+            }
+            const Cell* proc = coz_eval(e, clause->cell[2]);
+            /* Expression must evaluate to a procedure */
+            if (proc->type != VAL_PROC) {
+                return make_val_err("expression after '=>' must evaluate to a procedure",
+                                     SYNTAX_ERR);
+            }
+            return coz_eval(e, make_sexpr_len2(proc, test));
+        }
+        /* Expressions present. Evaluate them, and break to return the last */
+        for (int j = 1; j < clause->count; j++) {
+            result = coz_eval(e, clause->cell[j]);
+        }
+        break;
     }
     return result;
-}
-
-/* dummy function */
-Cell* sf_else(const Lex* e, const Cell* a) {
-    (void)e;
-    (void)a;
-    return make_val_bool(1);
 }
 
 Cell* sf_import(Lex* e, const Cell* a) {
