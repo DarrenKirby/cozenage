@@ -119,8 +119,7 @@ Cell* apply_lambda(Cell* lambda, const Cell* args) {
  *         Special forms        *
  * -----------------------------*/
 
-/* 'define' -> binds a value (or proc) to a symbol, and places it
- * into the environment */
+/* */
 Cell* sf_define(Lex* e, const Cell* a) {
     if (a->count < 2) {
         return make_val_err("define requires at least 2 arguments", ARITY_ERR);
@@ -180,6 +179,9 @@ Cell* sf_define(Lex* e, const Cell* a) {
     return make_val_err("invalid define syntax", SYNTAX_ERR);
 }
 
+/* (quote ⟨datum⟩) OR '⟨datum⟩
+ * (quote ⟨datum⟩) evaluates to ⟨datum⟩. ⟨Datum⟩ can be any external representation of a Scheme
+ * object. This notation is used to include literal constants in Scheme code. */
 Cell* sf_quote(const Lex* e, Cell* a) {
     (void)e;
     if (a->count != 1) {
@@ -194,12 +196,18 @@ Cell* sf_quote(const Lex* e, Cell* a) {
             quoted_sexpr->cell[i]->quoted = true;
         }
     }
-
     /* Convert the VAL_SEXPR into a proper VAL_PAIR list. */
     Cell* result = sexpr_to_list(quoted_sexpr);
     return result;
 }
 
+/* (lambda ⟨formals⟩ ⟨body⟩)
+ * A lambda expression evaluates to a procedure. The environment in effect when the
+ * lambda expression is evaluated is remembered as part of the procedure; it is called the closing
+ * environment. When the procedure is later called with some arguments, the closing environment is
+ * extended by binding the variables in the formal parameter list to fresh locations, and the
+ * locations are filled with the arguments according to rules about to be given. The new environment
+ * created by this process is referred to as the invocation environment. */
 Cell* sf_lambda(Lex* e, Cell* a) {
     if (a->count < 2) {
         return make_val_err("lambda requires formals and a body", SYNTAX_ERR);
@@ -220,59 +228,63 @@ Cell* sf_lambda(Lex* e, Cell* a) {
     return lambda;
 }
 
+/* (if ⟨test⟩ ⟨consequent⟩ ⟨alternate⟩)
+ * An if expression is evaluated as follows: first, ⟨test⟩ is evaluated. If it yields a true value,
+ * then ⟨consequent⟩ is evaluated and its values are returned. Otherwise, ⟨alternate⟩ is evaluated
+ * and its values are returned. If no <alternate> is provided to evaluate, it returns null */
 Cell* sf_if(Lex* e, const Cell* a) {
     Cell* err = CHECK_ARITY_RANGE(a, 2, 3);
     if (err) return err;
 
     const Cell* test = coz_eval(e, a->cell[0]);
-    if (test->type != VAL_BOOL) {
-        return make_val_err("'if' test must be a predicate", VALUE_ERR);
+
+    /* Note: this 'just works' with no <alternative>, as coz_eval() returns null with no args */
+    if (test->type == VAL_BOOL && test->b_val == 0) {
+        return coz_eval(e, a->cell[2]);
     }
-    Cell* result;
-    if (test->b_val == 1) {
-        result = coz_eval(e, a->cell[1]);
-    } else {
-        if (a->count == 2) {
-            result = nullptr;
-        } else {
-            result = coz_eval(e, a->cell[2]);
-        }
-    }
-    return result;
+    return coz_eval(e, a->cell[1]);
 }
 
+/* (when ⟨test⟩ ⟨expression1⟩ ⟨expression2⟩ ... )
+ * The test is evaluated, and if it evaluates to a true value, the expressions are evaluated in
+ * order. The result of the when expression is unspecified, per R7RS, but Cozenage returns the value
+ * of the last expression evaluated, or null if the test evaluates to #f. */
 Cell* sf_when(Lex* e, const Cell* a) {
     Cell* err = CHECK_ARITY_MIN(a, 2);
     if (err) return err;
 
     const Cell* test = coz_eval(e, a->cell[0]);
-    if (test->type != VAL_BOOL) {
-        return make_val_err("'when' test must be a predicate", VALUE_ERR);
+
+    /* Check for literal #f */
+    if (test->type == VAL_BOOL && test->b_val == 0) {
+        return nullptr;
     }
     Cell* result = nullptr;
-    if (test->b_val == 1) {
-        for (int i = 1; i < a->count; i++) {
-            result = coz_eval(e, a->cell[i]);
-        }
+    for (int i = 1; i < a->count; i++) {
+        result = coz_eval(e, a->cell[i]);
     }
     return result;
 }
 
+/*  (unless ⟨test⟩ ⟨expression1⟩ ⟨expression2⟩ ... )
+ *  The test is evaluated, and if it evaluates to #f, the expressions are evaluated in order. The
+ *  result of the unless expression is unspecified, per R7RS, but Cozenage returns the value of the
+ *  last expression evaluated, or null if the test is truthy. */
 Cell* sf_unless(Lex* e, const Cell* a) {
     Cell* err = CHECK_ARITY_MIN(a, 2);
     if (err) return err;
 
     const Cell* test = coz_eval(e, a->cell[0]);
-    if (test->type != VAL_BOOL) {
-        return make_val_err("'unless' test must be a predicate", VALUE_ERR);
-    }
-    Cell* result = nullptr;
-    if (test->b_val == 0) {
+
+    /* Check for literal#f */
+    if (test->type == VAL_BOOL && test->b_val == 0) {
+        Cell* result = nullptr;
         for (int i = 1; i < a->count; i++) {
             result = coz_eval(e, a->cell[i]);
         }
+        return result;
     }
-    return result;
+    return nullptr;
 }
 
 Cell* sf_cond(Lex* e, const Cell* a) {
@@ -340,6 +352,7 @@ Cell* sf_import(Lex* e, const Cell* a) {
 }
 
 Cell* sf_let(Lex* e, Cell* a) {
+    /* TODO: implement named let */
     const Cell* bindings = cell_pop(a, 0);
     if (bindings->type != VAL_SEXPR) {
         return make_val_err("Bindings must be a list", VALUE_ERR);
@@ -427,6 +440,10 @@ Cell* sf_let_star(Lex* e, Cell* a) {
     return result;
 }
 
+/* (set! ⟨variable⟩ ⟨expression⟩)
+ * ⟨Expression⟩ is evaluated, and the resulting value is stored in the location to which ⟨variable⟩
+ * is bound. It is an error if ⟨variable⟩ is not bound either in some region enclosing the set!
+ * expression or else globally. The result of the set! expression is unspecified. */
 Cell* sf_set_bang(Lex* e, const Cell* a) {
     Cell* err = CHECK_ARITY_EXACT(a, 2);
     if (err) return err;
@@ -444,6 +461,7 @@ Cell* sf_set_bang(Lex* e, const Cell* a) {
     const Cell* val = coz_eval(e, expr);
     /* Rebind the variable with the new value */
     lex_put(e, variable, val);
+    /* No meaningful return value */
     return nullptr;
 }
 
