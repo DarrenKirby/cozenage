@@ -69,10 +69,12 @@ struct lib_load {
     unsigned int repl:1;
     unsigned int time:1;
     unsigned int write:1;
+    unsigned int coz_bits:1;
 } load_libs = {0,0,0,0,
     0,0,0, 0,
     0,0,0,
-    0,0,0,0};
+    0,0,0,0,
+    0};
 
 static volatile sig_atomic_t got_sigint = 0;
 #ifdef __linux__
@@ -215,6 +217,10 @@ void repl() {
     if (load_libs.cxr) {
         (void)load_scheme_library("cxr", e);
     }
+    /* Cozenage libs */
+    if (load_libs.coz_bits) {
+        (void)load_scheme_library("coz-bits", e);
+    }
 
     for (;;) {
         Cell *val = coz_read(e);
@@ -239,8 +245,9 @@ Options:\n\
 \n\
     '-l' and '--library' accept a required comma-delimited list of\n\
     libraries to pre-load. Accepted values are:\n\
-    coz-ext, case-lambda, char, complex, cxr, eval, file, inexact\n\
-    lazy, load, process-context, read, repl, time, write\n\n\
+    case-lambda, char, complex, cxr, eval, file, inexact\n\
+    lazy, load, process-context, read, repl, time, write\n\
+    coz-ext, coz-bits\n\n\
 Report bugs to <bulliver@gmail.com>\n", APP_NAME);
 }
 
@@ -283,6 +290,8 @@ void process_library_arg(struct lib_load *l, const char *arg) {
             l->time = 1;
         } else if (strcmp(token, "write") == 0) {
             l->write = 1;
+        } else if (strcmp(token, "coz-bits") == 0) {
+            l->coz_bits = 1;
         } else {
             fprintf(stderr, "Error: Unknown library name '%s' specified.\n", token);
             fprintf(stderr, "Run with -h for a list of valid library names.\n");
