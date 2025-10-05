@@ -44,6 +44,11 @@ Cell* builtin_boolean(const Lex* e, const Cell* a) {
     return make_val_bool(result);
 }
 
+/* TODO: 'boolean=?' */
+
+/* FIXME: 'and' and 'or' are syntax/special forms. They need to be pulled
+ * out of here (and out of the env) and placed in special_forms.c */
+
 /* 'and' -> VAL_BOOL|ANY - if any expression evaluates to #f, then #f is
  * returned. Any remaining expressions are not evaluated. If all the expressions
  * evaluate to true values, the values of the last expression are returned.

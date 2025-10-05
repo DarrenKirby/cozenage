@@ -227,7 +227,7 @@ char **lexer(const char *input, int *count) {
     /* Debug print */
     if (DEBUG) {
         for (int i = 0; i < n; i++) {
-            printf("TOK[%d] = '%s'\n", i, tokens[i]);
+            printf("TOK[%d] = |%s|\n", i, tokens[i]);
         }
     }
     return tokens;
@@ -360,6 +360,7 @@ Cell* parse_tokens(Parser *p) {
 }
 
 Cell* parse_atom(const char *tok) {
+    //printf("tok = |%s|\n", tok);
     if (!tok) return make_val_err("NULL token", GEN_ERR);
     char err_buf[128] = {0};
     const size_t len = strlen(tok);

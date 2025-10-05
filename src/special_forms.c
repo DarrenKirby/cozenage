@@ -31,7 +31,7 @@ int is_syntactic_keyword(const char* s) {
     const char* keywords[] = {
         "define", "quote", "lambda", "if", "when", "unless",
         "cond", "import", "set!", "let", "let*" ,"letrec",
-        "begin", "do", "case", nullptr
+        "begin", "do", "case", "and", "or", nullptr
     };
 
     for (int i = 0; keywords[i] != NULL; i++) {
@@ -119,7 +119,16 @@ Cell* apply_lambda(Cell* lambda, const Cell* args) {
  *         Special forms        *
  * -----------------------------*/
 
-/* */
+/* (define ⟨variable⟩ ⟨expression⟩) OR (define (⟨variable⟩ ⟨formals⟩) ⟨body⟩)
+ * ⟨Formals⟩ are either a sequence of zero or more variables, or a sequence of one or more variables
+ * followed by a space-delimited period and another variable (as in a lambda expression). This form
+ * is equivalent to:
+ *
+ *    (define ⟨variable⟩
+ *        (lambda (⟨formals⟩) ⟨body⟩))
+ *
+ *  TODO: (define (⟨variable⟩ . ⟨formal⟩) ⟨body⟩) form
+ */
 Cell* sf_define(Lex* e, const Cell* a) {
     if (a->count < 2) {
         return make_val_err("define requires at least 2 arguments", ARITY_ERR);
@@ -188,16 +197,21 @@ Cell* sf_quote(const Lex* e, Cell* a) {
         return make_val_err("quote takes exactly one argument", ARITY_ERR);
     }
     /* Extract the S-expression that was quoted. */
-    Cell* quoted_sexpr = cell_take(a, 0);
+    Cell* qexpr = cell_take(a, 0);
 
     /* Flag whether to do env lookup */
-    for (int i = 0; i < quoted_sexpr->count; i++) {
-        if (quoted_sexpr->cell[i]->type == VAL_SYM) {
-            quoted_sexpr->cell[i]->quoted = true;
+    if (qexpr->count == 1 && qexpr->type == VAL_SYM) {
+        qexpr->quoted = true;
+    }
+    if (qexpr->count > 1) {
+        for (int i = 0; i < qexpr->count; i++) {
+            if (qexpr->cell[i]->type == VAL_SYM) {
+                qexpr->cell[i]->quoted = true;
+            }
         }
     }
     /* Convert the VAL_SEXPR into a proper VAL_PAIR list. */
-    Cell* result = sexpr_to_list(quoted_sexpr);
+    Cell* result = sexpr_to_list(qexpr);
     return result;
 }
 
@@ -365,6 +379,11 @@ Cell* sf_cond(Lex* e, const Cell* a) {
     return result;
 }
 
+/* (import ⟨import-set⟩ ...)
+ * An import declaration provides a way to import identifiers exported by a library. Each
+ * ⟨import set⟩ names a set of bindings from a library and possibly specifies local names for the
+ * imported bindings. */
+/* TODO: implement 'only', 'except', 'prefix', and 'rename' */
 Cell* sf_import(Lex* e, const Cell* a) {
     Cell* import_set = make_val_sexpr();
     import_set->cell = GC_MALLOC(sizeof(Cell*) * a->count);
@@ -386,8 +405,8 @@ Cell* sf_import(Lex* e, const Cell* a) {
         if (strcmp(library_type, "scheme") == 0) {
             /* Load the Library */
             result = load_scheme_library(library_name, e);
-        // } else if (strcmp(library_type, "cozenage") == 0){
-        //     result = load_scheme_library(library_name, e);
+         } else if (strcmp(library_type, "cozenage") == 0){
+             result = load_scheme_library(library_name, e);
         } else {
             /* TODO: Handle User Libraries Here
              * For example, (import (my-libs utils)). */
@@ -397,6 +416,15 @@ Cell* sf_import(Lex* e, const Cell* a) {
     return result;
 }
 
+/* (let ⟨bindings⟩ ⟨body⟩) where ⟨Bindings⟩ has the form ((⟨variable1⟩ ⟨init1⟩) ...)
+ * where each ⟨init⟩ is an expression, and ⟨body⟩ is a sequence of zero or more definitions followed
+ * by a sequence of one or more expressions. It is an error for a ⟨variable⟩ to appear more than
+ * once in the list of variables being bound.
+ *
+ * The ⟨init⟩s are evaluated in the current environment (in some unspecified order), the ⟨variable⟩s
+ * are bound to fresh locations holding the results, the ⟨body⟩ is evaluated in the extended
+ * environment, and the values of the last expression of ⟨body⟩ are returned. Each binding of a
+ * ⟨variable⟩ has ⟨body⟩ as its region. */
 Cell* sf_let(Lex* e, Cell* a) {
     /* TODO: implement named let */
     const Cell* bindings = cell_pop(a, 0);
@@ -405,9 +433,10 @@ Cell* sf_let(Lex* e, Cell* a) {
     }
     const Cell* body = a;
 
-    /* separate formals and args from bindings */
-    Cell* formals = make_val_sexpr();
-    Cell* args = make_val_sexpr();
+    /* separate variables and values from bindings */
+    /* TODO: raise error if not all variables are unique*/
+    Cell* vars = make_val_sexpr();
+    Cell* vals = make_val_sexpr();
     for (int i = 0; i < bindings->count; i++) {
         const Cell* local_b = bindings->cell[i];
         if (local_b->type != VAL_SEXPR) {
@@ -419,20 +448,21 @@ Cell* sf_let(Lex* e, Cell* a) {
         if (local_b->cell[0]->type != VAL_SYM) {
             return make_val_err("first value in binding must be a symbol", VALUE_ERR);
         }
-        cell_add(formals, local_b->cell[0]);
-        cell_add(args, local_b->cell[1]);
+        cell_add(vars, local_b->cell[0]);
+        cell_add(vals, local_b->cell[1]);
     }
 
     /* Create a new child environment */
     Lex* local_env = lex_new_child(e);
 
-    for (int i = 0; i < args->count; i++) {
-        const Cell* sym = formals->cell[i];
-        const Cell* val = coz_eval(e, args->cell[i]);
+    /* Populate it with sym->val pairs */
+    for (int i = 0; i < vals->count; i++) {
+        const Cell* sym = vars->cell[i];
+        const Cell* val = coz_eval(e, vals->cell[i]);
         lex_put(local_env, sym, val);
     }
 
-    /* Evaluate body expressions in this environment */
+    /* Evaluate the body expressions in this environment */
     Cell* result = nullptr;
     for (int i = 0; i < body->count; i++) {
         result = coz_eval(local_env, body->cell[i]);
@@ -440,6 +470,14 @@ Cell* sf_let(Lex* e, Cell* a) {
     return result;
 }
 
+/* (let* ⟨bindings⟩ ⟨body⟩) where ⟨Bindings⟩ has the form ((⟨variable1⟩ ⟨init1⟩) ...)
+ * where each ⟨init⟩ is an expression, and ⟨body⟩ is a sequence of zero or more definitions followed
+ * by a sequence of one or more expressions.
+ *
+ * The let* binding construct is similar to let, but the bindings are performed sequentially from
+ * left to right, and the region of a binding indicated by (⟨variable⟩ ⟨init⟩) is that part of the
+ * let* expression to the right of the binding. Thus, the second binding is done in an environment
+ * in which the first binding is visible, and so on. The ⟨variable⟩s need not be distinct. */
 Cell* sf_let_star(Lex* e, Cell* a) {
     const Cell* bindings = cell_pop(a, 0);
     if (bindings->type != VAL_SEXPR) {
@@ -511,7 +549,11 @@ Cell* sf_set_bang(Lex* e, const Cell* a) {
     return nullptr;
 }
 
-Cell* sf_begin(Lex* e, Cell* a) {
+/* (begin ⟨expression1 ⟩ ⟨expression2 ⟩ ... )
+ * This form of begin can be used as an ordinary expression. The ⟨expression⟩s are evaluated
+ * sequentially from left to right, and the values of the last ⟨expression⟩ are returned. This
+ * expression type is used to sequence side effects such as assignments or input and output. */
+Cell* sf_begin(Lex* e, const Cell* a) {
     Cell* result = nullptr;
     for (int i = 0; i< a->count; i++) {
         result = coz_eval(e, a->cell[i]);

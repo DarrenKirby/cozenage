@@ -27,6 +27,7 @@
 #include "io_lib.h"
 #include "eval_lib.h"
 #include "cxr_lib.h"
+#include "coz_bits_lib.h"
 #include <string.h>
 
 
@@ -50,6 +51,7 @@ static const LibraryRegistryEntry library_registry[] = {
     {"eval", lex_add_eval_lib},
     {"write", lex_add_write_lib},
     {"cxr", lex_add_cxr_lib},
+    {"coz-bits", lex_add_coz_bits_lib},
     {nullptr, nullptr}
 };
 

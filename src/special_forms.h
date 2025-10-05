@@ -39,6 +39,6 @@ Cell* sf_import(Lex* e, const Cell* a);
 Cell* sf_let(Lex* e, Cell* a);
 Cell* sf_let_star(Lex* e, Cell* a);
 Cell* sf_set_bang(Lex* e, const Cell* a);
-Cell* sf_begin(Lex* e, Cell* a);
+Cell* sf_begin(Lex* e, const Cell* a);
 
 #endif //COZENAGE_SPECIAL_FORMS_H
