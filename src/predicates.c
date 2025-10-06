@@ -38,8 +38,8 @@ Cell* builtin_number_pred(const Lex* e, const Cell* a) {
     return make_cell_boolean(0);
 }
 
-/* 'boolean?' -> CELL_BOOLEAN  - returns #t if obj is either #t or #f
-    and returns #f otherwise. */
+/* (boolean? obj)
+* The boolean? predicate returns #t if obj is either #t or #f and returns #f otherwise. */
 Cell* builtin_boolean_pred(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);

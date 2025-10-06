@@ -25,24 +25,41 @@
  *     Boolean and logical procedures     *
  * ---------------------------------------*/
 
-/* 'not' -> CELL_BOOLEAN - returns #t if obj is false, and returns #f otherwise */
+/* (not obj )
+ * The not procedure returns #t if obj is false, and returns #f otherwise. */
 Cell* builtin_not(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err;
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
-    const int is_false = a->cell[0]->type == CELL_BOOLEAN && a->cell[0]->boolean_v == 0;
-    return make_cell_boolean(is_false);
+    if (a->cell[0]->type == CELL_BOOLEAN && a->cell[0]->boolean_v == 0) {
+        return make_cell_boolean(1);
+    }
+    return make_cell_boolean(0);
 }
 
-/* 'boolean' -> CELL_BOOLEAN - converts any value to a strict boolean */
+/* (boolean=? boolean1 boolean2 boolean3 ... )
+ * Returns #t if all the arguments are booleans and all are #t or all are #f. */
 Cell* builtin_boolean(const Lex* e, const Cell* a) {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 1);
-    if (err) return err;
-    const int result = a->cell[0]->type == CELL_BOOLEAN
-                 ? a->cell[0]->boolean_v
-                 : 1; /* everything except #f is true */
-    return make_cell_boolean(result);
+    /* Return #t if no args */
+    if (a->count == 0) {
+        return make_cell_boolean(1);
+    }
+    /* If not all args are CELL_BOOLEAN, return #f */
+    if (check_arg_types(a, CELL_BOOLEAN)) {
+        return make_cell_boolean(0);
+    }
+    /* Return #t for single boolean argument */
+    if (a->count == 1) {
+        return make_cell_boolean(1);
+    }
+    /* Value of first arg */
+    const bool v = a->cell[0]->boolean_v;
+    /* Compare with subsequent values */
+    for (int i = 1; i < a->count; i++) {
+        if (v != a->cell[i]->boolean_v) {
+            return make_cell_boolean(0);
+        }
+    }
+    return make_cell_boolean(1);
 }
-
-/* TODO: 'boolean=?' */

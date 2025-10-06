@@ -132,7 +132,7 @@ This is a list of what *is* implemented so far. I try to keep it up to date:
 ### Boolean and logical procedures
 
 - `not`
-- `boolean`
+- `boolean=?`
 
 ### Pair/list procedures
 
