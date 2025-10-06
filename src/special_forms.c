@@ -542,7 +542,7 @@ Cell* sf_set_bang(Lex* e, const Cell* a) {
     /* Now evaluate new expression */
     Cell* expr = a->cell[1];
     const Cell* val = coz_eval(e, expr);
-    /* Rebind the variable with the new value */
+    /* Re-bind the variable with the new value */
     lex_put(e, variable, val);
     /* No meaningful return value */
     return nullptr;
@@ -558,4 +558,46 @@ Cell* sf_begin(Lex* e, const Cell* a) {
         result = coz_eval(e, a->cell[i]);
     }
     return result;
+}
+
+/* (and ⟨test1⟩ ... )
+ * The ⟨test⟩ expressions are evaluated from left to right, and if any expression evaluates to #f,
+ * then #f is returned. Any remaining expressions are not evaluated. If all the expressions evaluate
+ * to true values, the values of the last expression are returned. If there are no expressions, then
+ * #t is returned. */
+Cell* sf_and(Lex* e, const Cell* a) {
+    (void)e;
+    if (a->count == 0) {
+        return make_cell_boolean(1);
+    }
+    Cell* test_result = nullptr;
+    for (int i = 0; i < a->count; i++) {
+        test_result = coz_eval(e, a->cell[i]);
+        if (test_result->type == CELL_BOOLEAN && test_result->boolean_v == 0) {
+            /* first #f encountered → return #f */
+            return make_cell_boolean(0);
+        }
+    }
+    /* all truthy → return copy of last element */
+    return test_result;
+}
+
+/* (or ⟨test1⟩ ... )
+ * The ⟨test⟩ expressions are evaluated from left to right, and the value of the first expression
+ * that evaluates to a true value is returned. Any remaining expressions are not evaluated. If all
+ * expressions evaluate to #f or if there are no expressions, then #f is returned. */
+Cell* sf_or(Lex* e, const Cell* a) {
+    (void)e;
+    if (a->count == 0) {
+        return make_cell_boolean(0);
+    }
+    for (int i = 0; i < a->count; i++) {
+        Cell *test_result = coz_eval(e, a->cell[i]);
+        if (!(test_result->type == CELL_BOOLEAN && test_result->boolean_v == 0)) {
+            /* first truthy value → return it */
+            return test_result;
+        }
+    }
+    /* all false → return #f */
+    return make_cell_boolean(0);
 }

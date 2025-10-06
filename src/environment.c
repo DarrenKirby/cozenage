@@ -214,8 +214,6 @@ void lex_add_builtins(Lex* e) {
     lex_add_builtin(e, "exact-integer?", builtin_exact_integer);
     /* Boolean and logical procedures */
     lex_add_builtin(e, "not", builtin_not);
-    lex_add_builtin(e, "and", builtin_and);
-    lex_add_builtin(e, "or", builtin_or);
     lex_add_builtin(e, "boolean", builtin_boolean);
     /* Pair/list procedures */
     lex_add_builtin(e, "cons", builtin_cons);
