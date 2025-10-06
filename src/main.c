@@ -219,7 +219,7 @@ void repl() {
     }
     /* Cozenage libs */
     if (load_libs.coz_bits) {
-        (void)load_scheme_library("coz-bits", e);
+        (void)load_scheme_library("bits", e);
     }
 
     for (;;) {
@@ -247,7 +247,7 @@ Options:\n\
     libraries to pre-load. Accepted values are:\n\
     case-lambda, char, complex, cxr, eval, file, inexact\n\
     lazy, load, process-context, read, repl, time, write\n\
-    coz-ext, coz-bits\n\n\
+    coz-ext, bits\n\n\
 Report bugs to <bulliver@gmail.com>\n", APP_NAME);
 }
 
@@ -290,7 +290,7 @@ void process_library_arg(struct lib_load *l, const char *arg) {
             l->time = 1;
         } else if (strcmp(token, "write") == 0) {
             l->write = 1;
-        } else if (strcmp(token, "coz-bits") == 0) {
+        } else if (strcmp(token, "bits") == 0) {
             l->coz_bits = 1;
         } else {
             fprintf(stderr, "Error: Unknown library name '%s' specified.\n", token);
