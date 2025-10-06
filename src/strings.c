@@ -32,25 +32,25 @@ Cell* builtin_string_to_symbol(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
-    if (a->cell[0]->type != VAL_STR) {
-        return make_val_err("string->symbol: arg 1 must be a string", TYPE_ERR);
+    if (a->cell[0]->type != CELL_STRING) {
+        return make_cell_error("string->symbol: arg 1 must be a string", TYPE_ERR);
     }
-    return make_val_sym(a->cell[0]->str);
+    return make_cell_symbol(a->cell[0]->str);
 }
 
 Cell* builtin_symbol_to_string(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
-    if (a->cell[0]->type != VAL_SYM) {
-        return make_val_err("symbol->string: arg 1 must be a symbol", TYPE_ERR);
+    if (a->cell[0]->type != CELL_SYMBOL) {
+        return make_cell_error("symbol->string: arg 1 must be a symbol", TYPE_ERR);
     }
-    return make_val_str(a->cell[0]->sym);
+    return make_cell_string(a->cell[0]->sym);
 }
 
 Cell* builtin_string(const Lex* e, const Cell* a) {
     (void)e;
-    Cell* err = check_arg_types(a, VAL_CHAR);
+    Cell* err = check_arg_types(a, CELL_CHAR);
     if (err) return err;
 
     const int str_len = a->count;
@@ -58,19 +58,19 @@ Cell* builtin_string(const Lex* e, const Cell* a) {
     int32_t j = 0;
     for (int i = 0; i < str_len; i++) {
         const Cell* char_cell = a->cell[i];
-        const UChar32 code_point = char_cell->c_val;
+        const UChar32 code_point = char_cell->char_v;
         U8_APPEND_UNSAFE(the_string, j, code_point);
     }
     the_string[j] = '\0';
-    return make_val_str(the_string);
+    return make_cell_string(the_string);
 }
 
 Cell* builtin_string_length(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
-    if (a->cell[0]->type != VAL_STR) {
-        return make_val_err("string-length: arg 1 must be a string", TYPE_ERR);
+    if (a->cell[0]->type != CELL_STRING) {
+        return make_cell_error("string-length: arg 1 must be a string", TYPE_ERR);
     }
 
     const char* s = a->cell[0]->str;
@@ -85,16 +85,16 @@ Cell* builtin_string_length(const Lex* e, const Cell* a) {
         U8_NEXT(s, i, len_bytes, c);
         /* A negative value for 'c' indicates an invalid UTF-8 sequence */
         if (c < 0) {
-            return make_val_err("string-length: invalid UTF-8 sequence in string", VALUE_ERR);
+            return make_cell_error("string-length: invalid UTF-8 sequence in string", VALUE_ERR);
         }
         code_point_count++;
     }
-    return make_val_int(code_point_count);
+    return make_cell_integer(code_point_count);
 }
 
 Cell* builtin_string_eq_pred(const Lex* e, const Cell* a) {
     (void)e;
-    Cell* err = check_arg_types(a, VAL_STR);
+    Cell* err = check_arg_types(a, CELL_STRING);
     if (err) return err;
     err = CHECK_ARITY_MIN(a, 1);
     if (err) return err;
@@ -106,22 +106,22 @@ Cell* builtin_string_eq_pred(const Lex* e, const Cell* a) {
         /* quick exit before conversion: if the len is not the same,
          * the strings are not the same */
         if (strlen(lhs) != strlen(rhs)) {
-            return make_val_bool(0);
+            return make_cell_boolean(0);
         }
         /* convert to UTF-16 */
         const UChar* U_lhs = convert_to_utf16(lhs);
         const UChar* U_rhs = convert_to_utf16(rhs);
         if (u_strcmpCodePointOrder(U_lhs, U_rhs) != 0)  {
-            return make_val_bool(0);
+            return make_cell_boolean(0);
         }
     }
     /* If we get here, we're equal */
-    return make_val_bool(1);
+    return make_cell_boolean(1);
 }
 
 Cell* builtin_string_lt_pred(const Lex* e, const Cell* a) {
     (void)e;
-    Cell* err = check_arg_types(a, VAL_STR);
+    Cell* err = check_arg_types(a, CELL_STRING);
     if (err) return err;
     err = CHECK_ARITY_MIN(a, 1);
     if (err) return err;
@@ -134,16 +134,16 @@ Cell* builtin_string_lt_pred(const Lex* e, const Cell* a) {
         const UChar* U_lhs = convert_to_utf16(lhs);
         const UChar* U_rhs = convert_to_utf16(rhs);
         if (u_strcmpCodePointOrder(U_lhs, U_rhs) >= 0)  {
-            return make_val_bool(0);
+            return make_cell_boolean(0);
         }
     }
     /* If we get here, s1 < s2 < sn ... */
-    return make_val_bool(1);
+    return make_cell_boolean(1);
 }
 
 Cell* builtin_string_lte_pred(const Lex* e, const Cell* a) {
     (void)e;
-    Cell* err = check_arg_types(a, VAL_STR);
+    Cell* err = check_arg_types(a, CELL_STRING);
     if (err) return err;
     err = CHECK_ARITY_MIN(a, 1);
     if (err) return err;
@@ -156,16 +156,16 @@ Cell* builtin_string_lte_pred(const Lex* e, const Cell* a) {
         const UChar* U_lhs = convert_to_utf16(lhs);
         const UChar* U_rhs = convert_to_utf16(rhs);
         if (u_strcmpCodePointOrder(U_lhs, U_rhs) > 0)  {
-            return make_val_bool(0);
+            return make_cell_boolean(0);
         }
     }
     /* If we get here, s1 <= s2 <= sn ... */
-    return make_val_bool(1);
+    return make_cell_boolean(1);
 }
 
 Cell* builtin_string_gt_pred(const Lex* e, const Cell* a) {
     (void)e;
-    Cell* err = check_arg_types(a, VAL_STR);
+    Cell* err = check_arg_types(a, CELL_STRING);
     if (err) return err;
     err = CHECK_ARITY_MIN(a, 1);
     if (err) return err;
@@ -178,16 +178,16 @@ Cell* builtin_string_gt_pred(const Lex* e, const Cell* a) {
         const UChar* U_lhs = convert_to_utf16(lhs);
         const UChar* U_rhs = convert_to_utf16(rhs);
         if (u_strcmpCodePointOrder(U_lhs, U_rhs) <= 0)  {
-            return make_val_bool(0);
+            return make_cell_boolean(0);
         }
     }
     /* If we get here, s1 > s2 > sn ... */
-    return make_val_bool(1);
+    return make_cell_boolean(1);
 }
 
 Cell* builtin_string_gte_pred(const Lex* e, const Cell* a) {
     (void)e;
-    Cell* err = check_arg_types(a, VAL_STR);
+    Cell* err = check_arg_types(a, CELL_STRING);
     if (err) return err;
     err = CHECK_ARITY_MIN(a, 1);
     if (err) return err;
@@ -200,16 +200,16 @@ Cell* builtin_string_gte_pred(const Lex* e, const Cell* a) {
         const UChar* U_lhs = convert_to_utf16(lhs);
         const UChar* U_rhs = convert_to_utf16(rhs);
         if (u_strcmpCodePointOrder(U_lhs, U_rhs) >= 0)  {
-            return make_val_bool(0);
+            return make_cell_boolean(0);
         }
     }
     /* If we get here, s1 >= s2 >= sn ... */
-    return make_val_bool(1);
+    return make_cell_boolean(1);
 }
 
 Cell* builtin_string_append(const Lex* e, const Cell* a) {
     (void)e;
-    Cell* err = check_arg_types(a, VAL_STR);
+    Cell* err = check_arg_types(a, CELL_STRING);
     if (err) return err;
     err = CHECK_ARITY_MIN(a, 1);
     if (err) return err;
@@ -239,5 +239,5 @@ Cell* builtin_string_append(const Lex* e, const Cell* a) {
             u_strcat(result, U_rhs);
         }
     }
-    return make_val_str(convert_to_utf8(result));
+    return make_cell_string(convert_to_utf8(result));
 }

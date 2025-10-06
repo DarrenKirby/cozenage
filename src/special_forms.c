@@ -42,10 +42,10 @@ int is_syntactic_keyword(const char* s) {
     return 0;
 }
 
-/* Convert a VAL_SEXPR to a proper VAL_PAIR linked-list */
+/* Convert a CELL_SEXPR to a proper CELL_PAIR linked-list */
 Cell* sexpr_to_list(Cell* c) {
     /* If the item is not an S-expression, it's an atom. Return it */
-    if (c->type != VAL_SEXPR) {
+    if (c->type != CELL_SEXPR) {
         return c;
     }
 
@@ -53,7 +53,7 @@ Cell* sexpr_to_list(Cell* c) {
     int dot_pos = -1;
     if (c->count > 1) {
         const Cell* dot_candidate = c->cell[c->count - 2];
-        if (dot_candidate->type == VAL_SYM && strcmp(dot_candidate->sym, ".") == 0) {
+        if (dot_candidate->type == CELL_SYMBOL && strcmp(dot_candidate->sym, ".") == 0) {
             dot_pos = c->count - 2;
         }
     }
@@ -67,12 +67,12 @@ Cell* sexpr_to_list(Cell* c) {
         Cell* list_head = final_cdr;
         for (int i = dot_pos - 1; i >= 0; i--) {
             Cell* element = sexpr_to_list(c->cell[i]);
-            list_head = make_val_pair(element, list_head);
+            list_head = make_cell_pair(element, list_head);
         }
         return list_head;
     }
     /* Handle Proper List */
-    Cell* list_head = make_val_nil();
+    Cell* list_head = make_cell_nil();
     const int len = c->count;
 
     for (int i = len - 1; i >= 0; i--) {
@@ -81,7 +81,7 @@ Cell* sexpr_to_list(Cell* c) {
         Cell* element = sexpr_to_list(c->cell[i]);
 
         /* Prepend the new element to the head of our list. */
-        list_head = make_val_pair(element, list_head);
+        list_head = make_cell_pair(element, list_head);
         list_head->len = len - i;
     }
     return list_head;
@@ -89,8 +89,8 @@ Cell* sexpr_to_list(Cell* c) {
 
 /* Evaluate a lambda call, and return the value */
 Cell* apply_lambda(Cell* lambda, const Cell* args) {
-    if (!lambda || lambda->type != VAL_PROC || lambda->is_builtin) {
-        return make_val_err("Not a lambda", TYPE_ERR);
+    if (!lambda || lambda->type != CELL_PROC || lambda->is_builtin) {
+        return make_cell_error("Not a lambda", TYPE_ERR);
     }
 
     /* Create a new child environment */
@@ -98,13 +98,13 @@ Cell* apply_lambda(Cell* lambda, const Cell* args) {
 
     /* Bind formals to arguments */
     if (lambda->formals->count != args->count) {
-        return make_val_err("Lambda: wrong number of arguments", ARITY_ERR);
+        return make_cell_error("Lambda: wrong number of arguments", ARITY_ERR);
     }
 
     for (int i = 0; i < args->count; i++) {
         const Cell* sym = lambda->formals->cell[i];
         const Cell* val = args->cell[i];
-        lex_put(local_env, sym, val);  /* sym should be VAL_SYM, val evaluated */
+        lex_put(local_env, sym, val);  /* sym should be CELL_SYMBOL, val evaluated */
     }
 
     /* Evaluate body expressions in this environment */
@@ -131,7 +131,7 @@ Cell* apply_lambda(Cell* lambda, const Cell* args) {
  */
 Cell* sf_define(Lex* e, const Cell* a) {
     if (a->count < 2) {
-        return make_val_err("define requires at least 2 arguments", ARITY_ERR);
+        return make_cell_error("define requires at least 2 arguments", ARITY_ERR);
     }
     const Cell* target = a->cell[0];
 
@@ -140,18 +140,18 @@ Cell* sf_define(Lex* e, const Cell* a) {
         char err_buf[128];
         snprintf(err_buf, sizeof(err_buf),
                  "Syntax keyword '%s' cannot be used as a variable", target->sym);
-        return make_val_err(err_buf, VALUE_ERR);
+        return make_cell_error(err_buf, VALUE_ERR);
     }
 
     /* (define <symbol> <expr>) */
-    if (target->type == VAL_SYM) {
+    if (target->type == CELL_SYMBOL) {
         Cell* val = coz_eval(e, a->cell[1]);
         /* Bail out if error encountered during evaluation */
-        if (val->type == VAL_ERR) {
+        if (val->type == CELL_ERROR) {
             return val;
         }
         /* Grab the name for the un-sugared define lambda */
-        if (val->type == VAL_PROC) {
+        if (val->type == CELL_PROC) {
             val->l_name = GC_strdup(target->sym);
         }
         lex_put(e, target, val);
@@ -159,23 +159,23 @@ Cell* sf_define(Lex* e, const Cell* a) {
     }
 
     /* (define (<f-name> <args>) <body>) */
-    if (target->type == VAL_SEXPR && target->count > 0 &&
-        target->cell[0]->type == VAL_SYM) {
+    if (target->type == CELL_SEXPR && target->count > 0 &&
+        target->cell[0]->type == CELL_SYMBOL) {
 
         /* first element is function name */
         const Cell* fname = target->cell[0];
 
         /* rest are formal args */
-        Cell* formals = make_val_sexpr();
+        Cell* formals = make_cell_sexpr();
         for (int i = 1; i < target->count; i++) {
-            if (target->cell[i]->type != VAL_SYM) {
-                return make_val_err("lambda formals must be symbols", TYPE_ERR);
+            if (target->cell[i]->type != CELL_SYMBOL) {
+                return make_cell_error("lambda formals must be symbols", TYPE_ERR);
             }
             cell_add(formals, cell_copy(target->cell[i]));
         }
 
         /* build lambda with args + body */
-        Cell* body = make_val_sexpr();
+        Cell* body = make_cell_sexpr();
         for (int i = 1; i < a->count; i++) {
             cell_add(body, cell_copy(a->cell[i]));
         }
@@ -185,7 +185,7 @@ Cell* sf_define(Lex* e, const Cell* a) {
         return lam;
         }
 
-    return make_val_err("invalid define syntax", SYNTAX_ERR);
+    return make_cell_error("invalid define syntax", SYNTAX_ERR);
 }
 
 /* (quote ⟨datum⟩) OR '⟨datum⟩
@@ -194,23 +194,23 @@ Cell* sf_define(Lex* e, const Cell* a) {
 Cell* sf_quote(const Lex* e, Cell* a) {
     (void)e;
     if (a->count != 1) {
-        return make_val_err("quote takes exactly one argument", ARITY_ERR);
+        return make_cell_error("quote takes exactly one argument", ARITY_ERR);
     }
     /* Extract the S-expression that was quoted. */
     Cell* qexpr = cell_take(a, 0);
 
     /* Flag whether to do env lookup */
-    if (qexpr->count == 1 && qexpr->type == VAL_SYM) {
+    if (qexpr->count == 1 && qexpr->type == CELL_SYMBOL) {
         qexpr->quoted = true;
     }
     if (qexpr->count > 1) {
         for (int i = 0; i < qexpr->count; i++) {
-            if (qexpr->cell[i]->type == VAL_SYM) {
+            if (qexpr->cell[i]->type == CELL_SYMBOL) {
                 qexpr->cell[i]->quoted = true;
             }
         }
     }
-    /* Convert the VAL_SEXPR into a proper VAL_PAIR list. */
+    /* Convert the CELL_SEXPR into a proper CELL_PAIR list. */
     Cell* result = sexpr_to_list(qexpr);
     return result;
 }
@@ -224,7 +224,7 @@ Cell* sf_quote(const Lex* e, Cell* a) {
  * created by this process is referred to as the invocation environment. */
 Cell* sf_lambda(Lex* e, Cell* a) {
     if (a->count < 2) {
-        return make_val_err("lambda requires formals and a body", SYNTAX_ERR);
+        return make_cell_error("lambda requires formals and a body", SYNTAX_ERR);
     }
 
     const Cell* formals = cell_pop(a, 0);   /* first arg */
@@ -232,8 +232,8 @@ Cell* sf_lambda(Lex* e, Cell* a) {
 
     /* formals should be a list of symbols */
     for (int i = 0; i < formals->count; i++) {
-        if (formals->cell[i]->type != VAL_SYM) {
-            return make_val_err("lambda formals must be symbols", TYPE_ERR);
+        if (formals->cell[i]->type != CELL_SYMBOL) {
+            return make_cell_error("lambda formals must be symbols", TYPE_ERR);
         }
     }
 
@@ -253,7 +253,7 @@ Cell* sf_if(Lex* e, const Cell* a) {
     const Cell* test = coz_eval(e, a->cell[0]);
 
     /* Note: this 'just works' with no <alternative>, as coz_eval() returns null with no args */
-    if (test->type == VAL_BOOL && test->b_val == 0) {
+    if (test->type == CELL_BOOLEAN && test->boolean_v == 0) {
         return coz_eval(e, a->cell[2]);
     }
     return coz_eval(e, a->cell[1]);
@@ -270,7 +270,7 @@ Cell* sf_when(Lex* e, const Cell* a) {
     const Cell* test = coz_eval(e, a->cell[0]);
 
     /* Check for literal #f */
-    if (test->type == VAL_BOOL && test->b_val == 0) {
+    if (test->type == CELL_BOOLEAN && test->boolean_v == 0) {
         return nullptr;
     }
     Cell* result = nullptr;
@@ -291,7 +291,7 @@ Cell* sf_unless(Lex* e, const Cell* a) {
     const Cell* test = coz_eval(e, a->cell[0]);
 
     /* Check for literal #f */
-    if (test->type == VAL_BOOL && test->b_val == 0) {
+    if (test->type == CELL_BOOLEAN && test->boolean_v == 0) {
         Cell* result = nullptr;
         for (int i = 1; i < a->count; i++) {
             result = coz_eval(e, a->cell[i]);
@@ -323,17 +323,17 @@ Cell* sf_cond(Lex* e, const Cell* a) {
     //Cell* err = CHECK_ARITY_MIN(a, 1);
     //if (err) return err;
     if (a->count == 0) {
-        return make_val_err("ill-formed cond expression", VALUE_ERR);
+        return make_cell_error("ill-formed cond expression", VALUE_ERR);
     }
 
     Cell* result = nullptr;
     for (int i = 0; i < a->count; i++) {
         const Cell* clause = a->cell[i];
         /* Check for 'else' clause and if found evaluate any expressions*/
-        if (clause->cell[0]->type == VAL_SYM && strcmp(clause->cell[0]->sym, "else") == 0) {
+        if (clause->cell[0]->type == CELL_SYMBOL && strcmp(clause->cell[0]->sym, "else") == 0) {
             /* else clause must be last */
             if (i != a->count-1) {
-                return make_val_err("'else' clause must be last in the cond expression",
+                return make_cell_error("'else' clause must be last in the cond expression",
                                      SYNTAX_ERR);
             }
             for (int j = 1; j < clause->count; j++) {
@@ -344,7 +344,7 @@ Cell* sf_cond(Lex* e, const Cell* a) {
         /* Not an else, so evaluate the test */
         Cell* test = coz_eval(e, clause->cell[0]);
         /* Move along if current test is #f */
-        if (test->type == VAL_BOOL && test->b_val == 0) {
+        if (test->type == CELL_BOOLEAN && test->boolean_v == 0) {
             continue;
         }
         /* Test is truthy - first see if there is an expression */
@@ -353,19 +353,19 @@ Cell* sf_cond(Lex* e, const Cell* a) {
             return test;
         }
         /* Check for cond '=>' form */
-        if (clause->cell[1]->type == VAL_SYM && strcmp(clause->cell[1]->sym, "=>") == 0) {
+        if (clause->cell[1]->type == CELL_SYMBOL && strcmp(clause->cell[1]->sym, "=>") == 0) {
             if (clause->count <= 2) {
-                return make_val_err("cond '=>' form must have an expression", SYNTAX_ERR);
+                return make_cell_error("cond '=>' form must have an expression", SYNTAX_ERR);
             }
             /* '=>' form can only have one expression after the test */
             if (clause->count > 3) {
-                return make_val_err("cond '=>' form can only have 1 expression after the test",
+                return make_cell_error("cond '=>' form can only have 1 expression after the test",
                                      SYNTAX_ERR);
             }
             const Cell* proc = coz_eval(e, clause->cell[2]);
             /* Expression must evaluate to a procedure */
-            if (proc->type != VAL_PROC) {
-                return make_val_err("expression after '=>' must evaluate to a procedure",
+            if (proc->type != CELL_PROC) {
+                return make_cell_error("expression after '=>' must evaluate to a procedure",
                                      SYNTAX_ERR);
             }
             return coz_eval(e, make_sexpr_len2(proc, test));
@@ -385,15 +385,15 @@ Cell* sf_cond(Lex* e, const Cell* a) {
  * imported bindings. */
 /* TODO: implement 'only', 'except', 'prefix', and 'rename' */
 Cell* sf_import(Lex* e, const Cell* a) {
-    Cell* import_set = make_val_sexpr();
+    Cell* import_set = make_cell_sexpr();
     import_set->cell = GC_MALLOC(sizeof(Cell*) * a->count);
     /* Make a new sexpr which contains pairs of (library . name), */
     int i;
     for (i = 0; i < a->count; i++) {
         const char* lib = GC_strdup(a->cell[i]->cell[0]->sym);
         const char* name = GC_strdup(a->cell[i]->cell[1]->sym);
-        import_set->cell[i] = make_val_pair(make_val_str(lib),
-                     make_val_str(name));
+        import_set->cell[i] = make_cell_pair(make_cell_string(lib),
+                     make_cell_string(name));
     }
     import_set->count = i;
 
@@ -402,15 +402,14 @@ Cell* sf_import(Lex* e, const Cell* a) {
         const char* library_type = import_set->cell[j]->car->str;
         const char* library_name = import_set->cell[j]->cdr->str;
 
-        if (strcmp(library_type, "scheme") == 0) {
+        if (strcmp(library_type, "scheme") == 0 ||
+            strcmp(library_type, "cozenage") == 0) {
             /* Load the Library */
             result = load_scheme_library(library_name, e);
-         } else if (strcmp(library_type, "cozenage") == 0){
-             result = load_scheme_library(library_name, e);
         } else {
             /* TODO: Handle User Libraries Here
              * For example, (import (my-libs utils)). */
-            return make_val_err("import: user-defined libraries not yet supported", GEN_ERR);
+            return make_cell_error("import: user-defined libraries not yet supported", GEN_ERR);
         }
     }
     return result;
@@ -428,25 +427,25 @@ Cell* sf_import(Lex* e, const Cell* a) {
 Cell* sf_let(Lex* e, Cell* a) {
     /* TODO: implement named let */
     const Cell* bindings = cell_pop(a, 0);
-    if (bindings->type != VAL_SEXPR) {
-        return make_val_err("Bindings must be a list", VALUE_ERR);
+    if (bindings->type != CELL_SEXPR) {
+        return make_cell_error("Bindings must be a list", VALUE_ERR);
     }
     const Cell* body = a;
 
     /* separate variables and values from bindings */
     /* TODO: raise error if not all variables are unique*/
-    Cell* vars = make_val_sexpr();
-    Cell* vals = make_val_sexpr();
+    Cell* vars = make_cell_sexpr();
+    Cell* vals = make_cell_sexpr();
     for (int i = 0; i < bindings->count; i++) {
         const Cell* local_b = bindings->cell[i];
-        if (local_b->type != VAL_SEXPR) {
-            return make_val_err("Bindings must be a list", VALUE_ERR);
+        if (local_b->type != CELL_SEXPR) {
+            return make_cell_error("Bindings must be a list", VALUE_ERR);
         }
         if (local_b->count != 2) {
-            return make_val_err("bindings must contain exactly 2 items", VALUE_ERR);
+            return make_cell_error("bindings must contain exactly 2 items", VALUE_ERR);
         }
-        if (local_b->cell[0]->type != VAL_SYM) {
-            return make_val_err("first value in binding must be a symbol", VALUE_ERR);
+        if (local_b->cell[0]->type != CELL_SYMBOL) {
+            return make_cell_error("first value in binding must be a symbol", VALUE_ERR);
         }
         cell_add(vars, local_b->cell[0]);
         cell_add(vals, local_b->cell[1]);
@@ -480,8 +479,8 @@ Cell* sf_let(Lex* e, Cell* a) {
  * in which the first binding is visible, and so on. The ⟨variable⟩s need not be distinct. */
 Cell* sf_let_star(Lex* e, Cell* a) {
     const Cell* bindings = cell_pop(a, 0);
-    if (bindings->type != VAL_SEXPR) {
-        return make_val_err("Bindings must be a list", VALUE_ERR);
+    if (bindings->type != CELL_SEXPR) {
+        return make_cell_error("Bindings must be a list", VALUE_ERR);
     }
     const Cell* body = a;
 
@@ -490,14 +489,14 @@ Cell* sf_let_star(Lex* e, Cell* a) {
 
     for (int i = 0; i < bindings->count; i++) {
         const Cell* local_b = bindings->cell[i];
-        if (local_b->type != VAL_SEXPR) {
-            return make_val_err("Bindings must be a list", VALUE_ERR);
+        if (local_b->type != CELL_SEXPR) {
+            return make_cell_error("Bindings must be a list", VALUE_ERR);
         }
         if (local_b->count != 2) {
-            return make_val_err("bindings must contain exactly 2 items", VALUE_ERR);
+            return make_cell_error("bindings must contain exactly 2 items", VALUE_ERR);
         }
-        if (local_b->cell[0]->type != VAL_SYM) {
-            return make_val_err("first value in binding must be a symbol", VALUE_ERR);
+        if (local_b->cell[0]->type != CELL_SYMBOL) {
+            return make_cell_error("first value in binding must be a symbol", VALUE_ERR);
         }
         const Cell* formal = local_b->cell[0];
         Cell* arg = local_b->cell[1];
@@ -532,12 +531,12 @@ Cell* sf_set_bang(Lex* e, const Cell* a) {
     Cell* err = CHECK_ARITY_EXACT(a, 2);
     if (err) return err;
     const Cell* variable = a->cell[0];
-    if (variable->type != VAL_SYM) {
-        return make_val_err("arg1 must be a symbol", TYPE_ERR);
+    if (variable->type != CELL_SYMBOL) {
+        return make_cell_error("arg1 must be a symbol", TYPE_ERR);
     }
     /* Ensure the variable is already bound in the environment */
     Cell* result = lex_get(e, variable);
-    if (result->type == VAL_ERR) {
+    if (result->type == CELL_ERROR) {
         return result;
     }
     /* Now evaluate new expression */

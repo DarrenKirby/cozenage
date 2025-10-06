@@ -22,66 +22,66 @@
 #include <math.h>
 
 
-/* 'real-part' -> VAL_REAL|VAL_RAT|VAL_INT - returns the real part of a
+/* 'real-part' -> CELL_REAL|CELL_RATIONAL|CELL_INTEGER - returns the real part of a
  * complex number */
 Cell* builtin_real_part(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
     Cell* sub = a->cell[0];
-    if (sub->type == VAL_INT ||
-        sub->type == VAL_REAL ||
-        sub->type == VAL_RAT) {
+    if (sub->type == CELL_INTEGER ||
+        sub->type == CELL_REAL ||
+        sub->type == CELL_RATIONAL) {
         return sub;
     }
-    if (sub->type == VAL_COMPLEX) {
+    if (sub->type == CELL_COMPLEX) {
         return sub->real;
     }
     /* If we didn't return early, we have the wrong arg type */
-    return check_arg_types(make_sexpr_len1(sub), VAL_COMPLEX|VAL_REAL|VAL_RAT|VAL_INT);
+    return check_arg_types(make_sexpr_len1(sub), CELL_COMPLEX|CELL_REAL|CELL_RATIONAL|CELL_INTEGER);
 }
 
-/* 'imag-part' -> VAL_REAL|VAL_RAT|VAL_INT - returns the imaginary part of a
+/* 'imag-part' -> CELL_REAL|CELL_RATIONAL|CELL_INTEGER - returns the imaginary part of a
  * complex number */
 Cell* builtin_imag_part(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
     const Cell* sub = a->cell[0];
-    if (sub->type == VAL_INT ||
-        sub->type == VAL_REAL ||
-        sub->type == VAL_RAT) {
-        return make_val_int(0);
+    if (sub->type == CELL_INTEGER ||
+        sub->type == CELL_REAL ||
+        sub->type == CELL_RATIONAL) {
+        return make_cell_integer(0);
         }
-    if (sub->type == VAL_COMPLEX) {
+    if (sub->type == CELL_COMPLEX) {
         return sub->imag;
     }
     /* If we didn't return early, we have the wrong arg type */
-    return check_arg_types(make_sexpr_len1(sub), VAL_COMPLEX|VAL_REAL|VAL_RAT|VAL_INT);
+    return check_arg_types(make_sexpr_len1(sub), CELL_COMPLEX|CELL_REAL|CELL_RATIONAL|CELL_INTEGER);
 }
 
-/* 'make-rectangular' -> VAL_COMPLEX - convert a complex number to rectangular form */
+/* 'make-rectangular' -> CELL_COMPLEX- convert a complex number to rectangular form */
 Cell* builtin_make_rectangular(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2);
     if (err) return err;
-    err = check_arg_types(a, VAL_REAL|VAL_RAT|VAL_INT);
+    err = check_arg_types(a, CELL_REAL|CELL_RATIONAL|CELL_INTEGER);
     if (err) return err;
 
-    return make_val_complex(a->cell[0], a->cell[1]);
+    return make_cell_complex(a->cell[0], a->cell[1]);
 }
 
-/* 'angle' -> VAL_REAL- calculate angle 'θ' of complex number */
+/* 'angle' -> CELL_REAL- calculate angle 'θ' of complex number */
 Cell* builtin_angle(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
-    err = check_arg_types(a, VAL_REAL|VAL_RAT|VAL_INT|VAL_COMPLEX);
+    err = check_arg_types(a, CELL_REAL|CELL_RATIONAL|CELL_INTEGER|CELL_COMPLEX);
     if (err) return err;
 
     const Cell* arg = a->cell[0];
     switch (arg->type) {
-        case VAL_COMPLEX: {
+        case CELL_COMPLEX: {
             const long double r = cell_to_long_double(arg->real);
             const long double i = cell_to_long_double(arg->imag);
             return make_cell_from_double(atan2l(i, r));
@@ -91,12 +91,12 @@ Cell* builtin_angle(const Lex* e, const Cell* a) {
     }
 }
 
-/* 'make-polar' -> VAL_COMPLEX - convert a complex number to polar form */
+/* 'make-polar' -> CELL_COMPLEX- convert a complex number to polar form */
 Cell* builtin_make_polar(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2);
     if (err) return err;
-    err = check_arg_types(a, VAL_REAL|VAL_RAT|VAL_INT);
+    err = check_arg_types(a, CELL_REAL|CELL_RATIONAL|CELL_INTEGER);
     if (err) return err;
 
     const long double M = cell_to_long_double(a->cell[0]);
@@ -105,7 +105,7 @@ Cell* builtin_make_polar(const Lex* e, const Cell* a) {
     const long double real_part = M * cosl(A);
     const long double imag_part = M * sinl(A);
 
-    return make_val_complex(
+    return make_cell_complex(
         make_cell_from_double(real_part),
         make_cell_from_double(imag_part)
         );

@@ -30,34 +30,34 @@ Cell* builtin_char_to_int(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
-    err = check_arg_types(a, VAL_CHAR);
+    err = check_arg_types(a, CELL_CHAR);
     if (err) return err;
 
-    return make_val_int(a->cell[0]->c_val);
+    return make_cell_integer(a->cell[0]->char_v);
 }
 
 Cell* builtin_int_to_char(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
-    err = check_arg_types(a, VAL_INT);
+    err = check_arg_types(a, CELL_INTEGER);
     if (err) return err;
 
-    const UChar32 val = (int)a->cell[0]->i_val;
+    const UChar32 val = (int)a->cell[0]->integer_v;
     if (val < 0 || val > 0x10FFFF) {
-        return make_val_err("integer->char: invalid code point", VALUE_ERR);
+        return make_cell_error("integer->char: invalid code point", VALUE_ERR);
     }
-    return make_val_char(val);
+    return make_cell_char(val);
 }
 
 Cell* builtin_char_equal_pred(const Lex* e, const Cell* a) {
     (void)e;
-    Cell* err = check_arg_types(a, VAL_CHAR);
+    Cell* err = check_arg_types(a, CELL_CHAR);
     if (err) return err;
 
     Cell** cells = GC_MALLOC(sizeof(Cell*) * a->count);;
     for (int i = 0; i < a->count; i++) {
-        cells[i] = make_val_int(a->cell[i]->c_val);
+        cells[i] = make_cell_integer(a->cell[i]->char_v);
     }
 
     const Cell* cell_sexpr = make_sexpr_from_array(a->count, cells);
@@ -66,12 +66,12 @@ Cell* builtin_char_equal_pred(const Lex* e, const Cell* a) {
 
 Cell* builtin_char_lt_pred(const Lex* e, const Cell* a) {
     (void)e;
-    Cell* err = check_arg_types(a, VAL_CHAR);
+    Cell* err = check_arg_types(a, CELL_CHAR);
     if (err) return err;
 
     Cell** cells = GC_MALLOC(sizeof(Cell*) * a->count);;
     for (int i = 0; i < a->count; i++) {
-        cells[i] = make_val_int(a->cell[i]->c_val);
+        cells[i] = make_cell_integer(a->cell[i]->char_v);
     }
 
     const Cell* cell_sexpr = make_sexpr_from_array(a->count, cells);
@@ -80,12 +80,12 @@ Cell* builtin_char_lt_pred(const Lex* e, const Cell* a) {
 
 Cell* builtin_char_lte_pred(const Lex* e, const Cell* a) {
     (void)e;
-    Cell* err = check_arg_types(a, VAL_CHAR);
+    Cell* err = check_arg_types(a, CELL_CHAR);
     if (err) return err;
 
     Cell** cells = GC_MALLOC(sizeof(Cell*) * a->count);;
     for (int i = 0; i < a->count; i++) {
-        cells[i] = make_val_int(a->cell[i]->c_val);
+        cells[i] = make_cell_integer(a->cell[i]->char_v);
     }
 
     const Cell* cell_sexpr = make_sexpr_from_array(a->count, cells);
@@ -94,12 +94,12 @@ Cell* builtin_char_lte_pred(const Lex* e, const Cell* a) {
 
 Cell* builtin_char_gt_pred(const Lex* e, const Cell* a) {
     (void)e;
-    Cell* err = check_arg_types(a, VAL_CHAR);
+    Cell* err = check_arg_types(a, CELL_CHAR);
     if (err) return err;
 
     Cell** cells = GC_MALLOC(sizeof(Cell*) * a->count);;
     for (int i = 0; i < a->count; i++) {
-        cells[i] = make_val_int(a->cell[i]->c_val);
+        cells[i] = make_cell_integer(a->cell[i]->char_v);
     }
 
     const Cell* cell_sexpr = make_sexpr_from_array(a->count, cells);
@@ -108,12 +108,12 @@ Cell* builtin_char_gt_pred(const Lex* e, const Cell* a) {
 
 Cell* builtin_char_gte_pred(const Lex* e, const Cell* a) {
     (void)e;
-    Cell* err = check_arg_types(a, VAL_CHAR);
+    Cell* err = check_arg_types(a, CELL_CHAR);
     if (err) return err;
 
     Cell** cells = GC_MALLOC(sizeof(Cell*) * a->count);;
     for (int i = 0; i < a->count; i++) {
-        cells[i] = make_val_int(a->cell[i]->c_val);
+        cells[i] = make_cell_integer(a->cell[i]->char_v);
     }
 
     const Cell* cell_sexpr = make_sexpr_from_array(a->count, cells);

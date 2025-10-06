@@ -25,7 +25,7 @@
 /* Returns the cosine of arg (arg is in radians). */
 Cell* builtin_cos(const Lex* e, const Cell* a) {
     (void)e;
-    Cell* err = check_arg_types(a, VAL_INT|VAL_RAT|VAL_REAL);
+    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL);
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
     /* TODO: add complex support */
@@ -38,7 +38,7 @@ Cell* builtin_cos(const Lex* e, const Cell* a) {
 /* Returns the arccosine of arg, in radians */
 Cell* builtin_acos(const Lex* e, const Cell* a) {
     (void)e;
-    Cell* err = check_arg_types(a, VAL_INT|VAL_RAT|VAL_REAL);
+    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL);
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
     /* TODO: add complex support */
@@ -51,7 +51,7 @@ Cell* builtin_acos(const Lex* e, const Cell* a) {
 /* Returns the sine of arg (arg is in radians) */
 Cell* builtin_sin(const Lex* e, const Cell* a) {
     (void)e;
-    Cell* err = check_arg_types(a, VAL_INT|VAL_RAT|VAL_REAL);
+    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL);
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
     /* TODO: add complex support */
@@ -64,7 +64,7 @@ Cell* builtin_sin(const Lex* e, const Cell* a) {
 /* Returns the arcsine of arg, in radians */
 Cell* builtin_asin(const Lex* e, const Cell* a) {
     (void)e;
-    Cell* err = check_arg_types(a, VAL_INT|VAL_RAT|VAL_REAL);
+    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL);
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
     /* TODO: add complex support */
@@ -77,7 +77,7 @@ Cell* builtin_asin(const Lex* e, const Cell* a) {
 /* Returns the tangent of arg (arg is in radians) */
 Cell* builtin_tan(const Lex* e, const Cell* a) {
     (void)e;
-    Cell* err = check_arg_types(a, VAL_INT|VAL_RAT|VAL_REAL);
+    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL);
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
     /* TODO: add complex support */
@@ -92,7 +92,7 @@ Cell* builtin_tan(const Lex* e, const Cell* a) {
  * to polar coordinates (r, theta) */
 Cell* builtin_atan(const Lex* e, const Cell* a) {
     (void)e;
-    Cell* err = check_arg_types(a, VAL_INT|VAL_RAT|VAL_REAL);
+    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL);
     if (err) { return err; }
     if ((err = CHECK_ARITY_RANGE(a, 1, 2))) { return err; }
     /* TODO: add complex support */
@@ -112,7 +112,7 @@ Cell* builtin_atan(const Lex* e, const Cell* a) {
 /* Returns the value of E raised to arg power */
 Cell* builtin_exp(const Lex* e, const Cell* a) {
     (void)e;
-    Cell* err = check_arg_types(a, VAL_INT|VAL_RAT|VAL_REAL);
+    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL);
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
     /* TODO: add complex support */
@@ -126,7 +126,7 @@ Cell* builtin_exp(const Lex* e, const Cell* a) {
  * With two args (n, b): Returns log n base b */
 Cell* builtin_log(const Lex* e, const Cell* a) {
     (void)e;
-    Cell* err = check_arg_types(a, VAL_INT|VAL_RAT|VAL_REAL);
+    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL);
     if (err) { return err; }
     if ((err = CHECK_ARITY_RANGE(a, 1, 2))) { return err; }
     /* TODO: add complex support */
@@ -144,7 +144,7 @@ Cell* builtin_log(const Lex* e, const Cell* a) {
 /* Equivalent to (log n 2) */
 Cell* builtin_log2(const Lex* e, const Cell* a) {
     (void)e;
-    Cell* err = check_arg_types(a, VAL_INT|VAL_RAT|VAL_REAL);
+    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL);
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
     /* TODO: add complex support */
@@ -157,7 +157,7 @@ Cell* builtin_log2(const Lex* e, const Cell* a) {
 /* Equivalent to (log n 10) */
 Cell* builtin_log10(const Lex* e, const Cell* a) {
     (void)e;
-    Cell* err = check_arg_types(a, VAL_INT|VAL_RAT|VAL_REAL);
+    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL);
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
     /* TODO: add complex support */
@@ -170,7 +170,7 @@ Cell* builtin_log10(const Lex* e, const Cell* a) {
 /* Returns the square root of arg */
 Cell* builtin_sqrt(const Lex* e, const Cell* a) {
     (void)e;
-    Cell* err = check_arg_types(a, VAL_INT|VAL_RAT|VAL_REAL);
+    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL);
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
     /* TODO: add complex support */
@@ -183,7 +183,7 @@ Cell* builtin_sqrt(const Lex* e, const Cell* a) {
 /* Returns the cube root of arg */
 Cell* builtin_cbrt(const Lex* e, const Cell* a) {
     (void)e;
-    Cell* err = check_arg_types(a, VAL_INT|VAL_RAT|VAL_REAL);
+    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL);
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
     /* TODO: add complex support */
@@ -196,46 +196,46 @@ Cell* builtin_cbrt(const Lex* e, const Cell* a) {
 /* Predicate to test if val is infinite */
 Cell* builtin_infinite(const Lex* e, const Cell* a) {
     (void)e;
-    Cell* err = check_arg_types(a, VAL_INT|VAL_RAT|VAL_REAL);
+    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL);
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
     /* TODO: add complex support */
 
     const long double n = cell_to_long_double(a->cell[0]);
     if (isinf(n)) {
-        return make_val_bool(1);
+        return make_cell_boolean(1);
     }
-    return make_val_bool(0);
+    return make_cell_boolean(0);
 }
 
 /* Predicate to test if val is finite */
 Cell* builtin_finite(const Lex* e, const Cell* a) {
     (void)e;
-    Cell* err = check_arg_types(a, VAL_INT|VAL_RAT|VAL_REAL);
+    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL);
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
     /* TODO: add complex support */
 
     const long double n = cell_to_long_double(a->cell[0]);
     if (isinf(n)) {
-        return make_val_bool(0);
+        return make_cell_boolean(0);
     }
-    return make_val_bool(1);
+    return make_cell_boolean(1);
 }
 
 /* Predicate to test if val is nan */
 Cell* builtin_nan(const Lex* e, const Cell* a) {
     (void)e;
-    Cell* err = check_arg_types(a, VAL_INT|VAL_RAT|VAL_REAL);
+    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL);
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
     /* TODO: add complex support */
 
     const long double n = cell_to_long_double(a->cell[0]);
     if (isnan(n)) {
-        return make_val_bool(1);
+        return make_cell_boolean(1);
     }
-    return make_val_bool(0);
+    return make_cell_boolean(0);
 }
 
 void lex_add_inexact_lib(Lex* e) {

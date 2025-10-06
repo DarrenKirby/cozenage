@@ -27,10 +27,10 @@ Cell* builtin_eval(const Lex* e, const Cell* a) {
     if (err) return err;
     Cell* args;
     /* Convert list to s-expr if we are handed a quote */
-    if (a->cell[0]->type == VAL_PAIR) {
+    if (a->cell[0]->type == CELL_PAIR) {
         args = make_sexpr_from_list(a->cell[0]);
         for (int i = 0; i < args->count; i++ ) {
-            if (args->cell[i]->type == VAL_PAIR && args->cell[i]->len != -1) {
+            if (args->cell[i]->type == CELL_PAIR && args->cell[i]->len != -1) {
                 Cell* tmp = cell_copy(args->cell[i]);
                 args->cell[i] = make_sexpr_from_list(tmp);
             }

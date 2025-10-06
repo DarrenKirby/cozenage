@@ -46,86 +46,86 @@ Cell* builtin_input_port_pred(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
-    if (a->cell[0]->type != VAL_PORT || a->cell[0]->port_t != INPUT_PORT) {
-        return make_val_bool(0);
+    if (a->cell[0]->type != CELL_PORT || a->cell[0]->port_t != INPUT_PORT) {
+        return make_cell_boolean(0);
     }
-    return make_val_bool(1);
+    return make_cell_boolean(1);
 }
 
 Cell* builtin_output_port_pred(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
-    if (a->cell[0]->type != VAL_PORT || a->cell[0]->port_t != OUTPUT_PORT) {
-        return make_val_bool(0);
+    if (a->cell[0]->type != CELL_PORT || a->cell[0]->port_t != OUTPUT_PORT) {
+        return make_cell_boolean(0);
     }
-    return make_val_bool(1);
+    return make_cell_boolean(1);
 }
 
 Cell* builtin_text_port_pred(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
-    if (a->cell[0]->type != VAL_PORT || a->cell[0]->stream_t != TEXT_PORT) {
-        return make_val_bool(0);
+    if (a->cell[0]->type != CELL_PORT || a->cell[0]->stream_t != TEXT_PORT) {
+        return make_cell_boolean(0);
     }
-    return make_val_bool(1);
+    return make_cell_boolean(1);
 }
 
 Cell* builtin_binary_port_pred(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
-    if (a->cell[0]->type != VAL_PORT || a->cell[0]->stream_t != BINARY_PORT) {
-        return make_val_bool(0);
+    if (a->cell[0]->type != CELL_PORT || a->cell[0]->stream_t != BINARY_PORT) {
+        return make_cell_boolean(0);
     }
-    return make_val_bool(1);
+    return make_cell_boolean(1);
 }
 
 Cell* builtin_input_port_open(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
-    if (a->cell[0]->type == VAL_PORT ||
+    if (a->cell[0]->type == CELL_PORT ||
         a->cell[0]->port_t != INPUT_PORT ||
         a->cell[0]->is_open == true) {
-        return make_val_bool(1);
+        return make_cell_boolean(1);
         }
-    return make_val_bool(0);
+    return make_cell_boolean(0);
 }
 
 Cell* builtin_output_port_open(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
-    if (a->cell[0]->type == VAL_PORT ||
+    if (a->cell[0]->type == CELL_PORT ||
         a->cell[0]->port_t != OUTPUT_PORT ||
         a->cell[0]->is_open == true) {
-        return make_val_bool(1);
+        return make_cell_boolean(1);
     }
-    return make_val_bool(0);
+    return make_cell_boolean(0);
 }
 
 Cell* builtin_close_port(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
-    if (a->cell[0]->type != VAL_PORT) {
-        return make_val_err("arg1 is not a port", TYPE_ERR);
+    if (a->cell[0]->type != CELL_PORT) {
+        return make_cell_error("arg1 is not a port", TYPE_ERR);
     }
 
     if (a->cell[0]->is_open == 1) {
         fclose(a->cell[0]->fh);
         a->cell[0]->is_open = 0;
     }
-    return make_val_bool(1);
+    return make_cell_boolean(1);
 }
 
 Cell* builtin_read_line(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_RANGE(a, 0, 1);
     if (err) return err;
-    err = check_arg_types(a, VAL_PORT);
+    err = check_arg_types(a, CELL_PORT);
     if (err) return err;
 
     Cell* port;
@@ -136,16 +136,16 @@ Cell* builtin_read_line(const Lex* e, const Cell* a) {
     }
 
     if (port->is_open == 0 || port->port_t != INPUT_PORT)
-        return make_val_err("port is not open for input", GEN_ERR);
+        return make_cell_error("port is not open for input", GEN_ERR);
 
     char *line = nullptr;
     size_t n = 0;
     const ssize_t len = getline(&line, &n, port->fh);
-    if (len <= 0) { free(line); return make_val_eof(); }
+    if (len <= 0) { free(line); return make_cell_eof(); }
     /* remove newline if present */
     if (line[len-1] == '\n') line[len-1] = '\0';
 
-    Cell* result = make_val_str(line);
+    Cell* result = make_cell_string(line);
     free(line);
     return result;
 }
@@ -154,12 +154,12 @@ Cell* builtin_write_string(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_RANGE(a, 1, 4);
     if (err) return err;
-    if (a->cell[0]->type != VAL_STR) {
-        return make_val_err("arg1 must be a string", TYPE_ERR);
+    if (a->cell[0]->type != CELL_STRING) {
+        return make_cell_error("arg1 must be a string", TYPE_ERR);
     }
     if (a->count >= 2) {
-        if (a->cell[1]->type != VAL_PORT) {
-            return make_val_err("arg2 must be a port", TYPE_ERR);
+        if (a->cell[1]->type != CELL_PORT) {
+            return make_cell_error("arg2 must be a port", TYPE_ERR);
         }
     }
     Cell* port;
@@ -169,7 +169,7 @@ Cell* builtin_write_string(const Lex* e, const Cell* a) {
         port = a->cell[1];
     }
     if (fputs(a->cell[0]->str, port->fh) == EOF) {
-        return make_val_err(strerror(errno), FILE_ERR);
+        return make_cell_error(strerror(errno), FILE_ERR);
     }
     /* No meaningful return value */
     return nullptr;
@@ -187,7 +187,7 @@ Cell* builtin_newline(const Lex* e, const Cell* a) {
         port = a->cell[0];
     }
     if (fputs("\n", port->fh) == EOF) {
-        return make_val_err(strerror(errno), FILE_ERR);
+        return make_cell_error(strerror(errno), FILE_ERR);
     }
     /* No meaningful return value */
     return nullptr;

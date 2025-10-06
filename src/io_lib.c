@@ -35,13 +35,13 @@ Cell* builtin_display(const Lex* e, const Cell* a) {
     if (a->count == 1) {
         port = builtin_current_output_port(e, a);
     } else {
-        if (a->cell[1]->type != VAL_PORT) {
-            return make_val_err("arg1 must be a port", TYPE_ERR);
+        if (a->cell[1]->type != CELL_PORT) {
+            return make_cell_error("arg1 must be a port", TYPE_ERR);
         }
         port = a->cell[1];
     }
     if (fputs(a->cell[0]->str, port->fh) == EOF) {
-        return make_val_err(strerror(errno), FILE_ERR);
+        return make_cell_error(strerror(errno), FILE_ERR);
     }
     return NULL;
 }

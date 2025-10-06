@@ -24,162 +24,162 @@
  *       Type identity predicate procedures         *
  * -------------------------------------------------*/
 
-/* 'number?' -> VAL_BOOL - returns #t if obj is numeric, else #f  */
+/* 'number?' -> CELL_BOOLEAN - returns #t if obj is numeric, else #f  */
 Cell* builtin_number_pred(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
 
-    const int mask = VAL_INT|VAL_REAL|VAL_RAT|VAL_COMPLEX;
+    const int mask = CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX;
     if (a->cell[0]->type & mask) {
-        return make_val_bool(1);
+        return make_cell_boolean(1);
     }
-    return make_val_bool(0);
+    return make_cell_boolean(0);
 }
 
-/* 'boolean?' -> VAL_BOOL  - returns #t if obj is either #t or #f
+/* 'boolean?' -> CELL_BOOLEAN  - returns #t if obj is either #t or #f
     and returns #f otherwise. */
 Cell* builtin_boolean_pred(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
-    return make_val_bool(a->cell[0]->type == VAL_BOOL);
+    return make_cell_boolean(a->cell[0]->type == CELL_BOOLEAN);
 }
 
-/* 'null?' -> VAL_BOOL - return #t if obj is null, else #f */
+/* 'null?' -> CELL_BOOLEAN - return #t if obj is null, else #f */
 Cell* builtin_null_pred(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
-    return make_val_bool(a->cell[0]->type == VAL_NIL);
+    return make_cell_boolean(a->cell[0]->type == CELL_NIL);
 }
 
-/* 'pair?' -> VAL_BOOL - return #t if obj is a pair, else #f */
+/* 'pair?' -> CELL_BOOLEAN - return #t if obj is a pair, else #f */
 Cell* builtin_pair_pred(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
-    return make_val_bool(a->cell[0]->type == VAL_PAIR);
+    return make_cell_boolean(a->cell[0]->type == CELL_PAIR);
 }
 
-/* 'procedure?' -> VAL_BOOL - return #t if obj is a procedure, else #f */
+/* 'procedure?' -> CELL_BOOLEAN - return #t if obj is a procedure, else #f */
 Cell* builtin_proc_pred(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
-    return make_val_bool(a->cell[0]->type == VAL_PROC);
+    return make_cell_boolean(a->cell[0]->type == CELL_PROC);
 }
 
-/* 'symbol?' -> VAL_BOOL - return #t if obj is a symbol, else #f */
+/* 'symbol?' -> CELL_BOOLEAN - return #t if obj is a symbol, else #f */
 Cell* builtin_sym_pred(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
-    return make_val_bool(a->cell[0]->type == VAL_SYM);
+    return make_cell_boolean(a->cell[0]->type == CELL_SYMBOL);
 }
 
-/* 'string?' -> VAL_BOOL - return #t if obj is a string, else #f */
+/* 'string?' -> CELL_BOOLEAN - return #t if obj is a string, else #f */
 Cell* builtin_string_pred(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
-    return make_val_bool(a->cell[0]->type == VAL_STR);
+    return make_cell_boolean(a->cell[0]->type == CELL_STRING);
 }
 
-/* 'char?' -> VAL_BOOL - return #t if obj is a char, else #f */
+/* 'char?' -> CELL_BOOLEAN - return #t if obj is a char, else #f */
 Cell* builtin_char_pred(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
-    return make_val_bool(a->cell[0]->type == VAL_CHAR);
+    return make_cell_boolean(a->cell[0]->type == CELL_CHAR);
 }
 
-/* 'vector?' -> VAL_BOOL - return #t if obj is a vector, else #f */
+/* 'vector?' -> CELL_BOOLEAN - return #t if obj is a vector, else #f */
 Cell* builtin_vector_pred(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
-    return make_val_bool(a->cell[0]->type == VAL_VEC);
+    return make_cell_boolean(a->cell[0]->type == CELL_VECTOR);
 }
 
-/* 'bytevector?' -> VAL_BOOL - return #t if obj is a byte vector, else #f */
+/* 'bytevector?' -> CELL_BOOLEAN - return #t if obj is a byte vector, else #f */
 Cell* builtin_byte_vector_pred(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
-    return make_val_bool(a->cell[0]->type == VAL_BYTEVEC);
+    return make_cell_boolean(a->cell[0]->type == CELL_BYTEVECTOR);
 }
 
-/* 'port?' -> VAL_BOOL - return #t if obj is a port, else #f */
+/* 'port?' -> CELL_BOOLEAN - return #t if obj is a port, else #f */
 Cell* builtin_port_pred(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
-    return make_val_bool(a->cell[0]->type == VAL_PORT);
+    return make_cell_boolean(a->cell[0]->type == CELL_PORT);
 }
 
-/* 'eof-object?' -> VAL_BOOL - return #t if obj is an eof, else #f */
+/* 'eof-object?' -> CELL_BOOLEAN - return #t if obj is an eof, else #f */
 Cell* builtin_eof_pred(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
-    return make_val_bool(a->cell[0]->type == VAL_EOF);
+    return make_cell_boolean(a->cell[0]->type == CELL_EOF);
 }
 
 /* ---------------------------------------*
  *      Numeric identity procedures       *
  * ---------------------------------------*/
 
-/* 'exact?' -> VAL_BOOL -  */
+/* 'exact?' -> CELL_BOOLEAN -  */
 Cell* builtin_exact_pred(const Lex* e, const Cell* a) {
     (void)e;
-    Cell* err = check_arg_types(a, VAL_INT|VAL_REAL|VAL_RAT|VAL_COMPLEX);
+    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX);
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
 
-    if (a->cell[0]->type == VAL_COMPLEX) {
+    if (a->cell[0]->type == CELL_COMPLEX) {
         if (a->cell[0]->exact && a->cell[1]->exact) {
-            return make_val_bool(1);
+            return make_cell_boolean(1);
         }
-        return make_val_bool(0);
+        return make_cell_boolean(0);
     }
-    return make_val_bool(a->cell[0]->exact);
+    return make_cell_boolean(a->cell[0]->exact);
 }
 
-/* 'inexact?' -> VAL_BOOL -  */
+/* 'inexact?' -> CELL_BOOLEAN -  */
 Cell* builtin_inexact_pred(const Lex* e, const Cell* a) {
     (void)e;
-    Cell* err = check_arg_types(a, VAL_INT|VAL_REAL|VAL_RAT|VAL_COMPLEX);
+    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX);
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
 
-    if (a->cell[0]->type == VAL_COMPLEX) {
+    if (a->cell[0]->type == CELL_COMPLEX) {
         if (a->cell[0]->exact && a->cell[1]->exact) {
-            return make_val_bool(0);
+            return make_cell_boolean(0);
         }
-        return make_val_bool(1);
+        return make_cell_boolean(1);
     }
      if (a->cell[0]->exact) {
-         return make_val_bool(0);
+         return make_cell_boolean(0);
      }
-    return make_val_bool(1);
+    return make_cell_boolean(1);
 }
 
-/* 'complex?' -> VAL_BOOL - R7RS compliant */
+/* 'complex?' -> CELL_BOOLEAN - R7RS compliant */
 Cell* builtin_complex(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
 
     /* All numbers are complex numbers. */
-    const int mask = VAL_INT|VAL_RAT|VAL_REAL|VAL_COMPLEX;
+    const int mask = CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX;
     if (a->cell[0]->type & mask) {
-        return make_val_bool(1);
+        return make_cell_boolean(1);
     }
-    return make_val_bool(0);
+    return make_cell_boolean(0);
 }
 
-/* 'real?' -> VAL_BOOL - R7RS compliant */
+/* 'real?' -> CELL_BOOLEAN - R7RS compliant */
 Cell* builtin_real(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
@@ -187,19 +187,19 @@ Cell* builtin_real(const Lex* e, const Cell* a) {
 
     const Cell* arg = a->cell[0];
     switch (arg->type) {
-        case VAL_INT:
-        case VAL_RAT:
-        case VAL_REAL:
-            return make_val_bool(1);
-        case VAL_COMPLEX:
+        case CELL_INTEGER:
+        case CELL_RATIONAL:
+        case CELL_REAL:
+            return make_cell_boolean(1);
+        case CELL_COMPLEX:
             /* A complex number is real if its imaginary part is zero. */
-            return make_val_bool(cell_is_real_zero(arg->imag));
+            return make_cell_boolean(cell_is_real_zero(arg->imag));
         default:
-            return make_val_bool(0);
+            return make_cell_boolean(0);
     }
 }
 
-/* 'rational?' -> VAL_BOOL - R7RS compliant */
+/* 'rational?' -> CELL_BOOLEAN - R7RS compliant */
 Cell* builtin_rational(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
@@ -207,28 +207,28 @@ Cell* builtin_rational(const Lex* e, const Cell* a) {
 
     const Cell* arg = a->cell[0];
     switch (arg->type) {
-        case VAL_INT:
-        case VAL_RAT:
-        case VAL_REAL:
+        case CELL_INTEGER:
+        case CELL_RATIONAL:
+        case CELL_REAL:
             /* all reals are inherently rational. */
-            return make_val_bool(1);
-        case VAL_COMPLEX:
+            return make_cell_boolean(1);
+        case CELL_COMPLEX:
             /* A complex number is rational if its imaginary part is zero. */
-            return make_val_bool(cell_is_real_zero(arg->imag));
+            return make_cell_boolean(cell_is_real_zero(arg->imag));
         default:
-            return make_val_bool(0);
+            return make_cell_boolean(0);
     }
 }
 
-/* 'integer?' -> VAL_BOOL - R7RS compliant */
+/* 'integer?' -> CELL_BOOLEAN - R7RS compliant */
 Cell* builtin_integer(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
-    return make_val_bool(cell_is_integer(a->cell[0]));
+    return make_cell_boolean(cell_is_integer(a->cell[0]));
 }
 
-/* 'exact-integer?' -> VAL_BOOL - R7RS compliant */
+/* 'exact-integer?' -> CELL_BOOLEAN - R7RS compliant */
 Cell* builtin_exact_integer(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
@@ -236,68 +236,68 @@ Cell* builtin_exact_integer(const Lex* e, const Cell* a) {
 
     const Cell* arg = a->cell[0];
     /* The value must be an integer AND the number must be exact. */
-    return make_val_bool(cell_is_integer(arg) && arg->exact);
+    return make_cell_boolean(cell_is_integer(arg) && arg->exact);
 }
 
 /* ---------------------------------------*
  *       Numeric predicate procedures     *
  * ---------------------------------------*/
 
-/* 'zero?' -> VAL_BOOL - returns #t if arg is == 0 else #f */
+/* 'zero?' -> CELL_BOOLEAN - returns #t if arg is == 0 else #f */
 Cell* builtin_zero(const Lex* e, const Cell* a) {
     (void)e;
-    Cell* err = check_arg_types(a, VAL_INT|VAL_REAL|VAL_RAT|VAL_COMPLEX);
+    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX);
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
 
     const Cell* arg = a->cell[0];
     bool is_zero;
 
-    if (arg->type == VAL_COMPLEX) {
+    if (arg->type == CELL_COMPLEX) {
         is_zero = cell_is_real_zero(arg->real) && cell_is_real_zero(arg->imag);
     } else {
         is_zero = cell_is_real_zero(arg);
     }
-    return make_val_bool(is_zero);
+    return make_cell_boolean(is_zero);
 }
 
-/* 'positive?' -> VAL_BOOL - returns #t if arg is > 0 else #f */
+/* 'positive?' -> CELL_BOOLEAN - returns #t if arg is > 0 else #f */
 Cell* builtin_positive(const Lex* e, const Cell* a) {
     (void)e;
-    Cell* err = check_arg_types(a, VAL_INT|VAL_REAL|VAL_RAT|VAL_COMPLEX);
+    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX);
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
 
-    return make_val_bool(cell_is_positive(a->cell[0]));
+    return make_cell_boolean(cell_is_positive(a->cell[0]));
 }
 
-/* 'negative?' -> VAL_BOOL - returns #t if arg is < 0 else #f */
+/* 'negative?' -> CELL_BOOLEAN - returns #t if arg is < 0 else #f */
 Cell* builtin_negative(const Lex* e, const Cell* a) {
     (void)e;
-    Cell* err = check_arg_types(a, VAL_INT|VAL_REAL|VAL_RAT|VAL_COMPLEX);
+    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX);
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
 
-    return make_val_bool(cell_is_negative(a->cell[0]));
+    return make_cell_boolean(cell_is_negative(a->cell[0]));
 }
 
-/* 'odd?' -> VAL_BOOL - returns #t if arg is an odd integer else #f */
+/* 'odd?' -> CELL_BOOLEAN - returns #t if arg is an odd integer else #f */
 Cell* builtin_odd(const Lex* e, const Cell* a) {
     (void)e;
-    Cell* err = check_arg_types(a, VAL_INT|VAL_REAL|VAL_RAT|VAL_COMPLEX);
+    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX);
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
 
-    return make_val_bool(cell_is_odd(a->cell[0]));
+    return make_cell_boolean(cell_is_odd(a->cell[0]));
 }
 
-/* 'even?' -> VAL_BOOL - returns #t if arg is an even integer else #f */
+/* 'even?' -> CELL_BOOLEAN - returns #t if arg is an even integer else #f */
 Cell* builtin_even(const Lex* e, const Cell* a) {
     (void)e;
-    Cell* err = check_arg_types(a, VAL_INT|VAL_REAL|VAL_RAT|VAL_COMPLEX);
+    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX);
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
 
-    return make_val_bool(cell_is_even(a->cell[0]));
+    return make_cell_boolean(cell_is_even(a->cell[0]));
 }
 

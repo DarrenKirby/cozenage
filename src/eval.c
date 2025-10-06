@@ -31,12 +31,12 @@ Cell* coz_eval(Lex* e, Cell* v) {
 
     switch (v->type) {
         /* Symbols: look them up in the environment unless quoted */
-        case VAL_SYM: {
+        case CELL_SYMBOL: {
             if (is_syntactic_keyword(v->sym)) {
                 char err_buf[128];
                 snprintf(err_buf, sizeof(err_buf),
                          "Syntax keyword '%s' cannot be used as a variable", v->sym);
-                return make_val_err(err_buf, SYNTAX_ERR);
+                return make_cell_error(err_buf, SYNTAX_ERR);
             }
             if (v->quoted) {
                 return v;
@@ -45,28 +45,28 @@ Cell* coz_eval(Lex* e, Cell* v) {
             return x;
         }
         /* S-expressions: recursively evaluate */
-        case VAL_SEXPR:
+        case CELL_SEXPR:
             return eval_sexpr(e, v);
         /* All literals evaluate to themselves */
-        case VAL_INT:
-        case VAL_REAL:
-        case VAL_RAT:
-        case VAL_COMPLEX:
-        case VAL_BOOL:
-        case VAL_CHAR:
-        case VAL_STR:
-        case VAL_PAIR:
-        case VAL_VEC:
-        case VAL_BYTEVEC:
-        case VAL_NIL:
+        case CELL_INTEGER:
+        case CELL_REAL:
+        case CELL_RATIONAL:
+        case CELL_COMPLEX:
+        case CELL_BOOLEAN:
+        case CELL_CHAR:
+        case CELL_STRING:
+        case CELL_PAIR:
+        case CELL_VECTOR:
+        case CELL_BYTEVECTOR:
+        case CELL_NIL:
         /* Functions, ports, continuations, and errors are returned as-is */
-        case VAL_PROC:
-        case VAL_PORT:
-        case VAL_CONT:
-        case VAL_ERR:
+        case CELL_PROC:
+        case CELL_PORT:
+        case CELL_CONT:
+        case CELL_ERROR:
             return v;
         default:
-            return make_val_err("Unknown val type in eval()", GEN_ERR);
+            return make_cell_error("Unknown val type in eval()", GEN_ERR);
     }
 }
 
@@ -79,7 +79,7 @@ Cell* eval_sexpr(Lex* e, Cell* v) {
 
     /* NOTE: These special forms need to be dispatched out of
      * eval_sexpr() early, so that their arguments are not evaluated */
-    if (first->type == VAL_SYM) {
+    if (first->type == CELL_SYMBOL) {
         /* special form: define */
         if (strcmp(first->sym, "define") == 0) {
             return sf_define(e, v);
@@ -131,18 +131,18 @@ Cell* eval_sexpr(Lex* e, Cell* v) {
     }
     /* Otherwise, evaluate first element normally (should become a function) */
     Cell* f = coz_eval(e, first);
-    if (f->type != VAL_PROC) {
+    if (f->type != CELL_PROC) {
         printf("Bad token: ");
         printf(ANSI_RED_B);
         print_cell(f);
         printf("%s: ", ANSI_RESET);
-        return make_val_err("S-expression does not start with a procedure", TYPE_ERR);
+        return make_cell_error("S-expression does not start with a procedure", TYPE_ERR);
     }
 
     /* Evaluate arguments */
     for (int i = 0; i < v->count; i++) {
         v->cell[i] = coz_eval(e, v->cell[i]);
-        if (v->cell[i]->type == VAL_ERR) {
+        if (v->cell[i]->type == CELL_ERROR) {
             return cell_take(v, i);
         }
     }

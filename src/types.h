@@ -64,28 +64,28 @@ typedef enum {
 
 /* Cell_t type enum */
 typedef enum {
-    VAL_INT     = 1 << 0,   /* integer */
-    VAL_RAT     = 1 << 1,   /* rational */
-    VAL_REAL    = 1 << 2,   /* real */
-    VAL_COMPLEX = 1 << 3,   /* complex number */
+    CELL_INTEGER    = 1 << 0,   /* integer */
+    CELL_RATIONAL   = 1 << 1,   /* rational */
+    CELL_REAL       = 1 << 2,   /* real */
+    CELL_COMPLEX    = 1 << 3,   /* complex number */
 
-    VAL_BOOL    = 1 << 4,   /* #t / #f */
-    VAL_CHAR    = 1 << 5,   /* character */
-    VAL_STR     = 1 << 6,   /* string */
-    VAL_SYM     = 1 << 7,   /* symbol */
+    CELL_BOOLEAN    = 1 << 4,   /* #t / #f */
+    CELL_CHAR       = 1 << 5,   /* character */
+    CELL_STRING     = 1 << 6,   /* string */
+    CELL_SYMBOL     = 1 << 7,   /* symbol */
 
-    VAL_PAIR    = 1 << 8,   /* cons cell */
-    VAL_NIL     = 1 << 9,   /* '() empty list */
-    VAL_VEC     = 1 << 10,  /* vector */
-    VAL_BYTEVEC = 1 << 11,  /* byte vector */
+    CELL_PAIR       = 1 << 8,   /* cons cell */
+    CELL_NIL        = 1 << 9,   /* '() empty list */
+    CELL_VECTOR     = 1 << 10,  /* vector */
+    CELL_BYTEVECTOR = 1 << 11,  /* byte vector */
 
-    VAL_SEXPR   = 1 << 12,  /* an array of values, used internally */
-    VAL_PROC    = 1 << 13,  /* procedure */
-    VAL_PORT    = 1 << 14,  /* port */
-    VAL_CONT    = 1 << 15,  /* continuation (maybe) */
+    CELL_SEXPR      = 1 << 12,  /* an array of values, used internally */
+    CELL_PROC       = 1 << 13,  /* procedure */
+    CELL_PORT       = 1 << 14,  /* port */
+    CELL_CONT       = 1 << 15,  /* continuation (maybe) */
 
-    VAL_ERR     = 1 << 16,   /* error */
-    VAL_EOF     = 1 << 17    /* EOF object */
+    CELL_ERROR      = 1 << 16,   /* error */
+    CELL_EOF        = 1 << 17    /* EOF object */
 } Cell_t;
 
 /* Definition of the Cell struct/tagged union */
@@ -155,11 +155,11 @@ typedef struct Cell {
         Cell** cell;          /* for compound types (sexpr, vector, bytevector) */
         char* sym;            /* symbols */
         char* str;            /* strings */
-        char* err;            /* error string */
-        long double r_val;    /* reals */
-        long long int i_val;  /* integers */
-        UChar32 c_val;        /* character literal */
-        bool b_val;           /* boolean */
+        char* error_v;            /* error string */
+        long double real_v;    /* reals */
+        long long int integer_v;  /* integers */
+        UChar32 char_v;        /* character literal */
+        bool boolean_v;           /* boolean */
     };
 } Cell;
 
@@ -176,22 +176,22 @@ extern Cell* default_error_port;
 void init_default_ports(void);
 typedef Cell* (*BuiltinFn)(const Lex* e, const Cell* args);
 
-Cell* make_val_real(long double n);
-Cell* make_val_int(long long n);
-Cell* make_val_rat(long int num, long int den, bool simplify);
-Cell* make_val_complex(Cell* real, Cell *imag);
-Cell* make_val_bool(int b);
-Cell* make_val_char(UChar32 c);
-Cell* make_val_vect(void);
-Cell* make_val_bytevec(void);
-Cell* make_val_sym(const char* s);
-Cell* make_val_str(const char* s);
-Cell* make_val_sexpr(void);
-Cell* make_val_nil(void);
-Cell* make_val_pair(Cell* car, Cell* cdr);
-Cell* make_val_err(const char* m, err_t t);
-Cell* make_val_port(const char* path, FILE* fh, int io_t, int stream_t);
-Cell* make_val_eof(void);
+Cell* make_cell_real(long double the_real);
+Cell* make_cell_integer(long long the_integer);
+Cell* make_cell_rational(long int numerator, long int denominator, bool simplify);
+Cell* make_cell_complex(Cell* real_part, Cell *imag_part);
+Cell* make_cell_boolean(int the_boolean);
+Cell* make_cell_char(UChar32 the_char);
+Cell* make_cell_vector(void);
+Cell* make_cell_bytevector(void);
+Cell* make_cell_symbol(const char* the_symbol);
+Cell* make_cell_string(const char* the_string);
+Cell* make_cell_sexpr(void);
+Cell* make_cell_nil(void);
+Cell* make_cell_pair(Cell* car, Cell* cdr);
+Cell* make_cell_error(const char* error_string, err_t error_type);
+Cell* make_cell_port(const char* path, FILE* fh, int io_t, int stream_t);
+Cell* make_cell_eof(void);
 Cell* cell_add(Cell* v, Cell* x);
 Cell* cell_copy(const Cell* v);
 Cell* cell_pop(Cell* v, int i);

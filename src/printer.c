@@ -58,12 +58,12 @@ void print_pair(const Cell* v) {
         print_cell(cur->car);
 
         /* Case 1: The list continues (cdr is another pair). */
-        if (cur->cdr->type == VAL_PAIR) {
+        if (cur->cdr->type == CELL_PAIR) {
             printf(" ");
             cur = cur->cdr;
         }
         /* Case 2: This is the end of a proper list. */
-        else if (cur->cdr->type == VAL_NIL) {
+        else if (cur->cdr->type == CELL_NIL) {
             break;
         }
         /* Case 3: This is an improper list. */
@@ -78,19 +78,19 @@ void print_pair(const Cell* v) {
 
 void print_cell(const Cell* v) {
     switch (v->type) {
-    case VAL_REAL:
-        print_long_double(v->r_val);
+    case CELL_REAL:
+        print_long_double(v->real_v);
         break;
 
-    case VAL_INT:
-        printf("%lld", v->i_val);
+    case CELL_INTEGER:
+        printf("%lld", v->integer_v);
         break;
 
-    case VAL_RAT:
+    case CELL_RATIONAL:
         printf("%ld/%ld", v->num, v->den);
         break;
 
-    case VAL_COMPLEX: {
+    case CELL_COMPLEX: {
         print_cell(v->real);
 
         const long double im = cell_to_long_double(v->imag);
@@ -104,18 +104,18 @@ void print_cell(const Cell* v) {
         break;
     }
 
-    case VAL_BOOL:
+    case CELL_BOOLEAN:
 #ifndef TESTING__
         printf("%s%s%s", ANSI_MAGENTA,
-               v->b_val ? "#true" : "#false",
+               v->boolean_v ? "#true" : "#false",
                ANSI_RESET);
         break;
 #else
-        printf("%s", v->b_val ? "#true" : "#false");
+        printf("%s", v->boolean_v ? "#true" : "#false");
         break;
 #endif
 
-    case VAL_ERR: {
+    case CELL_ERROR: {
         char *err_str;
         switch (v->err_t) {
             case FILE_ERR: { err_str = "File error:"; break; }
@@ -131,12 +131,12 @@ void print_cell(const Cell* v) {
         printf(" %s %s", err_str, v->err);
         break;
 #else
-        printf(" %s%s %s %s", ANSI_RED_B, err_str, ANSI_RESET, v->err);
+        printf(" %s%s %s %s", ANSI_RED_B, err_str, ANSI_RESET, v->error_v);
         break;
 #endif
     }
-    case VAL_CHAR:
-        switch (v->c_val) {
+    case CELL_CHAR:
+        switch (v->char_v) {
         case '\n': printf("#\\newline");   break;
         case ' ':  printf("#\\space");     break;
         case '\t': printf("#\\tab");       break;
@@ -147,15 +147,15 @@ void print_cell(const Cell* v) {
         case 0x7f: printf("#\\delete");    break;
         case '\0': printf("#\\null");      break;
 
-        default:   printf("#\\%C", v->c_val); break;
+        default:   printf("#\\%C", v->char_v); break;
         }
         break;
 
-    case VAL_STR:
+    case CELL_STRING:
         printf("\"%s\"", v->str);
         break;
 
-    case VAL_PROC:
+    case CELL_PROC:
         if (v->is_builtin) {
             printf("<builtin procedure '%s%s%s'>", ANSI_GREEN_B, v->f_name, ANSI_RESET);
         } else {
@@ -163,36 +163,36 @@ void print_cell(const Cell* v) {
         }
         break;
 
-    case VAL_PORT:
+    case CELL_PORT:
         printf("<%s%s %s-port '%s%s%s'>", v->is_open ? "open:" : "closed:",
             v->stream_t == TEXT_PORT ? "text" : "binary",
             v->port_t == INPUT_PORT ? "input" : "output",
             ANSI_BLUE_B, v->path, ANSI_RESET);
         break;
 
-    case VAL_SYM:
+    case CELL_SYMBOL:
         printf("%s", v->sym);
         break;
 
-    case VAL_PAIR:
+    case CELL_PAIR:
         print_pair(v);
             break;
 
-    case VAL_NIL:
+    case CELL_NIL:
         printf("()");
         break;
 
-    case VAL_EOF:
+    case CELL_EOF:
         printf("!EOF");
         break;
 
-    case VAL_SEXPR:
+    case CELL_SEXPR:
         print_sequence(v, nullptr, '(', ')');
         break;
-    case VAL_VEC:
+    case CELL_VECTOR:
         print_sequence(v, "#", '(', ')');
         break;
-    case VAL_BYTEVEC:
+    case CELL_BYTEVECTOR:
         print_sequence(v, "#u8", '(', ')');
         break;
 

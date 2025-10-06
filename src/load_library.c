@@ -60,7 +60,7 @@ Cell* load_scheme_library(const char* lib_name, Lex* env) {
     /* Check if already loaded to prevent redundant work */
     for (int i = 0; i < loaded_lib_count; i++) {
         if (strcmp(loaded_libs[i], lib_name) == 0) {
-            return make_val_bool(1);
+            return make_cell_boolean(1);
         }
     }
 
@@ -74,12 +74,12 @@ Cell* load_scheme_library(const char* lib_name, Lex* env) {
             if (loaded_lib_count < MAX_LOADED_LIBS) {
                 loaded_libs[loaded_lib_count++] = strdup(lib_name);
             }
-            return make_val_bool(1);
+            return make_cell_boolean(1);
         }
     }
 
     /* If we get here, the library wasn't found. */
     char buf[512];
     snprintf(buf, 511, "library '%s' not found.", lib_name);
-    return make_val_err(buf, VALUE_ERR);
+    return make_cell_error(buf, VALUE_ERR);
 }

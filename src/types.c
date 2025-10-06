@@ -40,194 +40,195 @@ Cell* default_output_port = nullptr;
 Cell* default_error_port  = nullptr;
 
 void init_default_ports(void) {
-    default_input_port  = make_val_port("stdin",  stdin,  INPUT_PORT, TEXT_PORT);
-    default_output_port = make_val_port("stdout", stdout, OUTPUT_PORT, TEXT_PORT);
-    default_error_port  = make_val_port("stderr", stderr, OUTPUT_PORT, TEXT_PORT);
+    default_input_port  = make_cell_port("stdin",  stdin,  INPUT_PORT, TEXT_PORT);
+    default_output_port = make_cell_port("stdout", stdout, OUTPUT_PORT, TEXT_PORT);
+    default_error_port  = make_cell_port("stderr", stderr, OUTPUT_PORT, TEXT_PORT);
 }
 
 /*------------------------------------*
  *       Cell type constructors       *
  * -----------------------------------*/
 
-Cell* make_val_nil(void) {
+Cell* make_cell_nil(void) {
     if (!val_nil) {
         val_nil = GC_MALLOC(sizeof(Cell));
-        val_nil->type = VAL_NIL;
+        val_nil->type = CELL_NIL;
         /* no other fields needed */
     }
     return val_nil;
 }
 
-Cell* make_val_real(const long double n) {
+Cell* make_cell_real(const long double the_real) {
     Cell* v = GC_MALLOC(sizeof(Cell));
     if (!v) {
         fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
         exit(EXIT_FAILURE);
     }
-    v->type = VAL_REAL;
+    v->type = CELL_REAL;
     v->exact = false;
-    v->r_val = n;
+    v->real_v = the_real;
     return v;
 }
 
-Cell* make_val_int(const long long int n) {
+Cell* make_cell_integer(const long long int the_integer) {
     Cell* v = GC_MALLOC(sizeof(Cell));
     if (!v) {
         fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
         exit(EXIT_FAILURE);
     }
-    v->type = VAL_INT;
+    v->type = CELL_INTEGER;
     v->exact = true;
-    v->i_val = n;
+    v->integer_v = the_integer;
     return v;
 }
 
-Cell* make_val_rat(const long int num, const long int den, const bool simplify) {
+Cell* make_cell_rational(const long int numerator, const long int denominator,
+                         const bool simplify) {
     Cell* v = GC_MALLOC(sizeof(Cell));
     if (!v) {
         fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
         exit(EXIT_FAILURE);
     }
-    v->type = VAL_RAT;
+    v->type = CELL_RATIONAL;
     v->exact = true;
-    v->num = num;
-    v->den = den;
+    v->num = numerator;
+    v->den = denominator;
     if (simplify) {
         return simplify_rational(v);
     }
     return v;
 }
 
-Cell* make_val_complex(Cell* real, Cell *imag) {
-    if (real->type == VAL_COMPLEX || imag->type == VAL_COMPLEX) {
-        return make_val_err("Cannot have complex real or imaginary parts.", GEN_ERR);
+Cell* make_cell_complex(Cell* real_part, Cell *imag_part) {
+    if (real_part->type == CELL_COMPLEX|| imag_part->type == CELL_COMPLEX) {
+        return make_cell_error("Cannot have complex real or imaginary parts.", GEN_ERR);
     }
     Cell* v = GC_MALLOC(sizeof(Cell));
     if (!v) {
         fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
         exit(EXIT_FAILURE);
     }
-    v->type = VAL_COMPLEX;
-    v->real = real;
-    v->imag = imag;
-    v->exact = real->exact && imag->exact;
+    v->type = CELL_COMPLEX;
+    v->real = real_part;
+    v->imag = imag_part;
+    v->exact = real_part->exact && imag_part->exact;
     return v;
 }
 
-Cell* make_val_bool(const int b) {
+Cell* make_cell_boolean(const int the_boolean) {
     Cell* v = GC_MALLOC(sizeof(Cell));
     if (!v) {
         fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
         exit(EXIT_FAILURE);
     }
-    v->type = VAL_BOOL;
-    v->b_val = b;
+    v->type = CELL_BOOLEAN;
+    v->boolean_v = the_boolean;
     return v;
 }
 
-Cell* make_val_sym(const char* s) {
+Cell* make_cell_symbol(const char* the_symbol) {
     Cell* v = GC_MALLOC(sizeof(Cell));
     if (!v) {
         fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
         exit(EXIT_FAILURE);
     }
-    v->type = VAL_SYM;
+    v->type = CELL_SYMBOL;
     v->quoted = false;
-    v->sym = GC_strdup(s);
+    v->sym = GC_strdup(the_symbol);
     return v;
 }
 
-Cell* make_val_str(const char* s) {
+Cell* make_cell_string(const char* the_string) {
     Cell* v = GC_MALLOC(sizeof(Cell));
     if (!v) {
         fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
         exit(EXIT_FAILURE);
     }
-    v->type = VAL_STR;
-    v->str = GC_strdup(s);
+    v->type = CELL_STRING;
+    v->str = GC_strdup(the_string);
     return v;
 }
 
-Cell* make_val_sexpr(void) {
+Cell* make_cell_sexpr(void) {
     Cell* v = GC_MALLOC(sizeof(Cell));
     if (!v) {
         fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
         exit(EXIT_FAILURE);
     }
-    v->type = VAL_SEXPR;
+    v->type = CELL_SEXPR;
     v->count = 0;
     v->cell = nullptr;
     return v;
 }
 
-Cell* make_val_char(const UChar32 c) {
+Cell* make_cell_char(const UChar32 the_char) {
     Cell* v = GC_MALLOC(sizeof(Cell));
     if (!v) {
         fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
         exit(EXIT_FAILURE);
     }
-    v->type = VAL_CHAR;
-    v->c_val = c;
+    v->type = CELL_CHAR;
+    v->char_v = the_char;
     return v;
 }
 
-Cell* make_val_pair(Cell* car, Cell* cdr) {
+Cell* make_cell_pair(Cell* car, Cell* cdr) {
     Cell* v = GC_MALLOC(sizeof(Cell));
     if (!v) {
         fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
         exit(EXIT_FAILURE);
     }
-    v->type = VAL_PAIR;
+    v->type = CELL_PAIR;
     v->car = car;
     v->cdr = cdr;
     v->len = -1;
     return v;
 }
 
-Cell* make_val_vect(void) {
+Cell* make_cell_vector(void) {
     Cell* v = GC_MALLOC(sizeof(Cell));
     if (!v) {
         fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
         exit(EXIT_FAILURE);
     }
-    v->type = VAL_VEC;
+    v->type = CELL_VECTOR;
     v->cell = nullptr;
     v->count = 0;
     return v;
 }
 
-Cell* make_val_bytevec(void) {
+Cell* make_cell_bytevector(void) {
     Cell* v = GC_MALLOC(sizeof(Cell));
     if (!v) {
         fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
         exit(EXIT_FAILURE);
     }
-    v->type = VAL_BYTEVEC;
+    v->type = CELL_BYTEVECTOR;
     v->cell = nullptr;
     v->count = 0;
     return v;
 }
 
-Cell* make_val_err(const char* m, err_t t) {
+Cell* make_cell_error(const char* error_string, const err_t error_type) {
     Cell* v = GC_MALLOC(sizeof(Cell));
     if (!v) {
         fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
         exit(EXIT_FAILURE);
     }
-    v->type = VAL_ERR;
-    v->err_t = t;
-    v->err = GC_strdup(m);
+    v->type = CELL_ERROR;
+    v->err_t = error_type;
+    v->error_v = GC_strdup(error_string);
     return v;
 }
 
-Cell* make_val_port(const char* path, FILE* fh, const int io_t, const int stream_t) {
+Cell* make_cell_port(const char* path, FILE* fh, const int io_t, const int stream_t) {
     Cell* v = GC_MALLOC(sizeof(Cell));
     if (!v) {
         fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
         exit(EXIT_FAILURE);
     }
     v->is_open = true;
-    v->type = VAL_PORT;
+    v->type = CELL_PORT;
     v->path = GC_strdup(path);
     v->port_t = io_t;
     v->stream_t = stream_t;
@@ -235,13 +236,13 @@ Cell* make_val_port(const char* path, FILE* fh, const int io_t, const int stream
     return v;
 }
 
-Cell* make_val_eof(void) {
+Cell* make_cell_eof(void) {
     Cell* v = GC_MALLOC(sizeof(Cell));
     if (!v) {
         fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
         exit(EXIT_FAILURE);
     }
-    v->type = VAL_EOF;
+    v->type = CELL_EOF;
     return v;
 }
 
@@ -304,32 +305,32 @@ Cell* cell_copy(const Cell* v) {
     copy->type = v->type;
 
     switch (v->type) {
-    case VAL_INT:
-        copy->i_val = v->i_val;
+    case CELL_INTEGER:
+        copy->integer_v = v->integer_v;
         copy->exact = v->exact;
         break;
-    case VAL_REAL:
-        copy->r_val = v->r_val;
+    case CELL_REAL:
+        copy->real_v = v->real_v;
         copy->exact = v->exact;
         break;
-    case VAL_BOOL:
-        copy->b_val = v->b_val;
+    case CELL_BOOLEAN:
+        copy->boolean_v = v->boolean_v;
         break;
-    case VAL_CHAR:
-        copy->c_val = v->c_val;
+    case CELL_CHAR:
+        copy->char_v = v->char_v;
         break;
-    case VAL_SYM:
+    case CELL_SYMBOL:
         copy->sym = GC_strdup(v->sym);
         copy->quoted =  v->quoted;
         break;
-    case VAL_STR:
+    case CELL_STRING:
         copy->str = GC_strdup(v->str);
         break;
-    case VAL_ERR:
-        copy->err = GC_strdup(v->err);
+    case CELL_ERROR:
+        copy->error_v = GC_strdup(v->error_v);
         copy->err_t = v->err_t;
         break;
-    case VAL_PROC:
+    case CELL_PROC:
         if (v->is_builtin) {
             copy->is_builtin = true;
             copy->builtin = v->builtin;
@@ -342,9 +343,9 @@ Cell* cell_copy(const Cell* v) {
             copy->env     = v->env;   /* DO NOT copy environments; share the pointer */
         }
         break;
-    case VAL_SEXPR:
-    case VAL_VEC:
-    case VAL_BYTEVEC:
+    case CELL_SEXPR:
+    case CELL_VECTOR:
+    case CELL_BYTEVECTOR:
         copy->count = v->count;
         if (v->count) {
             copy->cell = GC_MALLOC(sizeof(Cell*) * v->count);
@@ -355,28 +356,28 @@ Cell* cell_copy(const Cell* v) {
             copy->cell[i] = cell_copy(v->cell[i]);
         }
         break;
-    case VAL_NIL:
+    case CELL_NIL:
         /* return the singleton instead of allocating */
-        return make_val_nil();
-    case VAL_PAIR: {
+        return make_cell_nil();
+    case CELL_PAIR: {
         copy->car = cell_copy(v->car);
         copy->cdr = cell_copy(v->cdr);
         copy->len = v->len;
         break;
         }
-    case VAL_RAT: {
+    case CELL_RATIONAL: {
         copy->exact = v->exact;
         copy->num = v->num;
         copy->den = v->den;
         break;
     }
-    case VAL_COMPLEX: {
+    case CELL_COMPLEX: {
         copy->exact = v->exact;
         copy->real = cell_copy(v->real);
         copy->imag = cell_copy(v->imag);
         break;
         }
-    case VAL_PORT: {
+    case CELL_PORT: {
         copy->is_open = v->is_open;
         copy->port_t = v->port_t;
         copy->stream_t = v->stream_t;
@@ -384,7 +385,7 @@ Cell* cell_copy(const Cell* v) {
         copy->path = GC_strdup(v->path);
         break;
     }
-    case VAL_CONT:
+    case CELL_CONT:
         /* shallow copy (all fields remain zeroed) */
         break;
 
@@ -398,46 +399,46 @@ Cell* cell_copy(const Cell* v) {
 /* Turn a single type into a string (for error reporting) */
 const char* cell_type_name(const int t) {
     switch (t) {
-        case VAL_INT:      return "integer";
-        case VAL_REAL:     return "float";
-        case VAL_RAT:      return "rational";
-        case VAL_COMPLEX:  return "complex";
-        case VAL_BOOL:     return "bool";
-        case VAL_SYM:      return "symbol";
-        case VAL_STR:      return "string";
-        case VAL_SEXPR:    return "sexpr";
-        case VAL_NIL:      return "nil";
-        case VAL_PROC:     return "procedure";
-        case VAL_ERR:      return "error";
-        case VAL_PAIR:     return "pair";
-        case VAL_VEC:      return "vector";
-        case VAL_CHAR:     return "char";
-        case VAL_BYTEVEC:  return "byte vector";
-        default:           return "unknown";
+        case CELL_INTEGER:     return "integer";
+        case CELL_REAL:        return "float";
+        case CELL_RATIONAL:    return "rational";
+        case CELL_COMPLEX:     return "complex";
+        case CELL_BOOLEAN:     return "bool";
+        case CELL_SYMBOL:      return "symbol";
+        case CELL_STRING:      return "string";
+        case CELL_SEXPR:       return "sexpr";
+        case CELL_NIL:         return "nil";
+        case CELL_PROC:        return "procedure";
+        case CELL_ERROR:       return "error";
+        case CELL_PAIR:        return "pair";
+        case CELL_VECTOR:      return "vector";
+        case CELL_CHAR:        return "char";
+        case CELL_BYTEVECTOR:  return "byte vector";
+        default:               return "unknown";
     }
 }
 
 /* Turn a mask (possibly multiple flags ORed together) into a string
-   e.g. (VAL_INT | VAL_REAL) -> "int|real" */
+   e.g. (CELL_INTEGER | CELL_REAL) -> "int|real" */
 const char* cell_mask_types(const int mask) {
     static char buf[128];  /* static to return pointer safely */
     buf[0] = '\0';
 
-    if (mask & VAL_INT)      strcat(buf, "integer|");
-    if (mask & VAL_REAL)     strcat(buf, "real|");
-    if (mask & VAL_RAT)      strcat(buf, "rational|");
-    if (mask & VAL_COMPLEX)  strcat(buf, "complex|");
-    if (mask & VAL_BOOL)     strcat(buf, "bool|");
-    if (mask & VAL_SYM)      strcat(buf, "symbol|");
-    if (mask & VAL_STR)      strcat(buf, "string|");
-    if (mask & VAL_SEXPR)    strcat(buf, "sexpr|");
-    if (mask & VAL_NIL)      strcat(buf, "nil|");
-    if (mask & VAL_PROC)     strcat(buf, "procedure|");
-    if (mask & VAL_ERR)      strcat(buf, "error|");
-    if (mask & VAL_PAIR)     strcat(buf, "pair|");
-    if (mask & VAL_VEC)      strcat(buf, "vector|");
-    if (mask & VAL_CHAR)     strcat(buf, "char|");
-    if (mask & VAL_BYTEVEC)  strcat(buf, "byte vector|");
+    if (mask & CELL_INTEGER)     strcat(buf, "integer|");
+    if (mask & CELL_REAL)        strcat(buf, "real|");
+    if (mask & CELL_RATIONAL)    strcat(buf, "rational|");
+    if (mask & CELL_COMPLEX)     strcat(buf, "complex|");
+    if (mask & CELL_BOOLEAN)     strcat(buf, "bool|");
+    if (mask & CELL_SYMBOL)      strcat(buf, "symbol|");
+    if (mask & CELL_STRING)      strcat(buf, "string|");
+    if (mask & CELL_SEXPR)       strcat(buf, "sexpr|");
+    if (mask & CELL_NIL)         strcat(buf, "nil|");
+    if (mask & CELL_PROC)        strcat(buf, "procedure|");
+    if (mask & CELL_ERROR)       strcat(buf, "error|");
+    if (mask & CELL_PAIR)        strcat(buf, "pair|");
+    if (mask & CELL_VECTOR)      strcat(buf, "vector|");
+    if (mask & CELL_CHAR)        strcat(buf, "char|");
+    if (mask & CELL_BYTEVECTOR)  strcat(buf, "byte vector|");
 
     /* remove trailing '|' */
     const size_t len = strlen(buf);
@@ -451,7 +452,7 @@ const char* cell_mask_types(const int mask) {
  *      Procedure argument arity and type validators       *
  * --------------------------------------------------------*/
 
-/* Return NULL if all args are valid, else return a VAL_ERR */
+/* Return NULL if all args are valid, else return a CELL_ERROR */
 Cell* check_arg_types(const Cell* a, const int mask) {
     for (int i = 0; i < a->count; i++) {
         const Cell* arg = a->cell[i];
@@ -464,7 +465,7 @@ Cell* check_arg_types(const Cell* a, const int mask) {
                      i+1,
                      cell_type_name(arg->type),
                      cell_mask_types(mask));
-            return make_val_err(buf, TYPE_ERR);
+            return make_cell_error(buf, TYPE_ERR);
         }
     }
     return nullptr;
@@ -478,21 +479,21 @@ Cell* check_arg_arity(const Cell* a, const int exact, const int min, const int m
         snprintf(buf, sizeof(buf),
                  "expected exactly %d arg%s, got %d",
                  exact, exact == 1 ? "" : "s", argc);
-        return make_val_err(buf, ARITY_ERR);
+        return make_cell_error(buf, ARITY_ERR);
     }
     if (min >= 0 && argc < min) {
         char buf[128];
         snprintf(buf, sizeof(buf),
                  "expected at least %d arg%s, got %d",
                  min, min == 1 ? "" : "s", argc);
-        return make_val_err(buf, ARITY_ERR);
+        return make_cell_error(buf, ARITY_ERR);
     }
     if (max >= 0 && argc > max) {
         char buf[128];
         snprintf(buf, sizeof(buf),
                  "expected at most %d arg%s, got %d",
                  max, max == 1 ? "" : "s", argc);
-        return make_val_err(buf, ARITY_ERR);
+        return make_cell_error(buf, ARITY_ERR);
     }
     return nullptr; /* all good */
 }
@@ -503,19 +504,19 @@ Cell* check_arg_arity(const Cell* a, const int exact, const int min, const int m
 
 /* Convertors */
 Cell* int_to_rat(const Cell* v) {
-    return make_val_rat(v->i_val, 1, 0);
+    return make_cell_rational(v->integer_v, 1, 0);
 }
 
 Cell* int_to_real(const Cell* v) {
-    return make_val_real((long double)v->i_val);
+    return make_cell_real((long double)v->integer_v);
 }
 
 Cell* rat_to_real(const Cell* v) {
-    return make_val_real((long double)v->num / (long double)v->den);
+    return make_cell_real((long double)v->num / (long double)v->den);
 }
 
 Cell* to_complex(Cell* v) {
-    return make_val_complex(v, make_val_int(0));
+    return make_cell_complex(v, make_cell_integer(0));
 }
 
 /* Promote two numbers to the same type, modifying lhs and rhs in-place. */
@@ -523,27 +524,27 @@ void numeric_promote(Cell** lhs, Cell** rhs) {
     Cell* a = *lhs;
     Cell* b = *rhs;
 
-    if (a->type == VAL_COMPLEX || b->type == VAL_COMPLEX) {
-        if (a->type != VAL_COMPLEX) {
+    if (a->type == CELL_COMPLEX|| b->type == CELL_COMPLEX) {
+        if (a->type != CELL_COMPLEX) {
             a = to_complex(a);
         }
-        if (b->type != VAL_COMPLEX) {
+        if (b->type != CELL_COMPLEX) {
             b = to_complex(b);
         }
     }
-    else if (a->type == VAL_REAL || b->type == VAL_REAL) {
-        if (a->type == VAL_INT || a->type == VAL_RAT) {
-            a = a->type == VAL_INT ? int_to_real(a) : rat_to_real(a);
+    else if (a->type == CELL_REAL || b->type == CELL_REAL) {
+        if (a->type == CELL_INTEGER || a->type == CELL_RATIONAL) {
+            a = a->type == CELL_INTEGER ? int_to_real(a) : rat_to_real(a);
         }
-        if (b->type == VAL_INT || b->type == VAL_RAT) {
-            b = b->type == VAL_INT ? int_to_real(b) : rat_to_real(b);
+        if (b->type == CELL_INTEGER || b->type == CELL_RATIONAL) {
+            b = b->type == CELL_INTEGER ? int_to_real(b) : rat_to_real(b);
         }
     }
-    else if (a->type == VAL_RAT || b->type == VAL_RAT) {
-        if (a->type == VAL_INT) {
+    else if (a->type == CELL_RATIONAL || b->type == CELL_RATIONAL) {
+        if (a->type == CELL_INTEGER) {
             a = int_to_rat(a);
         }
-        if (b->type == VAL_INT) {
+        if (b->type == CELL_INTEGER) {
             b = int_to_rat(b);
         }
     }
@@ -557,7 +558,7 @@ void numeric_promote(Cell** lhs, Cell** rhs) {
 
 /* Construct an S-expression with exactly one element */
 Cell* make_sexpr_len1(const Cell* a) {
-    Cell* v = make_val_sexpr();
+    Cell* v = make_cell_sexpr();
     v->count = 1;
     v->cell = GC_MALLOC(sizeof(Cell*));
     v->cell[0] = cell_copy(a);
@@ -566,7 +567,7 @@ Cell* make_sexpr_len1(const Cell* a) {
 
 /* Construct an S-expression with exactly two elements */
 Cell* make_sexpr_len2(const Cell* a, const Cell* b) {
-    Cell* v = make_val_sexpr();
+    Cell* v = make_cell_sexpr();
     v->count = 2;
     v->cell = GC_MALLOC(sizeof(Cell*) * 2);
     v->cell[0] = cell_copy(a);
@@ -576,7 +577,7 @@ Cell* make_sexpr_len2(const Cell* a, const Cell* b) {
 
 /* Construct an S-expression with exactly four elements */
 Cell* make_sexpr_len4(const Cell* a, const Cell* b, const Cell* c, const Cell* d) {
-    Cell* v = make_val_sexpr();
+    Cell* v = make_cell_sexpr();
     v->count = 4;
     v->cell = GC_MALLOC(sizeof(Cell*) * 4);
     v->cell[0] = cell_copy(a);
@@ -587,7 +588,7 @@ Cell* make_sexpr_len4(const Cell* a, const Cell* b, const Cell* c, const Cell* d
 }
 
 Cell* make_sexpr_from_list(Cell* v) {
-    Cell* result = make_val_sexpr();
+    Cell* result = make_cell_sexpr();
     result->count = v->len;
     result->cell = GC_MALLOC(sizeof(Cell*) * v->len);
 
@@ -601,7 +602,7 @@ Cell* make_sexpr_from_list(Cell* v) {
 
 /* Constructs an S-expression from a C array of Cell pointers. */
 Cell* make_sexpr_from_array(const int count, Cell** cells) {
-    Cell* v = make_val_sexpr();
+    Cell* v = make_cell_sexpr();
     v->count = count;
     v->cell = GC_MALLOC(sizeof(Cell*) * count);
 
@@ -618,7 +619,7 @@ Cell* flatten_sexpr(const Cell* sexpr) {
     int new_count = 0;
     for (int i = 0; i < sexpr->count; i++) {
         const Cell* current_item = sexpr->cell[i];
-        if (current_item->type == VAL_SEXPR) {
+        if (current_item->type == CELL_SEXPR) {
             /* If the item is an inner s-expr, add the count of its children. */
             new_count += current_item->count;
         } else {
@@ -627,7 +628,7 @@ Cell* flatten_sexpr(const Cell* sexpr) {
     }
 
     /* Allocation */
-    Cell* result = make_val_sexpr();
+    Cell* result = make_cell_sexpr();
     result->count = new_count;
     if (new_count == 0) {
         return result;
@@ -638,7 +639,7 @@ Cell* flatten_sexpr(const Cell* sexpr) {
     int result_idx = 0;
     for (int i = 0; i < sexpr->count; i++) {
         const Cell* current_item = sexpr->cell[i];
-        if (current_item->type == VAL_SEXPR) {
+        if (current_item->type == CELL_SEXPR) {
             /* It's an inner s-expr, so copy its children over. */
             for (int j = 0; j < current_item->count; j++) {
                 result->cell[result_idx] = cell_copy(current_item->cell[j]);
@@ -661,13 +662,13 @@ Cell* flatten_sexpr(const Cell* sexpr) {
 bool cell_is_real_zero(const Cell* c) {
     if (!c) return false;
     switch (c->type) {
-        case VAL_INT:
-            return c->i_val == 0;
-        case VAL_RAT:
+        case CELL_INTEGER:
+            return c->integer_v == 0;
+        case CELL_RATIONAL:
             /* Assumes simplified rational where numerator would be 0. */
             return c->num == 0;
-        case VAL_REAL:
-            return c->r_val == 0.0L;
+        case CELL_REAL:
+            return c->real_v == 0.0L;
         default:
             return false;
     }
@@ -677,15 +678,15 @@ bool cell_is_real_zero(const Cell* c) {
 bool cell_is_integer(const Cell* c) {
     if (!c) return false;
     switch (c->type) {
-        case VAL_INT:
+        case CELL_INTEGER:
             return true;
-        case VAL_RAT:
+        case CELL_RATIONAL:
             /* A simplified rational is an integer if its denominator is 1. */
             return c->den == 1;
-        case VAL_REAL:
+        case CELL_REAL:
             /* A real is an integer if it has no fractional part. */
-            return c->r_val == floorl(c->r_val);
-        case VAL_COMPLEX:
+            return c->real_v == floorl(c->real_v);
+        case CELL_COMPLEX:
             /* A complex is an integer if its imaginary part is zero
              * and its real part is an integer. */
             return cell_is_real_zero(c->imag) && cell_is_integer(c->real);
@@ -698,11 +699,11 @@ bool cell_is_integer(const Cell* c) {
 bool cell_is_real(const Cell* c) {
     if (!c) return false;
     switch (c->type) {
-        case VAL_INT:
-        case VAL_RAT:
-        case VAL_REAL:
+        case CELL_INTEGER:
+        case CELL_RATIONAL:
+        case CELL_REAL:
             return true;
-        case VAL_COMPLEX:
+        case CELL_COMPLEX:
             /* A complex number is real if its imaginary part is zero. */
             return cell_is_real_zero(c->imag);
         default:
@@ -716,16 +717,16 @@ bool cell_is_positive(const Cell* c) {
     if (!c) return false;
 
     const Cell* val_to_check = c;
-    if (c->type == VAL_COMPLEX) {
+    if (c->type == CELL_COMPLEX) {
         /* Must be a real number to be positive */
         if (!cell_is_real_zero(c->imag)) return false;
         val_to_check = c->real;
     }
 
     switch (val_to_check->type) {
-        case VAL_INT:  return val_to_check->i_val > 0;
-        case VAL_REAL: return val_to_check->r_val > 0.0L;
-        case VAL_RAT:  return val_to_check->num > 0; /* Assumes den is always positive */
+        case CELL_INTEGER:  return val_to_check->integer_v > 0;
+        case CELL_REAL: return val_to_check->real_v > 0.0L;
+        case CELL_RATIONAL:  return val_to_check->num > 0; /* Assumes den is always positive */
         default:       return false;
     }
 }
@@ -735,16 +736,16 @@ bool cell_is_negative(const Cell* c) {
     if (!c) return false;
 
     const Cell* val_to_check = c;
-    if (c->type == VAL_COMPLEX) {
+    if (c->type == CELL_COMPLEX) {
         /* Must be a real number to be negative */
         if (!cell_is_real_zero(c->imag)) return false;
         val_to_check = c->real;
     }
 
     switch (val_to_check->type) {
-        case VAL_INT:  return val_to_check->i_val < 0;
-        case VAL_REAL: return val_to_check->r_val < 0.0L;
-        case VAL_RAT:  return val_to_check->num < 0; /* Assumes den is always positive */
+        case CELL_INTEGER:  return val_to_check->integer_v < 0;
+        case CELL_REAL: return val_to_check->real_v < 0.0L;
+        case CELL_RATIONAL:  return val_to_check->num < 0; /* Assumes den is always positive */
         default:       return false;
     }
 }
@@ -756,13 +757,13 @@ bool cell_is_odd(const Cell* c) {
         return false;
     }
 
-    const Cell* int_cell = (c->type == VAL_COMPLEX) ? c->real : c;
+    const Cell* int_cell = (c->type == CELL_COMPLEX) ? c->real : c;
 
     long long val;
     switch (int_cell->type) {
-        case VAL_INT:  val = int_cell->i_val; break;
-        case VAL_REAL: val = (long long)int_cell->r_val; break;
-        case VAL_RAT:  val = int_cell->num; break; /* den is 1 if it's an integer */
+        case CELL_INTEGER:  val = int_cell->integer_v; break;
+        case CELL_REAL: val = (long long)int_cell->real_v; break;
+        case CELL_RATIONAL:  val = int_cell->num; break; /* den is 1 if it's an integer */
         default: return false; /* Unreachable */
     }
     return (val % 2 != 0);
@@ -775,13 +776,13 @@ bool cell_is_even(const Cell* c) {
         return false;
     }
 
-    const Cell* int_cell = (c->type == VAL_COMPLEX) ? c->real : c;
+    const Cell* int_cell = (c->type == CELL_COMPLEX) ? c->real : c;
 
     long long val;
     switch (int_cell->type) {
-        case VAL_INT:  val = int_cell->i_val; break;
-        case VAL_REAL: val = (long long)int_cell->r_val; break;
-        case VAL_RAT:  val = int_cell->num; break; /* den is 1 if it's an integer */
+        case CELL_INTEGER:  val = int_cell->integer_v; break;
+        case CELL_REAL: val = (long long)int_cell->real_v; break;
+        case CELL_RATIONAL:  val = int_cell->num; break; /* den is 1 if it's an integer */
         default: return false; /* Unreachable */
     }
     return (val % 2 == 0);
@@ -790,19 +791,19 @@ bool cell_is_even(const Cell* c) {
 
 Cell* negate_numeric(const Cell* x) {
     switch (x->type) {
-        case VAL_INT:
-            return make_val_int(-x->i_val);
-        case VAL_RAT:
-            return make_val_rat(-x->num, x->den, 1);
-        case VAL_REAL:
-            return make_val_real(-x->r_val);
-        case VAL_COMPLEX:
-            return make_val_complex(
+        case CELL_INTEGER:
+            return make_cell_integer(-x->integer_v);
+        case CELL_RATIONAL:
+            return make_cell_rational(-x->num, x->den, 1);
+        case CELL_REAL:
+            return make_cell_real(-x->real_v);
+        case CELL_COMPLEX:
+            return make_cell_complex(
                 negate_numeric(x->real),
                 negate_numeric(x->imag)
             );
         default:
-            return make_val_err("negate_numeric: Oops, this isn't right!", GEN_ERR);
+            return make_cell_error("negate_numeric: Oops, this isn't right!", GEN_ERR);
     }
 }
 
@@ -820,7 +821,7 @@ static long int gcd_ll(long int a, long int b) {
 
 /* simplify rational: reduce to the lowest terms, normalize sign */
 Cell* simplify_rational(Cell* v) {
-    if (v->type != VAL_RAT) {
+    if (v->type != CELL_RATIONAL) {
         return v; /* nothing to do */
     }
 
@@ -836,16 +837,16 @@ Cell* simplify_rational(Cell* v) {
 
     if (v->den == 0) {
         /* undefined fraction, return an error */
-        Cell* err = make_val_err("simplify_rational: denominator is zero!", GEN_ERR);
+        Cell* err = make_cell_error("simplify_rational: denominator is zero!", GEN_ERR);
         return err;
     }
     if (v->num == v->den) {
         /* Return as integer 1 */
-        return make_val_int(1);
+        return make_cell_integer(1);
     }
     if (v->den == 1) {
         /* Return as integer */
-        Cell* int_cell = make_val_int(v->num);
+        Cell* int_cell = make_cell_integer(v->num);
         return int_cell;
     }
     return v;
@@ -854,9 +855,9 @@ Cell* simplify_rational(Cell* v) {
 /* Helper: convert numeric Cell to long double */
 long double cell_to_ld(const Cell* c) {
     switch (c->type) {
-        case VAL_INT:  return (long double)c->i_val;
-        case VAL_RAT:  return (long double)c->num / (long double)c->den;
-        case VAL_REAL: return c->r_val;
+        case CELL_INTEGER:  return (long double)c->integer_v;
+        case CELL_RATIONAL:  return (long double)c->num / (long double)c->den;
+        case CELL_REAL: return c->real_v;
         default:       return 0.0L; /* should not happen */
     }
 }
@@ -937,12 +938,12 @@ void complex_apply(BuiltinFn fn, const Lex* e, Cell* result, const Cell* rhs) {
 /* Helper to convert any real-valued cell to a C long double. */
 long double cell_to_long_double(const Cell* c) {
     switch (c->type) {
-        case VAL_INT:
-            return (long double)c->i_val;
-        case VAL_RAT:
+        case CELL_INTEGER:
+            return (long double)c->integer_v;
+        case CELL_RATIONAL:
             return (long double)c->num / c->den;
-        case VAL_REAL:
-            return c->r_val;
+        case CELL_REAL:
+            return c->real_v;
         default:
             /* This case should ideally not be reached if inputs are valid numbers. */
             return 0.0L;
@@ -950,11 +951,11 @@ long double cell_to_long_double(const Cell* c) {
 }
 
 /* Helper to construct appropriate cell from a long double */
-Cell* make_cell_from_double(long double d) {
+Cell* make_cell_from_double(const long double d) {
     if (d == floorl(d) && d >= LLONG_MIN && d <= LLONG_MAX) {
-        return make_val_int((long long)d);
+        return make_cell_integer((long long)d);
     }
-    return make_val_real(d);
+    return make_cell_real(d);
 }
 
 /* A version of strdup that allocates memory using the garbage collector. */
@@ -966,7 +967,6 @@ char* GC_strdup(const char* s) {
     size_t len = strlen(s) + 1;
     char* new_str = GC_MALLOC_ATOMIC(len);
     if (new_str == NULL) {
-        /* Handle allocation failure if necessary */
         fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
         exit(EXIT_FAILURE);
     }
@@ -981,7 +981,7 @@ char* GC_strndup(const char* s, const size_t n) {
     size_t len = strnlen(s, n);
 
     /* Allocate GC-managed memory. */
-    char* new_str = (char*) GC_MALLOC_ATOMIC(len + 1);
+    char* new_str = GC_MALLOC_ATOMIC(len + 1);
     if (new_str == NULL) {
         fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
         exit(EXIT_FAILURE);
@@ -995,7 +995,7 @@ char* GC_strndup(const char* s, const size_t n) {
 }
 
 /* Mapping of char names to Unicode codepoints.
- * This array MUST be kept sorted alphabetically by the 'name' field. */
+ * This array MUST be kept sorted alphabetically. */
 static const NamedChar named_chars[] = {
     {"Alpha",     0x0391},
     {"Beta",      0x0392},
@@ -1074,14 +1074,14 @@ Cell* list_get_nth_cell_ptr(const Cell* list, const long n) {
     const Cell* current = list;
     for (long i = 0; i < n; i++) {
         /* Make sure we are still on a pair before trying to get the cdr */
-        if (current->type != VAL_PAIR) {
+        if (current->type != CELL_PAIR) {
             return nullptr;
         }
         current = current->cdr;
     }
 
     /* After the loop, `current` is the pair holding our desired element */
-    if (current->type != VAL_PAIR) {
+    if (current->type != CELL_PAIR) {
         return nullptr;
     }
     /* The value we want is the CAR of this final pair */

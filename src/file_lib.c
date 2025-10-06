@@ -34,39 +34,39 @@ call-with-output-file
 with-output-to-file
 */
 
-/* 'file-exists?' -> VAL_BOOL - file exists predicate */
+/* 'file-exists?' -> CELL_BOOLEAN - file exists predicate */
 Cell* builtin_file_exists(const Lex* e, const Cell* a) {
     (void)e;
-    Cell* err = check_arg_types(a, VAL_STR);
+    Cell* err = check_arg_types(a, CELL_STRING);
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
 
     const char* filename = a->cell[0]->str;
     if (access(filename, F_OK) == 0) {
-        return make_val_bool(1);
+        return make_cell_boolean(1);
     }
-    return make_val_bool(0);
+    return make_cell_boolean(0);
 }
 
-/* 'delete-file -> VAL_BOOL - delete a file, and return a bool confirming outcome */
+/* 'delete-file -> CELL_BOOLEAN - delete a file, and return a bool confirming outcome */
 Cell* builtin_delete_file(const Lex* e, const Cell* a) {
     (void)e;
-    Cell* err = check_arg_types(a, VAL_STR);
+    Cell* err = check_arg_types(a, CELL_STRING);
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
 
     const char* filename = a->cell[0]->str;
     if (unlink(filename) != 0) {
-        Cell* f_err = make_val_err(strerror(errno), FILE_ERR);
+        Cell* f_err = make_cell_error(strerror(errno), FILE_ERR);
         return f_err;
     }
-    return make_val_bool(1);
+    return make_cell_boolean(1);
 }
 
-/* 'open-input-file' -> VAL_PORT - open a file and bind it to a text port */
+/* 'open-input-file' -> CELL_PORT - open a file and bind it to a text port */
 Cell* builtin_open_input_file(const Lex* e, const Cell* a) {
     (void)e;
-    Cell* err = check_arg_types(a, VAL_STR);
+    Cell* err = check_arg_types(a, CELL_STRING);
     if (err) { return err; }
     err = CHECK_ARITY_EXACT(a, 1);
     if (err) { return err; }
@@ -74,23 +74,23 @@ Cell* builtin_open_input_file(const Lex* e, const Cell* a) {
     const char* filename = a->cell[0]->str;
     FILE *fp = fopen(filename, "r");
     if (!fp) {
-        return make_val_err(strerror(errno), FILE_ERR);
+        return make_cell_error(strerror(errno), FILE_ERR);
     }
     char *actual_path = GC_MALLOC(PATH_MAX);
     const char *ptr = realpath(filename, actual_path);
     if (ptr == NULL) {
         fclose(fp);
-        return make_val_err(strerror(errno), FILE_ERR);
+        return make_cell_error(strerror(errno), FILE_ERR);
     }
 
-    Cell* p = make_val_port(ptr, fp, INPUT_PORT, TEXT_PORT);
+    Cell* p = make_cell_port(ptr, fp, INPUT_PORT, TEXT_PORT);
     return p;
 }
 
-/* 'open-binary-input-file' -> VAL_PORT - open a file and bind it to a binary port */
+/* 'open-binary-input-file' -> CELL_PORT - open a file and bind it to a binary port */
 Cell* builtin_open_binary_input_file(const Lex* e, const Cell* a) {
     (void)e;
-    Cell* err = check_arg_types(a, VAL_STR);
+    Cell* err = check_arg_types(a, CELL_STRING);
     if (err) { return err; }
     err = CHECK_ARITY_EXACT(a, 1);
     if (err) { return err; }
@@ -98,42 +98,42 @@ Cell* builtin_open_binary_input_file(const Lex* e, const Cell* a) {
     const char* filename = a->cell[0]->str;
     FILE *fp = fopen(filename, "r");
     if (fp == NULL) {
-        return make_val_err(strerror(errno), FILE_ERR);
+        return make_cell_error(strerror(errno), FILE_ERR);
     }
-    Cell* p = make_val_port(filename, fp, INPUT_PORT, BINARY_PORT);
+    Cell* p = make_cell_port(filename, fp, INPUT_PORT, BINARY_PORT);
     return p;
 }
 
 Cell* builtin_open_output_file(const Lex* e, const Cell* a) {
     (void)e;
-    Cell* err = check_arg_types(a, VAL_STR);
+    Cell* err = check_arg_types(a, CELL_STRING);
     if (err) { return err; }
     err = CHECK_ARITY_RANGE(a, 1, 2);
     if (err) { return err; }
 
     char *mode = "w";
     const char* filename = a->cell[0]->str;
-    if (a->count == 2 && a->cell[1]->type == VAL_STR) {
+    if (a->count == 2 && a->cell[1]->type == CELL_STRING) {
         mode = a->cell[1]->str;
     }
     FILE *fp = fopen(filename, mode);
     if (!fp) {
-        return make_val_err(strerror(errno), FILE_ERR);
+        return make_cell_error(strerror(errno), FILE_ERR);
     }
     char *actual_path = GC_MALLOC(PATH_MAX);
     const char *ptr = realpath(filename, actual_path);
     if (ptr == NULL) {
         fclose(fp);
-        return make_val_err(strerror(errno), FILE_ERR);
+        return make_cell_error(strerror(errno), FILE_ERR);
     }
 
-    Cell* p = make_val_port(filename, fp, OUTPUT_PORT, TEXT_PORT);
+    Cell* p = make_cell_port(filename, fp, OUTPUT_PORT, TEXT_PORT);
     return p;
 }
 
 Cell* builtin_open_binary_output_file(const Lex* e, const Cell* a) {
     (void)e;
-    Cell* err = check_arg_types(a, VAL_STR);
+    Cell* err = check_arg_types(a, CELL_STRING);
     if (err) { return err; }
     err = CHECK_ARITY_EXACT(a, 1);
     if (err) { return err; }
@@ -141,9 +141,9 @@ Cell* builtin_open_binary_output_file(const Lex* e, const Cell* a) {
     const char* filename = a->cell[0]->str;
     FILE *fp = fopen(filename, "r");
     if (fp == NULL) {
-        return make_val_err(strerror(errno), FILE_ERR);
+        return make_cell_error(strerror(errno), FILE_ERR);
     }
-    Cell* p = make_val_port(filename, fp, OUTPUT_PORT, BINARY_PORT);
+    Cell* p = make_cell_port(filename, fp, OUTPUT_PORT, BINARY_PORT);
     return p;
 }
 

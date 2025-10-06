@@ -29,49 +29,49 @@
  *     Basic arithmetic operators     *
  * -----------------------------------*/
 
-/* '+' -> VAL_INT|VAL_REAL|VAL_RAT|VAL_COMP - returns the sum of its arguments */
+/* '+' -> CELL_INTEGER|CELL_REAL|CELL_RATIONAL|VAL_COMP - returns the sum of its arguments */
 Cell* builtin_add(const Lex* e, const Cell* a) {
     (void)e;
-    Cell* err = check_arg_types(a, VAL_INT|VAL_REAL|VAL_RAT|VAL_COMPLEX);
+    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX);
     if (err) { return err; }
     /* identity law logic */
-    if (a->count == 0) return make_val_int(0);
+    if (a->count == 0) return make_cell_integer(0);
     if (a->count == 1) return a->cell[0];
 
     /* deep-copy required as result gets mutated */
     Cell* result = cell_copy(a->cell[0]);
 
-    for (int i = 1; i < a->count; i++) {
+    for (register int i = 1; i < a->count; i++) {
         Cell* rhs = a->cell[i];
         numeric_promote(&result, &rhs);
 
         switch (result->type) {
-            case VAL_INT:
-                result->i_val += rhs->i_val;
+            case CELL_INTEGER:
+                result->integer_v += rhs->integer_v;
                 break;
-            case VAL_RAT:
+            case CELL_RATIONAL:
                 /* (a/b) + (c/d) = (ad + bc)/bd */
                 result->num = result->num * rhs->den + rhs->num * result->den;
                 result->den = result->den * rhs->den;
                 result = simplify_rational(result);
                 break;
-            case VAL_REAL:
-                result->r_val += rhs->r_val;
+            case CELL_REAL:
+                result->real_v += rhs->real_v;
                 break;
-            case VAL_COMPLEX:
+            case CELL_COMPLEX:
                 complex_apply(builtin_add, e, result, rhs);
                 break;
             default:
-                return make_val_err("<builtin '+'> Oops, this shouldn't have happened.", GEN_ERR);
+                return make_cell_error("<builtin '+'> Oops, this shouldn't have happened.", GEN_ERR);
         }
         result->exact = result->exact && rhs->exact;
     }
     return result;
 }
 
-/* '-' -> VAL_INT|VAL_REAL|VAL_RAT|VAL_COMP - returns the difference of its arguments */
+/* '-' -> CELL_INTEGER|CELL_REAL|CELL_RATIONAL|VAL_COMP - returns the difference of its arguments */
 Cell* builtin_sub(const Lex* e, const Cell* a) {
-    Cell* err = check_arg_types(a, VAL_INT|VAL_REAL|VAL_RAT|VAL_COMPLEX);
+    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX);
     if (err) { return err; }
     if ((err = CHECK_ARITY_MIN(a, 1))) { return err; }
 
@@ -88,89 +88,89 @@ Cell* builtin_sub(const Lex* e, const Cell* a) {
         numeric_promote(&result, &rhs);
 
         switch (result->type) {
-            case VAL_INT:
-                result->i_val -= rhs->i_val;
+            case CELL_INTEGER:
+                result->integer_v -= rhs->integer_v;
                 break;
-            case VAL_RAT:
+            case CELL_RATIONAL:
                 /* (a/b) - (c/d) = (ad - bc)/bd */
                 /* 1/1 - 1/2 = ((1)(2) - (1)(1))/(1)(2) = (2 - 1)/2 = 1/2 */
                 result->num = result->num * rhs->den - rhs->num * result->den;
                 result->den = result->den * rhs->den;
                 result = simplify_rational(result);
                 break;
-            case VAL_REAL:
-                result->r_val -= rhs->r_val;
+            case CELL_REAL:
+                result->real_v -= rhs->real_v;
                 break;
-            case VAL_COMPLEX:
+            case CELL_COMPLEX:
                 complex_apply(builtin_sub, e, result, rhs);
                 break;
             default:
-                return make_val_err("<builtin '-'> Oops, this shouldn't have happened.", GEN_ERR);
+                return make_cell_error("<builtin '-'> Oops, this shouldn't have happened.", GEN_ERR);
         }
         result->exact = result->exact && rhs->exact;
     }
     return result;
 }
 
-/* '*' -> VAL_INT|VAL_FLOAT|VAL_RAT|VAL_COMP - returns the product of its arguments */
+/* '*' -> CELL_INTEGER|VAL_FLOAT|CELL_RATIONAL|VAL_COMP - returns the product of its arguments */
 Cell* builtin_mul(const Lex* e, const Cell* a) {
-    Cell* err = check_arg_types(a, VAL_INT|VAL_REAL|VAL_RAT|VAL_COMPLEX);
+    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX);
     if (err) { return err; }
     /* identity law logic */
-    if (a->count == 0) return make_val_int(1);
+    if (a->count == 0) return make_cell_integer(1);
     if (a->count == 1) return a->cell[0];
 
     /* deep-copy required as result gets mutated */
     Cell* result = cell_copy(a->cell[0]);
 
-    for (int i = 1; i < a->count; i++) {
+    for (register int i = 1; i < a->count; i++) {
         Cell* rhs = a->cell[i];
         numeric_promote(&result, &rhs);
 
         switch (result->type) {
-            case VAL_INT:
-                result->i_val *= rhs->i_val;
+            case CELL_INTEGER:
+                result->integer_v *= rhs->integer_v;
                 break;
-            case VAL_RAT:
+            case CELL_RATIONAL:
                 /* (a/b) * (c/d) = (a * c)/(b * d) */
                 result->num = result->num * rhs->num;
                 result->den = result->den * rhs->den;
                 result = simplify_rational(result);
                 break;
-            case VAL_REAL:
-                result->r_val *= rhs->r_val;
+            case CELL_REAL:
+                result->real_v *= rhs->real_v;
                 break;
-            case VAL_COMPLEX:
+            case CELL_COMPLEX:
                 complex_apply(builtin_mul, e, result, rhs);
                 break;
             default:
-                return make_val_err("<builtin '*'> Oops, this shouldn't have happened.", GEN_ERR);
+                return make_cell_error("<builtin '*'> Oops, this shouldn't have happened.", GEN_ERR);
         }
         result->exact = result->exact && rhs->exact;
     }
     return result;
 }
 
-/* '+' -> VAL_INT|VAL_REAL|VAL_RAT|VAL_COMP - returns the quotient of its arguments */
+/* '+' -> CELL_INTEGER|CELL_REAL|CELL_RATIONAL|VAL_COMP - returns the quotient of its arguments */
 Cell* builtin_div(const Lex* e, const Cell* a) {
-    Cell* err = check_arg_types(a, VAL_INT|VAL_REAL|VAL_RAT|VAL_COMPLEX);
+    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX);
     if (err) { return err; }
     if ((err = CHECK_ARITY_MIN(a, 1))) { return err; }
 
     /* unary division reciprocal */
     if (a->count == 1) {
-        if (a->cell[0]->type == VAL_INT) {
-            return make_val_rat(1, a->cell[0]->i_val, 1);
+        if (a->cell[0]->type == CELL_INTEGER) {
+            return make_cell_rational(1, a->cell[0]->integer_v, 1);
         }
-        if (a->cell[0]->type == VAL_RAT) {
+        if (a->cell[0]->type == CELL_RATIONAL) {
             const long int n = a->cell[0]->num;
             const long int d = a->cell[0]->den;
-            return make_val_rat(d, n, 1);
+            return make_cell_rational(d, n, 1);
         }
-        if (a->cell[0]->type == VAL_REAL) {
-            return make_val_real(1.0L / a->cell[0]->r_val);
+        if (a->cell[0]->type == CELL_REAL) {
+            return make_cell_real(1.0L / a->cell[0]->real_v);
         }
-        if (a->cell[0]->type == VAL_COMPLEX) {
+        if (a->cell[0]->type == CELL_COMPLEX) {
             const Cell* z = a->cell[0];
             const Cell* a_part = z->real;
             const Cell* b_part = z->imag;
@@ -190,7 +190,7 @@ Cell* builtin_div(const Lex* e, const Cell* a) {
             Cell* new_real = builtin_div(e, new_real_args);
 
             /* Calculate the new imaginary part: -b / (a^2 + b^2) */
-            const Cell* zero = make_val_int(0);
+            const Cell* zero = make_cell_integer(0);
             const Cell* neg_b_args = make_sexpr_len2(zero, b_part);
             const Cell* neg_b = builtin_sub(e, neg_b_args);
 
@@ -198,7 +198,7 @@ Cell* builtin_div(const Lex* e, const Cell* a) {
             Cell* new_imag = builtin_div(e, new_imag_args);
 
             /* Create the final result */
-            Cell* result = make_val_complex(new_real, new_imag);
+            Cell* result = make_cell_complex(new_real, new_imag);
             return result;
         }
     }
@@ -211,36 +211,36 @@ Cell* builtin_div(const Lex* e, const Cell* a) {
         numeric_promote(&result, &rhs);
 
         switch (result->type) {
-        case VAL_INT:
-            if (rhs->i_val == 0) {
-                return make_val_err("Division by zero.", VALUE_ERR);
+        case CELL_INTEGER:
+            if (rhs->integer_v == 0) {
+                return make_cell_error("Division by zero.", VALUE_ERR);
             }
             /* pretty hacky way to get (/ 9 3) -> 3 but (/ 10 3) -> 10/3 */
-            const double r = remainder((double)result->i_val, (double)rhs->i_val);
+            const double r = remainder((double)result->integer_v, (double)rhs->integer_v);
             if (r == 0 || r == 0.0) {
-                result->i_val /= rhs->i_val;
+                result->integer_v /= rhs->integer_v;
             } else {
-                Cell* new_rat = make_val_rat(result->i_val, rhs->i_val, 1);
+                Cell* new_rat = make_cell_rational(result->integer_v, rhs->integer_v, 1);
                 result = new_rat;
             }
             break;
-        case VAL_RAT:
+        case CELL_RATIONAL:
             /* (a/b) / (c/d) = (a * d)/(b * c)   */
             result->num = result->num * rhs->den;
             result->den = result->den * rhs->num;
             result = simplify_rational(result);
             break;
-        case VAL_REAL:
-            if (rhs->r_val == 0) {
-                return make_val_err("Division by zero.", VALUE_ERR);
+        case CELL_REAL:
+            if (rhs->real_v == 0) {
+                return make_cell_error("Division by zero.", VALUE_ERR);
             }
-            result->r_val /= rhs->r_val;
+            result->real_v /= rhs->real_v;
             break;
-        case VAL_COMPLEX:
+        case CELL_COMPLEX:
             complex_apply(builtin_div, e, result, rhs);
             break;
         default:
-            return make_val_err("<builtin '/'> Oops, this shouldn't have happened.", GEN_ERR);
+            return make_cell_error("<builtin '/'> Oops, this shouldn't have happened.", GEN_ERR);
         }
         result->exact = result->exact && rhs->exact;
     }
@@ -251,11 +251,11 @@ Cell* builtin_div(const Lex* e, const Cell* a) {
  *     Generic numeric operations     *
  * -----------------------------------*/
 
-/* 'abs' -> VAL_INT|VAL_REAL|VAL_RAT|VAL_COMPLEX -
+/* 'abs' -> CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX-
  * returns the absolute value (magnitude) of its argument. */
 Cell* builtin_abs(const Lex* e, const Cell* a) {
     (void)e;
-    Cell* err = check_arg_types(a, VAL_INT|VAL_REAL|VAL_RAT|VAL_COMPLEX);
+    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX);
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
 
@@ -265,16 +265,16 @@ Cell* builtin_abs(const Lex* e, const Cell* a) {
     if (cell_is_real(arg)) {
         /* If the number is a complex type, we operate on its real part.
          * Otherwise, we operate on the number itself. */
-        const Cell* real_val = arg->type == VAL_COMPLEX ? arg->real : arg;
+        const Cell* real_v = arg->type == CELL_COMPLEX? arg->real : arg;
 
-        if (cell_is_negative(real_val)) {
-            return negate_numeric(real_val);
+        if (cell_is_negative(real_v)) {
+            return negate_numeric(real_v);
         }
         /* The number is non-negative, so just return it. */
-        return (Cell*)real_val;
+        return (Cell*)real_v;
     }
     /* Handle non-real complex numbers
-     * At this point, we know 'arg' is a VAL_COMPLEX.
+     * At this point, we know 'arg' is a CELL_COMPLEX.
      * Convert real and imaginary parts to long doubles. */
     const long double x = cell_to_long_double(arg->real);
     const long double y = cell_to_long_double(arg->imag);
@@ -283,7 +283,7 @@ Cell* builtin_abs(const Lex* e, const Cell* a) {
     const long double magnitude = sqrtl(x * x + y * y);
 
     /* The result of a magnitude calculation is always an inexact real number. */
-    return make_val_real(magnitude);
+    return make_cell_real(magnitude);
 }
 
 /* Helper to bridge expt with complex_apply */
@@ -299,11 +299,11 @@ static Cell* expt_complex_op(const BuiltinFn op, const Lex* e, const Cell* z1, c
     return result;
 }
 
-/* 'expt' -> VAL_INT|VAL_REAL|VAL_RAT|VAL_COMPLEX - returns its first arg calculated
+/* 'expt' -> CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX- returns its first arg calculated
  * to the power of its second arg */
 Cell* builtin_expt(const Lex* e, const Cell* a) {
     (void)e;
-    Cell* err = check_arg_types(a, VAL_INT|VAL_REAL|VAL_RAT|VAL_COMPLEX);
+    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX);
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 2))) { return err; }
 
@@ -311,8 +311,8 @@ Cell* builtin_expt(const Lex* e, const Cell* a) {
     const Cell* exp = a->cell[1];
 
     /* Handle simple edge cases */
-    if (cell_is_real_zero(exp)) { return make_val_int(1); }
-    if (cell_is_real_zero(base)) { return make_val_int(0); }
+    if (cell_is_real_zero(exp)) { return make_cell_integer(1); }
+    if (cell_is_real_zero(base)) { return make_cell_integer(0); }
 
     /* Base is a non-negative real number */
     if (cell_is_real(base) && !cell_is_negative(base)) {
@@ -335,14 +335,14 @@ Cell* builtin_expt(const Lex* e, const Cell* a) {
 
         Cell* real_part = make_cell_from_double(magnitude * cosl(angle));
         Cell* imag_part = make_cell_from_double(magnitude * sinl(angle));
-        return make_val_complex(real_part, imag_part);
+        return make_cell_complex(real_part, imag_part);
     }
 
     /* Base is a complex number */
-    if (base->type == VAL_COMPLEX) {
+    if (base->type == CELL_COMPLEX) {
         if (cell_is_integer(exp)) {
             const long long n = (long long)cell_to_long_double(exp);
-            Cell* result = make_val_int(1); // Multiplicative identity
+            Cell* result = make_cell_integer(1); // Multiplicative identity
             const Cell* current_power = cell_copy(base);
 
             long long abs_n = n > 0 ? n : -n;
@@ -356,48 +356,48 @@ Cell* builtin_expt(const Lex* e, const Cell* a) {
 
             /* Handle negative exponent: z^-n = 1 / z^n */
             if (n < 0) {
-                const Cell* one = make_val_int(1);
+                const Cell* one = make_cell_integer(1);
                 result = expt_complex_op(builtin_div, e, one, result);
             }
             return result;
         }
-        return make_val_err("expt: complex base with non-integer exponent not implemented", GEN_ERR);
+        return make_cell_error("expt: complex base with non-integer exponent not implemented", GEN_ERR);
     }
-    return make_val_err("expt: unreachable code", GEN_ERR);
+    return make_cell_error("expt: unreachable code", GEN_ERR);
 }
 
-/* 'modulo' -> VAL_INT - returns the remainder of dividing the first argument
+/* 'modulo' -> CELL_INTEGER - returns the remainder of dividing the first argument
  * by the second, with the result having the same sign as the divisor.*/
 Cell* builtin_modulo(const Lex* e, const Cell* a) {
     (void)e;
-    Cell* err = check_arg_types(a, VAL_INT);
+    Cell* err = check_arg_types(a, CELL_INTEGER);
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 2))) { return err; }
-    long long r = a->cell[0]->i_val % a->cell[1]->i_val;
-    if (r != 0 && ((a->cell[1]->i_val > 0 && r < 0) || (a->cell[1]->i_val < 0 && r > 0))) {
-        r += a->cell[1]->i_val;
+    long long r = a->cell[0]->integer_v % a->cell[1]->integer_v;
+    if (r != 0 && ((a->cell[1]->integer_v > 0 && r < 0) || (a->cell[1]->integer_v < 0 && r > 0))) {
+        r += a->cell[1]->integer_v;
     }
-    return make_val_int(r);
+    return make_cell_integer(r);
 }
 
-/* 'quotient' -> VAL_INT - returns the integer result of dividing
+/* 'quotient' -> CELL_INTEGER - returns the integer result of dividing
  * the first argument by the second, discarding any remainder.*/
 Cell* builtin_quotient(const Lex* e, const Cell* a) {
     (void)e;
-    Cell* err = check_arg_types(a, VAL_INT);
+    Cell* err = check_arg_types(a, CELL_INTEGER);
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 2))) { return err; }
-    return make_val_int(a->cell[0]->i_val / a->cell[1]->i_val);
+    return make_cell_integer(a->cell[0]->integer_v / a->cell[1]->integer_v);
 }
 
-/* 'remainder' -> VAL_INT - returns the remainder of dividing the first argument
+/* 'remainder' -> CELL_INTEGER - returns the remainder of dividing the first argument
  * by the second, with the result having the same sign as the dividend.*/
 Cell* builtin_remainder(const Lex* e, const Cell* a) {
     (void)e;
-    Cell* err = check_arg_types(a, VAL_INT);
+    Cell* err = check_arg_types(a, CELL_INTEGER);
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 2))) { return err; }
-    return make_val_int(a->cell[0]->i_val % a->cell[1]->i_val);
+    return make_cell_integer(a->cell[0]->integer_v % a->cell[1]->integer_v);
 }
 
 /* Helper for the core GCD algorithm (Euclidean) for two integers. */
@@ -422,49 +422,49 @@ long long lcm_helper(long long x, long long y) {
 
 Cell* builtin_gcd(const Lex* e, const Cell* a) {
     (void)e;
-    Cell* err = check_arg_types(a, VAL_INT);
+    Cell* err = check_arg_types(a, CELL_INTEGER);
     if (err) return err;
 
     if (a->count == 0) {
-        return make_val_int(0); /* Identity for GCD */
+        return make_cell_integer(0); /* Identity for GCD */
     }
 
-    long long result = a->cell[0]->i_val;
+    long long result = a->cell[0]->integer_v;
     for (int i = 1; i < a->count; i++) {
-        result = gcd_helper(result, a->cell[i]->i_val);
+        result = gcd_helper(result, a->cell[i]->integer_v);
     }
 
-    return make_val_int(llabs(result)); /* Final result must be non-negative */
+    return make_cell_integer(llabs(result)); /* Final result must be non-negative */
 }
 
 Cell* builtin_lcm(const Lex* e, const Cell* a) {
     (void)e;
-    Cell* err = check_arg_types(a, VAL_INT);
+    Cell* err = check_arg_types(a, CELL_INTEGER);
     if (err) { return err; }
 
     if (a->count == 0) {
-        return make_val_int(1); /* Identity for LCM */
+        return make_cell_integer(1); /* Identity for LCM */
     }
 
-    long long result = a->cell[0]->i_val;
+    long long result = a->cell[0]->integer_v;
     for (int i = 1; i < a->count; i++) {
-        result = lcm_helper(result, a->cell[i]->i_val);
+        result = lcm_helper(result, a->cell[i]->integer_v);
     }
 
-    return make_val_int(llabs(result)); /* Final result must be non-negative */
+    return make_cell_integer(llabs(result)); /* Final result must be non-negative */
 }
 
-/* 'max' -> VAL_INT|VAL_RAT|VAL_REAL - return the largest value in numeric args */
+/* 'max' -> CELL_INTEGER|CELL_RATIONAL|CELL_REAL - return the largest value in numeric args */
 Cell* builtin_max(const Lex* e, const Cell* a) {
     (void)e;
-    Cell* err = check_arg_types(a, VAL_INT|VAL_RAT|VAL_REAL|VAL_COMPLEX);
+    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX);
     if (err) { return err; }
     if ((err = CHECK_ARITY_MIN(a, 1))) { return err; }
 
     /* Validate that all arguments are real numbers. */
     for (int i = 0; i < a->count; i++) {
         if (!cell_is_real(a->cell[i])) {
-            return make_val_err("max: all arguments must be real numbers", TYPE_ERR);
+            return make_cell_error("max: all arguments must be real numbers", TYPE_ERR);
         }
     }
 
@@ -475,23 +475,23 @@ Cell* builtin_max(const Lex* e, const Cell* a) {
         Cell* arg_list = make_sexpr_len2(largest_so_far, rhs);
         const Cell* result = builtin_lt_op(e, arg_list);
 
-        if (result->b_val == 1) { /* if (largest_so_far < rhs) */
+        if (result->boolean_v == 1) { /* if (largest_so_far < rhs) */
             largest_so_far = rhs;
         }
     }
     return cell_copy(largest_so_far);
 }
 
-/* 'min' -> VAL_INT|VAL_RAT|VAL_REAL - return the smallest value in numeric args */
+/* 'min' -> CELL_INTEGER|CELL_RATIONAL|CELL_REAL - return the smallest value in numeric args */
 Cell* builtin_min(const Lex* e, const Cell* a) {
     (void)e;
-    Cell* err = check_arg_types(a, VAL_INT|VAL_RAT|VAL_REAL|VAL_COMPLEX);
+    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX);
     if (err) { return err; }
     if ((err = CHECK_ARITY_MIN(a, 1))) { return err; }
 
     for (int i = 0; i < a->count; i++) {
         if (!cell_is_real(a->cell[i])) {
-            return make_val_err("min: all arguments must be real numbers", TYPE_ERR);
+            return make_cell_error("min: all arguments must be real numbers", TYPE_ERR);
         }
     }
 
@@ -502,7 +502,7 @@ Cell* builtin_min(const Lex* e, const Cell* a) {
         Cell* arg_list = make_sexpr_len2(smallest_so_far, rhs);
         const Cell* result = builtin_gt_op(e, arg_list); /* Using > for min */
 
-        if (result->b_val == 1) { /* if (smallest_so_far > rhs) */
+        if (result->boolean_v == 1) { /* if (smallest_so_far > rhs) */
             smallest_so_far = rhs;
         }
     }
@@ -511,7 +511,7 @@ Cell* builtin_min(const Lex* e, const Cell* a) {
 
 Cell* builtin_floor(const Lex* e, const Cell* a) {
     (void)e;
-    Cell* err = check_arg_types(a, VAL_INT|VAL_RAT|VAL_REAL);
+    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL);
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
 
@@ -523,7 +523,7 @@ Cell* builtin_floor(const Lex* e, const Cell* a) {
 
 Cell* builtin_ceiling(const Lex* e, const Cell* a) {
     (void)e;
-    Cell* err = check_arg_types(a, VAL_INT|VAL_RAT|VAL_REAL);
+    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL);
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
 
@@ -535,7 +535,7 @@ Cell* builtin_ceiling(const Lex* e, const Cell* a) {
 
 Cell* builtin_round(const Lex* e, const Cell* a) {
     (void)e;
-    Cell* err = check_arg_types(a, VAL_INT|VAL_RAT|VAL_REAL);
+    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL);
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
 
@@ -547,7 +547,7 @@ Cell* builtin_round(const Lex* e, const Cell* a) {
 
 Cell* builtin_truncate(const Lex* e, const Cell* a) {
     (void)e;
-    Cell* err = check_arg_types(a, VAL_INT|VAL_RAT|VAL_REAL);
+    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL);
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
 
@@ -559,33 +559,33 @@ Cell* builtin_truncate(const Lex* e, const Cell* a) {
 
 Cell* builtin_numerator(const Lex* e, const Cell* a) {
     (void)e;
-    Cell* err = check_arg_types(a, VAL_INT|VAL_RAT);
+    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL);
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
 
     /* return ints unchanged */
-    if (a->cell[0]->type == VAL_INT) {
+    if (a->cell[0]->type == CELL_INTEGER) {
         return a->cell[0];
     }
-    return make_val_int(a->cell[0]->num);
+    return make_cell_integer(a->cell[0]->num);
 }
 
 Cell* builtin_denominator(const Lex* e, const Cell* a) {
     (void)e;
-    Cell* err = check_arg_types(a, VAL_INT|VAL_RAT);
+    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL);
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
 
     /* denominator of int always 1 */
-    if (a->cell[0]->type == VAL_INT) {
-        return make_val_int(1);
+    if (a->cell[0]->type == CELL_INTEGER) {
+        return make_cell_integer(1);
     }
-    return make_val_int(a->cell[0]->den);
+    return make_cell_integer(a->cell[0]->den);
 }
 
 Cell* builtin_square(const Lex* e, const Cell* a) {
     (void)e;
-    Cell* err = check_arg_types(a, VAL_INT|VAL_RAT|VAL_REAL|VAL_COMPLEX);
+    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX);
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
 
@@ -595,7 +595,7 @@ Cell* builtin_square(const Lex* e, const Cell* a) {
 
 Cell* builtin_exact(const Lex* e, const Cell* a) {
     (void)e;
-    Cell* err = check_arg_types(a, VAL_INT|VAL_RAT|VAL_REAL|VAL_COMPLEX);
+    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX);
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
 
@@ -603,7 +603,7 @@ Cell* builtin_exact(const Lex* e, const Cell* a) {
     if (a->cell[0]->exact) {
         return a->cell[0];
     }
-    if (a->cell[0]->type == VAL_COMPLEX) {
+    if (a->cell[0]->type == CELL_COMPLEX) {
         a->cell[0]->real->exact = 1;
         a->cell[0]->imag->exact = 1;
     }
@@ -613,7 +613,7 @@ Cell* builtin_exact(const Lex* e, const Cell* a) {
 
 Cell* builtin_inexact(const Lex* e, const Cell* a) {
     (void)e;
-    Cell* err = check_arg_types(a, VAL_INT|VAL_RAT|VAL_REAL|VAL_COMPLEX);
+    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX);
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
 
@@ -621,7 +621,7 @@ Cell* builtin_inexact(const Lex* e, const Cell* a) {
     if (a->cell[0]->exact == 0) {
         return a->cell[0];
     }
-    if (a->cell[0]->type == VAL_COMPLEX) {
+    if (a->cell[0]->type == CELL_COMPLEX) {
         a->cell[0]->real->exact = 0;
         a->cell[0]->imag->exact = 0;
     }

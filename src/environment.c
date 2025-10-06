@@ -58,7 +58,7 @@ Lex* lex_new_child(Lex* parent) {
 
 /* Retrieve a Cell* value from an environment */
 Cell* lex_get(const Lex* e, const Cell* k) {
-    if (!e || !k || k->type != VAL_SYM) return nullptr;
+    if (!e || !k || k->type != CELL_SYMBOL) return nullptr;
 
     for (int i = 0; i < e->count; i++) {
         if (strcmp(e->syms[i], k->sym) == 0) {
@@ -73,12 +73,12 @@ Cell* lex_get(const Lex* e, const Cell* k) {
 
     char buf[128];
     snprintf(buf, sizeof(buf), "Unbound symbol: '%s'", k->sym);
-    return make_val_err(buf, VALUE_ERR);
+    return make_cell_error(buf, VALUE_ERR);
 }
 
 /* Place a Cell* value into an environment */
 void lex_put(Lex* e, const Cell* k, const Cell* v) {
-    if (!e || !k || !v || k->type != VAL_SYM) {
+    if (!e || !k || !v || k->type != CELL_SYMBOL) {
         fprintf(stderr, "lex_put: invalid arguments\n");
         return;
     }
@@ -105,20 +105,20 @@ void lex_put(Lex* e, const Cell* k, const Cell* v) {
     e->vals[e->count - 1] = (Cell*)v;
 }
 
-/* Populate the VAL_PROC struct of a Cell* object for builtin procedures */
+/* Populate the CELL_PROC struct of a Cell* object for builtin procedures */
 Cell* lex_make_builtin(const char* name, Cell* (*func)(const Lex*, const Cell*)) {
     Cell* c = GC_MALLOC(sizeof(Cell));
-    c->type = VAL_PROC;
+    c->type = CELL_PROC;
     c->f_name = GC_strdup(name);
     c->builtin = func;
     c->is_builtin = true;
     return c;
 }
 
-/* Populate the VAL_PROC struct of a Cell* object for a named lambda procedure */
+/* Populate the CELL_PROC struct of a Cell* object for a named lambda procedure */
 Cell* lex_make_named_lambda(const char* name, const Cell* formals, const Cell* body, Lex* env) {
     Cell* c = GC_MALLOC(sizeof(Cell));
-    c->type = VAL_PROC;
+    c->type = CELL_PROC;
     c->l_name = GC_strdup(name);  /* optional */
     c->formals = cell_copy(formals);
     c->body = cell_copy(body);
@@ -127,10 +127,10 @@ Cell* lex_make_named_lambda(const char* name, const Cell* formals, const Cell* b
     return c;
 }
 
-/* Populate the VAL_PROC struct of a Cell* object for an anonymous lambda procedure */
+/* Populate the CELL_PROC struct of a Cell* object for an anonymous lambda procedure */
 Cell* lex_make_lambda(const Cell* formals, const Cell* body, Lex* env) {
     Cell* c = GC_MALLOC(sizeof(Cell));
-    c->type = VAL_PROC;
+    c->type = CELL_PROC;
     c->l_name = nullptr;  /* No name */
     c->formals = cell_copy(formals);
     c->body = cell_copy(body);
@@ -142,7 +142,7 @@ Cell* lex_make_lambda(const Cell* formals, const Cell* body, Lex* env) {
 /* Register a procedure in an environment */
 void lex_add_builtin(Lex* e, const char* name, Cell* (*func)(const Lex*, const Cell*)) {
     const Cell* fn = lex_make_builtin(name, func);
-    const Cell* k = make_val_sym(name);
+    const Cell* k = make_cell_symbol(name);
     lex_put(e, k, fn);
 }
 

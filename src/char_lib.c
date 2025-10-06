@@ -32,109 +32,109 @@ Cell* builtin_char_alphabetic(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
-    if (a->cell[0]->type != VAL_CHAR) {
-        return make_val_err("char-alphabetic?: arg 1 must be a char", TYPE_ERR);
+    if (a->cell[0]->type != CELL_CHAR) {
+        return make_cell_error("char-alphabetic?: arg 1 must be a char", TYPE_ERR);
     }
-    return make_val_bool(u_isalpha(a->cell[0]->c_val));
+    return make_cell_boolean(u_isalpha(a->cell[0]->char_v));
 }
 
 Cell* builtin_char_whitespace(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
-    if (a->cell[0]->type != VAL_CHAR) {
-        return make_val_err("char-whitespace?: arg 1 must be a char", TYPE_ERR);
+    if (a->cell[0]->type != CELL_CHAR) {
+        return make_cell_error("char-whitespace?: arg 1 must be a char", TYPE_ERR);
     }
-    return make_val_bool(u_isspace(a->cell[0]->c_val));
+    return make_cell_boolean(u_isspace(a->cell[0]->char_v));
 }
 
 Cell* builtin_char_numeric(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
-    if (a->cell[0]->type != VAL_CHAR) {
-        return make_val_err("char-numeric?: arg 1 must be a char", TYPE_ERR);
+    if (a->cell[0]->type != CELL_CHAR) {
+        return make_cell_error("char-numeric?: arg 1 must be a char", TYPE_ERR);
     }
-    return make_val_bool(u_isdigit(a->cell[0]->c_val));
+    return make_cell_boolean(u_isdigit(a->cell[0]->char_v));
 }
 
 Cell* builtin_char_upper_case(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
-    if (a->cell[0]->type != VAL_CHAR) {
-        return make_val_err("char-upper-case?: arg 1 must be a char", TYPE_ERR);
+    if (a->cell[0]->type != CELL_CHAR) {
+        return make_cell_error("char-upper-case?: arg 1 must be a char", TYPE_ERR);
     }
-    return make_val_bool(u_isupper(a->cell[0]->c_val));
+    return make_cell_boolean(u_isupper(a->cell[0]->char_v));
 }
 
 Cell* builtin_char_lower_case(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
-    if (a->cell[0]->type != VAL_CHAR) {
-        return make_val_err("char-lower-case?: arg 1 must be a char", TYPE_ERR);
+    if (a->cell[0]->type != CELL_CHAR) {
+        return make_cell_error("char-lower-case?: arg 1 must be a char", TYPE_ERR);
     }
-    return make_val_bool(u_islower(a->cell[0]->c_val));
+    return make_cell_boolean(u_islower(a->cell[0]->char_v));
 }
 
 Cell* builtin_char_upcase(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
-    if (a->cell[0]->type != VAL_CHAR) {
-        return make_val_err("char-upcase: arg 1 must be a char", TYPE_ERR);
+    if (a->cell[0]->type != CELL_CHAR) {
+        return make_cell_error("char-upcase: arg 1 must be a char", TYPE_ERR);
     }
-    return make_val_char(u_toupper(a->cell[0]->c_val));
+    return make_cell_char(u_toupper(a->cell[0]->char_v));
 }
 
 Cell* builtin_char_downcase(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
-    if (a->cell[0]->type != VAL_CHAR) {
-        return make_val_err("char-downcase: arg 1 must be a char", TYPE_ERR);
+    if (a->cell[0]->type != CELL_CHAR) {
+        return make_cell_error("char-downcase: arg 1 must be a char", TYPE_ERR);
     }
-    return make_val_char(u_tolower(a->cell[0]->c_val));
+    return make_cell_char(u_tolower(a->cell[0]->char_v));
 }
 
 Cell* builtin_char_foldcase(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
-    if (a->cell[0]->type != VAL_CHAR) {
-        return make_val_err("char-foldcase: arg 1 must be a char", TYPE_ERR);
+    if (a->cell[0]->type != CELL_CHAR) {
+        return make_cell_error("char-foldcase: arg 1 must be a char", TYPE_ERR);
     }
-    const unsigned char c = a->cell[0]->c_val;
-    return make_val_char(u_foldCase(c, U_FOLD_CASE_DEFAULT));
+    const unsigned char c = a->cell[0]->char_v;
+    return make_cell_char(u_foldCase(c, U_FOLD_CASE_DEFAULT));
 }
 
 Cell* builtin_digit_value(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
-    if (a->cell[0]->type != VAL_CHAR) {
-        return make_val_err("digit-value: arg 1 must be a char", TYPE_ERR);
+    if (a->cell[0]->type != CELL_CHAR) {
+        return make_cell_error("digit-value: arg 1 must be a char", TYPE_ERR);
     }
 
-    const int32_t value = u_charDigitValue(a->cell[0]->c_val);
+    const int32_t value = u_charDigitValue(a->cell[0]->char_v);
 
     if (value == -1) {
-        return make_val_bool(0);
+        return make_cell_boolean(0);
     }
-    return make_val_int(value);
+    return make_cell_integer(value);
 }
 
 Cell* builtin_char_equal_ci(const Lex* e, const Cell* a) {
     (void)e;
-    Cell* err = check_arg_types(a, VAL_CHAR);
+    Cell* err = check_arg_types(a, CELL_CHAR);
     if (err) return err;
 
     Cell** cells = GC_MALLOC(sizeof(Cell*) * a->count);;
     for (int i = 0; i < a->count; i++) {
         const Cell* the_char = a->cell[i];
         const Cell* the_char_fc = builtin_char_foldcase(e, make_sexpr_len1(the_char));
-        cells[i] = make_val_int(the_char_fc->c_val);
+        cells[i] = make_cell_integer(the_char_fc->char_v);
     }
 
     Cell* cell_sexpr = make_sexpr_from_array(a->count, cells);
@@ -143,14 +143,14 @@ Cell* builtin_char_equal_ci(const Lex* e, const Cell* a) {
 
 Cell* builtin_char_lt_ci(const Lex* e, const Cell* a) {
     (void)e;
-    Cell* err = check_arg_types(a, VAL_CHAR);
+    Cell* err = check_arg_types(a, CELL_CHAR);
     if (err) return err;
 
     Cell** cells = GC_MALLOC(sizeof(Cell*) * a->count);;
     for (int i = 0; i < a->count; i++) {
         const Cell* the_char = a->cell[i];
         const Cell* the_char_fc = builtin_char_foldcase(e, make_sexpr_len1(the_char));
-        cells[i] = make_val_int(the_char_fc->c_val);
+        cells[i] = make_cell_integer(the_char_fc->char_v);
     }
 
     Cell* cell_sexpr = make_sexpr_from_array(a->count, cells);
@@ -159,14 +159,14 @@ Cell* builtin_char_lt_ci(const Lex* e, const Cell* a) {
 
 Cell* builtin_char_lte_ci(const Lex* e, const Cell* a) {
     (void)e;
-    Cell* err = check_arg_types(a, VAL_CHAR);
+    Cell* err = check_arg_types(a, CELL_CHAR);
     if (err) return err;
 
     Cell** cells = GC_MALLOC(sizeof(Cell*) * a->count);;
     for (int i = 0; i < a->count; i++) {
         const Cell* the_char = a->cell[i];
         const Cell* the_char_fc = builtin_char_foldcase(e, make_sexpr_len1(the_char));
-        cells[i] = make_val_int(the_char_fc->c_val);
+        cells[i] = make_cell_integer(the_char_fc->char_v);
     }
 
     Cell* cell_sexpr = make_sexpr_from_array(a->count, cells);
@@ -175,14 +175,14 @@ Cell* builtin_char_lte_ci(const Lex* e, const Cell* a) {
 
 Cell* builtin_char_gt_ci(const Lex* e, const Cell* a) {
     (void)e;
-    Cell* err = check_arg_types(a, VAL_CHAR);
+    Cell* err = check_arg_types(a, CELL_CHAR);
     if (err) return err;
 
     Cell** cells = GC_MALLOC(sizeof(Cell*) * a->count);;
     for (int i = 0; i < a->count; i++) {
         const Cell* the_char = a->cell[i];
         const Cell* the_char_fc = builtin_char_foldcase(e, make_sexpr_len1(the_char));
-        cells[i] = make_val_int(the_char_fc->c_val);
+        cells[i] = make_cell_integer(the_char_fc->char_v);
     }
 
     Cell* cell_sexpr = make_sexpr_from_array(a->count, cells);
@@ -191,14 +191,14 @@ Cell* builtin_char_gt_ci(const Lex* e, const Cell* a) {
 
 Cell* builtin_char_gte_ci(const Lex* e, const Cell* a) {
     (void)e;
-    Cell* err = check_arg_types(a, VAL_CHAR);
+    Cell* err = check_arg_types(a, CELL_CHAR);
     if (err) return err;
 
     Cell** cells = GC_MALLOC(sizeof(Cell*) * a->count);;
     for (int i = 0; i < a->count; i++) {
         const Cell* the_char = a->cell[i];
         const Cell* the_char_fc = builtin_char_foldcase(e, make_sexpr_len1(the_char));
-        cells[i] = make_val_int(the_char_fc->c_val);
+        cells[i] = make_cell_integer(the_char_fc->char_v);
     }
 
     Cell* cell_sexpr = make_sexpr_from_array(a->count, cells);
@@ -207,72 +207,72 @@ Cell* builtin_char_gte_ci(const Lex* e, const Cell* a) {
 
 Cell* builtin_string_downcase(const Lex* e, const Cell* a) {
     (void)e;
-    Cell* err = check_arg_types(a, VAL_STR);
+    Cell* err = check_arg_types(a, CELL_STRING);
     if (err) return err;
     err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
 
     UErrorCode status = U_ZERO_ERROR;
     UChar* src = convert_to_utf16(a->cell[0]->str);
-    if (!src) return make_val_err("string-downcase: malformed UTF-8 string", VALUE_ERR);
+    if (!src) return make_cell_error("string-downcase: malformed UTF-8 string", VALUE_ERR);
 
     const int32_t src_len = u_countChar32(src, -1);
 
     UChar* dst = GC_MALLOC(sizeof(UChar) * src_len + 1);;
     const int32_t dest_len = u_strToLower(dst,
         src_len + 1,
-        src, -1, NULL, &status);
+        src, -1, nullptr, &status);
 
     if (dest_len < src_len) {
-        return make_val_err("string-downcase: some chars not copied!!!", GEN_ERR);
+        return make_cell_error("string-downcase: some chars not copied!!!", GEN_ERR);
     }
 
     char* result = convert_to_utf8(dst);
     if (!result) {
-        return make_val_err("string-downcase: malformed UTF-8 string", VALUE_ERR);
+        return make_cell_error("string-downcase: malformed UTF-8 string", VALUE_ERR);
     }
-    return make_val_str(result);
+    return make_cell_string(result);
 }
 
 Cell* builtin_string_upcase(const Lex* e, const Cell* a) {
     (void)e;
-    Cell* err = check_arg_types(a, VAL_STR);
+    Cell* err = check_arg_types(a, CELL_STRING);
     if (err) return err;
     err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
 
     UErrorCode status = U_ZERO_ERROR;
     UChar* src = convert_to_utf16(a->cell[0]->str);
-    if (!src) return make_val_err("string-upcase: malformed UTF-8 string", VALUE_ERR);
+    if (!src) return make_cell_error("string-upcase: malformed UTF-8 string", VALUE_ERR);
 
     const int32_t src_len = u_countChar32(src, -1);
 
     UChar* dst = GC_MALLOC(sizeof(UChar) * src_len + 1);;
     const int32_t dest_len = u_strToUpper(dst,
         src_len + 1,
-        src, -1, NULL, &status);
+        src, -1, nullptr, &status);
 
     if (dest_len < src_len) {
-        return make_val_err("string-upcase: some chars not copied!!!", GEN_ERR);
+        return make_cell_error("string-upcase: some chars not copied!!!", GEN_ERR);
     }
 
     char* result = convert_to_utf8(dst);
     if (!result) {
-        return make_val_err("string-upcase: malformed UTF-8 string", VALUE_ERR);
+        return make_cell_error("string-upcase: malformed UTF-8 string", VALUE_ERR);
     }
-    return make_val_str(result);
+    return make_cell_string(result);
 }
 
 Cell* builtin_string_foldcase(const Lex* e, const Cell* a) {
     (void)e;
-    Cell* err = check_arg_types(a, VAL_STR);
+    Cell* err = check_arg_types(a, CELL_STRING);
     if (err) return err;
     err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
 
     UErrorCode status = U_ZERO_ERROR;
     UChar* src = convert_to_utf16(a->cell[0]->str);
-    if (!src) return make_val_err("string-foldcase: malformed UTF-8 string", VALUE_ERR);
+    if (!src) return make_cell_error("string-foldcase: malformed UTF-8 string", VALUE_ERR);
 
     const int32_t src_len = u_countChar32(src, -1);
 
@@ -281,19 +281,19 @@ Cell* builtin_string_foldcase(const Lex* e, const Cell* a) {
         U_FOLD_CASE_DEFAULT, &status);
 
     if (dest_len < src_len) {
-        return make_val_err("string-foldcase: some chars not copied!!!", GEN_ERR);
+        return make_cell_error("string-foldcase: some chars not copied!!!", GEN_ERR);
     }
 
     char* result = convert_to_utf8(dst);
     if (!result) {
-        return make_val_err("string-foldcase: malformed UTF-8 string", VALUE_ERR);
+        return make_cell_error("string-foldcase: malformed UTF-8 string", VALUE_ERR);
     }
-    return make_val_str(result);
+    return make_cell_string(result);
 }
 
 Cell* builtin_string_equal_ci(const Lex* e, const Cell* a) {
     (void)e;
-    Cell* err = check_arg_types(a, VAL_STR);
+    Cell* err = check_arg_types(a, CELL_STRING);
     if (err) return err;
     err = CHECK_ARITY_MIN(a, 1);
     if (err) return err;
@@ -305,7 +305,7 @@ Cell* builtin_string_equal_ci(const Lex* e, const Cell* a) {
         /* quick exit before conversion: if the len is not the same,
          * the strings are not the same */
         if (strlen(lhs) != strlen(rhs)) {
-            return make_val_bool(0);
+            return make_cell_boolean(0);
         }
         /* convert to UTF-16 */
         const UChar* U_lhs = convert_to_utf16(lhs);
@@ -313,16 +313,16 @@ Cell* builtin_string_equal_ci(const Lex* e, const Cell* a) {
         UErrorCode status = U_ZERO_ERROR;
         if (u_strCaseCompare(U_lhs, -1, U_rhs, -1,
             U_FOLD_CASE_DEFAULT, &status) != 0)  {
-            return make_val_bool(0);
+            return make_cell_boolean(0);
         }
     }
     /* If we get here, we're equal */
-    return make_val_bool(1);
+    return make_cell_boolean(1);
 }
 
 Cell* builtin_string_lt_ci(const Lex* e, const Cell* a) {
     (void)e;
-    Cell* err = check_arg_types(a, VAL_STR);
+    Cell* err = check_arg_types(a, CELL_STRING);
     if (err) return err;
     err = CHECK_ARITY_MIN(a, 1);
     if (err) return err;
@@ -337,16 +337,16 @@ Cell* builtin_string_lt_ci(const Lex* e, const Cell* a) {
         UErrorCode status = U_ZERO_ERROR;
         if (u_strCaseCompare(U_lhs, -1, U_rhs, -1,
             U_FOLD_CASE_DEFAULT, &status) >= 0)  {
-            return make_val_bool(0);
+            return make_cell_boolean(0);
         }
     }
     /* If we get here, s1 < s2 < sn ... */
-    return make_val_bool(1);
+    return make_cell_boolean(1);
 }
 
 Cell* builtin_string_lte_ci(const Lex* e, const Cell* a) {
     (void)e;
-    Cell* err = check_arg_types(a, VAL_STR);
+    Cell* err = check_arg_types(a, CELL_STRING);
     if (err) return err;
     err = CHECK_ARITY_MIN(a, 1);
     if (err) return err;
@@ -361,16 +361,16 @@ Cell* builtin_string_lte_ci(const Lex* e, const Cell* a) {
         UErrorCode status = U_ZERO_ERROR;
         if (u_strCaseCompare(U_lhs, -1, U_rhs, -1,
             U_FOLD_CASE_DEFAULT, &status) > 0)  {
-            return make_val_bool(0);
+            return make_cell_boolean(0);
         }
     }
     /* If we get here, s1 <= s2 <= sn ... */
-    return make_val_bool(1);
+    return make_cell_boolean(1);
 }
 
 Cell* builtin_string_gt_ci(const Lex* e, const Cell* a) {
     (void)e;
-    Cell* err = check_arg_types(a, VAL_STR);
+    Cell* err = check_arg_types(a, CELL_STRING);
     if (err) return err;
     err = CHECK_ARITY_MIN(a, 1);
     if (err) return err;
@@ -385,16 +385,16 @@ Cell* builtin_string_gt_ci(const Lex* e, const Cell* a) {
         UErrorCode status = U_ZERO_ERROR;
         if (u_strCaseCompare(U_lhs, -1, U_rhs, -1,
             U_FOLD_CASE_DEFAULT, &status) <= 0)  {
-            return make_val_bool(0);
+            return make_cell_boolean(0);
         }
     }
     /* If we get here, s1 > s2 > sn ... */
-    return make_val_bool(1);
+    return make_cell_boolean(1);
 }
 
 Cell* builtin_string_gte_ci(const Lex* e, const Cell* a) {
     (void)e;
-    Cell* err = check_arg_types(a, VAL_STR);
+    Cell* err = check_arg_types(a, CELL_STRING);
     if (err) return err;
     err = CHECK_ARITY_MIN(a, 1);
     if (err) return err;
@@ -409,11 +409,11 @@ Cell* builtin_string_gte_ci(const Lex* e, const Cell* a) {
         UErrorCode status = U_ZERO_ERROR;
         if (u_strCaseCompare(U_lhs, -1, U_rhs, -1,
             U_FOLD_CASE_DEFAULT, &status) >= 0)  {
-            return make_val_bool(0);
+            return make_cell_boolean(0);
         }
     }
     /* If we get here, s1 >= s2 >= sn ... */
-    return make_val_bool(1);
+    return make_cell_boolean(1);
 }
 
 void lex_add_char_lib(Lex* e) {

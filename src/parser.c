@@ -273,7 +273,7 @@ Cell* parse_tokens(Parser *p) {
     }
 
     if (left_count != right_count) {
-        return make_val_err("Unbalanced parentheses", SYNTAX_ERR);
+        return make_cell_error("Unbalanced parentheses", SYNTAX_ERR);
     }
 
     const char *tok = peek(p);
@@ -283,9 +283,9 @@ Cell* parse_tokens(Parser *p) {
     if (strcmp(tok, "'") == 0) {
         advance(p);  /* consume ' */
         Cell *quoted = parse_tokens(p);
-        if (!quoted) return make_val_err("Expected expression after quote", SYNTAX_ERR);
-        Cell *qexpr = make_val_sexpr();
-        cell_add(qexpr, make_val_sym("quote"));
+        if (!quoted) return make_cell_error("Expected expression after quote", SYNTAX_ERR);
+        Cell *qexpr = make_cell_sexpr();
+        cell_add(qexpr, make_cell_symbol("quote"));
         cell_add(qexpr, quoted);
         return qexpr;
     }
@@ -295,23 +295,23 @@ Cell* parse_tokens(Parser *p) {
         advance(p); /* consume '#u8' */
         const char *paren = advance(p); /* must be '(' */
         if (!paren || strcmp(paren, "(") != 0)
-            return make_val_err("Expected '(' after #u8", SYNTAX_ERR);
-        Cell *bv = make_val_bytevec();
+            return make_cell_error("Expected '(' after #u8", SYNTAX_ERR);
+        Cell *bv = make_cell_bytevector();
         while (peek(p) && strcmp(peek(p), ")") != 0) {
             cell_add(bv, parse_tokens(p));
         }
         if (!peek(p)) {
-            return make_val_err("Unmatched '(' in bytevector literal", SYNTAX_ERR);
+            return make_cell_error("Unmatched '(' in bytevector literal", SYNTAX_ERR);
         }
         advance(p); /* skip ')' */
 
         /* ensure members in range */
         for (int i = 0; i < bv->count; i++) {
-            if (bv->cell[i]->type != VAL_INT) {
-                return make_val_err("bytevector members must be integers", VALUE_ERR);
+            if (bv->cell[i]->type != CELL_INTEGER) {
+                return make_cell_error("bytevector members must be integers", VALUE_ERR);
             }
-            if (bv->cell[i]->i_val < 0 || bv->cell[i]->i_val > 255) {
-                return make_val_err("bytevector members must be between 0 and 255 (inclusive)", VALUE_ERR);
+            if (bv->cell[i]->integer_v < 0 || bv->cell[i]->integer_v > 255) {
+                return make_cell_error("bytevector members must be between 0 and 255 (inclusive)", VALUE_ERR);
             }
         }
         return bv;
@@ -321,33 +321,33 @@ Cell* parse_tokens(Parser *p) {
     if (strcmp(tok, "#") == 0) {
         advance(p);  /* consume '#' */
         const char *next = peek(p);
-        if (!next) return make_val_err("Invalid token: '#'", SYNTAX_ERR);
+        if (!next) return make_cell_error("Invalid token: '#'", SYNTAX_ERR);
 
         /* plain vector: #( ... ) */
         if (strcmp(next, "(") == 0) {
             advance(p); /* consume '(' */
-            Cell *vec = make_val_vect();
+            Cell *vec = make_cell_vector();
             while (peek(p) && strcmp(peek(p), ")") != 0) {
                 cell_add(vec, parse_tokens(p));
             }
             if (!peek(p)) {
-                return make_val_err("Unmatched '(' in vector literal", SYNTAX_ERR);
+                return make_cell_error("Unmatched '(' in vector literal", SYNTAX_ERR);
             }
             advance(p); /* skip ')' */
             return vec;
         }
-        return make_val_err("Invalid token", SYNTAX_ERR);
+        return make_cell_error("Invalid token", SYNTAX_ERR);
     }
 
     /* Handle S-expressions '(' ... ')' */
     if (strcmp(tok, "(") == 0) {
         advance(p);  /* consume '(' */
-        Cell *sexpr = make_val_sexpr();
+        Cell *sexpr = make_cell_sexpr();
         while (peek(p) && strcmp(peek(p), ")") != 0) {
             cell_add(sexpr, parse_tokens(p));
         }
         if (!peek(p)) {
-            return make_val_err("Unmatched '('", SYNTAX_ERR);
+            return make_cell_error("Unmatched '('", SYNTAX_ERR);
         }
 
         advance(p); /* skip ')' */
@@ -361,20 +361,20 @@ Cell* parse_tokens(Parser *p) {
 
 Cell* parse_atom(const char *tok) {
     //printf("tok = |%s|\n", tok);
-    if (!tok) return make_val_err("NULL token", GEN_ERR);
+    if (!tok) return make_cell_error("NULL token", GEN_ERR);
     char err_buf[128] = {0};
     const size_t len = strlen(tok);
 
     /* null - '() */
     if (strcmp(tok, "'()") == 0) {
-        return make_val_nil();
+        return make_cell_nil();
     }
 
     /* Boolean */
     if (strcmp(tok, "#t") == 0 ||
-        strcmp(tok, "#true") == 0) return make_val_bool(1);
+        strcmp(tok, "#true") == 0) return make_cell_boolean(1);
     if (strcmp(tok, "#f") == 0 ||
-        strcmp(tok, "#false") == 0) return make_val_bool(0);
+        strcmp(tok, "#false") == 0) return make_cell_boolean(0);
 
     /* Character literal */
     if (tok[0] == '#' && tok[1] == '\\') {
@@ -383,37 +383,37 @@ Cell* parse_atom(const char *tok) {
 
         /* Handle the special '#\' -> space case */
         if (payload_len == 0) {
-            return make_val_char(' ');
+            return make_cell_char(' ');
         }
 
         /* 1. Check for multi-letter named characters and hex literals FIRST. */
         if (payload_len > 1 || payload[0] == 'x') {
             /* Handle (R7RS required) named characters */
-            if (strcmp(payload, "space") == 0) return make_val_char(' ');
-            if (strcmp(payload, "newline") == 0) return make_val_char('\n');
-            if (strcmp(payload, "alarm") == 0) return make_val_char(0x7);
-            if (strcmp(payload, "backspace") == 0) return make_val_char(0x8);
-            if (strcmp(payload, "delete") == 0) return make_val_char(0x7f);
-            if (strcmp(payload, "escape") == 0) return make_val_char(0x1b);
-            if (strcmp(payload, "null") == 0) return make_val_char('\0');
-            if (strcmp(payload, "return") == 0) return make_val_char(0xd);
-            if (strcmp(payload, "tab") == 0) return make_val_char('\t');
+            if (strcmp(payload, "space") == 0) return make_cell_char(' ');
+            if (strcmp(payload, "newline") == 0) return make_cell_char('\n');
+            if (strcmp(payload, "alarm") == 0) return make_cell_char(0x7);
+            if (strcmp(payload, "backspace") == 0) return make_cell_char(0x8);
+            if (strcmp(payload, "delete") == 0) return make_cell_char(0x7f);
+            if (strcmp(payload, "escape") == 0) return make_cell_char(0x1b);
+            if (strcmp(payload, "null") == 0) return make_cell_char('\0');
+            if (strcmp(payload, "return") == 0) return make_cell_char(0xd);
+            if (strcmp(payload, "tab") == 0) return make_cell_char('\t');
 
             /* Check mapping of implementation-specific named chars */
             const NamedChar* named_char = find_named_char(payload);
             if (named_char) {
-                return make_val_char(named_char->codepoint);
+                return make_cell_char(named_char->codepoint);
             }
 
             /* Handle hex literals: #\x... */
             if (payload[0] == 'x' && payload_len > 1) {
                 char* end_ptr;
-                long code = strtol(payload + 1, &end_ptr, 16);
+                const long code = strtol(payload + 1, &end_ptr, 16);
 
                 if (*end_ptr != '\0' || code < 0 || code > 0x10FFFF) {
-                    return make_val_err("Invalid Unicode hex value", VALUE_ERR);
+                    return make_cell_error("Invalid Unicode hex value", VALUE_ERR);
                 }
-                return make_val_char((UChar32)code);
+                return make_cell_char((UChar32)code);
             }
         }
 
@@ -432,22 +432,22 @@ Cell* parse_atom(const char *tok) {
         if (i != (int)payload_len) {
             snprintf(err_buf, sizeof(err_buf), "Invalid character literal: '%s%s%s'",
                      ANSI_RED_B, tok, ANSI_RESET);
-            return make_val_err(err_buf, SYNTAX_ERR);
+            return make_cell_error(err_buf, SYNTAX_ERR);
         }
 
-        return make_val_char(code_point);
+        return make_cell_char(code_point);
     }
 
     /* String literal */
     if (tok[0] == '"' && tok[len-1] == '"') {
         const char *str = GC_strndup(tok+1, len-2);
-        return make_val_str(str);
+        return make_cell_string(str);
     }
 
-    if ((tok[0] == '#' && strchr("bodx", tok[1])) ||  /* #b101, #o666, #d123, #x0ff */
-        isdigit(tok[0]) ||                              /*  123,  5/4,  123+23i */
-        (tok[0] == '+' && isdigit(tok[1])) ||           /* +123, +5/4, +123+23i */
+    if (isdigit(tok[0]) ||                              /*  123,  5/4,  123+23i */
+        (tok[0] == '#' && strchr("bodx", tok[1])) ||  /* #b101, #o666, #d123, #x0ff */
         (tok[0] == '-' && isdigit(tok[1])) ||           /* -123, -5/4, -123+23i */
+        (tok[0] == '+' && isdigit(tok[1])) ||           /* +123, +5/4, +123+23i */
         strcmp(tok, "nan.0") == 0 ||
         strcmp(tok, "inf.0") == 0 ||
         strcmp(tok, "-inf.0") == 0 ||
@@ -477,12 +477,12 @@ Cell* parse_atom(const char *tok) {
 
             if (!sep) {
                 /* pure imaginary case: "12i", "-12i", "+12i", "i", "-i", "+i" */
-                r = make_val_int(0);
+                r = make_cell_integer(0);
 
                 if (strcmp(p, "+") == 0 || strcmp(p, "") == 0) {
-                    i = make_val_int(1);
+                    i = make_cell_integer(1);
                 } else if (strcmp(p, "-") == 0) {
-                    i = make_val_int(-1);
+                    i = make_cell_integer(-1);
                 } else {
                     i = parse_atom(p);
                 }
@@ -503,7 +503,7 @@ Cell* parse_atom(const char *tok) {
                 r = parse_atom(real_str);
                 i = parse_atom(buf);
             }
-            Cell* result = make_val_complex(r, i);
+            Cell* result = make_cell_complex(r, i);
             return result;
         }
         /* Rational numbers */
@@ -517,16 +517,16 @@ Cell* parse_atom(const char *tok) {
             if (p != NULL) {
                 snprintf(err_buf, sizeof(err_buf), "Invalid token: '%s%s%s'",
                     ANSI_RED_B, tok, ANSI_RESET);
-                return make_val_err(err_buf, SYNTAX_ERR);
+                return make_cell_error(err_buf, SYNTAX_ERR);
             }
 
             const long long n = parse_int_checked(tok1, err_buf, sizeof(err_buf), 10, &ok);
             const long long d = parse_int_checked(tok2, err_buf, sizeof(err_buf), 10, &ok);
 
             if (d == 0) {
-                return make_val_err("Cannot have zero-value denominator in rational", VALUE_ERR);
+                return make_cell_error("Cannot have zero-value denominator in rational", VALUE_ERR);
             }
-            return make_val_rat(n, d, 1);
+            return make_cell_rational(n, d, 1);
         }
 
         /* Numeric constants with optional base prefix */
@@ -547,28 +547,28 @@ Cell* parse_atom(const char *tok) {
         if (base != 10 || !strchr(tok, '.')) {
             /* Try integer parsing */
             const long long i = parse_int_checked(num_start, err_buf, sizeof(err_buf), base, &ok);
-            if (ok) return make_val_int(i);
+            if (ok) return make_cell_integer(i);
         }
 
         /* If no base prefix or decimal point detected, try float */
         if (base == 10) {
             const long double f = parse_float_checked(num_start, err_buf, sizeof(err_buf), &ok);
-            if (ok) return make_val_real(f);
+            if (ok) return make_cell_real(f);
         }
 
         /* If parsing fails but there is a numeric-like string, return error */
-        if (!ok) return make_val_err(err_buf, SYNTAX_ERR);
+        if (!ok) return make_cell_error(err_buf, SYNTAX_ERR);
     }
 
     /* reject all other hash prefixes and single '#' */
     if (tok[0] == '#') {
         snprintf(err_buf, sizeof(err_buf), "Invalid token: '%s%s%s'",
             ANSI_RED_B, tok, ANSI_RESET);
-        return make_val_err(err_buf, SYNTAX_ERR);
+        return make_cell_error(err_buf, SYNTAX_ERR);
     }
 
     /* Otherwise, treat as symbol */
-    return make_val_sym(tok);
+    return make_cell_symbol(tok);
 }
 
 /* Count '(' and ')' while ignoring:

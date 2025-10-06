@@ -29,11 +29,11 @@ Cell* builtin_apply(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2);
     if (err) return err;
-    if (a->cell[0]->type != VAL_PROC) {
-        return make_val_err("apply: arg 1 must be a procedure", ARITY_ERR);
+    if (a->cell[0]->type != CELL_PROC) {
+        return make_cell_error("apply: arg 1 must be a procedure", ARITY_ERR);
     }
-    if (a->cell[1]->type != VAL_PAIR && a->cell[1]->len == -1) {
-        return make_val_err("apply: arg 2 must be a proper list", TYPE_ERR);
+    if (a->cell[1]->type != CELL_PAIR && a->cell[1]->len == -1) {
+        return make_cell_error("apply: arg 2 must be a proper list", TYPE_ERR);
     }
 
     const Cell* composition = make_sexpr_len2(a->cell[0], make_sexpr_from_list(a->cell[1]));
@@ -44,15 +44,15 @@ Cell* builtin_map(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_MIN(a, 2);
     if (err) return err;
-    if (a->cell[0]->type != VAL_PROC) {
-        return make_val_err("map: arg 1 must be a procedure", TYPE_ERR);
+    if (a->cell[0]->type != CELL_PROC) {
+        return make_cell_error("map: arg 1 must be a procedure", TYPE_ERR);
     }
     int shortest_list_length = INT32_MAX;
     for (int i = 1; i < a->count; i++) {
         char buf[100];
-        if (a->cell[i]->type != VAL_PAIR && a->cell[i]->len == -1) {
+        if (a->cell[i]->type != CELL_PAIR && a->cell[i]->len == -1) {
             snprintf(buf, 100, "map: arg %d must be a proper list", i);
-            return make_val_err(buf, TYPE_ERR);
+            return make_cell_error(buf, TYPE_ERR);
         }
         if (a->cell[i]->len < shortest_list_length) {
             shortest_list_length = a->cell[i]->len;
@@ -63,15 +63,15 @@ Cell* builtin_map(const Lex* e, const Cell* a) {
     const int num_lists = a->count - 1;
     Cell* proc = a->cell[0];
 
-    Cell* final_result = make_val_nil();
+    Cell* final_result = make_cell_nil();
 
     for (int i = 0; i < shortest_len; i++) {
         /* Build a (reversed) list of the i-th arguments */
-        Cell* arg_list = make_val_nil();
+        Cell* arg_list = make_cell_nil();
         for (int j = 0; j < num_lists; j++) {
             const Cell* current_list = a->cell[j + 1];
             Cell* nth_item = list_get_nth_cell_ptr(current_list, i);
-            arg_list = make_val_pair(nth_item, arg_list);
+            arg_list = make_cell_pair(nth_item, arg_list);
             arg_list->len = j + 1;
         }
 
@@ -84,7 +84,7 @@ Cell* builtin_map(const Lex* e, const Cell* a) {
             tmp_result = func(e, make_sexpr_from_list(reversed_arg_list));
         } else {
             /* Prepend the procedure to create the application form */
-            Cell* application_list = make_val_pair(proc, reversed_arg_list);
+            Cell* application_list = make_cell_pair(proc, reversed_arg_list);
             application_list->len = arg_list->len + 1;
 
             /* Convert the Scheme list to an S-expression for eval */
@@ -93,13 +93,13 @@ Cell* builtin_map(const Lex* e, const Cell* a) {
             /* Evaluate it */
             tmp_result = coz_eval((Lex*)e, application_sexpr);
         }
-        if (tmp_result->type == VAL_ERR) {
+        if (tmp_result->type == CELL_ERROR) {
             /* Propagate any evaluation errors */
             return tmp_result;
         }
 
         /* Cons the result onto our (reversed) final list */
-        final_result = make_val_pair(tmp_result, final_result);
+        final_result = make_cell_pair(tmp_result, final_result);
         final_result->len = i + 1;
     }
 
