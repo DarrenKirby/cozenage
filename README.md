@@ -31,9 +31,9 @@ the libraries I have started are implemented yet.
 
 This is a list of what *is* implemented so far. I try to keep it up to date:
 
-## Builtin Procedures (scheme base)
+## Builtin procedures (scheme base)
 
-### Special forms
+### Special forms/syntax
 
 - `quote`
 - `define`
@@ -48,6 +48,8 @@ This is a list of what *is* implemented so far. I try to keep it up to date:
 - `else`
 - `begin`
 - `import`
+- `and`
+- `or`
 
 ### Basic arithmetic 
 
@@ -130,8 +132,6 @@ This is a list of what *is* implemented so far. I try to keep it up to date:
 ### Boolean and logical procedures
 
 - `not`
-- `and`
-- `or`
 - `boolean`
 
 ### Pair/list procedures
@@ -219,9 +219,9 @@ This is a list of what *is* implemented so far. I try to keep it up to date:
 - `write-string`
 - `newline`
 
-## Library procedures
+## R7RS Scheme library procedures
 
-### Complex Library (scheme complex)
+### Complex library (scheme complex)
 
 - `real-part`
 - `imag-part`
@@ -230,7 +230,7 @@ This is a list of what *is* implemented so far. I try to keep it up to date:
 - `angle`
 - `make-polar`
 
-### File Library (scheme file)
+### File library (scheme file)
 
 - `file-exists?`
 - `delete-file`
@@ -239,7 +239,7 @@ This is a list of what *is* implemented so far. I try to keep it up to date:
 - `open-output-file`
 - `open-binary-output-file`
 
-### Inexact Library (scheme inexact)
+### Inexact library (scheme inexact)
 
 - `cos`
 - `acos`
@@ -257,7 +257,7 @@ This is a list of what *is* implemented so far. I try to keep it up to date:
 - `infinite?`
 - `finite?`
 
-### Process-Context Library (scheme process-context)
+### Process-Context library (scheme process-context)
 
 - `exit`
 - `emergency-exit`
@@ -315,4 +315,17 @@ This is a list of what *is* implemented so far. I try to keep it up to date:
 - `cddadr`
 - `cdddar`
 - `cddddr`
+
+## Cozenage library procedures (non-R7RS)
+
+### Bits library (cozenage bits)
+
+- `>>` (right shift)
+- `<<` (left shift)
+- `&` (bitwise AND)
+- `|` (bitwise OR)
+- `^` (bitwise XOR)
+- `~` (bitwise NOT)
+- `int->bitstring`
+- `bitstring->int`
 
