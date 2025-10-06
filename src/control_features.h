@@ -20,7 +20,7 @@
 #ifndef COZENAGE_CONTROL_FEATURES_H
 #define COZENAGE_CONTROL_FEATURES_H
 
-#include "types.h"
+#include "cell.h"
 
 
 /* Control features  */

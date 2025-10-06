@@ -20,7 +20,7 @@
 #ifndef COZENAGE_COZ_BITS_LIB_H
 #define COZENAGE_COZ_BITS_LIB_H
 
-#include "types.h"
+#include "cell.h"
 
 Cell* bits_left_shift(const Lex* e, const Cell* a);
 Cell* bits_right_shift(const Lex* e, const Cell* a);

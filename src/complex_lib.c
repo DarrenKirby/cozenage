@@ -18,6 +18,7 @@
 */
 
 #include "complex_lib.h"
+#include "types.h"
 #include "numerics.h"
 #include <math.h>
 

@@ -1,5 +1,5 @@
 /*
-* 'src/char_lib.h'
+ * 'src/char_lib.h'
  * This file is part of Cozenage - https://github.com/DarrenKirby/cozenage
  * Copyright © 2025  Darren Kirby <darren@dragonbyte.ca>
  *
@@ -20,7 +20,7 @@
 #ifndef COZENAGE_CHAR_LIB_H
 #define COZENAGE_CHAR_LIB_H
 
-#include "types.h"
+#include "cell.h"
 
 Cell* builtin_char_alphabetic(const Lex* e, const Cell* a);
 Cell* builtin_char_whitespace(const Lex* e, const Cell* a);

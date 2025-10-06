@@ -18,6 +18,7 @@
 */
 
 #include "io_lib.h"
+#include "types.h"
 #include "printer.h"
 #include "ports.h"
 #include <string.h>
@@ -31,7 +32,7 @@ Cell* builtin_display(const Lex* e, const Cell* a) {
     Cell* err = CHECK_ARITY_RANGE(a, 1, 2);
     if (err) return err;
 
-    Cell* port = NULL;
+    Cell* port;
     if (a->count == 1) {
         port = builtin_current_output_port(e, a);
     } else {
@@ -43,10 +44,9 @@ Cell* builtin_display(const Lex* e, const Cell* a) {
     if (fputs(a->cell[0]->str, port->fh) == EOF) {
         return make_cell_error(strerror(errno), FILE_ERR);
     }
-    return NULL;
+    return nullptr;
 }
 
 void lex_add_write_lib(Lex* e) {
     lex_add_builtin(e, "display", builtin_display);
 }
-

@@ -1,5 +1,5 @@
 /*
-* 'src/eval.h'
+ * 'src/eval.h'
  * This file is part of Cozenage - https://github.com/DarrenKirby/cozenage
  * Copyright © 2025  Darren Kirby <darren@dragonbyte.ca>
  *
@@ -20,7 +20,6 @@
 #ifndef COZENAGE_EVAL_H
 #define COZENAGE_EVAL_H
 
-#include "types.h"
 #include "environment.h"
 
 

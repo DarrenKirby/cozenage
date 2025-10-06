@@ -21,6 +21,7 @@
 #include "special_forms.h"
 #include "printer.h"
 #include "main.h"
+#include "cell.h"
 #include <stdio.h>
 #include <string.h>
 

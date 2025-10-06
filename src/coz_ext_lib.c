@@ -19,15 +19,23 @@
 
 #include "coz_ext_lib.h"
 #include "environment.h"
+#include "main.h"
 #include "numerics.h"
 #include "printer.h"
 
 
-/* These are non-R7RS procedures that don't fit well elsewhere */
+/* These are non-R7RS procedures that don't fit well elsewhere
+ * FIXME: Probably just delete the two aliases, put print-env
+ * somewhere appropriate, and delete this file and header */
+
 
 Cell* builtin_print_env(const Lex* e, const Cell* a) {
     (void)a;
-    print_env(e);
+    for (int i = 0; i < e->count; i++) {
+        printf("%s%s%s -> ", ANSI_WHITE_B, e->syms[i], ANSI_RESET);
+        print_cell(e->vals[i]);
+        printf("\n");
+    }
     /* for side effects - no useful return value */
     return nullptr;
 }

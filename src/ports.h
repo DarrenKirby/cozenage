@@ -20,7 +20,7 @@
 #ifndef COZENAGE_PORTS_H
 #define COZENAGE_PORTS_H
 
-#include "types.h"
+#include "cell.h"
 
 /* Input/output and ports */
 Cell* builtin_current_input_port(const Lex* e, const Cell* a);

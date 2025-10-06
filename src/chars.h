@@ -20,7 +20,7 @@
 #ifndef COZENAGE_CHARS_H
 #define COZENAGE_CHARS_H
 
-#include"types.h"
+#include "cell.h"
 
 
 /* Char constructors, selectors, and procedures */

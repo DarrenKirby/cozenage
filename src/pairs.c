@@ -19,7 +19,7 @@
 
 #include "pairs.h"
 #include "eval.h"
-#include "printer.h"
+#include "types.h"
 
 
 /* Helpers */

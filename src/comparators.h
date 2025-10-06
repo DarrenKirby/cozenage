@@ -20,7 +20,7 @@
 #ifndef COZENAGE_COMPARATORS_H
 #define COZENAGE_COMPARATORS_H
 
-#include "types.h"
+#include "cell.h"
 
 
 /* Comparison operators */

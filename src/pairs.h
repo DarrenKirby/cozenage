@@ -20,7 +20,8 @@
 #ifndef COZENAGE_PAIRS_H
 #define COZENAGE_PAIRS_H
 
-#include "types.h"
+#include "cell.h"
+
 
 /* Helpers */
 Cell* car__(const Cell* list);

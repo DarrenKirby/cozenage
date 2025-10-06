@@ -20,7 +20,7 @@
 #ifndef COZENAGE_INEXACT_LIB_H
 #define COZENAGE_INEXACT_LIB_H
 
-#include "types.h"
+#include "cell.h"
 
 
 Cell* builtin_cos(const Lex* e, const Cell* a);

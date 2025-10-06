@@ -20,7 +20,7 @@
 #ifndef COZENAGE_NUMERICS_H
 #define COZENAGE_NUMERICS_H
 
-#include "types.h"
+#include "cell.h"
 
 
 /* Basic arithmetic operators */

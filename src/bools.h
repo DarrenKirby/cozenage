@@ -20,7 +20,7 @@
 #ifndef COZENAGE_BOOLS_H
 #define COZENAGE_BOOLS_H
 
-#include "types.h"
+#include "cell.h"
 
 
 /* Boolean and logical procedures */

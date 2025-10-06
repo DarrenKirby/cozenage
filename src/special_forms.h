@@ -20,7 +20,7 @@
 #ifndef COZENAGE_SPECIAL_FORMS_H
 #define COZENAGE_SPECIAL_FORMS_H
 
-#include "types.h"
+#include "cell.h"
 
 
 int is_syntactic_keyword(const char* s);

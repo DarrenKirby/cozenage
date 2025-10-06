@@ -206,11 +206,3 @@ void println_cell(const Cell* v) {
     print_cell(v);
     putchar('\n');
 }
-
-void print_env(const Lex* e) {
-    for (int i = 0; i < e->count; i++) {
-        printf("%s -> ", e->syms[i]);
-        print_cell(e->vals[i]);
-        printf("\n");
-    }
-}

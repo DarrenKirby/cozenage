@@ -1,5 +1,5 @@
 /*
-* 'src/complex_lib.h'
+ * 'src/complex_lib.h'
  * This file is part of Cozenage - https://github.com/DarrenKirby/cozenage
  * Copyright © 2025  Darren Kirby <darren@dragonbyte.ca>
  *
@@ -20,7 +20,7 @@
 #ifndef COZENAGE_COMPLEX_LIB_H
 #define COZENAGE_COMPLEX_LIB_H
 
-#include "types.h"
+#include "cell.h"
 
 
 Cell* builtin_real_part(const Lex* e, const Cell* a);

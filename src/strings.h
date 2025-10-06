@@ -20,7 +20,7 @@
 #ifndef COZENAGE_STRINGS_H
 #define COZENAGE_STRINGS_H
 
-#include "types.h"
+#include "cell.h"
 
 
 /* String constructors, selectors, and procedures */

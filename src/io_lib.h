@@ -20,7 +20,7 @@
 #ifndef COZENAGE_IO_LIB_H
 #define COZENAGE_IO_LIB_H
 
-#include "types.h"
+#include "cell.h"
 
 
 Cell* builtin_display(const Lex* e, const Cell* a);

@@ -20,8 +20,8 @@
 #ifndef COZENAGE_FILE_LIB_H
 #define COZENAGE_FILE_LIB_H
 
-#include "environment.h"
-#include "types.h"
+#include "cell.h"
+
 
 Cell* builtin_file_exists(const Lex* e, const Cell* a);
 Cell* builtin_delete_file(const Lex* e, const Cell* a);

@@ -26,9 +26,12 @@
 #include <string.h>
 #include <errno.h>
 #include <limits.h>
-#include <ctype.h>
 #include <wctype.h>
 #include <unicode/uchar.h>
+/* Linux needs this include, macOS does not */
+#ifdef __linux__
+#include <ctype.h>
+#endif
 
 
 long long parse_int_checked(const char* str, char* err_buf, const size_t err_buf_sz, const int base, int* ok) {

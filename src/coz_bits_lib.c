@@ -18,10 +18,10 @@
 */
 
 #include "coz_bits_lib.h"
+#include "types.h"
 #include <stdlib.h>
 #include <string.h>
 
-#include "printer.h"
 
 /* Helper which returns a variable-width two's complement representation
  * of a signed long long */

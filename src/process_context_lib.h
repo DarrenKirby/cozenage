@@ -20,7 +20,7 @@
 #ifndef COZENAGE_PROCESS_CONTEXT_LIB_H
 #define COZENAGE_PROCESS_CONTEXT_LIB_H
 
-#include "types.h"
+#include "cell.h"
 
 Cell* builtin_command_line(const Lex* e, const Cell* a);
 Cell* builtin_exit(const Lex* e, const Cell* a);

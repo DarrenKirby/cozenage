@@ -19,11 +19,10 @@
 
 #include "special_forms.h"
 #include "eval.h"
+#include "types.h"
 #include "load_library.h"
 #include <string.h>
 #include <gc/gc.h>
-
-#include "printer.h"
 
 
 /* A helper to check if a symbol name is a reserved syntactic keyword */

@@ -18,6 +18,7 @@
 */
 
 #include "chars.h"
+#include "types.h"
 #include "comparators.h"
 #include <gc/gc.h>
 

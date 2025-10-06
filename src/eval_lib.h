@@ -20,7 +20,7 @@
 #ifndef COZENAGE_EVAL_LIB_H
 #define COZENAGE_EVAL_LIB_H
 
-#include "types.h"
+#include "cell.h"
 
 
 Cell* builtin_eval(const Lex* e, const Cell* a);

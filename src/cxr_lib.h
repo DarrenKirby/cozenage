@@ -20,7 +20,7 @@
 #ifndef COZENAGE_CXR_LIB_H
 #define COZENAGE_CXR_LIB_H
 
-#include "types.h"
+#include "cell.h"
 
 
 Cell* builtin_caaar(const Lex* e, const Cell* a);

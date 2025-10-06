@@ -19,6 +19,7 @@
 
 #include "file_lib.h"
 #include "environment.h"
+#include "types.h"
 #include <unistd.h>
 #include <errno.h>
 #include <string.h>

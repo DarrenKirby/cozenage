@@ -18,6 +18,7 @@
 */
 
 #include "vectors.h"
+#include "types.h"
 #include <string.h>
 #include <gc/gc.h>
 #include <unicode/utf8.h>
@@ -27,7 +28,7 @@
  *     Vector constructors, selectors, and procedures    *
  * ------------------------------------------------------*/
 
-/* 'vector' -> CELL_VECTORT - returns a vector of all arg objects */
+/* 'vector' -> CELL_VECTOR - returns a vector of all arg objects */
 Cell* builtin_vector(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_MIN(a, 1);
@@ -156,7 +157,7 @@ Cell* builtin_vector_to_list(const Lex* e, const Cell* a) {
     return result;
 }
 
-/* 'vector-copy' -> CELL_VECTORT - returns a newly allocated copy of arg vector */
+/* 'vector-copy' -> CELL_VECTOR - returns a newly allocated copy of arg vector */
 Cell* builtin_vector_copy(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_RANGE(a, 1, 3);
@@ -219,7 +220,7 @@ Cell* builtin_vector_to_string(const Lex* e, const Cell* a) {
     return make_cell_string(the_string);
 }
 
-/* 'string->vector' -> CELL_VECTORT - returns a vector of all chars in arg */
+/* 'string->vector' -> CELL_VECTOR - returns a vector of all chars in arg */
 Cell* builtin_string_to_vector(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_RANGE(a, 1, 3);

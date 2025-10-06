@@ -20,7 +20,7 @@
 #ifndef COZENAGE_BYTEVECTORS_H
 #define COZENAGE_BYTEVECTORS_H
 
-#include "types.h"
+#include "cell.h"
 
 
 /* Bytevector constructors, selectors,and procedures */

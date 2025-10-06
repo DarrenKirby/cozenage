@@ -20,7 +20,7 @@
 #ifndef COZENAGE_COZ_EXT_LIB_H
 #define COZENAGE_COZ_EXT_LIB_H
 
-#include "environment.h"
+#include "cell.h"
 
 Cell* builtin_print_env(const Lex* e, const Cell* a);
 void lex_add_coz_ext(Lex* e);

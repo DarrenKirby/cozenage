@@ -20,10 +20,10 @@
 #ifndef COZENAGE_PARSER_H
 #define COZENAGE_PARSER_H
 
+#include "cell.h"
+
 /* for debug output */
 #define DEBUG 0
-
-typedef struct Cell Cell;
 
 typedef struct {
     char **array;

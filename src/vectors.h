@@ -20,7 +20,7 @@
 #ifndef COZENAGE_VECTORS_H
 #define COZENAGE_VECTORS_H
 
-#include "types.h"
+#include "cell.h"
 
 
 /* Vector constructors, selectors, and procedures */

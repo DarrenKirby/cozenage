@@ -20,7 +20,7 @@
 #ifndef COZENAGE_PREDICATES_H
 #define COZENAGE_PREDICATES_H
 
-#include "types.h"
+#include "cell.h"
 
 
 /* Type identity predicate procedures */

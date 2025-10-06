@@ -18,6 +18,7 @@
 */
 
 #include "strings.h"
+#include "types.h"
 #include <string.h>
 #include <gc/gc.h>
 #include <unicode/utf8.h>

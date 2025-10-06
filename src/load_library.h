@@ -20,7 +20,7 @@
 #ifndef COZENAGE_LOAD_LIBRARY_H
 #define COZENAGE_LOAD_LIBRARY_H
 
-#include "types.h"
+#include "cell.h"
 
 #define MAX_LOADED_LIBS 32
 

@@ -18,8 +18,10 @@
 */
 
 #include "control_features.h"
+#include "types.h"
 #include "eval.h"
 #include "pairs.h"
+
 
 /*-------------------------------------------------------*
  *    Control features and list iteration procedures     *

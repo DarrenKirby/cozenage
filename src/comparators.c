@@ -18,6 +18,7 @@
 */
 
 #include "comparators.h"
+#include "types.h"
 #include <string.h>
 
 

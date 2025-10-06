@@ -19,6 +19,7 @@
 
 #include "eval_lib.h"
 #include "eval.h"
+#include "types.h"
 
 
 Cell* builtin_eval(const Lex* e, const Cell* a) {

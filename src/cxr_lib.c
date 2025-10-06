@@ -18,6 +18,7 @@
 */
 
 #include "cxr_lib.h"
+#include "types.h"
 #include "pairs.h"
 
 
