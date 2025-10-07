@@ -10,6 +10,7 @@
 Lex* test_env;
 
 void setup_suite(void) {
+    init_global_singletons();
     test_env = lex_initialize();
     lex_add_builtins(test_env);
 }
