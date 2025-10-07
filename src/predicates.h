@@ -29,6 +29,7 @@ Cell* builtin_boolean_pred(const Lex* e, const Cell* a);
 Cell* builtin_null_pred(const Lex* e, const Cell* a);
 Cell* builtin_pair_pred(const Lex* e, const Cell* a);
 Cell* builtin_proc_pred(const Lex* e, const Cell* a);
+Cell* builtin_list_pred(const Lex* e, const Cell* a);
 Cell* builtin_sym_pred(const Lex* e, const Cell* a);
 Cell* builtin_string_pred(const Lex* e, const Cell* a);
 Cell* builtin_char_pred(const Lex* e, const Cell* a);

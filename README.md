@@ -110,6 +110,7 @@ This is a list of what *is* implemented so far. I try to keep it up to date:
 - `boolean?`
 - `null?`
 - `pair?`
+- `list?`
 - `procedure?`
 - `symbol?`
 - `string?`
@@ -143,12 +144,18 @@ This is a list of what *is* implemented so far. I try to keep it up to date:
 - `cadr`
 - `cdar`
 - `cddr`
+- `set-car!`
+- `set-cdr!`
 - `list`
 - `length`
 - `list-ref`
 - `append`
 - `reverse`
 - `list-tail`
+- `list-set!`
+- `make-list`
+- `filter`
+- `foldl`
 
 ### Vector procedures
 
@@ -196,10 +203,8 @@ This is a list of what *is* implemented so far. I try to keep it up to date:
 ### Control features and list iteration
 
 - `apply`
-- `eval`
 - `map`
-- `filter`
-- `foldl`
+
 
 ### input/output and ports
 
@@ -220,6 +225,10 @@ This is a list of what *is* implemented so far. I try to keep it up to date:
 - `newline`
 
 ## R7RS Scheme library procedures
+
+### Eval library (scheme eval)
+
+- `eval`
 
 ### Complex library (scheme complex)
 

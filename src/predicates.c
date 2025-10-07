@@ -47,7 +47,8 @@ Cell* builtin_boolean_pred(const Lex* e, const Cell* a) {
     return make_cell_boolean(a->cell[0]->type == CELL_BOOLEAN);
 }
 
-/* 'null?' -> CELL_BOOLEAN - return #t if obj is null, else #f */
+/* (null? obj)
+ * Returns #t if obj is the empty list, otherwise returns #f. */
 Cell* builtin_null_pred(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
@@ -55,12 +56,23 @@ Cell* builtin_null_pred(const Lex* e, const Cell* a) {
     return make_cell_boolean(a->cell[0]->type == CELL_NIL);
 }
 
-/* 'pair?' -> CELL_BOOLEAN - return #t if obj is a pair, else #f */
-Cell* builtin_pair_pred(const Lex* e, const Cell* a) {
+/* (pair? obj)
+ * The pair? predicate returns #t if obj is a pair, and otherwise returns #f*/
+Cell *builtin_pair_pred(const Lex *e, const Cell *a) {
+    (void) e;
+    Cell *err = CHECK_ARITY_EXACT(a, 1);
+    if (err) return err;
+    return make_cell_boolean(a->cell[0]->type == CELL_PAIR);
+}
+
+/* (list? obj)
+* Returns #t if obj is a list. Otherwise, it returns #f. By definition, all lists have finite length
+* and are terminated by the empty list.*/
+Cell* builtin_list_pred(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
-    return make_cell_boolean(a->cell[0]->type == CELL_PAIR);
+    return make_cell_boolean(a->cell[0]->type == CELL_PAIR && a->cell[0]->len > 0);
 }
 
 /* 'procedure?' -> CELL_BOOLEAN - return #t if obj is a procedure, else #f */

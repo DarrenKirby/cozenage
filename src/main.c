@@ -21,7 +21,7 @@
 #include "main.h"
 #include "parser.h"
 #include "printer.h"
-#include "types.h"
+#include "cell.h"
 #include "environment.h"
 #include "eval.h"
 #include "load_library.h"
@@ -174,18 +174,17 @@ void coz_print(const Cell* v) {
 }
 
 /* repl()
- * Read-Evaluate-Print loop
- * */
+ * Read-Evaluate-Print loop */
 void repl() {
-    /* Load history */
+    /* Load readline history */
     read_history_from_file();
     /* Initialize default ports */
     init_default_ports();
-    /* Initialize global singleton objects */
+    /* Initialize global singleton objects, nil, #t, #f, and EOF */
     init_global_singletons();
     /* Initialize global environment */
     Lex* e = lex_initialize();
-    /* Load (scheme base) procedures */
+    /* Load (scheme base) procedures into the environment*/
     lex_add_builtins(e);
 
     /* Load additional library procedures as specified by -l args */
@@ -305,9 +304,9 @@ void process_library_arg(struct lib_load *l, const char *arg) {
 }
 
 int main(const int argc, char** argv) {
-    /* initialize GC */
+    /* GC docs say this probably isn't necessary,
+     * but to do it to be portable with older versions */
     GC_INIT();
-    int opt;
 
     const struct option long_opts[] = {
         {"help", 0, nullptr, 'h'},
@@ -316,6 +315,7 @@ int main(const int argc, char** argv) {
         {nullptr,0,nullptr,0}
     };
 
+    int opt;
     while ((opt = getopt_long(argc, argv, "Vhl:", long_opts, nullptr)) != -1) {
         switch(opt) {
             case 'V':

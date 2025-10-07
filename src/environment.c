@@ -196,6 +196,7 @@ void lex_add_builtins(Lex* e) {
     lex_add_builtin(e, "boolean?", builtin_boolean_pred);
     lex_add_builtin(e, "null?", builtin_null_pred);
     lex_add_builtin(e, "pair?", builtin_pair_pred);
+    lex_add_builtin(e, "list?", builtin_list_pred);
     lex_add_builtin(e, "procedure?", builtin_proc_pred);
     lex_add_builtin(e, "symbol?", builtin_sym_pred);
     lex_add_builtin(e, "string?", builtin_string_pred);
@@ -224,11 +225,15 @@ void lex_add_builtins(Lex* e) {
     lex_add_builtin(e, "cdar", builtin_cdar);
     lex_add_builtin(e, "cddr", builtin_cddr);
     lex_add_builtin(e, "list", builtin_list);
+    lex_add_builtin(e, "set-car!", builtin_set_car);
+    lex_add_builtin(e, "set-cdr!", builtin_set_cdr);
     lex_add_builtin(e, "length", builtin_list_length);
     lex_add_builtin(e, "list-ref", builtin_list_ref);
     lex_add_builtin(e, "append", builtin_list_append);
     lex_add_builtin(e, "reverse", builtin_list_reverse);
     lex_add_builtin(e, "list-tail", builtin_list_tail);
+    lex_add_builtin(e, "make-list", builtin_make_list);
+    lex_add_builtin(e, "list-set!", builtin_list_set);
     lex_add_builtin(e, "filter", builtin_filter);
     lex_add_builtin(e, "foldl", builtin_foldl);
     /* Vector procedures */

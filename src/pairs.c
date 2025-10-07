@@ -52,7 +52,9 @@ inline Cell* cdr__(const Cell* list) {
  *     pair/list constructors, selectors, and procedures     *
  * ----------------------------------------------------------*/
 
-/* 'cons' -> CELL_PAIR - returns a pair made from two arguments */
+/* (cons obj1 obj2)
+ * Returns a newly allocated pair whose car is obj1 and whose cdr is obj2. The pair is guaranteed to be different (in
+ * the sense of eqv?) from every existing object. */
 Cell* builtin_cons(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2);
@@ -60,7 +62,8 @@ Cell* builtin_cons(const Lex* e, const Cell* a) {
     return make_cell_pair(a->cell[0], a->cell[1]);
 }
 
-/* 'car' -> ANY - returns the first member of a pair */
+/* (car pair)
+ * Returns the contents of the car field of pair. */
 Cell* builtin_car(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
@@ -68,7 +71,8 @@ Cell* builtin_car(const Lex* e, const Cell* a) {
     return car__(a->cell[0]);
 }
 
-/* 'cdr' -> ANY - returns the second member of a pair */
+/* (cdr pair)
+ * Returns the contents of the cdr field of pair. */
 Cell* builtin_cdr(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
@@ -76,6 +80,12 @@ Cell* builtin_cdr(const Lex* e, const Cell* a) {
     return cdr__(a->cell[0]);
 }
 
+/* These procedures are compositions of car and cdr as follows:
+*    (define (caar x) (car (car x)))
+*    (define (cadr x) (car (cdr x)))
+*    (define (cdar x) (cdr (car x)))
+*    (define (cddr x) (cdr (cdr x)))
+*    */
 Cell* builtin_caar(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
@@ -104,7 +114,8 @@ Cell* builtin_cddr(const Lex* e, const Cell* a) {
     return cdr__(cdr__(a->cell[0]));
 }
 
-/* 'list' -> CELL_PAIR - returns a nil-terminated proper list */
+/* (list obj ... )
+ * Returns a newly allocated list of its arguments. */
 Cell* builtin_list(const Lex* e, const Cell* a) {
     (void)e;
     /* start with nil */
@@ -119,7 +130,34 @@ Cell* builtin_list(const Lex* e, const Cell* a) {
     return result;
 }
 
-/* 'length' -> CELL_INTEGER - returns the member count of a proper list */
+/* (set-car! pair obj)
+ * Stores obj in the car field of pair. */
+Cell* builtin_set_car(const Lex* e, const Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 2);
+    if (err) return err;
+    if (a->cell[0]->type != CELL_PAIR) {
+        return make_cell_error("set-car!: arg 1 must be a pair", TYPE_ERR);
+    }
+    a->cell[0]->car = a->cell[1];
+    return nullptr;
+}
+
+/* (set-cdr! pair obj)
+ * Stores obj in the cdr field of pair. */
+Cell* builtin_set_cdr(const Lex* e, const Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 2);
+    if (err) return err;
+    if (a->cell[0]->type != CELL_PAIR) {
+        return make_cell_error("set-cdr!: arg 1 must be a pair", TYPE_ERR);
+    }
+    a->cell[0]->cdr = a->cell[1];
+    return nullptr;
+}
+
+/* (length list)
+ * Returns the length of list. */
 Cell* builtin_list_length(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
@@ -156,9 +194,10 @@ Cell* builtin_list_length(const Lex* e, const Cell* a) {
     return make_cell_integer(count);
 }
 
-/* 'list-ref' -> ANY - returns the list member at the zero-indexed
- * integer specified in the second arg. First arg is the list to act on*/
+/* (list-ref list k)
+ * Returns the kth element of list. (This is the same as the car of (list-tail list k).) */
 Cell* builtin_list_ref(const Lex* e, const Cell* a) {
+    /* FIXME: segfaults when index out of range on improper list*/
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2);
     if (err) return err;
@@ -176,7 +215,7 @@ Cell* builtin_list_ref(const Lex* e, const Cell* a) {
         return make_cell_error("list-ref: arg 2 out of range", INDEX_ERR);
     }
 
-    Cell* p = a->cell[0];
+    const Cell* p = a->cell[0];
     while (i > 0) {
         p = p->cdr;
         i--;
@@ -184,8 +223,12 @@ Cell* builtin_list_ref(const Lex* e, const Cell* a) {
     return p->car;
 }
 
-/* 'list-append' -> CELL_PAIR - returns a proper list of all
- * args appended to the result, in order */
+/* (append list ...)
+* The last argument, if there is one, can be of any type. Returns a list consisting of the elements
+* of the first list followed by the elements of the other lists. If there are no arguments, the
+* empty list is returned. If there is exactly one argument, it is returned. Otherwise, the resulting
+* list is always newly allocated, except that it shares structure with the last argument. An
+* improper list results if the last argument is not a proper list. */
 Cell* builtin_list_append(const Lex* e, const Cell* a) {
     (void)e;
     /* Base case: (append) -> '() */
@@ -278,8 +321,8 @@ Cell* builtin_list_append(const Lex* e, const Cell* a) {
     return result_head;
 }
 
-/* 'reverse' -> CELL_PAIR - returns a proper list with members of
- * arg reversed */
+/* (reverse list)
+* Returns a newly allocated list consisting of the elements of list in reverse order. */
 Cell* builtin_list_reverse(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
@@ -313,8 +356,8 @@ Cell* builtin_list_reverse(const Lex* e, const Cell* a) {
     return reversed_list;
 }
 
-/* 'list-tail' -> CELL_PAIR - returns a proper list of the last nth
- * members of arg */
+/* (list-tail list k)
+ * Returns the sublist of list obtained by omitting the first k elements */
 Cell* builtin_list_tail(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2);
@@ -346,6 +389,64 @@ Cell* builtin_list_tail(const Lex* e, const Cell* a) {
     }
     /* After the loop, p is pointing at the k-th cdr of the original list. */
     return p;
+}
+
+/* (make-list k)
+ * (make-list k fill)
+ * Returns a newly allocated list of k elements. If a second argument is given, then each element is
+ * initialized to fill. Otherwise, the initial contents of each element is set to 0. */
+Cell* builtin_make_list(const Lex* e, const Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_RANGE(a, 1, 2);
+    if (err) return err;
+    if (a->cell[0]->type != CELL_INTEGER && a->cell[0]->integer_v < 1) {
+        return make_cell_error("make-list: arg 1 must be a positive integer", VALUE_ERR);
+    }
+    Cell* fill;
+    if (a->count== 2) {
+        fill = a->cell[1];
+    } else {
+        fill = make_cell_integer(0);
+    }
+    /* start with nil */
+    Cell* result = make_cell_nil();
+
+    const int len = (int)a->cell[0]->integer_v;
+    /* build backwards so it comes out in the right order */
+    for (int i = len - 1; i >= 0; i--) {
+        result = make_cell_pair(fill, result);
+        result->len = len - i;
+    }
+    return result;
+}
+
+/* (list-set! list k obj)
+* The list-set! procedure stores obj in element k of list. */
+Cell* builtin_list_set(const Lex* e, const Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 3);
+    if (err) return err;
+    if (a->cell[0]->type != CELL_PAIR) {
+        return make_cell_error("list-set!: arg 1 must be a list", TYPE_ERR);
+    }
+    if (a->cell[1]->type != CELL_INTEGER && a->cell[1]->integer_v < 0) {
+        return make_cell_error("list-set!: arg 2 must be a valid list indice", VALUE_ERR);
+    }
+    Cell* p = a->cell[0];
+    const int len = (int)a->cell[1]->integer_v;
+
+    if (a->cell[0]->len <= len) {
+        return make_cell_error("list-set!: list indice out of range", INDEX_ERR);
+    }
+
+    for (int i = 0; i < len; i++) {
+        p = p->cdr;
+    }
+    /* Now p is pointing at the pair to mutate*/
+    p->car = a->cell[2];
+    /* No meaningful return value */
+    return nullptr;
+
 }
 
 /* ----------------------------------------------------------*

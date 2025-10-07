@@ -25,6 +25,8 @@
  *     Byte vector constructors, selectors, and procedures    *
  * -----------------------------------------------------------*/
 
+/* (bytevector byte ... )
+ * Returns a newly allocated bytevector containing its arguments. */
 Cell* builtin_bytevector(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_MIN(a, 1);
@@ -40,6 +42,8 @@ Cell* builtin_bytevector(const Lex* e, const Cell* a) {
     return vec;
 }
 
+/* (bytevector-length bytevector)
+ * Returns the length in bytes of bytevector as an exact integer*/
 Cell* builtin_bytevector_length(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
@@ -50,12 +54,14 @@ Cell* builtin_bytevector_length(const Lex* e, const Cell* a) {
     return make_cell_integer(a->cell[0]->count);
 }
 
+/* (bytevector-u8-ref bytevector k)
+ * Returns the kth byte of bytevector. */
 Cell* builtin_bytevector_ref(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2);
     if (err) return err;
     if (a->cell[0]->type != CELL_BYTEVECTOR) {
-        return make_cell_error("bytevector-ref: arg 1 must be a vector", TYPE_ERR);
+        return make_cell_error("bytevector-ref: arg 1 must be a bytevector", TYPE_ERR);
     }
     if (a->cell[1]->type != CELL_INTEGER) {
         return make_cell_error("bytevector-ref: arg 2 must be an integer", TYPE_ERR);
@@ -68,6 +74,11 @@ Cell* builtin_bytevector_ref(const Lex* e, const Cell* a) {
     return a->cell[0]->cell[i];
 }
 
+/* (make-bytevector k)
+ * (make-bytevector k byte)
+ * The make-bytevector procedure returns a newly allocated bytevector of length k. If byte is given,
+ * then all elements of the bytevector are initialized to byte, otherwise the contents of each
+ * element are set to 0. */
 Cell* builtin_make_bytevector(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_RANGE(a, 1, 2);
@@ -95,12 +106,16 @@ Cell* builtin_make_bytevector(const Lex* e, const Cell* a) {
     return vec;
 }
 
+/* (bytevector-copy bytevector)
+ * (bytevector-copy bytevector start)
+ * (bytevector-copy bytevector start end)
+ * Returns a newly allocated bytevector containing the bytes in bytevector between start and end. */
 Cell* builtin_bytevector_copy(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_RANGE(a, 1, 3);
     if (err) return err;
     if (a->cell[0]->type != CELL_BYTEVECTOR) {
-        return make_cell_error("bytevector->copy: arg 1 must be a vector", TYPE_ERR);
+        return make_cell_error("bytevector->copy: arg 1 must be a bytevector", TYPE_ERR);
     }
     int start = 0;
     int end = a->cell[0]->count;

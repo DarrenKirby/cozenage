@@ -35,11 +35,15 @@ Cell* builtin_cadr(const Lex* e, const Cell* a);
 Cell* builtin_cdar(const Lex* e, const Cell* a);
 Cell* builtin_cddr(const Lex* e, const Cell* a);
 Cell* builtin_list(const Lex* e, const Cell* a);
+Cell* builtin_set_car(const Lex* e, const Cell* a);
+Cell* builtin_set_cdr(const Lex* e, const Cell* a);
 Cell* builtin_list_length(const Lex* e, const Cell* a);
 Cell* builtin_list_ref(const Lex* e, const Cell* a);
 Cell* builtin_list_append(const Lex* e, const Cell* a);
 Cell* builtin_list_reverse(const Lex* e, const Cell* a);
 Cell* builtin_list_tail(const Lex* e, const Cell* a);
+Cell* builtin_make_list(const Lex* e, const Cell* a);
+Cell* builtin_list_set(const Lex* e, const Cell* a);
 Cell* builtin_filter(const Lex* e, const Cell* a);
 Cell* builtin_foldl(const Lex* e, const Cell* a);
 
