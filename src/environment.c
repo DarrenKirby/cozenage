@@ -201,7 +201,7 @@ void lex_add_builtins(Lex* e) {
     lex_add_builtin(e, "string?", builtin_string_pred);
     lex_add_builtin(e, "char?", builtin_char_pred);
     lex_add_builtin(e, "vector?", builtin_vector_pred);
-    lex_add_builtin(e, "bytevector?", builtin_byte_vector_pred);
+    lex_add_builtin(e, "bytevector?", builtin_bytevector_pred);
     lex_add_builtin(e, "port?", builtin_port_pred);
     lex_add_builtin(e, "eof-object?", builtin_eof_pred);
     /* Numeric identity predicate procedures */

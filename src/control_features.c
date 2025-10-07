@@ -51,9 +51,13 @@ Cell* builtin_map(const Lex* e, const Cell* a) {
     }
     int shortest_list_length = INT32_MAX;
     for (int i = 1; i < a->count; i++) {
+        /* If list arg is empty, return empty list */
+        if (a->cell[i]->type == CELL_NIL) {
+            return make_cell_nil();
+        }
         char buf[100];
-        if (a->cell[i]->type != CELL_PAIR && a->cell[i]->len == -1) {
-            snprintf(buf, 100, "map: arg %d must be a proper list", i);
+        if (a->cell[i]->type != CELL_PAIR || a->cell[i]->len == -1) {
+            snprintf(buf, 100, "map: arg %d must be a proper list", i+1);
             return make_cell_error(buf, TYPE_ERR);
         }
         if (a->cell[i]->len < shortest_list_length) {

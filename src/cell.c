@@ -24,10 +24,17 @@
 #include <string.h>
 
 
-/* define the global nil */
-Cell* val_nil = nullptr;
+/* Define the global nil */
+Cell* Nil_Obj = nullptr;
 
-/* default ports */
+/* Define global #t and #f */
+Cell* True_Obj = nullptr;
+Cell* False_Obj = nullptr;
+
+/* Define global EOF object */
+Cell* EOF_Obj = nullptr;
+
+/* Default ports */
 Cell* default_input_port  = nullptr;
 Cell* default_output_port = nullptr;
 Cell* default_error_port  = nullptr;
@@ -38,21 +45,60 @@ void init_default_ports(void) {
     default_error_port  = make_cell_port("stderr", stderr, OUTPUT_PORT, TEXT_PORT);
 }
 
+/*-------------------------------------------*
+ *       Global singleton constructors       *
+ *                                           *
+ *  These constructors should be considered  *
+ *  'private', and never directly accessed.  *
+ * ------------------------------------------*/
+
+static Cell* make_cell_nil__(void) {
+    Cell* nil_obj = GC_MALLOC_ATOMIC_UNCOLLECTABLE(sizeof(Cell));
+    nil_obj->type = CELL_NIL;
+    return nil_obj;
+}
+
+static Cell* make_cell_boolean__(const int the_boolean) {
+    Cell* v = GC_MALLOC_ATOMIC_UNCOLLECTABLE(sizeof(Cell));
+    v->type = CELL_BOOLEAN;
+    v->boolean_v = the_boolean;
+    return v;
+}
+
+static Cell* make_cell_eof__(void) {
+    Cell* eof_obj = GC_MALLOC_ATOMIC_UNCOLLECTABLE(sizeof(Cell));
+    eof_obj->type = CELL_EOF;
+    return eof_obj;
+}
+
+void init_global_singletons(void) {
+    Nil_Obj = make_cell_nil__();
+    True_Obj = make_cell_boolean__(1);
+    False_Obj = make_cell_boolean__(0);
+    EOF_Obj = make_cell_eof__();
+}
+
 /*------------------------------------*
  *       Cell type constructors       *
  * -----------------------------------*/
 
+/* Thin wrapper that returns the singleton nil object */
 Cell* make_cell_nil(void) {
-    if (!val_nil) {
-        val_nil = GC_MALLOC(sizeof(Cell));
-        val_nil->type = CELL_NIL;
-        /* no other fields needed */
-    }
-    return val_nil;
+    return Nil_Obj;
+}
+
+/* Thin wrapper that returns the singleton #t or #f object */
+Cell* make_cell_boolean(const int the_boolean) {
+    return the_boolean ? True_Obj : False_Obj;
+}
+
+/* Thin wrapper that returns the singleton EOF object */
+Cell* make_cell_eof(void) {
+    return EOF_Obj;
 }
 
 Cell* make_cell_real(const long double the_real) {
-    Cell* v = GC_MALLOC(sizeof(Cell));
+    Cell* v = GC_MALLOC_ATOMIC(sizeof(Cell));
     if (!v) {
         fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
         exit(EXIT_FAILURE);
@@ -64,7 +110,7 @@ Cell* make_cell_real(const long double the_real) {
 }
 
 Cell* make_cell_integer(const long long int the_integer) {
-    Cell* v = GC_MALLOC(sizeof(Cell));
+    Cell* v = GC_MALLOC_ATOMIC(sizeof(Cell));
     if (!v) {
         fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
         exit(EXIT_FAILURE);
@@ -77,7 +123,7 @@ Cell* make_cell_integer(const long long int the_integer) {
 
 Cell* make_cell_rational(const long int numerator, const long int denominator,
                          const bool simplify) {
-    Cell* v = GC_MALLOC(sizeof(Cell));
+    Cell* v = GC_MALLOC_ATOMIC(sizeof(Cell));
     if (!v) {
         fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
         exit(EXIT_FAILURE);
@@ -108,19 +154,8 @@ Cell* make_cell_complex(Cell* real_part, Cell *imag_part) {
     return v;
 }
 
-Cell* make_cell_boolean(const int the_boolean) {
-    Cell* v = GC_MALLOC(sizeof(Cell));
-    if (!v) {
-        fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
-        exit(EXIT_FAILURE);
-    }
-    v->type = CELL_BOOLEAN;
-    v->boolean_v = the_boolean;
-    return v;
-}
-
 Cell* make_cell_symbol(const char* the_symbol) {
-    Cell* v = GC_MALLOC(sizeof(Cell));
+    Cell* v = GC_MALLOC_ATOMIC(sizeof(Cell));
     if (!v) {
         fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
         exit(EXIT_FAILURE);
@@ -132,7 +167,7 @@ Cell* make_cell_symbol(const char* the_symbol) {
 }
 
 Cell* make_cell_string(const char* the_string) {
-    Cell* v = GC_MALLOC(sizeof(Cell));
+    Cell* v = GC_MALLOC_ATOMIC(sizeof(Cell));
     if (!v) {
         fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
         exit(EXIT_FAILURE);
@@ -155,7 +190,7 @@ Cell* make_cell_sexpr(void) {
 }
 
 Cell* make_cell_char(const UChar32 the_char) {
-    Cell* v = GC_MALLOC(sizeof(Cell));
+    Cell* v = GC_MALLOC_ATOMIC(sizeof(Cell));
     if (!v) {
         fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
         exit(EXIT_FAILURE);
@@ -229,16 +264,6 @@ Cell* make_cell_port(const char* path, FILE* fh, const int io_t, const int strea
     return v;
 }
 
-Cell* make_cell_eof(void) {
-    Cell* v = GC_MALLOC(sizeof(Cell));
-    if (!v) {
-        fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
-        exit(EXIT_FAILURE);
-    }
-    v->type = CELL_EOF;
-    return v;
-}
-
 /*------------------------------------------------*
  *    Cell accessors, destructors, and helpers    *
  * -----------------------------------------------*/
@@ -307,7 +332,9 @@ Cell* cell_copy(const Cell* v) {
         copy->exact = v->exact;
         break;
     case CELL_BOOLEAN:
-        copy->boolean_v = v->boolean_v;
+        /* Not sure why we would ever copy a boolean Cell, but just in case
+         we will just return the global #t or #f singleton */
+        copy = make_cell_boolean(v->boolean_v);
         break;
     case CELL_CHAR:
         copy->char_v = v->char_v;

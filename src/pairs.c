@@ -19,6 +19,7 @@
 
 #include "pairs.h"
 #include "eval.h"
+#include "printer.h"
 #include "types.h"
 
 
@@ -359,7 +360,11 @@ Cell* builtin_filter(const Lex* e, const Cell* a) {
     if (a->cell[0]->type != CELL_PROC) {
         return make_cell_error("filter: arg 1 must be a procedure", TYPE_ERR);
     }
-    if (a->cell[1]->type != CELL_PAIR && a->cell[1]->len == -1) {
+    /* Empty list arg :: empty list result */
+    if (a->cell[1]->type == CELL_NIL) {
+        return make_cell_nil();
+    }
+    if (a->cell[1]->type != CELL_PAIR || a->cell[1]->len < 1 ) {
         return make_cell_error("filter: arg 2 must be a proper list", TYPE_ERR);
     }
 
@@ -371,10 +376,13 @@ Cell* builtin_filter(const Lex* e, const Cell* a) {
         if (pred_outcome->type == CELL_ERROR) {
             return pred_outcome;
         }
-        /* Create pointer to val in result list if pred is true */
-        if (pred_outcome->boolean_v == 1) {
-            result = make_cell_pair(val->car, result);
+        /* Continue if pred isn't true/truthy */
+        if (pred_outcome->type == CELL_BOOLEAN && pred_outcome->boolean_v == 0) {
+            val = val->cdr;
+            continue;
         }
+        /* Otherwise write it to the result list */
+        result = make_cell_pair(val->car, result);
         val = val->cdr;
     }
     return builtin_list_reverse(e, make_sexpr_len1(result));
@@ -390,6 +398,10 @@ Cell* builtin_foldl(const Lex* e, const Cell* a) {
     int shortest_list_length = INT32_MAX;
 
     for (int i = 2; i < a->count; i++) {
+        /* If any of the list args is empty, return the accumulator */
+        if (a->cell[i]->type == CELL_NIL) {
+            return a->cell[1];
+        }
         char buf[128];
         if (a->cell[i]->type != CELL_PAIR || a->cell[i]->len == -1) {
             snprintf(buf, 128, "foldl: arg %d must be a proper list", i+1);

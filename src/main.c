@@ -177,10 +177,12 @@ void coz_print(const Cell* v) {
  * Read-Evaluate-Print loop
  * */
 void repl() {
-    /* load history */
+    /* Load history */
     read_history_from_file();
-    /* initialize default ports */
+    /* Initialize default ports */
     init_default_ports();
+    /* Initialize global singleton objects */
+    init_global_singletons();
     /* Initialize global environment */
     Lex* e = lex_initialize();
     /* Load (scheme base) procedures */

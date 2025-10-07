@@ -128,7 +128,7 @@ void print_cell(const Cell* v) {
             default: { err_str = "Error: "; break; }
         }
 #ifdef TESTING__
-        printf(" %s %s", err_str, v->err);
+        printf(" %s %s", err_str, v->error_v);
         break;
 #else
         printf(" %s%s %s %s", ANSI_RED_B, err_str, ANSI_RESET, v->error_v);

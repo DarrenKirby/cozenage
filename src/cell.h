@@ -138,13 +138,13 @@ typedef struct Cell {
             Cell* imag;       /* imaginary part */
         };
         /* Single-field types */
-        Cell** cell;          /* for compound types (sexpr, vector, bytevector) */
-        char* sym;            /* symbols */
-        char* str;            /* strings */
+        Cell** cell;              /* for compound types (sexpr, vector, bytevector) */
+        char* sym;                /* symbols */
+        char* str;                /* strings */
         char* error_v;            /* error string */
-        long double real_v;    /* reals */
+        long double real_v;       /* reals */
         long long int integer_v;  /* integers */
-        UChar32 char_v;        /* character literal */
+        UChar32 char_v;           /* character literal */
         bool boolean_v;           /* boolean */
     };
 } Cell;
@@ -154,24 +154,24 @@ extern Cell* default_input_port;
 extern Cell* default_output_port;
 extern Cell* default_error_port;
 void init_default_ports(void);
+void init_global_singletons(void);
 
-
+Cell* make_cell_nil(void);
+Cell* make_cell_boolean(int the_boolean);
+Cell* make_cell_eof(void);
 Cell* make_cell_real(long double the_real);
 Cell* make_cell_integer(long long the_integer);
 Cell* make_cell_rational(long int numerator, long int denominator, bool simplify);
 Cell* make_cell_complex(Cell* real_part, Cell *imag_part);
-Cell* make_cell_boolean(int the_boolean);
 Cell* make_cell_char(UChar32 the_char);
 Cell* make_cell_vector(void);
 Cell* make_cell_bytevector(void);
 Cell* make_cell_symbol(const char* the_symbol);
 Cell* make_cell_string(const char* the_string);
 Cell* make_cell_sexpr(void);
-Cell* make_cell_nil(void);
 Cell* make_cell_pair(Cell* car, Cell* cdr);
 Cell* make_cell_error(const char* error_string, err_t error_type);
 Cell* make_cell_port(const char* path, FILE* fh, int io_t, int stream_t);
-Cell* make_cell_eof(void);
 Cell* cell_add(Cell* v, Cell* x);
 Cell* cell_copy(const Cell* v);
 Cell* cell_pop(Cell* v, int i);

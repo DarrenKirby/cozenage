@@ -103,8 +103,9 @@ Cell* builtin_vector_pred(const Lex* e, const Cell* a) {
     return make_cell_boolean(a->cell[0]->type == CELL_VECTOR);
 }
 
-/* 'bytevector?' -> CELL_BOOLEAN - return #t if obj is a byte vector, else #f */
-Cell* builtin_byte_vector_pred(const Lex* e, const Cell* a) {
+/* (bytevector? obj)
+ * Returns #t if obj is a bytevector. Otherwise, #f is returned. */
+Cell* builtin_bytevector_pred(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
