@@ -177,7 +177,8 @@ void coz_print(const Cell* v) {
 /* repl()
  * Read-Evaluate-Print loop */
 void repl() {
-    symbol_table = sym_table_initialize();
+    /* Initialize symbol table with initial size of 128 */
+    symbol_table = ht_create(128);
     /* Load readline history */
     read_history_from_file();
     /* Initialize default ports */

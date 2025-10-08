@@ -18,61 +18,9 @@
 */
 
 #include "symbols.h"
-#include <gc/gc.h>
-#include <string.h>
-#include <stdlib.h>
 
 
 /* Declare the symbol table */
-Sym_T* symbol_table = nullptr;
+ht_table* symbol_table = nullptr;
 
-#define INITIAL_CAPACITY 8
-
-/* Initialize the symbol table, and return a pointer to it. */
-Sym_T* sym_table_initialize(void) {
-    Sym_T* table = GC_MALLOC(sizeof(Sym_T));
-    table->count = 0;
-    table->capacity = INITIAL_CAPACITY;
-    table->syms = GC_MALLOC(sizeof(char*) * table->capacity);
-    table->vals = GC_MALLOC(sizeof(Cell*) * table->capacity);
-    if (!table->syms || !table->vals) {
-        fprintf(stderr, "ENOMEM: sym_table_initialize failed\n");
-        exit(EXIT_FAILURE);
-    }
-    return table;
-}
-
-/* Retrieve a Cell* value from the symbol table */
-Cell* symbol_table_lookup(const Sym_T* table, const char* sym) {
-    if (!table || !sym) return nullptr;
-
-    for (int i = 0; i < table->count; i++) {
-        if (strcmp(table->syms[i], sym) == 0) {
-            return table->vals[i];
-        }
-    }
-    /* Not found, return NULL */
-    return nullptr;
-}
-
-/* Place a symbol Cell* value into the symbol table */
-const char* symbol_table_put(Sym_T* table, const char* sym, const Cell* v) {
-    /* Check if the table is full, and needs reallocation. */
-    if (table->count == table->capacity) {
-        table->capacity *= 2; /* Double the capacity */
-        table->syms = GC_REALLOC(table->syms, sizeof(char*) * table->capacity);
-        table->vals = GC_REALLOC(table->vals, sizeof(Cell*) * table->capacity);
-        if (!table->syms || !table->vals) {
-            fprintf(stderr, "ENOMEM: symbol_table_put failed\n");
-            exit(EXIT_FAILURE);
-        }
-    }
-
-    /* Add the new symbol. */
-    const char* stored_sym = GC_strdup(sym);
-    table->syms[table->count] = GC_strdup(stored_sym);
-    table->vals[table->count] = (Cell*)v;
-    table->count++;
-    /* Return the interned string for make_cell_symbol to use */
-    return stored_sym;
-}
+/* Hmmm, this file not used so much now with the hash table........ */

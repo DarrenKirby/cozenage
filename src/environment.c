@@ -40,7 +40,7 @@
 Lex* lex_initialize(void) {
     Lex* top_env = GC_MALLOC(sizeof(Lex));
     top_env->count = 0;
-    top_env->capacity = INITIAL_ENV_CAPACITY;
+    top_env->capacity = INITIAL_GLOBAL_ENV_CAPACITY;
     top_env->syms = GC_MALLOC(sizeof(char*) * top_env->capacity);
     top_env->vals = GC_MALLOC(sizeof(char*) * top_env->capacity);
     top_env->parent = nullptr;  /* top-level has no parent */
@@ -51,8 +51,9 @@ Lex* lex_initialize(void) {
 Lex* lex_new_child(Lex* parent) {
     Lex* e = GC_MALLOC(sizeof(Lex));
     e->count = 0;
-    e->syms = nullptr;
-    e->vals = nullptr;
+    e->capacity = INITIAL_CHILD_ENV_CAPACITY;
+    e->syms = GC_MALLOC(sizeof(char*) * e->capacity);
+    e->vals = GC_MALLOC(sizeof(char*) * e->capacity);
     e->parent = parent;
     return e;
 }

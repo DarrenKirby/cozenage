@@ -20,21 +20,9 @@
 #ifndef COZENAGE_SYMBOLS_H
 #define COZENAGE_SYMBOLS_H
 
-#include "cell.h"
+#include "hash.h"
 
-/* Symbol interning lookup table */
-/* Just parallel arrays for now. Will optimize this later */
-typedef struct Symbol_table {
-    int count;        /* How many symbols are currently stored */
-    int capacity;     /* How many slots are allocated in memory */
-    char** syms;      /* symbol names */
-    Cell** vals;      /* values */
-} Sym_T;
 
-extern Sym_T* symbol_table;
-
-Sym_T* sym_table_initialize(void);
-Cell* symbol_table_lookup(const Sym_T* table, const char* sym);
-const char* symbol_table_put(Sym_T* table, const char* sym, const Cell* v);
+extern ht_table* symbol_table;
 
 #endif //COZENAGE_SYMBOLS_H

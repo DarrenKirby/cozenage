@@ -20,6 +20,7 @@
 #include "cell.h"
 #include "types.h"
 #include "symbols.h"
+#include "hash.h"
 #include <gc/gc.h>
 #include <stdlib.h>
 #include <string.h>
@@ -157,7 +158,7 @@ Cell* make_cell_complex(Cell* real_part, Cell *imag_part) {
 
 Cell* make_cell_symbol(const char* the_symbol) {
     /* Lookup in symbol table first */
-    Cell* v = symbol_table_lookup(symbol_table, the_symbol);
+    Cell* v = ht_get(symbol_table, the_symbol);
     if (v) {
         return v;
     }
@@ -169,7 +170,7 @@ Cell* make_cell_symbol(const char* the_symbol) {
     }
     v->type = CELL_SYMBOL;
     v->quoted = false;
-    const char* canonical_name = symbol_table_put(symbol_table, the_symbol, v);
+    const char* canonical_name = ht_set(symbol_table, the_symbol, v);
     v->sym = (char*)canonical_name;
     return v;
 }
