@@ -116,6 +116,8 @@ add_executable(cozenage src/bools.c
         src/vectors.c
         src/cxr_lib.c
         src/coz_bits_lib.c
-        src/cell.c)
+        src/cell.c
+        src/symbols.c
+        src/symbols.h)
 
 target_link_libraries(cozenage PRIVATE ${READLINE_LIBRARY} ${M_LIB} ${GC_LIB} icu::uc)
