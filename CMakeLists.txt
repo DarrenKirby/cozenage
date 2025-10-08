@@ -87,18 +87,23 @@ endif()
 find_library(M_LIB m)
 find_library(GC_LIB gc)
 
-add_executable(cozenage src/bools.c
+add_executable(cozenage
+        src/bools.c
         src/bytevectors.c
+        src/cell.c
         src/char_lib.c
         src/chars.c
         src/comparators.c
         src/complex_lib.c
         src/control_features.c
+        src/coz_bits_lib.c
         src/coz_ext_lib.c
+        src/cxr_lib.c
         src/environment.c
         src/eval.c
         src/eval_lib.c
         src/file_lib.c
+        src/hash.c
         src/inexact_lib.c
         src/io_lib.c
         src/load_library.c
@@ -112,12 +117,8 @@ add_executable(cozenage src/bools.c
         src/process_context_lib.c
         src/special_forms.c
         src/strings.c
-        src/types.c
-        src/vectors.c
-        src/cxr_lib.c
-        src/coz_bits_lib.c
-        src/cell.c
         src/symbols.c
-        src/symbols.h)
+        src/types.c
+        src/vectors.c)
 
 target_link_libraries(cozenage PRIVATE ${READLINE_LIBRARY} ${M_LIB} ${GC_LIB} icu::uc)
