@@ -40,8 +40,9 @@
 Lex* lex_initialize(void) {
     Lex* top_env = GC_MALLOC(sizeof(Lex));
     top_env->count = 0;
-    top_env->syms = nullptr;
-    top_env->vals = nullptr;
+    top_env->capacity = INITIAL_ENV_CAPACITY;
+    top_env->syms = GC_MALLOC(sizeof(char*) * top_env->capacity);
+    top_env->vals = GC_MALLOC(sizeof(char*) * top_env->capacity);
     top_env->parent = nullptr;  /* top-level has no parent */
     return top_env;
 }
@@ -82,6 +83,16 @@ void lex_put(Lex* e, const Cell* k, const Cell* v) {
         fprintf(stderr, "lex_put: invalid arguments\n");
         return;
     }
+    /* Check if we need to reallocate */
+    if (e->count == e->capacity) {
+        e->capacity *= 2; /* Double the capacity */
+        e->syms = GC_REALLOC(e->syms, sizeof(char*) * e->capacity);
+        e->vals = GC_REALLOC(e->vals, sizeof(Cell*) * e->capacity);
+        if (!e->syms || !e->vals) {
+            fprintf(stderr, "ENOMEM: symbol_table_put failed\n");
+            exit(EXIT_FAILURE);
+        }
+    }
 
     /* Check if symbol already exists */
     for (int i = 0; i < e->count; i++) {
@@ -95,12 +106,6 @@ void lex_put(Lex* e, const Cell* k, const Cell* v) {
 
     /* Symbol not found; append new entry */
     e->count++;
-    e->syms = GC_REALLOC(e->syms, sizeof(char*) * e->count);
-    e->vals = GC_REALLOC(e->vals, sizeof(Cell*) * e->count);
-    if (!e->syms || !e->vals) {
-        fprintf(stderr, "ENOMEM: lex_put failed\n");
-        exit(EXIT_FAILURE);
-    }
     e->syms[e->count - 1] = GC_strdup(k->sym);
     e->vals[e->count - 1] = (Cell*)v;
 }
@@ -234,6 +239,8 @@ void lex_add_builtins(Lex* e) {
     lex_add_builtin(e, "list-tail", builtin_list_tail);
     lex_add_builtin(e, "make-list", builtin_make_list);
     lex_add_builtin(e, "list-set!", builtin_list_set);
+    lex_add_builtin(e, "memq", builtin_memq);
+    lex_add_builtin(e, "memv", builtin_memv);
     lex_add_builtin(e, "filter", builtin_filter);
     lex_add_builtin(e, "foldl", builtin_foldl);
     /* Vector procedures */

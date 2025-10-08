@@ -20,13 +20,15 @@
 #ifndef COZENAGE_ENVIRONMENT_H
 #define COZENAGE_ENVIRONMENT_H
 
+#define INITIAL_ENV_CAPACITY 64
 
 struct Cell;
 typedef struct Cell Cell;
 
 /* Just parallel arrays for now. Will optimize this later */
 typedef struct Lex {
-    int count;
+    int count;           /* Number of occupied slots */
+    int capacity;        /* Allocated slots */
     char** syms;         /* symbol names */
     Cell** vals;         /* values */
     struct Lex* parent;  /* points to parent env, NULL if top-level */
