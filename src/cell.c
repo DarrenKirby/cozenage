@@ -19,6 +19,7 @@
 
 #include "cell.h"
 #include "types.h"
+#include "symbols.h"
 #include <gc/gc.h>
 #include <stdlib.h>
 #include <string.h>
@@ -155,14 +156,21 @@ Cell* make_cell_complex(Cell* real_part, Cell *imag_part) {
 }
 
 Cell* make_cell_symbol(const char* the_symbol) {
-    Cell* v = GC_MALLOC_ATOMIC(sizeof(Cell));
+    /* Lookup in symbol table first */
+    Cell* v = symbol_table_lookup(symbol_table, the_symbol);
+    if (v) {
+        return v;
+    }
+    /* Not found, so construct the cell, place in the table, then return it */
+    v = GC_MALLOC_ATOMIC(sizeof(Cell));
     if (!v) {
         fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
         exit(EXIT_FAILURE);
     }
     v->type = CELL_SYMBOL;
     v->quoted = false;
-    v->sym = GC_strdup(the_symbol);
+    const char* canonical_name = symbol_table_put(symbol_table, the_symbol, v);
+    v->sym = (char*)canonical_name;
     return v;
 }
 
@@ -340,8 +348,8 @@ Cell* cell_copy(const Cell* v) {
         copy->char_v = v->char_v;
         break;
     case CELL_SYMBOL:
-        copy->sym = GC_strdup(v->sym);
-        copy->quoted =  v->quoted;
+        /* Symbols are interned, just grab the pointer */
+        copy = (Cell*)v;
         break;
     case CELL_STRING:
         copy->str = GC_strdup(v->str);

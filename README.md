@@ -154,6 +154,8 @@ This is a list of what *is* implemented so far. I try to keep it up to date:
 - `list-tail`
 - `list-set!`
 - `make-list`
+- `memq`
+- `memv`
 - `filter`
 - `foldl`
 

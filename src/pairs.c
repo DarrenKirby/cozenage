@@ -21,6 +21,7 @@
 #include "eval.h"
 #include "printer.h"
 #include "types.h"
+#include "comparators.h"
 
 
 /* Helpers */
@@ -53,8 +54,8 @@ inline Cell* cdr__(const Cell* list) {
  * ----------------------------------------------------------*/
 
 /* (cons obj1 obj2)
- * Returns a newly allocated pair whose car is obj1 and whose cdr is obj2. The pair is guaranteed to be different (in
- * the sense of eqv?) from every existing object. */
+ * Returns a newly allocated pair whose car is obj1 and whose cdr is obj2. The pair is guaranteed
+ * to be different (in the sense of eqv?) from every existing object. */
 Cell* builtin_cons(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2);
@@ -81,11 +82,11 @@ Cell* builtin_cdr(const Lex* e, const Cell* a) {
 }
 
 /* These procedures are compositions of car and cdr as follows:
-*    (define (caar x) (car (car x)))
-*    (define (cadr x) (car (cdr x)))
-*    (define (cdar x) (cdr (car x)))
-*    (define (cddr x) (cdr (cdr x)))
-*    */
+ *    (define (caar x) (car (car x)))
+ *    (define (cadr x) (car (cdr x)))
+ *    (define (cdar x) (cdr (car x)))
+ *    (define (cddr x) (cdr (cdr x)))
+ *    */
 Cell* builtin_caar(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
@@ -224,11 +225,11 @@ Cell* builtin_list_ref(const Lex* e, const Cell* a) {
 }
 
 /* (append list ...)
-* The last argument, if there is one, can be of any type. Returns a list consisting of the elements
-* of the first list followed by the elements of the other lists. If there are no arguments, the
-* empty list is returned. If there is exactly one argument, it is returned. Otherwise, the resulting
-* list is always newly allocated, except that it shares structure with the last argument. An
-* improper list results if the last argument is not a proper list. */
+ * The last argument, if there is one, can be of any type. Returns a list consisting of the elements
+ * of the first list followed by the elements of the other lists. If there are no arguments, the
+ * empty list is returned. If there is exactly one argument, it is returned. Otherwise, the resulting
+ * list is always newly allocated, except that it shares structure with the last argument. An
+ * improper list results if the last argument is not a proper list. */
 Cell* builtin_list_append(const Lex* e, const Cell* a) {
     (void)e;
     /* Base case: (append) -> '() */
@@ -322,7 +323,7 @@ Cell* builtin_list_append(const Lex* e, const Cell* a) {
 }
 
 /* (reverse list)
-* Returns a newly allocated list consisting of the elements of list in reverse order. */
+ * Returns a newly allocated list consisting of the elements of list in reverse order. */
 Cell* builtin_list_reverse(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
@@ -421,7 +422,7 @@ Cell* builtin_make_list(const Lex* e, const Cell* a) {
 }
 
 /* (list-set! list k obj)
-* The list-set! procedure stores obj in element k of list. */
+ * The list-set! procedure stores obj in element k of list. */
 Cell* builtin_list_set(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 3);
@@ -446,7 +447,67 @@ Cell* builtin_list_set(const Lex* e, const Cell* a) {
     p->car = a->cell[2];
     /* No meaningful return value */
     return nullptr;
+}
 
+/* (memq obj list)
+ * Return the first sublist of list whose car is obj, where the sublists of list are the non-empty
+ * lists returned by (list-tail list k) for k less than the length of list. If obj does not occur in
+ * list, then #f (not the empty list) is returned. Uses eq? to compare obj with the elements of list
+ */
+Cell* builtin_memq(const Lex* e, const Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 2);
+    if (err) return err;
+    if (a->cell[1]->type != CELL_PAIR) {
+        return make_cell_error("memq: arg 2 must be a list", TYPE_ERR);
+    }
+
+    Cell* lhs = a->cell[1];
+    const Cell* rhs = a->cell[0];
+    bool found_it = false;
+    for (int i = 0; i < a->cell[1]->count; i++) {
+        const Cell* result = builtin_eq(e, make_sexpr_len2(lhs->car, rhs));
+        if (result->boolean_v == 1) {
+            found_it = true;
+            break;
+        }
+        lhs = lhs->cdr;
+    }
+    if (found_it) {
+        return lhs;
+    }
+    return make_cell_boolean(0);
+}
+
+Cell* builtin_memv(const Lex* e, const Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 2);
+    if (err) return err;
+    if (a->cell[1]->type != CELL_PAIR) {
+        return make_cell_error("memq: arg 2 must be a list", TYPE_ERR);
+    }
+
+    Cell* lhs = a->cell[1];
+    const Cell* rhs = a->cell[0];
+    bool found_it = false;
+    for (int i = 0; i < a->cell[1]->count; i++) {
+        const Cell* result = builtin_eqv(e, make_sexpr_len2(lhs->car, rhs));
+        if (result->boolean_v == 1) {
+            found_it = true;
+            break;
+        }
+        lhs = lhs->cdr;
+    }
+    if (found_it) {
+        return lhs;
+    }
+    return make_cell_boolean(0);
+}
+
+Cell* builtin_member(const Lex* e, const Cell* a) {
+    (void)e;
+    (void)a;
+    return make_cell_error("Coming soon!", GEN_ERR);
 }
 
 /* ----------------------------------------------------------*

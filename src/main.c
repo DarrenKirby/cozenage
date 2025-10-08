@@ -24,6 +24,7 @@
 #include "cell.h"
 #include "environment.h"
 #include "eval.h"
+#include "symbols.h"
 #include "load_library.h"
 #include <gc.h>
 #include <stdio.h>
@@ -176,6 +177,7 @@ void coz_print(const Cell* v) {
 /* repl()
  * Read-Evaluate-Print loop */
 void repl() {
+    symbol_table = sym_table_initialize();
     /* Load readline history */
     read_history_from_file();
     /* Initialize default ports */

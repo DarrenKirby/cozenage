@@ -44,6 +44,8 @@ Cell* builtin_list_reverse(const Lex* e, const Cell* a);
 Cell* builtin_list_tail(const Lex* e, const Cell* a);
 Cell* builtin_make_list(const Lex* e, const Cell* a);
 Cell* builtin_list_set(const Lex* e, const Cell* a);
+Cell* builtin_memq(const Lex* e, const Cell* a);
+Cell* builtin_memv(const Lex* e, const Cell* a);
 Cell* builtin_filter(const Lex* e, const Cell* a);
 Cell* builtin_foldl(const Lex* e, const Cell* a);
 
