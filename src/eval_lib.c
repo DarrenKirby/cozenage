@@ -43,6 +43,6 @@ Cell* builtin_eval(const Lex* e, const Cell* a) {
     return coz_eval((Lex*)e, args);
 }
 
-void lex_add_eval_lib(Lex* e) {
+void lex_add_eval_lib(const Lex* e) {
     lex_add_builtin(e, "eval", builtin_eval);
 }

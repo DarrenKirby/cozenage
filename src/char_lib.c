@@ -416,7 +416,7 @@ Cell* builtin_string_gte_ci(const Lex* e, const Cell* a) {
     return make_cell_boolean(1);
 }
 
-void lex_add_char_lib(Lex* e) {
+void lex_add_char_lib(const Lex* e) {
     lex_add_builtin(e, "char-alphabetic?", builtin_char_alphabetic);
     lex_add_builtin(e, "char-whitespace?", builtin_char_whitespace);
     lex_add_builtin(e, "char-numeric?", builtin_char_numeric);

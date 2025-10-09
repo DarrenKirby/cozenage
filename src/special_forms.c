@@ -93,7 +93,7 @@ Cell* apply_lambda(Cell* lambda, const Cell* args) {
     }
 
     /* Create a new child environment */
-    Lex* local_env = lex_new_child(lambda->env);
+    Lex* local_env = new_child_env(lambda->env);
 
     /* Bind formals to arguments */
     if (lambda->formals->count != args->count) {
@@ -103,13 +103,13 @@ Cell* apply_lambda(Cell* lambda, const Cell* args) {
     for (int i = 0; i < args->count; i++) {
         const Cell* sym = lambda->formals->cell[i];
         const Cell* val = args->cell[i];
-        lex_put(local_env, sym, val);  /* sym should be CELL_SYMBOL, val evaluated */
+        lex_put_local(local_env, sym, val);  /* sym should be CELL_SYMBOL, val evaluated */
     }
 
     /* Evaluate body expressions in this environment */
     Cell* result = nullptr;
     for (int i = 0; i < lambda->body->count; i++) {
-        result = coz_eval(local_env, cell_copy(lambda->body->cell[i]));
+        result = coz_eval(local_env, lambda->body->cell[i]);
     }
     return result;
 }
@@ -153,7 +153,7 @@ Cell* sf_define(Lex* e, const Cell* a) {
         if (val->type == CELL_PROC) {
             val->l_name = GC_strdup(target->sym);
         }
-        lex_put(e, target, val);
+        lex_put_global(e, target, val);
         return val;
     }
 
@@ -180,7 +180,7 @@ Cell* sf_define(Lex* e, const Cell* a) {
         }
 
         Cell* lam = lex_make_named_lambda(fname->sym, formals, body, e);
-        lex_put(e, fname, lam);
+        lex_put_global(e, fname, lam);
         return lam;
         }
 
@@ -451,13 +451,13 @@ Cell* sf_let(Lex* e, Cell* a) {
     }
 
     /* Create a new child environment */
-    Lex* local_env = lex_new_child(e);
+    Lex* local_env = new_child_env(e);
 
     /* Populate it with sym->val pairs */
     for (int i = 0; i < vals->count; i++) {
         const Cell* sym = vars->cell[i];
         const Cell* val = coz_eval(e, vals->cell[i]);
-        lex_put(local_env, sym, val);
+        lex_put_local(local_env, sym, val);
     }
 
     /* Evaluate the body expressions in this environment */
@@ -502,13 +502,13 @@ Cell* sf_let_star(Lex* e, Cell* a) {
 
         /* Create the new environment for THIS binding.
          * The parent is the *previous* environment in the chain. */
-        Lex* new_env = lex_new_child(current_env);
+        Lex* new_env = new_child_env(current_env);
 
         /* Evaluate the argument expression in the *current* environment. */
         const Cell* val = coz_eval(current_env, arg);
 
         /* Put the new binding into the new environment. */
-        lex_put(new_env, formal, val);
+        lex_put_local(new_env, formal, val);
 
         /* Update current_env to point to the new environment. */
         current_env = new_env;
@@ -542,7 +542,7 @@ Cell* sf_set_bang(Lex* e, const Cell* a) {
     Cell* expr = a->cell[1];
     const Cell* val = coz_eval(e, expr);
     /* Re-bind the variable with the new value */
-    lex_put(e, variable, val);
+    lex_put_local(e, variable, val);
     /* No meaningful return value */
     return nullptr;
 }

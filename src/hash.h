@@ -20,7 +20,10 @@
 #ifndef COZENAGE_HASH_H
 #define COZENAGE_HASH_H
 
-#include "cell.h"
+#include <stdio.h>
+
+/* Forward declare Cell */
+typedef struct Cell Cell;
 
 /* Constants for hash function */
 #define FNV_OFFSET 14695981039346656037UL

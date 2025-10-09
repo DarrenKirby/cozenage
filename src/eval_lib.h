@@ -24,6 +24,6 @@
 
 
 Cell* builtin_eval(const Lex* e, const Cell* a);
-void lex_add_eval_lib(Lex* e);
+void lex_add_eval_lib(const Lex* e);
 
 #endif //COZENAGE_EVAL_LIB_H

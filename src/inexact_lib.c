@@ -238,7 +238,7 @@ Cell* builtin_nan(const Lex* e, const Cell* a) {
     return make_cell_boolean(0);
 }
 
-void lex_add_inexact_lib(Lex* e) {
+void lex_add_inexact_lib(const Lex* e) {
     lex_add_builtin(e, "cos", builtin_cos);
     lex_add_builtin(e, "acos", builtin_acos);
     lex_add_builtin(e, "sin", builtin_sin);

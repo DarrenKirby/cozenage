@@ -149,7 +149,7 @@ Cell* builtin_open_binary_output_file(const Lex* e, const Cell* a) {
 }
 
 /* Register the procedures in the environment */
-void lex_add_file_lib(Lex* e) {
+void lex_add_file_lib(const Lex* e) {
     lex_add_builtin(e, "file-exists?", builtin_file_exists);
     lex_add_builtin(e, "delete-file", builtin_delete_file);
     lex_add_builtin(e, "open-input-file", builtin_open_input_file);

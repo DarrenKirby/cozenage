@@ -214,7 +214,7 @@ Cell* builtin_cdddr(const Lex* e, const Cell* a) {
     return cdr__(cdr__(cdr__(a->cell[0])));
 }
 
-void lex_add_cxr_lib(Lex* e) {
+void lex_add_cxr_lib(const Lex* e) {
     lex_add_builtin(e, "caaaar", builtin_caaaar);
     lex_add_builtin(e, "caaar", builtin_caaar);
     lex_add_builtin(e, "caaddr", builtin_caaddr);

@@ -38,6 +38,6 @@ Cell* builtin_cbrt(const Lex* e, const Cell* a);
 Cell* builtin_infinite(const Lex* e, const Cell* a);
 Cell* builtin_finite(const Lex* e, const Cell* a);
 Cell* builtin_nan(const Lex* e, const Cell* a);
-void lex_add_inexact_lib(Lex* e);
+void lex_add_inexact_lib(const Lex* e);
 
 #endif //COZENAGE_INEXACT_LIB_H

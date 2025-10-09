@@ -37,7 +37,7 @@ int loaded_lib_count = 0;
 /* map a name to a loader function */
 typedef struct {
     const char* name;
-    void (*init_func)(Lex* env);
+    void (*init_func)(const Lex* env);
 } LibraryRegistryEntry;
 
 /* The registry of all built-in libraries */
@@ -56,14 +56,13 @@ static const LibraryRegistryEntry library_registry[] = {
 };
 
 /* look up and load a library */
-Cell* load_scheme_library(const char* lib_name, Lex* env) {
+Cell* load_scheme_library(const char* lib_name, const Lex* env) {
     /* Check if already loaded to prevent redundant work */
     for (int i = 0; i < loaded_lib_count; i++) {
         if (strcmp(loaded_libs[i], lib_name) == 0) {
             return make_cell_boolean(1);
         }
     }
-
     /* Find the library in the registry */
     for (int i = 0; library_registry[i].name != NULL; i++) {
         if (strcmp(library_registry[i].name, lib_name) == 0) {
@@ -77,7 +76,6 @@ Cell* load_scheme_library(const char* lib_name, Lex* env) {
             return make_cell_boolean(1);
         }
     }
-
     /* If we get here, the library wasn't found. */
     char buf[512];
     snprintf(buf, 511, "library '%s' not found.", lib_name);

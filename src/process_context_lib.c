@@ -106,7 +106,7 @@ Cell* builtin_get_env_vars(const Lex* e, const Cell* a) {
     return result;
 }
 
-void lex_add_proc_con_lib(Lex* e) {
+void lex_add_proc_con_lib(const Lex* e) {
     lex_add_builtin(e, "exit", builtin_exit);
     lex_add_builtin(e, "emergency-exit", builtin_emergency_exit);
     lex_add_builtin(e, "get-environment-variable", builtin_get_env_var);

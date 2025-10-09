@@ -44,6 +44,6 @@ Cell* builtin_string_lt_ci(const Lex* e, const Cell* a);
 Cell* builtin_string_lte_ci(const Lex* e, const Cell* a);
 Cell* builtin_string_gt_ci(const Lex* e, const Cell* a);
 Cell* builtin_string_gte_ci(const Lex* e, const Cell* a);
-void lex_add_char_lib(Lex* e);
+void lex_add_char_lib(const Lex* e);
 
 #endif //COZENAGE_CHAR_LIB_H

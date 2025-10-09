@@ -27,6 +27,6 @@ Cell* builtin_exit(const Lex* e, const Cell* a);
 Cell* builtin_emergency_exit(const Lex* e, const Cell* a);
 Cell* builtin_get_env_var(const Lex* e, const Cell* a);
 Cell* builtin_get_env_vars(const Lex* e, const Cell* a);
-void lex_add_proc_con_lib(Lex* e);
+void lex_add_proc_con_lib(const Lex* e);
 
 #endif //COZENAGE_PROCESS_CONTEXT_LIB_H

@@ -24,7 +24,7 @@
 
 
 Cell* builtin_display(const Lex* e, const Cell* a);
-void lex_add_write_lib(Lex* e);
+void lex_add_write_lib(const Lex* e);
 void lex_add_read_lib(Lex* e);
 
 #endif //COZENAGE_IO_LIB_H

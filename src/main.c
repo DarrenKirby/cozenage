@@ -186,7 +186,7 @@ void repl() {
     /* Initialize global singleton objects, nil, #t, #f, and EOF */
     init_global_singletons();
     /* Initialize global environment */
-    Lex* e = lex_initialize();
+    Lex* e = lex_initialize_global_env();
     /* Load (scheme base) procedures into the environment*/
     lex_add_builtins(e);
 

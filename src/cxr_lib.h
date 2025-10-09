@@ -47,6 +47,6 @@ Cell* builtin_cdadr(const Lex* e, const Cell* a);
 Cell* builtin_cddadr(const Lex* e, const Cell* a);
 Cell* builtin_cdddar(const Lex* e, const Cell* a);
 Cell* builtin_cdddr(const Lex* e, const Cell* a);
-void lex_add_cxr_lib(Lex* e);
+void lex_add_cxr_lib(const Lex* e);
 
 #endif //COZENAGE_CXR_LIB_H

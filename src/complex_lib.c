@@ -113,7 +113,7 @@ Cell* builtin_make_polar(const Lex* e, const Cell* a) {
 }
 
 /* Loader for our (scheme complex) library procedures */
-void lex_add_complex_lib(Lex* e) {
+void lex_add_complex_lib(const Lex* e) {
     lex_add_builtin(e, "real-part", builtin_real_part);
     lex_add_builtin(e, "imag-part", builtin_imag_part);
     lex_add_builtin(e,"make-rectangular", builtin_make_rectangular);

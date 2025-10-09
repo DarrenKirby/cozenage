@@ -36,79 +36,97 @@
 #include <string.h>
 
 
-/* Initialize an environment, and return a pointer to it. */
-Lex* lex_initialize(void) {
-    Lex* top_env = GC_MALLOC(sizeof(Lex));
-    top_env->count = 0;
-    top_env->capacity = INITIAL_GLOBAL_ENV_CAPACITY;
-    top_env->syms = GC_MALLOC(sizeof(char*) * top_env->capacity);
-    top_env->vals = GC_MALLOC(sizeof(char*) * top_env->capacity);
-    top_env->parent = nullptr;  /* top-level has no parent */
-    return top_env;
+/* Initialize the global environment, and return a pointer to it. */
+Lex* lex_initialize_global_env(void) {
+    ht_table* global_env = ht_create(256);
+    Lex* e = GC_MALLOC(sizeof(Lex));
+    e->local = nullptr;
+    e->global = global_env;
+    return e;
 }
 
-/* Initialize a new local environment */
-Lex* lex_new_child(Lex* parent) {
-    Lex* e = GC_MALLOC(sizeof(Lex));
+/* Initialize a new child environment */
+Lex* new_child_env(const Lex* parent_env) {
+    Ch_Env* e = GC_MALLOC(sizeof(Ch_Env));
     e->count = 0;
     e->capacity = INITIAL_CHILD_ENV_CAPACITY;
     e->syms = GC_MALLOC(sizeof(char*) * e->capacity);
     e->vals = GC_MALLOC(sizeof(char*) * e->capacity);
-    e->parent = parent;
-    return e;
+    // The new frame's parent is the PARENT'S LOCAL FRAME.
+    e->parent = parent_env->local;
+
+    Lex* w = GC_MALLOC(sizeof(Lex));
+    w->local = e; // The new wrapper points to the new local frame
+    w->global = parent_env->global;
+    return w;
 }
 
 /* Retrieve a Cell* value from an environment */
 Cell* lex_get(const Lex* e, const Cell* k) {
     if (!e || !k || k->type != CELL_SYMBOL) return nullptr;
 
-    for (int i = 0; i < e->count; i++) {
-        if (strcmp(e->syms[i], k->sym) == 0) {
-            return e->vals[i];
+    /* Search the entire local environment chain iteratively. */
+    const Ch_Env* current_frame = e->local;
+    while (current_frame != nullptr) {
+        /* Linearly scan the symbols in the current frame. */
+        for (int i = 0; i < current_frame->count; i++) {
+            if (strcmp(current_frame->syms[i], k->sym) == 0) {
+                return current_frame->vals[i];
+            }
         }
+        /* Not in this frame, move up to the parent frame. */
+        current_frame = current_frame->parent;
     }
 
-    /* Recurse into parent if not found */
-    if (e->parent) {
-        return lex_get(e->parent, k);
+    /* If not found in any local frame, check the global environment. */
+    Cell* result = ht_get(e->global, k->sym);
+    if (result) {
+        return result;
     }
 
+    /* If not found anywhere, the symbol is unbound. */
     char buf[128];
     snprintf(buf, sizeof(buf), "Unbound symbol: '%s'", k->sym);
     return make_cell_error(buf, VALUE_ERR);
 }
 
 /* Place a Cell* value into an environment */
-void lex_put(Lex* e, const Cell* k, const Cell* v) {
+void lex_put_local(Lex* e, const Cell* k, const Cell* v) {
     if (!e || !k || !v || k->type != CELL_SYMBOL) {
         fprintf(stderr, "lex_put: invalid arguments\n");
         return;
     }
     /* Check if we need to reallocate */
-    if (e->count == e->capacity) {
-        e->capacity *= 2; /* Double the capacity */
-        e->syms = GC_REALLOC(e->syms, sizeof(char*) * e->capacity);
-        e->vals = GC_REALLOC(e->vals, sizeof(Cell*) * e->capacity);
-        if (!e->syms || !e->vals) {
+    if (e->local->count == e->local->capacity) {
+        e->local->capacity *= 2; /* Double the capacity */
+        e->local->syms = GC_REALLOC(e->local->syms, sizeof(char*) * e->local->capacity);
+        e->local->vals = GC_REALLOC(e->local->vals, sizeof(Cell*) * e->local->capacity);
+        if (!e->local->syms || !e->local->vals) {
             fprintf(stderr, "ENOMEM: symbol_table_put failed\n");
             exit(EXIT_FAILURE);
         }
     }
-
     /* Check if symbol already exists */
-    for (int i = 0; i < e->count; i++) {
-        if (strcmp(e->syms[i], k->sym) == 0) {
+    for (int i = 0; i < e->local->count; i++) {
+        if (strcmp(e->local->syms[i], k->sym) == 0) {
             /* Free the old value and replace it with v */
-            GC_FREE(e->vals[i]);
-            e->vals[i] = (Cell*)v;
+            GC_FREE(e->local->vals[i]);
+            e->local->vals[i] = (Cell*)v;
             return;
         }
     }
-
     /* Symbol not found; append new entry */
-    e->count++;
-    e->syms[e->count - 1] = GC_strdup(k->sym);
-    e->vals[e->count - 1] = (Cell*)v;
+    e->local->count++;
+    e->local->syms[e->local->count - 1] = GC_strdup(k->sym);
+    e->local->vals[e->local->count - 1] = (Cell*)v;
+}
+
+void lex_put_global(const Lex* e, const Cell* k, Cell* v) {
+    if (!e || !k || !v || k->type != CELL_SYMBOL) {
+        fprintf(stderr, "lex_put: invalid arguments\n");
+        return;
+    }
+    ht_set(e->global, k->sym, v);
 }
 
 /* Populate the CELL_PROC struct of a Cell* object for builtin procedures */
@@ -145,15 +163,15 @@ Cell* lex_make_lambda(const Cell* formals, const Cell* body, Lex* env) {
     return c;
 }
 
-/* Register a procedure in an environment */
-void lex_add_builtin(Lex* e, const char* name, Cell* (*func)(const Lex*, const Cell*)) {
-    const Cell* fn = lex_make_builtin(name, func);
+/* Register a procedure in the global environment */
+void lex_add_builtin(const Lex* e, const char* name, Cell* (*func)(const Lex*, const Cell*)) {
+    Cell* fn = lex_make_builtin(name, func);
     const Cell* k = make_cell_symbol(name);
-    lex_put(e, k, fn);
+    lex_put_global(e, k, fn);
 }
 
 /* Register all builtin procedures in the global environment */
-void lex_add_builtins(Lex* e) {
+void lex_add_builtins(const Lex* e) {
     /* Basic arithmetic operators */
     lex_add_builtin(e, "+", builtin_add);
     lex_add_builtin(e, "-", builtin_sub);

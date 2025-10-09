@@ -28,6 +28,6 @@ Cell* builtin_imag_part(const Lex* e, const Cell* a);
 Cell* builtin_make_rectangular(const Lex* e, const Cell* a);
 Cell* builtin_angle(const Lex* e, const Cell* a);
 Cell* builtin_make_polar(const Lex* e, const Cell* a);
-void lex_add_complex_lib(Lex* e);
+void lex_add_complex_lib(const Lex* e);
 
 #endif //COZENAGE_COMPLEX_LIB_H

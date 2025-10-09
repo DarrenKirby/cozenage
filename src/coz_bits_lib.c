@@ -209,7 +209,7 @@ Cell* bits_bitstring_to_int(const Lex* e, const Cell* a) {
     return make_cell_integer(negative_part + positive_part);
 }
 
-void lex_add_coz_bits_lib(Lex* e) {
+void lex_add_coz_bits_lib(const Lex* e) {
     lex_add_builtin(e, ">>", bits_right_shift);
     lex_add_builtin(e, "<<", bits_left_shift);
     lex_add_builtin(e, "&", bits_bitwise_and);

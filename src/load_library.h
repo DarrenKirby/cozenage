@@ -25,6 +25,6 @@
 #define MAX_LOADED_LIBS 32
 
 
-Cell* load_scheme_library(const char* lib_name, Lex* env);
+Cell* load_scheme_library(const char* lib_name, const Lex* env);
 
 #endif //COZENAGE_LOAD_LIBRARY_H
