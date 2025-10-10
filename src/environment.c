@@ -90,7 +90,7 @@ Cell* lex_get(const Lex* e, const Cell* k) {
     return make_cell_error(buf, VALUE_ERR);
 }
 
-/* Place a Cell* value into an environment */
+/* Place a Cell* value into a local environment */
 void lex_put_local(Lex* e, const Cell* k, const Cell* v) {
     if (!e || !k || !v || k->type != CELL_SYMBOL) {
         fprintf(stderr, "lex_put: invalid arguments\n");
@@ -121,6 +121,7 @@ void lex_put_local(Lex* e, const Cell* k, const Cell* v) {
     e->local->vals[e->local->count - 1] = (Cell*)v;
 }
 
+/* Place a Cell* value in the global environment */
 void lex_put_global(const Lex* e, const Cell* k, Cell* v) {
     if (!e || !k || !v || k->type != CELL_SYMBOL) {
         fprintf(stderr, "lex_put: invalid arguments\n");
@@ -260,8 +261,10 @@ void lex_add_builtins(const Lex* e) {
     lex_add_builtin(e, "list-set!", builtin_list_set);
     lex_add_builtin(e, "memq", builtin_memq);
     lex_add_builtin(e, "memv", builtin_memv);
+    lex_add_builtin(e, "member", builtin_member);
     lex_add_builtin(e, "filter", builtin_filter);
     lex_add_builtin(e, "foldl", builtin_foldl);
+    lex_add_builtin(e, "zip", builtin_zip);
     /* Vector procedures */
     lex_add_builtin(e, "vector", builtin_vector);
     lex_add_builtin(e, "vector-length", builtin_vector_length);

@@ -258,8 +258,13 @@ Cell* val_equal(const Lex* e, const Cell* x, const Cell* y) {
         case CELL_STRING:  return make_cell_boolean(strcmp(x->str, y->str) == 0);
         case CELL_COMPLEX: return make_cell_boolean(complex_eq_op(e, x, y));
 
+        case CELL_PAIR:
         case CELL_SEXPR:
         case CELL_VECTOR:
+            if (x->type == CELL_PAIR) {
+                x = make_sexpr_from_list(cell_copy(x));
+                y = make_sexpr_from_list(cell_copy(y));
+            }
             if (x->count != y->count) return make_cell_boolean(0);
             for (int i = 0; i < x->count; i++) {
                 const Cell* eq = val_equal(e, x->cell[i], y->cell[i]);

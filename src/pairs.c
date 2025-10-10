@@ -479,6 +479,11 @@ Cell* builtin_memq(const Lex* e, const Cell* a) {
     return make_cell_boolean(0);
 }
 
+/* (memv obj list)
+ * Return the first sublist of list whose car is obj, where the sublists of list are the non-empty
+ * lists returned by (list-tail list k) for k less than the length of list. If obj does not occur in
+ * list, then #f (not the empty list) is returned. Uses eqv? to compare obj with the elements of list
+ */
 Cell* builtin_memv(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2);
@@ -504,10 +509,49 @@ Cell* builtin_memv(const Lex* e, const Cell* a) {
     return make_cell_boolean(0);
 }
 
+/* (member obj list)
+ * (member obj list compare)
+ * Return the first sublist of list whose car is obj, where the sublists of list are the non-empty
+ * lists returned by (list-tail list k) for k less than the length of list. If obj does not occur in
+ * list, then #f (not the empty list) is returned. Uses equal? to compare obj with the elements of
+ * list unless an optional third arg, a comparison procedure, is provided */
 Cell* builtin_member(const Lex* e, const Cell* a) {
     (void)e;
-    (void)a;
-    return make_cell_error("Coming soon!", GEN_ERR);
+    Cell* err = CHECK_ARITY_RANGE(a, 2, 3);
+    if (err) return err;
+    if (a->cell[1]->type != CELL_PAIR) {
+        return make_cell_error("member: arg 2 must be a list", TYPE_ERR);
+    }
+    if (a->count == 3) {
+        if (a->cell[2]->type != CELL_PROC) {
+            return make_cell_error("member: arg 3 must be a procedure", TYPE_ERR);
+        }
+    }
+
+    Cell* lhs = a->cell[1];
+    const Cell* rhs = a->cell[0];
+    bool found_it = false;
+    for (int i = 0; i < a->cell[1]->count; i++) {
+        Cell* result;
+        if (a->count == 2) {
+            result = builtin_equal(e, make_sexpr_len2(lhs->car, rhs));
+        }else {
+            Cell* args = make_cell_sexpr();
+            cell_add(args, a->cell[2]);
+            cell_add(args, lhs);
+            cell_add(args, (Cell*)rhs);
+            result = coz_eval((Lex*)e, args);
+        }
+        if (result->boolean_v == 1) {
+            found_it = true;
+            break;
+        }
+        lhs = lhs->cdr;
+    }
+    if (found_it) {
+        return lhs;
+    }
+    return make_cell_boolean(0);
 }
 
 /* ----------------------------------------------------------*
@@ -557,8 +601,8 @@ Cell* builtin_foldl(const Lex* e, const Cell* a) {
     if (a->cell[0]->type != CELL_PROC) {
         return make_cell_error("foldl: arg 1 must be a procedure", TYPE_ERR);
     }
-    int shortest_list_length = INT32_MAX;
 
+    int shortest_list_length = INT32_MAX;
     for (int i = 2; i < a->count; i++) {
         /* If any of the list args is empty, return the accumulator */
         if (a->cell[i]->type == CELL_NIL) {
@@ -587,7 +631,7 @@ Cell* builtin_foldl(const Lex* e, const Cell* a) {
         /* Grab vals starting from the last list, so that after the
          * 'reversed' list is constructed, order is correct */
         for (int j = num_lists + 1; j >= 2; j--) {
-            Cell* current_list = a->cell[j];
+            const Cell* current_list = a->cell[j];
             Cell* nth_item = list_get_nth_cell_ptr(current_list, i);
             arg_list = make_cell_pair(nth_item, arg_list);
             /* len is the number of lists plus the accumulator */
@@ -620,4 +664,46 @@ Cell* builtin_foldl(const Lex* e, const Cell* a) {
     }
     /* Return the accumulator after all list args are evaluated */
     return init;
+}
+
+Cell* builtin_zip(const Lex* e, const Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_MIN(a, 2);
+    if (err) return err;
+
+    int shortest_list_length = INT32_MAX;
+    for (int i = 0; i < a->count; i++) {
+        /* If any of the list args is empty, return an empty list */
+        if (a->cell[i]->type == CELL_NIL) {
+            return make_cell_nil();
+        }
+        char buf[128];
+        if (a->cell[i]->type != CELL_PAIR || a->cell[i]->len == -1) {
+            snprintf(buf, 128, "zip: arg %d must be a proper list", i+1);
+            return make_cell_error(buf, TYPE_ERR);
+        }
+        if (a->cell[i]->len < shortest_list_length) {
+            shortest_list_length = a->cell[i]->len;
+        }
+    }
+
+    const int shortest_len = shortest_list_length;
+    const int num_lists = a->count;
+    Cell* outer_list = make_cell_nil();
+    for (int i = 0; i < shortest_len; i++) {
+        Cell* inner_list = make_cell_nil();
+
+        /* Grab vals starting from the last list, so that after the
+         * 'reversed' list is constructed, order is correct */
+        for (int j = num_lists-1 ; j >= 0; j--) {
+            const Cell* current_list = a->cell[j];
+            Cell* nth_item = list_get_nth_cell_ptr(current_list, i);
+            inner_list = make_cell_pair(nth_item, inner_list);
+            /* len is the number of lists */
+            inner_list->len = num_lists;
+        }
+        outer_list = make_cell_pair(inner_list, outer_list);
+    }
+    outer_list->len = num_lists;
+    return builtin_list_reverse(e, make_sexpr_len1(outer_list));
 }

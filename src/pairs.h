@@ -23,7 +23,7 @@
 #include "cell.h"
 
 
-/* Helpers */
+/* Helpers - not static because cxr lib uses them */
 Cell* car__(const Cell* list);
 Cell* cdr__(const Cell* list);
 /* pair/list constructors, selectors, and procedures */
@@ -46,7 +46,9 @@ Cell* builtin_make_list(const Lex* e, const Cell* a);
 Cell* builtin_list_set(const Lex* e, const Cell* a);
 Cell* builtin_memq(const Lex* e, const Cell* a);
 Cell* builtin_memv(const Lex* e, const Cell* a);
+Cell* builtin_member(const Lex* e, const Cell* a);
 Cell* builtin_filter(const Lex* e, const Cell* a);
 Cell* builtin_foldl(const Lex* e, const Cell* a);
+Cell* builtin_zip(const Lex* e, const Cell* a);
 
 #endif //COZENAGE_PAIRS_H

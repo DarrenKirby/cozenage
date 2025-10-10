@@ -156,8 +156,10 @@ This is a list of what *is* implemented so far. I try to keep it up to date:
 - `make-list`
 - `memq`
 - `memv`
+- `member`
 - `filter`
 - `foldl`
+- `map`
 
 ### Vector procedures
 
@@ -189,7 +191,7 @@ This is a list of what *is* implemented so far. I try to keep it up to date:
 - `char>?`
 - `char>=?`
 
-### String procedures
+### String/Symbol procedures
 
 - `symbol->string`
 - `string->symbol`
@@ -206,7 +208,6 @@ This is a list of what *is* implemented so far. I try to keep it up to date:
 
 - `apply`
 - `map`
-
 
 ### input/output and ports
 
