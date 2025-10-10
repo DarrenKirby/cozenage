@@ -464,17 +464,12 @@ Cell* builtin_memq(const Lex* e, const Cell* a) {
 
     Cell* lhs = a->cell[1];
     const Cell* rhs = a->cell[0];
-    bool found_it = false;
     for (int i = 0; i < a->cell[1]->count; i++) {
-        const Cell* result = builtin_eq(e, make_sexpr_len2(lhs->car, rhs));
-        if (result->boolean_v == 1) {
-            found_it = true;
-            break;
+        /* eq? == direct pointer equality */
+        if (lhs->car == rhs) {
+            return lhs;
         }
         lhs = lhs->cdr;
-    }
-    if (found_it) {
-        return lhs;
     }
     return make_cell_boolean(0);
 }
@@ -494,17 +489,12 @@ Cell* builtin_memv(const Lex* e, const Cell* a) {
 
     Cell* lhs = a->cell[1];
     const Cell* rhs = a->cell[0];
-    bool found_it = false;
     for (int i = 0; i < a->cell[1]->count; i++) {
         const Cell* result = builtin_eqv(e, make_sexpr_len2(lhs->car, rhs));
         if (result->boolean_v == 1) {
-            found_it = true;
-            break;
+            return lhs;
         }
         lhs = lhs->cdr;
-    }
-    if (found_it) {
-        return lhs;
     }
     return make_cell_boolean(0);
 }
@@ -530,12 +520,11 @@ Cell* builtin_member(const Lex* e, const Cell* a) {
 
     Cell* lhs = a->cell[1];
     const Cell* rhs = a->cell[0];
-    bool found_it = false;
     for (int i = 0; i < a->cell[1]->count; i++) {
         Cell* result;
         if (a->count == 2) {
             result = builtin_equal(e, make_sexpr_len2(lhs->car, rhs));
-        }else {
+        } else {
             Cell* args = make_cell_sexpr();
             cell_add(args, a->cell[2]);
             cell_add(args, lhs);
@@ -543,13 +532,104 @@ Cell* builtin_member(const Lex* e, const Cell* a) {
             result = coz_eval((Lex*)e, args);
         }
         if (result->boolean_v == 1) {
-            found_it = true;
-            break;
+            return lhs;
         }
         lhs = lhs->cdr;
     }
-    if (found_it) {
-        return lhs;
+    return make_cell_boolean(0);
+}
+
+/* (assq obj alist )
+ * Find the first pair in alist whose car field is obj, and returns that pair. If no pair in alist has obj as its car,
+ * then #f is returned. Uses eq? for the comparison. */
+Cell* builtin_assq(const Lex* e, const Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 2);
+    if (err) return err;
+    if (a->cell[1]->type != CELL_PAIR) {
+        return make_cell_error("assq: arg 2 must be a pair", TYPE_ERR);
+    }
+
+    const Cell* p = a->cell[1];
+    const Cell* obj = a->cell[0];
+    while (p->type != CELL_NIL) {
+        /* eq? == direct pointer equality */
+        if (p->car->type != CELL_PAIR) {
+            return make_cell_error("assq: arg 2 must be an association list", VALUE_ERR);
+        }
+        if (p->car->car == obj) {
+            return p->car;
+        }
+        p = p->cdr;
+    }
+    return make_cell_boolean(0);
+}
+
+/* (assv obj alist )
+ * Find the first pair in alist whose car field is obj, and returns that pair. If no pair in alist has obj as its car,
+ * then #f is returned. Uses eqv? for the comparison. */
+Cell* builtin_assv(const Lex* e, const Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 2);
+    if (err) return err;
+    if (a->cell[1]->type != CELL_PAIR) {
+        return make_cell_error("assv: arg 2 must be a pair", TYPE_ERR);
+    }
+
+    const Cell* p = a->cell[1];
+    const Cell* obj = a->cell[0];
+    while (p->type != CELL_NIL) {
+        if (p->car->type != CELL_PAIR) {
+            return make_cell_error("assq: arg 2 must be an association list", VALUE_ERR);
+        }
+        const Cell* p_test = builtin_eqv(e, make_sexpr_len2(p->car->car, obj));
+        if (p_test->boolean_v == 1) {
+            return p->car;
+        }
+        p = p->cdr;
+    }
+    return make_cell_boolean(0);
+}
+
+/* (assoc obj alist )
+ * (assoc obj alist compare)
+ * Find the first pair in alist whose car field is obj, and returns that pair. If no pair in alist has obj as its car,
+ * then #f is returned. Uses eq? for the comparison, unless an optional procedure is passed as the third arg. */
+Cell* builtin_assoc(const Lex* e, const Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_RANGE(a, 2, 3);
+    if (err) return err;
+    if (a->cell[1]->type != CELL_PAIR) {
+        return make_cell_error("assoc: arg 2 must be a pair", TYPE_ERR);
+    }
+    if (a->count == 3) {
+        if (a->cell[2]->type != CELL_PROC) {
+            return make_cell_error("assoc: arg 3 must be a procedure", TYPE_ERR);
+        }
+    }
+
+    const Cell* p = a->cell[1];
+    const Cell* obj = a->cell[0];
+    while (p->type != CELL_NIL) {
+        if (p->car->type != CELL_PAIR) {
+            return make_cell_error("assoc: arg 2 must be an association list", VALUE_ERR);
+        }
+        if (a->count == 2) {
+            const Cell* p_test = builtin_equal(e, make_sexpr_len2(p->car->car, obj));
+            if (p_test->boolean_v == 1) {
+                return p->car;
+            }
+        } else {
+            Cell* args = make_cell_sexpr();
+            cell_add(args, a->cell[2]);
+            cell_add(args, p->car->car);
+            cell_add(args, (Cell*)obj);
+            const Cell *p_test = coz_eval((Lex *) e, args);
+            if (p_test->boolean_v == 1) {
+                return p->car;
+            }
+        }
+        p = p->cdr;
     }
     return make_cell_boolean(0);
 }
@@ -557,7 +637,6 @@ Cell* builtin_member(const Lex* e, const Cell* a) {
 /* ----------------------------------------------------------*
  *                 List iteration procedures                 *
  * ----------------------------------------------------------*/
-
 
 Cell* builtin_filter(const Lex* e, const Cell* a) {
     (void)e;
