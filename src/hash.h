@@ -42,22 +42,24 @@ typedef struct hash_table {
     size_t count;       /* number of items in hash table */
 } ht_table;
 
+/* Hash table iterator: create with ht_iterator, iterate with ht_next. */
+/* Don't need this until implementing a hash/map/dict Scheme type */
+typedef struct {
+    const char* key;  // current key
+    Cell* value;      // current value
+
+    // Don't use these fields directly.
+    ht_table* _table;       // reference to hash table being iterated
+    size_t _index;    // current index into ht._entries
+} hti;
+
 ht_table* ht_create(int initial_capacity);
 void ht_destroy(ht_table* table);
 Cell* ht_get(const ht_table* table, const char* key);
 const char* ht_set(ht_table* table, const char* key, Cell* value);
 void ht_delete(ht_table* table, const char* key);
 size_t ht_length(const ht_table* table);
+hti ht_iterator(ht_table* table);
+bool ht_next(hti* it);
 
 #endif //COZENAGE_HASH_H
-
-/* Hash table iterator: create with ht_iterator, iterate with ht_next. */
-/* Don't need this until implementing a hash/map/dict Scheme type */
-// typedef struct {
-//     const char* key;  // current key
-//     Cell* value;      // current value
-//
-//     // Don't use these fields directly.
-//     ht_table* _table;       // reference to hash table being iterated
-//     size_t _index;    // current index into ht._entries
-// } hti;

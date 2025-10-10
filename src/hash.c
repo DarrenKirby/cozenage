@@ -78,7 +78,7 @@ void ht_destroy(ht_table* table) {
 static uint64_t get_hash_key(const char* key) {
     uint64_t hash = FNV_OFFSET;
     for (const char* p = key; *p; p++) {
-        hash ^= (uint64_t)(unsigned char)(*p);
+        hash ^= (uint64_t)(unsigned char)*p;
         hash *= FNV_PRIME;
     }
     return hash;
@@ -215,26 +215,26 @@ size_t ht_length(const ht_table* table) {
 
 /* This iterator (written by Ben Hoyt) is not needed yet, but may be useful
  * when implementing a hash/map/dict scheme type */
-// hti ht_iterator(ht_table* table) {
-//     hti it;
-//     it._table = table;
-//     it._index = 0;
-//     return it;
-// }
-//
-// bool ht_next(hti* it) {
-//     /* Loop till we've hit end of items array. */
-//     const ht_table* table = it->_table;
-//     while (it->_index < table->capacity) {
-//         const size_t i = it->_index;
-//         it->_index++;
-//         if (table->items[i].key != NULL && &table->items[i] != &HT_DELETED_ITEM) {
-//             /* Found next non-empty item, update iterator key and value. */
-//             const ht_item entry = table->items[i];
-//             it->key = entry.key;
-//             it->value = entry.value;
-//             return true;
-//         }
-//     }
-//     return false;
-// }
+hti ht_iterator(ht_table* table) {
+    hti it;
+    it._table = table;
+    it._index = 0;
+    return it;
+}
+
+bool ht_next(hti* it) {
+    /* Loop till we've hit end of items array. */
+    const ht_table* table = it->_table;
+    while (it->_index < table->capacity) {
+        const size_t i = it->_index;
+        it->_index++;
+        if (table->items[i].key != NULL && table->items[i].key != HT_DELETED_ITEM.key) {
+            /* Found next non-empty item, update iterator key and value. */
+            const ht_item entry = table->items[i];
+            it->key = entry.key;
+            it->value = entry.value;
+            return true;
+        }
+    }
+    return false;
+}

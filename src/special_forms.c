@@ -319,8 +319,6 @@ Cell* sf_unless(Lex* e, const Cell* a) {
  * order, and the values of the last one are returned.
  */
 Cell* sf_cond(Lex* e, const Cell* a) {
-    //Cell* err = CHECK_ARITY_MIN(a, 1);
-    //if (err) return err;
     if (a->count == 0) {
         return make_cell_error("ill-formed cond expression", VALUE_ERR);
     }
@@ -383,7 +381,7 @@ Cell* sf_cond(Lex* e, const Cell* a) {
  * ⟨import set⟩ names a set of bindings from a library and possibly specifies local names for the
  * imported bindings. */
 /* TODO: implement 'only', 'except', 'prefix', and 'rename' */
-Cell* sf_import(Lex* e, const Cell* a) {
+Cell* sf_import(const Lex* e, const Cell* a) {
     Cell* import_set = make_cell_sexpr();
     import_set->cell = GC_MALLOC(sizeof(Cell*) * a->count);
     /* Make a new sexpr which contains pairs of (library . name), */

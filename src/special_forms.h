@@ -35,7 +35,7 @@ Cell* sf_when(Lex* e, const Cell* a);
 Cell* sf_unless(Lex* e, const Cell* a);
 Cell* sf_cond(Lex* e, const Cell* a);
 Cell* sf_else(const Lex* e, const Cell* a);
-Cell* sf_import(Lex* e, const Cell* a);
+Cell* sf_import(const Lex* e, const Cell* a);
 Cell* sf_let(Lex* e, Cell* a);
 Cell* sf_let_star(Lex* e, Cell* a);
 Cell* sf_set_bang(Lex* e, const Cell* a);

@@ -21,6 +21,7 @@
 #include "environment.h"
 #include "main.h"
 #include "numerics.h"
+#include "hash.h"
 #include "printer.h"
 
 
@@ -30,13 +31,14 @@
 
 
 Cell* builtin_print_env(const Lex* e, const Cell* a) {
-    (void)a; (void)e;
-    /*FIXME: update for hash table global env */
-    // for (int i = 0; i < e->count; i++) {
-    //     printf("%s%s%s -> ", ANSI_WHITE_B, e->syms[i], ANSI_RESET);
-    //     print_cell(e->vals[i]);
-    //     printf("\n");
-    // }
+    (void)a;
+    /* First print global env hash items */
+    hti it = ht_iterator(e->global);
+    while (ht_next(&it)) {
+        printf("%s%s%s -> ", ANSI_BLUE_B, it.key, ANSI_RESET);
+        println_cell(it.value);
+    }
+    /* Print local env if any */
     /* for side effects - no useful return value */
     return nullptr;
 }
