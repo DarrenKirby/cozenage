@@ -634,6 +634,42 @@ Cell* builtin_assoc(const Lex* e, const Cell* a) {
     return make_cell_boolean(0);
 }
 
+/* (list-copy obj )
+* Returns a newly allocated copy of the given obj if it is a list. Only the pairs themselves are
+* copied; the cars of the result are the same (in the sense of eqv?) as the cars of list. If obj is
+* an improper list, so is the result, and the final cdr's are the same in the sense of eqv?. An obj
+* which is not a list is returned unchanged. It is an error if obj is a circular list. */
+Cell* builtin_list_copy(const Lex* e, const Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    if (err) return err;
+    /* Non-pairs get returned unaltered */
+    if (a->cell[0]->type != CELL_PAIR) {
+        return a->cell[0];
+    }
+
+    const Cell* old_list = a->cell[0];
+    Cell* new_list_head = make_cell_pair(old_list->car, nullptr);
+
+    /* Runner pointers for iteration */
+    Cell* new_p = new_list_head;
+    const Cell* old_p = old_list;
+    while (old_p->cdr->type != CELL_NIL && old_p->cdr->type == CELL_PAIR) {
+        /* Advance the old pointer */
+        old_p = old_p->cdr;
+        /* Create a new cell and link it */
+        new_p->cdr = make_cell_pair(old_p->car, nullptr);
+        /* Advance the new pointer */
+        new_p = new_p->cdr;
+    }
+
+    /* Now, handle the final cdr.
+     * This correctly handles both proper and improper lists. */
+    new_p->cdr = old_p->cdr;
+    /* Return the original head pointer */
+    return new_list_head;
+}
+
 /* ----------------------------------------------------------*
  *                 List iteration procedures                 *
  * ----------------------------------------------------------*/

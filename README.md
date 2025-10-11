@@ -160,6 +160,7 @@ This is a list of what *is* implemented so far. I try to keep it up to date:
 - `assq`
 - `assv`
 - `assoc`
+- `list-copy`
 - `filter`
 - `foldl`
 - `map`
