@@ -19,6 +19,7 @@
 
 #include "eval_lib.h"
 #include "eval.h"
+#include "printer.h"
 #include "types.h"
 
 
@@ -32,8 +33,12 @@ Cell* builtin_eval(const Lex* e, const Cell* a) {
         args = make_sexpr_from_list(a->cell[0]);
         for (int i = 0; i < args->count; i++ ) {
             if (args->cell[i]->type == CELL_PAIR && args->cell[i]->len != -1) {
-                Cell* tmp = cell_copy(args->cell[i]);
+                Cell* tmp = args->cell[i];
                 args->cell[i] = make_sexpr_from_list(tmp);
+            }
+            /* 'Unquote' the symbols */
+            if (args->cell[i]->type == CELL_SYMBOL) {
+                args->cell[i]->quoted = false;
             }
         }
         /* Otherwise just send straight to eval */
