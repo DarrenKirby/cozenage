@@ -52,11 +52,11 @@ Lex* new_child_env(const Lex* parent_env) {
     e->capacity = INITIAL_CHILD_ENV_CAPACITY;
     e->syms = GC_MALLOC(sizeof(char*) * e->capacity);
     e->vals = GC_MALLOC(sizeof(char*) * e->capacity);
-    // The new frame's parent is the PARENT'S LOCAL FRAME.
+    /* The new frame's parent is the PARENT'S LOCAL FRAME. */
     e->parent = parent_env->local;
 
     Lex* w = GC_MALLOC(sizeof(Lex));
-    w->local = e; // The new wrapper points to the new local frame
+    w->local = e; /* The new wrapper points to the new local frame */
     w->global = parent_env->global;
     return w;
 }
@@ -141,24 +141,24 @@ Cell* lex_make_builtin(const char* name, Cell* (*func)(const Lex*, const Cell*))
 }
 
 /* Populate the CELL_PROC struct of a Cell* object for a named lambda procedure */
-Cell* lex_make_named_lambda(const char* name, const Cell* formals, const Cell* body, Lex* env) {
+Cell* lex_make_named_lambda(char* name, Cell* formals, Cell* body, Lex* env) {
     Cell* c = GC_MALLOC(sizeof(Cell));
     c->type = CELL_PROC;
-    c->l_name = GC_strdup(name);  /* optional */
-    c->formals = cell_copy(formals);
-    c->body = cell_copy(body);
+    c->l_name = name;  /* optional */
+    c->formals = formals;
+    c->body = body;
     c->env = env;  /* do NOT copy, just store pointer */
     c->is_builtin = false;
     return c;
 }
 
 /* Populate the CELL_PROC struct of a Cell* object for an anonymous lambda procedure */
-Cell* lex_make_lambda(const Cell* formals, const Cell* body, Lex* env) {
+Cell* lex_make_lambda(Cell* formals, Cell* body, Lex* env) {
     Cell* c = GC_MALLOC(sizeof(Cell));
     c->type = CELL_PROC;
     c->l_name = nullptr;  /* No name */
-    c->formals = cell_copy(formals);
-    c->body = cell_copy(body);
+    c->formals = formals;
+    c->body = body;
     c->env = env;  /* do NOT copy, just store pointer */
     c->is_builtin = false;
     return c;

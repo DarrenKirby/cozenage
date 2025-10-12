@@ -85,7 +85,6 @@ Cell* eval_sexpr(Lex* e, Cell* v) {
     if (v->count == 0) return v;
 
     /* Grab first element without evaluating yet */
-    //Cell* first = cell_pop(v, 0);
     Cell* first = v->cell[0];
 
     /* NOTE: These special forms need to be dispatched out of

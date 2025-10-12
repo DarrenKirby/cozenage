@@ -245,7 +245,7 @@ Cell* builtin_eqv(const Lex* e, const Cell* a) {
 }
 
 /* Helper for equal? */
-Cell* val_equal(const Lex* e, const Cell* x, const Cell* y) {
+static Cell* val_equal(const Lex* e, Cell* x, Cell* y) {
     if (x->type != y->type) return make_cell_boolean(0);
 
     switch (x->type) {
@@ -262,8 +262,8 @@ Cell* val_equal(const Lex* e, const Cell* x, const Cell* y) {
         case CELL_SEXPR:
         case CELL_VECTOR:
             if (x->type == CELL_PAIR) {
-                x = make_sexpr_from_list(cell_copy(x));
-                y = make_sexpr_from_list(cell_copy(y));
+                x = make_sexpr_from_list(x);
+                y = make_sexpr_from_list(y);
             }
             if (x->count != y->count) return make_cell_boolean(0);
             for (int i = 0; i < x->count; i++) {

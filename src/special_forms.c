@@ -177,7 +177,7 @@ Cell* sf_define(Lex* e, const Cell* a) {
         /* build lambda with args + body */
         Cell* body = make_cell_sexpr();
         for (int i = 1; i < a->count; i++) {
-            cell_add(body, cell_copy(a->cell[i]));
+            cell_add(body, a->cell[i]);
         }
 
         Cell* lam = lex_make_named_lambda(fname->sym, formals, body, e);
@@ -227,8 +227,8 @@ Cell* sf_lambda(Lex* e, Cell* a) {
         return make_cell_error("lambda requires formals and a body", SYNTAX_ERR);
     }
 
-    const Cell* formals = cell_pop(a, 0);   /* first arg */
-    const Cell* body = a;                     /* remaining args */
+    Cell* formals = cell_pop(a, 0);   /* first arg */
+    Cell* body = a;                     /* remaining args */
 
     /* formals should be a list of symbols */
     for (int i = 0; i < formals->count; i++) {
