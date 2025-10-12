@@ -70,6 +70,7 @@ Cell* sexpr_to_list(Cell* c) {
         }
         return list_head;
     }
+
     /* Handle Proper List */
     Cell* list_head = make_cell_nil();
     const int len = c->count;
@@ -99,7 +100,6 @@ Cell* apply_lambda(Cell* lambda, const Cell* args) {
     if (lambda->formals->count != args->count) {
         return make_cell_error("Lambda: wrong number of arguments", ARITY_ERR);
     }
-
     for (int i = 0; i < args->count; i++) {
         const Cell* sym = lambda->formals->cell[i];
         const Cell* val = args->cell[i];
@@ -111,6 +111,7 @@ Cell* apply_lambda(Cell* lambda, const Cell* args) {
     for (int i = 0; i < lambda->body->count; i++) {
         result = coz_eval(local_env, lambda->body->cell[i]);
     }
+    /* Return result of last expression evaluated */
     return result;
 }
 
@@ -151,7 +152,7 @@ Cell* sf_define(Lex* e, const Cell* a) {
         }
         /* Grab the name for the un-sugared define lambda */
         if (val->type == CELL_PROC) {
-            val->l_name = GC_strdup(target->sym);
+            val->l_name = target->sym;
         }
         lex_put_global(e, target, val);
         return val;
@@ -170,7 +171,7 @@ Cell* sf_define(Lex* e, const Cell* a) {
             if (target->cell[i]->type != CELL_SYMBOL) {
                 return make_cell_error("lambda formals must be symbols", TYPE_ERR);
             }
-            cell_add(formals, cell_copy(target->cell[i]));
+            cell_add(formals, target->cell[i]);
         }
 
         /* build lambda with args + body */
@@ -227,7 +228,7 @@ Cell* sf_lambda(Lex* e, Cell* a) {
     }
 
     const Cell* formals = cell_pop(a, 0);   /* first arg */
-    const Cell* body    = cell_copy(a);       /* remaining args */
+    const Cell* body = a;                     /* remaining args */
 
     /* formals should be a list of symbols */
     for (int i = 0; i < formals->count; i++) {
@@ -235,7 +236,6 @@ Cell* sf_lambda(Lex* e, Cell* a) {
             return make_cell_error("lambda formals must be symbols", TYPE_ERR);
         }
     }
-
     /* Build the lambda cell */
     Cell* lambda = lex_make_lambda(formals, body, e);
     return lambda;
@@ -422,48 +422,81 @@ Cell* sf_import(const Lex* e, const Cell* a) {
  * environment, and the values of the last expression of ⟨body⟩ are returned. Each binding of a
  * ⟨variable⟩ has ⟨body⟩ as its region. */
 Cell* sf_let(Lex* e, Cell* a) {
-    /* TODO: implement named let */
-    const Cell* bindings = cell_pop(a, 0);
-    if (bindings->type != CELL_SEXPR) {
-        return make_cell_error("Bindings must be a list", VALUE_ERR);
-    }
-    const Cell* body = a;
-
-    /* separate variables and values from bindings */
-    /* TODO: raise error if not all variables are unique*/
-    Cell* vars = make_cell_sexpr();
-    Cell* vals = make_cell_sexpr();
-    for (int i = 0; i < bindings->count; i++) {
-        const Cell* local_b = bindings->cell[i];
-        if (local_b->type != CELL_SEXPR) {
+    /* Standard let */
+    if (a->cell[0]->type != CELL_SYMBOL) {
+        const Cell* bindings = cell_pop(a, 0);
+        if (bindings->type != CELL_SEXPR) {
             return make_cell_error("Bindings must be a list", VALUE_ERR);
         }
-        if (local_b->count != 2) {
-            return make_cell_error("bindings must contain exactly 2 items", VALUE_ERR);
+        const Cell* body = a;
+
+        /* separate variables and values from bindings */
+        /* TODO: raise error if not all variables are unique*/
+        Cell* vars = make_cell_sexpr();
+        Cell* vals = make_cell_sexpr();
+        for (int i = 0; i < bindings->count; i++) {
+            const Cell* local_b = bindings->cell[i];
+            if (local_b->type != CELL_SEXPR) {
+                return make_cell_error("Bindings must be a list", VALUE_ERR);
+            }
+            if (local_b->count != 2) {
+                return make_cell_error("bindings must contain exactly 2 items", VALUE_ERR);
+            }
+            if (local_b->cell[0]->type != CELL_SYMBOL) {
+                return make_cell_error("first value in binding must be a symbol", VALUE_ERR);
+            }
+            cell_add(vars, local_b->cell[0]);
+            cell_add(vals, local_b->cell[1]);
         }
-        if (local_b->cell[0]->type != CELL_SYMBOL) {
-            return make_cell_error("first value in binding must be a symbol", VALUE_ERR);
+
+        /* Create a new child environment */
+        Lex* local_env = new_child_env(e);
+
+        /* Populate it with sym->val pairs */
+        for (int i = 0; i < vals->count; i++) {
+            const Cell* sym = vars->cell[i];
+            const Cell* val = coz_eval(e, vals->cell[i]);
+            lex_put_local(local_env, sym, val);
         }
-        cell_add(vars, local_b->cell[0]);
-        cell_add(vals, local_b->cell[1]);
-    }
 
-    /* Create a new child environment */
-    Lex* local_env = new_child_env(e);
-
-    /* Populate it with sym->val pairs */
-    for (int i = 0; i < vals->count; i++) {
-        const Cell* sym = vars->cell[i];
-        const Cell* val = coz_eval(e, vals->cell[i]);
-        lex_put_local(local_env, sym, val);
+        /* Evaluate the body expressions in this environment */
+        Cell* result = nullptr;
+        for (int i = 0; i < body->count; i++) {
+            result = coz_eval(local_env, body->cell[i]);
+        }
+        return result;
     }
-
-    /* Evaluate the body expressions in this environment */
-    Cell* result = nullptr;
-    for (int i = 0; i < body->count; i++) {
-        result = coz_eval(local_env, body->cell[i]);
+    /* Named let - de-sugar into a letrec */
+    /* TODO: this is ugly dog shit
+     * Really need to affect this transformation earlier -
+     * like after I write a proper parser/lexer */
+    Cell* nl_name = a->cell[0];
+    const Cell* nl_vars = a->cell[1];
+    Cell* nl_body = a->cell[2];
+    /* Build the lambda formals and letrec body */
+    Cell* lambda_formals = make_cell_sexpr();
+    Cell* lr_body = make_cell_sexpr();
+    cell_add(lr_body, nl_name);
+    /* Iterate over bindings */
+    for (int i = 0; i < nl_vars->count; i++) {
+        cell_add(lambda_formals, nl_vars->cell[i]->cell[0]);
+        cell_add(lr_body, nl_vars->cell[i]->cell[1]);
     }
-    return result;
+    /* Build the lambda transformation */
+    Cell* lambda = make_cell_sexpr();
+    cell_add(lambda, make_cell_symbol("lambda"));
+    cell_add(lambda, lambda_formals);
+    cell_add(lambda, nl_body);
+    /* Build the letrec bindings */
+    Cell* lr_bindings = make_cell_sexpr();
+    cell_add(lr_bindings, nl_name );
+    cell_add(lr_bindings, lambda);
+    /* Put it all together */
+    Cell* letrec_expr = make_cell_sexpr();
+    cell_add(letrec_expr, make_sexpr_len1(lr_bindings));
+    cell_add(letrec_expr, lr_body);
+
+    return sf_letrec(e, letrec_expr);
 }
 
 /* (let* ⟨bindings⟩ ⟨body⟩) where ⟨Bindings⟩ has the form ((⟨variable1⟩ ⟨init1⟩) ...)
@@ -516,6 +549,44 @@ Cell* sf_let_star(Lex* e, Cell* a) {
     Cell* result = nullptr;
     for (int i = 0; i < body->count; i++) {
         result = coz_eval(current_env, body->cell[i]);
+    }
+    return result;
+}
+
+Cell* sf_letrec(const Lex* e, Cell* a) {
+    const Cell* bindings = cell_pop(a, 0);
+    if (bindings->type != CELL_SEXPR) {
+        return make_cell_error("Bindings must be a list", VALUE_ERR);
+    }
+
+    const Cell* body = a;
+    /* Create a new child environment */
+    Lex* local_env = new_child_env(e);
+    /* Iterate and bind placeholders */
+    for (int i = 0; i < bindings->count; i++) {
+        const Cell* variable = bindings->cell[i]->cell[0];
+        /* Use CELL_EOF for now to designate an 'unspecified' value,
+         * rather than create an explicit CELL_UNSPECIFIED type. */
+        lex_put_local(local_env, variable, make_cell_eof());
+    }
+    /* Iterate and bind init-expressions (lambdas) to variables (lambda names) */
+    for (int i = 0; i < bindings->count; i++) {
+        const Cell* variable = bindings->cell[i]->cell[0];
+        Cell* local_bind = bindings->cell[i]->cell[1];
+        const Cell* init_exp = coz_eval(local_env, local_bind);
+        if (init_exp->type == CELL_ERROR) {
+            /* TODO:change this error message to print the problem expression/variable
+               after printer.c is generalized to write to any stream rather than just stdout */
+            char buf[128];
+            sprintf(buf, "letrec: variable used before initialization");
+            return make_cell_error(buf, VALUE_ERR);
+        }
+        lex_put_local(local_env, variable, init_exp);
+    }
+    /* Iterate over all body expressions and return the last value evaluated */
+    Cell* result = nullptr;
+    for (int i = 0; i < body->count; i++) {
+        result = coz_eval(local_env, body->cell[i]);
     }
     return result;
 }

@@ -38,6 +38,7 @@ Cell* sf_else(const Lex* e, const Cell* a);
 Cell* sf_import(const Lex* e, const Cell* a);
 Cell* sf_let(Lex* e, Cell* a);
 Cell* sf_let_star(Lex* e, Cell* a);
+Cell* sf_letrec(const Lex* e, Cell* a);
 Cell* sf_set_bang(Lex* e, const Cell* a);
 Cell* sf_begin(Lex* e, const Cell* a);
 Cell* sf_or(Lex* e, const Cell* a);

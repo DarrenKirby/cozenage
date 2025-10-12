@@ -61,7 +61,7 @@ char* format_twos_complement(const long long val) {
     /* Extract the lowest N bits from the value.
      * We work with the unsigned representation to avoid issues with
      * right-shifting negative numbers. */
-    unsigned long long u_val = (unsigned long long)val;
+    const unsigned long long u_val = (unsigned long long)val;
     for (int i = 0; i < n_bits; ++i) {
         /* Get the bit at position (n_bits - 1 - i) */
         const int bit_pos = n_bits - 1 - i;

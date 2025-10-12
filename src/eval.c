@@ -133,6 +133,10 @@ Cell* eval_sexpr(Lex* e, Cell* v) {
         if (strcmp(first->sym, "let*") == 0) {
             return sf_let_star(e, sf_args);
         }
+        /* special form - letrec */
+        if (strcmp(first->sym, "letrec") == 0) {
+            return sf_letrec(e, sf_args);
+        }
         /* special form - set! */
         if (strcmp(first->sym, "set!") == 0) {
             return sf_set_bang(e, sf_args);

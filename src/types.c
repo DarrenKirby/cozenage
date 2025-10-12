@@ -49,6 +49,7 @@ const char* cell_type_name(const int t) {
         case CELL_VECTOR:      return "vector";
         case CELL_CHAR:        return "char";
         case CELL_BYTEVECTOR:  return "byte vector";
+        case CELL_EOF:         return "eof";
         default:               return "unknown";
     }
 }
@@ -74,6 +75,7 @@ const char* cell_mask_types(const int mask) {
     if (mask & CELL_VECTOR)      strcat(buf, "vector|");
     if (mask & CELL_CHAR)        strcat(buf, "char|");
     if (mask & CELL_BYTEVECTOR)  strcat(buf, "byte vector|");
+    if (mask & CELL_EOF)         strcat(buf, "eof|");
 
     /* remove trailing '|' */
     const size_t len = strlen(buf);
