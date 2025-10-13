@@ -156,7 +156,7 @@ static bool ht_resize(ht_table* table) {
     }
     /* Iterate items, move all non-empty items to new table's items. */
     for (size_t i = 0; i < table->capacity; i++) {
-        ht_item item = table->items[i];
+        const ht_item item = table->items[i];
         /* Ensure we only move real entries, not empty or deleted ones. */
         if (item.key != nullptr && item.key != HT_DELETED_ITEM.key) {
             ht_set_item(new_items, new_capacity, item.key,
