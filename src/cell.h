@@ -137,9 +137,14 @@ typedef struct Cell {
             Cell* real;       /* real part */
             Cell* imag;       /* imaginary part */
         };
+        /* Symbols */
+        struct {
+            char* sym;        /* Symbol text */
+            int sf_id;        /* Special form id */
+        };
         /* Single-field types */
         Cell** cell;              /* for compound types (sexpr, vector, bytevector) */
-        char* sym;                /* symbols */
+        //char* sym;                /* symbols */
         char* str;                /* strings */
         char* error_v;            /* error string */
         long double real_v;       /* reals */

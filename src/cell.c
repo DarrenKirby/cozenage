@@ -168,6 +168,7 @@ Cell* make_cell_symbol(const char* the_symbol) {
         fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
         exit(EXIT_FAILURE);
     }
+    v->sf_id = 0; /* Special form id zero by default */
     v->type = CELL_SYMBOL;
     v->quoted = false;
     const char* canonical_name = ht_set(symbol_table, the_symbol, v);
