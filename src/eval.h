@@ -21,9 +21,10 @@
 #define COZENAGE_EVAL_H
 
 #include "environment.h"
+#include "special_forms.h"
 
 
-Cell* coz_eval(Lex* e, Cell* v);
-Cell* eval_sexpr(Lex* e, Cell* v);
+typedef HandlerResult (*special_form_handler_t)(Lex*, Cell*);
+Cell* coz_eval(Lex* env, Cell* expr);
 
 #endif //COZENAGE_EVAL_H

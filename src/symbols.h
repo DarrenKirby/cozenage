@@ -22,7 +22,45 @@
 
 #include "hash.h"
 
+typedef enum {
+    SF_ID_DEFINE = 1,
+    SF_ID_QUOTE,
+    SF_ID_LAMBDA,
+    SF_ID_IF,
+    SF_ID_WHEN,
+    SF_ID_UNLESS,
+    SF_ID_COND,
+    SF_ID_IMPORT,
+    SF_ID_LET,
+    SF_ID_LET_STAR,
+    SF_ID_LETREC,
+    SF_ID_SET_BANG,
+    SF_ID_BEGIN,
+    SF_ID_AND,
+    SF_ID_OR
+} SpecialFormID;
 
+/* Declarations of Global Symbols for Special Forms */
+extern Cell* G_define_sym;
+extern Cell* G_quote_sym;
+extern Cell* G_lambda_sym;
+extern Cell* G_if_sym;
+extern Cell* G_when_sym;
+extern Cell* G_unless_sym;
+extern Cell* G_cond_sym;
+extern Cell* G_import_sym;
+extern Cell* G_let_sym;
+extern Cell* G_let_star_sym;
+extern Cell* G_letrec_sym;
+extern Cell* G_set_bang_sym;
+extern Cell* G_begin_sym;
+extern Cell* G_and_sym;
+extern Cell* G_or_sym;
+
+/* The global symbol table */
 extern ht_table* symbol_table;
+
+/* SF initialization function */
+void init_special_forms(void);
 
 #endif //COZENAGE_SYMBOLS_H

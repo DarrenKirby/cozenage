@@ -22,54 +22,9 @@
 #include "printer.h"
 #include "main.h"
 #include "cell.h"
+#include "symbols.h"
 #include <stdio.h>
-#include <string.h>
 
-
-/* Evaluate a Cell in the given environment. */
-Cell* coz_eval(Lex* e, Cell* v) {
-    if (!v) return nullptr;
-
-    switch (v->type) {
-        /* Symbols: look them up in the environment unless quoted */
-        case CELL_SYMBOL: {
-            if (is_syntactic_keyword(v->sym)) {
-                char err_buf[128];
-                snprintf(err_buf, sizeof(err_buf),
-                         "Syntax keyword '%s' cannot be used as a variable", v->sym);
-                return make_cell_error(err_buf, SYNTAX_ERR);
-            }
-            if (v->quoted) {
-                return v;
-            }
-            Cell* x = lex_get(e, v);
-            return x;
-        }
-        /* S-expressions: recursively evaluate */
-        case CELL_SEXPR:
-            return eval_sexpr(e, v);
-        /* All literals evaluate to themselves */
-        case CELL_INTEGER:
-        case CELL_REAL:
-        case CELL_RATIONAL:
-        case CELL_COMPLEX:
-        case CELL_BOOLEAN:
-        case CELL_CHAR:
-        case CELL_STRING:
-        case CELL_PAIR:
-        case CELL_VECTOR:
-        case CELL_BYTEVECTOR:
-        case CELL_NIL:
-        /* Functions, ports, continuations, and errors are returned as-is */
-        case CELL_PROC:
-        case CELL_PORT:
-        case CELL_CONT:
-        case CELL_ERROR:
-            return v;
-        default:
-            return make_cell_error("Unknown val type in eval()", GEN_ERR);
-    }
-}
 
 /* Helper to extract procedure args from s-expr */
 static Cell* get_args_from_sexpr(const Cell* v) {
@@ -80,109 +35,114 @@ static Cell* get_args_from_sexpr(const Cell* v) {
     return args;
 }
 
-/* Evaluate an S-expression. */
-Cell* eval_sexpr(Lex* e, Cell* v) {
-    if (v->count == 0) return v;
+special_form_handler_t SF_DISPATCH_TABLE[] = {
+    nullptr,
+    &sf_define,
+    &sf_quote,
+    &sf_lambda,
+    &sf_if,
+    &sf_when,
+    &sf_unless,
+    &sf_cond,
+    &sf_import,
+    &sf_let,
+    &sf_let_star,
+    &sf_letrec,
+    &sf_set_bang,
+    &sf_begin,
+    &sf_and,
+    &sf_or,
+};
 
-    /* Grab first element without evaluating yet */
-    Cell* first = v->cell[0];
+/* Evaluate a Cell in the given environment. */
+Cell* coz_eval(Lex* env, Cell* expr) {
+    while (true) {
+        if (!expr) return nullptr;
 
-    /* NOTE: These special forms need to be dispatched out of
-     * eval_sexpr() early, so that their arguments are not evaluated */
-    if (first->type == CELL_SYMBOL) {
-        /* Create the argument list once for all special forms. */
-        Cell* sf_args = get_args_from_sexpr(v);
-        /* special form: define */
-        if (strcmp(first->sym, "define") == 0) {
-            return sf_define(e, sf_args);
+        /* Turf all the self-evaluating types. */
+        if (expr->type & (CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX|
+                          CELL_BOOLEAN|CELL_CHAR|CELL_STRING|CELL_PAIR|
+                          CELL_VECTOR|CELL_BYTEVECTOR|CELL_NIL|CELL_EOF|
+                          CELL_PROC|CELL_PORT|CELL_CONT|CELL_ERROR)) {
+            return expr;
+                          }
+
+        /* Symbols: look them up in the environment unless quoted */
+        if (expr->type & CELL_SYMBOL) {
+
+            /* Scold for using syntax dumbly */
+            if (is_syntactic_keyword(expr->sym)) {
+                char err_buf[128];
+                snprintf(err_buf, sizeof(err_buf),
+                         "Syntax keyword '%s' cannot be used as a variable", expr->sym);
+                return make_cell_error(err_buf, SYNTAX_ERR);
+            }
+            if (expr->quoted) {
+                return expr;
+            }
+            return lex_get(env, expr);
         }
-        /* Special form: quote */
-        if (strcmp(first->sym, "quote") == 0) {
-            return sf_quote(e, sf_args);
+
+        /* S-expressions:  */
+        /* Grab first element without evaluating yet */
+        Cell* first = expr->cell[0];
+
+        /* NOTE: These special forms need to be dispatched out of
+         * eval_sexpr() early, so the arguments are not evaluated. */
+        if (first->type == CELL_SYMBOL && first->sf_id > 0) {
+            /* It's a special form! Dispatch using the array. */
+            const special_form_handler_t handler = SF_DISPATCH_TABLE[first->sf_id];
+            const HandlerResult result = handler(env, get_args_from_sexpr(expr));
+            /* Straight return */
+            if (result.action == ACTION_RETURN) {
+                return result.value;
+            }
+            /* ACTION_CONTINUE from a tail call */
+            expr = result.value;
+            continue;
         }
-        /* Special form: lambda */
-        if (strcmp(first->sym, "lambda") == 0) {
-            return sf_lambda(e, sf_args);
+
+        /* It's not a special form, so it's a procedure call. */
+        /* First, evaluate the procedure itself. */
+        const Cell* f = coz_eval(env, first);
+        if (f->type != CELL_PROC) {
+            printf("Bad token: ");
+            printf(ANSI_RED_B);
+            print_cell(f);
+            printf("%s: ", ANSI_RESET);
+            return make_cell_error("S-expression does not start with a procedure", TYPE_ERR);
         }
-        /* special form - if */
-        if (strcmp(first->sym, "if") == 0) {
-            return sf_if(e, sf_args);
+
+        /* Create a new list containing the unevaluated arguments. */
+        Cell* args = get_args_from_sexpr(expr);
+
+        /* Now, evaluate each argument within this new list. */
+        for (int i = 0; i < args->count; i++) {
+            args->cell[i] = coz_eval(env, args->cell[i]);
+            if (args->cell[i]->type == CELL_ERROR) {
+                /* If an argument evaluation fails, return the error. */
+                return cell_take(args, i);
+            }
         }
-        /* special form - when */
-        if (strcmp(first->sym, "when") == 0) {
-            return sf_when(e, sf_args);
+
+        /* Apply the function to the list of evaluated arguments. */
+        /* Dispatch builtin */
+        if (f->is_builtin) {
+            return f->builtin(env, args);
         }
-        /* special form - unless */
-        if (strcmp(first->sym, "unless") == 0) {
-            return sf_unless(e, sf_args);
+        /* Tail-call evaluate the lambda */
+        const Cell* body = f->body;
+        if (body->count == 0) {
+            return make_cell_error("lambda has no body!", VALUE_ERR);
         }
-        /* special form - cond */
-        if (strcmp(first->sym, "cond") == 0) {
-            return sf_cond(e, sf_args);
+        if (f->formals->count != args->count) {
+            return make_cell_error("Lambda: wrong number of arguments", ARITY_ERR);
         }
-        /* special form - import */
-        if (strcmp(first->sym, "import") == 0) {
-            return sf_import(e, sf_args);
-        }
-        /* special form - let */
-        if (strcmp(first->sym, "let") == 0) {
-            return sf_let(e, sf_args);
-        }
-        /* special form - let* */
-        if (strcmp(first->sym, "let*") == 0) {
-            return sf_let_star(e, sf_args);
-        }
-        /* special form - letrec */
-        if (strcmp(first->sym, "letrec") == 0) {
-            return sf_letrec(e, sf_args);
-        }
-        /* special form - set! */
-        if (strcmp(first->sym, "set!") == 0) {
-            return sf_set_bang(e, sf_args);
-        }
-        /* special form - begin */
-        if (strcmp(first->sym, "begin") == 0) {
-            return sf_begin(e, sf_args);
-        }
-        /* special form - and */
-        if (strcmp(first->sym, "and") == 0) {
-            return sf_and(e, sf_args);
-        }
-        /* special form - or */
-        if (strcmp(first->sym, "or") == 0) {
-            return sf_or(e, sf_args);
+        env = build_lambda_env(f->env, f->formals, args);
+        if (body->count == 1) {
+            expr = body->cell[0];
+        } else {
+            expr = sequence_sf_body(body);
         }
     }
-
-    /* It's not a special form, so it's a procedure call. */
-    /* First, evaluate the procedure itself. */
-    Cell* f = coz_eval(e, first);
-    if (f->type != CELL_PROC) {
-        printf("Bad token: ");
-        printf(ANSI_RED_B);
-        print_cell(f);
-        printf("%s: ", ANSI_RESET);
-        return make_cell_error("S-expression does not start with a procedure", TYPE_ERR);
-    }
-
-    /* Create a new list containing the unevaluated arguments. */
-    Cell* args = get_args_from_sexpr(v);
-
-    /* Now, evaluate each argument within this new list. */
-    for (int i = 0; i < args->count; i++) {
-        args->cell[i] = coz_eval(e, args->cell[i]);
-        if (args->cell[i]->type == CELL_ERROR) {
-            /* If an argument evaluation fails, return the error. */
-            return cell_take(args, i);
-        }
-    }
-
-    /* Apply the function to the list of evaluated arguments. */
-    Cell* result;
-    if (f->is_builtin) {
-        result = f->builtin(e, args);
-    } else {
-        result = apply_lambda(f, args);
-    }
-    return result;
 }

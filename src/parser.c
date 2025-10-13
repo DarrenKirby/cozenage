@@ -428,8 +428,7 @@ Cell* parse_atom(const char *tok) {
         /* Decode the first code point from the payload */
         U8_NEXT_UNSAFE(payload, i, code_point);
 
-        /* CRITICAL VALIDATION:
-         * If 'i' is not equal to the payload length, it means there was
+        /* If 'i' is not equal to the payload length, it means there was
          * more than one character after #\ (e.g., #\ab or #\λa),
          * which is an error according to the R7RS standard. */
         if (i != (int)payload_len) {

@@ -22,26 +22,37 @@
 
 #include "cell.h"
 
+typedef enum {
+    ACTION_RETURN,   /* The handler produced a final value. Exit the eval loop. */
+    ACTION_CONTINUE  /* The handler produced a new expression. Continue the loop. */
+} HandlerAction;
+
+typedef struct {
+    HandlerAction action;
+    Cell* value;     /* The final value OR the next expression */
+} HandlerResult;
 
 int is_syntactic_keyword(const char* s);
 Cell* sexpr_to_list(Cell* c);
-Cell* apply_lambda(Cell* lambda, const Cell* args);
+//Cell* apply_lambda(Cell* lambda, const Cell* args);
+Lex* build_lambda_env(const Lex* env, const Cell* formals, const Cell* args);
+Cell* sequence_sf_body(const Cell* body);
 /* Special forms */
-Cell* sf_define(Lex* e, const Cell* a);
-Cell* sf_quote(const Lex* e, Cell* a);
-Cell* sf_lambda(Lex* e, Cell* a);;
-Cell* sf_if(Lex* e, const Cell* a);
-Cell* sf_when(Lex* e, const Cell* a);
-Cell* sf_unless(Lex* e, const Cell* a);
-Cell* sf_cond(Lex* e, const Cell* a);
-Cell* sf_else(const Lex* e, const Cell* a);
-Cell* sf_import(const Lex* e, const Cell* a);
-Cell* sf_let(Lex* e, Cell* a);
-Cell* sf_let_star(Lex* e, Cell* a);
-Cell* sf_letrec(const Lex* e, Cell* a);
-Cell* sf_set_bang(Lex* e, const Cell* a);
-Cell* sf_begin(Lex* e, const Cell* a);
-Cell* sf_or(Lex* e, const Cell* a);
-Cell* sf_and(Lex* e, const Cell* a);
+HandlerResult sf_define(Lex* e, Cell* a);
+HandlerResult sf_quote(Lex* e, Cell* a);
+HandlerResult sf_lambda(Lex* e, Cell* a);;
+HandlerResult sf_if(Lex* e, Cell* a);
+HandlerResult sf_when(Lex* e, Cell* a);
+HandlerResult sf_unless(Lex* e, Cell* a);
+HandlerResult sf_cond(Lex* e, Cell* a);
+HandlerResult sf_else(Lex* e, Cell* a);
+HandlerResult sf_import(Lex* e, Cell* a);
+HandlerResult sf_let(Lex* e, Cell* a);
+HandlerResult sf_let_star(Lex* e, Cell* a);
+HandlerResult sf_letrec(Lex* e, Cell* a);
+HandlerResult sf_set_bang(Lex* e, Cell* a);
+HandlerResult sf_begin(Lex* e, Cell* a);
+HandlerResult sf_or(Lex* e, Cell* a);
+HandlerResult sf_and(Lex* e, Cell* a);
 
 #endif //COZENAGE_SPECIAL_FORMS_H

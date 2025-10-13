@@ -189,6 +189,8 @@ void repl() {
     Lex* e = lex_initialize_global_env();
     /* Load (scheme base) procedures into the environment*/
     lex_add_builtins(e);
+    /* Initialize special form lookup table */
+    init_special_forms();
 
     /* Load additional library procedures as specified by -l args */
     if (load_libs.coz_ext) {
@@ -226,7 +228,7 @@ void repl() {
         (void)load_scheme_library("bits", e);
     }
 
-    for (;;) {
+    while (true) {
         Cell *val = coz_read(e);
         if (!val) {
             continue;
