@@ -36,6 +36,9 @@ Cell* False_Obj = nullptr;
 /* Define global EOF object */
 Cell* EOF_Obj = nullptr;
 
+/* Define global tail call sentinel object */
+Cell* TCS_Obj = nullptr;
+
 /* Default ports */
 Cell* default_input_port  = nullptr;
 Cell* default_output_port = nullptr;
@@ -73,11 +76,18 @@ static Cell* make_cell_eof__(void) {
     return eof_obj;
 }
 
+static Cell* make_cell_tcs__(void) {
+    Cell* tcs_obj = GC_MALLOC_ATOMIC_UNCOLLECTABLE(sizeof(Cell));
+    tcs_obj->type = CELL_TCS;
+    return tcs_obj;
+}
+
 void init_global_singletons(void) {
     Nil_Obj = make_cell_nil__();
     True_Obj = make_cell_boolean__(1);
     False_Obj = make_cell_boolean__(0);
     EOF_Obj = make_cell_eof__();
+    TCS_Obj = make_cell_tcs__();
 }
 
 /*------------------------------------*
@@ -97,6 +107,11 @@ Cell* make_cell_boolean(const int the_boolean) {
 /* Thin wrapper that returns the singleton EOF object */
 Cell* make_cell_eof(void) {
     return EOF_Obj;
+}
+
+/* Thin wrapper that returns the singleton TCS object */
+Cell* make_cell_tcs(void) {
+    return TCS_Obj;
 }
 
 Cell* make_cell_real(const long double the_real) {

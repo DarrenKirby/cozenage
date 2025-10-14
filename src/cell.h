@@ -71,7 +71,8 @@ typedef enum {
     CELL_CONT       = 1 << 15,  /* continuation (maybe) */
 
     CELL_ERROR      = 1 << 16,   /* error */
-    CELL_EOF        = 1 << 17    /* EOF object */
+    CELL_EOF        = 1 << 17,   /* EOF object */
+    CELL_TCS        = 1 << 18    /* Tail Call Sentinel object */
 } Cell_t;
 
 /* Definition of the Cell struct/tagged union */
@@ -144,7 +145,6 @@ typedef struct Cell {
         };
         /* Single-field types */
         Cell** cell;              /* for compound types (sexpr, vector, bytevector) */
-        //char* sym;                /* symbols */
         char* str;                /* strings */
         char* error_v;            /* error string */
         long double real_v;       /* reals */
@@ -154,7 +154,9 @@ typedef struct Cell {
     };
 } Cell;
 
-extern Cell* val_nil;  /* declare the global singleton */
+/* Declare the global singletons */
+extern Cell* val_nil;
+extern Cell* TCS_Obj;
 extern Cell* default_input_port;
 extern Cell* default_output_port;
 extern Cell* default_error_port;
@@ -164,6 +166,7 @@ void init_global_singletons(void);
 Cell* make_cell_nil(void);
 Cell* make_cell_boolean(int the_boolean);
 Cell* make_cell_eof(void);
+Cell* make_cell_tcs(void);
 Cell* make_cell_real(long double the_real);
 Cell* make_cell_integer(long long the_integer);
 Cell* make_cell_rational(long int numerator, long int denominator, bool simplify);
