@@ -54,6 +54,8 @@ special_form_handler_t SF_DISPATCH_TABLE[] = {
     &sf_or,
 };
 
+static Cell* apply(const Cell* proc, const Cell* args, Lex** env_out, Cell** expr_out);
+
 /* Evaluate a Cell in the given environment. */
 Cell* coz_eval(Lex* env, Cell* expr) {
     while (true) {
@@ -87,13 +89,12 @@ Cell* coz_eval(Lex* env, Cell* expr) {
         /* Grab first element without evaluating yet */
         Cell* first = expr->cell[0];
 
-        /* NOTE: These special forms need to be dispatched out of
+        /* These special forms need to be dispatched out of
          * eval_sexpr() early, so the arguments are not evaluated. */
         if (first->type == CELL_SYMBOL && first->sf_id > 0) {
-            /* It's a special form! Dispatch using the array. */
             const special_form_handler_t handler = SF_DISPATCH_TABLE[first->sf_id];
             const HandlerResult result = handler(env, get_args_from_sexpr(expr));
-            /* Straight return */
+            /* A final value. */
             if (result.action == ACTION_RETURN) {
                 return result.value;
             }
@@ -125,24 +126,23 @@ Cell* coz_eval(Lex* env, Cell* expr) {
             }
         }
 
-        /* Apply the function to the list of evaluated arguments. */
-        /* Dispatch builtin */
-        if (f->is_builtin) {
-            return f->builtin(env, args);
+        Cell* result = apply(f, args, &env, &expr);
+        if (result != TCS_Obj) {
+            /* f was a primitive C function, it returned a final value. */
+            return result;
         }
-        /* Tail-call evaluate the lambda */
-        const Cell* body = f->body;
-        if (body->count == 0) {
-            return make_cell_error("lambda has no body!", VALUE_ERR);
-        }
-        if (f->formals->count != args->count) {
-            return make_cell_error("Lambda: wrong number of arguments", ARITY_ERR);
-        }
-        env = build_lambda_env(f->env, f->formals, args);
-        if (body->count == 1) {
-            expr = body->cell[0];
-        } else {
-            expr = sequence_sf_body(body);
-        }
+        /* f was a Scheme lambda, apply() updated our expr and env.
+         * Allow the control flow to begin another loop,
+         * performing the tail call. */
     }
+}
+
+static Cell* apply(const Cell* proc, const Cell* args, Lex** env_out, Cell** expr_out) {
+    if (proc->is_builtin) {
+        return proc->builtin(*env_out, args); /* Return final value */
+    }
+    /* It's a Scheme lambda, return TCO */
+    *env_out = build_lambda_env(proc->env, proc->formals, args);
+    *expr_out = sequence_sf_body(proc->body);
+    return TCS_Obj;
 }
