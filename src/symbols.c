@@ -40,6 +40,7 @@ Cell* G_set_bang_sym = nullptr;
 Cell* G_begin_sym = nullptr;
 Cell* G_and_sym = nullptr;
 Cell* G_or_sym = nullptr;
+Cell* G_else_sym = nullptr;
 
 /* Initialize canonical symbols and configure their special form IDs */
 void init_special_forms(void) {

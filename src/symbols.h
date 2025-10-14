@@ -37,7 +37,11 @@ typedef enum {
     SF_ID_SET_BANG,
     SF_ID_BEGIN,
     SF_ID_AND,
-    SF_ID_OR
+    SF_ID_OR,
+    /* 'else' isn't mapped to a function !!!
+     *  If adding more special forms - keep this
+     * 'else' last in the enum or things will break */
+    SF_ID_ELSE
 } SpecialFormID;
 
 /* Declarations of Global Symbols for Special Forms */
@@ -56,6 +60,7 @@ extern Cell* G_set_bang_sym;
 extern Cell* G_begin_sym;
 extern Cell* G_and_sym;
 extern Cell* G_or_sym;
+extern Cell* G_else_sym;
 
 /* The global symbol table */
 extern ht_table* symbol_table;
