@@ -54,7 +54,7 @@ special_form_handler_t SF_DISPATCH_TABLE[] = {
     &sf_or,
 };
 
-static Cell* apply(const Cell* proc, const Cell* args, Lex** env_out, Cell** expr_out);
+static Cell* coz_apply(const Cell* proc, const Cell* args, Lex** env_out, Cell** expr_out);
 
 /* Evaluate a Cell in the given environment. */
 Cell* coz_eval(Lex* env, Cell* expr) {
@@ -126,7 +126,7 @@ Cell* coz_eval(Lex* env, Cell* expr) {
             }
         }
 
-        Cell* result = apply(f, args, &env, &expr);
+        Cell* result = coz_apply(f, args, &env, &expr);
         if (result != TCS_Obj) {
             /* f was a primitive C function, it returned a final value. */
             return result;
@@ -137,7 +137,8 @@ Cell* coz_eval(Lex* env, Cell* expr) {
     }
 }
 
-static Cell* apply(const Cell* proc, const Cell* args, Lex** env_out, Cell** expr_out) {
+/* Apply that procedure on them args! */
+static Cell* coz_apply(const Cell* proc, const Cell* args, Lex** env_out, Cell** expr_out) {
     if (proc->is_builtin) {
         return proc->builtin(*env_out, args); /* Return final value */
     }
