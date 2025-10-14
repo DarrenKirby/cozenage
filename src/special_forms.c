@@ -20,10 +20,17 @@
 #include "special_forms.h"
 #include "eval.h"
 #include "types.h"
+#include "symbols.h"
 #include "load_library.h"
 #include <string.h>
 #include <gc/gc.h>
-#include "symbols.h"
+
+
+/* Helpers for iteration clarity */
+#define first  0
+#define second 1
+#define third  2
+#define last(ptr) ((ptr)->count - 1)
 
 
 /* TODO - implement transformations, and double-check for all tail calls.
@@ -94,34 +101,6 @@ Cell* sexpr_to_list(Cell* c) {
     return list_head;
 }
 
-/* Evaluate a lambda call, and return the value */
-// Cell* apply_lambda(Cell* lambda, const Cell* args) {
-//     if (!lambda || lambda->type != CELL_PROC || lambda->is_builtin) {
-//         return make_cell_error("Not a lambda", TYPE_ERR);
-//     }
-//
-//     /* Create a new child environment */
-//     Lex* local_env = new_child_env(lambda->env);
-//
-//     /* Bind formals to arguments */
-//     if (lambda->formals->count != args->count) {
-//         return make_cell_error("Lambda: wrong number of arguments", ARITY_ERR);
-//     }
-//     for (int i = 0; i < args->count; i++) {
-//         const Cell* sym = lambda->formals->cell[i];
-//         const Cell* val = args->cell[i];
-//         lex_put_local(local_env, sym, val);  /* sym should be CELL_SYMBOL, val evaluated */
-//     }
-//
-//     /* Evaluate body expressions in this environment */
-//     Cell* result = nullptr;
-//     for (int i = 0; i < lambda->body->count; i++) {
-//         result = coz_eval(local_env, lambda->body->cell[i]);
-//     }
-//     /* Return result of last expression evaluated */
-//     return result;
-// }
-
 Lex* build_lambda_env(const Lex* env, const Cell* formals, const Cell* args) {
     /* Create a new child environment */
     Lex* local_env = new_child_env(env);
@@ -135,10 +114,13 @@ Lex* build_lambda_env(const Lex* env, const Cell* formals, const Cell* args) {
     return local_env;
 }
 
-/* Just takes multiple body statements and stuffs them in a 'begin' expression */
+/* Just takes body statements and stuffs them in a 'begin' expression */
 Cell* sequence_sf_body(const Cell* body) {
     Cell* seq = make_cell_sexpr();
     cell_add(seq, G_begin_sym);
+
+    /* Iterate over the list of expressions in the body
+     * and add each complete expression to our new 'begin' block. */
     for (int i = 0; i < body->count; i++) {
         cell_add(seq, body->cell[i]);
     }
@@ -284,17 +266,26 @@ HandlerResult sf_lambda(Lex* e, Cell* a) {
  * and its values are returned. If no <alternate> is provided to evaluate, it returns null */
 HandlerResult sf_if(Lex* e, Cell* a) {
     Cell* err = CHECK_ARITY_RANGE(a, 2, 3);
-    if (err) return (HandlerResult){ .action = ACTION_RETURN, .value = err };
-
-    const Cell* test = coz_eval(e, a->cell[0]);
-
-    /* Note: this 'just works' with no <alternative>, as coz_eval() returns null with no args */
-    if (test->type == CELL_BOOLEAN && test->boolean_v == 0) {
-        /* A tail call */
-        return (HandlerResult){ .action = ACTION_CONTINUE, .value = a->cell[2] };
+    if (err) {
+        return (HandlerResult){ .action = ACTION_RETURN, .value = err };
     }
-    /* A tail call */
-    return (HandlerResult){ .action = ACTION_CONTINUE, .value = a->cell[1] };
+    const Cell* test = coz_eval(e, a->cell[first]);
+
+    /* Check if the result is TRUTHY */
+    if (test && !(test->type == CELL_BOOLEAN && test->boolean_v == 0)) {
+        /* Test was true, so evaluate the consequent as a tail call. */
+        return (HandlerResult){ .action = ACTION_CONTINUE, .value = a->cell[second] };
+    }
+
+    /* Test was false.
+     * Check if an alternative exists before accessing it. */
+    if (a->count == 3) {
+        /* It exists, so evaluate it as a tail call. */
+        return (HandlerResult){ .action = ACTION_CONTINUE, .value = a->cell[third] };
+    }
+
+    /* No alternative was provided. Return an unspecified value. */
+    return (HandlerResult){ .action = ACTION_RETURN, .value = nullptr };
 }
 
 /* (when ⟨test⟩ ⟨expression1⟩ ⟨expression2⟩ ... )
@@ -305,20 +296,19 @@ HandlerResult sf_when(Lex* e, Cell* a) {
     Cell* err = CHECK_ARITY_MIN(a, 2);
     if (err) return (HandlerResult){ .action = ACTION_RETURN, .value = err };
 
-    const Cell* test = coz_eval(e, a->cell[0]);
+    /* Pop off the test */
+    const Cell* test = coz_eval(e, cell_pop(a, first));
 
-    /* Check for literal #f */
-    if (test->type == CELL_BOOLEAN && test->boolean_v == 0) {
+    /* Safety check for NULL from eval, treat it as truthy
+     * and check for literal #f */
+    if (test && test->type == CELL_BOOLEAN && test->boolean_v == 0) {
+        /* Test was false, return unspecified. */
         return (HandlerResult){ .action = ACTION_RETURN, .value = nullptr };
     }
-    for (int i = 1; i < a->count - 1; i++) {
-        const Cell *result = coz_eval(e, a->cell[i]);
-        if (result->type == CELL_ERROR) {
-            return (HandlerResult){ .action = ACTION_CONTINUE, .value = a->cell[a->count - 1] };
-        }
-    }
-    /* A tail call */
-    return (HandlerResult){ .action = ACTION_CONTINUE, .value = a->cell[a->count - 1] };
+
+    /* Sequence remaining expressions into a 'begin' and tail-call */
+    Cell* body_block = sequence_sf_body(a);
+    return (HandlerResult){ .action = ACTION_CONTINUE, .value = body_block };
 }
 
 /*  (unless ⟨test⟩ ⟨expression1⟩ ⟨expression2⟩ ... )
@@ -329,19 +319,18 @@ HandlerResult sf_unless(Lex* e, Cell* a) {
     Cell* err = CHECK_ARITY_MIN(a, 2);
     if (err) return (HandlerResult){ .action = ACTION_RETURN, .value = err };
 
-    const Cell* test = coz_eval(e, a->cell[0]);
+    /* Pop off the test */
+    const Cell* test = coz_eval(e, cell_pop(a, first));
 
-    /* Check for literal #f */
-    if (test->type == CELL_BOOLEAN && test->boolean_v == 0) {
-        for (int i = 1; i < a->count-1; i++) {
-            const Cell *result = coz_eval(e, a->cell[i]);
-            if (result->type == CELL_ERROR) {
-                return (HandlerResult){ .action = ACTION_CONTINUE, .value = a->cell[a->count - 1] };
-            }
-        }
-        /* A tail call */
-        return (HandlerResult){ .action = ACTION_CONTINUE, .value = a->cell[a->count - 1] };
+    /* Safety check for NULL from eval, treat it as truthy
+     * and check for literal #f */
+    if (test && test->type == CELL_BOOLEAN && test->boolean_v == 0) {
+        /* Sequence remaining expressions into a 'begin' and tail-call */
+        Cell* body_block = sequence_sf_body(a);
+        return (HandlerResult){ .action = ACTION_CONTINUE, .value = body_block };
     }
+
+    /* Test was true (or null), return unspecified. */
     return (HandlerResult){ .action = ACTION_RETURN, .value = nullptr };
 }
 
@@ -369,43 +358,55 @@ HandlerResult sf_cond(Lex* e, Cell* a) {
         return (HandlerResult){ .action = ACTION_RETURN, .value = err };
     }
 
-    Cell* result = nullptr;
     for (int i = 0; i < a->count; i++) {
         const Cell* clause = a->cell[i];
+
+        /* Clause must be a list */
+        if (clause->type != CELL_SEXPR || clause->count == 0) {
+            Cell* err = make_cell_error("cond clause must be a non-empty list", SYNTAX_ERR);
+            return (HandlerResult){ .action = ACTION_RETURN, .value = err };
+        }
+
         /* Check for 'else' clause and if found evaluate any expressions*/
-        if (clause->cell[0]->type == CELL_SYMBOL && strcmp(clause->cell[0]->sym, "else") == 0) {
+        if (clause->cell[first]->type == CELL_SYMBOL && clause->cell[first] == G_else_sym) {
             /* else clause must be last */
-            if (i != a->count-1) {
-                Cell* err = make_cell_error("'else' clause must be last in the cond expression",
+            if (i != last(a)) {
+                Cell* err = make_cell_error("else clause must be last in the cond expression",
                                      SYNTAX_ERR);
                 return (HandlerResult){ .action = ACTION_RETURN, .value = err };
             }
-            for (int j = 1; j < clause->count; j++) {
-                result = coz_eval(e, clause->cell[j]);
-                if (result->type == CELL_ERROR) {
-                    return (HandlerResult){ .action = ACTION_RETURN, .value = result };
+            /* eval the first n-1 expressions */
+            for (int j = 1; j < last(clause); j++) {
+                Cell* exp = coz_eval(e, clause->cell[j]);
+                if (exp && exp->type == CELL_ERROR) {
+                    return (HandlerResult){ .action = ACTION_RETURN, .value = exp };
                 }
-                /* A tail call */
-                return (HandlerResult){ .action = ACTION_CONTINUE, .value = clause->cell[clause->count - 1] };
             }
+            /* return the tail call */
+            return (HandlerResult){ .action = ACTION_CONTINUE, .value = clause->cell[last(clause)] };
         }
+
         /* Not an else, so evaluate the test */
-        Cell* test = coz_eval(e, clause->cell[0]);
+        Cell* test = coz_eval(e, clause->cell[first]);
+
         /* Move along if current test is #f */
-        if (test->type == CELL_BOOLEAN && test->boolean_v == 0) {
+        if (test->type == CELL_BOOLEAN && test->boolean_v == false) {
             continue;
         }
+
         /* Test is truthy - first see if there is an expression */
         if (clause->count == 1) {
             /* No expression, return the test result */
             return (HandlerResult){ .action = ACTION_RETURN, .value = test };
         }
+
         /* Check for cond '=>' form */
         if (clause->cell[1]->type == CELL_SYMBOL && strcmp(clause->cell[1]->sym, "=>") == 0) {
             if (clause->count <= 2) {
                 Cell* err = make_cell_error("cond '=>' form must have an expression", SYNTAX_ERR);
                 return (HandlerResult){ .action = ACTION_RETURN, .value = err };
             }
+
             /* '=>' form can only have one expression after the test */
             if (clause->count > 3) {
                 Cell* err = make_cell_error("cond '=>' form can only have 1 expression after the test",
@@ -421,16 +422,20 @@ HandlerResult sf_cond(Lex* e, Cell* a) {
             }
             /* A tail call */
             Cell* tmp = make_sexpr_len2(proc, test);
-            return (HandlerResult){ .action = ACTION_RETURN, .value = tmp };
+            return (HandlerResult){ .action = ACTION_CONTINUE, .value = tmp };
         }
-        /* Expressions present. Evaluate them, and break to return the last */
-        for (int j = 1; j < clause->count - 1; j++) {
-            result = coz_eval(e, clause->cell[j]);
+        /* Expressions present. eval all but the last */
+        for (int j = 1; j < last(clause); j++) {
+            Cell* exp = coz_eval(e, clause->cell[j]);
+            if (exp && exp->type == CELL_ERROR) {
+                return (HandlerResult){ .action = ACTION_RETURN, .value = exp };
+            }
         }
-        /* A tail call */
-        return (HandlerResult){ .action = ACTION_CONTINUE, .value = result };
+        /* Return the last expression itself for the tail call */
+        return (HandlerResult){ .action = ACTION_CONTINUE, .value = clause->cell[last(clause)] };
     }
-    return (HandlerResult){ .action = ACTION_RETURN, .value = result };
+    /* All tests #f with no else is unspecified, so just return null */
+    return (HandlerResult){ .action = ACTION_RETURN, .value = nullptr };
 }
 
 /* (import ⟨import-set⟩ ...)
@@ -681,9 +686,9 @@ HandlerResult sf_set_bang(Lex* e, Cell* a) {
     }
     /* Now evaluate new expression */
     Cell* expr = a->cell[1];
-    const Cell* val = coz_eval(e, expr);
+    Cell* val = coz_eval(e, expr);
     /* Re-bind the variable with the new value */
-    lex_put_local(e, variable, val);
+    lex_put_global(e, variable, val);
     /* No meaningful return value */
     return (HandlerResult){ .action = ACTION_RETURN, .value = nullptr };
 }
@@ -694,14 +699,22 @@ HandlerResult sf_set_bang(Lex* e, Cell* a) {
  * expression type is used to sequence side effects such as assignments or input and output. */
 HandlerResult sf_begin(Lex* e, Cell* a) {
     /* Evaluate all but last expr*/
-    for (int i = 0; i < a->count-1; i++) {
+    const long long n_expressions = a->count;
+    /* If there is just one expression, return it to eval */
+    if (n_expressions == 1) {
+        return (HandlerResult){ .action = ACTION_CONTINUE, .value = a->cell[0] };
+    }
+    /* Otherwise, eval all but the last */
+    for (int i = 0; i < n_expressions-1; i++) {
         Cell *result = coz_eval(e, a->cell[i]);
+        /* null return will segfault the error check */
+        if (!result) { continue; }
         if (result->type == CELL_ERROR) {
             return (HandlerResult){ .action = ACTION_RETURN, .value = result };
         }
     }
     /* Send last expr back to eval */
-    return (HandlerResult){ .action = ACTION_CONTINUE, .value = a->cell[a->count-1] };
+    return (HandlerResult){ .action = ACTION_CONTINUE, .value = a->cell[n_expressions-1] };
 }
 
 /* (and ⟨test1⟩ ... )
@@ -710,21 +723,31 @@ HandlerResult sf_begin(Lex* e, Cell* a) {
  * to true values, the values of the last expression are returned. If there are no expressions, then
  * #t is returned. */
 HandlerResult sf_and(Lex* e, Cell* a) {
-    (void)e;
+    /* (and) -> #t */
     if (a->count == 0) {
         return (HandlerResult){ .action = ACTION_RETURN, .value = make_cell_boolean(1) };
     }
-    Cell* test_result = nullptr;
-    for (int i = 0; i < a->count; i++) {
-        test_result = coz_eval(e, a->cell[i]);
-        if (test_result->type == CELL_BOOLEAN && test_result->boolean_v == 0) {
-            /* first #f encountered → return #f */
-            return (HandlerResult){ .action = ACTION_RETURN, .value = make_cell_boolean(0) };
-        }
+    /* (and <tail expression>) */
+    if (a->count == 1) {
+        return (HandlerResult){ .action = ACTION_CONTINUE, .value = a->cell[0] };
     }
-    /* all truthy → return copy of last element */
-    //return test_result;
-    return (HandlerResult){ .action = ACTION_RETURN, .value = test_result };
+    /* (and e1 e2 ...) */
+    Cell *test_result = coz_eval(e, a->cell[0]);
+
+    if (test_result && test_result->type == CELL_ERROR) {
+        return (HandlerResult){ .action = ACTION_RETURN, .value = test_result };
+    }
+    /* Check for #f */
+    if (test_result && test_result->type == CELL_BOOLEAN && test_result->boolean_v == 0) {
+        return (HandlerResult){ .action = ACTION_RETURN, .value = make_cell_boolean(0) };
+    }
+    /* Truthy or NULL → build a new '(and e2 ...)' and tail-call. */
+    Cell* rest_of_and = make_cell_sexpr();
+    cell_add(rest_of_and, G_and_sym);
+    for (int i = 1; i < a->count; i++) {
+        cell_add(rest_of_and, a->cell[i]);
+    }
+    return (HandlerResult){ .action = ACTION_CONTINUE, .value = rest_of_and };
 }
 
 /* (or ⟨test1⟩ ... )
@@ -732,18 +755,25 @@ HandlerResult sf_and(Lex* e, Cell* a) {
  * that evaluates to a true value is returned. Any remaining expressions are not evaluated. If all
  * expressions evaluate to #f or if there are no expressions, then #f is returned. */
 HandlerResult sf_or(Lex* e, Cell* a) {
-    (void)e;
+    /* (or) -> #f */
     if (a->count == 0) {
         return (HandlerResult){ .action = ACTION_RETURN, .value = make_cell_boolean(0) };
     }
-    for (int i = 0; i < a->count; i++) {
-        Cell *test_result = coz_eval(e, a->cell[i]);
-        if (!(test_result->type == CELL_BOOLEAN && test_result->boolean_v == 0)) {
-            /* first truthy value → return it */
-            //return test_result;
-            return (HandlerResult){ .action = ACTION_RETURN, .value = test_result };
-        }
+    /* (or <tail expression>) */
+    if (a->count == 1) {
+        return (HandlerResult){ .action = ACTION_CONTINUE, .value = a->cell[0] };
     }
-    /* all false → return #f */
-    return (HandlerResult){ .action = ACTION_RETURN, .value = make_cell_boolean(0) };
+    /* (or e1 e2 ...) */
+    Cell *test_result = coz_eval(e, a->cell[0]);
+    if (test_result && test_result->type == CELL_BOOLEAN && test_result->boolean_v == 0) {
+        /* It's #f. Continue the search by tail-calling with the rest of the form. */
+        Cell* rest_of_or = make_cell_sexpr();
+        cell_add(rest_of_or, G_or_sym);
+        for (int i = 1; i < a->count; i++) {
+            cell_add(rest_of_or, a->cell[i]);
+        }
+        return (HandlerResult){ .action = ACTION_CONTINUE, .value = rest_of_or };
+    }
+    /* It's a TRUTHY value (or NULL). We're done. Short-circuit and return this value. */
+    return (HandlerResult){ .action = ACTION_RETURN, .value = test_result };
 }

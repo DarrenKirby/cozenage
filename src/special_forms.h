@@ -22,6 +22,7 @@
 
 #include "cell.h"
 
+
 typedef enum {
     ACTION_RETURN,   /* The handler produced a final value. Exit the eval loop. */
     ACTION_CONTINUE  /* The handler produced a new expression. Continue the loop. */
@@ -34,7 +35,6 @@ typedef struct {
 
 int is_syntactic_keyword(const char* s);
 Cell* sexpr_to_list(Cell* c);
-//Cell* apply_lambda(Cell* lambda, const Cell* args);
 Lex* build_lambda_env(const Lex* env, const Cell* formals, const Cell* args);
 Cell* sequence_sf_body(const Cell* body);
 /* Special forms */
