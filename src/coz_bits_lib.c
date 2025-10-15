@@ -75,6 +75,10 @@ char* format_twos_complement(const long long val) {
     return bitstring;
 }
 
+/*------------------------------------------------------------*
+ *            (cozenage bits) library procedures              *
+ * -----------------------------------------------------------*/
+
 Cell* bits_right_shift(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2);
@@ -82,12 +86,21 @@ Cell* bits_right_shift(const Lex* e, const Cell* a) {
     err = check_arg_types(a, CELL_INTEGER|CELL_SYMBOL);
     if (err) return err;
 
-    if (a->cell[0]->type == CELL_SYMBOL) {
-        return make_cell_error("Bitstrings not implemented yet", GEN_ERR);
+    const Cell* arg1 = a->cell[0];
+    const Cell* arg2 = a->cell[1];
+
+    bool bs = false;
+    if (arg1->type == CELL_SYMBOL) {
+        arg1 = bits_bitstring_to_int(e, make_sexpr_len1(arg1));
+        bs = true;
     }
-    const long long n = (long long)cell_to_long_double(a->cell[0]);
-    const int shift_amount = (int)cell_to_long_double(a->cell[1]);
-    return make_cell_integer(n >> shift_amount);
+    const long long n = (long long)cell_to_long_double(arg1);
+    const int shift_amount = (int)cell_to_long_double(arg2);
+    Cell* result = make_cell_integer(n >> shift_amount);
+    if (bs) {
+        return bits_int_to_bitstring(e, make_sexpr_len1(result));
+    }
+    return result;
 }
 
 Cell* bits_left_shift(const Lex* e, const Cell* a) {
@@ -97,12 +110,21 @@ Cell* bits_left_shift(const Lex* e, const Cell* a) {
     err = check_arg_types(a, CELL_INTEGER|CELL_SYMBOL);
     if (err) return err;
 
-    if (a->cell[0]->type == CELL_SYMBOL) {
-        return make_cell_error("Bitstrings not implemented yet", GEN_ERR);
+    const Cell* arg1 = a->cell[0];
+    const Cell* arg2 = a->cell[1];
+
+    bool bs = false;
+    if (arg1->type == CELL_SYMBOL) {
+        arg1 = bits_bitstring_to_int(e, make_sexpr_len1(arg1));
+        bs = true;
     }
-    const long long n = (long long)cell_to_long_double(a->cell[0]);
-    const int shift_amount = (int)cell_to_long_double(a->cell[1]);
-    return make_cell_integer(n << shift_amount);
+    const long long n = (long long)cell_to_long_double(arg1);
+    const int shift_amount = (int)cell_to_long_double(arg2);
+    Cell* result = make_cell_integer(n << shift_amount);
+    if (bs) {
+        return bits_int_to_bitstring(e, make_sexpr_len1(result));
+    }
+    return result;
 }
 
 Cell* bits_bitwise_and(const Lex* e, const Cell* a) {
