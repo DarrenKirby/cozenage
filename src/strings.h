@@ -24,8 +24,6 @@
 
 
 /* String constructors, selectors, and procedures */
-Cell* builtin_string_to_symbol(const Lex* e, const Cell* a);
-Cell* builtin_symbol_to_string(const Lex* e, const Cell* a);
 Cell* builtin_string(const Lex* e, const Cell* a);
 Cell* builtin_string_length(const Lex* e, const Cell* a);
 Cell* builtin_string_eq_pred(const Lex* e, const Cell* a);

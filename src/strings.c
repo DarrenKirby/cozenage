@@ -29,26 +29,6 @@
  *     String constructors, selectors, and procedures    *
  * ------------------------------------------------------*/
 
-Cell* builtin_string_to_symbol(const Lex* e, const Cell* a) {
-    (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 1);
-    if (err) return err;
-    if (a->cell[0]->type != CELL_STRING) {
-        return make_cell_error("string->symbol: arg 1 must be a string", TYPE_ERR);
-    }
-    return make_cell_symbol(a->cell[0]->str);
-}
-
-Cell* builtin_symbol_to_string(const Lex* e, const Cell* a) {
-    (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 1);
-    if (err) return err;
-    if (a->cell[0]->type != CELL_SYMBOL) {
-        return make_cell_error("symbol->string: arg 1 must be a symbol", TYPE_ERR);
-    }
-    return make_cell_string(a->cell[0]->sym);
-}
-
 Cell* builtin_string(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, CELL_CHAR);

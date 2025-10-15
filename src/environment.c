@@ -30,6 +30,7 @@
 #include "ports.h"
 #include "strings.h"
 #include "chars.h"
+#include "symbols.h"
 #include <gc.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -293,7 +294,8 @@ void lex_add_builtins(const Lex* e) {
     lex_add_builtin(e, "char<=?", builtin_char_lte_pred);
     lex_add_builtin(e, "char>?", builtin_char_gt_pred);
     lex_add_builtin(e, "char>=?", builtin_char_gte_pred);
-    /* String procedures */
+    /* Symbol and String procedures */
+    lex_add_builtin(e, "symbol=?", builtin_symbol_equal_pred);
     lex_add_builtin(e, "symbol->string", builtin_symbol_to_string);
     lex_add_builtin(e, "string->symbol", builtin_string_to_symbol);
     lex_add_builtin(e, "string", builtin_string);

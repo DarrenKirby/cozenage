@@ -21,6 +21,8 @@
 #define COZENAGE_SYMBOLS_H
 
 #include "hash.h"
+#include "environment.h"
+
 
 typedef enum {
     SF_ID_DEFINE = 1,
@@ -67,5 +69,10 @@ extern ht_table* symbol_table;
 
 /* SF initialization function */
 void init_special_forms(void);
+
+/* Builtin procedures */
+Cell* builtin_string_to_symbol(const Lex* e, const Cell* a);
+Cell* builtin_symbol_to_string(const Lex* e, const Cell* a);
+Cell* builtin_symbol_equal_pred(const Lex* e, const Cell* a);
 
 #endif //COZENAGE_SYMBOLS_H

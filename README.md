@@ -2,15 +2,40 @@
 
 *Getting close to being ready for prime time*
 
+## About
+
 This started as a 'toy' Lisp, but I am steadily, if slowly, working towards a full
 R7RS [Scheme implementation](https://standards.scheme.org/). After the bulk of the R7RS standard is implemented,
-I plan to add several `(cozenage foo)` libraries to interface with the OS, and eventually morph this
-into some kind of usable shell with Scheme syntax.
+I plan to add several `(cozenage foo)` libraries to interface with the OS, and eventually, I would
+like to implement some kind of 'shell mode' which would act like an interpretive shell 
+with Scheme syntax, kicking all 'unbound symbols' down a level as potential shell commands.
+
+This is an educational process for me. I started writing Cozenage to enhance my understanding of 
+Scheme, C , and programming language fundamentals in general.
+Not everything here is implemented in the most efficient or best way. Cozenage is a work in progress,
+and as I learn new and better techniques I will come back and improve sections of this program. Perhaps
+the most conspicuous deficiency is the lexer/parser. I am currently working through Robert Nystrom's
+"Crafting Interpreters", and I will rewrite Cozenage's parser when I finish. At that time I will
+also have to revisit my decision to implement the bare-bones 'AST' as a plain C array of Cell objects,
+rather than as a 'proper list', as it is done in all dogmatic Lisp and Scheme variants.
+
+A few things that I feel I have done well:
+
+- Full tower of numeric types, allowing for operations on integers, rationals, reals, complex numbers, and any arbitrary
+combination thereof.
+- Symbol interning and the global environment using a fast hash table.
+- Proper tail-call recursion for most special forms which prescribe it, including 'lambda', 'if', 'else', 
+'cond', 'when', 'unless', 'and', and 'or', plus the procedure 'apply'. Coming soon: tail recursion for 
+'let', 'let*', and 'letrec'. 
+
+## Dependencies
 
 `Cozenage` requires one of [readline](https://tiswww.cwru.edu/php/chet/readline/rltop.html) or 
 libedit for the REPL. It requires [ICU](https://github.com/unicode-org/icu) for Unicode.
 These will almost certainly be installed already on any sort of development rig. It requires the [Boehm-Demers-Weiser Garbage Collector](https://github.com/bdwgc/bdwgc)
 which may or may not be installed already on your system.
+
+## Building Cozenage
 
 If you have cmake, run `make`.
 
@@ -20,7 +45,7 @@ To build the tests run `make tests`. You will need `criterion` installed.
 
 To delete objects and binaries run `make clean`
 
-Then run `./cozenage` to enter the funhouse.
+Run `./cozenage` to enter the funhouse.
 
 You can add the `-l/--library` flag with a comma-delimited list of libraries to load on startup
 (ie: complex,inexact,char etc.). Otherwise, you can load them from the REPL using the usual Scheme syntax: 
@@ -198,6 +223,7 @@ This is a list of what *is* implemented so far. I try to keep it up to date:
 
 ### String/Symbol procedures
 
+- `symbol=?`
 - `symbol->string`
 - `string->symbol`
 - `string`

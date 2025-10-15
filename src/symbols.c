@@ -19,6 +19,7 @@
 
 #include "symbols.h"
 #include "cell.h"
+#include "types.h"
 
 
 /* Declare the symbol table */
@@ -88,4 +89,47 @@ void init_special_forms(void) {
 
     G_or_sym = make_cell_symbol("or");
     G_or_sym->sf_id = SF_ID_OR;
+}
+
+/*-------------------------------------------------------*
+ *                  Symbol procedures                    *
+ * ------------------------------------------------------*/
+
+Cell* builtin_symbol_equal_pred(const Lex* e, const Cell* a) {
+    (void)e;
+    Cell* err = check_arg_types(a, CELL_SYMBOL);
+    if (err) return err;
+    err = CHECK_ARITY_MIN(a, 1);
+    if (err) return err;
+
+    for (int i = 0; i < a->count - 1; i++) {
+        const char* lhs = a->cell[i]->sym;
+        const char* rhs = a->cell[i+1]->sym;
+
+        if (lhs != rhs)  {
+            return make_cell_boolean(0);
+        }
+    }
+    /* If we get here, we're equal */
+    return make_cell_boolean(1);
+}
+
+Cell* builtin_string_to_symbol(const Lex* e, const Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    if (err) return err;
+    if (a->cell[0]->type != CELL_STRING) {
+        return make_cell_error("string->symbol: arg 1 must be a string", TYPE_ERR);
+    }
+    return make_cell_symbol(a->cell[0]->str);
+}
+
+Cell* builtin_symbol_to_string(const Lex* e, const Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    if (err) return err;
+    if (a->cell[0]->type != CELL_SYMBOL) {
+        return make_cell_error("symbol->string: arg 1 must be a symbol", TYPE_ERR);
+    }
+    return make_cell_string(a->cell[0]->sym);
 }
