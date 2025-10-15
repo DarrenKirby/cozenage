@@ -127,6 +127,26 @@ Cell* sequence_sf_body(const Cell* body) {
     return seq;
 }
 
+/* Searches the local environment chain and returns the specific frame
+ * where 'sym' is bound. Returns NULL if not found in any local frame. */
+static Ch_Env* lex_find_local_frame(const Lex* e, const char* sym) {
+    if (!e) return nullptr;
+
+    Ch_Env* current_frame = e->local;
+    while (current_frame != nullptr) {
+        for (int i = 0; i < current_frame->count; i++) {
+            if (strcmp(current_frame->syms[i], sym) == 0) {
+                /* Found it! Return a pointer to this frame. */
+                return current_frame;
+            }
+        }
+        current_frame = current_frame->parent;
+    }
+
+    /* Not found in any local frame. */
+    return nullptr;
+}
+
 /* -----------------------------*
  *         Special forms        *
  * -----------------------------*/
@@ -245,8 +265,8 @@ HandlerResult sf_lambda(Lex* e, Cell* a) {
         return (HandlerResult){ .action = ACTION_RETURN, .value = err };
     }
 
-    Cell* formals = cell_pop(a, 0);   /* first arg */
-    Cell* body = a;                     /* remaining args */
+    Cell* formals = cell_pop(a, first);   /* first arg */
+    Cell* body = a;                         /* remaining args */
 
     /* formals should be a list of symbols */
     for (int i = 0; i < formals->count; i++) {
@@ -622,7 +642,6 @@ HandlerResult sf_let_star(Lex* e, Cell* a) {
     for (int i = 0; i < body->count; i++) {
         result = coz_eval(current_env, body->cell[i]);
     }
-    //return result;
     return (HandlerResult){ .action = ACTION_RETURN, .value = result };
 }
 
@@ -674,23 +693,44 @@ HandlerResult sf_letrec(Lex* e, Cell* a) {
 HandlerResult sf_set_bang(Lex* e, Cell* a) {
     Cell* err = CHECK_ARITY_EXACT(a, 2);
     if (err) return (HandlerResult){ .action = ACTION_RETURN, .value = err };
-    const Cell* variable = a->cell[0];
+    const Cell* variable = a->cell[first];
     if (variable->type != CELL_SYMBOL) {
         err = make_cell_error("arg1 must be a symbol", TYPE_ERR);
         return (HandlerResult){ .action = ACTION_RETURN, .value = err };
     }
-    /* Ensure the variable is already bound in the environment */
-    Cell* result = lex_get(e, variable);
-    if (result->type == CELL_ERROR) {
-        return (HandlerResult){ .action = ACTION_RETURN, .value = result };
+
+    const char* sym_to_set = a->cell[0]->sym;
+    Cell* value_to_set = coz_eval(e, a->cell[1]);
+
+    /* First, try to find the variable in the local environment chain. */
+    const Ch_Env* target_frame = lex_find_local_frame(e, sym_to_set);
+
+    if (target_frame != nullptr) {
+        /* We found the correct frame, now find the variable again in *this specific frame*
+         * and update its value directly. */
+        for (int i = 0; i < target_frame->count; i++) {
+            if (strcmp(target_frame->syms[i], sym_to_set) == 0) {
+                target_frame->vals[i] = value_to_set;
+                /* R7RS says the return from set! is unspecified.
+                 * Cozenage will return the value set, for visual
+                 * feedback that the operation was successful */
+                return (HandlerResult){ .action = ACTION_RETURN, .value = value_to_set };
+            }
+        }
+    } else {
+        /* The variable was not in any local frame. Check global.
+         * Use ht_get to see if it *exists* before we set it. */
+        if (ht_get(e->global, sym_to_set)) {
+            /* It exists globally, so update it in the hash table. */
+            ht_set(e->global, sym_to_set, value_to_set);
+            return (HandlerResult){ .action = ACTION_RETURN, .value = value_to_set };
+        }
     }
-    /* Now evaluate new expression */
-    Cell* expr = a->cell[1];
-    Cell* val = coz_eval(e, expr);
-    /* Re-bind the variable with the new value */
-    lex_put_global(e, variable, val);
-    /* No meaningful return value */
-    return (HandlerResult){ .action = ACTION_RETURN, .value = nullptr };
+
+    /* The variable was not found anywhere. This is an error. */
+    char buf[128];
+    snprintf(buf, sizeof(buf), "set!: Unbound symbol: '%s'", sym_to_set);
+    return (HandlerResult){ .action = ACTION_RETURN, .value = make_cell_error(buf, VALUE_ERR) };
 }
 
 /* (begin ⟨expression1 ⟩ ⟨expression2 ⟩ ... )

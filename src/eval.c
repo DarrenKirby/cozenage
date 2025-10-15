@@ -23,7 +23,6 @@
 #include "main.h"
 #include "cell.h"
 #include "symbols.h"
-#include <stdio.h>
 
 
 /* Helper to extract procedure args from s-expr */

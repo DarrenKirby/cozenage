@@ -39,7 +39,7 @@ typedef struct Ch_Env {
     int capacity;           /* Allocated slots */
     char** syms;            /* symbol names */
     Cell** vals;            /* values */
-    Ch_Env* parent;     /* points to parent env, NULL if top-level */
+    Ch_Env* parent;         /* points to parent env, NULL if top-level */
 } Ch_Env;
 
 /* Environment management */
