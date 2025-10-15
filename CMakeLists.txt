@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 3.10)
 # C compiler on the system will be used
 project(cozenage C)
 set(CMAKE_C_STANDARD 23)
-set(CMAKE_C_FLAGS "-Wall -Wextra -O2") # -g -fsanitize=address,undefined")
+set(CMAKE_C_FLAGS "-Wall -Wextra -O0 -g") # -g -fsanitize=address,undefined")
 
 # Option to force libedit
 option(USE_LIBEDIT "Force using libedit instead of GNU readline" OFF)
@@ -87,38 +87,20 @@ endif()
 find_library(M_LIB m)
 find_library(GC_LIB gc)
 
-add_executable(cozenage
-        src/bools.c
-        src/bytevectors.c
-        src/cell.c
-        src/char_lib.c
-        src/chars.c
-        src/comparators.c
-        src/complex_lib.c
-        src/control_features.c
-        src/coz_bits_lib.c
-        src/coz_ext_lib.c
-        src/cxr_lib.c
-        src/environment.c
-        src/eval.c
-        src/eval_lib.c
-        src/file_lib.c
-        src/hash.c
-        src/inexact_lib.c
-        src/io_lib.c
-        src/load_library.c
-        src/main.c
-        src/numerics.c
-        src/pairs.c
-        src/parser.c
-        src/ports.c
-        src/predicates.c
-        src/printer.c
-        src/process_context_lib.c
-        src/special_forms.c
-        src/strings.c
-        src/symbols.c
-        src/types.c
-        src/vectors.c)
+# Define your project executable
+add_executable(cozenage src/main.c) # Start with just main
+
+# Use a glob to find all your source files recursively
+file(GLOB_RECURSE COZENAGE_SOURCES "src/*.c")
+
+# Add these sources to your target
+target_sources(cozenage PRIVATE ${COZENAGE_SOURCES})
+
+# IMPORTANT: Tell CMake where to find header files!
+target_include_directories(cozenage PRIVATE
+        ${PROJECT_SOURCE_DIR}/src
+        ${PROJECT_SOURCE_DIR}/src/scheme-lib
+        ${PROJECT_SOURCE_DIR}/src/cozenage-lib
+)
 
 target_link_libraries(cozenage PRIVATE ${READLINE_LIBRARY} ${M_LIB} ${GC_LIB} icu::uc)
