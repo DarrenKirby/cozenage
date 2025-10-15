@@ -29,17 +29,33 @@
 
 Cell* builtin_apply(const Lex* e, const Cell* a) {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 2);
+    Cell* err = CHECK_ARITY_MIN(a, 2);
     if (err) return err;
     if (a->cell[0]->type != CELL_PROC) {
         return make_cell_error("apply: arg 1 must be a procedure", ARITY_ERR);
     }
-    if (a->cell[1]->type != CELL_PAIR && a->cell[1]->len == -1) {
-        return make_cell_error("apply: arg 2 must be a proper list", TYPE_ERR);
+    Cell* final_sexpr = make_cell_sexpr();
+    /* Add the proc */
+    cell_add(final_sexpr, a->cell[0]);
+    /* Collect individual args, if any */
+    const int last_arg_index = a->count - 1;
+    for (int i = 1; i < last_arg_index; i++) {
+        cell_add(final_sexpr, a->cell[i]);
     }
-
-    const Cell* composition = make_sexpr_len2(a->cell[0], make_sexpr_from_list(a->cell[1]));
-    return coz_eval((Lex*)e, flatten_sexpr(composition));
+    const Cell* final_list = a->cell[last_arg_index];
+    /* Ensure last arg is a list */
+    if (final_list->type != CELL_PAIR || final_list->len == -1) {
+        return make_cell_error("apply: last arg must be a proper list", TYPE_ERR);
+    }
+    const Cell* current_item = final_list;
+    while (current_item->type != CELL_NIL) {
+        cell_add(final_sexpr, current_item->car);
+        current_item = current_item->cdr;
+    }
+    /* Give the s-expr a gentle kiss on the forehead,
+     * and make it a CELL_TRAMPOLINE... */
+    final_sexpr->type = CELL_TRAMPOLINE;
+    return final_sexpr;
 }
 
 Cell* builtin_map(const Lex* e, const Cell* a) {

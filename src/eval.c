@@ -126,13 +126,17 @@ Cell* coz_eval(Lex* env, Cell* expr) {
         }
 
         Cell* result = coz_apply(f, args, &env, &expr);
+        if (result->type == CELL_TRAMPOLINE) {
+            expr = result;
+            continue;
+        }
         if (result != TCS_Obj) {
             /* f was a primitive C function, it returned a final value. */
             return result;
         }
-        /* f was a Scheme lambda, apply() updated our expr and env.
-         * Allow the control flow to begin another loop,
-         * performing the tail call. */
+        /* If here ... f was a Scheme lambda, and apply() updated
+         * our expr and env. Allow the control flow to begin another
+         * loop, performing the tail call. */
     }
 }
 

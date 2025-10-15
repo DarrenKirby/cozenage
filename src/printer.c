@@ -187,6 +187,7 @@ void print_cell(const Cell* v) {
         break;
 
     case CELL_SEXPR:
+    case CELL_TRAMPOLINE:
         print_sequence(v, nullptr, '(', ')');
         break;
     case CELL_VECTOR:

@@ -50,6 +50,7 @@ typedef enum {
 
 /* Cell_t type enum */
 typedef enum {
+    /* Native Scheme types */
     CELL_INTEGER    = 1 << 0,   /* integer */
     CELL_RATIONAL   = 1 << 1,   /* rational */
     CELL_REAL       = 1 << 2,   /* real */
@@ -65,14 +66,18 @@ typedef enum {
     CELL_VECTOR     = 1 << 10,  /* vector */
     CELL_BYTEVECTOR = 1 << 11,  /* byte vector */
 
-    CELL_SEXPR      = 1 << 12,  /* an array of values, used internally */
+    CELL_EOF        = 1 << 12,  /* EOF object */
     CELL_PROC       = 1 << 13,  /* procedure */
     CELL_PORT       = 1 << 14,  /* port */
     CELL_CONT       = 1 << 15,  /* continuation (maybe) */
 
+    /* Internal types */
     CELL_ERROR      = 1 << 16,   /* error */
-    CELL_EOF        = 1 << 17,   /* EOF object */
-    CELL_TCS        = 1 << 18    /* Tail Call Sentinel object */
+    CELL_SEXPR      = 1 << 17,   /* an array of values */
+    CELL_TCS        = 1 << 18,   /* Tail Call Sentinel object */
+    CELL_TRAMPOLINE = 1 << 19    /* Trampoline object - returned from
+                                    first-class procedures to signal a
+                                    tail-call */
 } Cell_t;
 
 /* Definition of the Cell struct/tagged union */
