@@ -28,6 +28,15 @@
 #include <gc/gc.h>
 
 
+/* These procedures return #t if their arguments are alphabetic, numeric, whitespace, upper case,
+ * or lower case characters, respectively, otherwise they return #f.
+ *
+ * Specifically, they must return #t when applied to characters with the Unicode properties
+ * Alphabetic, Numeric Digit, White Space, Uppercase, and Lowercase respectively, and #f when
+ * applied to any other Unicode characters. Note that many Unicode characters are alphabetic but
+ * neither upper nor lower case. */
+
+/* (char-alphabetic? char) */
 Cell* builtin_char_alphabetic(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
@@ -38,6 +47,7 @@ Cell* builtin_char_alphabetic(const Lex* e, const Cell* a) {
     return make_cell_boolean(u_isalpha(a->cell[0]->char_v));
 }
 
+/* (char-whitespace? char) */
 Cell* builtin_char_whitespace(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
@@ -48,6 +58,7 @@ Cell* builtin_char_whitespace(const Lex* e, const Cell* a) {
     return make_cell_boolean(u_isspace(a->cell[0]->char_v));
 }
 
+/* (char-numeric? char) */
 Cell* builtin_char_numeric(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
@@ -58,6 +69,7 @@ Cell* builtin_char_numeric(const Lex* e, const Cell* a) {
     return make_cell_boolean(u_isdigit(a->cell[0]->char_v));
 }
 
+/* (char-upper-case? letter) */
 Cell* builtin_char_upper_case(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
@@ -68,6 +80,7 @@ Cell* builtin_char_upper_case(const Lex* e, const Cell* a) {
     return make_cell_boolean(u_isupper(a->cell[0]->char_v));
 }
 
+/* (char-lower-case? letter) */
 Cell* builtin_char_lower_case(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
@@ -78,6 +91,11 @@ Cell* builtin_char_lower_case(const Lex* e, const Cell* a) {
     return make_cell_boolean(u_islower(a->cell[0]->char_v));
 }
 
+/* (char-upcase char)
+ * The char-upcase procedure, given an argument that is the lowercase part of a Unicode casing pair,
+ * returns the uppercase member of the pair, provided that both characters are supported by the
+ * Scheme implementation. Note that language-sensitive casing pairs are not used. If the argument is
+ * not the lowercase member of such a pair, it is returned. */
 Cell* builtin_char_upcase(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
@@ -88,6 +106,11 @@ Cell* builtin_char_upcase(const Lex* e, const Cell* a) {
     return make_cell_char(u_toupper(a->cell[0]->char_v));
 }
 
+/* (char-downcase char)
+ * The char-downcase procedure, given an argument that is the uppercase part of a Unicode casing
+ * pair, returns the lowercase member of the pair, provided that both characters are supported by
+ * the Scheme implementation. Note that language-sensitive casing pairs are not used. If the
+ * argument is not the uppercase member of such a pair, it is returned. */
 Cell* builtin_char_downcase(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
@@ -98,6 +121,11 @@ Cell* builtin_char_downcase(const Lex* e, const Cell* a) {
     return make_cell_char(u_tolower(a->cell[0]->char_v));
 }
 
+/* (char-foldcase char)
+ * The char-foldcase procedure applies the Unicode simple case-folding algorithm to its argument and
+ * returns the result. Note that language-sensitive folding is not used. If the argument is an
+ * uppercase letter, the result will be either a lowercase letter or the same as the argument if the
+ * lowercase letter does not exist or is not supported by the implementation. */
 Cell* builtin_char_foldcase(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
@@ -109,6 +137,9 @@ Cell* builtin_char_foldcase(const Lex* e, const Cell* a) {
     return make_cell_char(u_foldCase(c, U_FOLD_CASE_DEFAULT));
 }
 
+/* (digit-value char)
+ * This procedure returns the numeric value (0 to 9) of its argument if it is a numeric digit (that
+ * is, if char-numeric? returns #t), or #f on any other character. */
 Cell* builtin_digit_value(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
@@ -125,6 +156,7 @@ Cell* builtin_digit_value(const Lex* e, const Cell* a) {
     return make_cell_integer(value);
 }
 
+/*  */
 Cell* builtin_char_equal_ci(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, CELL_CHAR);
@@ -141,6 +173,7 @@ Cell* builtin_char_equal_ci(const Lex* e, const Cell* a) {
     return builtin_eq_op(e, cell_sexpr);
 }
 
+/*  */
 Cell* builtin_char_lt_ci(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, CELL_CHAR);
@@ -157,6 +190,7 @@ Cell* builtin_char_lt_ci(const Lex* e, const Cell* a) {
     return builtin_lt_op(e, cell_sexpr);
 }
 
+/*  */
 Cell* builtin_char_lte_ci(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, CELL_CHAR);
@@ -173,6 +207,7 @@ Cell* builtin_char_lte_ci(const Lex* e, const Cell* a) {
     return builtin_lte_op(e, cell_sexpr);
 }
 
+/*  */
 Cell* builtin_char_gt_ci(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, CELL_CHAR);
@@ -189,6 +224,7 @@ Cell* builtin_char_gt_ci(const Lex* e, const Cell* a) {
     return builtin_gt_op(e, cell_sexpr);
 }
 
+/*  */
 Cell* builtin_char_gte_ci(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, CELL_CHAR);
@@ -205,6 +241,12 @@ Cell* builtin_char_gte_ci(const Lex* e, const Cell* a) {
     return builtin_gte_op(e, cell_sexpr);
 }
 
+/* These procedures apply the Unicode full string uppercasing, lowercasing, and case-folding
+ * algorithms to their arguments and return the result. In certain cases, the result differs in
+ * length from the argument. If the result is equal to the argument in the sense of string=?, the
+ * argument may be returned. */
+
+/* (string-downcase string) */
 Cell* builtin_string_downcase(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING);
@@ -234,6 +276,7 @@ Cell* builtin_string_downcase(const Lex* e, const Cell* a) {
     return make_cell_string(result);
 }
 
+/* (string-upcase string) */
 Cell* builtin_string_upcase(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING);
@@ -263,6 +306,7 @@ Cell* builtin_string_upcase(const Lex* e, const Cell* a) {
     return make_cell_string(result);
 }
 
+/* (string-foldcase string) */
 Cell* builtin_string_foldcase(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING);
@@ -277,7 +321,7 @@ Cell* builtin_string_foldcase(const Lex* e, const Cell* a) {
     const int32_t src_len = u_countChar32(src, -1);
 
     UChar* dst = GC_MALLOC(sizeof(UChar) * src_len + 1);;
-    int32_t dest_len = u_strFoldCase(dst, src_len + 1, src, -1,
+    const int32_t dest_len = u_strFoldCase(dst, src_len + 1, src, -1,
         U_FOLD_CASE_DEFAULT, &status);
 
     if (dest_len < src_len) {
@@ -291,6 +335,9 @@ Cell* builtin_string_foldcase(const Lex* e, const Cell* a) {
     return make_cell_string(result);
 }
 
+/* (string-ci=? string1 string2 string3 ... )
+* Returns #t if, after case-folding, all the strings are the same length and contain the same
+* characters in the same positions, otherwise returns #f.*/
 Cell* builtin_string_equal_ci(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING);
@@ -320,6 +367,7 @@ Cell* builtin_string_equal_ci(const Lex* e, const Cell* a) {
     return make_cell_boolean(1);
 }
 
+/* (string-ci<? string1 string2 string3 ... ) */
 Cell* builtin_string_lt_ci(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING);
@@ -344,6 +392,7 @@ Cell* builtin_string_lt_ci(const Lex* e, const Cell* a) {
     return make_cell_boolean(1);
 }
 
+/* (string<=? string1 string2 string3 ... ) */
 Cell* builtin_string_lte_ci(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING);
@@ -368,6 +417,7 @@ Cell* builtin_string_lte_ci(const Lex* e, const Cell* a) {
     return make_cell_boolean(1);
 }
 
+/* (string-ci>? string1 string2 string3 ... ) */
 Cell* builtin_string_gt_ci(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING);
@@ -392,6 +442,7 @@ Cell* builtin_string_gt_ci(const Lex* e, const Cell* a) {
     return make_cell_boolean(1);
 }
 
+/* (string-ci>=? string1 string2 string3 ... ) */
 Cell* builtin_string_gte_ci(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING);
