@@ -27,6 +27,11 @@
  *      Char constructors, selectors, and procedures     *
  * ------------------------------------------------------*/
 
+/* (char->integer char )
+ * Given a Unicode character, char->integer returns an exact integer between 0 and #xD7FF or
+ * between #xE000 and #x10FFFF which is equal to the Unicode scalar value of that character. Given
+ * a non-Unicode character, it returns an exact integer greater than #x10FFFF. This is true
+ * independent of whether the implementation uses the Unicode representation internally. */
 Cell* builtin_char_to_int(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
@@ -37,6 +42,9 @@ Cell* builtin_char_to_int(const Lex* e, const Cell* a) {
     return make_cell_integer(a->cell[0]->char_v);
 }
 
+/* (integer->char n)
+ * Given an exact integer that is the value returned by a character when char->integer is applied
+ * to it, integer->char returns that character. */
 Cell* builtin_int_to_char(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
@@ -51,6 +59,11 @@ Cell* builtin_int_to_char(const Lex* e, const Cell* a) {
     return make_cell_char(val);
 }
 
+/* These procedures return #t if the results of passing their arguments to char->integer are
+ * respectively equal, monotonically increasing, monotonically decreasing, monotonically
+ * non-decreasing, or monotonically non-increasing. */
+
+/* (char=? char1 char2 char3 ... ) */
 Cell* builtin_char_equal_pred(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, CELL_CHAR);
@@ -65,6 +78,7 @@ Cell* builtin_char_equal_pred(const Lex* e, const Cell* a) {
     return builtin_eq_op(e, cell_sexpr);
 }
 
+/* (char<? char1 char2 char3 ... ) */
 Cell* builtin_char_lt_pred(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, CELL_CHAR);
@@ -79,6 +93,7 @@ Cell* builtin_char_lt_pred(const Lex* e, const Cell* a) {
     return builtin_lt_op(e, cell_sexpr);
 }
 
+/* (char<=? char1 char2 char3 ... )   */
 Cell* builtin_char_lte_pred(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, CELL_CHAR);
@@ -93,6 +108,7 @@ Cell* builtin_char_lte_pred(const Lex* e, const Cell* a) {
     return builtin_lte_op(e, cell_sexpr);
 }
 
+/* (char>? char1 char2 char3 ... )   */
 Cell* builtin_char_gt_pred(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, CELL_CHAR);
@@ -107,6 +123,7 @@ Cell* builtin_char_gt_pred(const Lex* e, const Cell* a) {
     return builtin_gt_op(e, cell_sexpr);
 }
 
+/* (char>=? char1 char2 char3 ... )   */
 Cell* builtin_char_gte_pred(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, CELL_CHAR);
