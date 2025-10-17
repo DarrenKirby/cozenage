@@ -243,9 +243,11 @@ void repl() {
 
 static void show_help(void) {
     printf("Usage: %s [<options>]\n\n\
-A (not yet) R7RS-compliant Scheme REPL\n\n\
+A (not yet) R5RS and R7RS-compliant Scheme REPL\n\n\
 Options:\n\
-    -l, --library\t preload scheme libraries at startup\n\
+    -5, --r5rs\t\t load only names defined in R5RS standard\n\
+    -7, --r7rs\t\t load only (scheme base) names defined in R7RS standard\n\
+    -l, --library\t preload R7RS and/or Cozenage libraries at startup\n\
     -h, --help\t\t display this help\n\
     -V, --version\t display version information\n\n\
 \n\
@@ -254,7 +256,7 @@ Options:\n\
     case-lambda, char, complex, cxr, eval, file, inexact\n\
     lazy, load, process-context, read, repl, time, write\n\
     coz-ext, bits\n\n\
-Report bugs to <bulliver@gmail.com>\n", APP_NAME);
+Report bugs to <darren@dragonbyte.ca>\n", APP_NAME);
 }
 
 void process_library_arg(struct lib_load *l, const char *arg) {
@@ -314,14 +316,16 @@ int main(const int argc, char** argv) {
     GC_INIT();
 
     const struct option long_opts[] = {
-        {"help", 0, nullptr, 'h'},
-        {"version", 0, nullptr, 'V'},
+        {"help", no_argument, nullptr, 'h'},
+        {"version", no_argument, nullptr, 'V'},
+        {"r5rs", no_argument, nullptr, '5'},
+        {"r7rs", no_argument, nullptr, '7'},
         {"library", required_argument, nullptr, 'l'},
         {nullptr,0,nullptr,0}
     };
 
     int opt;
-    while ((opt = getopt_long(argc, argv, "Vhl:", long_opts, nullptr)) != -1) {
+    while ((opt = getopt_long(argc, argv, "Vh57l:", long_opts, nullptr)) != -1) {
         switch(opt) {
             case 'V':
                 printf("%s%s%s version %s\n", ANSI_BLUE_B, APP_NAME, ANSI_RESET, APP_VERSION);
@@ -330,6 +334,11 @@ int main(const int argc, char** argv) {
             case 'h':
                 show_help();
                 exit(EXIT_SUCCESS);
+                /* TODO: implement r5rs and r7rs modes */
+            case '5':
+            case '7':
+                printf("--r5rs and --r7rs not implemented yet\n\n");
+                break;
             case 'l':
                 process_library_arg(&load_libs, optarg);
                 break;
