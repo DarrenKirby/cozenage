@@ -26,8 +26,8 @@
 #include <unicode/ustring.h>
 
 
-/* Helper for other string procedures -
- * like strlen, but works with UTF8 */
+/* Helper for other string procedures.
+ * Like strlen, but works with UTF8 */
 static int32_t string_length(const Cell* string) {
     const char* s = string->str;
     const int32_t len_bytes = (int)strlen(s);
@@ -325,6 +325,11 @@ Cell* builtin_make_string(const Lex* e, const Cell* a) {
     return make_cell_string(new_string);
 }
 
+/* (string->list string)
+ * (string->list string start )
+ * (string->list string start end)
+ * The string->list procedure returns a newly allocated list of the characters of string between
+ * start and end. */
 Cell* builtin_string_list(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_RANGE(a, 1, 3);
