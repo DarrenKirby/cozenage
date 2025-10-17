@@ -18,8 +18,8 @@ the binary from the source tree.
 Install dependencies
 --------------------
 
-Cozenage requires one of `GNU Readline <>`_,
-or /*BSD libedit installed for the REPL. It requires `ICU <https://icu.unicode.org/>`_ for Unicode.
+Cozenage requires one of `GNU Readline <https://www.gnu.org/software/readline/>`_,
+or \**BSD libedit installed for the REPL. It requires `ICU <https://icu.unicode.org/>`_ for Unicode.
 It requires `libgc <https://www.hboehm.info/gc/>`_ for garbage collection.
 
 CMake build
