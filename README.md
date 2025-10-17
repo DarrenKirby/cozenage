@@ -32,22 +32,13 @@ If you have cmake, run `make`.
 
 If you do not have cmake, run `make nocmake`.
 
-To build the tests run `make tests`. You will need `criterion` installed.
+There is also a bit more in depth guide as part of the [Cozenage documentation](https://darrenkirby.github.io/cozenage/howto/installation.html)
 
-To delete objects and binaries run `make clean`
 
-Run `./cozenage` to enter the funhouse.
-
-You can add the `-l/--library` flag with a comma-delimited list of libraries to load on startup
-(ie: complex,inexact,char etc.). Otherwise, you can load them from the REPL using the usual Scheme syntax: 
-`(import (scheme char))`. User-defined libraries are not yet supported.
-
-Note that not all built-in procedures are implemented yet. Not all base libraries are implemented yet, and not all procedures in
-the libraries I have started are implemented yet.
-
-This is a list of what *is* implemented so far. I try to keep it up to date:
 
 ## Builtin procedures (scheme base)
+
+This is a list of what *is* implemented so far. I try to keep it up to date:
 
 ### Special forms/syntax
 
