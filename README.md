@@ -19,15 +19,6 @@ the most conspicuous deficiency is the lexer/parser. I am currently working thro
 also have to revisit my decision to implement the bare-bones 'AST' as a plain C array of Cell objects,
 rather than as a 'proper list', as it is done in all dogmatic Lisp and Scheme variants.
 
-A few things that I feel I have done well:
-
-- Full tower of numeric types, allowing for operations on integers, rationals, reals, complex numbers, and any arbitrary
-combination thereof.
-- Symbol interning and the global environment using a fast hash table.
-- Proper tail-call recursion for most special forms which prescribe it, including 'lambda', 'if', 'else', 
-'cond', 'when', 'unless', 'and', and 'or', plus the procedure 'apply'. Coming soon: tail recursion for 
-'let', 'let*', and 'letrec'. 
-
 ## Dependencies
 
 `Cozenage` requires one of [readline](https://tiswww.cwru.edu/php/chet/readline/rltop.html) or 
