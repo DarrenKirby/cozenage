@@ -34,3 +34,14 @@ build/
 *.swp
 *~
 
+# ======================
+# Sphinx generated files
+# ======================
+
+# Ignore Python byte code
+__pycache__/
+*.py[cod]
+
+# Ignore Sphinx build artifacts
+docs/_build/
+
