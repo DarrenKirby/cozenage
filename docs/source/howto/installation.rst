@@ -15,6 +15,13 @@ Cozenage provides a unified Makefile which uses either CMake or GNU-make for the
 There is no install target for now, but I will add one upon the stable release. For now, just run
 the binary from the source tree.
 
+Install dependencies
+--------------------
+
+Cozenage requires one of `GNU Readline <>`_,
+or /*BSD libedit installed for the REPL. It requires `ICU <https://icu.unicode.org/>`_ for Unicode.
+It requires `libgc <https://www.hboehm.info/gc/>`_ for garbage collection.
+
 CMake build
 -----------
 
@@ -69,3 +76,10 @@ which is shorthand for
 
     $ make clean
     $ make
+
+Portability
+-----------
+
+Cozenage is regularly tested on macOS, Linux, and FreeBSD. I do not have any Windows systems, so
+Windows support is unknown, and likely broken. If you would like to help with this please see
+`this issue <https://github.com/DarrenKirby/cozenage/issues/1>`_.
