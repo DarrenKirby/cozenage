@@ -186,7 +186,7 @@ Cell* builtin_char_lt_ci(const Lex* e, const Cell* a) {
         cells[i] = make_cell_integer(the_char_fc->char_v);
     }
 
-    Cell* cell_sexpr = make_sexpr_from_array(a->count, cells);
+    const Cell* cell_sexpr = make_sexpr_from_array(a->count, cells);
     return builtin_lt_op(e, cell_sexpr);
 }
 

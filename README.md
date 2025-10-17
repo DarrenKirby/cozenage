@@ -234,6 +234,9 @@ This is a list of what *is* implemented so far. I try to keep it up to date:
 - `string>?`
 - `string>=?`
 - `string-append`
+- `string-ref`
+- `make-string`
+- `string->list`
 
 ### Control features and list iteration
 

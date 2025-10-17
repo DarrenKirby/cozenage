@@ -306,6 +306,9 @@ void lex_add_builtins(const Lex* e) {
     lex_add_builtin(e, "string>?", builtin_string_gt_pred);
     lex_add_builtin(e, "string>=?", builtin_string_gte_pred);
     lex_add_builtin(e, "string-append", builtin_string_append);
+    lex_add_builtin(e, "string-ref", builtin_string_ref);
+    lex_add_builtin(e, "make-string", builtin_make_string);
+    lex_add_builtin(e, "string->list", builtin_string_list);
     /* Control features */
     lex_add_builtin(e, "apply", builtin_apply);
     lex_add_builtin(e, "map", builtin_map);
