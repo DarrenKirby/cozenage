@@ -22,23 +22,26 @@
 #include "main.h"
 #include "numerics.h"
 #include "hash.h"
-#include "printer.h"
+#include "repr.h"
 
 
 /* These are non-R7RS procedures that don't fit well elsewhere
  * FIXME: Probably just delete the two aliases, put print-env
  * somewhere appropriate, and delete this file and header */
 
-
+/* Dump the environment 'symbol' -> 'value' pairs
+ * This will only work in the REPL, but I'm not sure
+ * why it would be used anywhere else, so... */
 Cell* builtin_print_env(const Lex* e, const Cell* a) {
     (void)a;
     /* First print global env hash items */
     hti it = ht_iterator(e->global);
     while (ht_next(&it)) {
         printf("%s%s%s -> ", ANSI_BLUE_B, it.key, ANSI_RESET);
-        println_cell(it.value);
+        printf("%s\n", cell_to_string(it.value, MODE_REPL));
     }
     /* Print local env if any */
+
     /* for side effects - no useful return value */
     return nullptr;
 }
