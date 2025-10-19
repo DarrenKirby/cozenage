@@ -20,7 +20,7 @@
 #include "compat_readline.h"
 #include "main.h"
 #include "parser.h"
-#include "printer.h"
+#include "repr.h"
 #include "cell.h"
 #include "environment.h"
 #include "eval.h"
@@ -167,11 +167,11 @@ Cell* coz_read(Lex* e) {
 }
 
 /* print()
- * Take the Cell produced by eval and print it in a
- * context-specific, meaningful way.
+ * Take the Cell produced by eval and print
+ * it formatted for the REPL
  * */
 void coz_print(const Cell* v) {
-    println_cell(v);
+    printf("%s\n", cell_to_string(v, MODE_REPL));
 }
 
 /* repl()

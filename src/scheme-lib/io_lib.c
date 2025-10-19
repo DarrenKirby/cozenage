@@ -19,7 +19,7 @@
 
 #include "io_lib.h"
 #include "types.h"
-#include "printer.h"
+#include "repr.h"
 #include "ports.h"
 #include <string.h>
 #include <errno.h>

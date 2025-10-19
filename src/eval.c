@@ -19,7 +19,6 @@
 
 #include "eval.h"
 #include "special_forms.h"
-#include "printer.h"
 #include "main.h"
 #include "cell.h"
 #include "symbols.h"
@@ -108,7 +107,6 @@ Cell* coz_eval(Lex* env, Cell* expr) {
         if (f->type != CELL_PROC) {
             printf("Bad token: ");
             printf(ANSI_RED_B);
-            print_cell(f);
             printf("%s: ", ANSI_RESET);
             return make_cell_error("S-expression does not start with a procedure", TYPE_ERR);
         }

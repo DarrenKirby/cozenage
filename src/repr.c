@@ -1,5 +1,5 @@
 /*
- * 'src/printer.c'
+ * 'src/repr.c'
  * This file is part of Cozenage - https://github.com/DarrenKirby/cozenage
  * Copyright © 2025  Darren Kirby <darren@dragonbyte.ca>
  *
@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "printer.h"
+#include "repr.h"
 #include "parser.h"
 #include "buffer.h"
 #include "main.h"

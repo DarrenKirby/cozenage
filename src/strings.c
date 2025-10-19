@@ -27,7 +27,7 @@
 #include <unicode/ucnv.h>
 #include <unicode/uchar.h>
 
-#include "printer.h"
+#include "repr.h"
 
 
 /* Helper for other string procedures.

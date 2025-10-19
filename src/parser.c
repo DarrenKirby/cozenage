@@ -577,6 +577,10 @@ Cell* parse_atom(const char *tok) {
     return make_cell_symbol(tok);
 }
 
+
+/* FIXME: This function doesn't actually have anything to do with the parser -
+ * it is called by read_multiline(), and is used only in the context of the REPL.
+ * Move this function to repl.c, when the repl-specific stuff gets moved to repl.c */
 /* Count '(' and ')' while ignoring:
    - anything inside string literals
    - character literals starting with "#\..." (including #\()/#\)),
