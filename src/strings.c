@@ -20,10 +20,14 @@
 #include "strings.h"
 #include "types.h"
 #include <string.h>
-#include <_stdlib.h>
+#include <stdlib.h>
 #include <gc/gc.h>
 #include <unicode/utf8.h>
 #include <unicode/ustring.h>
+#include <unicode/ucnv.h>
+#include <unicode/uchar.h>
+
+#include "printer.h"
 
 
 /* Helper for other string procedures.
@@ -391,4 +395,97 @@ Cell* builtin_string_list(const Lex* e, const Cell* a) {
         char_index++;
     }
     return head;
+}
+
+Cell* builtin_list_string(const Lex* e, const Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    if (err) return err;
+
+    const Cell* l = a->cell[0];
+    const int l_len = a->cell[0]->len;
+    // UChar32 char_array[l_len];
+    //
+    // for (int32_t i = 0; i < l_len; i++) {
+    //     if (l->car->type != CELL_CHAR) {
+    //         return make_cell_error("list->string: All list elements must be chars", TYPE_ERR);
+    //     }
+    //     println_cell(l->car);
+    //     printf("char: %C\n", l->car->char_v);
+    //     char_array[i] = l->car->char_v;
+    //     l = l->cdr;
+    // }
+    UChar32 *char_array = (UChar32*)GC_MALLOC(l_len * sizeof(UChar32));
+    if (!char_array) {
+        fprintf(stderr, "ENOMEM: GC_MALLOC failed for temp array\n");
+        exit(EXIT_FAILURE);
+    }
+    for (int32_t i = 0; i < l_len; i++) {
+        if (l->car->type != CELL_CHAR) {
+            // Note: We allocated with GC_MALLOC, so we don't need to
+            // free it here before returning an error. The GC will get it.
+            return make_cell_error("list->string: All list elements must be chars", TYPE_ERR);
+        }
+        // println_cell(l->car); // You can comment these out
+        // printf("char: %C\n", l->car->char_v);
+        char_array[i] = l->car->char_v;
+        l = l->cdr;
+        // --- ADD THIS LINE ---
+        // Print the hex value *after* it's in the array.
+        printf("DEBUG: char_array[%d] = 0x%X\n", i, char_array[i]);
+    }
+
+    const int32_t srcByteLength = l_len * (int32_t)sizeof(UChar32);
+
+    UErrorCode status = U_ZERO_ERROR;
+
+    /* Pre-flight to get the required buffer size */
+
+    /* Call with NULL destination to get the size*/
+    const int32_t requiredByteCapacity = ucnv_convert(
+        "UTF-8",                 // toConverterName
+        "UTF-32LE",                // fromConverterName
+        nullptr,                 // target (NULL for pre-flight)
+        0,                       // targetCapacity (0 for pre-flight)
+        (const char*)char_array, // source
+        srcByteLength,           // sourceLength (in bytes!)
+        &status
+    );
+
+    if (status != U_BUFFER_OVERFLOW_ERROR && U_FAILURE(status)) {
+        char buf[256];
+        sprintf(buf, "Unicode error: %s", u_errorName(status));
+        return make_cell_error(buf, GEN_ERR);
+    }
+
+    /* Reset status after expected "overflow" */
+    status = U_ZERO_ERROR;
+
+    /* Allocate and perform the real conversion */
+    char *utf8Buffer = GC_MALLOC(requiredByteCapacity + 1);
+    if (!utf8Buffer) {
+        fprintf(stderr, "ENOMEM: malloc failed\n");
+        exit(EXIT_FAILURE);
+    }
+
+    ucnv_convert(
+        "UTF-8",
+        "UTF-32LE",
+        utf8Buffer,
+        requiredByteCapacity,
+        (const char*)char_array,
+        srcByteLength,
+        &status
+    );
+
+    if (U_FAILURE(status)) {
+        char buf[256];
+        sprintf(buf, "ICU conversion failed: %s\n", u_errorName(status));
+        free(utf8Buffer);
+        return make_cell_error(buf, GEN_ERR);
+    }
+
+    /* Null-terminate the resulting UTF-8 string */
+    utf8Buffer[requiredByteCapacity] = '\0';
+    return make_cell_string(utf8Buffer);
 }

@@ -35,5 +35,6 @@ Cell* builtin_string_append(const Lex* e, const Cell* a);
 Cell* builtin_string_ref(const Lex* e, const Cell* a);
 Cell* builtin_make_string(const Lex* e, const Cell* a);
 Cell* builtin_string_list(const Lex* e, const Cell* a);
+Cell* builtin_list_string(const Lex* e, const Cell* a);
 
 #endif //COZENAGE_STRINGS_H
