@@ -17,13 +17,26 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef COZENAGE_PRINTER_H
-#define COZENAGE_PRINTER_H
+#ifndef COZENAGE_REPR_H
+#define COZENAGE_REPR_H
 
 #include "cell.h"
 
+typedef enum {
+    /** R7RS `write` mode.
+        Strings are quoted, chars are #\, etc. */
+    MODE_WRITE,
 
-void print_cell(const Cell* v);
-void println_cell(const Cell* v);
+    /** R7RS `display` mode.
+        Strings and chars are printed literally. */
+    MODE_DISPLAY,
 
-#endif //COZENAGE_PRINTER_H
+    /** For the REPL.
+        Like MODE_WRITE, but with ANSI color codes. */
+    MODE_REPL
+} print_mode_t;
+
+char* cell_to_string(const Cell* cell, print_mode_t mode);
+void debug_print_cell(const Cell* v);
+
+#endif //COZENAGE_REPR_H
