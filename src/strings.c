@@ -404,35 +404,14 @@ Cell* builtin_list_string(const Lex* e, const Cell* a) {
 
     const Cell* l = a->cell[0];
     const int l_len = a->cell[0]->len;
-    // UChar32 char_array[l_len];
-    //
-    // for (int32_t i = 0; i < l_len; i++) {
-    //     if (l->car->type != CELL_CHAR) {
-    //         return make_cell_error("list->string: All list elements must be chars", TYPE_ERR);
-    //     }
-    //     println_cell(l->car);
-    //     printf("char: %C\n", l->car->char_v);
-    //     char_array[i] = l->car->char_v;
-    //     l = l->cdr;
-    // }
-    UChar32 *char_array = (UChar32*)GC_MALLOC(l_len * sizeof(UChar32));
-    if (!char_array) {
-        fprintf(stderr, "ENOMEM: GC_MALLOC failed for temp array\n");
-        exit(EXIT_FAILURE);
-    }
+    UChar32 char_array[l_len];
+
     for (int32_t i = 0; i < l_len; i++) {
         if (l->car->type != CELL_CHAR) {
-            // Note: We allocated with GC_MALLOC, so we don't need to
-            // free it here before returning an error. The GC will get it.
             return make_cell_error("list->string: All list elements must be chars", TYPE_ERR);
         }
-        // println_cell(l->car); // You can comment these out
-        // printf("char: %C\n", l->car->char_v);
         char_array[i] = l->car->char_v;
         l = l->cdr;
-        // --- ADD THIS LINE ---
-        // Print the hex value *after* it's in the array.
-        printf("DEBUG: char_array[%d] = 0x%X\n", i, char_array[i]);
     }
 
     const int32_t srcByteLength = l_len * (int32_t)sizeof(UChar32);
@@ -441,14 +420,16 @@ Cell* builtin_list_string(const Lex* e, const Cell* a) {
 
     /* Pre-flight to get the required buffer size */
 
+    /* Explicit endianness-check required, as ICU assumes big-endian if no BOM */
+    const char* fromConverterName = U_IS_BIG_ENDIAN ? "UTF-32BE" : "UTF-32LE";
     /* Call with NULL destination to get the size*/
     const int32_t requiredByteCapacity = ucnv_convert(
-        "UTF-8",                 // toConverterName
-        "UTF-32LE",                // fromConverterName
-        nullptr,                 // target (NULL for pre-flight)
-        0,                       // targetCapacity (0 for pre-flight)
-        (const char*)char_array, // source
-        srcByteLength,           // sourceLength (in bytes!)
+        "UTF-8",                 /* toConverterName */
+        fromConverterName,       /* fromConverterName */
+        nullptr,                 /* target (NULL for pre-flight) */
+        0,                       /* targetCapacity (0 for pre-flight) */
+        (const char*)char_array, /* source */
+        srcByteLength,           /* sourceLength (in bytes!) */
         &status
     );
 
@@ -470,7 +451,7 @@ Cell* builtin_list_string(const Lex* e, const Cell* a) {
 
     ucnv_convert(
         "UTF-8",
-        "UTF-32LE",
+        fromConverterName,
         utf8Buffer,
         requiredByteCapacity,
         (const char*)char_array,

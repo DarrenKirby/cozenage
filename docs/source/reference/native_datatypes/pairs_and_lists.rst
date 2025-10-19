@@ -50,8 +50,8 @@ List and pair procedures
 
    .. code-block:: scheme
 
-      (cons 1 2)
-      ;=> (1 . 2)
+      --> (cons 1 2)
+        (1 . 2)
 
 .. _proc:car:
 
@@ -63,14 +63,16 @@ List and pair procedures
    :type pair: pair
    :return: The first element (car) of the pair.
    :rtype: any
-   :raises: ``&error`` if *pair* is not a pair.
+   :raises: Type error if *pair* is not a pair.
 
    **Example:**
 
    .. code-block:: scheme
 
-      (car (cons 1 2))
-      ;=> 1
+      --> (car (cons 1 2))
+        1
+      --> (car '(1 2 3))
+        1
 
 .. _proc:cdr:
 
@@ -82,11 +84,13 @@ List and pair procedures
    :type pair: pair
    :return: The second element (cdr) of the pair.
    :rtype: any
-   :raises: ``&error`` if *pair* is not a pair.
+   :raises: Type error if *pair* is not a pair.
 
    **Example:**
 
    .. code-block:: scheme
 
-      (cdr (cons 1 2))
-      ;=> 2
+      --> (cdr (cons 1 2))
+        2
+      --> (cdr '(1 2 3 ))
+        (2 3)
