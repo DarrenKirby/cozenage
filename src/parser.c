@@ -28,7 +28,7 @@
 #include <limits.h>
 #include <wctype.h>
 #include <unicode/uchar.h>
-/* Linux needs this include, macOS does not */
+/* Linux needs this include, macOS and FreeBSD do not */
 #ifdef __linux__
 #include <ctype.h>
 #endif
@@ -346,6 +346,9 @@ Cell* parse_tokens(Parser *p) {
     if (strcmp(tok, "(") == 0) {
         advance(p);  /* consume '(' */
         Cell *sexpr = make_cell_sexpr();
+        if (peek(p) && strcmp(peek(p), ")") == 0 ) {
+            return make_cell_error("Bad expression: '()'", SYNTAX_ERR);
+        }
         while (peek(p) && strcmp(peek(p), ")") != 0) {
             cell_add(sexpr, parse_tokens(p));
         }
@@ -389,7 +392,7 @@ Cell* parse_atom(const char *tok) {
             return make_cell_char(' ');
         }
 
-        /* 1. Check for multi-letter named characters and hex literals FIRST. */
+        /* Check for multi-letter named characters and hex literals. */
         if (payload_len > 1 || payload[0] == 'x') {
             /* Handle (R7RS required) named characters */
             if (strcmp(payload, "space") == 0) return make_cell_char(' ');
@@ -536,14 +539,15 @@ Cell* parse_atom(const char *tok) {
 
         if (tok[0] == '#' && len > 2) {
             switch (tok[1]) {
-            case 'b': base = 2; num_start = tok + 2; break;
-            case 'o': base = 8; num_start = tok + 2; break;
-            case 'd': base = 10; num_start = tok + 2; break;
-            case 'x': base = 16; num_start = tok + 2; break;
+            case 'b': base = 2; break;
+            case 'o': base = 8; break;
+            case 'd': base = 10; break;
+            case 'x': base = 16; break;
                 /* this will never run, but the linter
                  * complains about no default case */
             default: ;
             }
+            num_start = tok + 2;
         }
 
         if (base != 10 || !strchr(tok, '.')) {
