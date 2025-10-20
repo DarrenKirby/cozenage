@@ -220,6 +220,9 @@ This is a list of what *is* implemented so far. I try to keep it up to date:
 - `make-string`
 - `string->list`
 - `list->string`
+- `substring`
+- `string-copy`
+- `string-copy!`
 
 ### Control features and list iteration
 
