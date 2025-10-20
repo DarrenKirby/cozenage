@@ -45,7 +45,7 @@ ICU_LIBS = $(shell pkg-config --libs icu-uc)
 
 # Specific flag sets for different builds
 CFLAGS_DEFAULT = -Wall -Wextra -O2 -std=gnu2x $(ICU_CFLAGS)
-CFLAGS_TEST = -Wall -Wextra -g -O0 -std=gnu2x -DTESTING__ $(ICU_CFLAGS)
+CFLAGS_TEST = -Wall -Wextra -g -O0 -std=gnu2x $(ICU_CFLAGS)
 
 # --- Libraries ---
 # Auto-detect readline or libedit
