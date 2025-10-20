@@ -27,8 +27,6 @@
 #include <unicode/ucnv.h>
 #include <unicode/uchar.h>
 
-#include "repr.h"
-
 
 /* Helper for other string procedures.
  * Like strlen, but works with UTF8 */
@@ -64,6 +62,7 @@ Cell* builtin_string(const Lex* e, const Cell* a) {
     if (err) return err;
 
     const int str_len = a->count;
+    /* 4-bytes per char, plus 1 for null */
     char* the_string = GC_MALLOC_ATOMIC(str_len * 4 + 1);
     int32_t j = 0;
     for (int i = 0; i < str_len; i++) {
@@ -82,7 +81,9 @@ Cell* builtin_string_length(const Lex* e, const Cell* a) {
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
     if (a->cell[0]->type != CELL_STRING) {
-        return make_cell_error("string-length: arg 1 must be a string", TYPE_ERR);
+        return make_cell_error(
+            "string-length: arg 1 must be a string",
+            TYPE_ERR);
     }
     return make_cell_integer(string_length(a->cell[0]));
 }
@@ -250,10 +251,14 @@ Cell* builtin_string_ref(const Lex* e, const Cell* a) {
     Cell* err = CHECK_ARITY_EXACT(a, 2);
     if (err) return err;
     if (a->cell[0]->type != CELL_STRING) {
-        return make_cell_error("string-ref: arg 1 must be a string", TYPE_ERR);
+        return make_cell_error(
+            "string-ref: arg 1 must be a string",
+            TYPE_ERR);
     }
     if (a->cell[1]->type != CELL_INTEGER) {
-        return make_cell_error("string-ref: arg 2 must be an integer", TYPE_ERR);
+        return make_cell_error(
+            "string-ref: arg 2 must be an integer",
+            TYPE_ERR);
     }
 
     int32_t byte_index = 0;
@@ -266,7 +271,9 @@ Cell* builtin_string_ref(const Lex* e, const Cell* a) {
 
         /* Check if we hit the end of the string before finding the character. */
         if (s[byte_index] == '\0') {
-            return make_cell_error("string-ref: index out of range", INDEX_ERR);
+            return make_cell_error(
+                "string-ref: index out of range",
+                INDEX_ERR);
         }
 
         U8_NEXT(s, byte_index, -1, c);  /* -1: null terminated */
@@ -278,7 +285,9 @@ Cell* builtin_string_ref(const Lex* e, const Cell* a) {
 
         current_char_index++;
     }
-    return make_cell_error("string-ref: invalid or malformed string", VALUE_ERR);
+    return make_cell_error(
+        "string-ref: invalid or malformed string",
+        VALUE_ERR);
 }
 
 /* (make-string k)
@@ -291,7 +300,9 @@ Cell* builtin_make_string(const Lex* e, const Cell* a) {
     Cell* err = CHECK_ARITY_RANGE(a, 1, 2);
     if (err) return err;
     if (a->cell[0]->type != CELL_INTEGER) {
-        return make_cell_error("make-string: arg 1 must be an integer", TYPE_ERR);
+        return make_cell_error(
+            "make-string: arg 1 must be an integer",
+            TYPE_ERR);
     }
 
     UChar32 fill_char;
@@ -300,7 +311,9 @@ Cell* builtin_make_string(const Lex* e, const Cell* a) {
         fill_char = 0x0020;
     } else {
         if (a->cell[1]->type != CELL_CHAR) {
-            return make_cell_error("make-string: arg 2 must be a char", TYPE_ERR);
+            return make_cell_error(
+                "make-string: arg 2 must be a char",
+                TYPE_ERR);
         }
         fill_char = a->cell[1]->char_v;
     }
@@ -339,7 +352,9 @@ Cell* builtin_string_list(const Lex* e, const Cell* a) {
     Cell* err = CHECK_ARITY_RANGE(a, 1, 3);
     if (err) return err;
     if (a->cell[0]->type != CELL_STRING) {
-        return make_cell_error("string->list: arg 1 must be a string", TYPE_ERR);
+        return make_cell_error(
+            "string->list: arg 1 must be a string",
+            TYPE_ERR);
     }
 
     const int32_t str_len = string_length(a->cell[0]);
@@ -349,13 +364,17 @@ Cell* builtin_string_list(const Lex* e, const Cell* a) {
 
     if (a->count == 2 || a->count == 3) {
         if (a->cell[1]->type != CELL_INTEGER) {
-            return make_cell_error("string->list: arg 2 must be an integer", TYPE_ERR);
+            return make_cell_error(
+                "string->list: arg 2 must be an integer",
+                TYPE_ERR);
         }
         start = (int)a->cell[1]->integer_v;
     }
     if (a->count == 3) {
         if (a->cell[2]->type != CELL_INTEGER) {
-            return make_cell_error("string->list: arg 3 must be an integer", TYPE_ERR);
+            return make_cell_error(
+                "string->list: arg 3 must be an integer",
+                TYPE_ERR);
         }
         end = (int)a->cell[2]->integer_v;
     }
@@ -363,13 +382,15 @@ Cell* builtin_string_list(const Lex* e, const Cell* a) {
     if (start < 0 || start > str_len ||
         end < 0   || end > str_len   ||
         start > end) {
-        return make_cell_error("string->list: index out of range", INDEX_ERR);
+        return make_cell_error(
+            "string->list: index out of range",
+            INDEX_ERR);
         }
 
     /* Build the list */
     int32_t byte_index = 0;
     int32_t char_index = 0;
-    int32_t current_list_len = end - start; // Start with the total length
+    int32_t current_list_len = end - start; /* Start with the total length */
     UChar32 c = 0;
     Cell* head = make_cell_nil();
     Cell* tail = nullptr;
@@ -397,6 +418,10 @@ Cell* builtin_string_list(const Lex* e, const Cell* a) {
     return head;
 }
 
+/* (list->string list)
+ * It is an error if any element of list is not a character. list->string returns a newly allocated
+ * string formed from the elements in the list. Order is preserved. string->list and list->string
+ * are inverses so far as equal? is concerned. */
 Cell* builtin_list_string(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
@@ -408,7 +433,9 @@ Cell* builtin_list_string(const Lex* e, const Cell* a) {
 
     for (int32_t i = 0; i < l_len; i++) {
         if (l->car->type != CELL_CHAR) {
-            return make_cell_error("list->string: All list elements must be chars", TYPE_ERR);
+            return make_cell_error(
+                "list->string: All list elements must be chars",
+                TYPE_ERR);
         }
         char_array[i] = l->car->char_v;
         l = l->cdr;
@@ -421,6 +448,7 @@ Cell* builtin_list_string(const Lex* e, const Cell* a) {
     /* Pre-flight to get the required buffer size */
 
     /* Explicit endianness-check required, as ICU assumes big-endian if no BOM */
+    // ReSharper disable once CppDFAUnreachableCode
     const char* fromConverterName = U_IS_BIG_ENDIAN ? "UTF-32BE" : "UTF-32LE";
     /* Call with NULL destination to get the size*/
     const int32_t requiredByteCapacity = ucnv_convert(
@@ -428,6 +456,7 @@ Cell* builtin_list_string(const Lex* e, const Cell* a) {
         fromConverterName,       /* fromConverterName */
         nullptr,                 /* target (NULL for pre-flight) */
         0,                       /* targetCapacity (0 for pre-flight) */
+        // ReSharper disable once CppRedundantCastExpression
         (const char*)char_array, /* source */
         srcByteLength,           /* sourceLength (in bytes!) */
         &status
@@ -454,6 +483,7 @@ Cell* builtin_list_string(const Lex* e, const Cell* a) {
         fromConverterName,
         utf8Buffer,
         requiredByteCapacity,
+        // ReSharper disable once CppRedundantCastExpression
         (const char*)char_array,
         srcByteLength,
         &status
@@ -469,4 +499,252 @@ Cell* builtin_list_string(const Lex* e, const Cell* a) {
     /* Null-terminate the resulting UTF-8 string */
     utf8Buffer[requiredByteCapacity] = '\0';
     return make_cell_string(utf8Buffer);
+}
+
+/* (substring string start end)
+ * The substring procedure returns a newly allocated string formed from the characters of string
+ * beginning with index start and ending with index end. This is equivalent to calling string-copy
+ * with the same arguments, but is provided for backward compatibility and stylistic flexibility. */
+Cell* builtin_substring(const Lex* e, const Cell* a) {
+    /* Just check that we have 3 args and kick it to string-copy... */
+    Cell* err = CHECK_ARITY_EXACT(a, 3);
+    if (err) return err;
+    return builtin_string_copy(e, a);
+}
+
+/* (string-set! string k char)
+ * It is an error if k is not a valid index of string. The string-set! procedure stores char in
+ * element k of string. */
+Cell* builtin_string_set_bang(const Lex* e, const Cell* a) {
+    (void)e;
+    (void)a;
+    return make_cell_error("Not implemented yet", VALUE_ERR);
+}
+
+/* (string-copy string )
+ * (string-copy string start )
+ * (string-copy string start end )
+ * Returns a newly allocated copy of the part of the given string between start and end. */
+Cell* builtin_string_copy(const Lex* e, const Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_RANGE(a, 1, 3);
+    if (err) return err;
+    if (a->cell[0]->type != CELL_STRING) {
+        return make_cell_error(
+            "string-copy: arg 1 must be a string",
+            TYPE_ERR);
+    }
+    const char* str = a->cell[0]->str;
+
+    /* Simplest case, copy entire string */
+    if (a->count == 1) {
+        return make_cell_string(GC_strdup(str));
+    }
+
+    /* Difficult cases, true substrings with start and end indices */
+    const int32_t total_byte_len = (int)strlen(a->cell[0]->str);
+    int32_t start_idx = 0;
+    int32_t end_idx = total_byte_len;
+
+    /* Check args for non-default indices */
+    if (a->count == 2 || a->count == 3) {
+        if (a->cell[1]->type != CELL_INTEGER) {
+            return make_cell_error(
+                "string-copy: arg 2 must be an integer",
+                TYPE_ERR);
+        }
+        start_idx = (int)a->cell[1]->integer_v;
+        if (a->count == 3) {
+            if (a->cell[2]->type != CELL_INTEGER) {
+                return make_cell_error(
+                    "string-copy: arg 3 must be an integer",
+                    TYPE_ERR);
+            }
+            end_idx = (int)a->cell[2]->integer_v;
+        }
+    }
+
+    /* Validate for legal indices */
+    const int32_t char_length = string_length(a->cell[0]);
+    if (start_idx < 0) {
+        return make_cell_error(
+            "string-copy: start index must be non-negative",
+            INDEX_ERR);
+    }
+    if (end_idx < 0) {
+        return make_cell_error(
+            "string-copy: end index must be non-negative",
+            INDEX_ERR);
+    }
+    if (start_idx > char_length) {
+        return make_cell_error(
+            "string-copy: start index is out of bounds",
+            INDEX_ERR);
+    }
+    if (end_idx > char_length) {
+        return make_cell_error(
+            "string-copy: end index is out of bounds",
+            INDEX_ERR);
+    }
+    if (start_idx > end_idx) {
+        return make_cell_error(
+            "string-copy: start index cannot be greater than end index",
+            INDEX_ERR);
+    }
+
+    /* Calculate the UTF8 codepoint indices */
+    int32_t byte_start_idx = 0;
+    U8_FWD_N(str, byte_start_idx, total_byte_len, start_idx);
+    const int32_t code_points_to_copy = end_idx - start_idx;
+    int32_t byte_end_idx = byte_start_idx;
+    U8_FWD_N(str, byte_end_idx, total_byte_len, code_points_to_copy);
+
+    /* Allocate and copy */
+    int32_t bytes_to_copy = byte_end_idx - byte_start_idx;
+    char *new_str = GC_MALLOC_ATOMIC(bytes_to_copy + 1);
+    memcpy(new_str, str + byte_start_idx, bytes_to_copy);
+    new_str[bytes_to_copy] = '\0';
+    return make_cell_string(new_str);
+}
+
+/* (string-copy! to at from )
+ * (string-copy! to at from start )
+ * (string-copy! to at from start end )
+ * It is an error if at is less than zero or greater than the length of to. It is also an error if
+ * (- (string-length to) at) is less than (- end start). Copies the characters of string from
+ * between start and end to string to , starting at 'at' . The order in which characters are copied
+ * is unspecified, except that if the source and destination overlap, copying takes place as if the
+ * source is first copied into a temporary string and then into the destination. This can be
+ * achieved without allocating storage by making sure to copy in the correct direction in such
+ * circumstances. */
+Cell* builtin_string_copy_bang(const Lex* e, const Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_RANGE(a, 3, 5);
+    if (err) return err;
+
+    /* Validate Arg Types */
+    if (a->cell[0]->type != CELL_STRING)
+        return make_cell_error(
+            "string-copy!: arg 1 must be a string (to)",
+            TYPE_ERR);
+    if (a->cell[1]->type != CELL_INTEGER)
+        return make_cell_error(
+            "string-copy!: arg 2 must be an integer (at)",
+            TYPE_ERR);
+    if (a->cell[2]->type != CELL_STRING)
+        return make_cell_error(
+            "string-copy!: arg 3 must be a string (from)",
+            TYPE_ERR);
+
+    /* Get 'to' string and 'at' index */
+    Cell* to_cell = a->cell[0];
+    const char* to_str = to_cell->str;
+    const int32_t to_char_len = string_length(to_cell);
+    const int32_t to_byte_len = (int32_t)strlen(to_str);
+    const int32_t to_start_idx = (int32_t)a->cell[1]->integer_v;
+
+    /* Get 'from' string and 'start'/'end' indices */
+    const char* from_str = a->cell[2]->str;
+    const int32_t from_char_len = string_length(a->cell[2]);
+    const int32_t from_byte_len = (int32_t)strlen(from_str);
+
+    int32_t from_start_idx = 0;
+    int32_t from_end_idx = from_char_len; /* Default to char length */
+
+    if (a->count >= 4) {
+        if (a->cell[3]->type != CELL_INTEGER)
+            return make_cell_error(
+                "string-copy!: arg 4 must be an integer (start)",
+                TYPE_ERR);
+        from_start_idx = (int32_t)a->cell[3]->integer_v;
+    }
+    if (a->count == 5) {
+        if (a->cell[4]->type != CELL_INTEGER)
+            return make_cell_error(
+                "string-copy!: arg 5 must be an integer (end)",
+                TYPE_ERR);
+        from_end_idx = (int32_t)a->cell[4]->integer_v;
+    }
+
+    /* R7RS Index Validation */
+    if (to_start_idx < 0 || to_start_idx > to_char_len)
+        return make_cell_error(
+            "string-copy!: 'at' index is out of bounds for 'to' string",
+            INDEX_ERR);
+    if (from_start_idx < 0 || from_start_idx > from_char_len)
+        return make_cell_error(
+            "string-copy!: 'start' index is out of bounds for 'from' string",
+            INDEX_ERR);
+    if (from_end_idx < 0 || from_end_idx > from_char_len)
+        return make_cell_error(
+            "string-copy!: 'end' index is out of bounds for 'from' string",
+            INDEX_ERR);
+    if (from_start_idx > from_end_idx)
+        return make_cell_error(
+            "string-copy!: 'start' index cannot be greater than 'end' index",
+            INDEX_ERR);
+
+    /* R7RS Destination Bounds Check */
+    const int32_t code_points_to_copy = from_end_idx - from_start_idx;
+    const int32_t to_available_chars = to_char_len - to_start_idx;
+
+    if (to_available_chars < code_points_to_copy) {
+        return make_cell_error(
+            "string-copy!: 'from' substring is larger than available space in 'to' string",
+            VALUE_ERR);
+    }
+
+    /* Calculate all BYTE offsets */
+
+    /* 'to' prefix (before 'at') */
+    int32_t to_prefix_byte_end = 0;
+    U8_FWD_N(to_str, to_prefix_byte_end, to_byte_len, to_start_idx);
+
+    /* 'from' substring */
+    int32_t from_byte_start = 0;
+    U8_FWD_N(from_str, from_byte_start, from_byte_len, from_start_idx);
+    int32_t from_byte_end = from_byte_start;
+    U8_FWD_N(from_str, from_byte_end, from_byte_len, code_points_to_copy);
+    const int32_t bytes_to_copy = from_byte_end - from_byte_start;
+
+    /* 'to' suffix (after copied part) */
+    int32_t to_suffix_byte_start = to_prefix_byte_end;
+    U8_FWD_N(to_str, to_suffix_byte_start, to_byte_len, code_points_to_copy);
+    const int32_t to_suffix_bytes = to_byte_len - to_suffix_byte_start;
+
+    /* Build New String */
+    const int32_t to_prefix_bytes = to_prefix_byte_end;
+    const int32_t new_total_bytes = to_prefix_bytes + bytes_to_copy + to_suffix_bytes;
+
+    char* new_str = GC_MALLOC_ATOMIC(new_total_bytes + 1);
+    if (!new_str) {
+        fprintf(stderr, "ENOMEM: malloc failed\n");
+        exit(EXIT_FAILURE);
+    }
+
+    /* Copy part 1: 'to' prefix */
+    memcpy(new_str, to_str, to_prefix_bytes);
+
+    /* Copy part 2: 'from' substring */
+    memcpy(new_str + to_prefix_bytes, from_str + from_byte_start, bytes_to_copy);
+
+    /* Copy part 3: 'to' suffix */
+    memcpy(new_str + to_prefix_bytes + bytes_to_copy, to_str + to_suffix_byte_start, to_suffix_bytes);
+
+    new_str[new_total_bytes] = '\0';
+
+    /* Mutate the Cell and return */
+    to_cell->str = new_str;
+    return to_cell;
+}
+
+/* (string-fill! string fill)
+ * (string-fill! string fill start)
+ * (string-fill! string fill start end)
+ * It is an error if fill is not a character. The string-fill! procedure stores fill in the elements
+ * of string between start and end. */
+Cell* builtin_string_fill(const Lex* e, const Cell* a) {
+    (void)e;
+    (void)a;
+    return make_cell_error("Not implemented yet", VALUE_ERR);
 }

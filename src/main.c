@@ -148,7 +148,7 @@ static char* read_multiline(const char* prompt, const char* cont_prompt) {
  * through a 2 step lexer/parser stream, and convert
  * the value to a Cell struct.
  * */
-Cell* coz_read(Lex* e) {
+Cell* coz_read(const Lex* e) {
     (void)e;
     char *input = read_multiline(PS1_PROMPT, PS2_PROMPT);
     /* reset bold input */
@@ -228,6 +228,7 @@ void repl() {
         (void)load_scheme_library("bits", e);
     }
 
+    // ReSharper disable once CppDFAEndlessLoop
     while (true) {
         Cell *val = coz_read(e);
         if (!val) {

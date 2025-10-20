@@ -310,6 +310,9 @@ void lex_add_builtins(const Lex* e) {
     lex_add_builtin(e, "make-string", builtin_make_string);
     lex_add_builtin(e, "string->list", builtin_string_list);
     lex_add_builtin(e, "list->string", builtin_list_string);
+    lex_add_builtin(e, "substring", builtin_substring);
+    lex_add_builtin(e, "string-copy", builtin_string_copy);
+    lex_add_builtin(e, "string-copy!", builtin_string_copy_bang);
     /* Control features */
     lex_add_builtin(e, "apply", builtin_apply);
     lex_add_builtin(e, "map", builtin_map);
