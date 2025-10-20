@@ -124,6 +124,7 @@ Cell* coz_eval(Lex* env, Cell* expr) {
         }
 
         Cell* result = coz_apply(f, args, &env, &expr);
+        if (!result) return nullptr;
         if (result->type == CELL_TRAMPOLINE) {
             expr = result;
             continue;

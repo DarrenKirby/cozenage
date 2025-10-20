@@ -152,18 +152,22 @@ static void cell_to_string_worker(const Cell* v, string_builder_t *sb, print_mod
         break;
     }
     case CELL_CHAR:
-        switch (v->char_v) {
-        case '\n': sb_append_str(sb, "#\\newline");   break;
-        case ' ':  sb_append_str(sb, "#\\space");     break;
-        case '\t': sb_append_str(sb, "#\\tab");       break;
-        case 0x7:  sb_append_str(sb, "#\\alarm");     break;
-        case 0x8:  sb_append_str(sb, "#\\backspace"); break;
-        case 0x1b: sb_append_str(sb, "#\\escape");    break;
-        case 0xd:  sb_append_str(sb, "#\\return");    break;
-        case 0x7f: sb_append_str(sb, "#\\delete");    break;
-        case '\0': sb_append_str(sb, "#\\null");      break;
+        if (mode == MODE_DISPLAY) {
+            sb_append_fmt(sb, "%C", v->char_v);
+        } else {
+            switch (v->char_v) {
+                case '\n': sb_append_str(sb, "#\\newline");   break;
+                case ' ':  sb_append_str(sb, "#\\space");     break;
+                case '\t': sb_append_str(sb, "#\\tab");       break;
+                case 0x7:  sb_append_str(sb, "#\\alarm");     break;
+                case 0x8:  sb_append_str(sb, "#\\backspace"); break;
+                case 0x1b: sb_append_str(sb, "#\\escape");    break;
+                case 0xd:  sb_append_str(sb, "#\\return");    break;
+                case 0x7f: sb_append_str(sb, "#\\delete");    break;
+                case '\0': sb_append_str(sb, "#\\null");      break;
 
-        default:   sb_append_fmt(sb, "#\\%C", v->char_v); break;
+                default:   sb_append_fmt(sb, "#\\%C", v->char_v); break;
+            }
         }
         break;
 

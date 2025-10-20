@@ -41,9 +41,7 @@ Cell* builtin_display(const Lex* e, const Cell* a) {
         }
         port = a->cell[1];
     }
-    if (fputs(a->cell[0]->str, port->fh) == EOF) {
-        return make_cell_error(strerror(errno), FILE_ERR);
-    }
+    fprintf(port->fh, "%s", cell_to_string(a->cell[0], MODE_DISPLAY));
     return nullptr;
 }
 
