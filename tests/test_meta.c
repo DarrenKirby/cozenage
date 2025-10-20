@@ -4,19 +4,22 @@
 #include <criterion/redirect.h>
 #include "../src/eval.h"
 #include "../src/parser.h"
-#include "../src/printer.h"
+#include "../src/repr.h"
+#include "../src/symbols.h"
 
 /* Define the global test environment variable. */
 Lex* test_env;
 
 void setup_suite(void) {
+    symbol_table = ht_create(128);
     init_global_singletons();
-    test_env = lex_initialize();
+    test_env = lex_initialize_global_env();
     lex_add_builtins(test_env);
+    init_special_forms();
 }
 
 void teardown_suite(void) {
-    //lex_delete(test_env);
+    /* Don't need to manually destroy with GC */
 }
 
 void suite_setup_wrapper(void) {
@@ -32,7 +35,7 @@ char* t_eval(const char* input) {
     const Cell *result = coz_eval(test_env, v);
 
     /* Print the result to stdout, and push stdout into the capture pipe */
-    print_cell(result);
+    printf("%s\n", cell_to_string(result, MODE_WRITE));
     fflush(stdout);
 
     /* Capture the result from stdout */
