@@ -92,7 +92,8 @@ static void repr_sequence(const Cell* v,
 }
 
 /* Generate external representations of all Cozenage/Scheme types */
-static void cell_to_string_worker(const Cell* v, string_builder_t *sb, print_mode_t mode) {
+static void cell_to_string_worker(const Cell* v, string_builder_t *sb,
+                                  const print_mode_t mode) {
     switch (v->type) {
     case CELL_REAL:
         repr_long_double(v->real_v, sb);
@@ -145,7 +146,8 @@ static void cell_to_string_worker(const Cell* v, string_builder_t *sb, print_mod
         }
 
         if (mode == MODE_REPL) {
-            sb_append_fmt(sb, " %s%s %s %s", ANSI_RED_B, err_str, ANSI_RESET, v->error_v);
+            sb_append_fmt(sb, " %s%s %s %s", ANSI_RED_B,
+                err_str, ANSI_RESET, v->error_v);
         } else {
             sb_append_fmt(sb, " %s %s", err_str, v->error_v);
         }
@@ -187,13 +189,15 @@ static void cell_to_string_worker(const Cell* v, string_builder_t *sb, print_mod
     case CELL_PROC:
         if (v->is_builtin) {
             if (mode == MODE_REPL) {
-                sb_append_fmt(sb, "<builtin procedure '%s%s%s'>", ANSI_GREEN_B, v->f_name, ANSI_RESET);
+                sb_append_fmt(sb, "<builtin procedure '%s%s%s'>",
+                    ANSI_GREEN_B, v->f_name, ANSI_RESET);
             } else {
                 sb_append_fmt(sb, "<builtin procedure '%s'>", v->f_name);
             }
         } else {
             if (mode == MODE_REPL) {
-                sb_append_fmt(sb, "<lambda '%s%s%s'>", ANSI_GREEN_B, v->l_name ? v->l_name : "anonymous", ANSI_RESET);
+                sb_append_fmt(sb, "<lambda '%s%s%s'>", ANSI_GREEN_B,
+                    v->l_name ? v->l_name : "anonymous", ANSI_RESET);
             } else {
                 sb_append_fmt(sb, "<lambda '%s'>", v->l_name ? v->l_name : "anonymous");
             }
