@@ -85,6 +85,11 @@ Cell* coz_eval(Lex* env, Cell* expr) {
 
         /* S-expressions:  */
         /* Grab first element without evaluating yet */
+        if (expr->count == 0) {
+            /* Unquoted "()" */
+            return make_cell_error("bad expression: '()'", SYNTAX_ERR);
+        }
+
         Cell* first = expr->cell[0];
 
         /* These special forms need to be dispatched out of

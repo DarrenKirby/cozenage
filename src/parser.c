@@ -229,6 +229,7 @@ char **lexer(const char *input, int *count) {
 
     /* Debug print */
     if (DEBUG) {
+        // ReSharper disable once CppDFAUnreachableCode
         for (int i = 0; i < n; i++) {
             printf("TOK[%d] = |%s|\n", i, tokens[i]);
         }
@@ -346,9 +347,7 @@ Cell* parse_tokens(Parser *p) {
     if (strcmp(tok, "(") == 0) {
         advance(p);  /* consume '(' */
         Cell *sexpr = make_cell_sexpr();
-        if (peek(p) && strcmp(peek(p), ")") == 0 ) {
-            return make_cell_error("Bad expression: '()'", SYNTAX_ERR);
-        }
+
         while (peek(p) && strcmp(peek(p), ")") != 0) {
             cell_add(sexpr, parse_tokens(p));
         }

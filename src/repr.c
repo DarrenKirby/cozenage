@@ -254,7 +254,7 @@ static void cell_to_string_worker(const Cell* v, string_builder_t *sb,
 }
 
 /* Generates the external representation of a Cell as a string. */
-char* cell_to_string(const Cell* cell, print_mode_t mode) {
+char* cell_to_string(const Cell* cell, const print_mode_t mode) {
     string_builder_t *sb = sb_new();
     cell_to_string_worker(cell, sb, mode);
     return sb->buffer;
