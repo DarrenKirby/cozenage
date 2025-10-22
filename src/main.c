@@ -22,6 +22,7 @@
 #include "parser.h"
 #include "config.h"
 #include "repl.h"
+#include "runner.h"
 #include "cell.h"
 #include <gc/gc.h>
 #include <stdio.h>
@@ -140,8 +141,19 @@ int main(const int argc, char** argv) {
         }
     }
 
-    /* Run the REPL */
-    const int exit_status = run_repl(load_libs);
 
-    return exit_status;
+    int non_option_args = argc - optind;
+
+    if (non_option_args > 0) {
+        // File-Runner Mode
+        // The first non-option argument is found at argv[optind]
+        char *file_path = argv[optind];
+
+        // We pass the file path (argv[optind]) AND the config struct.
+        return run_file_script(file_path, load_libs);
+    } else {
+        // REPL Mode (no non-option arguments were provided)
+        run_repl(load_libs);
+        return EXIT_SUCCESS;
+    }
 }
