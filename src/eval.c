@@ -19,8 +19,8 @@
 
 #include "eval.h"
 #include "special_forms.h"
-#include "main.h"
 #include "cell.h"
+#include "repr.h"
 #include "symbols.h"
 
 
@@ -103,12 +103,15 @@ Cell* coz_eval(Lex* env, Cell* expr) {
 
         /* It's not a special form, so it's a procedure call. */
         /* First, evaluate the procedure itself. */
-        const Cell* f = coz_eval(env, first);
+        Cell* f = coz_eval(env, first);
+        if (f->type == CELL_ERROR) {
+            return f;
+        }
         if (f->type != CELL_PROC) {
-            printf("Bad token: ");
-            printf(ANSI_RED_B);
-            printf("%s: ", ANSI_RESET);
-            return make_cell_error("S-expression does not start with a procedure", TYPE_ERR);
+            char buf[512];
+            snprintf(buf, sizeof(buf), "bad identifier: '%s'. Expression must start with a procedure",
+                cell_to_string(f, MODE_REPL));
+            return make_cell_error(buf, TYPE_ERR);
         }
 
         /* Create a new list containing the unevaluated arguments. */
