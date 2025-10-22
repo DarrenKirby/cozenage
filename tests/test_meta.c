@@ -35,7 +35,7 @@ char* t_eval(const char* input) {
     const Cell *result = coz_eval(test_env, v);
 
     /* Print the result to stdout, and push stdout into the capture pipe */
-    printf("%s\n", cell_to_string(result, MODE_WRITE));
+    printf("%s", cell_to_string(result, MODE_WRITE));
     fflush(stdout);
 
     /* Capture the result from stdout */
