@@ -90,7 +90,7 @@ static char* collect_one_expression_from_file(FILE *input_file) {
     /* Initial buffer size and allocation (will dynamically resize if needed) */
     size_t capacity = 1024;
     size_t length = 0;
-    char *buffer = (char*)malloc(capacity);
+    char *buffer = malloc(capacity);
     if (!buffer) {
         perror("Failed to allocate memory for expression buffer");
         return NULL;
@@ -121,7 +121,7 @@ static char* collect_one_expression_from_file(FILE *input_file) {
         /* Append Character to Buffer */
         if (length + 1 >= capacity) {
             capacity *= 2;
-            char *new_buffer = (char*)realloc(buffer, capacity);
+            char *new_buffer = realloc(buffer, capacity);
             if (!new_buffer) {
                 perror("Failed to reallocate buffer");
                 free(buffer);

@@ -23,6 +23,6 @@
 #include "config.h"
 
 
-int run_repl(lib_load_config config);
+int run_repl(lib_load_config load_libs);
 
 #endif //COZENAGE_REPL_H

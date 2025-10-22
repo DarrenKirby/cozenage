@@ -167,7 +167,7 @@ void repl(Lex* e) {
     }
 }
 
-int run_repl(lib_load_config load_libs) {
+int run_repl(const lib_load_config load_libs) {
     /* Print Version and Exit Information */
     printf("  %s%s%s version %s\n", ANSI_BLUE_B, APP_NAME, ANSI_RESET, APP_VERSION);
     printf("  Press <Ctrl+d> or type 'exit' to quit\n\n");

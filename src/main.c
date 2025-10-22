@@ -26,13 +26,11 @@
 #include "cell.h"
 #include <gc/gc.h>
 #include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
 #include <string.h>
-#include <signal.h>
 #include <getopt.h>
 
 
+/* Initialize load_libs struct to zeros */
 lib_load_config load_libs = {0};
 
 static void show_help(void) {
@@ -141,19 +139,17 @@ int main(const int argc, char** argv) {
         }
     }
 
-
-    int non_option_args = argc - optind;
+    const int non_option_args = argc - optind;
 
     if (non_option_args > 0) {
-        // File-Runner Mode
-        // The first non-option argument is found at argv[optind]
-        char *file_path = argv[optind];
+        /* File-Runner Mode */
+        const char *file_path = argv[optind];
 
-        // We pass the file path (argv[optind]) AND the config struct.
+        /* Pass the file path (argv[optind]) and the load_libs struct. */
         return run_file_script(file_path, load_libs);
-    } else {
-        // REPL Mode (no non-option arguments were provided)
-        run_repl(load_libs);
-        return EXIT_SUCCESS;
     }
+
+    /* REPL Mode (no non-option arguments were provided) */
+    run_repl(load_libs);
+    return EXIT_SUCCESS;
 }
