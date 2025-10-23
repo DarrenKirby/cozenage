@@ -5,7 +5,7 @@
 ## About
 
 This started as a 'toy' Lisp, but I am steadily, if slowly, working towards a full
-R7RS [Scheme implementation](https://standards.scheme.org/). After the bulk of the R7RS standard is implemented,
+R5RS/R7RS [Scheme implementation](https://standards.scheme.org/). After the bulk of the standard is implemented,
 I plan to add several `(cozenage foo)` libraries to interface with the OS, and eventually, I would
 like to implement some kind of 'shell mode' which would act like an interpretive shell 
 with Scheme syntax, kicking all 'unbound symbols' down a level as potential shell commands.
@@ -34,7 +34,16 @@ If you do not have cmake, run `make nocmake`.
 
 There is also a bit more in depth guide as part of the [Cozenage documentation](https://darrenkirby.github.io/cozenage/howto/installation.html)
 
+## Running Cozenage
 
+To interpret a Scheme file (typically with an .scm or .ss extension, although Cozenage will attempt
+to run any file argument as Scheme code) just add the file name after and options:
+
+    $ ./cozenage -l write,file my_program.scm
+
+To run the REPL just run the program with no arguments:
+
+    $ ./cozenage -l write,file
 
 ## Builtin procedures (scheme base)
 
