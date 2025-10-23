@@ -26,7 +26,6 @@
 #include "repr.h"
 #include "symbols.h"
 #include "eval.h"
-#include "load_library.h"
 #include <unistd.h>
 #include <string.h>
 #include <signal.h>
@@ -192,42 +191,8 @@ int run_repl(const lib_load_config load_libs) {
     lex_add_builtins(e);
     /* Initialize special form lookup table */
     init_special_forms();
-
-    /* Load additional library procedures as specified by -l args */
-    if (load_libs.coz_ext) {
-        (void)load_scheme_library("coz-ext", e);
-    }
-    if (load_libs.file) {
-        (void)load_scheme_library("file", e);
-    }
-    if (load_libs.process_context) {
-        (void)load_scheme_library("process_context", e);
-    }
-    if (load_libs.inexact) {
-        (void)load_scheme_library("inexact", e);
-    }
-    if (load_libs.complex) {
-        (void)load_scheme_library("complex", e);
-    }
-    if (load_libs.char_lib) {
-        (void)load_scheme_library("char", e);
-    }
-    if (load_libs.read) {
-        (void)load_scheme_library("read", e);
-    }
-    if (load_libs.write) {
-        (void)load_scheme_library("write", e);
-    }
-    if (load_libs.eval) {
-        (void)load_scheme_library("eval", e);
-    }
-    if (load_libs.cxr) {
-        (void)load_scheme_library("cxr", e);
-    }
-    /* Cozenage libs */
-    if (load_libs.coz_bits) {
-        (void)load_scheme_library("bits", e);
-    }
+    /* Loads the CLI-specified R7RS libraries into the environment. */
+    load_initial_libraries(e, load_libs);
 
     /* Run until we don't */
     repl(e);

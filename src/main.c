@@ -23,10 +23,10 @@
 #include "config.h"
 #include "repl.h"
 #include "runner.h"
-#include "cell.h"
 #include <gc/gc.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 #include <getopt.h>
 
 

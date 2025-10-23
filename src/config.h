@@ -20,6 +20,8 @@
 #ifndef COZENAGE_CONFIG_H
 #define COZENAGE_CONFIG_H
 
+#include "environment.h"
+
 
 typedef struct lib_load {
     unsigned int coz_ext:1;
@@ -39,5 +41,8 @@ typedef struct lib_load {
     unsigned int write:1;
     unsigned int coz_bits:1;
 } lib_load_config;
+
+//void load_initial_libraries(Lex* e, lib_load_config load_libs);
+void load_initial_libraries(const Lex* e, lib_load_config load_libs);
 
 #endif // COZENAGE_CONFIG_H

@@ -20,23 +20,9 @@
 #ifndef COZENAGE_RUNNER_H
 #define COZENAGE_RUNNER_H
 
-#include <stdlib.h> // For EXIT_SUCCESS/EXIT_FAILURE
-#include "config.h" // For the lib_load_config struct
+#include "config.h"
 
-/**
- * @brief Executes Scheme code from a specified file.
- *
- * This function handles file opening, reading expressions sequentially,
- * and evaluating them without printing the result of each evaluation (non-REPL mode).
- * It includes a check for standard file extensions (.scm, .ss) and issues a
- * non-fatal warning otherwise.
- *
- * @param file_path The path to the Scheme source file.
- * @param config The configuration struct detailing which libraries to load.
- * @return EXIT_SUCCESS (0) on successful execution of the file,
- * or EXIT_FAILURE (1) if the file cannot be opened or a fatal
- * runtime error occurs during evaluation.
- */
+
 int run_file_script(const char *file_path, lib_load_config config);
 
 #endif //COZENAGE_RUNNER_H

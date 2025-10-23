@@ -20,7 +20,6 @@
 #include "runner.h"
 #include "symbols.h"
 #include "special_forms.h"
-#include "load_library.h"
 #include "parser.h"
 #include "eval.h"
 #include <stdio.h>
@@ -40,46 +39,6 @@ static void check_and_warn_extension(const char *file_path) {
         fprintf(stderr,
                 "Warning: Running file '%s' which does not have the standard .scm or .ss extension.\n",
                 file_path);
-    }
-}
-
-/* Loads the specified R7RS libraries into the environment. */
-static void load_initial_libraries(const Lex* e, lib_load_config load_libs) {
-    printf("Initializing interpreter environment...\n");
-
-    if (load_libs.coz_ext) {
-        (void)load_scheme_library("coz-ext", e);
-    }
-    if (load_libs.file) {
-        (void)load_scheme_library("file", e);
-    }
-    if (load_libs.process_context) {
-        (void)load_scheme_library("process_context", e);
-    }
-    if (load_libs.inexact) {
-        (void)load_scheme_library("inexact", e);
-    }
-    if (load_libs.complex) {
-        (void)load_scheme_library("complex", e);
-    }
-    if (load_libs.char_lib) {
-        (void)load_scheme_library("char", e);
-    }
-    if (load_libs.read) {
-        (void)load_scheme_library("read", e);
-    }
-    if (load_libs.write) {
-        (void)load_scheme_library("write", e);
-    }
-    if (load_libs.eval) {
-        (void)load_scheme_library("eval", e);
-    }
-    if (load_libs.cxr) {
-        (void)load_scheme_library("cxr", e);
-    }
-    /* Cozenage libs */
-    if (load_libs.coz_bits) {
-        (void)load_scheme_library("bits", e);
     }
 }
 
@@ -161,7 +120,7 @@ static char* collect_one_expression_from_file(FILE *input_file) {
     return buffer;
 }
 
-int run_file_script(const char *file_path, lib_load_config config) {
+int run_file_script(const char *file_path, lib_load_config load_libs) {
     FILE *script_file = NULL;
     int exit_status = EXIT_SUCCESS;
 
@@ -188,9 +147,8 @@ int run_file_script(const char *file_path, lib_load_config config) {
     lex_add_builtins(e);
     /* Initialize special form lookup table */
     init_special_forms();
-    load_initial_libraries(e, config);
-
-    printf("Executing script file: %s\n", file_path);
+    /* Loads the CLI-specified R7RS libraries into the environment. */
+    load_initial_libraries(e, load_libs);
 
     /* Loop through expressions and evaluate */
     char *expression_str = NULL;
@@ -199,7 +157,7 @@ int run_file_script(const char *file_path, lib_load_config config) {
         Parser *p = parse_str(expression_str);
         Cell *expression = parse_tokens(p);
 
-        /* I dunno, use GC here? */
+        /* Free the expression string */
         free(expression_str);
 
         /* Check if the parser failed */
@@ -222,7 +180,7 @@ int run_file_script(const char *file_path, lib_load_config config) {
             fprintf(stderr, "Runtime error detected during script execution.\n");
             fprintf(stderr, "%s\n", result->error_v);
             exit_status = EXIT_FAILURE;
-            break; // Stop execution on error
+            break;
         }
     }
 
@@ -234,13 +192,6 @@ int run_file_script(const char *file_path, lib_load_config config) {
 
     /* Cleanup */
     fclose(script_file);
-
-    /* Delete this after testing*/
-    if (exit_status == EXIT_SUCCESS) {
-        printf("Script execution finished successfully.\n");
-    } else {
-        printf("Script execution finished with errors.\n");
-    }
 
     return exit_status;
 }
