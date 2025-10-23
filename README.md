@@ -28,6 +28,10 @@ which may or may not be installed already on your system.
 
 ## Building Cozenage
 
+Cozenage has been built and tested on Linux, FreeBSD, and macOS. Building on Windows will almost
+certainly break without a POSIX subsystem in place. See [this bug](https://github.com/DarrenKirby/cozenage/issues/1) for details.
+The build system(s) specify the C23 standard, so the build might fail on older compilers.
+
 If you have cmake, run `make`.
 
 If you do not have cmake, run `make nocmake`.
@@ -37,7 +41,7 @@ There is also a bit more in depth guide as part of the [Cozenage documentation](
 ## Running Cozenage
 
 To interpret a Scheme file (typically with an .scm or .ss extension, although Cozenage will attempt
-to run any file argument as Scheme code) just add the file name after and options:
+to run any file argument as Scheme code) just add the file name after any options:
 
     $ ./cozenage -l write,file my_program.scm
 
