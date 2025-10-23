@@ -34,8 +34,8 @@
 lib_load_config load_libs = {0};
 
 static void show_help(void) {
-    printf("Usage: %s [<options>]\n\n\
-A (not yet) R5RS and R7RS-compliant Scheme REPL\n\n\
+    printf("Usage: cozenage [option ...] [file] \n\n\
+A (not just yet) R5RS and R7RS-compliant Scheme REPL and code runner\n\n\
 Options:\n\
     -5, --r5rs\t\t load only names defined in R5RS standard\n\
     -7, --r7rs\t\t load only (scheme base) names defined in R7RS standard\n\
@@ -48,7 +48,7 @@ Options:\n\
     case-lambda, char, complex, cxr, eval, file, inexact\n\
     lazy, load, process-context, read, repl, time, write\n\
     coz-ext, bits\n\n\
-Report bugs to <darren@dragonbyte.ca>\n", APP_NAME);
+Report bugs to <darren@dragonbyte.ca>\n");
 }
 
 void process_library_arg(struct lib_load *l, const char *arg) {

@@ -52,7 +52,7 @@ static char* collect_one_expression_from_file(FILE *input_file) {
     char *buffer = malloc(capacity);
     if (!buffer) {
         perror("Failed to allocate memory for expression buffer");
-        return NULL;
+        return nullptr;
     }
 
     /* Skip leading whitespace and comments until an expression starts or EOF */
@@ -72,7 +72,7 @@ static char* collect_one_expression_from_file(FILE *input_file) {
 
     if (c == EOF) {
         free(buffer);
-        return NULL;
+        return nullptr;
     }
 
     /* Collect characters until the expression is balanced and complete */
@@ -84,7 +84,7 @@ static char* collect_one_expression_from_file(FILE *input_file) {
             if (!new_buffer) {
                 perror("Failed to reallocate buffer");
                 free(buffer);
-                return NULL;
+                return nullptr;
             }
             buffer = new_buffer;
         }
@@ -114,21 +114,20 @@ static char* collect_one_expression_from_file(FILE *input_file) {
     if (paren_depth != 0) {
         fprintf(stderr, "Error: Unbalanced expression found at end of file.\n");
         free(buffer);
-        return NULL;
+        return nullptr;
     }
 
     return buffer;
 }
 
 int run_file_script(const char *file_path, lib_load_config load_libs) {
-    FILE *script_file = NULL;
     int exit_status = EXIT_SUCCESS;
 
     /* Check extension and issue non-fatal warning */
     check_and_warn_extension(file_path);
 
     /* Open the file */
-    script_file = fopen(file_path, "r");
+    FILE *script_file = fopen(file_path, "r");
     if (script_file == NULL) {
         perror("Error opening Scheme file");
         /* Cannot open the file, return failure */
@@ -151,7 +150,7 @@ int run_file_script(const char *file_path, lib_load_config load_libs) {
     load_initial_libraries(e, load_libs);
 
     /* Loop through expressions and evaluate */
-    char *expression_str = NULL;
+    char *expression_str;
     while ((expression_str = collect_one_expression_from_file(script_file)) != NULL) {
 
         Parser *p = parse_str(expression_str);

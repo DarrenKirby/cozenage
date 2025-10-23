@@ -42,7 +42,6 @@ typedef struct lib_load {
     unsigned int coz_bits:1;
 } lib_load_config;
 
-//void load_initial_libraries(Lex* e, lib_load_config load_libs);
 void load_initial_libraries(const Lex* e, lib_load_config load_libs);
 
 #endif // COZENAGE_CONFIG_H
