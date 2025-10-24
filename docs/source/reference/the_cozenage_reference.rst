@@ -11,6 +11,7 @@ and Cozenage's extensions beyond the R5RS/R7RS specifications. That documentatio
    running_cozenage/
    documentation_notation/
    syntax_and_special_forms/
+   native_datatypes/index
    native_datatypes/booleans
    native_datatypes/numerics
    native_datatypes/symbols
@@ -21,4 +22,6 @@ and Cozenage's extensions beyond the R5RS/R7RS specifications. That documentatio
    native_datatypes/bytevectors
    native_datatypes/procedures
    extended_datatypes/
+   library/index
+   library/time
    errors_and_exceptions/
