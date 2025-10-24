@@ -30,7 +30,7 @@ void load_initial_libraries(const Lex* e, const lib_load_config load_libs) {
         (void)load_scheme_library("file", e);
     }
     if (load_libs.process_context) {
-        (void)load_scheme_library("process_context", e);
+        (void)load_scheme_library("process-context", e);
     }
     if (load_libs.inexact) {
         (void)load_scheme_library("inexact", e);
@@ -52,6 +52,9 @@ void load_initial_libraries(const Lex* e, const lib_load_config load_libs) {
     }
     if (load_libs.cxr) {
         (void)load_scheme_library("cxr", e);
+    }
+    if (load_libs.time) {
+        (void)load_scheme_library("time", e);
     }
     /* Cozenage libs */
     if (load_libs.coz_bits) {

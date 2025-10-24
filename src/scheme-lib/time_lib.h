@@ -1,5 +1,5 @@
 /*
- * 'src/scheme-lib/complex_lib.h'
+ * 'src/scheme-lib/time_lib.h'
  * This file is part of Cozenage - https://github.com/DarrenKirby/cozenage
  * Copyright © 2025  Darren Kirby <darren@dragonbyte.ca>
  *
@@ -17,17 +17,21 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef COZENAGE_COMPLEX_LIB_H
-#define COZENAGE_COMPLEX_LIB_H
+#ifndef COZENAGE_TIME_LIB_H
+#define COZENAGE_TIME_LIB_H
 
 #include "cell.h"
 
 
-Cell* builtin_real_part(const Lex* e, const Cell* a);
-Cell* builtin_imag_part(const Lex* e, const Cell* a);
-Cell* builtin_make_rectangular(const Lex* e, const Cell* a);
-Cell* builtin_angle(const Lex* e, const Cell* a);
-Cell* builtin_make_polar(const Lex* e, const Cell* a);
-void lex_add_complex_lib(const Lex* e);
+/* R7RSs "suitable constant" (TAI-UTC offset)
+ * As of 2025, this is 37.0 seconds. */
+#define TAI_UTC_OFFSET 37.0;
 
-#endif //COZENAGE_COMPLEX_LIB_H
+Cell* builtin_current_second(const Lex* e, const Cell* a);
+Cell* builtin_current_jiffy(const Lex* e, const Cell* a);
+Cell* builtin_jiffies_per_second(const Lex* e, const Cell* a);
+Cell* builtin_current_datetime_utc(const Lex* e, const Cell* a);
+Cell* builtin_current_datetime_local(const Lex* e, const Cell* a);
+void lex_add_time_lib(const Lex* e);
+
+#endif //COZENAGE_TIME_LIB_H

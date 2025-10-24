@@ -182,8 +182,8 @@ This is a list of what *is* implemented so far. I try to keep it up to date:
 - `assv`
 - `assoc`
 - `list-copy`
-- `filter`
-- `foldl`
+- `filter` (Not R7RS)
+- `foldl` (Not R7RS)
 - `map`
 
 ### Vector procedures
@@ -294,10 +294,10 @@ This is a list of what *is* implemented so far. I try to keep it up to date:
 - `atan`
 - `exp`
 - `log`
-- `log2`
-- `log10`
+- `log2` (Not R7RS)
+- `log10` (Not R7RS)
 - `sqrt`
-- `cbrt`
+- `cbrt` (Not R7RS)
 - `nan?`
 - `infinite?`
 - `finite?`
@@ -360,6 +360,14 @@ This is a list of what *is* implemented so far. I try to keep it up to date:
 - `cddadr`
 - `cdddar`
 - `cddddr`
+
+### Time library (scheme time)
+
+- `current-second`
+- `current-jiffy`
+- `jiffies-per-second`
+- `current-dt-utc` (Not R7RS)
+- `current-dt-local`(Not R7RS)
 
 ## Cozenage library procedures (non-R7RS)
 
