@@ -20,6 +20,8 @@
 #include "time_lib.h"
 #include <time.h>
 
+#include "types.h"
+
 
 /* (current-second)
  * Returns an inexact number representing the current time on the International Atomic Time (TAI)
@@ -73,23 +75,62 @@ Cell* builtin_jiffies_per_second(const Lex* e, const Cell* a) {
     return make_cell_integer(1000000000);
 }
 
+/* (current-dt-utc [fmt string])
+ * Can be called with zero or one argument. If an argument is provided, it must be a string which is
+ * a format specification as per the C library function strftime(3). With no argument, the format
+ * specifier is "%Y-%m-%d %H:%M:%S", which prints the date/time as: "2025-10-23 17:00:17" in UTC. */
 Cell* builtin_current_datetime_utc(const Lex* e, const Cell* a) {
-    (void)e; (void)a;
+    (void)e;
+    Cell* err = CHECK_ARITY_RANGE(a, 0, 1);
+    if (err) return err;
+
+    char* fmt_str;
+    if (a->count > 0 && a->cell[0]->type == CELL_STRING) {
+        fmt_str = a->cell[0]->str;
+    } else {
+        fmt_str = "%Y-%m-%d %H:%M:%S";
+    }
     const time_t t = time(NULL);
     struct tm ts;
     gmtime_r(&t, &ts);
     char buf[128];
-    strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", &ts);
+    const size_t result = strftime(buf, sizeof(buf), fmt_str, &ts);
+    /* strftime returns zero if the buffer is too small, and buf will be garbage.
+     * There are also legitimate 0-length conversions, so we just return an empty
+     * string in either of these cases. */
+    if (result < 1) {
+        return make_cell_string("");
+    }
     return make_cell_string(buf);
 }
 
+/* (current-dt-local [fmt string])
+ * Can be called with zero or one argument. If an argument is provided, it must be a string which is
+ * a format specification as per the C library function strftime(3). With no argument, the format
+ * specifier is "%Y-%m-%d %H:%M:%S", which prints the date/time as: "2025-10-23 17:00:17" in the
+ * local time. */
 Cell* builtin_current_datetime_local(const Lex* e, const Cell* a) {
-    (void)e; (void)a;
+    (void)e;
+    Cell* err = CHECK_ARITY_RANGE(a, 0, 1);
+    if (err) return err;
+
+    char* fmt_str;
+    if (a->count > 0 && a->cell[0]->type == CELL_STRING) {
+        fmt_str = a->cell[0]->str;
+    } else {
+        fmt_str = "%Y-%m-%d %H:%M:%S";
+    }
     const time_t t = time(NULL);
     struct tm ts;
     localtime_r(&t, &ts);
     char buf[128];
-    strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", &ts);
+    const size_t result = strftime(buf, sizeof(buf), fmt_str, &ts);
+    /* strftime returns zero if the buffer is too small, and buf will be garbage.
+     * There are also legitimate 0-length conversions, so we just return an empty
+     * string in either of these cases. */
+    if (result < 1) {
+        return make_cell_string("");
+    }
     return make_cell_string(buf);
 }
 
