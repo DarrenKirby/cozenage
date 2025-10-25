@@ -39,7 +39,7 @@ The procedures car and cdr themselves and the four two-level compositions are in
 inexact values.
 
 Cozenage Libraries
-==================
+------------------
 
 ``bits`` - The ``(cozenage bits)`` library exports procedures which perform bitwise operations on
 integers, and provides a mechanism for converting integers to and from bitstrings. A bitstring is
