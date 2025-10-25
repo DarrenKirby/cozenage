@@ -427,7 +427,7 @@ Cell* builtin_vector_fill_bang(const Lex* e, const Cell* a) {
             TYPE_ERR);
     }
     int start = 0;
-    int end = a->count;
+    int end = a->cell[0]->count;
     Cell* fill = a->cell[1];
     if (a->count > 2) {
         if (a->cell[2]->type != CELL_INTEGER) {
