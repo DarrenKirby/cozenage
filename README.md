@@ -192,9 +192,12 @@ This is a list of what *is* implemented so far. I try to keep it up to date:
 - `vector-length`
 - `vector-ref`
 - `make-vector`
+- `vector-set!`
+- `vector-fill!`
+- `vector-copy`
+- `vector-append`
 - `list->vector`
 - `vector->list`
-- `vector-copy`
 - `string->vector`
 - `vector->string`
 

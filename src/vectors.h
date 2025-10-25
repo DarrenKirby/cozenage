@@ -33,5 +33,9 @@ Cell* builtin_vector_to_list(const Lex* e, const Cell* a);
 Cell* builtin_vector_copy(const Lex* e, const Cell* a);
 Cell* builtin_vector_to_string(const Lex* e, const Cell* a);
 Cell* builtin_string_to_vector(const Lex* e, const Cell* a);
+Cell* builtin_vector_set_bang(const Lex* e, const Cell* a);
+Cell* builtin_vector_append(const Lex* e, const Cell* a);
+Cell* builtin_vector_copy_bang(const Lex* e, const Cell* a);
+Cell* builtin_vector_fill_bang(const Lex* e, const Cell* a);
 
 #endif //COZENAGE_VECTORS_H

@@ -280,6 +280,9 @@ void lex_add_builtins(const Lex* e) {
     lex_add_builtin(e, "vector-copy", builtin_vector_copy);
     lex_add_builtin(e, "vector->string", builtin_vector_to_string);
     lex_add_builtin(e, "string->vector", builtin_string_to_vector);
+    lex_add_builtin(e, "vector-set!", builtin_vector_set_bang);
+    lex_add_builtin(e, "vector-fill!", builtin_vector_fill_bang);
+    lex_add_builtin(e, "vector-append", builtin_vector_append);
     /* Bytevector procedures */
     lex_add_builtin(e, "bytevector", builtin_bytevector);
     lex_add_builtin(e, "bytevector-length", builtin_bytevector_length);
