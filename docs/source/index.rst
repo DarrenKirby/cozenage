@@ -26,11 +26,21 @@ Cell objects, rather than as a 'proper list', as it is done in all dogmatic Lisp
 
 .. note::
 
-   This project is under active development.
+   This project is under active development. The documentation, and the code itself changes
+   everyday. Be sure to pull from Github and build often to get the latest version.
+
+This documentation is organized into three main types. **Howto**s are goal-oriented documentation.
+They have specific goals, and demonstrate how to achieve that goal. **Tutorial**s are
+knowledge-oriented documentation. They don't have specific goals other than to introduce and
+demonstrate various concepts to work towards building general knowledge. The **Reference** is a
+single document which exhaustively details all the types, procedures, syntax, special forms,
+libraries, and even the underlying C internals of Cozenage. If you know what you are looking for, see
+if there is a Howto on the topic, else search for the topic in the reference. If you have no
+specific goal, and just want to learn more about Scheme and/or Cozenage, try a tutorial.
 
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: Contents:
 
    howto/installation
