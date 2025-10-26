@@ -22,12 +22,9 @@
 #include "repr.h"
 #include "ports.h"
 #include <string.h>
-#include <errno.h>
 
 
 Cell* builtin_display(const Lex* e, const Cell* a) {
-    /* FIXME: only works with strings
-    Will have to change/copy/edit printing functions to write to a port */
     (void)e;
     Cell* err = CHECK_ARITY_RANGE(a, 1, 2);
     if (err) return err;

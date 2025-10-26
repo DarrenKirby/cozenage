@@ -179,7 +179,7 @@ void lex_add_builtins(const Lex* e) {
     lex_add_builtin(e, "-", builtin_sub);
     lex_add_builtin(e, "*", builtin_mul);
     lex_add_builtin(e, "/", builtin_div);
-    /* Comparison operators */
+    /* Numeric comparison operators */
     lex_add_builtin(e, "=", builtin_eq_op);
     lex_add_builtin(e, ">", builtin_gt_op);
     lex_add_builtin(e, "<", builtin_lt_op);

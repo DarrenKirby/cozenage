@@ -18,9 +18,8 @@
 */
 
 #include "time_lib.h"
-#include <time.h>
-
 #include "types.h"
+#include <time.h>
 
 
 /* (current-second)
