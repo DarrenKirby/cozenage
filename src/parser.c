@@ -277,7 +277,9 @@ Cell* parse_tokens(Parser *p) {
     }
 
     if (left_count != right_count) {
-        return make_cell_error("Unbalanced parentheses", SYNTAX_ERR);
+        return make_cell_error(
+            "Unbalanced parentheses",
+            SYNTAX_ERR);
     }
 
     const char *tok = peek(p);
@@ -287,7 +289,9 @@ Cell* parse_tokens(Parser *p) {
     if (strcmp(tok, "'") == 0) {
         advance(p);  /* consume ' */
         Cell *quoted = parse_tokens(p);
-        if (!quoted) return make_cell_error("Expected expression after quote", SYNTAX_ERR);
+        if (!quoted) return make_cell_error(
+            "Expected expression after quote",
+            SYNTAX_ERR);
         Cell *qexpr = make_cell_sexpr();
         cell_add(qexpr, make_cell_symbol("quote"));
         cell_add(qexpr, quoted);
@@ -298,24 +302,33 @@ Cell* parse_tokens(Parser *p) {
     if (strcmp(tok, "#u8") == 0) {
         advance(p); /* consume '#u8' */
         const char *paren = advance(p); /* must be '(' */
-        if (!paren || strcmp(paren, "(") != 0)
-            return make_cell_error("Expected '(' after #u8", SYNTAX_ERR);
+        if (!paren || strcmp(paren, "(") != 0) {
+            return make_cell_error(
+                "Expected '(' after #u8",
+                SYNTAX_ERR);
+        }
         Cell *bv = make_cell_bytevector();
         while (peek(p) && strcmp(peek(p), ")") != 0) {
             cell_add(bv, parse_tokens(p));
         }
         if (!peek(p)) {
-            return make_cell_error("Unmatched '(' in bytevector literal", SYNTAX_ERR);
+            return make_cell_error(
+                "Unmatched '(' in bytevector literal",
+                SYNTAX_ERR);
         }
         advance(p); /* skip ')' */
 
         /* ensure members in range */
         for (int i = 0; i < bv->count; i++) {
             if (bv->cell[i]->type != CELL_INTEGER) {
-                return make_cell_error("bytevector members must be integers", VALUE_ERR);
+                return make_cell_error(
+                    "bytevector members must be integers",
+                    VALUE_ERR);
             }
             if (bv->cell[i]->integer_v < 0 || bv->cell[i]->integer_v > 255) {
-                return make_cell_error("bytevector members must be between 0 and 255 (inclusive)", VALUE_ERR);
+                return make_cell_error(
+                    " u8 bytevector members must be between 0 and 255 (inclusive)",
+                    VALUE_ERR);
             }
         }
         return bv;
@@ -528,7 +541,9 @@ Cell* parse_atom(const char *tok) {
             const long long d = parse_int_checked(tok2, err_buf, sizeof(err_buf), 10, &ok);
 
             if (d == 0) {
-                return make_cell_error("Cannot have zero-value denominator in rational", VALUE_ERR);
+                return make_cell_error(
+                    "Cannot have zero-value denominator in rational",
+                    VALUE_ERR);
             }
             return make_cell_rational(n, d, 1);
         }
@@ -574,49 +589,4 @@ Cell* parse_atom(const char *tok) {
 
     /* Otherwise, treat as symbol */
     return make_cell_symbol(tok);
-}
-
-
-/* FIXME: This function doesn't actually have anything to do with the parser -
- * it is called by read_multiline(), and is used only in the context of the REPL.
- * Move this function to repl.c, when the repl-specific stuff gets moved to repl.c */
-/* Count '(' and ')' while ignoring:
-   - anything inside string literals
-   - character literals starting with "#\..." (including #\()/#\)),
-   - line comments starting with ';' to end-of-line.
-*/
-int paren_balance(const char *s, int *in_string) {
-    int balance = 0;
-    int escaped = 0;
-    int string = *in_string;  /* carry-over state from previous line */
-
-    for (const char *p = s; *p; p++) {
-        if (string) {
-            if (escaped) {
-                escaped = 0;
-            } else if (*p == '\\') {
-                escaped = 1;
-            } else if (*p == '"') {
-                string = 0; /* string closed */
-            }
-            continue;
-        }
-
-        /* not in a string */
-        if (*p == '"') {
-            string = 1;
-            escaped = 0;
-        } else if (*p == '#' && *(p+1) == '\\') {
-            /* char literal — skip this and next */
-            p++;
-            if (*p && *(p+1)) p++;
-        } else if (*p == '(') {
-            balance++;
-        } else if (*p == ')') {
-            balance--;
-        }
-    }
-
-    *in_string = string;  /* pass string-state back */
-    return balance;
 }

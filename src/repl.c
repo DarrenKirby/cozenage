@@ -26,6 +26,7 @@
 #include "repr.h"
 #include "symbols.h"
 #include "eval.h"
+#include "lexer.h"
 #include <unistd.h>
 #include <string.h>
 #include <signal.h>
@@ -55,7 +56,7 @@ int discard_continuation(const int count, const int key) {
 }
 #endif
 
-void read_history_from_file() {
+static void read_history_from_file() {
     const char *hf = tilde_expand(HIST_FILE);
     if (access(hf, R_OK) == -1) {
         /* create empty file if it does not exist */
@@ -69,10 +70,52 @@ void read_history_from_file() {
     read_history(hf);
 }
 
-void save_history_to_file() {
+static void save_history_to_file() {
     const char *hf = tilde_expand(HIST_FILE);
     write_history(hf);
 }
+
+/* Count '(' and ')' while ignoring:
+   - anything inside string literals
+   - character literals starting with "#\..." (including #\()/#\)),
+   - line comments starting with ';' to end-of-line.
+*/
+int paren_balance(const char *s, int *in_string) {
+    int balance = 0;
+    int escaped = 0;
+    int string = *in_string;  /* carry-over state from previous line */
+
+    for (const char *p = s; *p; p++) {
+        if (string) {
+            if (escaped) {
+                escaped = 0;
+            } else if (*p == '\\') {
+                escaped = 1;
+            } else if (*p == '"') {
+                string = 0; /* string closed */
+            }
+            continue;
+        }
+
+        /* not in a string */
+        if (*p == '"') {
+            string = 1;
+            escaped = 0;
+        } else if (*p == '#' && *(p+1) == '\\') {
+            /* char literal — skip this and next */
+            p++;
+            if (*p && *(p+1)) p++;
+        } else if (*p == '(') {
+            balance++;
+        } else if (*p == ')') {
+            balance--;
+        }
+    }
+
+    *in_string = string;  /* pass string-state back */
+    return balance;
+}
+
 
 /* Allow multi-line input in the REPL */
 static char* read_multiline(const char* prompt, const char* cont_prompt) {
@@ -133,6 +176,30 @@ Cell* coz_read(const Lex* e) {
         save_history_to_file();
         exit(0);
     }
+
+    /* !!!!!!!! hook into new lexer/parser */
+
+    int line = -1;
+    TokenArray* ta = scan_all_tokens(input);
+    for (int i = 0; i < ta->count; i++) {
+        Token token = ta->tokens[i];
+
+        // Check for the end *first*!
+        if (token.type == T_EOF) {
+            break;
+        }
+
+        if (token.line != line) {
+            printf("%4d ", token.line);
+            line = token.line;
+        } else {
+            printf("   | ");
+        }
+        printf("%2d '%.*s'\n", token.type, token.length, token.start);
+    }
+
+    //return nullptr;
+    /* !!!!!!!! end hook */
 
     Parser *p = parse_str(input);
     if (!p) { return nullptr; }
