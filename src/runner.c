@@ -153,8 +153,8 @@ int run_file_script(const char *file_path, lib_load_config load_libs) {
     char *expression_str;
     while ((expression_str = collect_one_expression_from_file(script_file)) != NULL) {
 
-        Parser *p = parse_str(expression_str);
-        Cell *expression = parse_tokens(p);
+        TokenArray* ta = scan_all_tokens(expression_str);
+        Cell* expression = parse_tokens_new(ta);
 
         /* Free the expression string */
         free(expression_str);

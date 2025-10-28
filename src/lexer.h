@@ -23,7 +23,7 @@
 
 typedef enum {
     /* Single char tokens */
-    T_LEFT_PAREN,
+    T_LEFT_PAREN ,
     T_RIGHT_PAREN,
     T_HASH,
     /* Multi-char tokens */
@@ -50,12 +50,14 @@ typedef struct {
     Token* tokens;
     int count;
     int capacity;
+    int position;
 } TokenArray;
 
 #define TA_CAPACITY 8
 
-void init_lexer(const char *source);
-Token lex_token();
+//void init_lexer(const char *source);
+//Token lex_token();
 TokenArray* scan_all_tokens(const char* source);
+void debug_lexer(const TokenArray* ta);
 
 #endif //COZENAGE_LEXER_H

@@ -135,35 +135,37 @@ static Token string() {
 }
 
 static Token number() {
-    while (is_digit(peek())) advance();
-
-    /* Look for a fractional part. */
-    if (peek() == '.' && is_digit(peekNext())) {
-        /* Consume the decimal point. */
+    // while (is_digit(peek())) advance();
+    //
+    // /* Look for a fractional part. */
+    // if (peek() == '.' && is_digit(peekNext())) {
+    //     /* Consume the decimal point. */
+    //     advance();
+    //
+    //     while (is_digit(peek())) advance();
+    // }
+    //
+    // /* Look for rational number */
+    // if (peek() == '/') {
+    //     advance();
+    //
+    //     while (is_digit(peek())) advance();
+    // }
+    //
+    // /* Look for complex number */
+    // if ((peek() == '+' || peek() == '-') && is_digit(peekNext())) {
+    //     /* consume the +/- */
+    //     advance();
+    //
+    //     while (is_digit(peek()) || peek() == '.') advance();
+    // }
+    // /* Consume any trailing 'i' */
+    // if (peek() == 'i') {
+    //     advance();
+    // }
+    while (!is_whitespace(peek()) && !at_end() && peek() != ')') {
         advance();
-
-        while (is_digit(peek())) advance();
     }
-
-    /* Look for rational number */
-    if (peek() == '/') {
-        advance();
-
-        while (is_digit(peek())) advance();
-    }
-
-    /* Look for complex number */
-    if ((peek() == '+' || peek() == '-') && is_digit(peekNext())) {
-        /* consume the +/- */
-        advance();
-
-        while (is_digit(peek())) advance();
-    }
-    /* Consume any trailing 'i' */
-    if (peek() == 'i') {
-        advance();
-    }
-
     return make_token(T_NUMBER);
 }
 
@@ -206,7 +208,7 @@ Token lex_token() {
 
     if (at_end()) return make_token(T_EOF);
 
-    char c = advance();
+    const char c = advance();
     if (is_digit(c)) return number();
 
     switch (c) {
@@ -223,7 +225,10 @@ Token lex_token() {
         /* Either a number prefix, or symbol. */
         case '+':
         case '-': {
-            if (is_digit(peekNext())) return number();
+            /* -inf.0 and +inf.0 need special handling.
+             * lex them as symbols, and deal with in the parser */
+            if (peek() == 'i' && peekNext() == 'n') return symbol();
+            if (is_digit(peek())) return number();
             return make_token(T_SYMBOL);
         }
         /* Multiple possibilities, depending on what follows the hash. */
@@ -260,7 +265,7 @@ Token lex_token() {
     }
 }
 
-TokenArray* init_token_array() {
+static TokenArray* init_token_array() {
     /* Allocate space for the manager struct itself. */
     TokenArray *ta = GC_MALLOC(sizeof(TokenArray));
     if (ta == NULL) {
@@ -277,10 +282,11 @@ TokenArray* init_token_array() {
 
     ta->count = 0;
     ta->capacity = TA_CAPACITY;
+    ta->position = 0;
     return ta;
 }
 
-TokenArray* write_token_array(TokenArray* ta, Token token) {
+static TokenArray* write_token_array(TokenArray* ta, Token token) {
     /* Check if we need to reallocate. */
     if (ta->count == ta->capacity) {
         ta->capacity *= 2;
@@ -311,4 +317,24 @@ TokenArray* scan_all_tokens(const char* source) {
         if (token.type == T_EOF) break;
     }
     return t_array;
+}
+
+void debug_lexer(const TokenArray* ta) {
+    int line = -1;
+
+    for (int i = 0; i < ta->count; i++) {
+        const Token token = ta->tokens[i];
+
+        if (token.type == T_EOF) {
+            break;
+        }
+
+        if (token.line != line) {
+            printf("%4d ", token.line);
+            line = token.line;
+        } else {
+            printf("   | ");
+        }
+        printf("%2d [ %.*s ]\n", token.type, token.length, token.start);
+    }
 }

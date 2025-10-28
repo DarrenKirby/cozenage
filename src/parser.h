@@ -21,20 +21,9 @@
 #define COZENAGE_PARSER_H
 
 #include "cell.h"
+#include "lexer.h"
 
-/* for debug output */
-#define DEBUG 0
 
-typedef struct {
-    char **array;
-    int position;
-    int size;
-} Parser;
-
-char **lexer(const char *input, int *count);
-void free_tokens(char **tokens, int count);
-Parser *parse_str(const char *input);
-Cell *parse_tokens(Parser *p);
-Cell *parse_atom(const char *tok);
+Cell* parse_tokens_new(TokenArray *ta);
 
 #endif //COZENAGE_PARSER_H

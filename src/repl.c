@@ -161,6 +161,14 @@ static char* read_multiline(const char* prompt, const char* cont_prompt) {
     return input;
 }
 
+/* print()
+ * Take the Cell produced by eval and print
+ * it formatted for the REPL
+ * */
+void coz_print(const Cell* v) {
+    printf("%s\n", cell_to_string(v, MODE_REPL));
+}
+
 /* read()
  * Take a line of input from a prompt and pass it
  * through a 2 step lexer/parser stream, and convert
@@ -177,43 +185,15 @@ Cell* coz_read(const Lex* e) {
         exit(0);
     }
 
-    /* !!!!!!!! hook into new lexer/parser */
-
-    int line = -1;
     TokenArray* ta = scan_all_tokens(input);
-    for (int i = 0; i < ta->count; i++) {
-        Token token = ta->tokens[i];
-
-        // Check for the end *first*!
-        if (token.type == T_EOF) {
-            break;
-        }
-
-        if (token.line != line) {
-            printf("%4d ", token.line);
-            line = token.line;
-        } else {
-            printf("   | ");
-        }
-        printf("%2d '%.*s'\n", token.type, token.length, token.start);
+    Cell* parsed = parse_tokens_new(ta);
+    if (!parsed) { return nullptr; }
+    if (parsed->type == CELL_ERROR) {
+        coz_print(parsed);
+        return nullptr;
     }
-
-    //return nullptr;
-    /* !!!!!!!! end hook */
-
-    Parser *p = parse_str(input);
-    if (!p) { return nullptr; }
-    Cell *v = parse_tokens(p);
-    if (v) add_history(input);
-    return v;
-}
-
-/* print()
- * Take the Cell produced by eval and print
- * it formatted for the REPL
- * */
-void coz_print(const Cell* v) {
-    printf("%s\n", cell_to_string(v, MODE_REPL));
+    add_history(input);
+    return parsed;
 }
 
 /* repl()
