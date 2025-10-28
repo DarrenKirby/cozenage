@@ -27,13 +27,12 @@ ALL_SOURCE_DIRS  = $(APP_SOURCE_DIRS) $(TEST_SOURCE_DIRS)
 APP_SOURCES  = $(foreach dir,$(APP_SOURCE_DIRS),$(wildcard $(dir)/*.c))
 TEST_SOURCES = $(foreach dir,$(TEST_SOURCE_DIRS),$(wildcard $(dir)/*.c))
 
-# Create flattened lists of object file paths inside OBJ_DIR
-APP_OBJECTS  = $(addprefix $(OBJ_DIR)/, $(notdir $(patsubst %.c,%.o,$(APP_SOURCES))))
+# Create object file paths that mirror the source directory structure inside OBJ_DIR
+APP_OBJECTS  = $(patsubst %.c,$(OBJ_DIR)/%.o,$(APP_SOURCES))
 
-# For the test build, we use all app sources EXCEPT main.c, plus all test sources
-APP_SOURCES_FOR_TEST = $(filter-out src/main.c, $(APP_SOURCES))
+APP_SOURCES_FOR_TEST = $(filter-out src/main.c src/repl.c src/runner.c, $(APP_SOURCES))
 ALL_SOURCES_FOR_TEST = $(APP_SOURCES_FOR_TEST) $(TEST_SOURCES)
-TEST_OBJECTS = $(addprefix $(OBJ_DIR)/, $(notdir $(patsubst %.c,%.o,$(ALL_SOURCES_FOR_TEST))))
+TEST_OBJECTS = $(patsubst %.c,$(OBJ_DIR)/%.o,$(ALL_SOURCES_FOR_TEST))
 
 # --- Compiler Flags ---
 # Add include paths for ALL source directories to CFLAGS
@@ -44,8 +43,8 @@ ICU_CFLAGS = $(shell pkg-config --cflags icu-uc)
 ICU_LIBS = $(shell pkg-config --libs icu-uc)
 
 # Specific flag sets for different builds
-CFLAGS_DEFAULT = -Wall -Wextra -O2 -std=gnu2x $(ICU_CFLAGS)
-CFLAGS_TEST = -Wall -Wextra -g -O0 -std=gnu2x $(ICU_CFLAGS)
+CFLAGS_DEFAULT = -Wall -Wextra -Werror -Wdeprecated-declarations -O2 -std=gnu2x $(ICU_CFLAGS)
+CFLAGS_TEST = -Wall -Wextra -g -O0 -std=gnu2x $(ICU_CFLAGS) -fsanitize=address -fno-omit-frame-pointer
 
 # --- Libraries ---
 # Auto-detect readline or libedit
@@ -101,14 +100,16 @@ $(BINARY): $(APP_OBJECTS)
 # Rule to link the test runner for 'test' build
 $(TEST_BINARY): $(TEST_OBJECTS)
 	@echo "Linking test runner: $@"
-	$(CC) $(CFLAGS) -o $@ $^ $(TEST_LIBS)
+	$(CC) $(CFLAGS) -o $@ $^ $(TEST_LIBS) -fsanitize=address
 
-# A single pattern rule to compile any .c file into the obj dir.
-# This rule is now generic enough to handle both app and test sources.
-$(OBJ_DIR)/%.o:
-	# Ensure the object directory exists before compiling
-	@mkdir -p $(OBJ_DIR)
-	# Find the full path to the source file (.c) based on the object file name (.o)
-	$(eval SOURCE_FILE := $(shell find $(ALL_SOURCE_DIRS) -name $*.c -print -quit))
-	@echo "Compiling: $(SOURCE_FILE)"
-	$(CC) $(CFLAGS) -c $(SOURCE_FILE) -o $@
+# A static pattern rule to compile any .c file into its corresponding
+# location inside the obj directory.
+$(OBJ_DIR)/%.o: %.c
+    # Ensure the target directory exists before compiling (e.g., obj/src/scheme-lib/)
+	@mkdir -p $(@D)
+	@echo "Compiling: $<"
+	$(CC) $(CFLAGS) -c $< -o $@
+
+# $< is the first prerequisite (the .c file)
+# $@ is the target (the .o file)
+# $(@D) is the directory part of the target

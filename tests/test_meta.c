@@ -18,7 +18,7 @@ void setup_each_test(void) {
 
     // setup logic
     symbol_table = ht_create(128);
-    fprintf(stderr, "SETUP address of symbol_table: %p\n", (void*)symbol_table);
+    //fprintf(stderr, "SETUP address of symbol_table: %p\n", (void*)symbol_table);
     init_default_ports();
     init_global_singletons();
     test_env = lex_initialize_global_env();
@@ -55,22 +55,34 @@ void teardown_each_test(void) {
 //     setup_suite();
 // }
 
+// No longer needs to return a static buffer
 char* t_eval(const char* input) {
-    /* Parse the input string into an expression. */
+    // These steps are correct
     TokenArray* ta = scan_all_tokens(input);
     Cell* parsed = parse_tokens_new(ta);
-
     const Cell *result = coz_eval(test_env, parsed);
 
-    /* Print the result to stdout, and push stdout into the capture pipe */
-    printf("%s", cell_to_string(result, MODE_WRITE));
-    fflush(stdout);
-
-    /* Capture the result from stdout */
-    static char buffer[4096];
-    memset(buffer, 0, sizeof(buffer));
-    FILE* stdout_pipe = cr_get_redirected_stdout();
-    fread(buffer, 1, sizeof(buffer) - 1, stdout_pipe);
-
-    return buffer;
+    // The new, safer way: return the string directly.
+    // This assumes cell_to_string returns a GC-allocated string.
+    return cell_to_string(result, MODE_WRITE);
 }
+
+// char* t_eval(const char* input) {
+//     /* Parse the input string into an expression. */
+//     TokenArray* ta = scan_all_tokens(input);
+//     Cell* parsed = parse_tokens_new(ta);
+//
+//     const Cell *result = coz_eval(test_env, parsed);
+//
+//     /* Print the result to stdout, and push stdout into the capture pipe */
+//     printf("%s", cell_to_string(result, MODE_WRITE));
+//     fflush(stdout);
+//
+//     /* Capture the result from stdout */
+//     static char buffer[4096];
+//     memset(buffer, 0, sizeof(buffer));
+//     FILE* stdout_pipe = cr_get_redirected_stdout();
+//     fread(buffer, 1, sizeof(buffer) - 1, stdout_pipe);
+//
+//     return buffer;
+// }
