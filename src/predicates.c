@@ -150,14 +150,11 @@ Cell* builtin_exact_pred(const Lex* e, const Cell* a) {
     Cell* err = check_arg_types(a, CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX);
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
-
-    if (a->cell[0]->type == CELL_COMPLEX) {
-        if (a->cell[0]->exact && a->cell[1]->exact) {
-            return make_cell_boolean(1);
-        }
-        return make_cell_boolean(0);
+    Cell* z = a->cell[0];
+    if (z->type == CELL_COMPLEX) {
+        return make_cell_boolean(z->real->exact & z->imag->exact);
     }
-    return make_cell_boolean(a->cell[0]->exact);
+    return make_cell_boolean(z->exact);
 }
 
 /* 'inexact?' -> CELL_BOOLEAN -  */
