@@ -314,6 +314,12 @@ bool cell_is_real_zero(const Cell* c) {
 /* Helper to check if a cell represents an integer value, per R7RS tower. */
 bool cell_is_integer(const Cell* c) {
     if (!c) return false;
+
+    const long double num = cell_to_long_double(c);
+    if (isinf(num)) {
+        return false;
+    }
+
     switch (c->type) {
         case CELL_INTEGER:
             return true;
@@ -335,6 +341,12 @@ bool cell_is_integer(const Cell* c) {
 /* Checks if a number is real-valued (i.e., has a zero imaginary part). */
 bool cell_is_real(const Cell* c) {
     if (!c) return false;
+
+    const long double num = cell_to_long_double(c);
+    if (isinf(num)) {
+        return false;
+    }
+
     switch (c->type) {
         case CELL_INTEGER:
         case CELL_RATIONAL:
@@ -353,18 +365,16 @@ bool cell_is_real(const Cell* c) {
 bool cell_is_positive(const Cell* c) {
     if (!c) return false;
 
-    const Cell* val_to_check = c;
-    if (c->type == CELL_COMPLEX) {
-        /* Must be a real number to be positive */
-        if (!cell_is_real_zero(c->imag)) return false;
-        val_to_check = c->real;
+    const long double num = cell_to_long_double(c);
+    if (isinf(num)) {
+        return num > 0 ? true : false;
     }
 
-    switch (val_to_check->type) {
-        case CELL_INTEGER:  return val_to_check->integer_v > 0;
-        case CELL_REAL: return val_to_check->real_v > 0.0L;
-        case CELL_RATIONAL:  return val_to_check->num > 0; /* Assumes den is always positive */
-        default:       return false;
+    switch (c->type) {
+        case CELL_INTEGER: return c->integer_v > 0;
+        case CELL_REAL: return c->real_v > 0.0L;
+        case CELL_RATIONAL: return c->num > 0; /* Assumes den is always positive */
+        default: return false;
     }
 }
 
@@ -372,18 +382,16 @@ bool cell_is_positive(const Cell* c) {
 bool cell_is_negative(const Cell* c) {
     if (!c) return false;
 
-    const Cell* val_to_check = c;
-    if (c->type == CELL_COMPLEX) {
-        /* Must be a real number to be negative */
-        if (!cell_is_real_zero(c->imag)) return false;
-        val_to_check = c->real;
+    const long double num = cell_to_long_double(c);
+    if (isinf(num)) {
+        return num > 0 ? false : true;
     }
 
-    switch (val_to_check->type) {
-        case CELL_INTEGER:  return val_to_check->integer_v < 0;
-        case CELL_REAL: return val_to_check->real_v < 0.0L;
-        case CELL_RATIONAL:  return val_to_check->num < 0; /* Assumes den is always positive */
-        default:       return false;
+    switch (c->type) {
+        case CELL_INTEGER: return c->integer_v < 0;
+        case CELL_REAL: return c->real_v < 0.0L;
+        case CELL_RATIONAL: return c->num < 0; /* Assumes den is always positive */
+        default: return false;
     }
 }
 
@@ -391,7 +399,12 @@ bool cell_is_negative(const Cell* c) {
 bool cell_is_odd(const Cell* c) {
     /* Must be an integer to be odd or even. */
     if (!cell_is_integer(c)) {
-        return false;
+        return 0;
+    }
+
+    /* inf.0 neither even nor odd */
+    if (isinf(cell_to_long_double(c))) {
+        return 0;
     }
 
     const Cell* int_cell = (c->type == CELL_COMPLEX) ? c->real : c;
@@ -403,7 +416,7 @@ bool cell_is_odd(const Cell* c) {
         case CELL_RATIONAL:  val = int_cell->num; break; /* den is 1 if it's an integer */
         default: return false; /* Unreachable */
     }
-    return (val % 2 != 0);
+    return val % 2 != 0;
 }
 
 /* Helper for even? */
@@ -413,6 +426,11 @@ bool cell_is_even(const Cell* c) {
         return false;
     }
 
+    /* inf.0 neither even nor odd */
+    if (isinf(cell_to_long_double(c))) {
+        return false;
+    }
+
     const Cell* int_cell = (c->type == CELL_COMPLEX) ? c->real : c;
 
     long long val;
@@ -422,7 +440,7 @@ bool cell_is_even(const Cell* c) {
         case CELL_RATIONAL:  val = int_cell->num; break; /* den is 1 if it's an integer */
         default: return false; /* Unreachable */
     }
-    return (val % 2 == 0);
+    return val % 2 == 0;
 }
 
 

@@ -19,6 +19,7 @@
 
 #include "predicates.h"
 #include "types.h"
+#include <math.h>
 
 
 /* -------------------------------------------------*
@@ -72,6 +73,10 @@ Cell* builtin_list_pred(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
+    /* '() is a list */
+    if (a->cell[0]->type == CELL_NIL) {
+        return make_cell_boolean(1);
+    }
     return make_cell_boolean(a->cell[0]->type == CELL_PAIR && a->cell[0]->len > 0);
 }
 
@@ -165,14 +170,13 @@ Cell* builtin_inexact_pred(const Lex* e, const Cell* a) {
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
 
     if (a->cell[0]->type == CELL_COMPLEX) {
-        if (a->cell[0]->exact && a->cell[1]->exact) {
-            return make_cell_boolean(0);
-        }
-        return make_cell_boolean(1);
+        return a->cell[0]->real->exact && a->cell[0]->imag->exact ?
+        make_cell_boolean(false) : make_cell_boolean(true);
     }
-     if (a->cell[0]->exact) {
-         return make_cell_boolean(0);
-     }
+
+    if (a->cell[0]->exact) {
+        return make_cell_boolean(0);
+    }
     return make_cell_boolean(1);
 }
 
@@ -216,19 +220,29 @@ Cell* builtin_rational(const Lex* e, const Cell* a) {
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
 
-    const Cell* arg = a->cell[0];
-    switch (arg->type) {
-        case CELL_INTEGER:
-        case CELL_RATIONAL:
-        case CELL_REAL:
-            /* all reals are inherently rational. */
-            return make_cell_boolean(1);
-        case CELL_COMPLEX:
-            /* A complex number is rational if its imaginary part is zero. */
-            return make_cell_boolean(cell_is_real_zero(arg->imag));
-        default:
-            return make_cell_boolean(0);
+    /* Non-numbers are not rational */
+    if (check_arg_types(a, CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX)) {
+        return make_cell_boolean(0);
     }
+    const Cell* arg = a->cell[0];
+
+    /* A complex number is rational if its real part is exact
+     * and its imaginary part is zero. */
+    if (arg->type == CELL_COMPLEX) {
+        return make_cell_boolean(arg->real->exact && cell_is_real_zero(arg->imag));
+    }
+
+    /* Exact numbers are rational */
+    if (arg->exact) {
+        return make_cell_boolean(1);
+    }
+
+    /* Finite reals are rational */
+    if (!arg->exact) {
+        return make_cell_boolean(isfinite(cell_to_long_double(arg)));
+    }
+
+    return make_cell_boolean(0);
 }
 
 /* 'integer?' -> CELL_BOOLEAN - R7RS compliant */
@@ -279,7 +293,16 @@ Cell* builtin_positive(const Lex* e, const Cell* a) {
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
 
-    return make_cell_boolean(cell_is_positive(a->cell[0]));
+    const Cell* val = a->cell[0];
+    if (a->cell[0]->type == CELL_COMPLEX) {
+        /* Must be a real number to be positive */
+        if (!cell_is_real_zero(a->cell[0]->imag)) return make_cell_error(
+            "positive?: expected real, got complex",
+            VALUE_ERR);
+        val = a->cell[0]->real;
+    }
+
+    return make_cell_boolean(cell_is_positive(val));
 }
 
 /* 'negative?' -> CELL_BOOLEAN - returns #t if arg is < 0 else #f */
@@ -289,7 +312,16 @@ Cell* builtin_negative(const Lex* e, const Cell* a) {
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
 
-    return make_cell_boolean(cell_is_negative(a->cell[0]));
+    const Cell* val = a->cell[0];
+    if (a->cell[0]->type == CELL_COMPLEX) {
+        /* Must be a real number to be negative */
+        if (!cell_is_real_zero(a->cell[0]->imag)) return make_cell_error(
+            "positive?: expected real, got complex",
+            VALUE_ERR);
+        val = a->cell[0]->real;
+    }
+
+    return make_cell_boolean(cell_is_negative(val));
 }
 
 /* 'odd?' -> CELL_BOOLEAN - returns #t if arg is an odd integer else #f */
