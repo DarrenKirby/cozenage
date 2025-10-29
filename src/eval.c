@@ -153,7 +153,7 @@ static Cell* coz_apply(const Cell* proc, const Cell* args, Lex** env_out, Cell**
         return proc->builtin(*env_out, args); /* Return final value */
     }
     /* It's a Scheme lambda, return TCO */
-    *env_out = build_lambda_env(proc->env, proc->formals, args);
-    *expr_out = sequence_sf_body(proc->body);
+    *env_out = build_lambda_env(proc->lambda->env, proc->lambda->formals, args);
+    *expr_out = sequence_sf_body(proc->lambda->body);
     return TCS_Obj;
 }

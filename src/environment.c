@@ -143,24 +143,26 @@ Cell* lex_make_builtin(const char* name, Cell* (*func)(const Lex*, const Cell*))
 
 /* Populate the CELL_PROC struct of a Cell* object for a named lambda procedure */
 Cell* lex_make_named_lambda(char* name, Cell* formals, Cell* body, Lex* env) {
-    Cell* c = GC_MALLOC(sizeof(Cell));
+    Cell* c = GC_MALLOC(sizeof(Cell)); /* Allocate Cell struct */
     c->type = CELL_PROC;
-    c->l_name = name;  /* optional */
-    c->formals = formals;
-    c->body = body;
-    c->env = env;  /* do NOT copy, just store pointer */
+    c->lambda= GC_MALLOC(sizeof(lambda)); /* Allocate lambda struct*/
+    c->lambda->l_name = name;  /* optional */
+    c->lambda->formals = formals;
+    c->lambda->body = body;
+    c->lambda->env = env;  /* do NOT copy, just store pointer */
     c->is_builtin = false;
     return c;
 }
 
 /* Populate the CELL_PROC struct of a Cell* object for an anonymous lambda procedure */
 Cell* lex_make_lambda(Cell* formals, Cell* body, Lex* env) {
-    Cell* c = GC_MALLOC(sizeof(Cell));
+    Cell* c = GC_MALLOC(sizeof(Cell)); /* Allocate Cell struct */
     c->type = CELL_PROC;
-    c->l_name = nullptr;  /* No name */
-    c->formals = formals;
-    c->body = body;
-    c->env = env;  /* do NOT copy, just store pointer */
+    c->lambda= GC_MALLOC(sizeof(lambda)); /* Allocate lambda struct*/
+    c->lambda->l_name = nullptr;  /* No name */
+    c->lambda->formals = formals;
+    c->lambda->body = body;
+    c->lambda->env = env;  /* do NOT copy, just store pointer */
     c->is_builtin = false;
     return c;
 }

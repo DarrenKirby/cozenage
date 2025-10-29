@@ -47,7 +47,7 @@ Cell* builtin_input_port_pred(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
-    if (a->cell[0]->type != CELL_PORT || a->cell[0]->port_t != INPUT_PORT) {
+    if (a->cell[0]->type != CELL_PORT || a->cell[0]->port->port_t != INPUT_PORT) {
         return make_cell_boolean(0);
     }
     return make_cell_boolean(1);
@@ -57,7 +57,7 @@ Cell* builtin_output_port_pred(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
-    if (a->cell[0]->type != CELL_PORT || a->cell[0]->port_t != OUTPUT_PORT) {
+    if (a->cell[0]->type != CELL_PORT || a->cell[0]->port->port_t != OUTPUT_PORT) {
         return make_cell_boolean(0);
     }
     return make_cell_boolean(1);
@@ -67,7 +67,7 @@ Cell* builtin_text_port_pred(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
-    if (a->cell[0]->type != CELL_PORT || a->cell[0]->stream_t != TEXT_PORT) {
+    if (a->cell[0]->type != CELL_PORT || a->cell[0]->port->stream_t != TEXT_PORT) {
         return make_cell_boolean(0);
     }
     return make_cell_boolean(1);
@@ -77,7 +77,7 @@ Cell* builtin_binary_port_pred(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
-    if (a->cell[0]->type != CELL_PORT || a->cell[0]->stream_t != BINARY_PORT) {
+    if (a->cell[0]->type != CELL_PORT || a->cell[0]->port->stream_t != BINARY_PORT) {
         return make_cell_boolean(0);
     }
     return make_cell_boolean(1);
@@ -88,7 +88,7 @@ Cell* builtin_input_port_open(const Lex* e, const Cell* a) {
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
     if (a->cell[0]->type == CELL_PORT ||
-        a->cell[0]->port_t != INPUT_PORT ||
+        a->cell[0]->port->port_t != INPUT_PORT ||
         a->cell[0]->is_open == true) {
         return make_cell_boolean(1);
         }
@@ -100,7 +100,7 @@ Cell* builtin_output_port_open(const Lex* e, const Cell* a) {
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
     if (a->cell[0]->type == CELL_PORT ||
-        a->cell[0]->port_t != OUTPUT_PORT ||
+        a->cell[0]->port->port_t != OUTPUT_PORT ||
         a->cell[0]->is_open == true) {
         return make_cell_boolean(1);
     }
@@ -116,7 +116,7 @@ Cell* builtin_close_port(const Lex* e, const Cell* a) {
     }
 
     if (a->cell[0]->is_open == 1) {
-        fclose(a->cell[0]->fh);
+        fclose(a->cell[0]->port->fh);
         a->cell[0]->is_open = 0;
     }
     return make_cell_boolean(1);
@@ -136,12 +136,12 @@ Cell* builtin_read_line(const Lex* e, const Cell* a) {
         port = a->cell[0];
     }
 
-    if (port->is_open == 0 || port->port_t != INPUT_PORT)
+    if (port->is_open == 0 || port->port->port_t != INPUT_PORT)
         return make_cell_error("port is not open for input", GEN_ERR);
 
     char *line = nullptr;
     size_t n = 0;
-    const ssize_t len = getline(&line, &n, port->fh);
+    const ssize_t len = getline(&line, &n, port->port->fh);
     if (len <= 0) { free(line); return make_cell_eof(); }
     /* remove newline if present */
     if (line[len-1] == '\n') line[len-1] = '\0';
@@ -169,7 +169,7 @@ Cell* builtin_write_string(const Lex* e, const Cell* a) {
     } else {
         port = a->cell[1];
     }
-    if (fputs(a->cell[0]->str, port->fh) == EOF) {
+    if (fputs(a->cell[0]->str, port->port->fh) == EOF) {
         return make_cell_error(strerror(errno), FILE_ERR);
     }
     /* No meaningful return value */
@@ -187,7 +187,7 @@ Cell* builtin_newline(const Lex* e, const Cell* a) {
     } else {
         port = a->cell[0];
     }
-    if (fputs("\n", port->fh) == EOF) {
+    if (fputs("\n", port->port->fh) == EOF) {
         return make_cell_error(strerror(errno), FILE_ERR);
     }
     /* No meaningful return value */

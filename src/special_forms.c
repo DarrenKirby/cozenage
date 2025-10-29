@@ -186,7 +186,7 @@ HandlerResult sf_define(Lex* e, Cell* a) {
         }
         /* Grab the name for the un-sugared define lambda */
         if (val->type == CELL_PROC) {
-            val->l_name = target->sym;
+            val->lambda->l_name = target->sym;
         }
         lex_put_global(e, target, val);
         return (HandlerResult){ .action = ACTION_RETURN, .value = val };
@@ -671,7 +671,7 @@ HandlerResult sf_letrec(Lex* e, Cell* a) {
             /* TODO:change this error message to print the problem expression/variable
                after printer.c is generalized to write to any stream rather than just stdout */
             char buf[128];
-            sprintf(buf, "letrec: variable used before initialization");
+            snprintf(buf, sizeof(buf), "letrec: variable used before initialization");
             Cell* err = make_cell_error(buf, VALUE_ERR);
             return (HandlerResult){ .action = ACTION_RETURN, .value = err };
         }

@@ -42,7 +42,7 @@ static ht_item HT_DELETED_ITEM = { (char*) -1, nullptr };
  * initialized to a sane size, but the argument must be a power of 2. */
 ht_table* ht_create(const int initial_capacity) {
     /* Allocate space for hash table struct. */
-    ht_table* table = GC_malloc(sizeof(ht_table));
+    ht_table* table = GC_MALLOC(sizeof(ht_table));
     if (table == NULL) {
         fprintf(stderr, "ENOMEM: malloc failed in ht_create\n");
         exit(EXIT_FAILURE);
@@ -51,7 +51,7 @@ ht_table* ht_create(const int initial_capacity) {
     table->capacity = initial_capacity;
 
     /* Allocate space for entry buckets. */
-    table->items = GC_malloc(table->capacity * sizeof(ht_item));
+    table->items = GC_MALLOC(table->capacity * sizeof(ht_item));
     if (table->items == NULL) {
         fprintf(stderr, "ENOMEM: malloc failed in ht_create\n");
         exit(EXIT_FAILURE);

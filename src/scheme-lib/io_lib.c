@@ -38,7 +38,7 @@ Cell* builtin_display(const Lex* e, const Cell* a) {
         }
         port = a->cell[1];
     }
-    fprintf(port->fh, "%s", cell_to_string(a->cell[0], MODE_DISPLAY));
+    fprintf(port->port->fh, "%s", cell_to_string(a->cell[0], MODE_DISPLAY));
     return nullptr;
 }
 
