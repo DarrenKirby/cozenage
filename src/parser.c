@@ -26,7 +26,6 @@
 #include <string.h>
 #include <errno.h>
 #include <limits.h>
-#include <wctype.h>
 #include <unicode/uchar.h>
 /* Linux needs this include, macOS and FreeBSD do not */
 #ifdef __linux__
@@ -119,8 +118,23 @@ static Cell* parse_number(char* token, const int line, int len) {
          return make_cell_real(parse_float_checked(token, err_buf, &ok));
      }
 
-    /* Check for prefixes */
     char *tok;
+    /* Check for exact/inexact */
+    if (token[0] == 'e') {
+        exact = 1; len -= 1;
+        token = token + 1;
+    } else if (token[0] == 'i') {
+        exact = 0; len -= 1;
+        token = token + 1;
+    }
+
+    /* For weirdness like #i#b1011 */
+    if (token[0] == '#') {
+        len -= 1;
+        token = token + 1;
+    }
+
+    /* Check for base prefixes */
     if (token[0] == 'b') {
         base = 2; len -= 1;
         tok = token + 1;
@@ -132,12 +146,6 @@ static Cell* parse_number(char* token, const int line, int len) {
         tok = token + 1;
     } else if (token[0] == 'x') {
         base = 16; len -= 1;
-        tok = token + 1;
-    } else if (token[0] == 'e') {
-        exact = 1; len -= 1;
-        tok = token + 1;
-    } else if (token[0] == 'i') {
-        exact = 0; len -= 1;
         tok = token + 1;
     } else {
         /* No prefix */
@@ -291,6 +299,8 @@ static Cell* parse_symbol(char* tok, const int line, const int len) {
      * not sure how to do it more elegantly. */
     if (strcmp(tok, "+inf.0") == 0 ||
         strcmp(tok, "-inf.0") == 0 ||
+        strcmp(tok, "+nan.0") == 0 ||
+        strcmp(tok, "-nan.0") == 0 ||
         strcmp(tok, "nan.0") == 0 ||
         strcmp(tok, "inf.0") == 0) {
         return parse_number(tok, line, len);

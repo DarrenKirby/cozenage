@@ -197,9 +197,10 @@ Token lex_token() {
         /* Either a number prefix, or symbol. */
         case '+':
         case '-': {
-            /* -inf.0 and +inf.0 need special handling.
+            /* -inf.0, +inf.0, +nan.0, and -nan.0 need special handling.
              * lex them as symbols, and deal with in the parser */
             if (peek() == 'i' && peekNext() == 'n') return symbol();
+            if (peek() == 'n' && peekNext() == 'a') return symbol();
             if (is_digit(peek())) return number();
             return make_token(T_SYMBOL);
         }
