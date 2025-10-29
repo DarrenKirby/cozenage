@@ -282,10 +282,11 @@ Cell* make_cell_port(const char* path, FILE* fh, const int io_t, const int strea
     }
     v->is_open = true;
     v->type = CELL_PORT;
-    v->path = GC_strdup(path);
-    v->port_t = io_t;
-    v->stream_t = stream_t;
-    v->fh = fh;
+    v->port = GC_MALLOC(sizeof(port));
+    v->port->path = GC_strdup(path);
+    v->port->port_t = io_t;
+    v->port->stream_t = stream_t;
+    v->port->fh = fh;
     return v;
 }
 
@@ -382,10 +383,11 @@ Cell* cell_copy(const Cell* v) {
             copy->f_name    = GC_strdup(v->f_name);
         } else {
             copy->is_builtin = false;
-            copy->l_name    = v->l_name ? GC_strdup(v->l_name) : nullptr;
-            copy->formals = cell_copy(v->formals) ;
-            copy->body    = cell_copy(v->body);
-            copy->env     = v->env;   /* DO NOT copy environments; share the pointer */
+            copy->lambda = GC_MALLOC(sizeof(lambda));
+            copy->lambda->l_name    = v->lambda->l_name ? GC_strdup(v->lambda->l_name) : nullptr;
+            copy->lambda->formals = cell_copy(v->lambda->formals) ;
+            copy->lambda->body    = cell_copy(v->lambda->body);
+            copy->lambda->env     = v->lambda->env;   /* DO NOT copy environments; share the pointer */
         }
         break;
     case CELL_SEXPR:
@@ -424,10 +426,11 @@ Cell* cell_copy(const Cell* v) {
         }
     case CELL_PORT: {
         copy->is_open = v->is_open;
-        copy->port_t = v->port_t;
-        copy->stream_t = v->stream_t;
-        copy->fh = v->fh;
-        copy->path = GC_strdup(v->path);
+        copy->port = GC_MALLOC(sizeof(port));
+        copy->port->port_t = v->port->port_t;
+        copy->port->stream_t = v->port->stream_t;
+        copy->port->fh = v->port->fh;
+        copy->port->path = GC_strdup(v->port->path);
         break;
     }
     case CELL_CONT:

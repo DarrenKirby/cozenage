@@ -80,6 +80,22 @@ typedef enum {
                                     tail-call */
 } Cell_t;
 
+/* Anonymous and named lambdas */
+typedef struct Lambda {
+     char* l_name;     /* name of builtin and named lambda procedures */
+     Cell* formals;    /* must be symbols */
+     Cell* body;       /* S-expression for lambda */
+     Lex* env;         /* closure environment */
+ } lambda;
+
+ /* Ports */
+typedef struct Port {
+     char* path;       /* file path of associated fh */
+     FILE* fh;         /* the file handle */
+     int port_t;       /* input or output */
+     int stream_t;     /* binary or textual */
+} port;
+
 /* Definition of the Cell struct/tagged union */
 typedef struct Cell {
     Cell_t type;        /* type of data the Cell holds */
@@ -109,21 +125,6 @@ typedef struct Cell {
     };
 
     union {
-        /* Anonymous and named lambdas */
-        struct {
-            char* l_name;     /* name of builtin and named lambda procedures */
-            Cell* formals;    /* non-NULL → user-defined lambda */
-            Cell* body;       /* S-expression for lambda */
-            Lex* env;         /* closure environment */
-        };
-        /* Ports */
-        struct {
-            char* path;       /* file path of associated fh */
-            FILE* fh;         /* the file handle */
-            int port_t;       /* input or output */
-            int stream_t;     /* binary or textual */
-        };
-        /* builtin procedures */
         struct {
             char* f_name;      /* name of builtin and named lambda procedure */
             Cell* (*builtin)(const Lex*, const Cell*); /* builtin procedure */
@@ -156,6 +157,8 @@ typedef struct Cell {
         long long int integer_v;  /* integers */
         UChar32 char_v;           /* character literal */
         bool boolean_v;           /* boolean */
+        lambda* lambda;
+        port* port;
     };
 } Cell;
 
