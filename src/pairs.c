@@ -251,7 +251,7 @@ Cell* builtin_list_append(const Lex* e, const Cell* a) {
         /* All but the last argument must be a list */
         if (current_list->type != CELL_PAIR) {
             char buf[128];
-            sprintf(buf, "append: arg%d is not a list", i+1);
+            snprintf(buf, sizeof(buf), "append: arg%d is not a list", i+1);
             return make_cell_error(buf, TYPE_ERR);
         }
 
@@ -262,7 +262,7 @@ Cell* builtin_list_append(const Lex* e, const Cell* a) {
         }
         if (p->type != CELL_NIL) {
             char buf[128];
-            sprintf(buf, "append: arg%d is not a proper list", i+1);
+            snprintf(buf, sizeof(buf), "append: arg%d is not a proper list", i+1);
             return make_cell_error(buf, TYPE_ERR);
         }
 
