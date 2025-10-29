@@ -14,8 +14,8 @@ Test(end_to_end_chars, test_char_integer_conversions, .init = setup_each_test, .
     cr_assert_str_eq(t_eval("(integer->char 9)"), "#\\tab");
     cr_assert_str_eq(t_eval("(integer->char 0)"), "#\\null");
     cr_assert_str_eq(t_eval("(integer->char 127)"), "#\\delete");
-    //cr_assert_str_eq(t_eval("(integer->char 8364)"), "#\\\xe2\x82\xac"); // Euro symbol (€)
-    //cr_assert_str_eq(t_eval("(integer->char 955)"), "#\\λ");  // Greek lambda (λ)
+    cr_assert_str_eq(t_eval("(integer->char 8364)"), "#\\€"); // Euro symbol (€)
+    cr_assert_str_eq(t_eval("(integer->char 955)"), "#\\λ");  // Greek lambda (λ)
 
     /* Test char->integer */
     cr_assert_str_eq(t_eval("(char->integer #\\A)"), "65");
@@ -38,7 +38,7 @@ Test(end_to_end_chars, test_char_integer_conversions, .init = setup_each_test, .
     /* The following tests are for error conditions. */
     cr_assert_str_eq(t_eval("(integer->char -1)"), " Value error: integer->char: invalid code point");
     cr_assert_str_eq(t_eval("(integer->char #x110000)"), " Value error: integer->char: invalid code point");
-    //cr_assert_str_eq(t_eval("(integer->char #xD800)"), " Error: integer->char: invalid code point (surrogate)");
+    cr_assert_str_eq(t_eval("(integer->char #xD800)"), " Value error: integer->char: invalid code point (surrogate)");
     cr_assert_str_eq(t_eval("(char->integer 123)"), " Type error: bad type at arg 1: got integer, expected char");
     cr_assert_str_eq(t_eval("(integer->char 1.0)"), " Type error: bad type at arg 1: got float, expected integer");
 }
