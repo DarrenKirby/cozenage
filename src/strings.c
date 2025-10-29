@@ -464,7 +464,7 @@ Cell* builtin_list_string(const Lex* e, const Cell* a) {
 
     if (status != U_BUFFER_OVERFLOW_ERROR && U_FAILURE(status)) {
         char buf[256];
-        sprintf(buf, "Unicode error: %s", u_errorName(status));
+        snprintf(buf, sizeof(buf), "Unicode error: %s", u_errorName(status));
         return make_cell_error(buf, GEN_ERR);
     }
 
@@ -491,7 +491,7 @@ Cell* builtin_list_string(const Lex* e, const Cell* a) {
 
     if (U_FAILURE(status)) {
         char buf[256];
-        sprintf(buf, "ICU conversion failed: %s\n", u_errorName(status));
+        snprintf(buf, sizeof(buf), "ICU conversion failed: %s\n", u_errorName(status));
         free(utf8Buffer);
         return make_cell_error(buf, GEN_ERR);
     }
