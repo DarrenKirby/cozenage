@@ -36,7 +36,10 @@ static void repr_long_double(const long double x, string_builder_t *sb) {
 
     /* If there's no '.' or exponent marker, force a ".0" */
     if (!strchr(buf, '.') && !strchr(buf, 'e') && !strchr(buf, 'E')) {
-        strcat(buf, ".0");
+        const size_t len = strlen(buf);
+        if (len < sizeof(buf) - 3) {
+            strcat(buf, ".0");
+        }
     }
     sb_append_str(sb, buf);
 }
@@ -197,9 +200,9 @@ static void cell_to_string_worker(const Cell* v, string_builder_t *sb,
         } else {
             if (mode == MODE_REPL) {
                 sb_append_fmt(sb, "<lambda '%s%s%s'>", ANSI_GREEN_B,
-                    v->l_name ? v->l_name : "anonymous", ANSI_RESET);
+                    v->lambda->l_name ? v->lambda->l_name : "anonymous", ANSI_RESET);
             } else {
-                sb_append_fmt(sb, "<lambda '%s'>", v->l_name ? v->l_name : "anonymous");
+                sb_append_fmt(sb, "<lambda '%s'>", v->lambda->l_name ? v->lambda->l_name : "anonymous");
             }
         }
         break;
@@ -207,14 +210,14 @@ static void cell_to_string_worker(const Cell* v, string_builder_t *sb,
     case CELL_PORT:
         if (mode == MODE_REPL) {
             printf("<%s%s %s-port '%s%s%s'>", v->is_open ? "open:" : "closed:",
-                v->stream_t == TEXT_PORT ? "text" : "binary",
-                v->port_t == INPUT_PORT ? "input" : "output",
-                ANSI_BLUE_B, v->path, ANSI_RESET);
+                v->port->stream_t == TEXT_PORT ? "text" : "binary",
+                v->port->port_t == INPUT_PORT ? "input" : "output",
+                ANSI_BLUE_B, v->port->path, ANSI_RESET);
         } else {
             printf("<%s%s %s-port '%s'>", v->is_open ? "open:" : "closed:",
-                v->stream_t == TEXT_PORT ? "text" : "binary",
-                v->port_t == INPUT_PORT ? "input" : "output",
-                v->path);
+                v->port->stream_t == TEXT_PORT ? "text" : "binary",
+                v->port->port_t == INPUT_PORT ? "input" : "output",
+                v->port->path);
         }
         break;
 
