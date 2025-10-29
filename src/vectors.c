@@ -33,8 +33,9 @@
 * It is analogous to list. */
 Cell* builtin_vector(const Lex* e, const Cell* a) {
     (void)e;
-    Cell* err = CHECK_ARITY_MIN(a, 1);
-    if (err) return err;
+    if (a->count == 0) {
+        return make_cell_vector();
+    }
 
     Cell *vec = make_cell_vector();
     for (int i = 0; i < a->count; i++) {
@@ -68,12 +69,12 @@ Cell* builtin_vector_ref(const Lex* e, const Cell* a) {
     }
     if (a->cell[1]->type != CELL_INTEGER) {
         return make_cell_error(
-            "vector-ref: arg 2 must be an integer",
+            "vector-ref: arg 2 must be an exact integer",
             TYPE_ERR);
     }
     const int i = (int)a->cell[1]->integer_v;
 
-    if (i >= a->cell[0]->count) {
+    if (i >= a->cell[0]->count || i < 0) {
         return make_cell_error(
             "vector-ref: index out of bounds",
             INDEX_ERR);
@@ -95,6 +96,10 @@ Cell* builtin_make_vector(const Lex* e, const Cell* a) {
             TYPE_ERR);
     }
     const long long n = a->cell[0]->integer_v;
+    /* (make-vector 0) -> #() */
+    if (n == 0) {
+        return make_cell_vector();
+    }
     if (n < 1) {
         return make_cell_error(
             "make-vector: arg 1 must be non-negative",
@@ -120,6 +125,10 @@ Cell* builtin_list_to_vector(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
+    /* '() -> #() */
+    if (a->cell[0]->type == CELL_NIL) {
+        return make_cell_vector();
+    }
     if (a->cell[0]->type != CELL_PAIR) {
         return make_cell_error(
             "list->vector: arg 1 must be a list",
