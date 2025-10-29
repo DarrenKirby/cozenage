@@ -258,7 +258,7 @@ static TokenArray* init_token_array() {
     return ta;
 }
 
-static TokenArray* write_token_array(TokenArray* ta, Token token) {
+static TokenArray* write_token_array(TokenArray* ta, const Token token) {
     /* Check if we need to reallocate. */
     if (ta->count == ta->capacity) {
         ta->capacity *= 2;

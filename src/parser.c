@@ -330,6 +330,13 @@ static Cell* parse_character(char* tok, const int line, const int len) {
             char* end_ptr;
             const long code = strtol(tok + 1, &end_ptr, 16);
 
+            if (code >= 0xD800 && code <= 0xDFFF) {
+                snprintf(err_buf, sizeof(err_buf),
+                    "Line %d, Invalid Unicode hex value (surrogate): '%s%s%s'",
+                    line, ANSI_RED_B, tok, ANSI_RESET);
+                return make_cell_error(err_buf, VALUE_ERR);
+            }
+
             if (*end_ptr != '\0' || code < 0 || code > 0x10FFFF) {
                 snprintf(err_buf, sizeof(err_buf),
                     "Line %d, Invalid Unicode hex value: '%s%s%s'",
