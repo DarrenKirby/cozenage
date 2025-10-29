@@ -135,34 +135,6 @@ static Token string() {
 }
 
 static Token number() {
-    // while (is_digit(peek())) advance();
-    //
-    // /* Look for a fractional part. */
-    // if (peek() == '.' && is_digit(peekNext())) {
-    //     /* Consume the decimal point. */
-    //     advance();
-    //
-    //     while (is_digit(peek())) advance();
-    // }
-    //
-    // /* Look for rational number */
-    // if (peek() == '/') {
-    //     advance();
-    //
-    //     while (is_digit(peek())) advance();
-    // }
-    //
-    // /* Look for complex number */
-    // if ((peek() == '+' || peek() == '-') && is_digit(peekNext())) {
-    //     /* consume the +/- */
-    //     advance();
-    //
-    //     while (is_digit(peek()) || peek() == '.') advance();
-    // }
-    // /* Consume any trailing 'i' */
-    // if (peek() == 'i') {
-    //     advance();
-    // }
     while (!is_whitespace(peek()) && !at_end() && peek() != ')') {
         advance();
     }
@@ -171,7 +143,7 @@ static Token number() {
 
 static Token boolean() {
     scanner.start = scanner.current;
-    while (!is_whitespace(peek()) && !at_end()) {
+    while (!is_whitespace(peek()) && !at_end() && peek() != ')') {
         advance();
     }
     return make_token(T_BOOLEAN);
