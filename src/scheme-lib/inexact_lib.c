@@ -196,46 +196,56 @@ Cell* builtin_cbrt(const Lex* e, const Cell* a) {
 /* Predicate to test if val is infinite */
 Cell* builtin_infinite(const Lex* e, const Cell* a) {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL);
+    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX);
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
-    /* TODO: add complex support */
 
-    const long double n = cell_to_long_double(a->cell[0]);
-    if (isinf(n)) {
-        return make_cell_boolean(1);
+    const Cell* arg = a->cell[0];
+    if (arg->type == CELL_COMPLEX) {
+        const long double r = cell_to_long_double(arg->real);
+        const long double i = cell_to_long_double(arg->imag);
+        return make_cell_boolean(isinf(r) || isinf(i));
     }
-    return make_cell_boolean(0);
+
+    const long double n = cell_to_long_double(arg);
+    return make_cell_boolean(isinf(n));
 }
 
 /* Predicate to test if val is finite */
 Cell* builtin_finite(const Lex* e, const Cell* a) {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL);
+    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX);
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
-    /* TODO: add complex support */
 
-    const long double n = cell_to_long_double(a->cell[0]);
-    if (isinf(n)) {
-        return make_cell_boolean(0);
+    const Cell* arg = a->cell[0];
+    if (arg->type == CELL_COMPLEX) {
+        const long double r = cell_to_long_double(arg->real);
+        const long double i = cell_to_long_double(arg->imag);
+        return make_cell_boolean(isfinite(r) && isfinite(i));
     }
-    return make_cell_boolean(1);
+
+    const long double n = cell_to_long_double(arg);
+    return make_cell_boolean(isfinite(n));
 }
 
 /* Predicate to test if val is nan */
 Cell* builtin_nan(const Lex* e, const Cell* a) {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL);
+    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    if (err) return err;
+    err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX);
     if (err) { return err; }
-    if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
-    /* TODO: add complex support */
 
-    const long double n = cell_to_long_double(a->cell[0]);
-    if (isnan(n)) {
-        return make_cell_boolean(1);
+    const Cell* arg = a->cell[0];
+    if (arg->type == CELL_COMPLEX) {
+        const long double r = cell_to_long_double(arg->real);
+        const long double i = cell_to_long_double(arg->imag);
+        return make_cell_boolean(isnan(r) || isnan(i));
     }
-    return make_cell_boolean(0);
+
+    const long double n = cell_to_long_double(arg);
+    return make_cell_boolean(isnan(n));
 }
 
 void lex_add_inexact_lib(const Lex* e) {
