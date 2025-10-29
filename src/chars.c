@@ -53,6 +53,9 @@ Cell* builtin_int_to_char(const Lex* e, const Cell* a) {
     if (err) return err;
 
     const UChar32 val = (int)a->cell[0]->integer_v;
+    if (val >= 0xD800 && val <= 0xDFFF) {
+        return make_cell_error("integer->char: invalid code point (surrogate)", VALUE_ERR);
+    }
     if (val < 0 || val > 0x10FFFF) {
         return make_cell_error("integer->char: invalid code point", VALUE_ERR);
     }
