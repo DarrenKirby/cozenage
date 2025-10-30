@@ -177,8 +177,7 @@ Test(end_to_end_vectors, test_vector_to_list, .init = setup_each_test, .fini = t
 Test(end_to_end_vectors, test_string_to_vector, .init = setup_each_test, .fini = teardown_each_test) {
     cr_assert_str_eq(t_eval("(string->vector \"abc\")"), "#(#\\a #\\b #\\c)");
     cr_assert_str_eq(t_eval("(string->vector \"\")"), "#()");
-    /* FIXME: this test returns an empty string. It should not */
-    //cr_assert_str_eq(t_eval("(string->vector \"λ\")"), "#(#\\λ)");
+    cr_assert_str_eq(t_eval("(string->vector \"λ\")"), "#(#\\λ)");
 
     // ## Type Errors ##
     cr_assert_str_eq(t_eval("(string->vector 'abc)"), " Type error: string->vector: arg1 must be a string");

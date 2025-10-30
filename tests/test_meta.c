@@ -1,12 +1,10 @@
 
 #include "test_meta.h"
-#include <criterion/criterion.h>
-#include <criterion/redirect.h>
-#include <gc/gc.h>
 #include "../src/eval.h"
 #include "../src/parser.h"
 #include "../src/repr.h"
 #include "../src/symbols.h"
+#include <locale.h>
 
 /* Define the global test environment variable. */
 Lex* test_env;
@@ -19,6 +17,7 @@ void setup_each_test(void) {
     // test_env = lex_initialize_global_env();
     // lex_add_builtins(test_env);
     // init_special_forms();
+    setlocale(LC_ALL, "");
 }
 
 // This function will run after EACH test
