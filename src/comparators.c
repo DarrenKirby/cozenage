@@ -21,6 +21,8 @@
 #include "types.h"
 #include <string.h>
 
+#include "repr.h"
+
 
 /* -----------------------------*
  *     Comparison operators     *
@@ -243,7 +245,8 @@ Cell* builtin_eqv(const Lex* e, const Cell* a) {
         case CELL_RATIONAL:  return make_cell_boolean(x->den == y->den && x->num == y->num);
         case CELL_COMPLEX: return make_cell_boolean(complex_eq_op(e, x, y));
         case CELL_CHAR: return make_cell_boolean(x->char_v == y->char_v);
-        default:       return make_cell_boolean(x == y); /* fall back to identity */
+        case CELL_NIL: return make_cell_boolean(y->type == CELL_NIL);
+        default: return make_cell_boolean(x == y); /* fall back to identity */
     }
 }
 
@@ -263,10 +266,12 @@ static Cell* val_equal(const Lex* e, Cell* x, Cell* y) {
         case CELL_SYMBOL:  return make_cell_boolean(strcmp(x->sym, y->sym) == 0);
         case CELL_STRING:  return make_cell_boolean(strcmp(x->str, y->str) == 0);
         case CELL_COMPLEX: return make_cell_boolean(complex_eq_op(e, x, y));
+        case CELL_NIL: return make_cell_boolean(y->type == CELL_NIL);
 
         case CELL_PAIR:
         case CELL_SEXPR:
         case CELL_VECTOR:
+        case CELL_BYTEVECTOR:
             if (x->type == CELL_PAIR) {
                 x = make_sexpr_from_list(x);
                 y = make_sexpr_from_list(y);

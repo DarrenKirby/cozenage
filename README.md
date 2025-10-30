@@ -262,6 +262,7 @@ This is a list of what *is* implemented so far. I try to keep it up to date:
 - `read-line`
 - `write-string`
 - `newline`
+- `eof-object`
 
 ## R7RS Scheme library procedures
 

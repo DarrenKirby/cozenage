@@ -337,4 +337,5 @@ void lex_add_builtins(const Lex* e) {
     lex_add_builtin(e, "read-line", builtin_read_line);
     lex_add_builtin(e, "write-string", builtin_write_string);
     lex_add_builtin(e, "newline", builtin_newline);
+    lex_add_builtin(e, "eof-object", builtin_eof);
 }

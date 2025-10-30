@@ -21,8 +21,6 @@
 #include "cell.h"
 #include "numerics.h"
 #include <gc.h>
-#include <ctype.h>
-#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -226,14 +224,43 @@ Cell* make_sexpr_len4(const Cell* a, const Cell* b, const Cell* c, const Cell* d
 
 Cell* make_sexpr_from_list(Cell* v) {
     Cell* result = make_cell_sexpr();
-    result->count = v->len;
-    result->cell = GC_MALLOC(sizeof(Cell*) * v->len);
+    int count;
 
+    /* A proper list is the simple case. */
+    if (v->len != -1) {
+        count = v->len;
+        result->cell = GC_MALLOC(sizeof(Cell*) * count);
+        const Cell* p = v;
+        for (int i = 0; i < count; i++) {
+            cell_add(result, p->car);
+            p = p->cdr;
+        }
+        return result;
+    }
+
+    /* Improper List Handling */
+    count = 0;
+    const Cell* traverser = v;
+
+    /* Count the number of pairs in the chain. */
+    while (traverser != NULL && traverser->type == CELL_PAIR) {
+        count++;
+        traverser = traverser->cdr;
+    }
+
+    /* Allocate space for all the `car`s from the pairs PLUS the final `cdr`. */
+    result->cell = GC_MALLOC(sizeof(Cell*) * (count + 1));
+
+    /* Copy the `car` of each pair. */
     Cell* p = v;
-    for (int i = 0; i < v->len; i++) {
-        result->cell[i] = cell_copy(p->car);
+    for (int i = 0; i < count; i++) {
+        cell_add(result, p->car);
         p = p->cdr;
     }
+
+    /* Add the final terminating element. */
+    cell_add(result, p);
+
     return result;
 }
 
@@ -505,16 +532,6 @@ Cell* simplify_rational(Cell* v) {
         return int_cell;
     }
     return v;
-}
-
-/* Helper: convert numeric Cell to long double */
-long double cell_to_ld(const Cell* c) {
-    switch (c->type) {
-        case CELL_INTEGER:  return (long double)c->integer_v;
-        case CELL_RATIONAL:  return (long double)c->num / (long double)c->den;
-        case CELL_REAL: return c->real_v;
-        default:       return 0.0L; /* should not happen */
-    }
 }
 
 /* Helper for performing arithmetic on complex numbers */

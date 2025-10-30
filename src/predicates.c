@@ -77,7 +77,21 @@ Cell* builtin_list_pred(const Lex* e, const Cell* a) {
     if (a->cell[0]->type == CELL_NIL) {
         return make_cell_boolean(1);
     }
-    return make_cell_boolean(a->cell[0]->type == CELL_PAIR && a->cell[0]->len > 0);
+
+    /* If len is not -1, we can trust it's a proper list. */
+    if (a->cell[0]->type == CELL_PAIR && a->cell[0]->len > 0) {
+        return make_cell_boolean(1);
+    }
+
+    /* If len is -1, this could be an improper list or a proper list
+     * built with `cons`. We need to traverse it to find out. */
+    const Cell* p = a->cell[0];
+    while (p->type == CELL_PAIR) {
+        p = p->cdr;
+    }
+
+    return p->type == CELL_NIL ?
+        make_cell_boolean(true) : make_cell_boolean(false);
 }
 
 /* 'procedure?' -> CELL_BOOLEAN - return #t if obj is a procedure, else #f */
