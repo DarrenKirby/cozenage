@@ -193,3 +193,11 @@ Cell* builtin_newline(const Lex* e, const Cell* a) {
     /* No meaningful return value */
     return nullptr;
 }
+
+Cell* builtin_eof(const Lex* e, const Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 0);
+    if (err) return err;
+
+    return make_cell_eof();
+}

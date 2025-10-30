@@ -36,5 +36,6 @@ Cell* builtin_close_port(const Lex* e, const Cell* a);
 Cell* builtin_read_line(const Lex* e, const Cell* a);
 Cell* builtin_write_string(const Lex* e, const Cell* a);
 Cell* builtin_newline(const Lex* e, const Cell* a);
+Cell* builtin_eof(const Lex* e, const Cell* a);
 
 #endif //COZENAGE_PORTS_H
