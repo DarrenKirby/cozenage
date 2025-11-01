@@ -233,23 +233,11 @@ HandlerResult sf_quote(Lex* e, Cell* a) {
         Cell* err = make_cell_error("quote takes exactly one argument", ARITY_ERR);
         return (HandlerResult){ .action = ACTION_RETURN, .value = err };
     }
+
     /* Extract the expression that was quoted. */
     Cell* qexpr = cell_take(a, 0);
 
-    /* Flag whether to do env lookup */
-    if (qexpr->type == CELL_SYMBOL) {
-        qexpr->quoted = true;
-    }
-    if (qexpr->type == CELL_SEXPR) {
-        for (int i = 0; i < qexpr->count; i++) {
-            if (qexpr->cell[i]->type == CELL_SYMBOL) {
-                qexpr->cell[i]->quoted = true;
-            }
-        }
-    }
-    /* Convert the CELL_SEXPR into a proper CELL_PAIR list. */
-    Cell* result = sexpr_to_list(qexpr);
-    return (HandlerResult){ .action = ACTION_RETURN, .value = result };
+    return (HandlerResult){ .action = ACTION_RETURN, .value = qexpr };
 }
 
 /* (lambda ⟨formals⟩ ⟨body⟩)

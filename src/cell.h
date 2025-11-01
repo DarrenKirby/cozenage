@@ -104,21 +104,23 @@ typedef struct Cell {
         struct {
             int count;   /* length of compound type */
         };
+
         struct {
             int len;     /* length of proper list (-1 for improper) */
         };
+
         struct {
             int err_t;    /* error type */
         };
+
         struct {
             bool exact;    /* exact/inexact flag for numerics*/
         };
+
         struct {
             bool is_open;  /* port open/closed status */
         };
-        struct {
-            bool quoted;   /* whether a symbol has been quoted or not */
-        };
+
         struct {
             bool is_builtin;
         };
@@ -129,26 +131,31 @@ typedef struct Cell {
             char* f_name;      /* name of builtin and named lambda procedure */
             Cell* (*builtin)(const Lex*, const Cell*); /* builtin procedure */
         };
+
         /* Pairs */
         struct {
             Cell* car;        /* first member */
             Cell* cdr;        /* second member */
         };
+
         /* Rationals */
         struct {
             long int num;     /* numerator */
             long int den;     /* denominator */
         };
+
         /* Complex numbers */
         struct {
             Cell* real;       /* real part */
             Cell* imag;       /* imaginary part */
         };
+
         /* Symbols */
         struct {
             char* sym;        /* Symbol text */
             int sf_id;        /* Special form id */
         };
+
         /* Single-field types */
         Cell** cell;              /* for compound types (sexpr, vector, bytevector) */
         char* str;                /* strings */

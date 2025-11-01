@@ -77,9 +77,7 @@ Cell* coz_eval(Lex* env, Cell* expr) {
                          "Syntax keyword '%s' cannot be used as a variable", expr->sym);
                 return make_cell_error(err_buf, SYNTAX_ERR);
             }
-            if (expr->quoted) {
-                return expr;
-            }
+
             return lex_get(env, expr);
         }
 
