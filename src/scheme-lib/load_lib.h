@@ -1,5 +1,5 @@
 /*
- * 'eval_lib.h'
+ * 'load_lib.h'
  * This file is part of Cozenage - https://github.com/DarrenKirby/cozenage
  * Copyright © 2025  Darren Kirby <darren@dragonbyte.ca>
  *
@@ -14,16 +14,16 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef COZENAGE_EVAL_LIB_H
-#define COZENAGE_EVAL_LIB_H
+#ifndef COZENAGE_LOAD_LIB_H
+#define COZENAGE_LOAD_LIB_H
 
 #include "cell.h"
 
 
-Cell* builtin_eval(const Lex* e, const Cell* a);
-void lex_add_eval_lib(const Lex* e);
+Cell* builtin_load(const Lex* e, const Cell* a);
+void lex_add_load_lib(const Lex* e);
 
-#endif //COZENAGE_EVAL_LIB_H
+#endif //COZENAGE_LOAD_LIB_H

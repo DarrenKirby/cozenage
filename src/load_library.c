@@ -26,6 +26,7 @@
 #include "process_context_lib.h"
 #include "io_lib.h"
 #include "eval_lib.h"
+#include "load_lib.h"
 #include "cxr_lib.h"
 #include "time_lib.h"
 #include "coz_bits_lib.h"
@@ -50,6 +51,7 @@ static const LibraryRegistryEntry library_registry[] = {
     {"process-context", lex_add_proc_con_lib},
     {"char", lex_add_char_lib},
     {"eval", lex_add_eval_lib},
+    {"load", lex_add_load_lib},
     {"write", lex_add_write_lib},
     {"cxr", lex_add_cxr_lib},
     {"time",lex_add_time_lib},

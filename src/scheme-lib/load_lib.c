@@ -1,5 +1,5 @@
 /*
- * 'eval_lib.c'
+ * 'load_lib.c'
  * This file is part of Cozenage - https://github.com/DarrenKirby/cozenage
  * Copyright © 2025  Darren Kirby <darren@dragonbyte.ca>
  *
@@ -17,33 +17,31 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "eval_lib.h"
-#include "eval.h"
-#include "repr.h"
+#include "load_lib.h"
 #include "types.h"
+#include "runner.h"
+#include "lexer.h"
+#include "repr.h"
 
 
-Cell* builtin_eval(const Lex* e, const Cell* a) {
-    (void)e;
-    Cell* err = CHECK_ARITY_MIN(a, 1);
+Cell* builtin_load(const Lex* e, const Cell* a) {
+    Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
-    Cell* args;
-    /* Convert list to s-expr if we are handed a quote */
-    if (a->cell[0]->type == CELL_PAIR) {
-        args = make_sexpr_from_list(a->cell[0]);
-        for (int i = 0; i < args->count; i++ ) {
-            if (args->cell[i]->type == CELL_PAIR && args->cell[i]->len != -1) {
-                Cell* tmp = args->cell[i];
-                args->cell[i] = make_sexpr_from_list(tmp);
-            }
-        }
-        /* Otherwise just send straight to eval */
-    } else {
-        args = a->cell[0];
+    if (a->cell[0]->type != CELL_STRING) {
+        return make_cell_error("load: arg must be a string", TYPE_ERR);
     }
-    return coz_eval((Lex*)e, args);
+    const char* file = a->cell[0]->str;
+    const char* input = read_file_to_string(file);
+    TokenArray* ta = scan_all_tokens(input);
+    const Cell* result = parse_all_expressions((Lex*)e, ta, false);
+
+    if (result && result->type == CELL_ERROR) {
+        fprintf(stderr, "%s\n", cell_to_string(result, MODE_REPL));
+        return make_cell_boolean(0);
+    }
+    return make_cell_boolean(1);
 }
 
-void lex_add_eval_lib(const Lex* e) {
-    lex_add_builtin(e, "eval", builtin_eval);
+void lex_add_load_lib(const Lex* e) {
+    lex_add_builtin(e, "load", builtin_load);
 }
