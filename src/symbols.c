@@ -89,6 +89,9 @@ void init_special_forms(void) {
 
     G_or_sym = make_cell_symbol("or");
     G_or_sym->sf_id = SF_ID_OR;
+
+    G_else_sym = make_cell_symbol("else");
+    G_else_sym->sf_id = SF_ID_ELSE;
 }
 
 /*-------------------------------------------------------*

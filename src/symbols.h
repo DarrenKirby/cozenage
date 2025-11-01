@@ -40,9 +40,6 @@ typedef enum {
     SF_ID_BEGIN,
     SF_ID_AND,
     SF_ID_OR,
-    /* 'else' isn't mapped to a function !!!
-     *  If adding more special forms - keep this
-     * 'else' last in the enum or things will break */
     SF_ID_ELSE
 } SpecialFormID;
 
