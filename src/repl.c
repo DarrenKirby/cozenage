@@ -22,11 +22,10 @@
 #include "main.h"
 #include "cell.h"
 #include "types.h"
-#include "parser.h"
 #include "repr.h"
 #include "symbols.h"
-#include "eval.h"
 #include "lexer.h"
+#include "runner.h"
 #include <unistd.h>
 #include <string.h>
 #include <signal.h>
@@ -75,11 +74,7 @@ static void save_history_to_file() {
     write_history(hf);
 }
 
-/* Count '(' and ')' while ignoring:
-   - anything inside string literals
-   - character literals starting with "#\..." (including #\()/#\)),
-   - line comments starting with ';' to end-of-line.
-*/
+/* Count parens to decide if we have a full expression, or need to wait for more input */
 int paren_balance(const char *s, int *in_string) {
     int balance = 0;
     int escaped = 0;
@@ -115,7 +110,6 @@ int paren_balance(const char *s, int *in_string) {
     *in_string = string;  /* pass string-state back */
     return balance;
 }
-
 
 /* Allow multi-line input in the REPL */
 static char* read_multiline(const char* prompt, const char* cont_prompt) {
@@ -169,13 +163,8 @@ void coz_print(const Cell* v) {
     printf("%s\n", cell_to_string(v, MODE_REPL));
 }
 
-/* read()
- * Take a line of input from a prompt and pass it
- * through a 2 step lexer/parser stream, and convert
- * the value to a Cell struct.
- * */
-Cell* coz_read(const Lex* e) {
-    (void)e;
+/* Print a prompt, and collect input into a string */
+char* coz_read() {
     char *input = read_multiline(PS1_PROMPT, PS2_PROMPT);
     /* reset bold input */
     printf("%s", ANSI_RESET);
@@ -184,16 +173,9 @@ Cell* coz_read(const Lex* e) {
         save_history_to_file();
         exit(0);
     }
-
-    TokenArray* ta = scan_all_tokens(input);
-    Cell* parsed = parse_tokens_new(ta);
-    if (!parsed) { return nullptr; }
-    if (parsed->type == CELL_ERROR) {
-        coz_print(parsed);
-        return nullptr;
-    }
+    /* Add expression to history */
     add_history(input);
-    return parsed;
+    return input;
 }
 
 /* repl()
@@ -201,15 +183,19 @@ Cell* coz_read(const Lex* e) {
 void repl(Lex* e) {
     // ReSharper disable once CppDFAEndlessLoop
     while (true) {
-        Cell *val = coz_read(e);
-        if (!val) {
-            continue;
-        }
-        Cell *result = coz_eval(e, val);
+        /* Get the input */
+        const char* input = coz_read();
+        /* Run it through the lexer */
+        TokenArray* ta = scan_all_tokens(input);
+        /* Run it through the parser and evaluate */
+        Cell* result = parse_all_expressions(e, ta, true);
+        /* Print either new prompt or error */
         if (!result) {
             continue;
         }
-        coz_print(result);
+        if (result->type == CELL_ERROR) {
+            coz_print(result);
+        }
     }
 }
 

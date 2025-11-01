@@ -378,17 +378,17 @@ static Cell* parse_character(char* tok, const int line, const int len) {
     return make_cell_char(code_point);
 }
 
-static Token *peek_new(const TokenArray *p) {
+static Token *peek(const TokenArray *p) {
     if (p->position < p->count) return &p->tokens[p->position];
     return nullptr;
 }
 
-static Token *advance_new(TokenArray *p) {
+static Token *advance(TokenArray *p) {
     if (p->position < p->count) return &p->tokens[p->position++];
     return nullptr;
 }
 
-Cell* parse_tokens_new(TokenArray *ta) {
+Cell* parse_tokens(TokenArray *ta) {
     /* First check that the expression is balanced */
     int left_count = 0, right_count = 0;
 
@@ -425,8 +425,8 @@ Cell* parse_tokens_new(TokenArray *ta) {
     /* Just handle quote and quasiquote the same for now */
     if (token->type == T_QUOTE || token->type == T_QUASIQUOTE) {
         /* Grab the next token */
-        Token* t = advance_new(ta);
-        Cell *quoted = parse_tokens_new(ta);
+        Token* t = advance(ta);
+        Cell *quoted = parse_tokens(ta);
         if (!quoted) {
             snprintf(err_buf, sizeof(err_buf),
                         "Line %d: Expected expression after quote: '%s%s%s'",
@@ -441,32 +441,32 @@ Cell* parse_tokens_new(TokenArray *ta) {
 
     /* Vector or bytevector */
     if (token->type == T_HASH) {
-        token = advance_new(ta); /* Consume '#' */
+        token = advance(ta); /* Consume '#' */
         Cell* vec;
 
-        if (peek_new(ta)->type == T_SYMBOL && strcmp("u8", token_to_string(peek_new(ta))) == 0) {
+        if (peek(ta)->type == T_SYMBOL && strcmp("u8", token_to_string(peek(ta))) == 0) {
             /* Bytevector */
             vec = make_cell_bytevector();
-            token = advance_new(ta); /* consume '#u8' */
+            token = advance(ta); /* consume '#u8' */
         } else {
             /* Vector */
             vec = make_cell_vector();
         }
 
-        if (peek_new(ta)->type != T_LEFT_PAREN) {
+        if (peek(ta)->type != T_LEFT_PAREN) {
             snprintf(err_buf, sizeof(err_buf),
                         "Line %d: Expected '(' in vector literal: '%s%s%s'",
                         token->line, ANSI_RED_B, token_to_string(token), ANSI_RESET);
             return make_cell_error(err_buf, SYNTAX_ERR);
         }
 
-        token = advance_new(ta); /* Consume '(' */
-        while (peek_new(ta)->type != T_RIGHT_PAREN) {
-            cell_add(vec, parse_tokens_new(ta));
-            advance_new(ta);
+        token = advance(ta); /* Consume '(' */
+        while (peek(ta)->type != T_RIGHT_PAREN) {
+            cell_add(vec, parse_tokens(ta));
+            advance(ta);
         }
 
-        if (!peek_new(ta)) {
+        if (!peek(ta)) {
             snprintf(err_buf, sizeof(err_buf),
                         "Line %d: Unmatched '(' in vector literal: '%s%s%s'",
                         token->line, ANSI_RED_B, token_to_string(token), ANSI_RESET);
@@ -493,7 +493,7 @@ Cell* parse_tokens_new(TokenArray *ta) {
 
     /* S-expression */
     if (token->type == T_LEFT_PAREN) {
-        token = advance_new(ta); /* Consume '(' */
+        token = advance(ta); /* Consume '(' */
         if (token->type == T_RIGHT_PAREN) {
             /* Unquoted nil is an error */
             snprintf(err_buf, sizeof(err_buf),
@@ -502,11 +502,11 @@ Cell* parse_tokens_new(TokenArray *ta) {
         }
         Cell *sexpr = make_cell_sexpr();
 
-        while (peek_new(ta)->type != T_RIGHT_PAREN) {
-            cell_add(sexpr, parse_tokens_new(ta));
-            advance_new(ta);
+        while (peek(ta)->type != T_RIGHT_PAREN) {
+            cell_add(sexpr, parse_tokens(ta));
+            advance(ta);
         }
-        if (!peek_new(ta)) {
+        if (!peek(ta)) {
             snprintf(err_buf, sizeof(err_buf),
                         "Line %d: Unmatched '('.", token->line);
             return make_cell_error(err_buf, SYNTAX_ERR);

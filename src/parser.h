@@ -24,6 +24,6 @@
 #include "lexer.h"
 
 
-Cell* parse_tokens_new(TokenArray *ta);
+Cell* parse_tokens(TokenArray *ta);
 
 #endif //COZENAGE_PARSER_H

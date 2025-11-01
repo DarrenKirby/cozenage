@@ -24,5 +24,6 @@
 
 
 int run_repl(lib_load_config load_libs);
+void coz_print(const Cell* v);
 
 #endif //COZENAGE_REPL_H

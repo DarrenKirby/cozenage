@@ -22,6 +22,8 @@
 #include "special_forms.h"
 #include "parser.h"
 #include "eval.h"
+#include "repl.h"
+#include "repr.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -29,7 +31,7 @@
 #include <gc/gc.h>
 
 
-/* Checks the file extension and prints a warning if it's non-standard. */
+/* Check the file extension and print a warning if it's non-standard. */
 static void check_and_warn_extension(const char *file_path) {
     const char *ext = strrchr(file_path, '.');
 
@@ -42,97 +44,50 @@ static void check_and_warn_extension(const char *file_path) {
     }
 }
 
-char* collect_one_expression_from_file(FILE *input_file) {
-    int c;
-    int paren_depth = 0;
-
-    /* Initial buffer size and allocation (will dynamically resize if needed) */
-    size_t capacity = 1024;
-    size_t length = 0;
-    char *buffer = malloc(capacity);
-    if (!buffer) {
-        perror("Failed to allocate memory for expression buffer");
+char* read_file_to_string(const char* filename) {
+    FILE* file = fopen(filename, "r");
+    if (file == NULL) {
+        perror("Error opening file");
         return nullptr;
     }
 
-    /* Skip leading whitespace and comments until an expression starts or EOF */
-    while ((c = fgetc(input_file)) != EOF) {
-        if (c == ';') {
-            /* Skip single-line comment */
-            while ((c = fgetc(input_file)) != EOF && c != '\n') { ; }
-            continue;
-        }
-        if (!isspace(c)) {
-            /* Found the start of a token/expression, push the character back
-             * and break the loop to start collecting. */
-            ungetc(c, input_file);
-            break;
-        }
-    }
+    /* Determine file size */
+    fseek(file, 0, SEEK_END);
+    const long file_size = ftell(file);
+    fseek(file, 0, SEEK_SET);
 
-    if (c == EOF) {
-        free(buffer);
+    if (file_size == -1) {
+        perror("Error getting file size");
+        fclose(file);
         return nullptr;
     }
 
-    /* Collect characters until the expression is balanced and complete */
-    while ((c = fgetc(input_file)) != EOF) {
-        /* Append Character to Buffer */
-        if (length + 1 >= capacity) {
-            capacity *= 2;
-            char *new_buffer = realloc(buffer, capacity);
-            if (!new_buffer) {
-                perror("Failed to reallocate buffer");
-                free(buffer);
-                return nullptr;
-            }
-            buffer = new_buffer;
-        }
-        buffer[length++] = (char)c;
+    /* Allocate memory for the string (+1 for null terminator) */
+    char* buffer = GC_MALLOC_ATOMIC(file_size + 1);
+    if (buffer == NULL) {
+        perror("Error allocating memory");
+        fclose(file);
+        return nullptr;
+    }
 
-        /* Update Parenthesis Depth */
-        if (c == '(') {
-            paren_depth++;
-        } else if (c == ')') {
-            paren_depth--;
-        }
-
-        /* If we hit a character that usually follows an expression (space, newline, EOF)
-         * AND the top-level parenthesis are balanced (depth == 0)
-         * AND we actually collected some characters (length > 0) */
-        if (paren_depth == 0 && length > 0 && (isspace(fgetc(input_file)) || feof(input_file))) {
-            /* Push the lookahead character back (space/newline/EOF) */
-            ungetc(fgetc(input_file), input_file);
-            break; /* Expression is complete */
-        }
+    /* Read file content into the buffer */
+    const size_t bytes_read = fread(buffer, 1, file_size, file);
+    if (bytes_read != (size_t)file_size) {
+        perror("Error reading file");
+        fclose(file);
+        return nullptr;
     }
 
     /* Null-terminate the string */
-    buffer[length] = '\0';
+    buffer[file_size] = '\0';
 
-    /* Check for unbalanced expressions at EOF */
-    if (paren_depth != 0) {
-        fprintf(stderr, "Error: Unbalanced expression found at end of file.\n");
-        free(buffer);
-        return nullptr;
-    }
-
+    fclose(file);
     return buffer;
 }
 
 int run_file_script(const char *file_path, lib_load_config load_libs) {
-    int exit_status = EXIT_SUCCESS;
-
     /* Check extension and issue non-fatal warning */
     check_and_warn_extension(file_path);
-
-    /* Open the file */
-    FILE *script_file = fopen(file_path, "r");
-    if (script_file == NULL) {
-        perror("Error opening Scheme file");
-        /* Cannot open the file, return failure */
-        return EXIT_FAILURE;
-    }
 
     /* Initialize symbol table with initial size of 128 */
     symbol_table = ht_create(128);
@@ -149,48 +104,56 @@ int run_file_script(const char *file_path, lib_load_config load_libs) {
     /* Loads the CLI-specified R7RS libraries into the environment. */
     load_initial_libraries(e, load_libs);
 
-    /* Loop through expressions and evaluate */
-    char *expression_str;
-    while ((expression_str = collect_one_expression_from_file(script_file)) != NULL) {
+    const char* input = read_file_to_string(file_path);
+    if (input == NULL) {
+        fprintf(stderr, "Fatal: could not open and read '%s'.\n", file_path);
+        exit(EXIT_FAILURE);
+    }
 
-        TokenArray* ta = scan_all_tokens(expression_str);
-        Cell* expression = parse_tokens_new(ta);
+    TokenArray* ta = scan_all_tokens(input);
+    const Cell* result = parse_all_expressions(e, ta, false);
 
-        /* Free the expression string */
-        free(expression_str);
+    if (result->type == CELL_ERROR) {
+        cell_to_string(result, MODE_REPL);
+        exit(EXIT_FAILURE);
+    }
 
-        /* Check if the parser failed */
-        if (expression == NULL) {
-            fprintf(stderr, "Fatal Syntax Error in script.\n");
-            exit_status = EXIT_FAILURE;
+    if (result->type == CELL_INTEGER) {
+        exit((int)result->integer_v);
+    }
+
+    exit(EXIT_FAILURE);
+}
+
+Cell* parse_all_expressions(Lex* e, TokenArray* ta, bool is_repl) {
+    while (ta->position <= ta->count) {
+        Cell* expression = parse_tokens(ta);
+        if (!expression) {
             break;
         }
 
-        /* Evaluate */
-        const Cell* result = coz_eval(e, expression);
-
-        /* Test for legitimate null return */
-        if (!result) {
-            continue;
+        if (expression->type == CELL_ERROR) {
+            return expression;
         }
 
-        /* Check for runtime errors during evaluation */
-        if (result->type == CELL_ERROR) {
-            fprintf(stderr, "Runtime error detected during script execution.\n");
-            fprintf(stderr, "%s\n", result->error_v);
-            exit_status = EXIT_FAILURE;
-            break;
+        Cell* result = coz_eval(e, expression);
+
+        if (result && result->type == CELL_ERROR) {
+            return result;
         }
+
+        if (is_repl) {
+            coz_print(result);
+        }
+
+        /* Bump the token position */
+        ta->position++;
     }
-
-    /* Check if loop exited due to I/O error (not EOF) */
-    if (!feof(script_file) && exit_status == EXIT_SUCCESS) {
-        fprintf(stderr, "Script reader exited unexpectedly due to file I/O error.\n");
-        exit_status = EXIT_FAILURE;
+    /* No more expressions... */
+    /* return null to get new REPL prompt */
+    if (is_repl) {
+        return nullptr;
     }
-
-    /* Cleanup */
-    fclose(script_file);
-
-    return exit_status;
+    /* Return success exit status to file runner */
+    return make_cell_integer(0);
 }

@@ -21,9 +21,11 @@
 #define COZENAGE_RUNNER_H
 
 #include "config.h"
+#include "lexer.h"
 
 
-int run_file_script(const char *file_path, lib_load_config config);
-char* collect_one_expression_from_file(FILE *input_file);
+int run_file_script(const char *file_path, lib_load_config load_libs);
+Cell* parse_all_expressions(Lex* e, TokenArray* ta, bool is_repl);
+char* read_file_to_string(const char* filename);
 
 #endif //COZENAGE_RUNNER_H
