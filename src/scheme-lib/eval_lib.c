@@ -18,10 +18,49 @@
 */
 
 #include "eval_lib.h"
+
+#include <stdlib.h>
+
 #include "eval.h"
 #include "repr.h"
 #include "types.h"
+#include "runner.h"
+#include "lexer.h"
+#include "parser.h"
 
+
+Cell* builtin_load(const Lex* e, const Cell* a) {
+    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    if (err) return err;
+    if (a->cell[0]->type != CELL_STRING) {
+        return make_cell_error("load: arg must be a string", TYPE_ERR);
+    }
+    FILE *script_file = fopen(a->cell[0]->str, "r");
+    if (script_file == NULL) {
+        perror("Error opening Scheme file");
+        /* Cannot open the file, return failure */
+        return nullptr;
+    }
+
+    char *expression_str;
+    while ((expression_str = collect_one_expression_from_file(script_file)) != NULL) {
+        TokenArray* ta = scan_all_tokens(expression_str);
+        Cell* expression = parse_tokens_new(ta);
+
+        /* Free the expression string */
+        free(expression_str);
+
+        /* Check if the parser failed */
+        if (expression == NULL) {
+            fprintf(stderr, "Fatal Syntax Error in script.\n");
+            return nullptr;
+        }
+
+        /* Evaluate */
+        coz_eval((Lex*)e, expression);
+    }
+    return make_cell_boolean(1);
+}
 
 Cell* builtin_eval(const Lex* e, const Cell* a) {
     (void)e;
@@ -50,4 +89,5 @@ Cell* builtin_eval(const Lex* e, const Cell* a) {
 
 void lex_add_eval_lib(const Lex* e) {
     lex_add_builtin(e, "eval", builtin_eval);
+    lex_add_builtin(e, "load", builtin_load);
 }
