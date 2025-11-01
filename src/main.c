@@ -51,7 +51,7 @@ Options:\n\
 Report bugs to <darren@dragonbyte.ca>\n");
 }
 
-void process_library_arg(struct lib_load *l, const char *arg) {
+static void process_library_arg(struct lib_load *l, const char *arg) {
     char *arg_copy = GC_strdup(arg);
     if (!arg_copy) {
         perror("Failed to allocate memory");
@@ -142,6 +142,19 @@ int main(const int argc, char** argv) {
     const int non_option_args = argc - optind;
 
     if (non_option_args > 0) {
+        if (non_option_args > 1) {
+            fprintf(stderr, "Warning: Cozenage will only run one Scheme file at a time.\n\n\
+If you want to run multiple independent files sequentially, use your shell facilities, ie:\n\n\
+$ cozenage file1.scm && cozenage file2.scm && cozenage file3.scm\n\n\
+If you want to load definitions from multiple files into the environment for a final script, use\n\
+the (scheme load) library, for example, at the top of the final script:\n\n\
+(import (scheme load))\n\
+(load \"file1.scm\")\n\
+(load \"file2.scm\")\n\
+(load \"file3.scm\")\n\n\
+;;; begin main script...\n\n\
+Now the definitions from the three files are loaded in the final script's environment.\n\n");
+        }
         /* File-Runner Mode */
         const char *file_path = argv[optind];
 
