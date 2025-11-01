@@ -18,15 +18,11 @@
 */
 
 #include "eval_lib.h"
-
-#include <stdlib.h>
-
 #include "eval.h"
 #include "repr.h"
 #include "types.h"
 #include "runner.h"
 #include "lexer.h"
-#include "parser.h"
 
 
 Cell* builtin_load(const Lex* e, const Cell* a) {
@@ -35,29 +31,14 @@ Cell* builtin_load(const Lex* e, const Cell* a) {
     if (a->cell[0]->type != CELL_STRING) {
         return make_cell_error("load: arg must be a string", TYPE_ERR);
     }
-    FILE *script_file = fopen(a->cell[0]->str, "r");
-    if (script_file == NULL) {
-        perror("Error opening Scheme file");
-        /* Cannot open the file, return failure */
-        return nullptr;
-    }
+    const char* file = a->cell[0]->str;
+    const char* input = read_file_to_string(file);
+    TokenArray* ta = scan_all_tokens(input);
+    const Cell* result = parse_all_expressions((Lex*)e, ta, false);
 
-    char *expression_str;
-    while ((expression_str = collect_one_expression_from_file(script_file)) != NULL) {
-        TokenArray* ta = scan_all_tokens(expression_str);
-        Cell* expression = parse_tokens_new(ta);
-
-        /* Free the expression string */
-        free(expression_str);
-
-        /* Check if the parser failed */
-        if (expression == NULL) {
-            fprintf(stderr, "Fatal Syntax Error in script.\n");
-            return nullptr;
-        }
-
-        /* Evaluate */
-        coz_eval((Lex*)e, expression);
+    if (result && result->type == CELL_ERROR) {
+        fprintf(stderr, "%s\n", cell_to_string(result, MODE_REPL));
+        return make_cell_boolean(0);
     }
     return make_cell_boolean(1);
 }
@@ -75,10 +56,6 @@ Cell* builtin_eval(const Lex* e, const Cell* a) {
                 Cell* tmp = args->cell[i];
                 args->cell[i] = make_sexpr_from_list(tmp);
             }
-            /* 'Unquote' the symbols */
-            // if (args->cell[i]->type == CELL_SYMBOL) {
-            //     args->cell[i]->quoted = false;
-            // }
         }
         /* Otherwise just send straight to eval */
     } else {
