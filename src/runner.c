@@ -42,7 +42,7 @@ static void check_and_warn_extension(const char *file_path) {
     }
 }
 
-static char* collect_one_expression_from_file(FILE *input_file) {
+char* collect_one_expression_from_file(FILE *input_file) {
     int c;
     int paren_depth = 0;
 

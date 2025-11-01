@@ -24,5 +24,6 @@
 
 
 int run_file_script(const char *file_path, lib_load_config config);
+char* collect_one_expression_from_file(FILE *input_file);
 
 #endif //COZENAGE_RUNNER_H
