@@ -76,9 +76,9 @@ Cell* builtin_eval(const Lex* e, const Cell* a) {
                 args->cell[i] = make_sexpr_from_list(tmp);
             }
             /* 'Unquote' the symbols */
-            if (args->cell[i]->type == CELL_SYMBOL) {
-                args->cell[i]->quoted = false;
-            }
+            // if (args->cell[i]->type == CELL_SYMBOL) {
+            //     args->cell[i]->quoted = false;
+            // }
         }
         /* Otherwise just send straight to eval */
     } else {
