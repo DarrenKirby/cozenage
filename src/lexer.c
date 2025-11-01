@@ -43,7 +43,7 @@ static bool is_digit(const char c) {
 }
 
 static bool is_whitespace(const char c) {
-    return c == ' ' || c == '\t' || c == '\r';
+    return c == ' ' || c == '\t' || c == '\r' || c == '\n';
 }
 
 static bool at_end() {
