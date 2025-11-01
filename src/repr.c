@@ -98,163 +98,166 @@ static void repr_sequence(const Cell* v,
 static void cell_to_string_worker(const Cell* v, string_builder_t *sb,
                                   const print_mode_t mode) {
     switch (v->type) {
-    case CELL_REAL:
-        repr_long_double(v->real_v, sb);
-        break;
-
-    case CELL_INTEGER:
-        sb_append_fmt(sb, "%lld", v->integer_v);
-        break;
-
-    case CELL_RATIONAL:
-        sb_append_fmt(sb, "%ld/%ld", v->num, v->den);
-        break;
-
-    case CELL_COMPLEX: {
-        cell_to_string_worker(v->real, sb, mode);
-
-        const long double im = cell_to_long_double(v->imag);
-        if (im < 0) {
-            /* already negative */
-            cell_to_string_worker(v->imag, sb, mode);
-        } else {
-            sb_append_char(sb, '+');
-            cell_to_string_worker(v->imag, sb, mode);
-        }
-        sb_append_char(sb, 'i');
-        break;
-    }
-
-    case CELL_BOOLEAN: {
-        char* val = v->boolean_v ? "#true" : "#false";
-        if (mode == MODE_REPL) {
-            sb_append_fmt(sb, "%s%s%s", ANSI_MAGENTA, val, ANSI_RESET);
-        } else {
-            sb_append_str(sb, val);
-        }
-        break;
-    }
-
-    case CELL_ERROR: {
-        char *err_str;
-        switch (v->err_t) {
-            case FILE_ERR: { err_str = "File error:"; break; }
-            case READ_ERR: { err_str = "Read error:"; break; }
-            case SYNTAX_ERR: { err_str = "Syntax error:"; break; }
-            case ARITY_ERR: { err_str = "Arity error:"; break; }
-            case TYPE_ERR: { err_str = "Type error:"; break; }
-            case INDEX_ERR: { err_str = "Index error:"; break; }
-            case VALUE_ERR: { err_str = "Value error:"; break; }
-            default: { err_str = "Error: "; break; }
-        }
-
-        if (mode == MODE_REPL) {
-            sb_append_fmt(sb, " %s%s %s %s", ANSI_RED_B,
-                err_str, ANSI_RESET, v->error_v);
-        } else {
-            sb_append_fmt(sb, " %s %s", err_str, v->error_v);
-        }
-        break;
-    }
-    case CELL_CHAR:
-        if (mode == MODE_DISPLAY) {
-            sb_append_fmt(sb, "%C", v->char_v);
-        } else {
-            switch (v->char_v) {
-                case '\n': sb_append_str(sb, "#\\newline");   break;
-                case ' ':  sb_append_str(sb, "#\\space");     break;
-                case '\t': sb_append_str(sb, "#\\tab");       break;
-                case 0x7:  sb_append_str(sb, "#\\alarm");     break;
-                case 0x8:  sb_append_str(sb, "#\\backspace"); break;
-                case 0x1b: sb_append_str(sb, "#\\escape");    break;
-                case 0xd:  sb_append_str(sb, "#\\return");    break;
-                case 0x7f: sb_append_str(sb, "#\\delete");    break;
-                case '\0': sb_append_str(sb, "#\\null");      break;
-
-                default:   sb_append_fmt(sb, "#\\%C", v->char_v); break;
-            }
-        }
-        break;
-
-    case CELL_STRING:
-        if (mode == MODE_DISPLAY) {
-            /* `display` prints the raw string */
-            sb_append_str(sb, v->str);
-        } else {
-            /* `write` and `REPL` print the quoted/escaped string */
-            sb_append_char(sb, '"');
-            /* TODO: escape quotes/backslashes in v->str */
-            sb_append_str(sb, v->str);
-            sb_append_char(sb, '"');
-        }
-        break;
-
-    case CELL_PROC:
-        if (v->is_builtin) {
-            if (mode == MODE_REPL) {
-                sb_append_fmt(sb, "<builtin procedure '%s%s%s'>",
-                    ANSI_GREEN_B, v->f_name, ANSI_RESET);
-            } else {
-                sb_append_fmt(sb, "<builtin procedure '%s'>", v->f_name);
-            }
-        } else {
-            if (mode == MODE_REPL) {
-                sb_append_fmt(sb, "<lambda '%s%s%s'>", ANSI_GREEN_B,
-                    v->lambda->l_name ? v->lambda->l_name : "anonymous", ANSI_RESET);
-            } else {
-                sb_append_fmt(sb, "<lambda '%s'>", v->lambda->l_name ? v->lambda->l_name : "anonymous");
-            }
-        }
-        break;
-
-    case CELL_PORT:
-        if (mode == MODE_REPL) {
-            printf("<%s%s %s-port '%s%s%s'>", v->is_open ? "open:" : "closed:",
-                v->port->stream_t == TEXT_PORT ? "text" : "binary",
-                v->port->port_t == INPUT_PORT ? "input" : "output",
-                ANSI_BLUE_B, v->port->path, ANSI_RESET);
-        } else {
-            printf("<%s%s %s-port '%s'>", v->is_open ? "open:" : "closed:",
-                v->port->stream_t == TEXT_PORT ? "text" : "binary",
-                v->port->port_t == INPUT_PORT ? "input" : "output",
-                v->port->path);
-        }
-        break;
-
-    case CELL_SYMBOL:
-        sb_append_fmt(sb, "%s", v->sym);
-        break;
-
-    case CELL_PAIR:
-        repr_pair(v, sb, mode);
+        case CELL_REAL:
+            repr_long_double(v->real_v, sb);
             break;
 
-    case CELL_NIL:
-        sb_append_str(sb, "()");
-        break;
+        case CELL_INTEGER:
+            sb_append_fmt(sb, "%lld", v->integer_v);
+            break;
 
-    case CELL_EOF:
-        sb_append_str(sb,"!EOF");
-        break;
+        case CELL_RATIONAL:
+            sb_append_fmt(sb, "%ld/%ld", v->num, v->den);
+            break;
 
-    case CELL_SEXPR:
-    case CELL_TRAMPOLINE:
-        repr_sequence(v, nullptr, '(', ')', sb, mode);
-        break;
-    case CELL_VECTOR:
-        repr_sequence(v, "#", '(', ')', sb, mode);
-        break;
-    case CELL_BYTEVECTOR:
-        repr_sequence(v, "#u8", '(', ')', sb, mode);
-        break;
+        case CELL_COMPLEX: {
+            cell_to_string_worker(v->real, sb, mode);
 
-    default:
-        /* This code should never run, but it's here if a cell type gets
-         * corrupted internally somehow */
-        printf("%sError:%s cell_to_string_worker: unknown type: '%s%d%s'", ANSI_RED_B,
-            ANSI_RESET, ANSI_RED_B, v->type, ANSI_RESET);
+            const long double im = cell_to_long_double(v->imag);
+            if (im < 0) {
+                /* already negative */
+                cell_to_string_worker(v->imag, sb, mode);
+            } else {
+                sb_append_char(sb, '+');
+                cell_to_string_worker(v->imag, sb, mode);
+            }
+            sb_append_char(sb, 'i');
+            break;
+        }
+
+        case CELL_BOOLEAN: {
+            char* val = v->boolean_v ? "#true" : "#false";
+            if (mode == MODE_REPL) {
+                sb_append_fmt(sb, "%s%s%s", ANSI_MAGENTA, val, ANSI_RESET);
+            } else {
+                sb_append_str(sb, val);
+            }
+            break;
+        }
+
+        case CELL_ERROR: {
+            char *err_str;
+            switch (v->err_t) {
+                case FILE_ERR: { err_str = "File error:"; break; }
+                case READ_ERR: { err_str = "Read error:"; break; }
+                case SYNTAX_ERR: { err_str = "Syntax error:"; break; }
+                case ARITY_ERR: { err_str = "Arity error:"; break; }
+                case TYPE_ERR: { err_str = "Type error:"; break; }
+                case INDEX_ERR: { err_str = "Index error:"; break; }
+                case VALUE_ERR: { err_str = "Value error:"; break; }
+                default: { err_str = "Error: "; break; }
+            }
+
+            if (mode == MODE_REPL) {
+                sb_append_fmt(sb, " %s%s %s %s", ANSI_RED_B,
+                    err_str, ANSI_RESET, v->error_v);
+            } else {
+                sb_append_fmt(sb, " %s %s", err_str, v->error_v);
+            }
+            break;
+        }
+
+        case CELL_CHAR:
+            if (mode == MODE_DISPLAY) {
+                sb_append_fmt(sb, "%C", v->char_v);
+            } else {
+                switch (v->char_v) {
+                    case '\n': sb_append_str(sb, "#\\newline");   break;
+                    case ' ':  sb_append_str(sb, "#\\space");     break;
+                    case '\t': sb_append_str(sb, "#\\tab");       break;
+                    case 0x7:  sb_append_str(sb, "#\\alarm");     break;
+                    case 0x8:  sb_append_str(sb, "#\\backspace"); break;
+                    case 0x1b: sb_append_str(sb, "#\\escape");    break;
+                    case 0xd:  sb_append_str(sb, "#\\return");    break;
+                    case 0x7f: sb_append_str(sb, "#\\delete");    break;
+                    case '\0': sb_append_str(sb, "#\\null");      break;
+
+                    default:   sb_append_fmt(sb, "#\\%C", v->char_v); break;
+                }
+            }
+            break;
+
+        case CELL_STRING:
+            if (mode == MODE_DISPLAY) {
+                /* `display` prints the raw string */
+                sb_append_str(sb, v->str);
+            } else {
+                /* `write` and `REPL` print the quoted/escaped string */
+                sb_append_char(sb, '"');
+                /* TODO: escape quotes/backslashes in v->str */
+                sb_append_str(sb, v->str);
+                sb_append_char(sb, '"');
+            }
+            break;
+
+        case CELL_PROC:
+            if (v->is_builtin) {
+                if (mode == MODE_REPL) {
+                    sb_append_fmt(sb, "<builtin procedure '%s%s%s'>",
+                        ANSI_GREEN_B, v->f_name, ANSI_RESET);
+                } else {
+                    sb_append_fmt(sb, "<builtin procedure '%s'>", v->f_name);
+                }
+            } else {
+                if (mode == MODE_REPL) {
+                    sb_append_fmt(sb, "<lambda '%s%s%s'>", ANSI_GREEN_B,
+                        v->lambda->l_name ? v->lambda->l_name : "anonymous", ANSI_RESET);
+                } else {
+                    sb_append_fmt(sb, "<lambda '%s'>", v->lambda->l_name ? v->lambda->l_name : "anonymous");
+                }
+            }
+            break;
+
+        case CELL_PORT:
+            if (mode == MODE_REPL) {
+                printf("<%s%s %s-port '%s%s%s'>", v->is_open ? "open:" : "closed:",
+                    v->port->stream_t == TEXT_PORT ? "text" : "binary",
+                    v->port->port_t == INPUT_PORT ? "input" : "output",
+                    ANSI_BLUE_B, v->port->path, ANSI_RESET);
+            } else {
+                printf("<%s%s %s-port '%s'>", v->is_open ? "open:" : "closed:",
+                    v->port->stream_t == TEXT_PORT ? "text" : "binary",
+                    v->port->port_t == INPUT_PORT ? "input" : "output",
+                    v->port->path);
+            }
+            break;
+
+        case CELL_SYMBOL:
+            sb_append_fmt(sb, "%s", v->sym);
+            break;
+
+        case CELL_PAIR:
+            repr_pair(v, sb, mode);
+                break;
+
+        case CELL_NIL:
+            sb_append_str(sb, "()");
+            break;
+
+        case CELL_EOF:
+            sb_append_str(sb,"!EOF");
+            break;
+
+        case CELL_SEXPR:
+        case CELL_TRAMPOLINE:
+            repr_sequence(v, nullptr, '(', ')', sb, mode);
+            break;
+
+        case CELL_VECTOR:
+            repr_sequence(v, "#", '(', ')', sb, mode);
+            break;
+
+        case CELL_BYTEVECTOR:
+            repr_sequence(v, "#u8", '(', ')', sb, mode);
+            break;
+
+        default:
+            /* This code should never run, but it's here if a cell type gets
+             * corrupted internally somehow */
+            fprintf(stderr, "%sError:%s cell_to_string_worker: unknown type: '%s%d%s'", ANSI_RED_B,
+                ANSI_RESET, ANSI_RED_B, v->type, ANSI_RESET);
+        }
     }
-}
 
 /* Generates the external representation of a Cell as a string. */
 char* cell_to_string(const Cell* cell, const print_mode_t mode) {
