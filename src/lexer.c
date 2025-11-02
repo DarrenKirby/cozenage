@@ -123,8 +123,31 @@ static void skip_whitespace() {
 
 static Token string() {
     while (peek() != '"' && !at_end()) {
-        if (peek() == '\n') scanner.line++;
-        advance();
+        const char c = peek();
+
+        if (c == '\\') {
+            /* It's an escape character. */
+            advance(); /* Consume the backslash */
+
+            /* Check for EOF right after the backslash */
+            if (at_end()) return error_token("Unterminated string.");
+
+            /* If the escaped char is a newline, count it. */
+            if (peek() == '\n') {
+                scanner.line++;
+            }
+
+            /* Consume the escaped character (e.g., ", n, t, \)
+               We don't care what it is, we just skip over it. */
+            advance();
+        } else if (c == '\n') {
+            /* This is a *literal* (unescaped) newline in the string */
+            scanner.line++;
+            advance();
+        } else {
+            /* Any other regular character */
+            advance();
+        }
     }
 
     if (at_end()) return error_token("Unterminated string.");

@@ -89,7 +89,7 @@ static long double parse_float_checked(const char* str, char* err_buf, int* ok) 
     return val;
 }
 
-static char* token_to_string(Token* token) {
+static char* token_to_string(const Token* token) {
     /* Allocate memory for the new string (+1 for the null terminator) */
     char* str = GC_MALLOC(token->length + 1);
     if (str == NULL) {
@@ -275,10 +275,110 @@ static Cell* parse_number(char* token, const int line, int len) {
     return make_cell_error(err_buf, SYNTAX_ERR);
 }
 
-static Cell* parse_string(const char* tok, const int len) {
-    /* Remove open and closing quote */
-    const char *str = GC_strndup(tok+1, len - 2);
-    return make_cell_string(str);
+static Cell* parse_string(const char* str, const int len) {
+    /* Allocate a new buffer. The final string will be
+       less than or equal to the original length. */
+    char* internal_buffer = GC_MALLOC_ATOMIC(len + 1);
+    if (!internal_buffer) {
+        fprintf(stderr, "Error: Memory allocation failed for string.\n");
+        exit(EXIT_FAILURE);
+    }
+
+    const int length = len - 1; /* -2 for the quote marks */
+    int lex_idx = 1;   /* Index for the raw input string 'str' */
+    int buf_idx = 0;   /* Index for the new 'internal_buffer' */
+
+    while (lex_idx < length) {
+
+        if (str[lex_idx] != '\\') {
+            /* Normal Character - not an escape, just copy it over. */
+            internal_buffer[buf_idx++] = str[lex_idx++];
+            continue;
+        }
+
+        /* Backslash Found */
+        lex_idx++; /* Consume the backslash (from 'str') */
+        if (lex_idx >= length) {
+            /* String ended with a backslash.
+               R7RS is unspecified, but a common behavior is
+               to just add the backslash. */
+            internal_buffer[buf_idx++] = '\\';
+            break;
+        }
+
+        char next_char = str[lex_idx];
+
+        /* Sub-Case: Standard Single-Char Escapes */
+        switch (next_char) {
+            case 'a': internal_buffer[buf_idx++] = '\a'; lex_idx++; continue;
+            case 'b': internal_buffer[buf_idx++] = '\b'; lex_idx++; continue;
+            case 't': internal_buffer[buf_idx++] = '\t'; lex_idx++; continue;
+            case 'n': internal_buffer[buf_idx++] = '\n'; lex_idx++; continue;
+            case 'v': internal_buffer[buf_idx++] = '\v'; lex_idx++; continue;
+            case 'f': internal_buffer[buf_idx++] = '\f'; lex_idx++; continue;
+            case 'r': internal_buffer[buf_idx++] = '\r'; lex_idx++; continue;
+            case '"': internal_buffer[buf_idx++] = '\"'; lex_idx++; continue;
+            case '\\': internal_buffer[buf_idx++] = '\\'; lex_idx++; continue;
+        default: ;
+        }
+
+        /* Check for optional intra-line whitespace (\ + <sp/tab>...) */
+        bool hiw = false;
+        if (next_char == ' ' || next_char == '\t') {
+            hiw = true;
+            lex_idx++; /* Consume the first space/tab */
+
+            /* Consume all *other* following spaces/tabs */
+            while (lex_idx < length && (str[lex_idx] == ' ' || str[lex_idx] == '\t')) {
+                lex_idx++;
+            }
+            if (lex_idx >= length) break; /* String ended in \ + spaces */
+
+            next_char = str[lex_idx]; /* Look at what's after the spaces */
+        }
+
+        /* Check for the newline (either immediately after \ or after spaces) */
+        bool newline_found = false;
+        if (next_char == '\n') {
+            lex_idx++; /* Consume \n */
+            newline_found = true;
+        } else if (next_char == '\r') {
+            lex_idx++; /* Consume \r */
+            if (lex_idx < length && str[lex_idx] == '\n') {
+                lex_idx++; /* Consume \n (for \r\n pair) */
+            }
+            newline_found = true;
+        }
+
+        /* If it *was* a line continuation, consume leading whitespace on *next* line */
+        if (newline_found) {
+            while (lex_idx < length && (str[lex_idx] == ' ' || str[lex_idx] == '\t')) {
+                lex_idx++;
+            }
+            /* We've successfully skipped the whole sequence.
+               Add *nothing* to the buffer and continue the main loop. */
+            continue;
+        }
+
+        /* Sub-Case: Error or Unhandled Escape
+           If we had whitespace but NO newline, it's an error. */
+        if (hiw) {
+            fprintf(stderr, "Error: Invalid string. "
+                            "Escape followed by intra-line whitespace "
+                            "must be followed by a newline.\n");
+            return nullptr;
+        }
+
+        /* We get here if it was \ + (some other char like 'z')
+           R7RS behavior is "unspecified."
+           A safe default: just add the character itself. */
+        internal_buffer[buf_idx++] = next_char;
+        lex_idx++;
+    }
+
+    /* Null-terminate the new, clean string */
+    internal_buffer[buf_idx] = '\0';
+    return make_cell_string(internal_buffer);
 }
 
 static Cell* parse_boolean(const char* tok, const int line) {

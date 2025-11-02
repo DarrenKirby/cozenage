@@ -24,6 +24,7 @@
 #include "types.h"
 #include <stdio.h>
 #include <string.h>
+#include <ctype.h>
 
 
 /* Forward declaration for helpers */
@@ -97,6 +98,7 @@ static void repr_sequence(const Cell* v,
 /* Generate external representations of all Cozenage/Scheme types */
 static void cell_to_string_worker(const Cell* v, string_builder_t *sb,
                                   const print_mode_t mode) {
+
     switch (v->type) {
         case CELL_REAL:
             repr_long_double(v->real_v, sb);
@@ -185,7 +187,25 @@ static void cell_to_string_worker(const Cell* v, string_builder_t *sb,
                 /* `write` and `REPL` print the quoted/escaped string */
                 sb_append_char(sb, '"');
                 /* TODO: escape quotes/backslashes in v->str */
-                sb_append_str(sb, v->str);
+                const int len = (int)strlen(v->str);
+                for (int i = 0; i < len; i++) {
+                    const char c = v->str[i];
+                    switch (c) {
+                    case '\n': sb_append_str(sb, "\\n"); break;
+                    case '\t': sb_append_str(sb, "\\t"); break;
+                    case '\"': sb_append_str(sb, "\\\""); break;
+                    case '\\': sb_append_str(sb, "\\\\"); break;
+                        // ... (and so on for \r, \a, etc.)
+                    default:
+                        // Check if it's a printable character
+                        if (isprint(c)) {
+                            sb_append_char(sb, c);
+                        } else {
+                            // Print non-printable chars as hex escapes
+                            sb_append_fmt(sb, "\\x%02x;", (unsigned char)c);
+                        }
+                    }
+                }
                 sb_append_char(sb, '"');
             }
             break;

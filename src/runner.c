@@ -125,7 +125,7 @@ int run_file_script(const char *file_path, lib_load_config load_libs) {
     exit(EXIT_FAILURE);
 }
 
-Cell* parse_all_expressions(Lex* e, TokenArray* ta, bool is_repl) {
+Cell* parse_all_expressions(Lex* e, TokenArray* ta, const bool is_repl) {
     while (ta->position <= ta->count) {
         Cell* expression = parse_tokens(ta);
         if (!expression) {
@@ -142,7 +142,7 @@ Cell* parse_all_expressions(Lex* e, TokenArray* ta, bool is_repl) {
             return result;
         }
 
-        if (is_repl) {
+        if (result && is_repl) {
             coz_print(result);
         }
 
