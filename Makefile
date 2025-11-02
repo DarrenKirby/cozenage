@@ -30,7 +30,7 @@ TEST_SOURCES = $(foreach dir,$(TEST_SOURCE_DIRS),$(wildcard $(dir)/*.c))
 # Create object file paths that mirror the source directory structure inside OBJ_DIR
 APP_OBJECTS  = $(patsubst %.c,$(OBJ_DIR)/%.o,$(APP_SOURCES))
 
-APP_SOURCES_FOR_TEST = $(filter-out src/main.c src/repl.c src/runner.c, $(APP_SOURCES))
+APP_SOURCES_FOR_TEST = $(filter-out src/main.c, $(APP_SOURCES))
 ALL_SOURCES_FOR_TEST = $(APP_SOURCES_FOR_TEST) $(TEST_SOURCES)
 TEST_OBJECTS = $(patsubst %.c,$(OBJ_DIR)/%.o,$(ALL_SOURCES_FOR_TEST))
 
