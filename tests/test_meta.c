@@ -43,7 +43,7 @@ char* t_eval(const char* input) {
     init_special_forms();
 
     TokenArray* ta = scan_all_tokens(input);
-    Cell* parsed = parse_tokens_new(ta);
+    Cell* parsed = parse_tokens(ta);
     const Cell *result = coz_eval(test_env, parsed);
 
     return cell_to_string(result, MODE_WRITE);
