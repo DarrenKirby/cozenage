@@ -13,7 +13,7 @@ use git to download the source tree:
 
 Cozenage provides a unified Makefile which uses either CMake or GNU-make for the build process.
 There is no install target for now, but I will add one upon the stable release. For now, just run
-the binary from the source tree.
+the binary from the source tree, or manually copy it to a suitable place.
 
 Install dependencies
 --------------------
@@ -76,6 +76,20 @@ which is shorthand for
 
     $ make clean
     $ make
+
+.. tip::
+
+    The unified Makefile uses GNU-extensions that will cause an error on most \*BSD systems that have standard make
+    installed. On such systems, replace all the ``make`` commands above with ``gmake``, if GNU Make is installed. If not,
+    CMake must be used manually to build. For example, from the top of the source directory:
+
+    .. code-block::
+
+        $ mkdir build
+        $ cd build
+        $ cmake ..
+        $ make
+        $ mv cozenage ..
 
 Portability
 -----------
