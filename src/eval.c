@@ -157,7 +157,7 @@ static Cell* coz_apply(const Cell* proc, const Cell* args, Lex** env_out, Cell**
 }
 
 /*
- * Applies a procedure to a list of ARGUMENTS (which are already values)
+ * Applies a procedure to a list of ARGUMENTS (which are already evaluated)
  * and returns the final computed value.
  * This function handles the trampoline loop internally for Scheme lambdas,
  * making it safe to call from C code like builtins.
@@ -169,10 +169,8 @@ Cell* coz_apply_and_get_val(const Cell* proc, const Cell* args, const Lex* env) 
 
     /*
      * This is a Scheme lambda. We can't just call it because it might
-     * tail-call internally. We need to set it up and then kick off a
-     * self-contained evaluation loop that runs until it produces a final
-     * value.
-     */
+     * tail-call internally. We need to set it up and then kick off a self-
+     * contained evaluation loop that runs until it produces a final value. */
     Lex* lambda_env  = build_lambda_env(proc->lambda->env, proc->lambda->formals, args);
     Cell* body_expr = sequence_sf_body(proc->lambda->body);
     return coz_eval(lambda_env, body_expr);
