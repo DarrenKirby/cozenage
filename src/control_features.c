@@ -101,19 +101,14 @@ Cell* builtin_map(const Lex* e, const Cell* a) {
         Cell* reversed_arg_list = builtin_list_reverse(e, make_sexpr_len1(arg_list));
 
         Cell* tmp_result;
+        /* If the procedure is a builtin - grab a pointer to it and call it directly
+         * otherwise - it is a lambda and needs to be evaluated and applied to the args. */
         if (proc->is_builtin) {
             Cell* (*func)(const Lex *, const Cell *) = proc->builtin;
             tmp_result = func(e, make_sexpr_from_list(reversed_arg_list));
         } else {
-            /* Prepend the procedure to create the application form */
-            Cell* application_list = make_cell_pair(proc, reversed_arg_list);
-            application_list->len = arg_list->len + 1;
-
-            /* Convert the Scheme list to an S-expression for eval */
-            Cell* application_sexpr = make_sexpr_from_list(application_list);
-
-            /* Evaluate it */
-            tmp_result = coz_eval((Lex*)e, application_sexpr);
+            const Cell* arg_sexpr = make_sexpr_from_list(reversed_arg_list);
+            tmp_result = coz_apply_and_get_val(proc, arg_sexpr, (Lex*)e);
         }
         if (tmp_result->type == CELL_ERROR) {
             /* Propagate any evaluation errors */

@@ -26,5 +26,6 @@
 
 typedef HandlerResult (*special_form_handler_t)(Lex*, Cell*);
 Cell* coz_eval(Lex* env, Cell* expr);
+Cell* coz_apply_and_get_val(const Cell* proc, const Cell* args, const Lex* env);
 
 #endif //COZENAGE_EVAL_H

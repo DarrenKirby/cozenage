@@ -693,7 +693,15 @@ Cell* builtin_filter(const Lex* e, const Cell* a) {
     Cell* result = make_cell_nil();
     const Cell* val = a->cell[1];
     for (int i = 0; i < a->cell[1]->len; i++) {
-        Cell* pred_outcome = coz_eval((Lex*)e, make_sexpr_len2(proc, val->car));
+        Cell* pred_outcome;
+        /* If proc is a builtin, run it directly. Otherwise,
+         * send it to apply */
+        if (proc->is_builtin) {
+            Cell* (*func)(const Lex *, const Cell *) = proc->builtin;
+            pred_outcome = func(e, make_sexpr_len1(val->car));
+        } else {
+            pred_outcome = coz_apply_and_get_val(proc, make_sexpr_len1(val->car), (Lex*)e);
+        }
         if (pred_outcome->type == CELL_ERROR) {
             return pred_outcome;
         }
@@ -754,21 +762,14 @@ Cell* builtin_foldl(const Lex* e, const Cell* a) {
         }
 
         Cell* tmp_result;
+        const Cell* arg_sexpr = make_sexpr_from_list(arg_list);
         /* If the procedure is a builtin - grab a pointer to it and call it directly
-         * otherwise - it is a lambda and needs to be evaluated */
+         * otherwise - it is a lambda and needs to be evaluated and applied to the args. */
         if (proc->is_builtin) {
             Cell* (*func)(const Lex *, const Cell *) = proc->builtin;
-            tmp_result = func(e, make_sexpr_from_list(arg_list));
+            tmp_result = func(e, arg_sexpr);
         } else {
-            /* Prepend the procedure to create the application form */
-            Cell* application_list = make_cell_pair(proc, arg_list);
-            application_list->len = arg_list->len + 1;
-
-            /* Convert the Scheme list to an S-expression for eval */
-            Cell* application_sexpr = make_sexpr_from_list(application_list);
-
-            /* Evaluate it */
-            tmp_result = coz_eval((Lex*)e, application_sexpr);
+            tmp_result = coz_apply_and_get_val(proc, arg_sexpr, (Lex*)e);
         }
         if (tmp_result->type == CELL_ERROR) {
             /* Propagate any evaluation errors */

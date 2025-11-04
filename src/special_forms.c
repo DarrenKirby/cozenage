@@ -236,8 +236,8 @@ HandlerResult sf_quote(Lex* e, Cell* a) {
 
     /* Extract the expression that was quoted. */
     Cell* qexpr = cell_take(a, 0);
-    Cell* result = sexpr_to_list(qexpr);
 
+    Cell* result = sexpr_to_list(qexpr);
     return (HandlerResult){ .action = ACTION_RETURN, .value = result };
 }
 
