@@ -50,6 +50,9 @@ void load_initial_libraries(const Lex* e, const lib_load_config load_libs) {
     if (load_libs.eval) {
         (void)load_scheme_library("eval", e);
     }
+    if (load_libs.load) {
+        (void)load_scheme_library("load", e);
+    }
     if (load_libs.cxr) {
         (void)load_scheme_library("cxr", e);
     }
