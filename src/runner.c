@@ -32,7 +32,8 @@
 
 
 /* Check the file extension and print a warning if it's non-standard. */
-static void check_and_warn_extension(const char *file_path) {
+static void check_and_warn_extension(const char *file_path)
+{
     const char *ext = strrchr(file_path, '.');
 
     /* Does the file have an extension? Is the extension NOT .scm AND NOT .ss? */
@@ -44,7 +45,9 @@ static void check_and_warn_extension(const char *file_path) {
     }
 }
 
-char* read_file_to_string(const char* filename) {
+
+char* read_file_to_string(const char* filename)
+{
     FILE* file = fopen(filename, "r");
     if (file == NULL) {
         perror("Error opening file");
@@ -85,21 +88,23 @@ char* read_file_to_string(const char* filename) {
     return buffer;
 }
 
-int run_file_script(const char *file_path, lib_load_config load_libs) {
-    /* Check extension and issue non-fatal warning */
+
+int run_file_script(const char *file_path, const lib_load_config load_libs)
+{
+    /* Check extension and issue non-fatal warning. */
     check_and_warn_extension(file_path);
 
-    /* Initialize symbol table with initial size of 128 */
+    /* Initialize symbol table with initial size of 128. */
     symbol_table = ht_create(128);
-    /* Initialize default ports */
+    /* Initialize default ports. */
     init_default_ports();
-    /* Initialize global singleton objects, nil, #t, #f, and EOF */
+    /* Initialize global singleton objects, nil, #t, #f, and EOF. */
     init_global_singletons();
-    /* Initialize global environment */
+    /* Initialize global environment. */
     Lex* e = lex_initialize_global_env();
-    /* Load (scheme base) procedures into the environment*/
+    /* Load (scheme base) procedures into the environment. */
     lex_add_builtins(e);
-    /* Initialize special form lookup table */
+    /* Initialize special form lookup table. */
     init_special_forms();
     /* Loads the CLI-specified R7RS libraries into the environment. */
     load_initial_libraries(e, load_libs);
@@ -113,19 +118,21 @@ int run_file_script(const char *file_path, lib_load_config load_libs) {
     TokenArray* ta = scan_all_tokens(input);
     const Cell* result = parse_all_expressions(e, ta, false);
 
-    if (result->type == CELL_ERROR) {
-        cell_to_string(result, MODE_REPL);
-        exit(EXIT_FAILURE);
-    }
-
     if (result->type == CELL_INTEGER) {
         exit((int)result->integer_v);
+    }
+
+    if (result->type == CELL_ERROR) {
+        fprintf(stderr, "%s\n", cell_to_string(result, MODE_REPL));
+        exit(EXIT_FAILURE);
     }
 
     exit(EXIT_FAILURE);
 }
 
-Cell* parse_all_expressions(Lex* e, TokenArray* ta, const bool is_repl) {
+
+Cell* parse_all_expressions(Lex* e, TokenArray* ta, const bool is_repl)
+{
     while (ta->position <= ta->count) {
         Cell* expression = parse_tokens(ta);
         if (!expression) {

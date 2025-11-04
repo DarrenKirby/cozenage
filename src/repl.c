@@ -38,15 +38,19 @@ static volatile sig_atomic_t got_sigint = 0;
 static volatile sig_atomic_t discard_line = 0;
 #endif
 
-static void sigint_handler(const int sig) {
+
+static void sigint_handler(const int sig)
+{
     (void)sig;
     got_sigint = 1;
     printf("\n");
 }
 
+
 #ifdef __linux__
 /* Callback for Ctrl-G binding */
-int discard_continuation(const int count, const int key) {
+int discard_continuation(const int count, const int key)
+{
     (void)count; (void)key;
     discard_line = 1;
     rl_replace_line("", 0);  /* clear current line buffer */
@@ -55,27 +59,36 @@ int discard_continuation(const int count, const int key) {
 }
 #endif
 
-static void read_history_from_file() {
+
+/* Read in the history. */
+static void read_history_from_file()
+{
     const char *hf = tilde_expand(HIST_FILE);
     if (access(hf, R_OK) == -1) {
         /* create empty file if it does not exist */
         FILE* f = fopen(hf, "w");
 
         if (f == NULL) {
-            printf("Error: Could not read, open, or create history file `~/cozenage_history`.\n");
+            fprintf(stderr, "Error: Could not open or create history file: `%s`.\n", HIST_FILE);
         }
         fclose(f);
     }
     read_history(hf);
 }
 
-static void save_history_to_file() {
+
+/* Write out the history. */
+static void save_history_to_file()
+{
     const char *hf = tilde_expand(HIST_FILE);
     write_history(hf);
 }
 
-/* Count parens to decide if we have a full expression, or need to wait for more input */
-int paren_balance(const char *s, int *in_string) {
+
+/* Count parens to decide if we have a full expression,
+ * or need to wait for more input. */
+int paren_balance(const char *s, int *in_string)
+{
     int balance = 0;
     int escaped = 0;
     int string = *in_string;  /* carry-over state from previous line */
@@ -111,8 +124,11 @@ int paren_balance(const char *s, int *in_string) {
     return balance;
 }
 
-/* Allow multi-line input in the REPL */
-static char* read_multiline(const char* prompt, const char* cont_prompt) {
+
+/* Allow multi-line input in the REPL using
+ * balanced parenthesis heuristic.*/
+static char* read_multiline(const char* prompt, const char* cont_prompt)
+{
     size_t total_len = 0;
     int balance = 0;
     int in_string = 0;   /* track string literal state across lines */
@@ -155,16 +171,17 @@ static char* read_multiline(const char* prompt, const char* cont_prompt) {
     return input;
 }
 
-/* print()
- * Take the Cell produced by eval and print
- * it formatted for the REPL
- * */
-void coz_print(const Cell* v) {
-    printf("%s\n", cell_to_string(v, MODE_REPL));
+
+/* REPL output. */
+void coz_print(const Cell* v)
+{
+    fprintf(stdout, "%s\n", cell_to_string(v, MODE_REPL));
 }
 
-/* Print a prompt, and collect input into a string */
-char* coz_read() {
+
+/* Print a prompt, return the input to the REPL. */
+char* coz_read()
+{
     char *input = read_multiline(PS1_PROMPT, PS2_PROMPT);
     /* reset bold input */
     printf("%s", ANSI_RESET);
@@ -178,9 +195,11 @@ char* coz_read() {
     return input;
 }
 
+
 /* repl()
  * Read-Evaluate-Print loop */
-void repl(Lex* e) {
+void repl(Lex* e)
+{
     // ReSharper disable once CppDFAEndlessLoop
     while (true) {
         /* Get the input */
@@ -199,7 +218,9 @@ void repl(Lex* e) {
     }
 }
 
-int run_repl(const lib_load_config load_libs) {
+
+int run_repl(const lib_load_config load_libs)
+{
     /* Print Version and Exit Information */
     printf("  %s%s%s version %s\n", ANSI_BLUE_B, APP_NAME, ANSI_RESET, APP_VERSION);
     printf("  Press <Ctrl+d> or type 'exit' to quit\n\n");

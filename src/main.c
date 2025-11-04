@@ -33,7 +33,9 @@
 /* Initialize load_libs struct to zeros */
 lib_load_config load_libs = {0};
 
-static void show_help(void) {
+
+static void show_help(void)
+{
     printf("Usage: cozenage [option ...] [file] \n\n\
 A (not just yet) R5RS and R7RS-compliant Scheme REPL and code runner\n\n\
 Options:\n\
@@ -51,7 +53,9 @@ Options:\n\
 Report bugs to <darren@dragonbyte.ca>\n");
 }
 
-static void process_library_arg(struct lib_load *l, const char *arg) {
+
+static void process_library_arg(struct lib_load *l, const char *arg)
+{
     char *arg_copy = GC_strdup(arg);
     if (!arg_copy) {
         perror("Failed to allocate memory");
@@ -102,7 +106,9 @@ static void process_library_arg(struct lib_load *l, const char *arg) {
     }
 }
 
-int main(const int argc, char** argv) {
+
+int main(const int argc, char** argv)
+{
     /* GC docs say this probably isn't necessary,
      * but to do it to be portable with older versions */
     GC_INIT();
