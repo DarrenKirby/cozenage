@@ -185,6 +185,7 @@ This is a list of what *is* implemented so far. I try to keep it up to date:
 - `filter` (Not R7RS)
 - `foldl` (Not R7RS)
 - `map`
+- `zip` (Not R7RS)
 
 ### Vector procedures
 
