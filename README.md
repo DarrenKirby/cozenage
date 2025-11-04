@@ -13,11 +13,7 @@ with Scheme syntax, kicking all 'unbound symbols' down a level as potential shel
 This is an educational process for me. I started writing Cozenage to enhance my understanding of 
 Scheme, C , and programming language fundamentals in general.
 Not everything here is implemented in the most efficient or best way. Cozenage is a work in progress,
-and as I learn new and better techniques I will come back and improve sections of this program. Perhaps
-the most conspicuous deficiency is the lexer/parser. I am currently working through Robert Nystrom's
-"Crafting Interpreters", and I will rewrite Cozenage's parser when I finish. At that time I will
-also have to revisit my decision to implement the bare-bones 'AST' as a plain C array of Cell objects,
-rather than as a 'proper list', as it is done in all dogmatic Lisp and Scheme variants.
+and as I learn new and better techniques I will come back and improve sections of this program.
 
 ## Dependencies
 
