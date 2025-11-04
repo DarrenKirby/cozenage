@@ -25,6 +25,8 @@
 #include <string.h>
 #include <gc/gc.h>
 
+#include "repr.h"
+
 
 /* Helpers for iteration clarity */
 #define first  0
@@ -278,10 +280,14 @@ HandlerResult sf_if(Lex* e, Cell* a) {
     if (err) {
         return (HandlerResult){ .action = ACTION_RETURN, .value = err };
     }
-    const Cell* test = coz_eval(e, a->cell[first]);
+    Cell* test = coz_eval(e, a->cell[first]);
+
+    if (test->type == CELL_ERROR) {
+        return (HandlerResult){ .action = ACTION_RETURN, .value = test };
+    }
 
     /* Check if the result is TRUTHY */
-    if (test && !(test->type == CELL_BOOLEAN && test->boolean_v == 0)) {
+    if (!(test->type == CELL_BOOLEAN && test->boolean_v == 0)) {
         /* Test was true, so evaluate the consequent as a tail call. */
         return (HandlerResult){ .action = ACTION_CONTINUE, .value = a->cell[second] };
     }
