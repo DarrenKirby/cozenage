@@ -59,9 +59,21 @@ int is_syntactic_keyword(const char* s) {
 
 /* Convert a CELL_SEXPR to a proper CELL_PAIR linked-list */
 Cell* sexpr_to_list(Cell* c) {
-    /* If the item is not an S-expression, it's an atom. Return it */
-    if (c->type != CELL_SEXPR) {
+
+    /* Turf all the atomic types. */
+    if (c->type & (CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX|
+                      CELL_BOOLEAN|CELL_CHAR|CELL_STRING|CELL_NIL|CELL_EOF|
+                      CELL_PROC|CELL_PORT|CELL_CONT|CELL_ERROR|CELL_SYMBOL)) {
         return c;
+                      }
+
+    /* Leave the top-level vector be, but convert internal members. */
+    if (c->type == CELL_VECTOR) {
+        Cell* result = make_cell_vector();
+        for (int i = 0; i < c->count; i++) {
+            cell_add(result, sexpr_to_list(c->cell[i]));
+        }
+        return result;
     }
 
     /* It is an S-expression. Check for improper list syntax. */
