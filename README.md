@@ -237,10 +237,11 @@ This is a list of what *is* implemented so far. I try to keep it up to date:
 - `string-copy`
 - `string-copy!`
 
-### Control features and list iteration
+### Control features
 
 - `apply`
 - `map`
+- `vector-map`
 
 ### input/output and ports
 
