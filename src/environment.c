@@ -321,6 +321,7 @@ void lex_add_builtins(const Lex* e) {
     /* Control features */
     lex_add_builtin(e, "apply", builtin_apply);
     lex_add_builtin(e, "map", builtin_map);
+    lex_add_builtin(e, "vector-map", builtin_vector_map);
     /* input/output and ports */
     lex_add_builtin(e, "current-input-port", builtin_current_input_port);
     lex_add_builtin(e, "current-output-port", builtin_current_output_port);

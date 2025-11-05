@@ -21,6 +21,7 @@
 #include "types.h"
 #include "eval.h"
 #include "pairs.h"
+#include "repr.h"
 
 
 /*-------------------------------------------------------*
@@ -123,3 +124,65 @@ Cell* builtin_map(const Lex* e, const Cell* a) {
     /* Reverse the final list to get the correct order and return */
     return builtin_list_reverse(e, make_sexpr_len1(final_result));
 }
+
+Cell* builtin_vector_map(const Lex* e, const Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_MIN(a, 2);
+    if (err) return err;
+    if (a->cell[0]->type != CELL_PROC) {
+        return make_cell_error("vector-map: arg 1 must be a procedure", TYPE_ERR);
+    }
+    int shortest_vec_length = INT32_MAX;
+    for (int i = 1; i < a->count; i++) {
+        /* If vector arg is empty, return empty vector. */
+        if (a->cell[i]->count == 0) {
+            return make_cell_vector();
+        }
+        char buf[100];
+        if (a->cell[i]->type != CELL_VECTOR) {
+            snprintf(buf, 100, "vector-map: arg %d must be a proper list", i+1);
+            return make_cell_error(buf, TYPE_ERR);
+        }
+        if (a->cell[i]->len < shortest_vec_length) {
+            shortest_vec_length = a->cell[i]->len;
+        }
+    }
+
+    const int shortest_len = shortest_vec_length;
+    const int num_args = a->count - 1;
+    const Cell* proc = a->cell[0];
+
+    Cell* final_result = make_cell_vector();
+
+    for (int i = 0; i < shortest_len; i++) {
+        /* Build a S-expr of the i-th arguments */
+        Cell* arg_list = make_cell_sexpr();
+        for (int j = 0; j < num_args; j++) {
+            const Cell* current_vec = a->cell[j + 1];
+            Cell* nth_item = current_vec->cell[i];
+            cell_add(arg_list, nth_item);
+        }
+
+        Cell* tmp_result;
+        /* If the procedure is a builtin - grab a pointer to it and call it directly
+         * otherwise - it is a lambda and needs to be evaluated and applied to the args. */
+        if (proc->is_builtin) {
+            Cell* (*func)(const Lex *, const Cell *) = proc->builtin;
+            tmp_result = func(e, arg_list);
+        } else {
+            tmp_result = coz_apply_and_get_val(proc, arg_list, (Lex*)e);
+        }
+
+        if (tmp_result->type == CELL_ERROR) {
+            /* Propagate any evaluation errors */
+            return tmp_result;
+        }
+
+        /* Add tmp result to the final vector. */
+        cell_add(final_result, tmp_result);
+    }
+
+    /* Reverse the final list to get the correct order and return */
+    return final_result;
+}
+
