@@ -29,6 +29,7 @@ typedef struct {
     size_t capacity; /* How many bytes are *allocated* */
 } string_builder_t;
 
+
 string_builder_t* sb_new(void);
 void sb_append_str(string_builder_t *sb, const char *s);
 void sb_append_char(string_builder_t *sb, char c);
