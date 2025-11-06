@@ -38,7 +38,8 @@
 
 
 /* Initialize the global environment, and return a pointer to it. */
-Lex* lex_initialize_global_env(void) {
+Lex* lex_initialize_global_env(void)
+{
     ht_table* global_env = ht_create(256);
     Lex* e = GC_MALLOC(sizeof(Lex));
     e->local = nullptr;
@@ -46,8 +47,10 @@ Lex* lex_initialize_global_env(void) {
     return e;
 }
 
+
 /* Initialize a new child environment */
-Lex* new_child_env(const Lex* parent_env) {
+Lex* new_child_env(const Lex* parent_env)
+{
     Ch_Env* e = GC_MALLOC(sizeof(Ch_Env));
     e->count = 0;
     e->capacity = INITIAL_CHILD_ENV_CAPACITY;
@@ -62,8 +65,10 @@ Lex* new_child_env(const Lex* parent_env) {
     return w;
 }
 
+
 /* Retrieve a Cell* value from an environment */
-Cell* lex_get(const Lex* e, const Cell* k) {
+Cell* lex_get(const Lex* e, const Cell* k)
+{
     if (!e || !k || k->type != CELL_SYMBOL) return nullptr;
 
     /* Search the entire local environment chain iteratively. */
@@ -91,8 +96,10 @@ Cell* lex_get(const Lex* e, const Cell* k) {
     return make_cell_error(buf, VALUE_ERR);
 }
 
+
 /* Place a Cell* value into a local environment */
-void lex_put_local(Lex* e, const Cell* k, const Cell* v) {
+void lex_put_local(Lex* e, const Cell* k, const Cell* v)
+{
     if (!e || !k || !v || k->type != CELL_SYMBOL) {
         fprintf(stderr, "lex_put: invalid arguments\n");
         return;
@@ -122,8 +129,10 @@ void lex_put_local(Lex* e, const Cell* k, const Cell* v) {
     e->local->vals[e->local->count - 1] = (Cell*)v;
 }
 
+
 /* Place a Cell* value in the global environment */
-void lex_put_global(const Lex* e, const Cell* k, Cell* v) {
+void lex_put_global(const Lex* e, const Cell* k, Cell* v)
+{
     if (!e || !k || !v || k->type != CELL_SYMBOL) {
         fprintf(stderr, "lex_put: invalid arguments\n");
         return;
@@ -131,8 +140,10 @@ void lex_put_global(const Lex* e, const Cell* k, Cell* v) {
     ht_set(e->global, k->sym, v);
 }
 
+
 /* Populate the CELL_PROC struct of a Cell* object for builtin procedures */
-Cell* lex_make_builtin(const char* name, Cell* (*func)(const Lex*, const Cell*)) {
+Cell* lex_make_builtin(const char* name, Cell* (*func)(const Lex*, const Cell*))
+{
     Cell* c = GC_MALLOC(sizeof(Cell));
     c->type = CELL_PROC;
     c->f_name = GC_strdup(name);
@@ -141,41 +152,49 @@ Cell* lex_make_builtin(const char* name, Cell* (*func)(const Lex*, const Cell*))
     return c;
 }
 
-/* Populate the CELL_PROC struct of a Cell* object for a named lambda procedure */
-Cell* lex_make_named_lambda(char* name, Cell* formals, Cell* body, Lex* env) {
-    Cell* c = GC_MALLOC(sizeof(Cell)); /* Allocate Cell struct */
+
+/* Populate the CELL_PROC struct of a Cell* object for a named lambda procedure. */
+Cell* lex_make_named_lambda(char* name, Cell* formals, Cell* body, Lex* env)
+{
+    Cell* c = GC_MALLOC(sizeof(Cell)); /* Allocate Cell struct. */
     c->type = CELL_PROC;
-    c->lambda= GC_MALLOC(sizeof(lambda)); /* Allocate lambda struct*/
-    c->lambda->l_name = name;  /* optional */
+    c->lambda= GC_MALLOC(sizeof(lambda)); /* Allocate lambda struct. */
+    c->lambda->l_name = name;
     c->lambda->formals = formals;
     c->lambda->body = body;
-    c->lambda->env = env;  /* do NOT copy, just store pointer */
+    c->lambda->env = env;
     c->is_builtin = false;
     return c;
 }
 
-/* Populate the CELL_PROC struct of a Cell* object for an anonymous lambda procedure */
-Cell* lex_make_lambda(Cell* formals, Cell* body, Lex* env) {
-    Cell* c = GC_MALLOC(sizeof(Cell)); /* Allocate Cell struct */
+
+/* Populate the CELL_PROC struct of a Cell* object for an anonymous lambda procedure. */
+Cell* lex_make_lambda(Cell* formals, Cell* body, Lex* env)
+{
+    Cell* c = GC_MALLOC(sizeof(Cell));
     c->type = CELL_PROC;
-    c->lambda= GC_MALLOC(sizeof(lambda)); /* Allocate lambda struct*/
-    c->lambda->l_name = nullptr;  /* No name */
+    c->lambda= GC_MALLOC(sizeof(lambda));
+    c->lambda->l_name = nullptr;
     c->lambda->formals = formals;
     c->lambda->body = body;
-    c->lambda->env = env;  /* do NOT copy, just store pointer */
+    c->lambda->env = env;
     c->is_builtin = false;
     return c;
 }
 
-/* Register a procedure in the global environment */
-void lex_add_builtin(const Lex* e, const char* name, Cell* (*func)(const Lex*, const Cell*)) {
+
+/* Register a procedure in the global environment. */
+void lex_add_builtin(const Lex* e, const char* name, Cell* (*func)(const Lex*, const Cell*))
+{
     Cell* fn = lex_make_builtin(name, func);
     const Cell* k = make_cell_symbol(name);
     lex_put_global(e, k, fn);
 }
 
-/* Register all builtin procedures in the global environment */
-void lex_add_builtins(const Lex* e) {
+
+/* Register all builtin procedures in the global environment. */
+void lex_add_builtins(const Lex* e)
+{
     /* Basic arithmetic operators */
     lex_add_builtin(e, "+", builtin_add);
     lex_add_builtin(e, "-", builtin_sub);
@@ -322,6 +341,10 @@ void lex_add_builtins(const Lex* e) {
     lex_add_builtin(e, "apply", builtin_apply);
     lex_add_builtin(e, "map", builtin_map);
     lex_add_builtin(e, "vector-map", builtin_vector_map);
+    lex_add_builtin(e, "string-map", builtin_string_map);
+    lex_add_builtin(e, "for-each", builtin_foreach);
+    lex_add_builtin(e, "vector-for-each", builtin_vector_foreach);
+    lex_add_builtin(e, "string-for-each", builtin_string_foreach);
     /* input/output and ports */
     lex_add_builtin(e, "current-input-port", builtin_current_input_port);
     lex_add_builtin(e, "current-output-port", builtin_current_output_port);
