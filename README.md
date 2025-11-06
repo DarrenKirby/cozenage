@@ -18,7 +18,7 @@ and as I learn new and better techniques I will come back and improve sections o
 ## Dependencies
 
 `Cozenage` requires one of [readline](https://tiswww.cwru.edu/php/chet/readline/rltop.html) or 
-libedit for the REPL. It requires [ICU](https://github.com/unicode-org/icu) for Unicode.
+libedit for the REPL. It requires [ICU](https://github.com/unicode-org/icu) for UTF-8.
 These will almost certainly be installed already on any sort of development rig. It requires the [Boehm-Demers-Weiser Garbage Collector](https://github.com/bdwgc/bdwgc)
 which may or may not be installed already on your system.
 
@@ -45,11 +45,16 @@ To run the REPL just run the program with no arguments:
 
     $ ./cozenage -l write,file
 
-## Builtin procedures (scheme base)
+## Status of built-in procedures and special forms
 
-This is a list of what *is* implemented so far. I try to keep it up to date:
+The status of the R7RS (scheme base) procedures, and the other scheme libraries 
+are documented on another page: 
+
+[R7RS built-in procedures](README.status.md)
 
 ### Special forms/syntax
+
+These are the special forms/syntax constructs that are implemented in Cozenage so far:
 
 - `quote`
 - `define`
@@ -68,316 +73,44 @@ This is a list of what *is* implemented so far. I try to keep it up to date:
 - `and`
 - `or`
 
-### Basic arithmetic 
+## Non-R7RS procedures and libraries
 
-- `+`
-- `-`
-- `*`
-- `/`
+Cozenage has implemented several built-in procedures which extend it beyond the
+R7RS specification. Some are loaded with `(scheme base)` by default, and some are
+imported along with the relevant `(scheme foo)` libraries.
 
-### Comparison operators
+- `filter` - `(scheme base)`
+- `foldl` - `(scheme base)`
+- `zip` - `(scheme base)`
 
-- `=`
-- `>`
-- `<`
-- `>=`
-- `<=`
 
-### Numeric predicate procedures
+- `log2` imported with `(scheme inexact)`
+- `log10` imported with `(scheme inexact)`
+- `cbrt` imported with `(scheme inexact)`
 
-- `zero?`
-- `positive?`
-- `negative?`
-- `odd?`
-- `even?`
 
-### Equality and equivalence comparators
-
-- `eq?`
-- `eqv?`
-- `equal?`
-
-### Generic numeric operations
-
-- `abs`
-- `expt`
-- `remainder`
-- `modulo`
-- `quotient`
-- `lcm`
-- `gcd`
-- `max`
-- `min`
-- `floor`
-- `ceiling`
-- `round`
-- `truncate`
-- `numerator`
-- `denominator`
-- `truncate-quotient`
-- `truncate-remainder`
-- `floor-remainder`
-- `square`
-- `exact`
-- `inexact`
-
-### Type identity predicate procedures
-
-- `number?`
-- `boolean?`
-- `null?`
-- `pair?`
-- `list?`
-- `procedure?`
-- `symbol?`
-- `string?`
-- `char?`
-- `vector?`
-- `bytevector?`
-- `port?`
-- `eof-object?`
-
-### Numeric identity predicate procedures
-
-- `exact?`
-- `inexact?`
-- `complex?`
-- `real?`
-- `rational?`
-- `integer?`
-- `exact-integer?`
-
-### Boolean and logical procedures
-
-- `not`
-- `boolean=?`
-
-### Pair/list procedures
-
-- `cons`
-- `car`
-- `cdr`
-- `caar`
-- `cadr`
-- `cdar`
-- `cddr`
-- `set-car!`
-- `set-cdr!`
-- `list`
-- `length`
-- `list-ref`
-- `append`
-- `reverse`
-- `list-tail`
-- `list-set!`
-- `make-list`
-- `memq`
-- `memv`
-- `member`
-- `assq`
-- `assv`
-- `assoc`
-- `list-copy`
-- `filter` (Not R7RS)
-- `foldl` (Not R7RS)
-- `map`
-- `zip` (Not R7RS)
-
-### Vector procedures
-
-- `vector`
-- `vector-length`
-- `vector-ref`
-- `make-vector`
-- `vector-set!`
-- `vector-fill!`
-- `vector-copy`
-- `vector-append`
-- `list->vector`
-- `vector->list`
-- `string->vector`
-- `vector->string`
-
-### Bytevector procedures
-
-- `bytevector`
-- `bytevector-length`
-- `bytevector-u8-ref`
-- `make-bytevector`
-- `bytevector-copy`
-
-### Char procedures
-
-- `char->int`
-- `int->char`
-- `char=?`
-- `char<?`
-- `char<=?`
-- `char>?`
-- `char>=?`
-
-### String/Symbol procedures
-
-- `symbol=?`
-- `symbol->string`
-- `string->symbol`
-- `string`
-- `string-length`
-- `string=?`
-- `string<?`
-- `string<=?`
-- `string>?`
-- `string>=?`
-- `string-append`
-- `string-ref`
-- `make-string`
-- `string->list`
-- `list->string`
-- `substring`
-- `string-copy`
-- `string-copy!`
-
-### Control features
-
-- `apply`
-- `map`
-- `vector-map`
-
-### input/output and ports
-
-- `current-input-port`
-- `current-output-port`
-- `current-error-port`
-- `input-port?`
-- `output-port?`
-- `textual-port?`
-- `binary-port?`
-- `input-port-open?`
-- `output-port-open?`
-- `close-port`
-- `close-input-port`
-- `close-output-port`
-- `read-line`
-- `write-string`
-- `newline`
-- `eof-object`
-
-## R7RS Scheme library procedures
-
-### Eval library (scheme eval)
-
-- `eval`
-
-### Load library (scheme load)
-
-- `load`
-
-### Complex library (scheme complex)
-
-- `real-part`
-- `imag-part`
-- `make-rectangular`
-- `magnitude`
-- `angle`
-- `make-polar`
-
-### File library (scheme file)
-
-- `file-exists?`
-- `delete-file`
-- `open-input-file`
-- `open-binary-input-file`
-- `open-output-file`
-- `open-binary-output-file`
-
-### Inexact library (scheme inexact)
-
-- `cos`
-- `acos`
-- `sin`
-- `asin`
-- `tan`
-- `atan`
-- `exp`
-- `log`
-- `log2` (Not R7RS)
-- `log10` (Not R7RS)
-- `sqrt`
-- `cbrt` (Not R7RS)
-- `nan?`
-- `infinite?`
-- `finite?`
-
-### Process-Context library (scheme process-context)
-
-- `exit`
-- `emergency-exit`
-- `get-environment-variable`
-- `get-environment-variables`
-
-### Char library (scheme char)
-
-- `char-alphabetic?`
-- `char-whitespace?`
-- `char-numeric?`
-- `char-upper-case?`
-- `char-lower-case?`
-- `char-upcase`
-- `char-downcase`
-- `char-foldcase`
-- `digit-value`
-- `char-ci=?`
-- `char-ci<?`
-- `char-ci<=?`
-- `char-ci>?`
-- `char-ci>=?`
-- `string-downcase`
-- `string-upcase`
-- `string-foldcase`
-- `string-ci=?`
-- `string-ci<?`
-- `string-ci<=?`
-- `string-ci>?`
-- `string-ci>=?`
-
-### Cxr library (scheme cxr)
-
-- `caaar`
-- `caadr`
-- `cadar`
-- `caddr`
-- `cdaar`
-- `cdadr`
-- `cddar`
-- `cdddr`
-- `caaaar`
-- `caaadr`
-- `caadar`
-- `caaddr`
-- `cadaar`
-- `cadadr`
-- `caddar`
-- `cadddr`
-- `cdaaar`
-- `cdaadr`
-- `cdadar`
-- `cdaddr`
-- `cddaar`
-- `cddadr`
-- `cdddar`
-- `cddddr`
-
-### Time library (scheme time)
-
-- `current-second`
-- `current-jiffy`
-- `jiffies-per-second`
-- `current-dt-utc` (Not R7RS)
-- `current-dt-local`(Not R7RS)
-
-## Cozenage library procedures (non-R7RS)
+- `current-dt-utc` imported with `(scheme time)`
+- `current-dt-local` imported with `(scheme time)`
 
 ### Bits library (cozenage bits)
+
+The `bits` library implements bitwise operations on integers,
+and also interprets a `bitstring` pseudo-type, which is string of ones and zeros implemented 
+as regular Scheme symbols prefaced by a lowercase 'b' character (so that the 
+parser doesn't interpret them as regular numeric digits). For example:
+
+    --> (import (cozenage bits))
+    --> (bitstring->int 'b1001001001)
+    -439
+    --> (bitstring->int 'b01001001001
+    585
+    --> (int->bitstring 10)
+    b01010
+    --> (int->bitstring -120)
+    b10001000
+
+Notice that bitstrings are interpreted as twos-compliment values, so positive values
+must have a leading `0`, and negative values must have a leading `1`.
 
 - `>>` (right shift)
 - `<<` (left shift)
