@@ -33,7 +33,9 @@
 #include <gc/gc.h>
 
 
+int is_repl;
 extern char **scheme_procedures;
+
 static volatile sig_atomic_t got_sigint = 0;
 #ifdef __linux__
 static volatile sig_atomic_t discard_line = 0;
@@ -231,6 +233,9 @@ int run_repl(const lib_load_config load_libs)
     printf("  %s%s%s version %s\n", ANSI_BLUE_B, APP_NAME, ANSI_RESET, APP_VERSION);
     printf("  Press <Ctrl+d> or type 'exit' to quit\n\n");
 
+    /* Initialize the is_repl global flag */
+    is_repl = 1;
+
     /* Set up keybinding and signal for Ctrl-G and CTRL-C */
 #ifdef __linux__
     rl_bind_key('\007', discard_continuation);  /* 7 = Ctrl-G */
@@ -247,8 +252,10 @@ int run_repl(const lib_load_config load_libs)
     init_global_singletons();
     /* Initialize global environment */
     Lex* e = lex_initialize_global_env();
-    /* Load (scheme base) procedures into the environment*/
+    /* Load (scheme base) procedures into the environment. */
     lex_add_builtins(e);
+    /* Loads the CLI-specified R7RS libraries into the environment. */
+    load_initial_libraries(e, load_libs);
 
 #ifdef USE_GNU_READLINE
     /* Bind the TAB key to the completion function. */
@@ -259,8 +266,6 @@ int run_repl(const lib_load_config load_libs)
 
     /* Initialize special form lookup table */
     init_special_forms();
-    /* Loads the CLI-specified R7RS libraries into the environment. */
-    load_initial_libraries(e, load_libs);
 
     /* Run until we don't */
     repl(e);

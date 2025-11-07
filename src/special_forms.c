@@ -22,10 +22,9 @@
 #include "types.h"
 #include "symbols.h"
 #include "load_library.h"
+#include "compat_readline.h"
 #include <string.h>
 #include <gc/gc.h>
-
-#include "repr.h"
 
 
 /* Helpers for iteration clarity */
@@ -34,6 +33,8 @@
 #define third  2
 #define last(ptr) ((ptr)->count - 1)
 
+/* import needs to know if we're in the REPL */
+extern int is_repl;
 
 /* TODO - implement transformations, and double-check for all tail calls.
  * - Need to create transformations.c and write functions to transform
@@ -495,10 +496,19 @@ HandlerResult sf_import(Lex* e, Cell* a) {
         } else {
             /* TODO: Handle User Libraries Here
              * For example, (import (my-libs utils)). */
-            Cell* err = make_cell_error("import: user-defined libraries not yet supported", GEN_ERR);
+            Cell* err = make_cell_error(
+                "import: user-defined libraries not yet supported",
+                GEN_ERR);
             return (HandlerResult){ .action = ACTION_RETURN, .value = err };
         }
     }
+    /* Re-generate the completion array if we're in the REPL (and have GNU readline). */
+#ifdef USE_GNU_READLINE
+    if (is_repl) {
+        populate_dynamic_completions(e);
+    }
+#endif
+
     return (HandlerResult){ .action = ACTION_RETURN, .value = result };
 }
 

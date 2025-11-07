@@ -60,9 +60,13 @@ void populate_dynamic_completions(const Lex* e) {
     it = ht_iterator(e->global);
     while (ht_next(&it)) {
         scheme_procedures[i] = GC_strdup(it.key);
-        //printf("found sym[%d]: %s\n", i, scheme_procedures[i]);
         i++;
     }
+
+    /* For debugging */
+    // for (int k = 0; k < symbol_count + num_sfs; k++) {
+    //     printf("found sym[%d]: %s\n", k, scheme_procedures[k]);
+    // }
 
     /* The list must be NULL-terminated for the generator to know when to stop. */
     scheme_procedures[i] = NULL;
@@ -91,10 +95,10 @@ char* scheme_procedure_generator(const char *text, int state) {
 
 char** completion_dispatcher(const char *text, const int start, const int end) {
     (void)end;
-    rl_attempted_completion_over = 1; /* Prevents completion on an empty line */
+    rl_attempted_completion_over = 1; /* Prevents completion on an empty line. */
 
     bool in_string = false;
-    /* Iterate through the line buffer up to the point of completion */
+    /* Iterate through the line buffer up to the point of completion. */
     for (int i = 0; i < start; i++) {
         /* If we find a double quote... */
         if (rl_line_buffer[i] == '"') {
