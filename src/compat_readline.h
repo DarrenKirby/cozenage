@@ -21,6 +21,8 @@
 #define COZENAGE_COMPAT_READLINE_H
 
 
+
+
 #ifdef _WIN32
 #include <string.h>
 
@@ -30,7 +32,7 @@ static char buffer[2048];
 char* readline(char* prompt) {
     fputs(prompt, stdout);
     fgets(buffer, 2048, stdin);
-    char* cpy = malloc(strlen(buffer)+1);
+    char* cpy = GC_MALLOC(strlen(buffer)+1);
     strcpy(cpy, buffer);
     cpy[strlen(cpy)-1] = '\0';
     return cpy;
@@ -42,20 +44,18 @@ void add_history(char* unused) {}
 #else
 
 #include <stdio.h>
+#include <readline/readline.h>
+#include <readline/history.h>
 
-/* editline does not provide tilde.h, so given certain systems'
- * propensity to provide fake readline stub files, this should
- * be a safe way to determine if we are actually using GNU readline */
-#if __has_include(<readline/tilde.h.h>)
-#  define HAS_GNU_READLINE 1
-#  include <readline/readline.h>
-#  include <readline/history.h>
-#  include <readline/tilde.h>
-#elif __has_include(<editline/readline.h>)
-#  define HAS_GNU_READLINE 0
-#  include <editline/readline.h>
-#else
-#  error "No readline-compatible headers found"
+#ifdef USE_GNU_READLINE
+
+#include <readline/tilde.h>
+#include "environment.h"
+
+char* scheme_procedure_generator(const char *text, int state);
+char** completion_dispatcher(const char *text, int start, int end);
+void populate_dynamic_completions(const Lex* e);
+
 #endif
 
 #endif

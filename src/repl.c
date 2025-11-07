@@ -33,6 +33,7 @@
 #include <gc/gc.h>
 
 
+extern char **scheme_procedures;
 static volatile sig_atomic_t got_sigint = 0;
 #ifdef __linux__
 static volatile sig_atomic_t discard_line = 0;
@@ -129,6 +130,9 @@ int paren_balance(const char *s, int *in_string)
  * balanced parenthesis heuristic.*/
 static char* read_multiline(const char* prompt, const char* cont_prompt)
 {
+#ifdef USE_GNU_READLINE
+    rl_attempted_completion_function = completion_dispatcher;
+#endif
     size_t total_len = 0;
     int balance = 0;
     int in_string = 0;   /* track string literal state across lines */
@@ -191,7 +195,9 @@ char* coz_read()
         exit(0);
     }
     /* Add expression to history */
-    add_history(input);
+    if (input != nullptr) {
+        add_history(input);
+    }
     return input;
 }
 
@@ -243,6 +249,14 @@ int run_repl(const lib_load_config load_libs)
     Lex* e = lex_initialize_global_env();
     /* Load (scheme base) procedures into the environment*/
     lex_add_builtins(e);
+
+#ifdef USE_GNU_READLINE
+    /* Bind the TAB key to the completion function. */
+    rl_bind_key('\t', rl_complete);
+    /* Load tab-completion candidate array from symbols in the environment */
+    populate_dynamic_completions(e);
+#endif
+
     /* Initialize special form lookup table */
     init_special_forms();
     /* Loads the CLI-specified R7RS libraries into the environment. */
