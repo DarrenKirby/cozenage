@@ -44,7 +44,9 @@ Cell* default_input_port  = nullptr;
 Cell* default_output_port = nullptr;
 Cell* default_error_port  = nullptr;
 
-void init_default_ports(void) {
+
+void init_default_ports(void)
+{
     default_input_port  = make_cell_port("stdin",  stdin,  INPUT_PORT, TEXT_PORT);
     default_output_port = make_cell_port("stdout", stdout, OUTPUT_PORT, TEXT_PORT);
     default_error_port  = make_cell_port("stderr", stderr, OUTPUT_PORT, TEXT_PORT);
@@ -57,32 +59,41 @@ void init_default_ports(void) {
  *  'private', and never directly accessed.  *
  * ------------------------------------------*/
 
-static Cell* make_cell_nil__(void) {
+static Cell* make_cell_nil__(void)
+{
     Cell* nil_obj = GC_MALLOC_ATOMIC_UNCOLLECTABLE(sizeof(Cell));
     nil_obj->type = CELL_NIL;
     return nil_obj;
 }
 
-static Cell* make_cell_boolean__(const int the_boolean) {
+
+static Cell* make_cell_boolean__(const int the_boolean)
+{
     Cell* v = GC_MALLOC_ATOMIC_UNCOLLECTABLE(sizeof(Cell));
     v->type = CELL_BOOLEAN;
     v->boolean_v = the_boolean;
     return v;
 }
 
-static Cell* make_cell_eof__(void) {
+
+static Cell* make_cell_eof__(void)
+{
     Cell* eof_obj = GC_MALLOC_ATOMIC_UNCOLLECTABLE(sizeof(Cell));
     eof_obj->type = CELL_EOF;
     return eof_obj;
 }
 
-static Cell* make_cell_tcs__(void) {
+
+static Cell* make_cell_tcs__(void)
+{
     Cell* tcs_obj = GC_MALLOC_ATOMIC_UNCOLLECTABLE(sizeof(Cell));
     tcs_obj->type = CELL_TCS;
     return tcs_obj;
 }
 
-void init_global_singletons(void) {
+
+void init_global_singletons(void)
+{
     Nil_Obj = make_cell_nil__();
     True_Obj = make_cell_boolean__(1);
     False_Obj = make_cell_boolean__(0);
@@ -94,27 +105,36 @@ void init_global_singletons(void) {
  *       Cell type constructors       *
  * -----------------------------------*/
 
-/* Thin wrapper that returns the singleton nil object */
-Cell* make_cell_nil(void) {
+/* Thin wrapper that returns the singleton nil object. */
+Cell* make_cell_nil(void)
+{
     return Nil_Obj;
 }
 
-/* Thin wrapper that returns the singleton #t or #f object */
-Cell* make_cell_boolean(const int the_boolean) {
+
+/* Thin wrapper that returns the singleton #t or #f object. */
+Cell* make_cell_boolean(const int the_boolean)
+{
     return the_boolean ? True_Obj : False_Obj;
 }
 
-/* Thin wrapper that returns the singleton EOF object */
-Cell* make_cell_eof(void) {
+
+/* Thin wrapper that returns the singleton EOF object. */
+Cell* make_cell_eof(void)
+{
     return EOF_Obj;
 }
 
-/* Thin wrapper that returns the singleton TCS object */
-Cell* make_cell_tcs(void) {
+
+/* Thin wrapper that returns the singleton TCS object. */
+Cell* make_cell_tcs(void)
+{
     return TCS_Obj;
 }
 
-Cell* make_cell_real(const long double the_real) {
+
+Cell* make_cell_real(const long double the_real)
+{
     Cell* v = GC_MALLOC_ATOMIC(sizeof(Cell));
     if (!v) {
         fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
@@ -126,7 +146,9 @@ Cell* make_cell_real(const long double the_real) {
     return v;
 }
 
-Cell* make_cell_integer(const long long int the_integer) {
+
+Cell* make_cell_integer(const long long int the_integer)
+{
     Cell* v = GC_MALLOC_ATOMIC(sizeof(Cell));
     if (!v) {
         fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
@@ -138,8 +160,11 @@ Cell* make_cell_integer(const long long int the_integer) {
     return v;
 }
 
-Cell* make_cell_rational(const long int numerator, const long int denominator,
-                         const bool simplify) {
+
+Cell* make_cell_rational(const long int numerator,
+                         const long int denominator,
+                         const bool simplify)
+{
     Cell* v = GC_MALLOC_ATOMIC(sizeof(Cell));
     if (!v) {
         fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
@@ -155,9 +180,13 @@ Cell* make_cell_rational(const long int numerator, const long int denominator,
     return v;
 }
 
-Cell* make_cell_complex(Cell* real_part, Cell *imag_part) {
-    if (real_part->type == CELL_COMPLEX|| imag_part->type == CELL_COMPLEX) {
-        return make_cell_error("Cannot have complex real or imaginary parts.", GEN_ERR);
+
+Cell* make_cell_complex(Cell* real_part, Cell *imag_part)
+{
+    if (real_part->type == CELL_COMPLEX || imag_part->type == CELL_COMPLEX) {
+        return make_cell_error(
+            "Cannot have complex real or imaginary parts.",
+            GEN_ERR);
     }
     Cell* v = GC_MALLOC(sizeof(Cell));
     if (!v) {
@@ -171,26 +200,30 @@ Cell* make_cell_complex(Cell* real_part, Cell *imag_part) {
     return v;
 }
 
-Cell* make_cell_symbol(const char* the_symbol) {
-    /* Lookup in symbol table first */
+
+Cell* make_cell_symbol(const char* the_symbol)
+{
+    /* Lookup in symbol table first. */
     Cell* v = ht_get(symbol_table, the_symbol);
     if (v) {
         return v;
     }
-    /* Not found, so construct the cell, place in the table, then return it */
+    /* Not found, so construct the cell, place in the table, then return it. */
     v = GC_MALLOC_ATOMIC(sizeof(Cell));
     if (!v) {
         fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
         exit(EXIT_FAILURE);
     }
-    v->sf_id = 0; /* Special form id zero by default */
+    v->sf_id = 0; /* Special form id zero by default. */
     v->type = CELL_SYMBOL;
     const char* canonical_name = ht_set(symbol_table, the_symbol, v);
     v->sym = (char*)canonical_name;
     return v;
 }
 
-Cell* make_cell_string(const char* the_string) {
+
+Cell* make_cell_string(const char* the_string)
+{
     Cell* v = GC_MALLOC_ATOMIC(sizeof(Cell));
     if (!v) {
         fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
@@ -201,7 +234,9 @@ Cell* make_cell_string(const char* the_string) {
     return v;
 }
 
-Cell* make_cell_sexpr(void) {
+
+Cell* make_cell_sexpr(void)
+{
     Cell* v = GC_MALLOC(sizeof(Cell));
     if (!v) {
         fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
@@ -213,7 +248,9 @@ Cell* make_cell_sexpr(void) {
     return v;
 }
 
-Cell* make_cell_char(const UChar32 the_char) {
+
+Cell* make_cell_char(const UChar32 the_char)
+{
     Cell* v = GC_MALLOC_ATOMIC(sizeof(Cell));
     if (!v) {
         fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
@@ -224,7 +261,9 @@ Cell* make_cell_char(const UChar32 the_char) {
     return v;
 }
 
-Cell* make_cell_pair(Cell* car, Cell* cdr) {
+
+Cell* make_cell_pair(Cell* car, Cell* cdr)
+{
     Cell* v = GC_MALLOC(sizeof(Cell));
     if (!v) {
         fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
@@ -237,7 +276,9 @@ Cell* make_cell_pair(Cell* car, Cell* cdr) {
     return v;
 }
 
-Cell* make_cell_vector(void) {
+
+Cell* make_cell_vector(void)
+{
     Cell* v = GC_MALLOC(sizeof(Cell));
     if (!v) {
         fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
@@ -249,7 +290,9 @@ Cell* make_cell_vector(void) {
     return v;
 }
 
-Cell* make_cell_bytevector(void) {
+
+Cell* make_cell_bytevector(void)
+{
     Cell* v = GC_MALLOC(sizeof(Cell));
     if (!v) {
         fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
@@ -261,7 +304,9 @@ Cell* make_cell_bytevector(void) {
     return v;
 }
 
-Cell* make_cell_error(const char* error_string, const err_t error_type) {
+
+Cell* make_cell_error(const char* error_string, const err_t error_type)
+{
     Cell* v = GC_MALLOC(sizeof(Cell));
     if (!v) {
         fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
@@ -273,7 +318,8 @@ Cell* make_cell_error(const char* error_string, const err_t error_type) {
     return v;
 }
 
-Cell* make_cell_port(const char* path, FILE* fh, const int io_t, const int stream_t) {
+Cell* make_cell_port(const char* path, FILE* fh, const int io_t, const int stream_t)
+{
     Cell* v = GC_MALLOC(sizeof(Cell));
     if (!v) {
         fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
@@ -293,26 +339,29 @@ Cell* make_cell_port(const char* path, FILE* fh, const int io_t, const int strea
  *    Cell accessors, destructors, and helpers    *
  * -----------------------------------------------*/
 
-Cell* cell_add(Cell* v, Cell* x) {
+Cell* cell_add(Cell* v, Cell* x)
+{
     v->count++;
     v->cell = GC_REALLOC(v->cell, sizeof(Cell*) * v->count);
     v->cell[v->count-1] = x;
     return v;
 }
 
-Cell* cell_pop(Cell* v, const int i) {
+
+Cell* cell_pop(Cell* v, const int i)
+{
     if (i < 0 || i >= v->count) return nullptr; /* defensive */
 
-    /* Grab item */
+    /* Grab item. */
     Cell* x = v->cell[i];
 
-    /* Shift the memory after the item at "i" over the top */
+    /* Shift the memory after the item at "i" over the top. */
     if (i < v->count - 1) {
         memmove(&v->cell[i], &v->cell[i+1],
                 sizeof(Cell*) * (v->count - i - 1));
     }
 
-    /* Decrease the count of items */
+    /* Decrease the count of items. */
     v->count--;
 
     /* If there are no elements left, free the array and set to NULL.
@@ -320,22 +369,25 @@ Cell* cell_pop(Cell* v, const int i) {
     if (v->count == 0) {
         v->cell = nullptr;
     } else {
-        /* Try to shrink the allocation; keep old pointer on OOM */
+        /* Try to shrink the allocation; keep old pointer on OOM. */
         Cell** tmp = GC_REALLOC(v->cell, sizeof(Cell*) * v->count);
         if (tmp) {
             v->cell = tmp;
-        } /* else: on OOM we keep the old block (safe) */
+        } /* else: on OOM we keep the old block (safe). */
     }
     return x;
 }
 
-/* Take an element out and delete the rest */
-Cell* cell_take(Cell* v, const int i) {
+
+/* Take an element out and delete the rest. */
+Cell* cell_take(Cell* v, const int i)
+{
     Cell* x = cell_pop(v, i);
     return x;
 }
 
-/* Recursively deep-copy all components of a Cell */
+
+/* Recursively deep-copy all components of a Cell. */
 Cell* cell_copy(const Cell* v) {
     if (!v) return nullptr;
 
@@ -358,14 +410,14 @@ Cell* cell_copy(const Cell* v) {
         break;
     case CELL_BOOLEAN:
         /* Not sure why we would ever copy a boolean Cell, but just in case
-         we will just return the global #t or #f singleton */
+         we will just return the global #t or #f singleton. */
         copy = make_cell_boolean(v->boolean_v);
         break;
     case CELL_CHAR:
         copy->char_v = v->char_v;
         break;
     case CELL_SYMBOL:
-        /* Symbols are interned, just grab the pointer */
+        /* Symbols are interned, just grab the pointer. */
         copy = (Cell*)v;
         break;
     case CELL_STRING:
@@ -386,7 +438,7 @@ Cell* cell_copy(const Cell* v) {
             copy->lambda->l_name    = v->lambda->l_name ? GC_strdup(v->lambda->l_name) : nullptr;
             copy->lambda->formals = cell_copy(v->lambda->formals) ;
             copy->lambda->body    = cell_copy(v->lambda->body);
-            copy->lambda->env     = v->lambda->env;   /* DO NOT copy environments; share the pointer */
+            copy->lambda->env     = v->lambda->env;   /* DO NOT copy environments; share the pointer. */
         }
         break;
     case CELL_SEXPR:
@@ -403,7 +455,7 @@ Cell* cell_copy(const Cell* v) {
         }
         break;
     case CELL_NIL:
-        /* return the singleton instead of allocating */
+        /* Return the singleton instead of allocating. */
         return make_cell_nil();
     case CELL_PAIR: {
         copy->car = cell_copy(v->car);
@@ -433,7 +485,7 @@ Cell* cell_copy(const Cell* v) {
         break;
     }
     case CELL_CONT:
-        /* shallow copy (all fields remain zeroed) */
+        /* Shallow copy (all fields remain zeroed). */
         break;
 
     default:
@@ -442,4 +494,3 @@ Cell* cell_copy(const Cell* v) {
     }
     return copy;
 }
-

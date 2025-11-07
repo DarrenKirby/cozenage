@@ -27,7 +27,8 @@
 
 /* (not obj )
  * The not procedure returns #t if obj is false, and returns #f otherwise. */
-Cell* builtin_not(const Lex* e, const Cell* a) {
+Cell* builtin_not(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err;
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
@@ -37,9 +38,11 @@ Cell* builtin_not(const Lex* e, const Cell* a) {
     return make_cell_boolean(0);
 }
 
+
 /* (boolean=? boolean1 boolean2 boolean3 ... )
  * Returns #t if all the arguments are booleans and all are #t or all are #f. */
-Cell* builtin_boolean(const Lex* e, const Cell* a) {
+Cell* builtin_boolean(const Lex* e, const Cell* a)
+{
     (void)e;
     /* Return #t if no args */
     if (a->count == 0) {

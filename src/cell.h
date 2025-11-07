@@ -25,7 +25,7 @@
 #include <unicode/umachine.h>
 
 
-/* enum for error types */
+/* enum for error types. */
 typedef enum {
     GEN_ERR,
     FILE_ERR,
@@ -37,7 +37,7 @@ typedef enum {
     VALUE_ERR,
 } err_t;
 
-/* enums for port types */
+/* enums for port types. */
 typedef enum {
     INPUT_PORT,
     OUTPUT_PORT
@@ -48,9 +48,9 @@ typedef enum {
     BINARY_PORT
 } stream_t;
 
-/* Cell_t type enum */
+/* Cell_t type enum. */
 typedef enum {
-    /* Native Scheme types */
+    /* Native Scheme types. */
     CELL_INTEGER    = 1 << 0,   /* integer */
     CELL_RATIONAL   = 1 << 1,   /* rational */
     CELL_REAL       = 1 << 2,   /* real */
@@ -71,7 +71,7 @@ typedef enum {
     CELL_PORT       = 1 << 14,  /* port */
     CELL_CONT       = 1 << 15,  /* continuation (maybe) */
 
-    /* Internal types */
+    /* Internal types. */
     CELL_ERROR      = 1 << 16,   /* error */
     CELL_SEXPR      = 1 << 17,   /* an array of values */
     CELL_TCS        = 1 << 18,   /* Tail Call Sentinel object */
@@ -80,45 +80,47 @@ typedef enum {
                                     tail-call */
 } Cell_t;
 
-/* Anonymous and named lambdas */
+/* Anonymous and named lambdas. */
 typedef struct Lambda {
-     char* l_name;     /* name of builtin and named lambda procedures */
-     Cell* formals;    /* must be symbols */
-     Cell* body;       /* S-expression for lambda */
-     Lex* env;         /* closure environment */
+     char* l_name;     /* Name of builtin and named lambda procedures. */
+     Cell* formals;    /* Must be symbols. */
+     Cell* body;       /* S-expression for lambda. */
+     Lex* env;         /* Closure environment. */
  } lambda;
+
 
  /* Ports */
 typedef struct Port {
-     char* path;       /* file path of associated fh */
-     FILE* fh;         /* the file handle */
-     int port_t;       /* input or output */
-     int stream_t;     /* binary or textual */
+     char* path;       /* File path of associated fh. */
+     FILE* fh;         /* The file handle. */
+     int port_t;       /* Input or output. */
+     int stream_t;     /* Binary or textual. */
 } port;
 
-/* Definition of the Cell struct/tagged union */
+
+/* Definition of the Cell struct/tagged union. */
 typedef struct Cell {
-    Cell_t type;        /* type of data the Cell holds */
+    Cell_t type;        /* type of data the Cell holds. */
 
     union {
         struct {
-            int count;   /* length of compound type */
+            int count;   /* length of compound type. */
         };
 
         struct {
-            int len;     /* length of proper list (-1 for improper) */
+            int len;     /* length of proper list (-1 for improper). */
         };
 
         struct {
-            int err_t;    /* error type */
+            int err_t;    /* error type. */
         };
 
         struct {
-            bool exact;    /* exact/inexact flag for numerics*/
+            bool exact;    /* exact/inexact flag for numerics. */
         };
 
         struct {
-            bool is_open;  /* port open/closed status */
+            bool is_open;  /* port open/closed status. */
         };
 
         struct {
@@ -128,8 +130,8 @@ typedef struct Cell {
 
     union {
         struct {
-            char* f_name;      /* name of builtin and named lambda procedure */
-            Cell* (*builtin)(const Lex*, const Cell*); /* builtin procedure */
+            char* f_name;      /* name of builtin and named lambda procedure. */
+            Cell* (*builtin)(const Lex*, const Cell*); /* builtin procedure. */
         };
 
         /* Pairs */
@@ -169,6 +171,7 @@ typedef struct Cell {
     };
 } Cell;
 
+
 /* Declare the global singletons */
 extern Cell* val_nil;
 extern Cell* TCS_Obj;
@@ -177,6 +180,7 @@ extern Cell* default_output_port;
 extern Cell* default_error_port;
 void init_default_ports(void);
 void init_global_singletons(void);
+
 
 Cell* make_cell_nil(void);
 Cell* make_cell_boolean(int the_boolean);

@@ -30,8 +30,10 @@
 /* Forward declaration for helpers */
 static void cell_to_string_worker(const Cell* v, string_builder_t *sb, print_mode_t mode);
 
+
 /* Formats reals to have a trailing '.0' for visual feedback to distinguish from an int */
-static void repr_long_double(const long double x, string_builder_t *sb) {
+static void repr_long_double(const long double x, string_builder_t *sb)
+{
     char buf[128];
     snprintf(buf, sizeof buf, "%.15Lg", x);
 
@@ -45,8 +47,10 @@ static void repr_long_double(const long double x, string_builder_t *sb) {
     sb_append_str(sb, buf);
 }
 
+
 /* Generate external representation of proper lists and dotted pairs. */
-static void repr_pair(const Cell* v, string_builder_t *sb, print_mode_t mode) {
+static void repr_pair(const Cell* v, string_builder_t *sb, const print_mode_t mode)
+{
     sb_append_char(sb, '(');
     const Cell* cur = v;
 
@@ -73,6 +77,7 @@ static void repr_pair(const Cell* v, string_builder_t *sb, print_mode_t mode) {
     sb_append_char(sb, ')');
 }
 
+
 /* Generate external representation of sequence types:
  * vector, bytevector, and s-expr. */
 static void repr_sequence(const Cell* v,
@@ -83,7 +88,7 @@ static void repr_sequence(const Cell* v,
                           const char close,
                           string_builder_t *sb,
                           const print_mode_t mode) {
-    if (!v) return;
+    //if (!v) return;
 
     if (prefix) sb_append_fmt(sb, "%s", prefix);
     sb_append_fmt(sb, "%c", open);
@@ -95,10 +100,13 @@ static void repr_sequence(const Cell* v,
     sb_append_fmt(sb, "%c", close);
 }
 
-/* Generate external representations of all Cozenage/Scheme types */
-static void cell_to_string_worker(const Cell* v, string_builder_t *sb,
-                                  const print_mode_t mode) {
 
+/* Generate external representations of all Cozenage/Scheme types. */
+static void cell_to_string_worker(const Cell* v,
+                                  string_builder_t *sb,
+                                  const print_mode_t mode)
+{
+    if (v == NULL) return;
     switch (v->type) {
         case CELL_REAL:
             repr_long_double(v->real_v, sb);
@@ -117,7 +125,7 @@ static void cell_to_string_worker(const Cell* v, string_builder_t *sb,
 
             const long double im = cell_to_long_double(v->imag);
             if (im < 0) {
-                /* already negative */
+                /* Already negative. */
                 cell_to_string_worker(v->imag, sb, mode);
             } else {
                 sb_append_char(sb, '+');
@@ -181,12 +189,11 @@ static void cell_to_string_worker(const Cell* v, string_builder_t *sb,
 
         case CELL_STRING:
             if (mode == MODE_DISPLAY) {
-                /* `display` prints the raw string */
+                /* `display` prints the raw string. */
                 sb_append_str(sb, v->str);
             } else {
-                /* `write` and `REPL` print the quoted/escaped string */
+                /* `write` and `REPL` print the quoted/escaped string. */
                 sb_append_char(sb, '"');
-                /* TODO: escape quotes/backslashes in v->str */
                 const int len = (int)strlen(v->str);
                 for (int i = 0; i < len; i++) {
                     const char c = v->str[i];
@@ -195,13 +202,13 @@ static void cell_to_string_worker(const Cell* v, string_builder_t *sb,
                     case '\t': sb_append_str(sb, "\\t"); break;
                     case '\"': sb_append_str(sb, "\\\""); break;
                     case '\\': sb_append_str(sb, "\\\\"); break;
-                        // ... (and so on for \r, \a, etc.)
+                        /* TODO... (and so on for \r, \a, etc.) */
                     default:
-                        // Check if it's a printable character
+                        /* Check if it's a printable character. */
                         if (isprint(c)) {
                             sb_append_char(sb, c);
                         } else {
-                            // Print non-printable chars as hex escapes
+                            /* Print non-printable chars as hex escapes. */
                             sb_append_fmt(sb, "\\x%02x;", (unsigned char)c);
                         }
                     }
@@ -273,21 +280,30 @@ static void cell_to_string_worker(const Cell* v, string_builder_t *sb,
 
         default:
             /* This code should never run, but it's here if a cell type gets
-             * corrupted internally somehow */
+             * corrupted internally somehow. */
             fprintf(stderr, "%sError:%s cell_to_string_worker: unknown type: '%s%d%s'", ANSI_RED_B,
                 ANSI_RESET, ANSI_RED_B, v->type, ANSI_RESET);
         }
     }
 
+
 /* Generates the external representation of a Cell as a string. */
-char* cell_to_string(const Cell* cell, const print_mode_t mode) {
+char* cell_to_string(const Cell* cell, const print_mode_t mode)
+{
+    if (cell == NULL) return "";
     string_builder_t *sb = sb_new();
     cell_to_string_worker(cell, sb, mode);
     return sb->buffer;
 }
 
+
 /* Helper for debugging */
-void debug_print_cell(const Cell* v) {
+void debug_print_cell(const Cell* v)
+{
+    if (v == NULL) {
+        printf("null cell\n");
+        return;
+    }
     char* s = cell_to_string(v, MODE_REPL);
     printf("%s\n", s);
 }

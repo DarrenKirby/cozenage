@@ -30,7 +30,8 @@
 
 /* Helper for other string procedures.
  * Like strlen, but works with UTF8 */
-static int32_t string_length(const Cell* string) {
+static int32_t string_length(const Cell* string)
+{
     const char* s = string->str;
     const int32_t len_bytes = (int)strlen(s);
 
@@ -56,7 +57,8 @@ static int32_t string_length(const Cell* string) {
 
 /* (string char ... )
 * Returns a newly allocated string composed of the arguments. It is analogous to list. */
-Cell* builtin_string(const Lex* e, const Cell* a) {
+Cell* builtin_string(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = check_arg_types(a, CELL_CHAR);
     if (err) return err;
@@ -76,7 +78,8 @@ Cell* builtin_string(const Lex* e, const Cell* a) {
 
 /* (string-length string)
  * Returns the number of characters in the given string. */
-Cell* builtin_string_length(const Lex* e, const Cell* a) {
+Cell* builtin_string_length(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
@@ -89,7 +92,8 @@ Cell* builtin_string_length(const Lex* e, const Cell* a) {
 }
 
 /* */
-Cell* builtin_string_eq_pred(const Lex* e, const Cell* a) {
+Cell* builtin_string_eq_pred(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING);
     if (err) return err;
@@ -116,7 +120,8 @@ Cell* builtin_string_eq_pred(const Lex* e, const Cell* a) {
     return make_cell_boolean(1);
 }
 
-Cell* builtin_string_lt_pred(const Lex* e, const Cell* a) {
+Cell* builtin_string_lt_pred(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING);
     if (err) return err;
@@ -138,7 +143,8 @@ Cell* builtin_string_lt_pred(const Lex* e, const Cell* a) {
     return make_cell_boolean(1);
 }
 
-Cell* builtin_string_lte_pred(const Lex* e, const Cell* a) {
+Cell* builtin_string_lte_pred(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING);
     if (err) return err;
@@ -160,7 +166,8 @@ Cell* builtin_string_lte_pred(const Lex* e, const Cell* a) {
     return make_cell_boolean(1);
 }
 
-Cell* builtin_string_gt_pred(const Lex* e, const Cell* a) {
+Cell* builtin_string_gt_pred(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING);
     if (err) return err;
@@ -182,7 +189,8 @@ Cell* builtin_string_gt_pred(const Lex* e, const Cell* a) {
     return make_cell_boolean(1);
 }
 
-Cell* builtin_string_gte_pred(const Lex* e, const Cell* a) {
+Cell* builtin_string_gte_pred(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING);
     if (err) return err;
@@ -207,7 +215,8 @@ Cell* builtin_string_gte_pred(const Lex* e, const Cell* a) {
 /* (string-append string ...)
  * Returns a newly allocated string whose characters are the concatenation of the characters in the
  * given strings. */
-Cell* builtin_string_append(const Lex* e, const Cell* a) {
+Cell* builtin_string_append(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING);
     if (err) return err;
@@ -246,7 +255,8 @@ Cell* builtin_string_append(const Lex* e, const Cell* a) {
 * It is an error if k is not a valid index of string. The string-ref procedure returns character k
 * of string using zero-origin indexing. There is no requirement for this procedure to execute in
 * constant time. */
-Cell* builtin_string_ref(const Lex* e, const Cell* a) {
+Cell* builtin_string_ref(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2);
     if (err) return err;
@@ -295,7 +305,8 @@ Cell* builtin_string_ref(const Lex* e, const Cell* a) {
  * The make-string procedure returns a newly allocated string of length k. If char is given, then
  * all the characters of the string are initialized to char, otherwise the contents of the string
  * are initialized to a space: " " aka 0x0020 */
-Cell* builtin_make_string(const Lex* e, const Cell* a) {
+Cell* builtin_make_string(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_RANGE(a, 1, 2);
     if (err) return err;
@@ -347,7 +358,8 @@ Cell* builtin_make_string(const Lex* e, const Cell* a) {
  * (string->list string start end)
  * The string->list procedure returns a newly allocated list of the characters of string between
  * start and end. */
-Cell* builtin_string_list(const Lex* e, const Cell* a) {
+Cell* builtin_string_list(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_RANGE(a, 1, 3);
     if (err) return err;
@@ -422,7 +434,8 @@ Cell* builtin_string_list(const Lex* e, const Cell* a) {
  * It is an error if any element of list is not a character. list->string returns a newly allocated
  * string formed from the elements in the list. Order is preserved. string->list and list->string
  * are inverses so far as equal? is concerned. */
-Cell* builtin_list_string(const Lex* e, const Cell* a) {
+Cell* builtin_list_string(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
@@ -505,7 +518,8 @@ Cell* builtin_list_string(const Lex* e, const Cell* a) {
  * The substring procedure returns a newly allocated string formed from the characters of string
  * beginning with index start and ending with index end. This is equivalent to calling string-copy
  * with the same arguments, but is provided for backward compatibility and stylistic flexibility. */
-Cell* builtin_substring(const Lex* e, const Cell* a) {
+Cell* builtin_substring(const Lex* e, const Cell* a)
+{
     /* Just check that we have 3 args and kick it to string-copy... */
     Cell* err = CHECK_ARITY_EXACT(a, 3);
     if (err) return err;
@@ -515,7 +529,9 @@ Cell* builtin_substring(const Lex* e, const Cell* a) {
 /* (string-set! string k char)
  * It is an error if k is not a valid index of string. The string-set! procedure stores char in
  * element k of string. */
-Cell* builtin_string_set_bang(const Lex* e, const Cell* a) {
+Cell* builtin_string_set_bang(const Lex* e, const Cell* a)
+{
+    /* TODO */
     (void)e;
     (void)a;
     return make_cell_error("Not implemented yet", VALUE_ERR);
@@ -525,7 +541,8 @@ Cell* builtin_string_set_bang(const Lex* e, const Cell* a) {
  * (string-copy string start )
  * (string-copy string start end )
  * Returns a newly allocated copy of the part of the given string between start and end. */
-Cell* builtin_string_copy(const Lex* e, const Cell* a) {
+Cell* builtin_string_copy(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_RANGE(a, 1, 3);
     if (err) return err;
@@ -617,12 +634,13 @@ Cell* builtin_string_copy(const Lex* e, const Cell* a) {
  * source is first copied into a temporary string and then into the destination. This can be
  * achieved without allocating storage by making sure to copy in the correct direction in such
  * circumstances. */
-Cell* builtin_string_copy_bang(const Lex* e, const Cell* a) {
+Cell* builtin_string_copy_bang(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_RANGE(a, 3, 5);
     if (err) return err;
 
-    /* Validate Arg Types */
+    /* Validate Arg Types. */
     if (a->cell[0]->type != CELL_STRING)
         return make_cell_error(
             "string-copy!: arg 1 must be a string (to)",
@@ -636,20 +654,20 @@ Cell* builtin_string_copy_bang(const Lex* e, const Cell* a) {
             "string-copy!: arg 3 must be a string (from)",
             TYPE_ERR);
 
-    /* Get 'to' string and 'at' index */
+    /* Get 'to' string and 'at' index. */
     Cell* to_cell = a->cell[0];
     const char* to_str = to_cell->str;
     const int32_t to_char_len = string_length(to_cell);
     const int32_t to_byte_len = (int32_t)strlen(to_str);
     const int32_t to_start_idx = (int32_t)a->cell[1]->integer_v;
 
-    /* Get 'from' string and 'start'/'end' indices */
+    /* Get 'from' string and 'start'/'end' indices. */
     const char* from_str = a->cell[2]->str;
     const int32_t from_char_len = string_length(a->cell[2]);
     const int32_t from_byte_len = (int32_t)strlen(from_str);
 
     int32_t from_start_idx = 0;
-    int32_t from_end_idx = from_char_len; /* Default to char length */
+    int32_t from_end_idx = from_char_len; /* Default to char length. */
 
     if (a->count >= 4) {
         if (a->cell[3]->type != CELL_INTEGER)
@@ -666,7 +684,7 @@ Cell* builtin_string_copy_bang(const Lex* e, const Cell* a) {
         from_end_idx = (int32_t)a->cell[4]->integer_v;
     }
 
-    /* R7RS Index Validation */
+    /* R7RS Index Validation. */
     if (to_start_idx < 0 || to_start_idx > to_char_len)
         return make_cell_error(
             "string-copy!: 'at' index is out of bounds for 'to' string",
@@ -684,7 +702,7 @@ Cell* builtin_string_copy_bang(const Lex* e, const Cell* a) {
             "string-copy!: 'start' index cannot be greater than 'end' index",
             INDEX_ERR);
 
-    /* R7RS Destination Bounds Check */
+    /* R7RS Destination Bounds Check. */
     const int32_t code_points_to_copy = from_end_idx - from_start_idx;
     const int32_t to_available_chars = to_char_len - to_start_idx;
 
@@ -694,13 +712,13 @@ Cell* builtin_string_copy_bang(const Lex* e, const Cell* a) {
             VALUE_ERR);
     }
 
-    /* Calculate all BYTE offsets */
+    /* Calculate all BYTE offsets. */
 
     /* 'to' prefix (before 'at') */
     int32_t to_prefix_byte_end = 0;
     U8_FWD_N(to_str, to_prefix_byte_end, to_byte_len, to_start_idx);
 
-    /* 'from' substring */
+    /* 'from' substring. */
     int32_t from_byte_start = 0;
     U8_FWD_N(from_str, from_byte_start, from_byte_len, from_start_idx);
     int32_t from_byte_end = from_byte_start;
@@ -722,18 +740,18 @@ Cell* builtin_string_copy_bang(const Lex* e, const Cell* a) {
         exit(EXIT_FAILURE);
     }
 
-    /* Copy part 1: 'to' prefix */
+    /* Copy part 1: 'to' prefix. */
     memcpy(new_str, to_str, to_prefix_bytes);
 
-    /* Copy part 2: 'from' substring */
+    /* Copy part 2: 'from' substring. */
     memcpy(new_str + to_prefix_bytes, from_str + from_byte_start, bytes_to_copy);
 
-    /* Copy part 3: 'to' suffix */
+    /* Copy part 3: 'to' suffix. */
     memcpy(new_str + to_prefix_bytes + bytes_to_copy, to_str + to_suffix_byte_start, to_suffix_bytes);
 
     new_str[new_total_bytes] = '\0';
 
-    /* Mutate the Cell and return */
+    /* Mutate the Cell and return. */
     to_cell->str = new_str;
     return to_cell;
 }
@@ -743,7 +761,9 @@ Cell* builtin_string_copy_bang(const Lex* e, const Cell* a) {
  * (string-fill! string fill start end)
  * It is an error if fill is not a character. The string-fill! procedure stores fill in the elements
  * of string between start and end. */
-Cell* builtin_string_fill(const Lex* e, const Cell* a) {
+Cell* builtin_string_fill(const Lex* e, const Cell* a)
+{
+    /* TODO */
     (void)e;
     (void)a;
     return make_cell_error("Not implemented yet", VALUE_ERR);
