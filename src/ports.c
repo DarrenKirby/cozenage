@@ -257,3 +257,41 @@ Cell* builtin_eof(const Lex* e, const Cell* a) {
 
     return make_cell_eof();
 }
+
+/* (read-error? obj) */
+Cell* builtin_read_error(const Lex* e, const Cell* a)
+{
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    if (err) return err;
+
+    const Cell* obj = a->cell[0];
+    if (obj->type != CELL_ERROR) {
+        return make_cell_boolean(0);
+    }
+
+    if (obj->err_t != READ_ERR) {
+        return make_cell_boolean(0);
+    }
+
+    return make_cell_boolean(1);
+}
+
+/* (file-error? obj) */
+Cell* builtin_file_error(const Lex* e, const Cell* a)
+{
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    if (err) return err;
+
+    const Cell* obj = a->cell[0];
+    if (obj->type != CELL_ERROR) {
+        return make_cell_boolean(0);
+    }
+
+    if (obj->err_t != FILE_ERR) {
+        return make_cell_boolean(0);
+    }
+
+    return make_cell_boolean(1);
+}
