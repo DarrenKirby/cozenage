@@ -71,5 +71,6 @@ void init_special_forms(void);
 Cell* builtin_string_to_symbol(const Lex* e, const Cell* a);
 Cell* builtin_symbol_to_string(const Lex* e, const Cell* a);
 Cell* builtin_symbol_equal_pred(const Lex* e, const Cell* a);
+Cell* builtin_features(const Lex* e, const Cell* a);
 
 #endif //COZENAGE_SYMBOLS_H

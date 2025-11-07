@@ -20,6 +20,16 @@
 #include "symbols.h"
 #include "cell.h"
 #include "types.h"
+#include "special_forms.h"
+
+/* For _POSIX_VERSION */
+#include <unistd.h>
+/* For uname */
+#include <string.h>
+#include <errno.h>
+#include <sys/utsname.h>
+
+#include "main.h"
 
 
 /* Declare the symbol table */
@@ -127,7 +137,8 @@ Cell* builtin_string_to_symbol(const Lex* e, const Cell* a) {
     return make_cell_symbol(a->cell[0]->str);
 }
 
-Cell* builtin_symbol_to_string(const Lex* e, const Cell* a) {
+Cell* builtin_symbol_to_string(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
@@ -135,4 +146,48 @@ Cell* builtin_symbol_to_string(const Lex* e, const Cell* a) {
         return make_cell_error("symbol->string: arg 1 must be a symbol", TYPE_ERR);
     }
     return make_cell_string(a->cell[0]->sym);
+}
+
+/* This may not belong in this file - but it's a short file,
+ * and is as good a place as any to define this. */
+Cell* builtin_features(const Lex* e, const Cell* a)
+{
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 0);
+    if (err) return err;
+
+    Cell* result_l = make_cell_sexpr();
+    /* Start by adding all the builtin features always present */
+    char* feature_array[] =  {
+        "exact-closed", "exact-complex", "ieee-float", "full-unicode", "ratios"
+    };
+    const int feature_count = sizeof(feature_array) / sizeof(feature_array[0]);
+
+    for (int i = 0; i < feature_count; i++) {
+        cell_add(result_l, make_cell_symbol(feature_array[i]));
+    }
+
+#ifdef _POSIX_VERSION
+    cell_add(result_l, make_cell_symbol("posix"));
+#endif
+
+    struct utsname uts;
+    if (uname(&uts) == -1) {
+        fprintf(stderr, "uname failed: %s\n", strerror(errno));
+    }
+    cell_add(result_l, make_cell_symbol(uts.sysname));
+    cell_add(result_l, make_cell_symbol(uts.machine));
+
+    /* Check byte order */
+    const char* endianess = U_IS_BIG_ENDIAN ? "big-endian" : "little-endian";
+    cell_add(result_l, make_cell_symbol(endianess));
+
+    /* Add Cozenage name and version */
+    cell_add(result_l, make_cell_symbol(APP_NAME));
+
+    char buf[64];
+    snprintf(buf, sizeof(buf), "%s-%s", APP_NAME, APP_VERSION);
+    cell_add(result_l, make_cell_symbol(buf));
+
+    return sexpr_to_list(result_l);
 }

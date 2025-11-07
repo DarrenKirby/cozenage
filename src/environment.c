@@ -320,6 +320,7 @@ void lex_add_builtins(const Lex* e)
     lex_add_builtin(e, "char>?", builtin_char_gt_pred);
     lex_add_builtin(e, "char>=?", builtin_char_gte_pred);
     /* Symbol and string procedures. */
+    lex_add_builtin(e, "features", builtin_features);
     lex_add_builtin(e, "symbol=?", builtin_symbol_equal_pred);
     lex_add_builtin(e, "symbol->string", builtin_symbol_to_string);
     lex_add_builtin(e, "string->symbol", builtin_string_to_symbol);
