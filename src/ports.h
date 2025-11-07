@@ -34,6 +34,8 @@ Cell* builtin_input_port_open(const Lex* e, const Cell* a);
 Cell* builtin_output_port_open(const Lex* e, const Cell* a);
 Cell* builtin_close_port(const Lex* e, const Cell* a);
 Cell* builtin_read_line(const Lex* e, const Cell* a);
+Cell* builtin_read_char(const Lex* e, const Cell* a);
+Cell* builtin_peek_char(const Lex* e, const Cell* a);
 Cell* builtin_write_string(const Lex* e, const Cell* a);
 Cell* builtin_newline(const Lex* e, const Cell* a);
 Cell* builtin_eof(const Lex* e, const Cell* a);

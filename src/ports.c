@@ -151,6 +151,62 @@ Cell* builtin_read_line(const Lex* e, const Cell* a) {
     return result;
 }
 
+Cell* builtin_read_char(const Lex* e, const Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_RANGE(a, 0, 1);
+    if (err) return err;
+    err = check_arg_types(a, CELL_PORT);
+    if (err) return err;
+
+    Cell* port;
+    if (a->count == 0) {
+        port = builtin_current_input_port(e, a);
+    } else {
+        port = a->cell[0];
+    }
+
+    if (port->is_open == 0 || port->port->port_t != INPUT_PORT)
+        return make_cell_error("port is not open for input", GEN_ERR);
+
+    /* TODO: need to use feof() to tell EOF from error? */
+    const int c = fgetc(port->port->fh);
+    if (c == EOF) {
+        return make_cell_eof();
+    }
+    return make_cell_char(c);
+}
+
+Cell* builtin_peek_char(const Lex* e, const Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_RANGE(a, 0, 1);
+    if (err) return err;
+    err = check_arg_types(a, CELL_PORT);
+    if (err) return err;
+
+    Cell* port;
+    if (a->count == 0) {
+        port = builtin_current_input_port(e, a);
+    } else {
+        port = a->cell[0];
+    }
+
+    if (port->is_open == 0 || port->port->port_t != INPUT_PORT)
+        return make_cell_error("port is not open for input", GEN_ERR);
+
+    /* TODO: need to use feof() to tell EOF from error? */
+    const int c = fgetc(port->port->fh);
+    const int pb_c = ungetc(c, port->port->fh);
+    if (c == EOF) {
+        return make_cell_eof();
+    }
+    if (pb_c == EOF) {
+       return make_cell_error(
+           "char pushback failed!",
+           FILE_ERR);
+    }
+    return make_cell_char(c);
+}
+
 Cell* builtin_write_string(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_RANGE(a, 1, 4);
