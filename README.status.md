@@ -84,7 +84,7 @@ This document tracks the implementation status of the R7RS standard libraries in
 |   ❌    | `floor-quotient`                 |
 |   ✅    | `floor-remainder`                |
 |   ❌    | `floor/`                         |
-|   ❌    | `flush-output-port`              |
+|    ✅    | `flush-output-port`              |
 |   ✅    | `for-each`                       |
 |   ✅    | `gcd`                            |
 |   ❌    | `get-output-bytevector`          |
