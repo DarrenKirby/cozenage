@@ -295,3 +295,27 @@ Cell* builtin_file_error(const Lex* e, const Cell* a)
 
     return make_cell_boolean(1);
 }
+
+/* (flush-output-port) procedure
+(flush-output-port port ) */
+Cell* builtin_flush_output_port(const Lex* e, const Cell* a)
+{
+    (void)e;
+    Cell* err = CHECK_ARITY_RANGE(a, 0, 1);
+    if (err) return err;
+
+    Cell* port;
+    if (a->count == 0) {
+        port = builtin_current_output_port(e, a);
+    } else {
+        err = check_arg_types(a, CELL_PORT);
+        if (err) return err;
+        port = a->cell[0];
+    }
+
+    int es;
+    if ((es = fflush(port->port->fh)) != 0) {
+        return make_cell_error(strerror(es), FILE_ERR);
+    }
+    return nullptr;
+}

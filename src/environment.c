@@ -365,6 +365,7 @@ void lex_add_builtins(const Lex* e)
     lex_add_builtin(e, "write-string", builtin_write_string);
     lex_add_builtin(e, "newline", builtin_newline);
     lex_add_builtin(e, "eof-object", builtin_eof);
+    lex_add_builtin(e, "flush-output-port", builtin_flush_output_port);
     /* Error procedures. */
     lex_add_builtin(e, "read-error?", builtin_read_error);
     lex_add_builtin(e, "file-error?", builtin_file_error);

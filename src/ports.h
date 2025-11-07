@@ -41,5 +41,6 @@ Cell* builtin_newline(const Lex* e, const Cell* a);
 Cell* builtin_eof(const Lex* e, const Cell* a);
 Cell* builtin_read_error(const Lex* e, const Cell* a);
 Cell* builtin_file_error(const Lex* e, const Cell* a);
+Cell* builtin_flush_output_port(const Lex* e, const Cell* a);
 
 #endif //COZENAGE_PORTS_H
