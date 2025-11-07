@@ -15,7 +15,6 @@ This document tracks the implementation status of the R7RS standard libraries in
 |   ✅    | `<`                              |
 |   ✅    | `<=`                             |
 |   ✅    | `=`                              |
-|   ✅    | `=>`                             |
 |   ✅    | `>`                              |
 |   ✅    | `>=`                             |
 |   ✅    | `abs`                            |
@@ -72,7 +71,7 @@ This document tracks the implementation status of the R7RS standard libraries in
 |   ❌    | `error`                          |
 |   ❌    | `error-object-irritants`         |
 |   ❌    | `error-object-message`           |
-|   ❌    | `error-object?`                  |
+|   ✅    | `error-object?`                  |
 |   ✅    | `even?`                          |
 |   ✅    | `exact`                          |
 |   ❌    | `exact-integer-sqrt`             |
@@ -80,7 +79,7 @@ This document tracks the implementation status of the R7RS standard libraries in
 |   ✅    | `exact?`                         |
 |   ✅    | `expt`                           |
 |   ❌    | `features`                       |
-|   ❌    | `file-error?`                    |
+|   ✅    | `file-error?`                    |
 |   ✅    | `floor`                          |
 |   ❌    | `floor-quotient`                 |
 |   ✅    | `floor-remainder`                |
@@ -148,7 +147,7 @@ This document tracks the implementation status of the R7RS standard libraries in
 |   ❌    | `read-bytevector`                |
 |   ❌    | `read-bytevector!`               |
 |   ✅    | `read-char`                      |
-|   ❌    | `read-error?`                    |
+|   ✅    | `read-error?`                    |
 |   ✅    | `read-line`                      |
 |   ❌    | `read-string`                    |
 |   ❌    | `read-u8`                        |
