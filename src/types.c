@@ -222,7 +222,8 @@ Cell* make_sexpr_len4(const Cell* a, const Cell* b, const Cell* c, const Cell* d
     return v;
 }
 
-Cell* make_sexpr_from_list(Cell* v) {
+Cell* make_sexpr_from_list(Cell* v)
+{
     Cell* result = make_cell_sexpr();
     int count;
 
@@ -265,7 +266,8 @@ Cell* make_sexpr_from_list(Cell* v) {
 }
 
 /* Constructs an S-expression from a C array of Cell pointers. */
-Cell* make_sexpr_from_array(const int count, Cell** cells) {
+Cell* make_sexpr_from_array(const int count, Cell** cells)
+{
     Cell* v = make_cell_sexpr();
     v->count = count;
     v->cell = GC_MALLOC(sizeof(Cell*) * count);
@@ -278,7 +280,8 @@ Cell* make_sexpr_from_array(const int count, Cell** cells) {
     return v;
 }
 
-Cell* flatten_sexpr(const Cell* sexpr) {
+Cell* flatten_sexpr(const Cell* sexpr)
+{
     /* Calculate the total size of the flattened S-expression */
     int new_count = 0;
     for (int i = 0; i < sexpr->count; i++) {
@@ -323,7 +326,8 @@ Cell* flatten_sexpr(const Cell* sexpr) {
  * ------------------------------------------*/
 
 /* Helper to check if a non-complex numeric cell has a value of zero. */
-bool cell_is_real_zero(const Cell* c) {
+bool cell_is_real_zero(const Cell* c)
+{
     if (!c) return false;
     switch (c->type) {
         case CELL_INTEGER:
@@ -339,7 +343,8 @@ bool cell_is_real_zero(const Cell* c) {
 }
 
 /* Helper to check if a cell represents an integer value, per R7RS tower. */
-bool cell_is_integer(const Cell* c) {
+bool cell_is_integer(const Cell* c)
+{
     if (!c) return false;
 
     const long double num = cell_to_long_double(c);
@@ -366,7 +371,8 @@ bool cell_is_integer(const Cell* c) {
 }
 
 /* Checks if a number is real-valued (i.e., has a zero imaginary part). */
-bool cell_is_real(const Cell* c) {
+bool cell_is_real(const Cell* c)
+{
     if (!c) return false;
 
     const long double num = cell_to_long_double(c);
@@ -389,7 +395,8 @@ bool cell_is_real(const Cell* c) {
 
 /* Helper for positive? (> 0)
  * Note: R7RS 'positive?' is strictly greater than 0. */
-bool cell_is_positive(const Cell* c) {
+bool cell_is_positive(const Cell* c)
+{
     if (!c) return false;
 
     const long double num = cell_to_long_double(c);
@@ -406,7 +413,8 @@ bool cell_is_positive(const Cell* c) {
 }
 
 /* Helper for negative? (< 0) */
-bool cell_is_negative(const Cell* c) {
+bool cell_is_negative(const Cell* c)
+{
     if (!c) return false;
 
     const long double num = cell_to_long_double(c);
@@ -423,7 +431,8 @@ bool cell_is_negative(const Cell* c) {
 }
 
 /* Helper for odd? */
-bool cell_is_odd(const Cell* c) {
+bool cell_is_odd(const Cell* c)
+{
     /* Must be an integer to be odd or even. */
     if (!cell_is_integer(c)) {
         return 0;
@@ -447,7 +456,8 @@ bool cell_is_odd(const Cell* c) {
 }
 
 /* Helper for even? */
-bool cell_is_even(const Cell* c) {
+bool cell_is_even(const Cell* c)
+{
     /* Must be an integer to be odd or even. */
     if (!cell_is_integer(c)) {
         return false;
@@ -471,7 +481,8 @@ bool cell_is_even(const Cell* c) {
 }
 
 
-Cell* negate_numeric(const Cell* x) {
+Cell* negate_numeric(const Cell* x)
+{
     switch (x->type) {
         case CELL_INTEGER:
             return make_cell_integer(-x->integer_v);
@@ -490,7 +501,8 @@ Cell* negate_numeric(const Cell* x) {
 }
 
 /* gcd helper, iterative and safe */
-static long int gcd_ll(long int a, long int b) {
+static long int gcd_ll(long int a, long int b)
+{
     if (a < 0) a = -a;
     if (b < 0) b = -b;
     while (b != 0) {
@@ -502,7 +514,8 @@ static long int gcd_ll(long int a, long int b) {
 }
 
 /* simplify rational: reduce to the lowest terms, normalize sign */
-Cell* simplify_rational(Cell* v) {
+Cell* simplify_rational(Cell* v)
+{
     if (v->type != CELL_RATIONAL) {
         return v; /* nothing to do */
     }
@@ -535,7 +548,8 @@ Cell* simplify_rational(Cell* v) {
 }
 
 /* Helper for performing arithmetic on complex numbers */
-void complex_apply(BuiltinFn fn, const Lex* e, Cell* result, const Cell* rhs) {
+void complex_apply(BuiltinFn fn, const Lex* e, Cell* result, const Cell* rhs)
+{
     if (fn == builtin_add || fn == builtin_sub) {
         /* addition/subtraction: elementwise using recursion */
         const Cell* real_args = make_sexpr_len2(result->real, rhs->real);
