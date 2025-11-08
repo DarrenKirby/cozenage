@@ -30,7 +30,7 @@
 
 /* Helper for other string procedures.
  * Like strlen, but works with UTF8 */
-static int32_t string_length(const Cell* string)
+int32_t string_length(const Cell* string)
 {
     const char* s = string->str;
     const int32_t len_bytes = (int)strlen(s);

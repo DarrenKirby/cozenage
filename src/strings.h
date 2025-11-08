@@ -24,6 +24,7 @@
 
 
 /* String constructors, selectors, and procedures */
+int32_t string_length(const Cell* string);
 Cell* builtin_string(const Lex* e, const Cell* a);
 Cell* builtin_string_length(const Lex* e, const Cell* a);
 Cell* builtin_string_eq_pred(const Lex* e, const Cell* a);
