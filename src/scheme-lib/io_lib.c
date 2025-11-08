@@ -25,7 +25,6 @@
 
 
 Cell* builtin_display(const Lex* e, const Cell* a) {
-    (void)e;
     Cell* err = CHECK_ARITY_RANGE(a, 1, 2);
     if (err) return err;
 
@@ -43,6 +42,45 @@ Cell* builtin_display(const Lex* e, const Cell* a) {
     return nullptr;
 }
 
+/* TODO: does not handle circular objects/datum labels */
+Cell* builtin_write(const Lex* e, const Cell* a) {
+    Cell* err = CHECK_ARITY_RANGE(a, 1, 2);
+    if (err) return err;
+
+    Cell* port;
+    if (a->count == 1) {
+        port = builtin_current_output_port(e, a);
+    } else {
+        if (a->cell[1]->type != CELL_PORT) {
+            return make_cell_error("arg1 must be a port", TYPE_ERR);
+        }
+        port = a->cell[1];
+    }
+    const Cell* val = a->cell[0];
+    fprintf(port->port->fh, "%s", cell_to_string(val, MODE_WRITE));
+    return nullptr;
+}
+
+Cell* builtin_write_simple(const Lex* e, const Cell* a) {
+    Cell* err = CHECK_ARITY_RANGE(a, 1, 2);
+    if (err) return err;
+
+    Cell* port;
+    if (a->count == 1) {
+        port = builtin_current_output_port(e, a);
+    } else {
+        if (a->cell[1]->type != CELL_PORT) {
+            return make_cell_error("arg1 must be a port", TYPE_ERR);
+        }
+        port = a->cell[1];
+    }
+    const Cell* val = a->cell[0];
+    fprintf(port->port->fh, "%s", cell_to_string(val, MODE_WRITE));
+    return nullptr;
+}
+
 void lex_add_write_lib(const Lex* e) {
     lex_add_builtin(e, "display", builtin_display);
+    lex_add_builtin(e, "write", builtin_write);
+    lex_add_builtin(e, "write-simple", builtin_write_simple);
 }

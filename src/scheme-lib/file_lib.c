@@ -112,7 +112,7 @@ Cell* builtin_open_output_file(const Lex* e, const Cell* a) {
     err = CHECK_ARITY_RANGE(a, 1, 2);
     if (err) { return err; }
 
-    char *mode = "w";
+    const char *mode = "w";
     const char* filename = a->cell[0]->str;
     if (a->count == 2 && a->cell[1]->type == CELL_STRING) {
         mode = a->cell[1]->str;
@@ -140,7 +140,7 @@ Cell* builtin_open_binary_output_file(const Lex* e, const Cell* a) {
     if (err) { return err; }
 
     const char* filename = a->cell[0]->str;
-    FILE *fp = fopen(filename, "r");
+    FILE *fp = fopen(filename, "w");
     if (fp == NULL) {
         return make_cell_error(strerror(errno), FILE_ERR);
     }

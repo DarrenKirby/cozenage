@@ -363,7 +363,10 @@ void lex_add_builtins(const Lex* e)
     lex_add_builtin(e, "read-line", builtin_read_line);
     lex_add_builtin(e, "read-char", builtin_read_char);
     lex_add_builtin(e, "peek-char", builtin_peek_char);
+    lex_add_builtin(e, "write-char", builtin_write_char);
     lex_add_builtin(e, "write-string", builtin_write_string);
+    lex_add_builtin(e, "write-u8", builtin_write_u8);
+    lex_add_builtin(e, "write-bytevector", builtin_write_bytevector);
     lex_add_builtin(e, "newline", builtin_newline);
     lex_add_builtin(e, "eof-object", builtin_eof);
     lex_add_builtin(e, "flush-output-port", builtin_flush_output_port);

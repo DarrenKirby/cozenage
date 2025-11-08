@@ -19,9 +19,11 @@
 
 #include "ports.h"
 #include "types.h"
+#include "strings.h"
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <wchar.h>
 
 
 /*-------------------------------------------------------*
@@ -116,6 +118,7 @@ Cell* builtin_close_port(const Lex* e, const Cell* a) {
     }
 
     if (a->cell[0]->is_open == 1) {
+        fflush(a->cell[0]->port->fh);
         fclose(a->cell[0]->port->fh);
         a->cell[0]->is_open = 0;
     }
@@ -207,14 +210,13 @@ Cell* builtin_peek_char(const Lex* e, const Cell* a) {
     return make_cell_char(c);
 }
 
-Cell* builtin_write_string(const Lex* e, const Cell* a) {
-    (void)e;
-    Cell* err = CHECK_ARITY_RANGE(a, 1, 4);
+Cell* builtin_write_char(const Lex* e, const Cell* a) {
+    Cell* err = CHECK_ARITY_RANGE(a, 1, 2);
     if (err) return err;
-    if (a->cell[0]->type != CELL_STRING) {
-        return make_cell_error("arg1 must be a string", TYPE_ERR);
+    if (a->cell[0]->type != CELL_CHAR) {
+        return make_cell_error("arg1 must be a char", TYPE_ERR);
     }
-    if (a->count >= 2) {
+    if (a->count == 2) {
         if (a->cell[1]->type != CELL_PORT) {
             return make_cell_error("arg2 must be a port", TYPE_ERR);
         }
@@ -225,15 +227,146 @@ Cell* builtin_write_string(const Lex* e, const Cell* a) {
     } else {
         port = a->cell[1];
     }
-    if (fputs(a->cell[0]->str, port->port->fh) == EOF) {
+
+    if (fputwc(a->cell[0]->char_v, port->port->fh) == EOF) {
+        char buf[256];
+        snprintf(buf, sizeof(buf), "write-char failed: %s", strerror(errno));
+    }
+    return nullptr;
+}
+
+Cell* builtin_write_string(const Lex* e, const Cell* a) {
+    Cell* err = CHECK_ARITY_RANGE(a, 1, 4);
+    if (err) return err;
+    if (a->cell[0]->type != CELL_STRING) {
+        return make_cell_error("arg1 must be a string", TYPE_ERR);
+    }
+    if (a->count >= 2) {
+        if (a->cell[1]->type != CELL_PORT) {
+            return make_cell_error("arg2 must be a port", TYPE_ERR);
+        }
+    }
+
+    int start = 0;
+    int end = 0;
+    int num_chars = string_length(a->cell[0]);
+
+    if (a->count >= 3) {
+        if (a->cell[2]->type != CELL_INTEGER) {
+            return make_cell_error("arg3 must be an integer", TYPE_ERR);
+        }
+        start = (int)a->cell[2]->integer_v;
+        if (a->count == 4) {
+            if (a->cell[3]->type != CELL_INTEGER) {
+                return make_cell_error("arg4 must be an integer", TYPE_ERR);
+            }
+            end = (int)a->cell[3]->integer_v;
+        }
+    }
+
+    Cell* port;
+    if (a->count == 1) {
+        port = builtin_current_output_port(e, a);
+    } else {
+        port = a->cell[1];
+    }
+
+    const char* in_string = &a->cell[0]->str[start];
+    if (!end) {
+        num_chars = num_chars - start;
+    } else {
+        num_chars = end - start;
+    }
+    const char* out_string = GC_strndup(in_string, num_chars);
+
+    if (fputs(out_string, port->port->fh) == EOF) {
         return make_cell_error(strerror(errno), FILE_ERR);
     }
     /* No meaningful return value */
     return nullptr;
 }
 
-Cell* builtin_newline(const Lex* e, const Cell* a) {
+Cell* builtin_write_u8(const Lex* e, const Cell* a)
+{
+    Cell* err = CHECK_ARITY_RANGE(a, 1, 2);
+    if (err) return err;
+    if (a->cell[0]->type != CELL_INTEGER && (a->cell[0]->integer_v > 256 || a->cell[0]->integer_v < 0)) {
+        return make_cell_error("arg1 must be an unsigned byte: 0 >= n <= 255", TYPE_ERR);
+    }
+    if (a->count == 2) {
+        if (a->cell[1]->type != CELL_PORT) {
+            return make_cell_error("arg2 must be a port", TYPE_ERR);
+        }
+    }
+    Cell* port;
+    if (a->count == 1) {
+        port = builtin_current_output_port(e, a);
+    } else {
+        port = a->cell[1];
+    }
+    int byte = (int)a->cell[0]->integer_v;
+    if (putc(byte, port->port->fh) == EOF) {
+        char buf[256];
+        snprintf(buf, sizeof(buf), "write-u8 failed: %s", strerror(errno));
+        return make_cell_error(strerror(errno), FILE_ERR);
+    }
+    return nullptr;
+}
+
+Cell* builtin_write_bytevector(const Lex* e, const Cell* a)
+{
     (void)e;
+    Cell* err = CHECK_ARITY_RANGE(a, 1, 4);
+    if (err) return err;
+    if (a->cell[0]->type != CELL_BYTEVECTOR) {
+        return make_cell_error("arg1 must be a bytevector", TYPE_ERR);
+    }
+    if (a->count == 2) {
+        if (a->cell[1]->type != CELL_PORT) {
+            return make_cell_error("arg2 must be a port", TYPE_ERR);
+        }
+    }
+    int start = 0;
+    int end = 0;
+    int num_bytes = a->cell[0]->count;
+
+    if (a->count >= 3) {
+        if (a->cell[2]->type != CELL_INTEGER) {
+            return make_cell_error("arg3 must be an integer", TYPE_ERR);
+        }
+        start = (int)a->cell[2]->integer_v;
+        if (a->count == 4) {
+            if (a->cell[3]->type != CELL_INTEGER) {
+                return make_cell_error("arg4 must be an integer", TYPE_ERR);
+            }
+            end = (int)a->cell[3]->integer_v;
+        }
+    }
+    Cell* port;
+    if (a->count == 1) {
+        port = builtin_current_output_port(e, a);
+    } else {
+        port = a->cell[1];
+    }
+
+    const Cell* bv = a->cell[0];
+    if (!end) {
+        num_bytes = num_bytes - start;
+    } else {
+        num_bytes = end - start;
+    }
+    for (int i = start; i < num_bytes; i++) {
+        const int byte = (int)bv->cell[i]->integer_v;
+        if (putc(byte, port->port->fh) == EOF) {
+            char buf[256];
+            snprintf(buf, sizeof(buf), "write-bytevector failed: %s", strerror(errno));
+            return make_cell_error(strerror(errno), FILE_ERR);
+        }
+    }
+    return nullptr;
+}
+
+Cell* builtin_newline(const Lex* e, const Cell* a) {
     Cell* err = CHECK_ARITY_RANGE(a, 0, 1);
     if (err) return err;
 
@@ -300,7 +433,6 @@ Cell* builtin_file_error(const Lex* e, const Cell* a)
 (flush-output-port port ) */
 Cell* builtin_flush_output_port(const Lex* e, const Cell* a)
 {
-    (void)e;
     Cell* err = CHECK_ARITY_RANGE(a, 0, 1);
     if (err) return err;
 
