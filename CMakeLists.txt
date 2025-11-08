@@ -189,6 +189,8 @@ target_include_directories(cozenage PRIVATE
         ${PROJECT_SOURCE_DIR}/src/cozenage-lib
 )
 
+target_link_directories(cozenage PRIVATE ${PC_READLINE_LIBRARY_DIRS})
+
 target_link_libraries(cozenage PRIVATE ${READLINE_LIBRARIES} ${M_LIB} ${GC_LIB} icu::uc)
 
 # If we found GNU readline, pass a definition to the C code.
