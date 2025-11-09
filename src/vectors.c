@@ -417,6 +417,7 @@ Cell* builtin_vector_append(const Lex* e, const Cell* a) {
     return result;
 }
 
+/* TODO: finish this! */
 Cell* builtin_vector_copy_bang(const Lex* e, const Cell* a) {
     (void)e; (void)a;
     return make_cell_boolean(0);

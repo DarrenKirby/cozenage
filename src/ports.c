@@ -24,28 +24,33 @@
 #include <string.h>
 #include <errno.h>
 #include <wchar.h>
+#include <sys/select.h>
 
 
 /*-------------------------------------------------------*
  *                Input/output and ports                 *
  * ------------------------------------------------------*/
 
-Cell* builtin_current_input_port(const Lex* e, const Cell* a) {
+Cell* builtin_current_input_port(const Lex* e, const Cell* a)
+{
     (void)e; (void)a;
     return default_input_port;
 }
 
-Cell* builtin_current_output_port(const Lex* e, const Cell* a) {
+Cell* builtin_current_output_port(const Lex* e, const Cell* a)
+{
     (void)e; (void)a;
     return default_output_port;
 }
 
-Cell* builtin_current_error_port(const Lex* e, const Cell* a) {
+Cell* builtin_current_error_port(const Lex* e, const Cell* a)
+{
     (void)e; (void)a;
     return default_error_port;
 }
 
-Cell* builtin_input_port_pred(const Lex* e, const Cell* a) {
+Cell* builtin_input_port_pred(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
@@ -55,7 +60,8 @@ Cell* builtin_input_port_pred(const Lex* e, const Cell* a) {
     return make_cell_boolean(1);
 }
 
-Cell* builtin_output_port_pred(const Lex* e, const Cell* a) {
+Cell* builtin_output_port_pred(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
@@ -65,7 +71,8 @@ Cell* builtin_output_port_pred(const Lex* e, const Cell* a) {
     return make_cell_boolean(1);
 }
 
-Cell* builtin_text_port_pred(const Lex* e, const Cell* a) {
+Cell* builtin_text_port_pred(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
@@ -75,7 +82,8 @@ Cell* builtin_text_port_pred(const Lex* e, const Cell* a) {
     return make_cell_boolean(1);
 }
 
-Cell* builtin_binary_port_pred(const Lex* e, const Cell* a) {
+Cell* builtin_binary_port_pred(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
@@ -85,7 +93,8 @@ Cell* builtin_binary_port_pred(const Lex* e, const Cell* a) {
     return make_cell_boolean(1);
 }
 
-Cell* builtin_input_port_open(const Lex* e, const Cell* a) {
+Cell* builtin_input_port_open(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
@@ -97,7 +106,8 @@ Cell* builtin_input_port_open(const Lex* e, const Cell* a) {
     return make_cell_boolean(0);
 }
 
-Cell* builtin_output_port_open(const Lex* e, const Cell* a) {
+Cell* builtin_output_port_open(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
@@ -109,12 +119,15 @@ Cell* builtin_output_port_open(const Lex* e, const Cell* a) {
     return make_cell_boolean(0);
 }
 
-Cell* builtin_close_port(const Lex* e, const Cell* a) {
+Cell* builtin_close_port(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
     if (a->cell[0]->type != CELL_PORT) {
-        return make_cell_error("arg1 is not a port", TYPE_ERR);
+        return make_cell_error(
+            "arg1 is not a port",
+            TYPE_ERR);
     }
 
     if (a->cell[0]->is_open == 1) {
@@ -125,7 +138,8 @@ Cell* builtin_close_port(const Lex* e, const Cell* a) {
     return make_cell_boolean(1);
 }
 
-Cell* builtin_read_line(const Lex* e, const Cell* a) {
+Cell* builtin_read_line(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_RANGE(a, 0, 1);
     if (err) return err;
@@ -140,7 +154,9 @@ Cell* builtin_read_line(const Lex* e, const Cell* a) {
     }
 
     if (port->is_open == 0 || port->port->port_t != INPUT_PORT)
-        return make_cell_error("port is not open for input", GEN_ERR);
+        return make_cell_error(
+            "port is not open for input",
+            GEN_ERR);
 
     char *line = nullptr;
     size_t n = 0;
@@ -154,7 +170,8 @@ Cell* builtin_read_line(const Lex* e, const Cell* a) {
     return result;
 }
 
-Cell* builtin_read_char(const Lex* e, const Cell* a) {
+Cell* builtin_read_char(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_RANGE(a, 0, 1);
     if (err) return err;
@@ -169,17 +186,20 @@ Cell* builtin_read_char(const Lex* e, const Cell* a) {
     }
 
     if (port->is_open == 0 || port->port->port_t != INPUT_PORT)
-        return make_cell_error("port is not open for input", GEN_ERR);
+        return make_cell_error(
+            "port is not open for input",
+            GEN_ERR);
 
     /* TODO: need to use feof() to tell EOF from error? */
-    const int c = fgetc(port->port->fh);
+    const int c = fgetwc(port->port->fh);
     if (c == EOF) {
         return make_cell_eof();
     }
     return make_cell_char(c);
 }
 
-Cell* builtin_peek_char(const Lex* e, const Cell* a) {
+Cell* builtin_peek_char(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_RANGE(a, 0, 1);
     if (err) return err;
@@ -194,11 +214,13 @@ Cell* builtin_peek_char(const Lex* e, const Cell* a) {
     }
 
     if (port->is_open == 0 || port->port->port_t != INPUT_PORT)
-        return make_cell_error("port is not open for input", GEN_ERR);
+        return make_cell_error(
+            "port is not open for input",
+            GEN_ERR);
 
     /* TODO: need to use feof() to tell EOF from error? */
-    const int c = fgetc(port->port->fh);
-    const int pb_c = ungetc(c, port->port->fh);
+    const int c = fgetwc(port->port->fh);
+    const int pb_c = ungetwc(c, port->port->fh);
     if (c == EOF) {
         return make_cell_eof();
     }
@@ -210,15 +232,20 @@ Cell* builtin_peek_char(const Lex* e, const Cell* a) {
     return make_cell_char(c);
 }
 
-Cell* builtin_write_char(const Lex* e, const Cell* a) {
+Cell* builtin_write_char(const Lex* e, const Cell* a)
+{
     Cell* err = CHECK_ARITY_RANGE(a, 1, 2);
     if (err) return err;
     if (a->cell[0]->type != CELL_CHAR) {
-        return make_cell_error("arg1 must be a char", TYPE_ERR);
+        return make_cell_error(
+            "arg1 must be a char",
+            TYPE_ERR);
     }
     if (a->count == 2) {
         if (a->cell[1]->type != CELL_PORT) {
-            return make_cell_error("arg2 must be a port", TYPE_ERR);
+            return make_cell_error(
+                "arg2 must be a port",
+                TYPE_ERR);
         }
     }
     Cell* port;
@@ -231,11 +258,13 @@ Cell* builtin_write_char(const Lex* e, const Cell* a) {
     if (fputwc(a->cell[0]->char_v, port->port->fh) == EOF) {
         char buf[256];
         snprintf(buf, sizeof(buf), "write-char failed: %s", strerror(errno));
+        return make_cell_error(buf, FILE_ERR);
     }
     return nullptr;
 }
 
-Cell* builtin_write_string(const Lex* e, const Cell* a) {
+Cell* builtin_write_string(const Lex* e, const Cell* a)
+{
     Cell* err = CHECK_ARITY_RANGE(a, 1, 4);
     if (err) return err;
     if (a->cell[0]->type != CELL_STRING) {
@@ -366,7 +395,8 @@ Cell* builtin_write_bytevector(const Lex* e, const Cell* a)
     return nullptr;
 }
 
-Cell* builtin_newline(const Lex* e, const Cell* a) {
+Cell* builtin_newline(const Lex* e, const Cell* a)
+{
     Cell* err = CHECK_ARITY_RANGE(a, 0, 1);
     if (err) return err;
 
@@ -383,7 +413,8 @@ Cell* builtin_newline(const Lex* e, const Cell* a) {
     return nullptr;
 }
 
-Cell* builtin_eof(const Lex* e, const Cell* a) {
+Cell* builtin_eof(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 0);
     if (err) return err;
@@ -450,4 +481,86 @@ Cell* builtin_flush_output_port(const Lex* e, const Cell* a)
         return make_cell_error(strerror(es), FILE_ERR);
     }
     return nullptr;
+}
+
+/* A simple function to check if a character is ready on a FILE* stream.
+ * This directly implements the logic for char-ready? and u8-ready? */
+static int is_char_ready(FILE *fp) {
+    /* Get the underlying file descriptor */
+    const int fd = fileno(fp);
+    if (fd < 0) {
+        return -1;
+    }
+
+    fd_set readfds;
+    struct timeval timeout;
+
+    /* Clear the set and add our file descriptor to it */
+    FD_ZERO(&readfds);
+    FD_SET(fd, &readfds);
+
+    /* Set the timeout to 0, so select() returns immediately */
+    timeout.tv_sec = 0;
+    timeout.tv_usec = 0;
+
+    /* Monitor the file descriptor for readiness
+     * The first argument is the highest-numbered file descriptor plus 1. */
+    const int result = select(fd + 1, &readfds, nullptr, nullptr, &timeout);
+
+    if (result == -1) {
+        return -1;
+    }
+
+    /* result will be 1 if data is ready, 0 otherwise.
+     * FD_ISSET is technically the most correct check. */
+    return result > 0 && FD_ISSET(fd, &readfds);
+}
+
+Cell* builtin_char_ready(const Lex* e, const Cell* a)
+{
+    (void)e;
+    Cell* err = CHECK_ARITY_RANGE(a, 0, 1);
+    if (err) return err;
+
+    Cell* port;
+    if (a->count == 0) {
+        port = builtin_current_output_port(e, a);
+    } else {
+        err = check_arg_types(a, CELL_PORT);
+        if (err) return err;
+        port = a->cell[0];
+    }
+
+    const int result = is_char_ready(port->port->fh);
+    if (result == -1) {
+        return make_cell_error(
+            "char-ready?: bad file descriptor",
+            FILE_ERR);
+    }
+    return result ? make_cell_boolean(1) : make_cell_boolean(0);
+}
+
+
+Cell* builtin_u8_ready(const Lex* e, const Cell* a)
+{
+    (void)e;
+    Cell* err = CHECK_ARITY_RANGE(a, 0, 1);
+    if (err) return err;
+
+    Cell* port;
+    if (a->count == 0) {
+        port = builtin_current_output_port(e, a);
+    } else {
+        err = check_arg_types(a, CELL_PORT);
+        if (err) return err;
+        port = a->cell[0];
+    }
+
+    const int result = is_char_ready(port->port->fh);
+    if (result == -1) {
+        return make_cell_error(
+            "u8-ready?: bad file descriptor",
+            FILE_ERR);
+    }
+    return result ? make_cell_boolean(1) : make_cell_boolean(0);
 }

@@ -36,6 +36,8 @@ Cell* builtin_close_port(const Lex* e, const Cell* a);
 Cell* builtin_read_line(const Lex* e, const Cell* a);
 Cell* builtin_read_char(const Lex* e, const Cell* a);
 Cell* builtin_peek_char(const Lex* e, const Cell* a);
+Cell* builtin_char_ready(const Lex* e, const Cell* a);
+Cell* builtin_u8_ready(const Lex* e, const Cell* a);
 Cell* builtin_write_char(const Lex* e, const Cell* a);
 Cell* builtin_write_string(const Lex* e, const Cell* a);
 Cell* builtin_write_u8(const Lex* e, const Cell* a);
