@@ -4,24 +4,18 @@ The Cozenage Reference
 At some point, I will write some extensive documentation of the Scheme syntax, builtin procedures,
 and Cozenage's extensions beyond the R5RS/R7RS specifications. That documentation will appear here.
 
+In the infancy of this reference, much of the text is copied directly from the Scheme R7RS specification itself.
+My gratitude to the authors of this report for explicitly allowing this. In time, I will replace the copied text with
+text more personalized for Cozenage itself.
+
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
    :caption: Contents:
 
-   running_cozenage/
-   documentation_notation/
-   syntax_and_special_forms/
-   native_datatypes/index
-   native_datatypes/booleans
-   native_datatypes/numerics
-   native_datatypes/symbols
-   native_datatypes/characters
-   native_datatypes/strings
-   native_datatypes/pairs_and_lists
-   native_datatypes/vectors
-   native_datatypes/bytevectors
-   native_datatypes/procedures
-   extended_datatypes/
+   running_cozenage/index
+   documentation_notation/index
+   syntax_and_special_forms/index
+   primitive_datatypes/index
+   extended_datatypes/index
    library/index
-   library/time
-   errors_and_exceptions/
+   errors_and_exceptions/index

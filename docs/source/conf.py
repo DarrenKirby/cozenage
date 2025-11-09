@@ -9,7 +9,7 @@
 project = 'Cozenage'
 copyright = '2025, Darren Kirby'
 author = 'Darren Kirby'
-release = '0.7.5'
+release = '0.8.1'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -27,3 +27,9 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 #html_theme = 'alabaster'
 html_theme = "furo"
 html_static_path = ['_static']
+
+html_css_files = [
+    'cozenage.css',
+]
+
+

@@ -56,3 +56,51 @@ Boolean procedures
         #false
       --> (not 'nil)
         #false
+
+.. _proc:boolean?:
+
+.. function:: (boolean? obj)
+
+    The boolean? predicate returns #true if obj is either #true or #false and returns #f otherwise.
+
+    :param obj: the object to test
+    :type obj: any
+    :return: #true or #false
+    :rtype: boolean
+
+    **Example**
+
+    .. code-block:: scheme
+
+        --> (boolean? #t)
+          #true
+        --> (boolean? #f)
+          #true
+        --> (boolean? "a string")
+          #false
+
+.. _proc:boolean=?:
+
+.. function:: (boolean=? obj obj ... )
+
+    The boolean=? procedure returns #true if all the arguments are booleans and all are #true or all are #false. Accepts
+    zero or more arguments.
+
+    :param obj: the object(s) to test.
+    :type obj: any
+    :return: #true or #false
+    :rtype: boolean
+
+    **Example**
+
+    .. code-block:: scheme
+
+        --> (boolean=?)
+          #true
+        --> (boolean=? #t #t #t)
+          #true
+        --> (boolean=? #t #f)
+          #false
+        --> (boolean=? "foo" "bar" "baz")
+         #false
+

@@ -1,5 +1,5 @@
-Time Library
-============
+Scheme Time Library
+===================
 
 The ``(scheme time)`` library provides access to time-related values.
 

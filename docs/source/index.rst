@@ -30,10 +30,10 @@ specific goal, and just want to learn more about Scheme and/or Cozenage, try a t
 
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
    :caption: Contents:
 
-   howto/installation
-   tutorial/get_started_with_scheme
-   reference/the_cozenage_reference
+   howto/index
+   tutorial/index
+   reference/index
 
