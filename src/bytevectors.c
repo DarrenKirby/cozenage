@@ -87,6 +87,39 @@ Cell* builtin_bytevector_ref(const Lex* e, const Cell* a)
     return a->cell[0]->cell[i];
 }
 
+/* (bytevector-u8-set! bytevector k obj)
+ * It is an error if k is not a valid index of vector. This procedure stores obj in the kth position
+ * of vector */
+Cell* builtin_bytevector_set_bang(const Lex* e, const Cell* a)
+{
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 3);
+    if (err) return err;
+    if (a->cell[0]->type != CELL_BYTEVECTOR) {
+        return make_cell_error(
+            "vector->set!: arg must be a vector",
+            TYPE_ERR);
+    }
+    if (a->cell[1]->type != CELL_INTEGER) {
+        return make_cell_error(
+            "vector->set!: arg must be an integer",
+            TYPE_ERR);
+    }
+
+    const long long idx = a->cell[1]->integer_v;
+    const Cell* vec = a->cell[0];
+    Cell* obj = a->cell[2];
+
+    if (idx < 0 || idx >= a->cell[0]->count) {
+        return make_cell_error(
+            "vector->set!: index out of range",
+            INDEX_ERR);
+    }
+
+    vec->cell[idx] = obj;
+    return nullptr;
+}
+
 
 /* (make-bytevector k)
  * (make-bytevector k byte)
@@ -157,4 +190,27 @@ Cell* builtin_bytevector_copy(const Lex* e, const Cell* a)
         cell_add(vec, a->cell[0]->cell[i]);
     }
     return vec;
+}
+
+/* (bytevector-append bytevector ...)
+* Returns a newly allocated bytevector whose elements are
+the concatenation of the elements in the given bytevectors. */
+Cell* builtin_bytevector_append(const Lex* e, const Cell* a)
+{
+    (void)e;
+    Cell* err = check_arg_types(a, CELL_BYTEVECTOR);
+    if (err) return err;
+
+    if (a->count == 0) {
+        return make_cell_bytevector();
+    }
+
+    Cell* result = make_cell_bytevector();
+    for (int i = 0; i < a->count; i++) {
+        const Cell* bv = a->cell[i];
+        for (int j = 0; j < bv->count; j++) {
+            cell_add(result, bv->cell[j]);
+        }
+    }
+    return result;
 }
