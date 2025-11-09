@@ -5,7 +5,7 @@ At some point, I will write some extensive documentation of the Scheme syntax, b
 and Cozenage's extensions beyond the R5RS/R7RS specifications. That documentation will appear here.
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: Contents:
 
    running_cozenage/
