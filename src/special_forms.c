@@ -21,6 +21,7 @@
 #include "eval.h"
 #include "types.h"
 #include "symbols.h"
+#include "repr.h"
 #include "load_library.h"
 #include "compat_readline.h"
 #include <string.h>
@@ -35,12 +36,6 @@
 
 /* import needs to know if we're in the REPL */
 extern int is_repl;
-
-/* TODO - implement transformations, and double-check for all tail calls.
- * - Need to create transformations.c and write functions to transform
- *     derived syntax to common forms.
- * - Need to cross-check with R7RS and make sure all tail call positions
- *     are handled correctly and kicked back to the eval loop. */
 
 /* A helper to check if a symbol name is a reserved syntactic keyword */
 int is_syntactic_keyword(const char* s) {
@@ -61,12 +56,12 @@ int is_syntactic_keyword(const char* s) {
 /* Convert a CELL_SEXPR to a proper CELL_PAIR linked-list */
 Cell* sexpr_to_list(Cell* c) {
 
-    /* Turf all the atomic types. */
+    /* Direct-return all the atomic types. */
     if (c->type & (CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX|
                       CELL_BOOLEAN|CELL_CHAR|CELL_STRING|CELL_NIL|CELL_EOF|
                       CELL_PROC|CELL_PORT|CELL_CONT|CELL_ERROR|CELL_SYMBOL)) {
         return c;
-                      }
+    }
 
     /* Leave the top-level vector be, but convert internal members. */
     if (c->type == CELL_VECTOR) {
@@ -571,10 +566,7 @@ HandlerResult sf_let(Lex* e, Cell* a) {
         return (HandlerResult){ .action = ACTION_RETURN, .value = result };
     }
     /* Named let - de-sugar into a letrec */
-    /* TODO: this is ugly dog shit
-     * Really need to handle this transformation better -
-     * Dispatch out all the transformations into a helper
-     * straight from eval */
+    /* Really need to handle this transformation better  */
     Cell* nl_name = a->cell[0];
     const Cell* nl_vars = a->cell[1];
     Cell* nl_body = a->cell[2];
@@ -626,15 +618,21 @@ HandlerResult sf_let_star(Lex* e, Cell* a) {
     for (int i = 0; i < bindings->count; i++) {
         const Cell* local_b = bindings->cell[i];
         if (local_b->type != CELL_SEXPR) {
-            Cell* err = make_cell_error("Bindings must be a list", VALUE_ERR);
+            Cell* err = make_cell_error(
+                "Bindings must be a list",
+                VALUE_ERR);
             return (HandlerResult){ .action = ACTION_RETURN, .value = err };
         }
         if (local_b->count != 2) {
-            Cell* err = make_cell_error("bindings must contain exactly 2 items", VALUE_ERR);
+            Cell* err = make_cell_error(
+                "bindings must contain exactly 2 items",
+                VALUE_ERR);
             return (HandlerResult){ .action = ACTION_RETURN, .value = err };
         }
         if (local_b->cell[0]->type != CELL_SYMBOL) {
-            Cell* err = make_cell_error("first value in binding must be a symbol", VALUE_ERR);
+            Cell* err = make_cell_error(
+                "first value in binding must be a symbol",
+                VALUE_ERR);
             return (HandlerResult){ .action = ACTION_RETURN, .value = err };
         }
         const Cell* formal = local_b->cell[0];
@@ -665,7 +663,9 @@ HandlerResult sf_let_star(Lex* e, Cell* a) {
 HandlerResult sf_letrec(Lex* e, Cell* a) {
     const Cell* bindings = cell_pop(a, 0);
     if (bindings->type != CELL_SEXPR) {
-        Cell* err = make_cell_error("Bindings must be a list", VALUE_ERR);
+        Cell* err = make_cell_error(
+            "Bindings must be a list",
+            VALUE_ERR);
         return (HandlerResult){ .action = ACTION_RETURN, .value = err };
     }
 
@@ -684,11 +684,11 @@ HandlerResult sf_letrec(Lex* e, Cell* a) {
         const Cell* variable = bindings->cell[i]->cell[0];
         Cell* local_bind = bindings->cell[i]->cell[1];
         const Cell* init_exp = coz_eval(local_env, local_bind);
+
         if (init_exp->type == CELL_ERROR) {
-            /* TODO:change this error message to print the problem expression/variable
-               after printer.c is generalized to write to any stream rather than just stdout */
             char buf[128];
-            snprintf(buf, sizeof(buf), "letrec: variable used before initialization");
+            snprintf(buf, sizeof(buf), "letrec: variable '%s' used before initialization",
+                cell_to_string(local_bind, MODE_REPL));
             Cell* err = make_cell_error(buf, VALUE_ERR);
             return (HandlerResult){ .action = ACTION_RETURN, .value = err };
         }
@@ -699,7 +699,6 @@ HandlerResult sf_letrec(Lex* e, Cell* a) {
     for (int i = 0; i < body->count; i++) {
         result = coz_eval(local_env, body->cell[i]);
     }
-    //return result;
     return (HandlerResult){ .action = ACTION_RETURN, .value = result };
 }
 
