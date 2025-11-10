@@ -32,7 +32,8 @@
 
 /* Initialize load_libs struct to zeros */
 lib_load_config load_libs = {0};
-
+int g_argc;
+char** g_argv;
 
 static void show_help(void)
 {
@@ -96,6 +97,8 @@ static void process_library_arg(struct lib_load *l, const char *arg)
             l->write = 1;
         } else if (strcmp(token, "bits") == 0) {
             l->coz_bits = 1;
+        } else if (strcmp(token, "stats") == 0) {
+            l->coz_stats = 1;
         } else {
             fprintf(stderr, "Error: Unknown library name '%s' specified.\n", token);
             fprintf(stderr, "Run with -h for a list of valid library names.\n");
@@ -148,18 +151,11 @@ int main(const int argc, char** argv)
     const int non_option_args = argc - optind;
 
     if (non_option_args > 0) {
+        /* Grab the number of args, and the args themselves starting from the file arg
+         * to construct (command-line) later if needed. */
         if (non_option_args > 1) {
-            fprintf(stderr, "Warning: Cozenage will only run one Scheme file at a time.\n\n\
-If you want to run multiple independent files sequentially, use your shell facilities, ie:\n\n\
-$ cozenage file1.scm && cozenage file2.scm && cozenage file3.scm\n\n\
-If you want to load definitions from multiple files into the environment for a final script, use\n\
-the (scheme load) library, for example, at the top of the final script:\n\n\
-(import (scheme load))\n\
-(load \"file1.scm\")\n\
-(load \"file2.scm\")\n\
-(load \"file3.scm\")\n\n\
-;;; begin main script...\n\n\
-Now the definitions from the three files are loaded in the final script's environment.\n\n");
+            g_argc = argc - optind;
+            g_argv = argv + optind;
         }
         /* File-Runner Mode */
         const char *file_path = argv[optind];
