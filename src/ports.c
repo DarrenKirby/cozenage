@@ -190,12 +190,18 @@ Cell* builtin_read_char(const Lex* e, const Cell* a)
             "port is not open for input",
             GEN_ERR);
 
-    /* TODO: need to use feof() to tell EOF from error? */
-    const int c = fgetwc(port->port->fh);
-    if (c == EOF) {
-        return make_cell_eof();
+    const int wc = fgetwc(port->port->fh);
+    if (wc == WEOF) {
+        /* Regular EOF */
+        if (feof(port->port->fh)) {
+            return make_cell_eof();
+        }
+        /* error from fgetwc() */
+        char buf[256];
+        snprintf(buf, 256, "read-char failed: %s", strerror(errno));
+        return make_cell_error(buf, FILE_ERR);
     }
-    return make_cell_char(c);
+    return make_cell_char(wc);
 }
 
 Cell* builtin_peek_char(const Lex* e, const Cell* a)
@@ -218,18 +224,25 @@ Cell* builtin_peek_char(const Lex* e, const Cell* a)
             "port is not open for input",
             GEN_ERR);
 
-    /* TODO: need to use feof() to tell EOF from error? */
-    const int c = fgetwc(port->port->fh);
-    const int pb_c = ungetwc(c, port->port->fh);
-    if (c == EOF) {
-        return make_cell_eof();
+    const int wc = fgetwc(port->port->fh);
+    if (wc == WEOF) {
+        /* Regular EOF */
+        if (feof(port->port->fh)) {
+            return make_cell_eof();
+        }
+        /* error from fgetwc() */
+        char buf[256];
+        snprintf(buf, 256, "peek-char failed: %s", strerror(errno));
+        return make_cell_error(buf, FILE_ERR);
     }
+    /*Push back the char */
+    const int pb_c = ungetwc(wc, port->port->fh);
     if (pb_c == EOF) {
        return make_cell_error(
            "char pushback failed!",
            FILE_ERR);
     }
-    return make_cell_char(c);
+    return make_cell_char(wc);
 }
 
 Cell* builtin_write_char(const Lex* e, const Cell* a)
