@@ -199,6 +199,15 @@ static Cell* parse_number(char* token, const int line, int len) {
             r = parse_number(real_str, line, len);
             i = parse_number(buf, line, len);
         }
+
+        /* Propagate errors */
+        if (r->type == CELL_ERROR) {
+            return r;
+        }
+        if (i->type == CELL_ERROR) {
+            return i;
+        }
+
         Cell* result = make_cell_complex(r, i);
         return result;
     }
