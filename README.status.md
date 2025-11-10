@@ -362,7 +362,7 @@ This document tracks the implementation status of the R7RS standard libraries in
 
 | Status | Procedure |
 |:---:|:---|
-| ❌ | `command-line` |
+| ✅ | `command-line` |
 | ✅ | `exit` |
 | ✅ | `get-environment-variable` |
 | ✅ | `get-environment-variables` |
