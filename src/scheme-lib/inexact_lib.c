@@ -20,15 +20,33 @@
 #include "inexact_lib.h"
 #include "types.h"
 #include <math.h>
+#include <complex.h>
 
+
+/* Helper to make C complex from Cell complex */
+static long double complex cell_to_c_complex(const Cell* c)
+{
+    long double a = cell_to_long_double(c->real);
+    long double b = cell_to_long_double(c->imag);
+
+    return CMPLXL(a, b);
+}
 
 /* Returns the cosine of arg (arg is in radians). */
 Cell* builtin_cos(const Lex* e, const Cell* a) {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL);
+    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX);
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
-    /* TODO: add complex support */
+
+    if (a->cell[0]->type == CELL_COMPLEX)
+    {
+        const long double complex z = cell_to_c_complex(a->cell[0]);
+        const long double complex z_result = ccosl(z);
+        Cell* real = make_cell_from_double(creall(z_result));
+        Cell* imag = make_cell_from_double(cimagl(z_result));
+        return make_cell_complex(real, imag);
+    }
 
     const long double n = cell_to_long_double(a->cell[0]);
     Cell* result = make_cell_from_double(cosl(n));
@@ -38,10 +56,18 @@ Cell* builtin_cos(const Lex* e, const Cell* a) {
 /* Returns the arccosine of arg, in radians */
 Cell* builtin_acos(const Lex* e, const Cell* a) {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL);
+    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX);
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
-    /* TODO: add complex support */
+
+    if (a->cell[0]->type == CELL_COMPLEX)
+    {
+        const long double complex z = cell_to_c_complex(a->cell[0]);
+        const long double complex z_result = cacosl(z);
+        Cell* real = make_cell_from_double(creall(z_result));
+        Cell* imag = make_cell_from_double(cimagl(z_result));
+        return make_cell_complex(real, imag);
+    }
 
     const long double n = cell_to_long_double(a->cell[0]);
     Cell* result = make_cell_from_double(acosl(n));
@@ -51,10 +77,18 @@ Cell* builtin_acos(const Lex* e, const Cell* a) {
 /* Returns the sine of arg (arg is in radians) */
 Cell* builtin_sin(const Lex* e, const Cell* a) {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL);
+    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX);
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
-    /* TODO: add complex support */
+
+    if (a->cell[0]->type == CELL_COMPLEX)
+    {
+        const long double complex z = cell_to_c_complex(a->cell[0]);
+        const long double complex z_result = csinl(z);
+        Cell* real = make_cell_from_double(creall(z_result));
+        Cell* imag = make_cell_from_double(cimagl(z_result));
+        return make_cell_complex(real, imag);
+    }
 
     const long double n = cell_to_long_double(a->cell[0]);
     Cell* result = make_cell_from_double(sinl(n));
@@ -64,10 +98,18 @@ Cell* builtin_sin(const Lex* e, const Cell* a) {
 /* Returns the arcsine of arg, in radians */
 Cell* builtin_asin(const Lex* e, const Cell* a) {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL);
+    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX);
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
-    /* TODO: add complex support */
+
+    if (a->cell[0]->type == CELL_COMPLEX)
+    {
+        const long double complex z = cell_to_c_complex(a->cell[0]);
+        const long double complex z_result = casinl(z);
+        Cell* real = make_cell_from_double(creall(z_result));
+        Cell* imag = make_cell_from_double(cimagl(z_result));
+        return make_cell_complex(real, imag);
+    }
 
     const long double n = cell_to_long_double(a->cell[0]);
     Cell* result = make_cell_from_double(asinl(n));
@@ -77,10 +119,18 @@ Cell* builtin_asin(const Lex* e, const Cell* a) {
 /* Returns the tangent of arg (arg is in radians) */
 Cell* builtin_tan(const Lex* e, const Cell* a) {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL);
+    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX);
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
-    /* TODO: add complex support */
+
+    if (a->cell[0]->type == CELL_COMPLEX)
+    {
+        const long double complex z = cell_to_c_complex(a->cell[0]);
+        const long double complex z_result = ctanl(z);
+        Cell* real = make_cell_from_double(creall(z_result));
+        Cell* imag = make_cell_from_double(cimagl(z_result));
+        return make_cell_complex(real, imag);
+    }
 
     const long double n = cell_to_long_double(a->cell[0]);
     Cell* result = make_cell_from_double(tanl(n));
@@ -92,17 +142,32 @@ Cell* builtin_tan(const Lex* e, const Cell* a) {
  * to polar coordinates (r, theta) */
 Cell* builtin_atan(const Lex* e, const Cell* a) {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL);
+    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX);
     if (err) { return err; }
     if ((err = CHECK_ARITY_RANGE(a, 1, 2))) { return err; }
-    /* TODO: add complex support */
 
     if (a->count == 1) {
+
+        if (a->cell[0]->type == CELL_COMPLEX)
+        {
+            const long double complex z = cell_to_c_complex(a->cell[0]);
+            const long double complex z_result = catanl(z);
+            Cell* real = make_cell_from_double(creall(z_result));
+            Cell* imag = make_cell_from_double(cimagl(z_result));
+            return make_cell_complex(real, imag);
+        }
+
         const long double n = cell_to_long_double(a->cell[0]);
         Cell* result = make_cell_from_double(atanl(n));
         return result;
     }
     /* two args */
+    if (a->cell[0]->type == CELL_COMPLEX) {
+        return make_cell_error(
+            "atan: invalid complex arg. Use 'make-polar' from (scheme complex)",
+            TYPE_ERR);
+    }
+
     const long double x = cell_to_long_double(a->cell[0]);
     const long double y = cell_to_long_double(a->cell[1]);
     Cell* result = make_cell_from_double(atan2l(x, y));
@@ -112,10 +177,18 @@ Cell* builtin_atan(const Lex* e, const Cell* a) {
 /* Returns the value of E raised to arg power */
 Cell* builtin_exp(const Lex* e, const Cell* a) {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL);
+    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX);
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
-    /* TODO: add complex support */
+
+    if (a->cell[0]->type == CELL_COMPLEX)
+    {
+        const long double complex z = cell_to_c_complex(a->cell[0]);
+        const long double complex z_result = cexpl(z);
+        Cell* real = make_cell_from_double(creall(z_result));
+        Cell* imag = make_cell_from_double(cimagl(z_result));
+        return make_cell_complex(real, imag);
+    }
 
     const long double n = cell_to_long_double(a->cell[0]);
     Cell* result = make_cell_from_double(expl(n));
@@ -126,15 +199,32 @@ Cell* builtin_exp(const Lex* e, const Cell* a) {
  * With two args (n, b): Returns log n base b */
 Cell* builtin_log(const Lex* e, const Cell* a) {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL);
+    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX);
     if (err) { return err; }
     if ((err = CHECK_ARITY_RANGE(a, 1, 2))) { return err; }
-    /* TODO: add complex support */
+
     if (a->count == 1) {
+
+        if (a->cell[0]->type == CELL_COMPLEX)
+        {
+            const long double complex z = cell_to_c_complex(a->cell[0]);
+            const long double complex z_result = clogl(z);
+            Cell* real = make_cell_from_double(creall(z_result));
+            Cell* imag = make_cell_from_double(cimagl(z_result));
+            return make_cell_complex(real, imag);
+        }
+
         const long double n = cell_to_long_double(a->cell[0]);
         Cell* result = make_cell_from_double(logl(n));
         return result;
     }
+    /* Two args - will not work with complex */
+    if (a->cell[0]->type == CELL_COMPLEX) {
+        return make_cell_error(
+            "Specifying log base not valid with complex",
+            TYPE_ERR);
+    }
+
     const long double n = cell_to_long_double(a->cell[0]);
     const long double b = cell_to_long_double(a->cell[1]);
     Cell* result = make_cell_from_double(logl(n)/logl(b));
@@ -147,7 +237,6 @@ Cell* builtin_log2(const Lex* e, const Cell* a) {
     Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL);
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
-    /* TODO: add complex support */
 
     const long double n = cell_to_long_double(a->cell[0]);
     Cell* result = make_cell_from_double(log2l(n));
@@ -160,7 +249,6 @@ Cell* builtin_log10(const Lex* e, const Cell* a) {
     Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL);
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
-    /* TODO: add complex support */
 
     const long double n = cell_to_long_double(a->cell[0]);
     Cell* result = make_cell_from_double(log10l(n));
@@ -170,10 +258,18 @@ Cell* builtin_log10(const Lex* e, const Cell* a) {
 /* Returns the square root of arg */
 Cell* builtin_sqrt(const Lex* e, const Cell* a) {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL);
+    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX);
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
-    /* TODO: add complex support */
+
+    if (a->cell[0]->type == CELL_COMPLEX)
+    {
+        const long double complex z = cell_to_c_complex(a->cell[0]);
+        const long double complex z_result = csqrtl(z);
+        Cell* real = make_cell_from_double(creall(z_result));
+        Cell* imag = make_cell_from_double(cimagl(z_result));
+        return make_cell_complex(real, imag);
+    }
 
     const long double n = cell_to_long_double(a->cell[0]);
     Cell* result = make_cell_from_double(sqrtl(n));
@@ -186,7 +282,6 @@ Cell* builtin_cbrt(const Lex* e, const Cell* a) {
     Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL);
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
-    /* TODO: add complex support */
 
     const long double n = cell_to_long_double(a->cell[0]);
     Cell* result = make_cell_from_double(cbrtl(n));
