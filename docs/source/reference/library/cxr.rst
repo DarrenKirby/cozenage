@@ -4,9 +4,12 @@ Scheme CXR Library
 Overview
 --------
 
-The ``CxR`` procedures are a standard feature of Lisp and Scheme, providing convenient shorthands for composing up to four ``car`` and ``cdr`` operations. The names of the procedures encode the sequence of operations: the letters between the initial 'c' and the final 'r' correspond to the sequence of ``car``s (from 'a') and ``cdr``s (from 'd').
+The ``CxR`` procedures are a standard feature of Lisp and Scheme, providing convenient shorthands for composing up to
+four ``car`` and ``cdr`` operations. The names of the procedures encode the sequence of operations: the letters
+between the initial 'c' and the final 'r' correspond to the sequence of ``car`` (from 'a') and ``cdr`` (from 'd').
 
-For example, the procedure ``caddr`` is equivalent to the expression ``(car (cdr (cdr x)))``. This allows for more concise and often more readable code when accessing elements deep inside a nested list structure.
+For example, the procedure ``caddr`` is equivalent to the expression ``(car (cdr (cdr x)))``. This allows for more
+concise and often more readable code when accessing elements deep inside a nested list structure.
 
 **Derivation Example:**
 
@@ -16,7 +19,9 @@ For example, the procedure ``caddr`` is equivalent to the expression ``(car (cdr
 
 **Typical Use:**
 
-These procedures are most useful for accessing fixed parts of a data structure represented as a list. For instance, if a "person" record is structured as `'(firstname lastname (address-details))`, you could access the last name with ``cadr`` and the address details with ``caddr``.
+These procedures are most useful for accessing fixed parts of a data structure represented as a list. For instance,
+if a "person" record is structured as `'(firstname lastname (address-details))`, you could access the last name
+with ``cadr`` and the address details with ``caddr``.
 
 .. code-block:: scheme
 

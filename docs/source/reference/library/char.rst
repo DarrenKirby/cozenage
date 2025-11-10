@@ -10,7 +10,7 @@ performing case-agnostic text searches.
 
 Character procedures allow for the classification of characters (e.g., alphabetic, numeric, whitespace), while string
 procedures provide tools for case conversion and comparison across entire strings. The ``-ci`` suffix in procedure names
- like ``char-ci=?`` and ``string-ci<?`` indicates a case-insensitive comparison.
+like ``char-ci=?`` and ``string-ci<?`` indicate a case-insensitive comparison.
 
 Character Procedures
 --------------------

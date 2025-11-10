@@ -12,9 +12,8 @@ R7RS procedures
 
    Returns an inexact number representing the current time on the International Atomic Time (TAI)
    scale. The value 0.0 represents midnight on January 1, 1970 TAI (equivalent to ten seconds before
-   midnight Universal Time) and the value 1.0 represents one TAI second later. Neither high accuracy
-   nor high precision are required; Cozenage returns Coordinated Universal Time plus 37, which is
-   the number of leap seconds added to UTC since the epoch, as ofOctober 2025.
+   midnight Universal Time) and the value 1.0 represents one TAI second later. Cozenage returns Coordinated Universal
+   Time plus 37, which is the number of leap seconds added to UTC since the epoch, as of October 2025.
 
    :return: The current TAI time in seconds.
    :rtype: real
@@ -127,3 +126,46 @@ R7RS procedures
 
        Running (slow-fib 30)...
        Execution time: 0.048215 seconds
+
+Cozenage Extensions
+-------------------
+
+The following procedures are not part of the R7RS standard but are included in Cozenage for convenience.
+
+.. _proc::current-dt-utc:
+
+.. function:: (current-dt-utc)
+              (current-dt-utc string)
+
+   Returns the current UTC date and time as a string. If an argument is provided, it must be a string which is
+   a format specification as per the C library function strftime(3). With no argument, the format
+   specifier is "%Y-%m-%d %H:%M:%S", which prints the date/time as: "2025-10-23 17:00:17" in UTC.
+
+   :param string: A format specifier as per strftime(3)
+   :type char: string
+   :return: The current UTC date and time
+   :rtype: string
+
+   **example**
+
+   .. code-block:: scheme
+
+       --> (current-dt-utc)
+       "2025-11-10 20:48:46"
+       --> (current-dt-utc "%A, %B %d, %Y")
+       "Monday, November 10, 2025"
+
+.. _proc::current-dt-local:
+
+.. function:: (current-dt-local)
+              (current-dt-local string)
+
+   Returns the current local date and time as a string. If an argument is provided, it must be a string which is
+   a format specification as per the C library function strftime(3). With no argument, the format
+   specifier is "%Y-%m-%d %H:%M:%S", which prints the date/time as: "2025-10-23 17:00:17".
+
+   :param string: A format specifier as per strftime(3)
+   :type char: string
+   :return: The current local date and time
+   :rtype: string
+
