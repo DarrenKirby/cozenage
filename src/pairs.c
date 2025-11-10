@@ -198,13 +198,16 @@ Cell* builtin_list_length(const Lex* e, const Cell* a) {
 /* (list-ref list k)
  * Returns the kth element of list. (This is the same as the car of (list-tail list k).) */
 Cell* builtin_list_ref(const Lex* e, const Cell* a) {
-    /* FIXME: segfaults when index out of range on improper list*/
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2);
     if (err) return err;
 
     if (a->cell[0]->type != CELL_PAIR) {
         return make_cell_error("list-ref: arg 1 must be a list", TYPE_ERR);
+    }
+    /* Improper list is not a list */
+    if (a->cell[0]->type == CELL_PAIR && a->cell[0]->len == -1) {
+        return make_cell_error("list-ref: arg 1 must be a proper list", TYPE_ERR);
     }
     if (a->cell[1]->type != CELL_INTEGER) {
         return make_cell_error("list-ref: arg 2 must be an integer", TYPE_ERR);
