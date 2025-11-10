@@ -23,12 +23,27 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "repr.h"
+#include "special_forms.h"
+
 
 extern char **environ;
+extern int is_repl;
+extern int g_argc;
+extern char **g_argv;
 
 Cell* builtin_command_line(const Lex* e, const Cell* a) {
     (void)e; (void)a;
-    return make_cell_error("not implemented yet", GEN_ERR);
+    /* Return list of just empty string if using REPL */
+    if (is_repl) {
+        return make_cell_pair(make_cell_string(""), make_cell_nil());
+    }
+    /* Construct the list of args. */
+    Cell* args = make_cell_sexpr();
+    for (int i = 0; i < g_argc; i++) {
+        cell_add(args, make_cell_string(g_argv[i]));
+    }
+    return sexpr_to_list(args);
 }
 
 Cell* builtin_exit(const Lex* e, const Cell* a) {
@@ -107,6 +122,7 @@ Cell* builtin_get_env_vars(const Lex* e, const Cell* a) {
 }
 
 void lex_add_proc_con_lib(const Lex* e) {
+    lex_add_builtin(e, "command-line", builtin_command_line);
     lex_add_builtin(e, "exit", builtin_exit);
     lex_add_builtin(e, "emergency-exit", builtin_emergency_exit);
     lex_add_builtin(e, "get-environment-variable", builtin_get_env_var);
