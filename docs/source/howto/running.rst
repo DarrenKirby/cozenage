@@ -89,8 +89,8 @@ Using the REPL
 --------------
 
 Most modern interpreted languages provide a :abbr:`REPL` for interactive use. The idea of a REPL was first described by
-John McCarthy, the inventor of the original LISP language in his 1960 paper named "Recursive Functions of Symbolic
-Expressions and Their Computation by Machine, Part I". The interactive loop he described is the direct ancestor of every
+John McCarthy, the inventor of the original LISP language in his 1960 paper named "Recursive functions of symbolic
+expressions and their computation by machine". The interactive loop he described is the direct ancestor of every
 REPL that exists today.
 
 REPLs are a very powerful tool which allow for interactive 'conversations' with the interpreter, in order to experiment
