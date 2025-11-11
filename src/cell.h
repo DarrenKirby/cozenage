@@ -50,7 +50,7 @@ typedef enum {
 
 /* Cell_t type enum. */
 typedef enum {
-    /* Native Scheme types. */
+    /* Primitive Scheme types. */
     CELL_INTEGER    = 1 << 0,   /* integer */
     CELL_RATIONAL   = 1 << 1,   /* rational */
     CELL_REAL       = 1 << 2,   /* real */
@@ -69,15 +69,15 @@ typedef enum {
     CELL_EOF        = 1 << 12,  /* EOF object */
     CELL_PROC       = 1 << 13,  /* procedure */
     CELL_PORT       = 1 << 14,  /* port */
+    /* Internal-use types. */
     CELL_CONT       = 1 << 15,  /* continuation (maybe) */
-
-    /* Internal types. */
-    CELL_ERROR      = 1 << 16,   /* error */
-    CELL_SEXPR      = 1 << 17,   /* an array of values */
-    CELL_TCS        = 1 << 18,   /* Tail Call Sentinel object */
-    CELL_TRAMPOLINE = 1 << 19    /* Trampoline object - returned from
-                                    first-class procedures to signal a
-                                    tail-call */
+    CELL_ERROR      = 1 << 16,  /* error */
+    CELL_SEXPR      = 1 << 17,  /* an array of values */
+    CELL_TCS        = 1 << 18,  /* Tail Call Sentinel object */
+    CELL_MRV        = 1 << 19,  /* Multiple Return Value sentinel object */
+    CELL_TRAMPOLINE = 1 << 20   /* Trampoline object - returned from
+                                   first-class procedures to signal a
+                                   tail-call */
 } Cell_t;
 
 /* Anonymous and named lambdas. */
@@ -196,6 +196,7 @@ Cell* make_cell_bytevector(void);
 Cell* make_cell_symbol(const char* the_symbol);
 Cell* make_cell_string(const char* the_string);
 Cell* make_cell_sexpr(void);
+Cell* make_cell_mrv(void);
 Cell* make_cell_pair(Cell* car, Cell* cdr);
 Cell* make_cell_error(const char* error_string, err_t error_type);
 Cell* make_cell_port(const char* path, FILE* fh, int io_t, int stream_t);
