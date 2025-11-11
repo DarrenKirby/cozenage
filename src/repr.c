@@ -24,7 +24,7 @@
 #include "types.h"
 #include <stdio.h>
 #include <string.h>
-#include <ctype.h>
+#include <wctype.h>
 
 
 /* Forward declaration for helpers */
@@ -196,22 +196,24 @@ static void cell_to_string_worker(const Cell* v,
                 sb_append_char(sb, '"');
                 const int len = (int)strlen(v->str);
                 for (int i = 0; i < len; i++) {
-                    const char c = v->str[i];
-                    switch (c) {
-                    case '\n': sb_append_str(sb, "\\n"); break;
-                    case '\t': sb_append_str(sb, "\\t"); break;
-                    case '\"': sb_append_str(sb, "\\\""); break;
-                    case '\\': sb_append_str(sb, "\\\\"); break;
-                        /* TODO... (and so on for \r, \a, etc.) */
-                    default:
-                        /* Check if it's a printable character. */
-                        if (isprint(c)) {
-                            sb_append_char(sb, c);
-                        } else {
-                            /* Print non-printable chars as hex escapes. */
-                            sb_append_fmt(sb, "\\x%02x;", (unsigned char)c);
+                    const wchar_t wc = (unsigned char)v->str[i];
+                    switch (wc) {
+                        case '\n': sb_append_str(sb, "\\n"); break;
+                        case '\t': sb_append_str(sb, "\\t"); break;
+                        case '\"': sb_append_str(sb, "\\\""); break;
+                        case '\\': sb_append_str(sb, "\\\\"); break;
+                        case '\a': sb_append_str(sb, "\\a"); break;
+                        case '\r': sb_append_str(sb, "\\r"); break;
+                        case '\0': sb_append_str(sb, "\\0"); break;
+                        default:
+                            /* Check if it's a printable character. */
+                            if (iswprint(wc)) {
+                                sb_append_char(sb, (char)wc);
+                            } else {
+                                /* Print non-printable chars as hex escapes. */
+                                sb_append_fmt(sb, "\\x%02x;", (unsigned char)wc);
+                            }
                         }
-                    }
                 }
                 sb_append_char(sb, '"');
             }
@@ -223,26 +225,26 @@ static void cell_to_string_worker(const Cell* v,
                     sb_append_fmt(sb, "<builtin procedure '%s%s%s'>",
                         ANSI_GREEN_B, v->f_name, ANSI_RESET);
                 } else {
-                    sb_append_fmt(sb, "<builtin procedure '%s'>", v->f_name);
+                    sb_append_fmt(sb, "#<builtin procedure '%s'>", v->f_name);
                 }
             } else {
                 if (mode == MODE_REPL) {
                     sb_append_fmt(sb, "<lambda '%s%s%s'>", ANSI_GREEN_B,
                         v->lambda->l_name ? v->lambda->l_name : "anonymous", ANSI_RESET);
                 } else {
-                    sb_append_fmt(sb, "<lambda '%s'>", v->lambda->l_name ? v->lambda->l_name : "anonymous");
+                    sb_append_fmt(sb, "#<lambda '%s'>", v->lambda->l_name ? v->lambda->l_name : "anonymous");
                 }
             }
             break;
 
         case CELL_PORT:
             if (mode == MODE_REPL) {
-                printf("<%s%s %s-port '%s%s%s'>", v->is_open ? "open:" : "closed:",
+                sb_append_fmt(sb, "<%s%s %s-port '%s%s%s'>", v->is_open ? "open:" : "closed:",
                     v->port->stream_t == TEXT_PORT ? "text" : "binary",
                     v->port->port_t == INPUT_PORT ? "input" : "output",
                     ANSI_BLUE_B, v->port->path, ANSI_RESET);
             } else {
-                printf("<%s%s %s-port '%s'>", v->is_open ? "open:" : "closed:",
+                sb_append_fmt(sb, "#<%s%s %s-port '%s'>", v->is_open ? "open:" : "closed:",
                     v->port->stream_t == TEXT_PORT ? "text" : "binary",
                     v->port->port_t == INPUT_PORT ? "input" : "output",
                     v->port->path);
