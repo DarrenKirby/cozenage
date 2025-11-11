@@ -18,6 +18,9 @@
 */
 
 #include "numerics.h"
+
+#include <float.h>
+
 #include "types.h"
 #include "environment.h"
 #include "comparators.h"
@@ -472,7 +475,7 @@ Cell* builtin_max(const Lex* e, const Cell* a) {
     for (int i = 1; i < a->count; i++) {
         const Cell* rhs = a->cell[i];
 
-        Cell* arg_list = make_sexpr_len2(largest_so_far, rhs);
+        const Cell* arg_list = make_sexpr_len2(largest_so_far, rhs);
         const Cell* result = builtin_lt_op(e, arg_list);
 
         if (result->boolean_v == 1) { /* if (largest_so_far < rhs) */
@@ -499,7 +502,7 @@ Cell* builtin_min(const Lex* e, const Cell* a) {
     for (int i = 1; i < a->count; i++) {
         Cell* rhs = a->cell[i];
 
-        Cell* arg_list = make_sexpr_len2(smallest_so_far, rhs);
+        const Cell* arg_list = make_sexpr_len2(smallest_so_far, rhs);
         const Cell* result = builtin_gt_op(e, arg_list); /* Using > for min */
 
         if (result->boolean_v == 1) { /* if (smallest_so_far > rhs) */
@@ -519,6 +522,61 @@ Cell* builtin_floor(const Lex* e, const Cell* a) {
     val = floorl(val);
 
     return make_cell_from_double(val);
+}
+
+/* (floor-quotient n1 n2) */
+Cell* builtin_floor_quotient(const Lex* e, const Cell* a)
+{
+    (void)e;
+    Cell* err = check_arg_types(a, CELL_INTEGER);
+    if (err) { return err; }
+    if ((err = CHECK_ARITY_EXACT(a, 2))) { return err; }
+
+    const long long n1 = a->cell[0]->integer_v ;
+    const long long n2 = a->cell[1]->integer_v ;
+
+    long long q = n1 / n2;
+    const long long r = n1 % n2;
+
+    if (r != 0 && n1 > 0 != n2 > 0) {
+        q = q - 1;
+    }
+
+    return make_cell_integer(q);
+}
+
+/* (floor/ n1 n2 ) */
+Cell* builtin_floor_div(const Lex* e, const Cell* a)
+{
+    (void)e;
+    Cell* err = check_arg_types(a, CELL_INTEGER);
+    if (err) { return err; }
+    if ((err = CHECK_ARITY_EXACT(a, 2))) { return err; }
+
+    const long long n1 = a->cell[0]->integer_v;
+    const long long n2 = a->cell[1]->integer_v;
+
+    if (n2 == 0) {
+        return make_cell_error(
+            "truncate/: division by zero",
+            VALUE_ERR);
+    }
+
+    long long q = n1 / n2; /* C's integer division truncates. */
+    long long r = n1 % n2; /* C's modulo is consistent with its division. */
+
+    /* If the remainder is non-zero and the signs of n and d differ,
+     * C's division truncated towards zero, which is the wrong direction
+     * for floor. We need to adjust. */
+    if (r != 0 && n1 > 0 != n2 > 0) {
+        q = q - 1;
+        r = r + n2;
+    }
+
+    Cell* result = make_cell_mrv();
+    cell_add(result, make_cell_integer(q));
+    cell_add(result, make_cell_integer(r));
+    return result;
 }
 
 Cell* builtin_ceiling(const Lex* e, const Cell* a) {
@@ -557,6 +615,32 @@ Cell* builtin_truncate(const Lex* e, const Cell* a) {
     return make_cell_from_double(val);
 }
 
+/* (truncate/ n1 n2 ) */
+Cell* builtin_truncate_div(const Lex* e, const Cell* a)
+{
+    (void)e;
+    Cell* err = check_arg_types(a, CELL_INTEGER);
+    if (err) { return err; }
+    if ((err = CHECK_ARITY_EXACT(a, 2))) { return err; }
+
+    const long long n1 = a->cell[0]->integer_v ;
+    const long long n2 = a->cell[1]->integer_v ;
+
+    if (n2 == 0) {
+        return make_cell_error(
+            "truncate/: division by zero",
+            VALUE_ERR);
+    }
+
+    const long long q = n1 / n2; /* C's integer division truncates. */
+    const long long r = n1 % n2; /* C's modulo is consistent with its division. */
+
+    Cell* result = make_cell_mrv();
+    cell_add(result, make_cell_integer(q));
+    cell_add(result, make_cell_integer(r));
+    return result;
+}
+
 Cell* builtin_numerator(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL);
@@ -583,14 +667,122 @@ Cell* builtin_denominator(const Lex* e, const Cell* a) {
     return make_cell_integer(a->cell[0]->den);
 }
 
+/* (rationalize x y)
+ * The rationalize procedure returns the simplest rational number differing from x by no more than y. A rational
+ * number r1 is simpler than another rational number r2 if r1 = p1/q1 and r2 = p2/q2 (in lowest terms) and
+ * |p1| ≤ |p2|and |q1| ≤ |q2|. Thus, 3/5 is simpler than 4/7. Although not all rationals are comparable in this ordering
+ * (consider 2/7 and 3/5), any interval contains a rational number that is simpler than every other rational number in
+ * that interval(the simpler 2/5 lies between 2/7 and 3/5). Note that 0 = 0/1 is the simplest rational of all. */
+Cell* builtin_rationalize(const Lex* e, const Cell* a)
+{
+    (void)e;
+    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL);
+    if (err) { return err; }
+    if ((err = CHECK_ARITY_EXACT(a, 2))) { return err; }
+
+    /* A practical limit based on ~16-17 digits of precision. */
+    // ReSharper disable once CppVariableCanBeMadeConstexpr
+    const long long MAX_DENOMINATOR = 10000000000000000LL; /* 10^16 */
+
+    const long double x_ld = cell_to_long_double(a->cell[0]);
+    const long double y_ld = cell_to_long_double(a->cell[1]);
+
+    const long double lower = x_ld - y_ld;
+    const long double upper = x_ld + y_ld;
+
+    if (lower <= 0.0 && upper >= 0.0) {
+        /* Return the rational 0/1. */
+        return make_cell_rational(0, 1, false);
+    }
+
+    for (long long q = 1; q < MAX_DENOMINATOR; ++q) {
+        // We need to find an integer p in the range [q * lower, q * upper]
+        long double p_lower_bound = q * lower;
+        long double p_upper_bound = q * upper;
+
+        /* Find the smallest integer p that is >= p_lower_bound.
+         * That's just ceil(p_lower_bound). */
+        long long p = (long long)ceill(p_lower_bound);
+
+        /* Now, check if this p is within the upper bound. */
+        if (p <= p_upper_bound) {
+            /* SUCCESS! We found the simplest p/q. */
+            return make_cell_rational(p, q, true);
+        }
+    }
+
+    /* If we cannot converge on a simpler rational,
+     * return the original x as a rat. */
+    int exponent;
+    /* frexpl breaks x into a mantissa in [0.5, 1.0) and an exponent. */
+    const long double mantissa = frexpl(x_ld, &exponent);
+
+    /* We need to turn the mantissa into an integer.
+     * LDBL_MANT_DIG is the number of bits in the mantissa (e.g., 64). */
+    const long long mantissa_as_int = (long long)ldexpl(mantissa, LDBL_MANT_DIG);
+    const long long denominator = (long long)1ULL << (LDBL_MANT_DIG - exponent);
+
+    return make_cell_rational(mantissa_as_int, denominator, true);
+}
+
 Cell* builtin_square(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX);
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
 
-    Cell* args = make_sexpr_len2(a->cell[0], a->cell[0]);
+    const Cell* args = make_sexpr_len2(a->cell[0], a->cell[0]);
     return builtin_mul(e, args);
+}
+
+/* Implements exact-integer-sqrt for unsigned 64-bit integers.
+ * Returns s, the integer square root. */
+static unsigned long long integer_sqrt(const unsigned long long k) {
+    if (k == 0) return 0;
+
+    /* Initial guess is a good, but low, approximation. */
+    unsigned long long s = 1ULL << ((63 - __builtin_clzll(k)) / 2);
+
+    /* Perform one iteration of Newton's method unconditionally.
+     * This jumps from the initial underestimate to an overestimate,
+     * which allows the main loop to converge correctly. */
+    s = (s + k / s) >> 1;
+
+    while (1) {
+        const unsigned long long s_next = (s + k / s) >> 1;
+
+        /* The sequence now decreases until it converges.
+         * The loop terminates when the next guess is no longer smaller. */
+        if (s_next >= s) {
+            return s; /* We've found the solution. */
+        }
+        s = s_next;
+    }
+}
+
+/* (exact-integer-sqrt k)
+ * Returns two values s and r such that k = s² + r. */
+Cell* builtin_exact_integer_sqrt(const Lex* e, const Cell* a)
+{
+    (void)e;
+    Cell* err = check_arg_types(a, CELL_INTEGER);
+    if (err) { return err; }
+    if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
+    const long long k = a->cell[0]->integer_v;
+    if (k < 1) {
+        make_cell_error(
+            "exact-integer-sqrt: arg1 must be an exact positive integer",
+            VALUE_ERR);
+    }
+
+    const unsigned long long s = integer_sqrt(k);
+    //const unsigned long long s = (long long)sqrtl(k);
+    const unsigned long long r = k - s * s;
+
+    Cell* result = make_cell_mrv();
+    cell_add(result, make_cell_integer((long long)s));
+    cell_add(result, make_cell_integer((long long)r));
+    return result;
 }
 
 Cell* builtin_exact(const Lex* e, const Cell* a) {

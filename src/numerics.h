@@ -39,12 +39,17 @@ Cell* builtin_gcd(const Lex* e, const Cell* a);
 Cell* builtin_max(const Lex* e, const Cell* a);
 Cell* builtin_min(const Lex* e, const Cell* a);
 Cell* builtin_floor(const Lex* e, const Cell* a);
+Cell* builtin_floor_quotient(const Lex* e, const Cell* a);
+Cell* builtin_floor_div(const Lex* e, const Cell* a);
 Cell* builtin_ceiling(const Lex* e, const Cell* a);
 Cell* builtin_round(const Lex* e, const Cell* a);
 Cell* builtin_truncate(const Lex* e, const Cell* a);
+Cell* builtin_truncate_div(const Lex* e, const Cell* a);
 Cell* builtin_numerator(const Lex* e, const Cell* a);
 Cell* builtin_denominator(const Lex* e, const Cell* a);
+Cell* builtin_rationalize(const Lex* e, const Cell* a);
 Cell* builtin_square(const Lex* e, const Cell* a);
+Cell* builtin_exact_integer_sqrt(const Lex* e, const Cell* a);
 Cell* builtin_exact(const Lex* e, const Cell* a);
 Cell* builtin_inexact(const Lex* e, const Cell* a);
 

@@ -233,10 +233,15 @@ void lex_add_builtins(const Lex* e)
     lex_add_builtin(e, "truncate", builtin_truncate);
     lex_add_builtin(e, "numerator", builtin_numerator);
     lex_add_builtin(e, "denominator", builtin_denominator);
+    lex_add_builtin(e, "rationalize", builtin_rationalize);
+    lex_add_builtin(e, "truncate/", builtin_truncate_div);
     lex_add_builtin(e, "truncate-quotient", builtin_quotient);
     lex_add_builtin(e, "truncate-remainder", builtin_remainder);
+    lex_add_builtin(e, "floor/", builtin_floor_div);
+    lex_add_builtin(e, "floor-quotient", builtin_floor_quotient);
     lex_add_builtin(e, "floor-remainder", builtin_modulo);
     lex_add_builtin(e, "square", builtin_square);
+    lex_add_builtin(e, "exact-integer-sqrt", builtin_exact_integer_sqrt);
     lex_add_builtin(e, "exact", builtin_exact);
     lex_add_builtin(e, "inexact", builtin_inexact);
     /* Type identity predicate procedures. */
