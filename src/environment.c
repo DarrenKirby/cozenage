@@ -313,7 +313,8 @@ void lex_add_builtins(const Lex* e)
     /* Bytevector procedures. */
     lex_add_builtin(e, "bytevector", builtin_bytevector);
     lex_add_builtin(e, "bytevector-length", builtin_bytevector_length);
-    lex_add_builtin(e, "bytevector-u8-ref", builtin_bytevector_ref);
+    lex_add_builtin(e, "bytevector-u8-ref", builtin_bytevector_u8_ref);
+    lex_add_builtin(e, "bytevector-u8-set!", builtin_bytevector_u8_set_bang);
     lex_add_builtin(e, "make-bytevector", builtin_make_bytevector);
     lex_add_builtin(e, "bytevector-copy", builtin_bytevector_copy);
     lex_add_builtin(e, "bytevector-append", builtin_bytevector_append);
