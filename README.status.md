@@ -148,7 +148,7 @@ This document tracks the implementation status of the R7RS standard libraries in
 |   ✅    | `read-char`                      |
 |   ✅    | `read-error?`                    |
 |   ✅    | `read-line`                      |
-|   ❌    | `read-string`                    |
+|   ✅    | `read-string`                    |
 |   ❌    | `read-u8`                        |
 |   ✅    | `real?`                          |
 |   ✅    | `remainder`                      |
@@ -161,7 +161,7 @@ This document tracks the implementation status of the R7RS standard libraries in
 |   ✅    | `string->list`                   |
 |   ✅    | `string->number`                 |
 |   ✅    | `string->symbol`                 |
-|   ❌    | `string->utf8`                   |
+|   ✅    | `string->utf8`                   |
 |   ✅    | `string->vector`                 |
 |   ✅    | `string-append`                  |
 |   ✅    | `string-copy`                    |
@@ -188,7 +188,7 @@ This document tracks the implementation status of the R7RS standard libraries in
 |   ✅    | `truncate-remainder`             |
 |   ✅    | `truncate/`                      |
 |   ✅    | `u8-ready?`                      |
-|   ❌    | `utf8->string`                   |
+|   ✅    | `utf8->string`                   |
 |   ❌    | `values`                         |
 |   ✅    | `vector`                         |
 |   ✅    | `vector->list`                   |
