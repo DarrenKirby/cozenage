@@ -550,16 +550,49 @@ Cell* parse_tokens(TokenArray *ta) {
     /* Vector or bytevector */
     if (token->type == T_HASH) {
         token = advance(ta); /* Consume '#' */
-        Cell* vec;
 
         if (peek(ta)->type == T_SYMBOL && strcmp("u8", token_to_string(peek(ta))) == 0) {
             /* Bytevector */
-            vec = make_cell_bytevector();
+            Cell* bv = make_cell_bytevector_u8();
             token = advance(ta); /* consume '#u8' */
-        } else {
-            /* Vector */
-            vec = make_cell_vector();
+
+            if (peek(ta)->type != T_LEFT_PAREN) {
+                snprintf(err_buf, sizeof(err_buf),
+                            "Line %d: Expected '(' in bytevector literal: '%s%s%s'",
+                            token->line, ANSI_RED_B, token_to_string(token), ANSI_RESET);
+                return make_cell_error(err_buf, SYNTAX_ERR);
+            }
+
+            token = advance(ta); /* Consume '(' */
+            while (peek(ta)->type != T_RIGHT_PAREN) {
+                const Cell* val = parse_tokens(ta);
+                if (val->type != CELL_INTEGER) {
+                    return make_cell_error(
+                        "bytevector literals can only contain bytes",
+                        TYPE_ERR);
+                }
+
+                if (val->integer_v < 0 || val->integer_v > UINT8_MAX) {
+                    return make_cell_error(
+                        "invalid u8 byte value",
+                        VALUE_ERR);
+                }
+                const u_int8_t byte = val->integer_v;
+                byte_add(bv, byte);
+                advance(ta);
+            }
+
+            if (!peek(ta)) {
+                snprintf(err_buf, sizeof(err_buf),
+                            "Line %d: Unmatched '(' in bytevector literal: '%s%s%s'",
+                            token->line, ANSI_RED_B, token_to_string(token), ANSI_RESET);
+                return make_cell_error(err_buf, SYNTAX_ERR);
+            }
+            return bv;
         }
+
+        /* Vector */
+        Cell* vec = make_cell_vector();
 
         if (peek(ta)->type != T_LEFT_PAREN) {
             snprintf(err_buf, sizeof(err_buf),
@@ -579,22 +612,6 @@ Cell* parse_tokens(TokenArray *ta) {
                         "Line %d: Unmatched '(' in vector literal: '%s%s%s'",
                         token->line, ANSI_RED_B, token_to_string(token), ANSI_RESET);
             return make_cell_error(err_buf, SYNTAX_ERR);
-        }
-
-        /* Check for valid values in #u8() bytevector. */
-        if (vec->type == CELL_BYTEVECTOR) {
-            for (int i = 0; i < vec->count; i++) {
-                if (vec->cell[i]->type != CELL_INTEGER) {
-                    return make_cell_error(
-                        "bytevector members must be integers",
-                        VALUE_ERR);
-                }
-                if (vec->cell[i]->integer_v < 0 || vec->cell[i]->integer_v > 255) {
-                    return make_cell_error(
-                        " u8 bytevector members must be between 0 and 255 (inclusive)",
-                        VALUE_ERR);
-                }
-            }
         }
         return vec;
     }
