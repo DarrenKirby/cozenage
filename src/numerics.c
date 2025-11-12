@@ -18,14 +18,12 @@
 */
 
 #include "numerics.h"
-
-#include <float.h>
-
 #include "types.h"
 #include "environment.h"
 #include "comparators.h"
 #include <math.h>
 #include <stdlib.h>
+#include <float.h>
 
 
 /*------------------------------------*

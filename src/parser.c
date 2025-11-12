@@ -120,41 +120,40 @@ static Cell* parse_number(char* token, const int line, int len) {
 
     char *tok;
     /* Check for exact/inexact */
-    if (token[0] == 'e') {
+    if (token[0] == 'e' && token[len - 1] != 'i') {
         exact = 1; len -= 1;
         token = token + 1;
-    } else if (token[0] == 'i') {
+    } else if (token[0] == 'i' && token[len - 1] != 'i') {
         exact = 0; len -= 1;
         token = token + 1;
     }
 
     /* For weirdness like #i#b1011 */
-    if (token[0] == '#') {
+    if (token[0] == '#' && token[len - 1] != 'i') {
         len -= 1;
         token = token + 1;
     }
 
     /* Check for base prefixes */
-    if (token[0] == 'b') {
+    if (token[0] == 'b' && token[len - 1] != 'i') {
         base = 2; len -= 1;
         tok = token + 1;
-    } else if (token[0] == 'o') {
+    } else if (token[0] == 'o' && token[len - 1] != 'i') {
         base = 8; len -= 1;
         tok = token + 1;
-    } else if (token[0] == 'd') {
+    } else if (token[0] == 'd' && token[len - 1] != 'i') {
         len -= 1;
         tok = token + 1;
-    } else if (token[0] == 'x') {
+    } else if (token[0] == 'x' && token[len - 1] != 'i') {
         base = 16; len -= 1;
         tok = token + 1;
     } else {
-        /* No prefix */
+        /* No prefix, or complex */
         tok = token;
     }
 
     /* Imaginary number */
     if (tok[len - 1] == 'i') {
-
         char *p = tok;
 
         /* strip trailing 'i' */
