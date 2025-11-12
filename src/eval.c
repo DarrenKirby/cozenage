@@ -67,6 +67,12 @@ Cell* coz_eval(Lex* env, Cell* expr) {
             return expr;
                           }
 
+        /* Multiple return values - just return for now,
+         * this will have to  be fixed when call-with-values is implemented */
+        if (expr->type == CELL_MRV) {
+            return expr;
+        }
+
         /* Symbols: look them up in the environment unless quoted */
         if (expr->type & CELL_SYMBOL) {
 
