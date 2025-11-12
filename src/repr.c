@@ -100,6 +100,17 @@ static void repr_sequence(const Cell* v,
     sb_append_fmt(sb, "%c", close);
 }
 
+static void repr_bv(const Cell* v, string_builder_t *sb, const print_mode_t mode)
+{
+    (void)mode;
+    sb_append_str(sb, "#u8(");
+    for (int i = 0; i < v->count; i++)
+    {
+        sb_append_fmt(sb, "%d", v->bv_u8[i]);
+        if (i != v->count - 1) sb_append_char(sb, ' ');
+    }
+    sb_append_char(sb, ')');
+}
 
 /* Generate external representations of all Cozenage/Scheme types. */
 static void cell_to_string_worker(const Cell* v,
@@ -285,7 +296,8 @@ static void cell_to_string_worker(const Cell* v,
             break;
 
         case CELL_BYTEVECTOR:
-            repr_sequence(v, "#u8", '(', ')', sb, mode);
+            //repr_sequence(v, "#u8", '(', ')', sb, mode);
+            repr_bv(v, sb, mode);
             break;
 
         default:
