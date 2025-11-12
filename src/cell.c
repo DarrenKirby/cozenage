@@ -291,7 +291,16 @@ Cell* make_cell_vector(void)
 }
 
 
-Cell* make_cell_bytevector(void)
+Cell* make_cell_bytevector(bv_t t)
+{
+    switch (t)  {
+        case BV_U8: return make_cell_bytevector_u8();
+        case BV_S8: return make_cell_error("Not implemented yet", GEN_ERR);
+    default: return make_cell_error("Bad byte vector type.", VALUE_ERR);
+    }
+}
+
+Cell* make_cell_bytevector_u8(void)
 {
     Cell* v = GC_MALLOC(sizeof(Cell));
     if (!v) {
@@ -299,7 +308,9 @@ Cell* make_cell_bytevector(void)
         exit(EXIT_FAILURE);
     }
     v->type = CELL_BYTEVECTOR;
-    v->cell = nullptr;
+    /* Initialize to 8-byte capacity */
+    v->bv_u8 = GC_MALLOC_ATOMIC(sizeof(uint8_t) * 8);
+    v->capacity = 8;
     v->count = 0;
     return v;
 }
@@ -358,6 +369,17 @@ Cell* cell_add(Cell* v, Cell* x)
     v->cell = GC_REALLOC(v->cell, sizeof(Cell*) * v->count);
     v->cell[v->count-1] = x;
     return v;
+}
+
+Cell* byte_add(Cell* bv, const u_int8_t b)
+{
+    bv->count++;
+    if (bv->count == bv->capacity) {
+        bv->bv_u8 = GC_REALLOC(bv->bv_u8, bv->capacity * 2);
+        bv->capacity *= 2;
+    }
+    bv->bv_u8[bv->count-1] = b;
+    return bv;
 }
 
 

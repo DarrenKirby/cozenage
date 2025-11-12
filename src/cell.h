@@ -80,6 +80,15 @@ typedef enum {
                                    tail-call */
 } Cell_t;
 
+typedef enum {
+    BV_U8,
+    BV_S8,
+    BV_U16,
+    BV_S16,
+    BV_U32,
+    BV_S32
+} bv_t;
+
 /* Anonymous and named lambdas. */
 typedef struct Lambda {
      char* l_name;     /* Name of builtin and named lambda procedures. */
@@ -158,8 +167,14 @@ typedef struct Cell {
             int sf_id;        /* Special form id */
         };
 
+        /* u8-Bytevectors. */
+        struct {
+            u_int8_t* bv_u8;
+            u_int16_t capacity;
+        };
+
         /* Single-field types */
-        Cell** cell;              /* for compound types (sexpr, vector, bytevector) */
+        Cell** cell;              /* for compound types (sexpr, vector) */
         char* str;                /* strings */
         char* error_v;            /* error string */
         long double real_v;       /* reals */
@@ -192,7 +207,7 @@ Cell* make_cell_rational(long int numerator, long int denominator, bool simplify
 Cell* make_cell_complex(Cell* real_part, Cell *imag_part);
 Cell* make_cell_char(UChar32 the_char);
 Cell* make_cell_vector(void);
-Cell* make_cell_bytevector(void);
+Cell* make_cell_bytevector(bv_t t);
 Cell* make_cell_symbol(const char* the_symbol);
 Cell* make_cell_string(const char* the_string);
 Cell* make_cell_sexpr(void);
@@ -204,5 +219,7 @@ Cell* cell_add(Cell* v, Cell* x);
 Cell* cell_copy(const Cell* v);
 Cell* cell_pop(Cell* v, int i);
 Cell* cell_take(Cell* v, int i);
+Cell* make_cell_bytevector_u8(void);
+Cell* byte_add(Cell* bv, u_int8_t b);
 
 #endif //COZENAGE_CELL_H
