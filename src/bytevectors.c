@@ -18,6 +18,11 @@
 */
 
 #include "bytevectors.h"
+
+#include <string.h>
+#include <gc/gc.h>
+
+#include "strings.h"
 #include "types.h"
 
 
@@ -192,6 +197,13 @@ Cell* builtin_bytevector_copy(const Lex* e, const Cell* a)
     return vec;
 }
 
+/* TODO */
+Cell* builtin_bytevector_copy_bang(const Lex* e, const Cell* a)
+{
+    (void)e; (void)a;
+    return nullptr;
+}
+
 /* (bytevector-append bytevector ...)
 * Returns a newly allocated bytevector whose elements are
 the concatenation of the elements in the given bytevectors. */
@@ -213,4 +225,108 @@ Cell* builtin_bytevector_append(const Lex* e, const Cell* a)
         }
     }
     return result;
+}
+
+Cell* builtin_utf8_string(const Lex* e, const Cell* a)
+{
+    (void)e;
+    Cell* err = CHECK_ARITY_RANGE(a, 1, 3);
+    if (err) return err;
+    if (a->cell[0]->type != CELL_BYTEVECTOR) {
+        return make_cell_error(
+            "string->utf8: arg 1 must be a string",
+            TYPE_ERR);
+    }
+
+    int start = 0;
+    int end = a->cell[0]->count;
+    if (a->count > 1) {
+        if (a->cell[1]->type != CELL_INTEGER) {
+            return make_cell_error(
+                "string->utf8: arg 2 must be an exact positive integer",
+                TYPE_ERR);
+        }
+        if (a->cell[1]->integer_v < 0) {
+            return make_cell_error(
+                "string->utf8: arg 2 must be non-negative",
+                VALUE_ERR);
+        }
+        start = (int)a->cell[1]->integer_v;
+    }
+    if (a->count == 3) {
+        if (a->cell[2]->type != CELL_INTEGER) {
+            return make_cell_error(
+                "string->utf8: arg 3 must be an exact positive integer",
+                TYPE_ERR);
+        }
+        if (a->cell[2]->integer_v < 0) {
+            return make_cell_error(
+                "string->utf8: arg 3 must be non-negative",
+                VALUE_ERR);
+        }
+        end = (int)a->cell[2]->integer_v;
+    }
+
+    const Cell* the_bv = a->cell[0];
+    char* the_str = GC_MALLOC_ATOMIC(the_bv->count + 1);
+
+    int j = 0;
+    for (int i = start; i < end; i++) {
+        //printf("%d\n", (int)the_bv->cell[i]->integer_v);
+        the_str[j] = (char)the_bv->cell[i]->integer_v;
+        j++;
+    }
+
+    the_str[j] = '\0';
+    return make_cell_string(the_str);
+}
+
+Cell* builtin_string_utf8(const Lex* e, const Cell* a)
+{
+    (void)e;
+    Cell* err = CHECK_ARITY_RANGE(a, 1, 3);
+    if (err) return err;
+    if (a->cell[0]->type != CELL_STRING) {
+        return make_cell_error(
+            "string->utf8: arg 1 must be a string",
+            TYPE_ERR);
+    }
+
+    int start = 0;
+    size_t end = strlen(a->cell[0]->str);
+    if (a->count > 1) {
+        if (a->cell[1]->type != CELL_INTEGER) {
+            return make_cell_error(
+                "string->utf8: arg 2 must be an exact positive integer",
+                TYPE_ERR);
+        }
+        if (a->cell[1]->integer_v < 0) {
+            return make_cell_error(
+                "string->utf8: arg 2 must be non-negative",
+                VALUE_ERR);
+        }
+        start = (int)a->cell[1]->integer_v;
+    }
+    if (a->count == 3) {
+        if (a->cell[2]->type != CELL_INTEGER) {
+            return make_cell_error(
+                "string->utf8: arg 3 must be an exact positive integer",
+                TYPE_ERR);
+        }
+        if (a->cell[2]->integer_v < 0) {
+            return make_cell_error(
+                "string->utf8: arg 3 must be non-negative",
+                VALUE_ERR);
+        }
+        end = (int)a->cell[2]->integer_v;
+    }
+
+    const char* the_s = a->cell[0]->str;
+    Cell* bv = make_cell_bytevector();
+    for (size_t i = start; i < end; i++)
+    {
+        const u_int8_t the_char = (int)the_s[i];
+        cell_add(bv, make_cell_integer(the_char));
+    }
+    return bv;
 }

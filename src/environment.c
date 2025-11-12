@@ -317,6 +317,8 @@ void lex_add_builtins(const Lex* e)
     lex_add_builtin(e, "make-bytevector", builtin_make_bytevector);
     lex_add_builtin(e, "bytevector-copy", builtin_bytevector_copy);
     lex_add_builtin(e, "bytevector-append", builtin_bytevector_append);
+    lex_add_builtin(e, "utf8->string", builtin_utf8_string);
+    lex_add_builtin(e, "string->utf8", builtin_string_utf8);
     /* Char procedures. */
     lex_add_builtin(e, "char->integer", builtin_char_to_int);
     lex_add_builtin(e, "integer->char", builtin_int_to_char);
@@ -370,6 +372,7 @@ void lex_add_builtins(const Lex* e)
     lex_add_builtin(e, "close-output-port", builtin_close_port);
     lex_add_builtin(e, "read-line", builtin_read_line);
     lex_add_builtin(e, "read-char", builtin_read_char);
+    lex_add_builtin(e, "read-string", builtin_read_string);
     lex_add_builtin(e, "peek-char", builtin_peek_char);
     lex_add_builtin(e, "char-ready?", builtin_char_ready);
     lex_add_builtin(e, "u8-ready?", builtin_u8_ready);
