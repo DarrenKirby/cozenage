@@ -26,7 +26,8 @@
 /* Bytevector constructors, selectors,and procedures */
 Cell* builtin_bytevector(const Lex* e, const Cell* a);
 Cell* builtin_bytevector_length(const Lex* e, const Cell* a);
-Cell* builtin_bytevector_ref(const Lex* e, const Cell* a);
+Cell* builtin_bytevector_u8_ref(const Lex* e, const Cell* a);
+Cell* builtin_bytevector_u8_set_bang(const Lex* e, const Cell* a);
 Cell* builtin_make_bytevector(const Lex* e, const Cell* a);
 Cell* builtin_bytevector_copy(const Lex* e, const Cell* a);
 Cell* builtin_bytevector_copy_bang(const Lex* e, const Cell* a);

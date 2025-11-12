@@ -38,16 +38,28 @@ Cell* builtin_bytevector(const Lex* e, const Cell* a)
     Cell* err = CHECK_ARITY_MIN(a, 1);
     if (err) return err;
 
-    Cell *vec = make_cell_bytevector();
+    // Cell *vec = make_cell_bytevector();
+    // for (int i = 0; i < a->count; i++) {
+    //     if (a->cell[i]->type != CELL_INTEGER || a->cell[i]->integer_v < 0 || a->cell[i]->integer_v > 255) {
+    //         return make_cell_error(
+    //             "bytevector: args must be integers 0 to 255 inclusive",
+    //             VALUE_ERR);
+    //     }
+    //     cell_add(vec, a->cell[i]);
+    // }
+    // return vec;
+
+    Cell* bv = make_cell_bytevector_u8();
     for (int i = 0; i < a->count; i++) {
-        if (a->cell[i]->type != CELL_INTEGER || a->cell[i]->integer_v < 0 || a->cell[i]->integer_v > 255) {
+        if (a->cell[i]->type != CELL_INTEGER || a->cell[i]->integer_v < 0 ||
+            a->cell[i]->integer_v > UINT8_MAX) {
             return make_cell_error(
                 "bytevector: args must be integers 0 to 255 inclusive",
                 VALUE_ERR);
         }
-        cell_add(vec, a->cell[i]);
+        byte_add(bv, (u_int8_t)a->cell[i]->integer_v);
     }
-    return vec;
+    return bv;
 }
 
 
@@ -67,7 +79,7 @@ Cell* builtin_bytevector_length(const Lex* e, const Cell* a)
 
 /* (bytevector-u8-ref bytevector k)
  * Returns the kth byte of bytevector. */
-Cell* builtin_bytevector_ref(const Lex* e, const Cell* a)
+Cell* builtin_bytevector_u8_ref(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2);
@@ -89,31 +101,36 @@ Cell* builtin_bytevector_ref(const Lex* e, const Cell* a)
             "bytevector-ref: index out of bounds",
             INDEX_ERR);
     }
-    return a->cell[0]->cell[i];
+    return make_cell_integer(a->cell[0]->bv_u8[i]);
 }
 
-/* (bytevector-u8-set! bytevector k obj)
+/* (bytevector-u8-set! bytevector k byte)
  * It is an error if k is not a valid index of vector. This procedure stores obj in the kth position
  * of vector */
-Cell* builtin_bytevector_set_bang(const Lex* e, const Cell* a)
+Cell* builtin_bytevector_u8_set_bang(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 3);
     if (err) return err;
     if (a->cell[0]->type != CELL_BYTEVECTOR) {
         return make_cell_error(
-            "vector->set!: arg must be a vector",
+            "vector->set!: arg 1 must be a vector",
             TYPE_ERR);
     }
     if (a->cell[1]->type != CELL_INTEGER) {
         return make_cell_error(
-            "vector->set!: arg must be an integer",
+            "vector->set!: arg 2 must be an exact non-negative integer",
             TYPE_ERR);
     }
 
     const long long idx = a->cell[1]->integer_v;
     const Cell* vec = a->cell[0];
-    Cell* obj = a->cell[2];
+    const int b = (int)a->cell[2]->integer_v;
+    if (b < 0 || b > UINT8_MAX) {
+        return make_cell_error(
+            "bytevector-u8-set!: invalid byte value",
+            VALUE_ERR);
+    }
 
     if (idx < 0 || idx >= a->cell[0]->count) {
         return make_cell_error(
@@ -121,7 +138,7 @@ Cell* builtin_bytevector_set_bang(const Lex* e, const Cell* a)
             INDEX_ERR);
     }
 
-    vec->cell[idx] = obj;
+    vec->bv_u8[idx] = (u_int8_t)b;
     return nullptr;
 }
 
@@ -147,20 +164,20 @@ Cell* builtin_make_bytevector(const Lex* e, const Cell* a)
             "make-bytevector: arg 1 must be non-negative",
             VALUE_ERR);
     }
-    Cell* fill;
+    u_int8_t fill;
     if (a->count == 2) {
-        fill = a->cell[1];
-        if (fill->integer_v < 0 || fill->integer_v > 255) {
+        fill = a->cell[1]->integer_v;
+        if (fill < 0 || fill > UINT8_MAX) {
             return make_cell_error(
                 "make-bytevector: arg 2 must be between 0 and 255 inclusive",
                 VALUE_ERR);
         }
     } else {
-        fill = make_cell_integer(0);
+        fill = 0;
     }
-    Cell *vec = make_cell_bytevector();
+    Cell *vec = make_cell_bytevector_u8();
     for (int i = 0; i < n; i++) {
-        cell_add(vec, fill);
+        byte_add(vec, fill);
     }
     return vec;
 }
@@ -190,9 +207,10 @@ Cell* builtin_bytevector_copy(const Lex* e, const Cell* a)
         start = (int)a->cell[1]->integer_v;
         end = (int)a->cell[2]->integer_v;
     }
-    Cell* vec = make_cell_vector();
+    Cell* vec = make_cell_bytevector_u8();
     for (int i = start; i < end; i++) {
-        cell_add(vec, a->cell[0]->cell[i]);
+        const u_int8_t byte = a->cell[0]->bv_u8[i];
+        byte_add(vec, byte);
     }
     return vec;
 }
@@ -214,14 +232,15 @@ Cell* builtin_bytevector_append(const Lex* e, const Cell* a)
     if (err) return err;
 
     if (a->count == 0) {
-        return make_cell_bytevector();
+        return make_cell_bytevector_u8();
     }
 
-    Cell* result = make_cell_bytevector();
+    Cell* result = make_cell_bytevector_u8();
     for (int i = 0; i < a->count; i++) {
         const Cell* bv = a->cell[i];
         for (int j = 0; j < bv->count; j++) {
-            cell_add(result, bv->cell[j]);
+            const u_int8_t byte = bv->bv_u8[j];
+            byte_add(result, byte);
         }
     }
     return result;
@@ -273,7 +292,7 @@ Cell* builtin_utf8_string(const Lex* e, const Cell* a)
     int j = 0;
     for (int i = start; i < end; i++) {
         //printf("%d\n", (int)the_bv->cell[i]->integer_v);
-        the_str[j] = (char)the_bv->cell[i]->integer_v;
+        the_str[j] = (char)the_bv->bv_u8[i];
         j++;
     }
 
@@ -322,11 +341,12 @@ Cell* builtin_string_utf8(const Lex* e, const Cell* a)
     }
 
     const char* the_s = a->cell[0]->str;
-    Cell* bv = make_cell_bytevector();
+    Cell* bv = make_cell_bytevector_u8();
     for (size_t i = start; i < end; i++)
     {
         const u_int8_t the_char = (int)the_s[i];
-        cell_add(bv, make_cell_integer(the_char));
+        byte_add(bv, the_char);
+        //cell_add(bv, make_cell_integer(the_char));
     }
     return bv;
 }
