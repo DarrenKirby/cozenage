@@ -19,6 +19,9 @@
 
 #include "strings.h"
 #include "types.h"
+#include "lexer.h"
+#include "repr.h"
+#include "parser.h"
 #include <string.h>
 #include <stdlib.h>
 #include <gc/gc.h>
@@ -26,6 +29,8 @@
 #include <unicode/ustring.h>
 #include <unicode/ucnv.h>
 #include <unicode/uchar.h>
+
+
 
 
 /* Helper for other string procedures.
@@ -768,3 +773,84 @@ Cell* builtin_string_fill(const Lex* e, const Cell* a)
     (void)a;
     return make_cell_error("Not implemented yet", VALUE_ERR);
 }
+
+Cell* builtin_string_number(const Lex* e, const Cell* a)
+{
+    (void)e;
+    Cell* err = CHECK_ARITY_RANGE(a, 1, 2);
+    if (err) return err;
+
+    if (a->cell[0]->type != CELL_STRING) {
+        return make_cell_error(
+            "string->number: arg1 must be a string",
+            VALUE_ERR);
+    }
+    const char* the_raw_num = a->cell[0]->str;
+
+    int radix = 10;
+    if (a->count == 2) {
+        if (a->cell[1]->type != CELL_INTEGER) {
+            return make_cell_error(
+                "string->number: radix arg must be an integer",
+                VALUE_ERR);
+        }
+        radix = (int)a->cell[1]->integer_v;
+        if (!(radix == 2 || radix == 8 || radix == 10 || radix == 16)) {
+            return make_cell_error(
+                "string->number: radix arg must be one of 2, 8, 10, or 16",
+                VALUE_ERR);
+        }
+        /*  */
+        if (strchr(the_raw_num, '.') != NULL) {
+            return make_cell_error(
+                "Cannot use radix arg with real number",
+                VALUE_ERR);
+        }
+    }
+
+    char the_num[256];
+    if (radix != 10) {
+        switch (radix) {
+            case 2: snprintf(the_num, sizeof(the_num), "#b%s", the_raw_num); break;
+            case 8: snprintf(the_num, sizeof(the_num), "#o%s", the_raw_num); break;
+            case 16: snprintf(the_num, sizeof(the_num), "#x%s", the_raw_num); break;
+            default: ;
+        }
+    } else {
+        snprintf(the_num, sizeof(the_num), "%s", the_raw_num);
+    }
+
+    TokenArray* ta = scan_all_tokens(the_num);
+    Cell* result = parse_tokens(ta);
+
+    /* Return false on parse errors */
+    if (result->type == CELL_ERROR) {
+        return make_cell_boolean(0);
+    }
+
+    /* Ditto if it's not actually a number. */
+    // ReSharper disable once CppVariableCanBeMadeConstexpr
+    const int mask = CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX;
+    if (!(result->type & mask)) {
+        return make_cell_boolean(0);
+    }
+    return result;
+}
+
+/* TODO - the radix??? */
+Cell* builtin_number_string(const Lex* e, const Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_RANGE(a, 1, 2);
+    if (err) return err;
+    // ReSharper disable once CppVariableCanBeMadeConstexpr
+    const int mask = CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX;
+    if (!(a->cell[0]->type & mask)) {
+        return make_cell_error(
+            "number->string: arg 1 must be a number",
+            TYPE_ERR);
+    }
+    const char* result = cell_to_string(a->cell[0], MODE_DISPLAY);
+    return make_cell_string(result);
+}
+
+

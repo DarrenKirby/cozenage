@@ -42,5 +42,8 @@ Cell* builtin_string_set_bang(const Lex* e, const Cell* a);
 Cell* builtin_string_copy(const Lex* e, const Cell* a);
 Cell* builtin_string_copy_bang(const Lex* e, const Cell* a);
 Cell* builtin_string_fill(const Lex* e, const Cell* a);
+Cell* builtin_string_number(const Lex* e, const Cell* a);
+Cell* builtin_number_string(const Lex* e, const Cell* a);
+
 
 #endif //COZENAGE_STRINGS_H
