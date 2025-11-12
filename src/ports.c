@@ -24,6 +24,7 @@
 #include <string.h>
 #include <errno.h>
 #include <wchar.h>
+#include <gc/gc.h>
 #include <sys/select.h>
 
 
@@ -168,6 +169,72 @@ Cell* builtin_read_line(const Lex* e, const Cell* a)
     Cell* result = make_cell_string(line);
     free(line);
     return result;
+}
+
+Cell* builtin_read_string(const Lex* e, const Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_RANGE(a, 1, 2);
+    if (err) return err;
+    if (a->cell[0]->type != CELL_INTEGER) {
+        return make_cell_error(
+            "read-string: arg 1 must be exact positive integer",
+            TYPE_ERR);
+    }
+    const int chars_to_read = (int)a->cell[0]->integer_v;
+    if (chars_to_read <= 0) {
+        return make_cell_error(
+           "read-string: arg 1 must be exact positive integer",
+           TYPE_ERR);
+    }
+    Cell* port;
+    if (a->count == 1) {
+        port = builtin_current_input_port(e, a);
+    } else {
+        if (a->cell[1]->type != CELL_PORT) {
+            return make_cell_error(
+                "read-string: arg 2 must be a port",
+                TYPE_ERR);
+        }
+        port = a->cell[1];
+    }
+
+    /* buffer size = the chars to read by potential 4 bytes each, plus 1 for \0 */
+    char* buffer = GC_MALLOC_ATOMIC(chars_to_read * 4 + 1);
+    int buf_idx = 0;
+    int chars_read = 0;
+
+    while (chars_read < chars_to_read) {
+        static unsigned short mask[] = {192, 224, 240};
+        unsigned short i = 0;
+        unsigned short j = 0;
+
+        /* Read a byte */
+        buffer[buf_idx] = (char)getc(port->port->fh);
+        if (buffer[buf_idx] == EOF) {
+            buffer[buf_idx] = '\0';
+            break;
+        }
+
+        /* check how many more bytes need to be read for character */
+        if ((buffer[buf_idx] & mask[0]) == mask[0]) i++;
+        if ((buffer[buf_idx] & mask[1]) == mask[1]) i++;
+        if ((buffer[buf_idx] & mask[2]) == mask[2]) i++;
+        /* Increment buffer pointer for the next read */
+        buf_idx++;
+
+        /* read subsequent character bytes */
+        while (j < i) {
+            j++;
+            buffer[buf_idx] = (char)getc(port->port->fh);
+            buf_idx++;
+        }
+        chars_read++;
+    }
+
+    if (chars_read == 0) {
+        return make_cell_eof();
+    }
+    return make_cell_string(buffer);
 }
 
 Cell* builtin_read_char(const Lex* e, const Cell* a)
