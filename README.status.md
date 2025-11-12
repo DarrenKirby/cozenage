@@ -74,16 +74,16 @@ This document tracks the implementation status of the R7RS standard libraries in
 |   ✅    | `error-object?`                  |
 |   ✅    | `even?`                          |
 |   ✅    | `exact`                          |
-|   ❌    | `exact-integer-sqrt`             |
+|   ✅    | `exact-integer-sqrt`             |
 |   ✅    | `exact-integer?`                 |
 |   ✅    | `exact?`                         |
 |   ✅    | `expt`                           |
 |   ✅    | `features`                       |
 |   ✅    | `file-error?`                    |
 |   ✅    | `floor`                          |
-|   ❌    | `floor-quotient`                 |
+|   ✅    | `floor-quotient`                 |
 |   ✅    | `floor-remainder`                |
-|   ❌    | `floor/`                         |
+|   ✅    | `floor/`                         |
 |   ✅    | `flush-output-port`              |
 |   ✅    | `for-each`                       |
 |   ✅    | `gcd`                            |
@@ -121,7 +121,7 @@ This document tracks the implementation status of the R7RS standard libraries in
 |   ✅    | `newline`                        |
 |   ✅    | `not`                            |
 |   ✅    | `null?`                          |
-|   ❌    | `number->string`                 |
+|   ✅    | `number->string`                 |
 |   ✅    | `number?`                        |
 |   ✅    | `numerator`                      |
 |   ✅    | `odd?`                           |
@@ -142,7 +142,7 @@ This document tracks the implementation status of the R7RS standard libraries in
 |   ❌    | `raise`                          |
 |   ❌    | `raise-continuable`              |
 |   ✅    | `rational?`                      |
-|   ❌    | `rationalize`                    |
+|   ✅    | `rationalize`                    |
 |   ❌    | `read-bytevector`                |
 |   ❌    | `read-bytevector!`               |
 |   ✅    | `read-char`                      |
@@ -159,7 +159,7 @@ This document tracks the implementation status of the R7RS standard libraries in
 |   ✅    | `square`                         |
 |   ✅    | `string`                         |
 |   ✅    | `string->list`                   |
-|   ❌    | `string->number`                 |
+|   ✅    | `string->number`                 |
 |   ✅    | `string->symbol`                 |
 |   ❌    | `string->utf8`                   |
 |   ✅    | `string->vector`                 |
@@ -186,7 +186,7 @@ This document tracks the implementation status of the R7RS standard libraries in
 |   ✅    | `truncate`                       |
 |   ✅    | `truncate-quotient`              |
 |   ✅    | `truncate-remainder`             |
-|   ❌    | `truncate/`                      |
+|   ✅    | `truncate/`                      |
 |   ✅    | `u8-ready?`                      |
 |   ❌    | `utf8->string`                   |
 |   ❌    | `values`                         |
