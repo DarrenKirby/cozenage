@@ -227,23 +227,23 @@ Cell* builtin_eq(const Lex* e, const Cell* a) {
  * that works for numbers, characters, and symbols, but you don’t need deep
  * structural comparison. */
 Cell* builtin_eqv(const Lex* e, const Cell* a) {
-    /* FIXME: (eqv? 10 10+0i) should return #t
-     * Need to use numeric promotion, or perhaps just
-     * interpret 10+0i as 10 at parser level */
     Cell* err = CHECK_ARITY_EXACT(a, 2);
     if (err) return err;
 
     const Cell* x = a->cell[0];
     const Cell* y = a->cell[1];
 
+    /* Just kick numbers over to '='*/
+    // ReSharper disable once CppVariableCanBeMadeConstexpr
+    const int mask = CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX;
+    if (x->type & mask) {
+        return builtin_eq_op(e, make_sexpr_len2(x, y));
+    }
+
     if (x->type != y->type) return make_cell_boolean(0);
 
     switch (x->type) {
         case CELL_BOOLEAN: return make_cell_boolean(x->boolean_v == y->boolean_v);
-        case CELL_INTEGER:  return make_cell_boolean(x->integer_v == y->integer_v);
-        case CELL_REAL: return make_cell_boolean(x->real_v == y->real_v);
-        case CELL_RATIONAL:  return make_cell_boolean(x->den == y->den && x->num == y->num);
-        case CELL_COMPLEX: return make_cell_boolean(complex_eq_op(e, x, y));
         case CELL_CHAR: return make_cell_boolean(x->char_v == y->char_v);
         case CELL_NIL: return make_cell_boolean(y->type == CELL_NIL);
         default: return make_cell_boolean(x == y); /* fall back to identity */
@@ -252,20 +252,19 @@ Cell* builtin_eqv(const Lex* e, const Cell* a) {
 
 /* Helper for equal? */
 static Cell* val_equal(const Lex* e, Cell* x, Cell* y) {
-    /* FIXME: (eqv? 10 10+0i) should return #t
-     * Need to use numeric promotion, or perhaps just
-     * interpret 10+0i as 10 at parser level */
+    /* Just kick numbers over to '='*/
+    // ReSharper disable once CppVariableCanBeMadeConstexpr
+    const int mask = CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX;
+    if (x->type & mask) {
+        return builtin_eq_op(e, make_sexpr_len2(x, y));
+    }
     if (x->type != y->type) return make_cell_boolean(0);
 
     switch (x->type) {
         case CELL_BOOLEAN: return make_cell_boolean(x->boolean_v == y->boolean_v);
         case CELL_CHAR: return make_cell_boolean(x->char_v == y->char_v);
-        case CELL_INTEGER:  return make_cell_boolean(x->integer_v == y->integer_v);
-        case CELL_REAL: return make_cell_boolean(x->real_v == y->real_v);
-        case CELL_RATIONAL:  return make_cell_boolean((x->den == y->den) && (x->num == y->num));
         case CELL_SYMBOL:  return make_cell_boolean(strcmp(x->sym, y->sym) == 0);
         case CELL_STRING:  return make_cell_boolean(strcmp(x->str, y->str) == 0);
-        case CELL_COMPLEX: return make_cell_boolean(complex_eq_op(e, x, y));
         case CELL_NIL: return make_cell_boolean(y->type == CELL_NIL);
 
         case CELL_PAIR:
