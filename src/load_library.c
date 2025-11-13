@@ -17,59 +17,92 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "load_library.h"
-#include "base-lib/file_lib.h"
-#include "base-lib/proc_env_lib.h"
-#include "base-lib/cxr_lib.h"
-#include "base-lib/time_lib.h"
-#include "base-lib/bits_lib.h"
-#include "base-lib/math_lib.h"
+#include "environment.h"
+#include "cell.h"
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <dlfcn.h>
 
 
-char* loaded_libs[MAX_LOADED_LIBS];
-int loaded_lib_count = 0;
+/* Define the library file extension based on the OS */
+#ifdef __APPLE__
+    #define LIB_EXT ".dylib"
+#else
+    #define LIB_EXT ".so"
+#endif
 
-/* map a name to a loader function */
-typedef struct {
-    const char* name;
-    void (*init_func)(const Lex* env);
-} LibraryRegistryEntry;
+/* Define the function signature we expect to find */
+typedef void (*CznLibInitFunc)(const Lex*);
 
-/* The registry of all built-in libraries */
-static const LibraryRegistryEntry library_registry[] = {
-    {"file", lex_add_file_lib},
-    {"proc-env", lex_add_proc_env_lib},
-    {"cxr", lex_add_cxr_lib},
-    {"time",lex_add_time_lib},
-    {"bits", lex_add_bits_lib},
-    {"math", lex_add_math_lib},
-    {nullptr, nullptr}
-};
+/*
+ * This is the internal C function that handles loading.
+ * It takes a "logical" library name (e.g., "math") and
+ * the environment to load it into.
+ *
+ * Returns 1 on success, 0 on failure.
+ */
+int internal_cozenage_load_lib(const char* libname, const Lex* env) {
+    char filepath[1024];
+    CznLibInitFunc init_func;
 
-/* look up and load a library */
-Cell* load_library(const char* lib_name, const Lex* env) {
-    /* Check if already loaded to prevent redundant work */
-    for (int i = 0; i < loaded_lib_count; i++) {
-        if (strcmp(loaded_libs[i], lib_name) == 0) {
-            return make_cell_boolean(1);
+    /* Library Search Path Logic
+     * This is a very simple search path.
+     * It looks in "./lib/" first, then "/usr/local/lib/cozenage/" */
+
+    /* Try ./lib/ */
+    snprintf(filepath, sizeof(filepath), "./lib/%s%s", libname, LIB_EXT);
+
+    /* dlopen() loads the library.
+     * RTLD_LAZY: Resolves symbols as code from the library is executed.
+     * RTLD_NOW: Resolves all symbols at load time (good for debugging) */
+    void* lib_handle = dlopen(filepath, RTLD_LAZY);
+
+    if (!lib_handle) {
+        /* If it failed, try the system path */
+        snprintf(filepath, sizeof(filepath), "/usr/local/lib/cozenage/%s%s", libname, LIB_EXT);
+        lib_handle = dlopen(filepath, RTLD_LAZY);
+
+        if (!lib_handle) {
+            /* Both failed. Report the error.
+             * dlerror() returns a human-readable message. */
+            fprintf(stderr, "Error loading library '%s': %s\n", libname, dlerror());
+            return 0;
         }
     }
-    /* Find the library in the registry */
-    for (int i = 0; library_registry[i].name != NULL; i++) {
-        if (strcmp(library_registry[i].name, lib_name) == 0) {
-            /* Found it. Call its initializer function. */
-            library_registry[i].init_func(env);
 
-            /* Mark it as loaded */
-            if (loaded_lib_count < MAX_LOADED_LIBS) {
-                loaded_libs[loaded_lib_count++] = strdup(lib_name);
-            }
-            return make_cell_boolean(1);
-        }
+    /* We have a valid handle. Now, find the init function.
+     * dlsym() searches for a symbol (function name) in the handle.
+     * We cast the resulting 'void*' to our function pointer type. */
+    *(void**)(&init_func) = dlsym(lib_handle, "cozenage_library_init");
+
+    if (!init_func) {
+        /* Could not find the init function. */
+        fprintf(stderr, "Error finding 'cozenage_library_init' in '%s': %s\n", filepath, dlerror());
+        dlclose(lib_handle);
+        return 0;
     }
-    /* If we get here, the library wasn't found. */
-    char buf[512];
-    snprintf(buf, 511, "library '%s' not found.", lib_name);
-    return make_cell_error(buf, VALUE_ERR);
+
+    /* We found the function. Now we call it. */
+    init_func(env);
+
+    /* NOTE: We don't call dlclose(lib_handle) here.
+     * We want the library to stay in memory for the rest of
+     * the interpreter's session, otherwise all the function
+     * pointers we just registered will become invalid.
+     * TODO: store the handles in a list so they can be unloaded later. */
+
+    return 1; /* Success. */
+}
+
+Cell* load_library(const char* libname, const Lex* env) {
+
+    /* Call the internal loader */
+    const int success = internal_cozenage_load_lib(libname, env);
+
+    /* Return a Cozenage value */
+    if (success) {
+        return make_cell_boolean(1);
+    }
+    return make_cell_boolean(0);
 }
