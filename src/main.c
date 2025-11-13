@@ -97,8 +97,6 @@ static void process_library_arg(struct lib_load *l, const char *arg)
             l->write = 1;
         } else if (strcmp(token, "bits") == 0) {
             l->coz_bits = 1;
-        } else if (strcmp(token, "stats") == 0) {
-            l->coz_stats = 1;
         } else {
             fprintf(stderr, "Error: Unknown library name '%s' specified.\n", token);
             fprintf(stderr, "Run with -h for a list of valid library names.\n");
