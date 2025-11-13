@@ -551,10 +551,43 @@ Cell* parse_tokens(TokenArray *ta) {
     if (token->type == T_HASH) {
         token = advance(ta); /* Consume '#' */
 
-        if (peek(ta)->type == T_SYMBOL && strcmp("u8", token_to_string(peek(ta))) == 0) {
+        if (peek(ta)->type == T_SYMBOL) {
             /* Bytevector */
-            Cell* bv = make_cell_bytevector_u8();
-            token = advance(ta); /* consume '#u8' */
+            const char* bv_tok = token_to_string(peek(ta));
+            u_int8_t bv_t;
+            int64_t bv_min;
+            int64_t bv_max;
+            if (strcmp(bv_tok, "u8") == 0) {
+                bv_t = BV_U8;
+                bv_min = 0;
+                bv_max = UINT8_MAX;
+            } else if (strcmp(bv_tok, "u16") == 0) {
+                bv_t = BV_U16;
+                bv_min = 0;
+                bv_max = UINT16_MAX;
+            } else if (strcmp(bv_tok, "u32") == 0) {
+                bv_t = BV_U32;
+                bv_min = 0;
+                bv_max = UINT32_MAX;
+            } else if (strcmp(bv_tok, "s8") == 0) {
+                bv_t = BV_S8;
+                bv_min = INT8_MIN;
+                bv_max = INT8_MAX;
+            } else if (strcmp(bv_tok, "s16") == 0) {
+                bv_t = BV_S16;
+                bv_min = INT16_MIN;
+                bv_max = INT16_MAX;
+            } else if (strcmp(bv_tok, "s32") == 0) {
+                bv_t = BV_S32;
+                bv_min = INT32_MIN;
+                bv_max = INT32_MAX;
+            } else {
+                return make_cell_error(
+                    "Bad bytevector label",
+                    SYNTAX_ERR);
+            }
+            Cell* bv = make_cell_bytevector(bv_t);
+            token = advance(ta); /* consume 'u8' */
 
             if (peek(ta)->type != T_LEFT_PAREN) {
                 snprintf(err_buf, sizeof(err_buf),
@@ -572,12 +605,15 @@ Cell* parse_tokens(TokenArray *ta) {
                         TYPE_ERR);
                 }
 
-                if (val->integer_v < 0 || val->integer_v > UINT8_MAX) {
+                if (val->integer_v < bv_min || val->integer_v > bv_max) {
+                    char buf[256];
+                    snprintf(buf, sizeof(buf),
+                        "invalid byte value for %s, must be >%lld and <%llu", bv_tok, bv_min, bv_max);
                     return make_cell_error(
-                        "invalid u8 byte value",
+                        buf,
                         VALUE_ERR);
                 }
-                const u_int8_t byte = val->integer_v;
+                const int64_t byte = val->integer_v;
                 byte_add(bv, byte);
                 advance(ta);
             }
