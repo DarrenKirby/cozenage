@@ -19,7 +19,7 @@ OBJ_DIR = obj
 # --- Source and Object Files ---
 
 # Define all directories containing C source files
-APP_SOURCE_DIRS  = src src/scheme-lib src/cozenage-lib
+APP_SOURCE_DIRS  = src src/base-lib
 TEST_SOURCE_DIRS = tests
 ALL_SOURCE_DIRS  = $(APP_SOURCE_DIRS) $(TEST_SOURCE_DIRS)
 

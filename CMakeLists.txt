@@ -8,42 +8,6 @@ set(CMAKE_C_STANDARD 23)
 #set(CMAKE_C_EXTENSIONS OFF)
 set(CMAKE_C_FLAGS "-Wall -Wextra -O0 -g") # -g -fsanitize=address,undefined")
 
-## Option to force libedit
-#option(USE_LIBEDIT "Force using libedit instead of GNU readline" OFF)
-#
-#if (USE_LIBEDIT)
-#    find_library(READLINE_LIBRARY edit)
-#    find_path(READLINE_INCLUDE_DIR editline/readline.h)
-#else()
-#    find_library(READLINE_LIBRARY readline)
-#    find_path(READLINE_INCLUDE_DIR readline/readline.h)
-#
-#    # fallback to libedit if readline not found
-#    if (NOT READLINE_LIBRARY)
-#        find_library(READLINE_LIBRARY edit)
-#        find_path(READLINE_INCLUDE_DIR editline/readline.h)
-#    endif()
-#endif()
-#
-## If neither found, error out
-#if (NOT READLINE_LIBRARY OR NOT READLINE_INCLUDE_DIR)
-#    message(FATAL_ERROR "Neither GNU readline nor libedit were found")
-#endif()
-#
-## Print what we found
-#message(STATUS "READLINE_LIBRARY=${READLINE_LIBRARY}")
-#get_filename_component(LIBFILE ${READLINE_LIBRARY} NAME)
-#if (LIBFILE MATCHES "readline")
-#    message(STATUS "Using GNU readline")
-#elseif (LIBFILE MATCHES "edit")
-#    message(STATUS "Using libedit")
-#endif()
-#
-#include_directories(${READLINE_INCLUDE_DIR})
-#
-
-
-
 # ==============================================================================
 # Find Readline or Libedit
 #
@@ -185,8 +149,7 @@ target_sources(cozenage PRIVATE ${COZENAGE_SOURCES})
 # IMPORTANT: Tell CMake where to find header files!
 target_include_directories(cozenage PRIVATE
         ${PROJECT_SOURCE_DIR}/src
-        ${PROJECT_SOURCE_DIR}/src/scheme-lib
-        ${PROJECT_SOURCE_DIR}/src/cozenage-lib
+        ${PROJECT_SOURCE_DIR}/src/base-lib
 )
 
 target_link_directories(cozenage PRIVATE ${PC_READLINE_LIBRARY_DIRS})
