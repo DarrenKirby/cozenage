@@ -317,3 +317,17 @@ void debug_print_cell(const Cell* v)
     char* s = cell_to_string(v, MODE_REPL);
     printf("%s\n", s);
 }
+
+/* Dump the environment 'symbol' -> 'value' pairs
+ * This will only work in the REPL, but I'm not sure
+ * why it would be used anywhere else, so... */
+void print_env(const Lex* e, const Cell* a) {
+    (void)a;
+    /* First print global env hash items */
+    hti it = ht_iterator(e->global);
+    while (ht_next(&it)) {
+        printf("%s%s%s -> ", ANSI_BLUE_B, it.key, ANSI_RESET);
+        printf("%s\n", cell_to_string(it.value, MODE_REPL));
+    }
+
+}

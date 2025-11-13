@@ -121,7 +121,7 @@ static Cell* byte_fits(const bv_t type, const int64_t byte) {
         case BV_U16: { min = 0; max = UINT16_MAX; t_s = "u16"; break; }
         case BV_S16: { min = INT16_MIN; max = INT16_MAX; t_s = "s16"; break;  }
         case BV_U32: { min = 0; max = UINT32_MAX; t_s = "u32"; break;}
-        case BV_S32: { min = 0; max = INT32_MAX; t_s = "s32"; break; }
+        case BV_S32: { min = INT32_MIN; max = INT32_MAX; t_s = "s32"; break; }
         default: { min = 0; max = UINT8_MAX; t_s = "u8"; break; }
     }
 
@@ -162,7 +162,7 @@ Cell* builtin_bytevector_set_bang(const Lex* e, const Cell* a)
         return check_if;
     }
 
-    if (idx < 0 || idx >= a->cell[0]->count) {
+    if (idx < 0 || idx >= bv->count) {
         return make_cell_error(
             "vector->set!: index out of range",
             INDEX_ERR);
@@ -321,7 +321,6 @@ Cell* builtin_utf8_string(const Lex* e, const Cell* a)
         }
         end = (int)a->cell[2]->integer_v;
     }
-
 
     char* the_str = GC_MALLOC_ATOMIC(bv->count + 1);
 

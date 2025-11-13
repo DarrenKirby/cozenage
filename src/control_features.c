@@ -22,11 +22,36 @@
 #include "eval.h"
 #include "pairs.h"
 #include "strings.h"
+#include "runner.h"
+#include "lexer.h"
+#include "repr.h"
+#include <stdlib.h>
 
 
 /*-------------------------------------------------------*
  *    Control features and list iteration procedures     *
  * ------------------------------------------------------*/
+
+Cell* builtin_eval(const Lex* e, const Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_MIN(a, 1);
+    if (err) return err;
+    Cell* args;
+    /* Convert list to s-expr if we are handed a quote */
+    if (a->cell[0]->type == CELL_PAIR) {
+        args = make_sexpr_from_list(a->cell[0]);
+        for (int i = 0; i < args->count; i++ ) {
+            if (args->cell[i]->type == CELL_PAIR && args->cell[i]->len != -1) {
+                Cell* tmp = args->cell[i];
+                args->cell[i] = make_sexpr_from_list(tmp);
+            }
+        }
+        /* Otherwise just send straight to eval */
+    } else {
+        args = a->cell[0];
+    }
+    return coz_eval((Lex*)e, args);
+}
 
 /* (apply proc arg1 ... args)
  * The apply procedure calls proc with the elements of the list (append (list arg1 ... ) args)
@@ -279,4 +304,60 @@ Cell* builtin_string_foreach(const Lex* e, const Cell* a) {
     /* Just send the args to string-map and discard results. */
     (void)builtin_string_map(e, a);
     return nullptr;
+}
+
+Cell* builtin_load(const Lex* e, const Cell* a) {
+    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    if (err) return err;
+    if (a->cell[0]->type != CELL_STRING) {
+        return make_cell_error("load: arg must be a string", TYPE_ERR);
+    }
+    const char* file = a->cell[0]->str;
+    const char* input = read_file_to_string(file);
+    TokenArray* ta = scan_all_tokens(input);
+    const Cell* result = parse_all_expressions((Lex*)e, ta, false);
+
+    if (result && result->type == CELL_ERROR) {
+        fprintf(stderr, "%s\n", cell_to_string(result, MODE_REPL));
+        return make_cell_boolean(0);
+    }
+    return make_cell_boolean(1);
+}
+
+Cell* builtin_exit(const Lex* e, const Cell* a) {
+    (void)e;
+    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_BOOLEAN);
+    if (err) { return err; }
+
+    if (a->count == 1) {
+        if (a->cell[0]->type == CELL_BOOLEAN) {
+            const int es = a->cell[0]->boolean_v;
+            if (es) {
+                exit(0); /* flip boolean 1 (#t) to exit success (0) */
+            }
+            exit(1);
+        }
+        /* If not bool, int. Just return directly */
+        exit((int)a->cell[0]->integer_v);
+    }
+    exit(0); /* exit success if no arg */
+}
+
+
+extern int is_repl;
+extern int g_argc;
+extern char **g_argv;
+
+Cell* builtin_command_line(const Lex* e, const Cell* a) {
+    (void)e; (void)a;
+    /* Return list of just empty string if using REPL */
+    if (is_repl) {
+        return make_cell_pair(make_cell_string(""), make_cell_nil());
+    }
+    /* Construct the list of args. */
+    Cell* args = make_cell_sexpr();
+    for (int i = 0; i < g_argc; i++) {
+        cell_add(args, make_cell_string(g_argv[i]));
+    }
+    return sexpr_to_list(args);
 }

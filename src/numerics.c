@@ -22,6 +22,7 @@
 #include "environment.h"
 #include "comparators.h"
 #include <math.h>
+#include <complex.h>
 #include <stdlib.h>
 #include <float.h>
 
@@ -401,59 +402,6 @@ Cell* builtin_remainder(const Lex* e, const Cell* a) {
     return make_cell_integer(a->cell[0]->integer_v % a->cell[1]->integer_v);
 }
 
-/* Helper for the core GCD algorithm (Euclidean) for two integers. */
-long long gcd_helper(long long x, long long y) {
-    x = llabs(x);
-    y = llabs(y);
-    while (x != 0) {
-        const long long tmp = x;
-        x = y % x;
-        y = tmp;
-    }
-    return y;
-}
-
-/* Helper for the core LCM logic (using the overflow-safe formula). */
-long long lcm_helper(long long x, long long y) {
-    if (x == 0 || y == 0) return 0;
-    x = llabs(x);
-    y = llabs(y);
-    return (x / gcd_helper(x, y)) * y;
-}
-
-Cell* builtin_gcd(const Lex* e, const Cell* a) {
-    (void)e;
-    Cell* err = check_arg_types(a, CELL_INTEGER);
-    if (err) return err;
-
-    if (a->count == 0) {
-        return make_cell_integer(0); /* Identity for GCD */
-    }
-
-    long long result = a->cell[0]->integer_v;
-    for (int i = 1; i < a->count; i++) {
-        result = gcd_helper(result, a->cell[i]->integer_v);
-    }
-
-    return make_cell_integer(llabs(result)); /* Final result must be non-negative */
-}
-
-Cell* builtin_lcm(const Lex* e, const Cell* a) {
-    (void)e;
-    Cell* err = check_arg_types(a, CELL_INTEGER);
-    if (err) { return err; }
-
-    if (a->count == 0) {
-        return make_cell_integer(1); /* Identity for LCM */
-    }
-
-    long long result = a->cell[0]->integer_v;
-    for (int i = 1; i < a->count; i++) {
-        result = lcm_helper(result, a->cell[i]->integer_v);
-    }
-
-    return make_cell_integer(llabs(result)); /* Final result must be non-negative */
-}
 
 /* 'max' -> CELL_INTEGER|CELL_RATIONAL|CELL_REAL - return the largest value in numeric args */
 Cell* builtin_max(const Lex* e, const Cell* a) {
@@ -522,61 +470,6 @@ Cell* builtin_floor(const Lex* e, const Cell* a) {
     return make_cell_from_double(val);
 }
 
-/* (floor-quotient n1 n2) */
-Cell* builtin_floor_quotient(const Lex* e, const Cell* a)
-{
-    (void)e;
-    Cell* err = check_arg_types(a, CELL_INTEGER);
-    if (err) { return err; }
-    if ((err = CHECK_ARITY_EXACT(a, 2))) { return err; }
-
-    const long long n1 = a->cell[0]->integer_v ;
-    const long long n2 = a->cell[1]->integer_v ;
-
-    long long q = n1 / n2;
-    const long long r = n1 % n2;
-
-    if (r != 0 && n1 > 0 != n2 > 0) {
-        q = q - 1;
-    }
-
-    return make_cell_integer(q);
-}
-
-/* (floor/ n1 n2 ) */
-Cell* builtin_floor_div(const Lex* e, const Cell* a)
-{
-    (void)e;
-    Cell* err = check_arg_types(a, CELL_INTEGER);
-    if (err) { return err; }
-    if ((err = CHECK_ARITY_EXACT(a, 2))) { return err; }
-
-    const long long n1 = a->cell[0]->integer_v;
-    const long long n2 = a->cell[1]->integer_v;
-
-    if (n2 == 0) {
-        return make_cell_error(
-            "truncate/: division by zero",
-            VALUE_ERR);
-    }
-
-    long long q = n1 / n2; /* C's integer division truncates. */
-    long long r = n1 % n2; /* C's modulo is consistent with its division. */
-
-    /* If the remainder is non-zero and the signs of n and d differ,
-     * C's division truncated towards zero, which is the wrong direction
-     * for floor. We need to adjust. */
-    if (r != 0 && n1 > 0 != n2 > 0) {
-        q = q - 1;
-        r = r + n2;
-    }
-
-    Cell* result = make_cell_mrv();
-    cell_add(result, make_cell_integer(q));
-    cell_add(result, make_cell_integer(r));
-    return result;
-}
-
 Cell* builtin_ceiling(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL);
@@ -611,32 +504,6 @@ Cell* builtin_truncate(const Lex* e, const Cell* a) {
     val = truncl(val);
 
     return make_cell_from_double(val);
-}
-
-/* (truncate/ n1 n2 ) */
-Cell* builtin_truncate_div(const Lex* e, const Cell* a)
-{
-    (void)e;
-    Cell* err = check_arg_types(a, CELL_INTEGER);
-    if (err) { return err; }
-    if ((err = CHECK_ARITY_EXACT(a, 2))) { return err; }
-
-    const long long n1 = a->cell[0]->integer_v ;
-    const long long n2 = a->cell[1]->integer_v ;
-
-    if (n2 == 0) {
-        return make_cell_error(
-            "truncate/: division by zero",
-            VALUE_ERR);
-    }
-
-    const long long q = n1 / n2; /* C's integer division truncates. */
-    const long long r = n1 % n2; /* C's modulo is consistent with its division. */
-
-    Cell* result = make_cell_mrv();
-    cell_add(result, make_cell_integer(q));
-    cell_add(result, make_cell_integer(r));
-    return result;
 }
 
 Cell* builtin_numerator(const Lex* e, const Cell* a) {
@@ -733,6 +600,37 @@ Cell* builtin_square(const Lex* e, const Cell* a) {
     return builtin_mul(e, args);
 }
 
+/* TODO remove redundancy of this helper between this file and math_lib.c */
+/* Helper to make C complex from Cell complex */
+static long double complex cell_to_c_complex(const Cell* c)
+{
+    long double a = cell_to_long_double(c->real);
+    long double b = cell_to_long_double(c->imag);
+
+    return CMPLXL(a, b);
+}
+
+/* Returns the square root of arg */
+Cell* builtin_sqrt(const Lex* e, const Cell* a) {
+    (void)e;
+    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX);
+    if (err) { return err; }
+    if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
+
+    if (a->cell[0]->type == CELL_COMPLEX)
+    {
+        const long double complex z = cell_to_c_complex(a->cell[0]);
+        const long double complex z_result = csqrtl(z);
+        Cell* real = make_cell_from_double(creall(z_result));
+        Cell* imag = make_cell_from_double(cimagl(z_result));
+        return make_cell_complex(real, imag);
+    }
+
+    const long double n = cell_to_long_double(a->cell[0]);
+    Cell* result = make_cell_from_double(sqrtl(n));
+    return result;
+}
+
 /* Implements exact-integer-sqrt for unsigned 64-bit integers.
  * Returns s, the integer square root. */
 static unsigned long long integer_sqrt(const unsigned long long k) {
@@ -817,4 +715,59 @@ Cell* builtin_inexact(const Lex* e, const Cell* a) {
     }
     a->cell[0]->exact = 0;
     return a->cell[0];
+}
+
+/* Predicate to test if val is infinite */
+Cell* builtin_infinite(const Lex* e, const Cell* a) {
+    (void)e;
+    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX);
+    if (err) { return err; }
+    if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
+
+    const Cell* arg = a->cell[0];
+    if (arg->type == CELL_COMPLEX) {
+        const long double r = cell_to_long_double(arg->real);
+        const long double i = cell_to_long_double(arg->imag);
+        return make_cell_boolean(isinf(r) || isinf(i));
+    }
+
+    const long double n = cell_to_long_double(arg);
+    return make_cell_boolean(isinf(n));
+}
+
+/* Predicate to test if val is finite */
+Cell* builtin_finite(const Lex* e, const Cell* a) {
+    (void)e;
+    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX);
+    if (err) { return err; }
+    if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
+
+    const Cell* arg = a->cell[0];
+    if (arg->type == CELL_COMPLEX) {
+        const long double r = cell_to_long_double(arg->real);
+        const long double i = cell_to_long_double(arg->imag);
+        return make_cell_boolean(isfinite(r) && isfinite(i));
+    }
+
+    const long double n = cell_to_long_double(arg);
+    return make_cell_boolean(isfinite(n));
+}
+
+/* Predicate to test if val is nan */
+Cell* builtin_nan(const Lex* e, const Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    if (err) return err;
+    err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX);
+    if (err) { return err; }
+
+    const Cell* arg = a->cell[0];
+    if (arg->type == CELL_COMPLEX) {
+        const long double r = cell_to_long_double(arg->real);
+        const long double i = cell_to_long_double(arg->imag);
+        return make_cell_boolean(isnan(r) || isnan(i));
+    }
+
+    const long double n = cell_to_long_double(arg);
+    return make_cell_boolean(isnan(n));
 }

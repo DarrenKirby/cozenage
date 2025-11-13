@@ -223,8 +223,6 @@ void lex_add_builtins(const Lex* e)
     lex_add_builtin(e, "remainder", builtin_remainder);
     lex_add_builtin(e, "modulo", builtin_modulo);
     lex_add_builtin(e, "quotient", builtin_quotient);
-    lex_add_builtin(e, "lcm", builtin_lcm);
-    lex_add_builtin(e, "gcd", builtin_gcd);
     lex_add_builtin(e, "max", builtin_max);
     lex_add_builtin(e, "min", builtin_min);
     lex_add_builtin(e, "floor", builtin_floor);
@@ -234,13 +232,8 @@ void lex_add_builtins(const Lex* e)
     lex_add_builtin(e, "numerator", builtin_numerator);
     lex_add_builtin(e, "denominator", builtin_denominator);
     lex_add_builtin(e, "rationalize", builtin_rationalize);
-    lex_add_builtin(e, "truncate/", builtin_truncate_div);
-    lex_add_builtin(e, "truncate-quotient", builtin_quotient);
-    lex_add_builtin(e, "truncate-remainder", builtin_remainder);
-    lex_add_builtin(e, "floor/", builtin_floor_div);
-    lex_add_builtin(e, "floor-quotient", builtin_floor_quotient);
-    lex_add_builtin(e, "floor-remainder", builtin_modulo);
     lex_add_builtin(e, "square", builtin_square);
+    lex_add_builtin(e, "sqrt", builtin_sqrt);
     lex_add_builtin(e, "exact-integer-sqrt", builtin_exact_integer_sqrt);
     lex_add_builtin(e, "exact", builtin_exact);
     lex_add_builtin(e, "inexact", builtin_inexact);
@@ -266,6 +259,9 @@ void lex_add_builtins(const Lex* e)
     lex_add_builtin(e, "rational?", builtin_rational);
     lex_add_builtin(e, "integer?", builtin_integer);
     lex_add_builtin(e, "exact-integer?", builtin_exact_integer);
+    lex_add_builtin(e, "infinite?", builtin_infinite);
+    lex_add_builtin(e, "finite?", builtin_finite);
+    lex_add_builtin(e, "nan?", builtin_nan);
     /* Boolean and logical procedures. */
     lex_add_builtin(e, "not", builtin_not);
     lex_add_builtin(e, "boolean=?", builtin_boolean);
@@ -328,6 +324,20 @@ void lex_add_builtins(const Lex* e)
     lex_add_builtin(e, "char<=?", builtin_char_lte_pred);
     lex_add_builtin(e, "char>?", builtin_char_gt_pred);
     lex_add_builtin(e, "char>=?", builtin_char_gte_pred);
+    lex_add_builtin(e, "char-alphabetic?", builtin_char_alphabetic);
+    lex_add_builtin(e, "char-whitespace?", builtin_char_whitespace);
+    lex_add_builtin(e, "char-numeric?", builtin_char_numeric);
+    lex_add_builtin(e, "char-upper-case?", builtin_char_upper_case);
+    lex_add_builtin(e, "char-lower-case?", builtin_char_lower_case);
+    lex_add_builtin(e, "char-upcase", builtin_char_upcase);
+    lex_add_builtin(e, "char-downcase", builtin_char_downcase);
+    lex_add_builtin(e, "char-foldcase", builtin_char_foldcase);
+    lex_add_builtin(e, "digit-value", builtin_digit_value);
+    lex_add_builtin(e, "char-ci=?", builtin_char_equal_ci);
+    lex_add_builtin(e, "char-ci<?", builtin_char_lt_ci);
+    lex_add_builtin(e, "char-ci<=?", builtin_char_lte_ci);
+    lex_add_builtin(e, "char-ci>?", builtin_char_gt_ci);
+    lex_add_builtin(e, "char-ci>=?", builtin_char_gte_ci);
     /* Symbol and string procedures. */
     lex_add_builtin(e, "features", builtin_features);
     lex_add_builtin(e, "symbol=?", builtin_symbol_equal_pred);
@@ -350,7 +360,16 @@ void lex_add_builtins(const Lex* e)
     lex_add_builtin(e, "string-copy!", builtin_string_copy_bang);
     lex_add_builtin(e, "string->number", builtin_string_number);
     lex_add_builtin(e, "number->string", builtin_number_string);
+    lex_add_builtin(e, "string-downcase", builtin_string_downcase);
+    lex_add_builtin(e, "string-upcase", builtin_string_upcase);
+    lex_add_builtin(e, "string-foldcase", builtin_string_foldcase);
+    lex_add_builtin(e, "string-ci=?", builtin_string_equal_ci);
+    lex_add_builtin(e, "string-ci<?", builtin_string_lt_ci);
+    lex_add_builtin(e, "string-ci<=?", builtin_string_lte_ci);
+    lex_add_builtin(e, "string-ci>?", builtin_string_gt_ci);
+    lex_add_builtin(e, "string-ci>=?", builtin_string_gte_ci);
     /* Control features. */
+    lex_add_builtin(e, "eval", builtin_eval);
     lex_add_builtin(e, "apply", builtin_apply);
     lex_add_builtin(e, "map", builtin_map);
     lex_add_builtin(e, "vector-map", builtin_vector_map);
@@ -358,6 +377,8 @@ void lex_add_builtins(const Lex* e)
     lex_add_builtin(e, "for-each", builtin_foreach);
     lex_add_builtin(e, "vector-for-each", builtin_vector_foreach);
     lex_add_builtin(e, "string-for-each", builtin_string_foreach);
+    lex_add_builtin(e, "command-line", builtin_command_line);
+    lex_add_builtin(e, "exit", builtin_exit);
     /* Input/output and ports. */
     lex_add_builtin(e, "current-input-port", builtin_current_input_port);
     lex_add_builtin(e, "current-output-port", builtin_current_output_port);
@@ -384,6 +405,12 @@ void lex_add_builtins(const Lex* e)
     lex_add_builtin(e, "newline", builtin_newline);
     lex_add_builtin(e, "eof-object", builtin_eof);
     lex_add_builtin(e, "flush-output-port", builtin_flush_output_port);
+    lex_add_builtin(e, "open-input-file", builtin_open_input_file);
+    lex_add_builtin(e, "open-binary-input-file", builtin_open_binary_input_file);
+    lex_add_builtin(e, "open-output-file", builtin_open_output_file);
+    lex_add_builtin(e, "open-binary-output-file", builtin_open_binary_output_file);
+    lex_add_builtin(e, "display", builtin_display);
+    lex_add_builtin(e, "write", builtin_write);
     /* Error procedures. */
     lex_add_builtin(e, "read-error?", builtin_read_error);
     lex_add_builtin(e, "file-error?", builtin_file_error);

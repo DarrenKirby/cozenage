@@ -24,6 +24,7 @@
 
 
 /* Control features  */
+Cell* builtin_eval(const Lex* e, const Cell* a);
 Cell* builtin_apply(const Lex* e, const Cell* a);
 Cell* builtin_map(const Lex* e, const Cell* a);
 Cell* builtin_vector_map(const Lex* e, const Cell* a);
@@ -31,5 +32,8 @@ Cell* builtin_string_map(const Lex* e, const Cell* a);
 Cell* builtin_foreach(const Lex* e, const Cell* a);
 Cell* builtin_vector_foreach(const Lex* e, const Cell* a);
 Cell* builtin_string_foreach(const Lex* e, const Cell* a);
+Cell* builtin_load(const Lex* e, const Cell* a);
+Cell* builtin_command_line(const Lex* e, const Cell* a);
+Cell* builtin_exit(const Lex* e, const Cell* a);
 
 #endif //COZENAGE_CONTROL_FEATURES_H

@@ -19,7 +19,6 @@
 
 #include "errors.h"
 #include "cell.h"
-
 #include "types.h"
 
 Cell* builtin_error_object(const Lex* e, const Cell* a)

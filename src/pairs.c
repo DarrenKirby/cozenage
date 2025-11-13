@@ -746,7 +746,7 @@ Cell* builtin_foldl(const Lex* e, const Cell* a) {
 
     const int shortest_len = shortest_list_length;
     const int num_lists = a->count - 2;
-    Cell* proc = a->cell[0];
+    const Cell* proc = a->cell[0];
     Cell* init = a->cell[1];
 
     for (int i = 0; i < shortest_len; i++) {

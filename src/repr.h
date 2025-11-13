@@ -38,5 +38,6 @@ typedef enum {
 
 char* cell_to_string(const Cell* cell, print_mode_t mode);
 void debug_print_cell(const Cell* v);
+void print_env(const Lex* e, const Cell* a);
 
 #endif //COZENAGE_REPR_H
