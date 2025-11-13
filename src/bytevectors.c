@@ -18,17 +18,34 @@
 */
 
 #include "bytevectors.h"
-
+#include "strings.h"
+#include "types.h"
 #include <string.h>
 #include <gc/gc.h>
 
-#include "strings.h"
-#include "types.h"
+
+DEFINE_BV_TYPE(u8,  uint8_t,  "%u")
+DEFINE_BV_TYPE(s8,  int8_t,   "%d")
+DEFINE_BV_TYPE(u16, uint16_t, "%u")
+DEFINE_BV_TYPE(s16, int16_t,  "%d")
+DEFINE_BV_TYPE(u32, uint32_t, "%u")
+DEFINE_BV_TYPE(s32, int32_t,  "%d")
+
+
+const bv_ops_t BV_OPS[] = {
+    [BV_U8]  = { get_u8, set_u8, repr_u8, append_u8,  sizeof(uint8_t)  },
+    [BV_S8]  = { get_s8, set_s8, repr_s8, append_s8,  sizeof(int8_t)   },
+    [BV_U16] = { get_u16, set_u16, repr_u16, append_u16, sizeof(uint16_t) },
+    [BV_S16] = { get_s16, set_s16, repr_s16, append_s16, sizeof(int16_t)  },
+    [BV_U32] = { get_u32, set_u32, repr_u32, append_u32, sizeof(uint32_t) },
+    [BV_S32] = { get_s32, set_s32, repr_s32, append_s32, sizeof(int32_t)  },
+};
 
 
 /*------------------------------------------------------------*
  *     Byte vector constructors, selectors, and procedures    *
  * -----------------------------------------------------------*/
+
 
 /* (bytevector byte ... )
  * Returns a newly allocated bytevector containing its arguments. */
@@ -38,18 +55,7 @@ Cell* builtin_bytevector(const Lex* e, const Cell* a)
     Cell* err = CHECK_ARITY_MIN(a, 1);
     if (err) return err;
 
-    // Cell *vec = make_cell_bytevector();
-    // for (int i = 0; i < a->count; i++) {
-    //     if (a->cell[i]->type != CELL_INTEGER || a->cell[i]->integer_v < 0 || a->cell[i]->integer_v > 255) {
-    //         return make_cell_error(
-    //             "bytevector: args must be integers 0 to 255 inclusive",
-    //             VALUE_ERR);
-    //     }
-    //     cell_add(vec, a->cell[i]);
-    // }
-    // return vec;
-
-    Cell* bv = make_cell_bytevector_u8();
+    Cell* bv = make_cell_bytevector(BV_U8);
     for (int i = 0; i < a->count; i++) {
         if (a->cell[i]->type != CELL_INTEGER || a->cell[i]->integer_v < 0 ||
             a->cell[i]->integer_v > UINT8_MAX) {
@@ -79,7 +85,7 @@ Cell* builtin_bytevector_length(const Lex* e, const Cell* a)
 
 /* (bytevector-u8-ref bytevector k)
  * Returns the kth byte of bytevector. */
-Cell* builtin_bytevector_u8_ref(const Lex* e, const Cell* a)
+Cell* builtin_bytevector_ref(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2);
@@ -94,6 +100,7 @@ Cell* builtin_bytevector_u8_ref(const Lex* e, const Cell* a)
             "bytevector-ref: arg 2 must be an integer",
             TYPE_ERR);
     }
+    const Cell* bv = a->cell[0];
     const int i = (int)a->cell[1]->integer_v;
 
     if (i >= a->cell[0]->count) {
@@ -101,13 +108,35 @@ Cell* builtin_bytevector_u8_ref(const Lex* e, const Cell* a)
             "bytevector-ref: index out of bounds",
             INDEX_ERR);
     }
-    return make_cell_integer(a->cell[0]->bv_u8[i]);
+    return make_cell_integer(BV_OPS[bv->bv->type].get(bv, i));
 }
 
-/* (bytevector-u8-set! bytevector k byte)
- * It is an error if k is not a valid index of vector. This procedure stores obj in the kth position
- * of vector */
-Cell* builtin_bytevector_u8_set_bang(const Lex* e, const Cell* a)
+static Cell* byte_fits(const bv_t type, const int64_t byte) {
+    int64_t min;
+    int64_t max;
+    char* t_s;
+    switch (type) {
+        case BV_U8: { min = 0; max = UINT8_MAX; t_s = "u8"; break; }
+        case BV_S8: { min = INT8_MIN; max = INT8_MAX; t_s = "s8"; break;  }
+        case BV_U16: { min = 0; max = UINT16_MAX; t_s = "u16"; break; }
+        case BV_S16: { min = INT16_MIN; max = INT16_MAX; t_s = "s16"; break;  }
+        case BV_U32: { min = 0; max = UINT32_MAX; t_s = "u32"; break;}
+        case BV_S32: { min = 0; max = INT32_MAX; t_s = "s32"; break; }
+        default: { min = 0; max = UINT8_MAX; t_s = "u8"; break; }
+    }
+
+    if (byte < min || byte > max) {
+        char buf[256];
+        snprintf(buf, sizeof(buf), "byte value %lld invalid for %s bytevector", byte, t_s);
+        return make_cell_error(buf, VALUE_ERR);
+    }
+    return make_cell_boolean(1);
+}
+
+/* (bytevector-set! bytevector k byte)
+ * It is an error if k is not a valid index of the bytevector.
+ * This procedure stores byte in the kth position of bytevector */
+Cell* builtin_bytevector_set_bang(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 3);
@@ -123,13 +152,14 @@ Cell* builtin_bytevector_u8_set_bang(const Lex* e, const Cell* a)
             TYPE_ERR);
     }
 
-    const long long idx = a->cell[1]->integer_v;
-    const Cell* vec = a->cell[0];
-    const int b = (int)a->cell[2]->integer_v;
-    if (b < 0 || b > UINT8_MAX) {
-        return make_cell_error(
-            "bytevector-u8-set!: invalid byte value",
-            VALUE_ERR);
+    const int idx = (int)a->cell[1]->integer_v;
+    Cell* bv = a->cell[0];
+    const uint8_t type = bv->bv->type;
+    const int byte = (int)a->cell[2]->integer_v;
+    /* Check the range. */
+    Cell* check_if = byte_fits(type, byte);
+    if (check_if->type == CELL_ERROR) {
+        return check_if;
     }
 
     if (idx < 0 || idx >= a->cell[0]->count) {
@@ -138,7 +168,7 @@ Cell* builtin_bytevector_u8_set_bang(const Lex* e, const Cell* a)
             INDEX_ERR);
     }
 
-    vec->bv_u8[idx] = (u_int8_t)b;
+    BV_OPS[type].set(bv, idx, byte);
     return nullptr;
 }
 
@@ -175,7 +205,7 @@ Cell* builtin_make_bytevector(const Lex* e, const Cell* a)
     } else {
         fill = 0;
     }
-    Cell *vec = make_cell_bytevector_u8();
+    Cell *vec = make_cell_bytevector(BV_U8);
     for (int i = 0; i < n; i++) {
         byte_add(vec, fill);
     }
@@ -197,19 +227,23 @@ Cell* builtin_bytevector_copy(const Lex* e, const Cell* a)
             "bytevector->copy: arg 1 must be a bytevector",
             TYPE_ERR);
     }
+
     int start = 0;
     int end = a->cell[0]->count;
-
     if (a->count == 2) {
         start = (int)a->cell[1]->integer_v;
     }
+
+    const Cell* bv = a->cell[0];
+    const bv_t type = bv->bv->type;
     if (a->count == 3) {
         start = (int)a->cell[1]->integer_v;
         end = (int)a->cell[2]->integer_v;
     }
-    Cell* vec = make_cell_bytevector_u8();
+
+    Cell* vec = make_cell_bytevector(type);
     for (int i = start; i < end; i++) {
-        const u_int8_t byte = a->cell[0]->bv_u8[i];
+        const int64_t byte = BV_OPS[type].get(bv, i);
         byte_add(vec, byte);
     }
     return vec;
@@ -232,14 +266,15 @@ Cell* builtin_bytevector_append(const Lex* e, const Cell* a)
     if (err) return err;
 
     if (a->count == 0) {
-        return make_cell_bytevector_u8();
+        return make_cell_bytevector(BV_U8);
     }
 
-    Cell* result = make_cell_bytevector_u8();
+    const bv_t type = a->cell[0]->bv->type;
+    Cell* result = make_cell_bytevector(type);
     for (int i = 0; i < a->count; i++) {
         const Cell* bv = a->cell[i];
         for (int j = 0; j < bv->count; j++) {
-            const u_int8_t byte = bv->bv_u8[j];
+            const int64_t byte =  BV_OPS[type].get(bv, j);
             byte_add(result, byte);
         }
     }
@@ -249,11 +284,12 @@ Cell* builtin_bytevector_append(const Lex* e, const Cell* a)
 Cell* builtin_utf8_string(const Lex* e, const Cell* a)
 {
     (void)e;
+    const Cell* bv = a->cell[0];
     Cell* err = CHECK_ARITY_RANGE(a, 1, 3);
     if (err) return err;
-    if (a->cell[0]->type != CELL_BYTEVECTOR) {
+    if (bv->type != CELL_BYTEVECTOR || bv->bv->type != BV_U8) {
         return make_cell_error(
-            "string->utf8: arg 1 must be a string",
+            "string->utf8: arg 1 must be a u8 bytevector",
             TYPE_ERR);
     }
 
@@ -286,13 +322,12 @@ Cell* builtin_utf8_string(const Lex* e, const Cell* a)
         end = (int)a->cell[2]->integer_v;
     }
 
-    const Cell* the_bv = a->cell[0];
-    char* the_str = GC_MALLOC_ATOMIC(the_bv->count + 1);
+
+    char* the_str = GC_MALLOC_ATOMIC(bv->count + 1);
 
     int j = 0;
     for (int i = start; i < end; i++) {
-        //printf("%d\n", (int)the_bv->cell[i]->integer_v);
-        the_str[j] = (char)the_bv->bv_u8[i];
+        the_str[j] = (char)BV_OPS[bv->bv->type].get(bv, i);
         j++;
     }
 
@@ -341,12 +376,11 @@ Cell* builtin_string_utf8(const Lex* e, const Cell* a)
     }
 
     const char* the_s = a->cell[0]->str;
-    Cell* bv = make_cell_bytevector_u8();
+    Cell* bv = make_cell_bytevector(BV_U8);
     for (size_t i = start; i < end; i++)
     {
         const u_int8_t the_char = (int)the_s[i];
         byte_add(bv, the_char);
-        //cell_add(bv, make_cell_integer(the_char));
     }
     return bv;
 }
