@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "coz_bits_lib.h"
+#include "bits_lib.h"
 #include "types.h"
 #include <stdlib.h>
 #include <string.h>
@@ -231,7 +231,7 @@ Cell* bits_bitstring_to_int(const Lex* e, const Cell* a) {
     return make_cell_integer(negative_part + positive_part);
 }
 
-void lex_add_coz_bits_lib(const Lex* e) {
+void lex_add_bits_lib(const Lex* e) {
     lex_add_builtin(e, ">>", bits_right_shift);
     lex_add_builtin(e, "<<", bits_left_shift);
     lex_add_builtin(e, "&", bits_bitwise_and);

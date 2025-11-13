@@ -18,14 +18,10 @@
 */
 
 #include "file_lib.h"
-#include "environment.h"
 #include "types.h"
 #include <unistd.h>
 #include <errno.h>
 #include <string.h>
-#include <stdlib.h>
-#include <gc/gc.h>
-#include <limits.h>
 
 
 /* TODO:
@@ -64,93 +60,8 @@ Cell* builtin_delete_file(const Lex* e, const Cell* a) {
     return make_cell_boolean(1);
 }
 
-/* 'open-input-file' -> CELL_PORT - open a file and bind it to a text port */
-Cell* builtin_open_input_file(const Lex* e, const Cell* a) {
-    (void)e;
-    Cell* err = check_arg_types(a, CELL_STRING);
-    if (err) { return err; }
-    err = CHECK_ARITY_EXACT(a, 1);
-    if (err) { return err; }
-
-    const char* filename = a->cell[0]->str;
-    FILE *fp = fopen(filename, "r");
-    if (!fp) {
-        return make_cell_error(strerror(errno), FILE_ERR);
-    }
-    char *actual_path = GC_MALLOC(PATH_MAX);
-    const char *ptr = realpath(filename, actual_path);
-    if (ptr == NULL) {
-        fclose(fp);
-        return make_cell_error(strerror(errno), FILE_ERR);
-    }
-
-    Cell* p = make_cell_port(ptr, fp, INPUT_PORT, TEXT_PORT);
-    return p;
-}
-
-/* 'open-binary-input-file' -> CELL_PORT - open a file and bind it to a binary port */
-Cell* builtin_open_binary_input_file(const Lex* e, const Cell* a) {
-    (void)e;
-    Cell* err = check_arg_types(a, CELL_STRING);
-    if (err) { return err; }
-    err = CHECK_ARITY_EXACT(a, 1);
-    if (err) { return err; }
-
-    const char* filename = a->cell[0]->str;
-    FILE *fp = fopen(filename, "r");
-    if (fp == NULL) {
-        return make_cell_error(strerror(errno), FILE_ERR);
-    }
-    Cell* p = make_cell_port(filename, fp, INPUT_PORT, BINARY_PORT);
-    return p;
-}
-
-Cell* builtin_open_output_file(const Lex* e, const Cell* a) {
-    (void)e;
-    Cell* err = check_arg_types(a, CELL_STRING);
-    if (err) { return err; }
-    err = CHECK_ARITY_RANGE(a, 1, 2);
-    if (err) { return err; }
-
-    const char *mode = "w";
-    const char* filename = a->cell[0]->str;
-    if (a->count == 2 && a->cell[1]->type == CELL_STRING) {
-        mode = a->cell[1]->str;
-    }
-    FILE *fp = fopen(filename, mode);
-    if (!fp) {
-        return make_cell_error(strerror(errno), FILE_ERR);
-    }
-    char *actual_path = GC_MALLOC(PATH_MAX);
-    const char *ptr = realpath(filename, actual_path);
-    if (ptr == NULL) {
-        fclose(fp);
-        return make_cell_error(strerror(errno), FILE_ERR);
-    }
-
-    Cell* p = make_cell_port(filename, fp, OUTPUT_PORT, TEXT_PORT);
-    return p;
-}
-
-Cell* builtin_open_binary_output_file(const Lex* e, const Cell* a) {
-    (void)e;
-    Cell* err = check_arg_types(a, CELL_STRING);
-    if (err) { return err; }
-    err = CHECK_ARITY_EXACT(a, 1);
-    if (err) { return err; }
-
-    const char* filename = a->cell[0]->str;
-    FILE *fp = fopen(filename, "w");
-    if (fp == NULL) {
-        return make_cell_error(strerror(errno), FILE_ERR);
-    }
-    Cell* p = make_cell_port(filename, fp, OUTPUT_PORT, BINARY_PORT);
-    return p;
-}
-
 /* Register the procedures in the environment */
 void lex_add_file_lib(const Lex* e) {
     lex_add_builtin(e, "file-exists?", builtin_file_exists);
     lex_add_builtin(e, "delete-file", builtin_delete_file);
-
 }

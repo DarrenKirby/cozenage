@@ -17,8 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef COZENAGE_PROCESS_CONTEXT_LIB_H
-#define COZENAGE_PROCESS_CONTEXT_LIB_H
+#ifndef COZENAGE_PROC_ENV_LIB_H
+#define COZENAGE_PROC_ENV_LIB_H
 
 #include "cell.h"
 
@@ -27,4 +27,4 @@ Cell* builtin_get_env_var(const Lex* e, const Cell* a);
 Cell* builtin_get_env_vars(const Lex* e, const Cell* a);
 void lex_add_proc_env_lib(const Lex* e);
 
-#endif //COZENAGE_PROCESS_CONTEXT_LIB_H
+#endif //COZENAGE_PROC_ENV_LIB_H

@@ -17,8 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef COZENAGE_COZ_BITS_LIB_H
-#define COZENAGE_COZ_BITS_LIB_H
+#ifndef COZENAGE_BITS_LIB_H
+#define COZENAGE_BITS_LIB_H
 
 #include "cell.h"
 
@@ -30,6 +30,6 @@ Cell* bits_bitwise_xor(const Lex* e, const Cell* a);
 Cell* bits_bitwise_not(const Lex* e, const Cell* a);
 Cell* bits_bitstring_to_int(const Lex* e, const Cell* a);
 Cell* bits_int_to_bitstring(const Lex* e, const Cell* a);
-void lex_add_coz_bits_lib(const Lex* e);
+void lex_add_bits_lib(const Lex* e);
 
-#endif //COZENAGE_COZ_BITS_LIB_H
+#endif //COZENAGE_BITS_LIB_H
