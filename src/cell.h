@@ -80,7 +80,7 @@ typedef enum {
                                    tail-call */
 } Cell_t;
 
-typedef enum {
+typedef enum : u_int8_t {
     BV_U8,
     BV_S8,
     BV_U16,
@@ -106,6 +106,12 @@ typedef struct Port {
      int stream_t;     /* Binary or textual. */
 } port;
 
+typedef struct ByteV
+{
+    u_int16_t capacity;
+    bv_t type;
+    void* data;
+} byte_v;
 
 /* Definition of the Cell struct/tagged union. */
 typedef struct Cell {
@@ -167,12 +173,6 @@ typedef struct Cell {
             int sf_id;        /* Special form id */
         };
 
-        /* u8-Bytevectors. */
-        struct {
-            u_int8_t* bv_u8;
-            u_int16_t capacity;
-        };
-
         /* Single-field types */
         Cell** cell;              /* for compound types (sexpr, vector) */
         char* str;                /* strings */
@@ -183,6 +183,7 @@ typedef struct Cell {
         bool boolean_v;           /* boolean */
         lambda* lambda;
         port* port;
+        byte_v* bv;
     };
 } Cell;
 
@@ -220,6 +221,6 @@ Cell* cell_copy(const Cell* v);
 Cell* cell_pop(Cell* v, int i);
 Cell* cell_take(Cell* v, int i);
 Cell* make_cell_bytevector_u8(void);
-Cell* byte_add(Cell* bv, u_int8_t b);
+Cell* byte_add(Cell* bv, int64_t value);
 
 #endif //COZENAGE_CELL_H

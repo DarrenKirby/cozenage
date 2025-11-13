@@ -21,6 +21,7 @@
 #include "types.h"
 #include "symbols.h"
 #include "hash.h"
+#include "bytevectors.h"
 #include <gc/gc.h>
 #include <stdlib.h>
 #include <string.h>
@@ -290,31 +291,26 @@ Cell* make_cell_vector(void)
     return v;
 }
 
-
-Cell* make_cell_bytevector(bv_t t)
-{
-    switch (t)  {
-        case BV_U8: return make_cell_bytevector_u8();
-        case BV_S8: return make_cell_error("Not implemented yet", GEN_ERR);
-    default: return make_cell_error("Bad byte vector type.", VALUE_ERR);
-    }
-}
-
-Cell* make_cell_bytevector_u8(void)
+Cell* make_cell_bytevector(const bv_t t)
 {
     Cell* v = GC_MALLOC(sizeof(Cell));
     if (!v) {
         fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
         exit(EXIT_FAILURE);
     }
+
     v->type = CELL_BYTEVECTOR;
-    /* Initialize to 8-byte capacity */
-    v->bv_u8 = GC_MALLOC_ATOMIC(sizeof(uint8_t) * 8);
-    v->capacity = 8;
+    v->bv = GC_MALLOC(sizeof(byte_v));
+
+    v->bv->type = t;
+    v->bv->capacity = 8;
     v->count = 0;
+
+    const size_t elem_size = BV_OPS[t].elem_size;
+    v->bv->data = GC_MALLOC_ATOMIC(elem_size * v->bv->capacity);
+
     return v;
 }
-
 
 Cell* make_cell_error(const char* error_string, const err_t error_type)
 {
@@ -371,17 +367,12 @@ Cell* cell_add(Cell* v, Cell* x)
     return v;
 }
 
-Cell* byte_add(Cell* bv, const u_int8_t b)
+
+Cell* byte_add(Cell* bv, const int64_t value)
 {
-    bv->count++;
-    if (bv->count == bv->capacity) {
-        bv->bv_u8 = GC_REALLOC(bv->bv_u8, bv->capacity * 2);
-        bv->capacity *= 2;
-    }
-    bv->bv_u8[bv->count-1] = b;
+    BV_OPS[bv->bv->type].append(bv, value);
     return bv;
 }
-
 
 Cell* cell_pop(Cell* v, const int i)
 {
@@ -478,7 +469,7 @@ Cell* cell_copy(const Cell* v) {
         break;
     case CELL_SEXPR:
     case CELL_VECTOR:
-    case CELL_BYTEVECTOR:
+    //case CELL_BYTEVECTOR:
         copy->count = v->count;
         if (v->count) {
             copy->cell = GC_MALLOC(sizeof(Cell*) * v->count);
