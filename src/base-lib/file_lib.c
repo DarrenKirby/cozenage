@@ -1,5 +1,5 @@
 /*
- * 'src/file_lib.c'
+ * 'src/base-lib/file_lib.c'
  * This file is part of Cozenage - https://github.com/DarrenKirby/cozenage
  * Copyright © 2025  Darren Kirby <darren@dragonbyte.ca>
  *
@@ -17,22 +17,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "file_lib.h"
 #include "types.h"
+#include "cell.h"
 #include <unistd.h>
 #include <errno.h>
 #include <string.h>
 
 
-/* TODO:
-call-with-input-file
-with-input-from-file
-call-with-output-file
-with-output-to-file
-*/
-
 /* 'file-exists?' -> CELL_BOOLEAN - file exists predicate */
-Cell* builtin_file_exists(const Lex* e, const Cell* a) {
+static Cell* file_exists(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING);
     if (err) { return err; }
@@ -46,7 +39,7 @@ Cell* builtin_file_exists(const Lex* e, const Cell* a) {
 }
 
 /* 'delete-file -> CELL_BOOLEAN - delete a file, and return a bool confirming outcome */
-Cell* builtin_delete_file(const Lex* e, const Cell* a) {
+static Cell* delete_file(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING);
     if (err) { return err; }
@@ -61,7 +54,7 @@ Cell* builtin_delete_file(const Lex* e, const Cell* a) {
 }
 
 /* Register the procedures in the environment */
-void lex_add_file_lib(const Lex* e) {
-    lex_add_builtin(e, "file-exists?", builtin_file_exists);
-    lex_add_builtin(e, "delete-file", builtin_delete_file);
+void cozenage_library_init(const Lex* e) {
+    lex_add_builtin(e, "file-exists?", file_exists);
+    lex_add_builtin(e, "delete-file", delete_file);
 }

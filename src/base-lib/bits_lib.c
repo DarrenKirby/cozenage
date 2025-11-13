@@ -1,5 +1,5 @@
 /*
- * 'coz_bits_lib.c'
+ * 'bits_lib.c'
  * This file is part of Cozenage - https://github.com/DarrenKirby/cozenage
  * Copyright © 2025  Darren Kirby <darren@dragonbyte.ca>
  *
@@ -17,15 +17,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "bits_lib.h"
 #include "types.h"
+#include "cell.h"
 #include <stdlib.h>
 #include <string.h>
 
 
+/* Forward declaration */
+static Cell* bits_bitstring_to_int(const Lex* e, const Cell* a);
+static Cell* bits_int_to_bitstring(const Lex* e, const Cell* a);
+
 /* Helper which returns a variable-width two's complement representation
  * of a signed long long */
-char* format_twos_complement(const long long val) {
+static char* format_twos_complement(const long long val) {
     /* Handle the zero case, which is special. */
     if (val == 0) {
         char* zero_str = malloc(2);
@@ -79,7 +83,7 @@ char* format_twos_complement(const long long val) {
  *            (cozenage bits) library procedures              *
  * -----------------------------------------------------------*/
 
-Cell* bits_right_shift(const Lex* e, const Cell* a) {
+static Cell* bits_right_shift(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2);
     if (err) return err;
@@ -103,7 +107,7 @@ Cell* bits_right_shift(const Lex* e, const Cell* a) {
     return result;
 }
 
-Cell* bits_left_shift(const Lex* e, const Cell* a) {
+static Cell* bits_left_shift(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2);
     if (err) return err;
@@ -127,7 +131,7 @@ Cell* bits_left_shift(const Lex* e, const Cell* a) {
     return result;
 }
 
-Cell* bits_bitwise_and(const Lex* e, const Cell* a) {
+static Cell* bits_bitwise_and(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2);
     if (err) return err;
@@ -142,7 +146,7 @@ Cell* bits_bitwise_and(const Lex* e, const Cell* a) {
     return make_cell_integer(lhs & rhs);
 }
 
-Cell* bits_bitwise_or(const Lex* e, const Cell* a) {
+static Cell* bits_bitwise_or(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2);
     if (err) return err;
@@ -157,7 +161,7 @@ Cell* bits_bitwise_or(const Lex* e, const Cell* a) {
     return make_cell_integer(lhs | rhs);
 }
 
-Cell* bits_bitwise_xor(const Lex* e, const Cell* a) {
+static Cell* bits_bitwise_xor(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2);
     if (err) return err;
@@ -172,7 +176,7 @@ Cell* bits_bitwise_xor(const Lex* e, const Cell* a) {
     return make_cell_integer(lhs ^ rhs);
 }
 
-Cell* bits_bitwise_not(const Lex* e, const Cell* a) {
+static Cell* bits_bitwise_not(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
@@ -186,7 +190,7 @@ Cell* bits_bitwise_not(const Lex* e, const Cell* a) {
     return make_cell_integer(~val);
 }
 
-Cell* bits_int_to_bitstring(const Lex* e, const Cell* a) {
+static Cell* bits_int_to_bitstring(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
@@ -202,7 +206,7 @@ Cell* bits_int_to_bitstring(const Lex* e, const Cell* a) {
     return result;
 }
 
-Cell* bits_bitstring_to_int(const Lex* e, const Cell* a) {
+static Cell* bits_bitstring_to_int(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
@@ -231,7 +235,7 @@ Cell* bits_bitstring_to_int(const Lex* e, const Cell* a) {
     return make_cell_integer(negative_part + positive_part);
 }
 
-void lex_add_bits_lib(const Lex* e) {
+void cozenage_library_init(const Lex* e) {
     lex_add_builtin(e, ">>", bits_right_shift);
     lex_add_builtin(e, "<<", bits_left_shift);
     lex_add_builtin(e, "&", bits_bitwise_and);

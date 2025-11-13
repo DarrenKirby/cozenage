@@ -1,5 +1,5 @@
 /*
- * 'src/process_context_lib.c'
+ * 'src/base-lib/proc_env_lib.c'
  * This file is part of Cozenage - https://github.com/DarrenKirby/cozenage
  * Copyright © 2025  Darren Kirby <darren@dragonbyte.ca>
  *
@@ -17,15 +17,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "proc_env_lib.h"
+
 #include "types.h"
+#include "cell.h"
 #include <stdlib.h>
 #include <string.h>
 
 
 extern char **environ;
 
-Cell* builtin_get_env_var(const Lex* e, const Cell* a) {
+static Cell* builtin_get_env_var(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING);
     if (err) { return err; }
@@ -39,7 +40,7 @@ Cell* builtin_get_env_var(const Lex* e, const Cell* a) {
     return make_cell_string(var_string);
 }
 
-Cell* builtin_get_env_vars(const Lex* e, const Cell* a) {
+static Cell* builtin_get_env_vars(const Lex* e, const Cell* a) {
     (void)e; (void)a;
     Cell* err = CHECK_ARITY_EXACT(a, 0);
     if (err) { return err; }
@@ -62,7 +63,7 @@ Cell* builtin_get_env_vars(const Lex* e, const Cell* a) {
     return result;
 }
 
-void lex_add_proc_env_lib(const Lex* e) {
+void cozenage_library_init(const Lex* e) {
     lex_add_builtin(e, "get-environment-variable", builtin_get_env_var);
     lex_add_builtin(e, "get-environment-variables", builtin_get_env_vars);
 }
