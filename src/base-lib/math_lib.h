@@ -20,7 +20,7 @@
 #ifndef COZENAGE_MATH_LIB_H
 #define COZENAGE_MATH_LIB_H
 
-#include "cell.c"
+#include "cell.h"
 
 Cell* builtin_cos(const Lex* e, const Cell* a);
 Cell* builtin_acos(const Lex* e, const Cell* a);
@@ -43,5 +43,6 @@ Cell* builtin_imag_part(const Lex* e, const Cell* a);
 Cell* builtin_make_rectangular(const Lex* e, const Cell* a);
 Cell* builtin_angle(const Lex* e, const Cell* a);
 Cell* builtin_make_polar(const Lex* e, const Cell* a);
+void lex_add_math_lib(const Lex* e);
 
 #endif //COZENAGE_MATH_LIB_H

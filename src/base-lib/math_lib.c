@@ -20,6 +20,7 @@
 #include "math_lib.h"
 #include "types.h"
 #include "numerics.h"
+#include <stdlib.h>
 #include <math.h>
 #include <complex.h>
 
