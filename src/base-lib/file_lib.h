@@ -1,5 +1,5 @@
 /*
- * 'src/io_lib.h'
+ * 'src/file_lib.h'
  * This file is part of Cozenage - https://github.com/DarrenKirby/cozenage
  * Copyright © 2025  Darren Kirby <darren@dragonbyte.ca>
  *
@@ -17,14 +17,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef COZENAGE_IO_LIB_H
-#define COZENAGE_IO_LIB_H
+#ifndef COZENAGE_FILE_LIB_H
+#define COZENAGE_FILE_LIB_H
 
 #include "cell.h"
 
 
-Cell* builtin_display(const Lex* e, const Cell* a);
-void lex_add_write_lib(const Lex* e);
-void lex_add_read_lib(Lex* e);
+Cell* builtin_file_exists(const Lex* e, const Cell* a);
+Cell* builtin_delete_file(const Lex* e, const Cell* a);
 
-#endif //COZENAGE_IO_LIB_H
+void lex_add_file_lib(const Lex* e);
+
+#endif //COZENAGE_FILE_LIB_H

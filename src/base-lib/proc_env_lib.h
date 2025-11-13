@@ -1,5 +1,5 @@
 /*
- * 'src/file_lib.h'
+ * 'src/process_context_lib.h'
  * This file is part of Cozenage - https://github.com/DarrenKirby/cozenage
  * Copyright © 2025  Darren Kirby <darren@dragonbyte.ca>
  *
@@ -17,16 +17,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef COZENAGE_FILE_LIB_H
-#define COZENAGE_FILE_LIB_H
+#ifndef COZENAGE_PROCESS_CONTEXT_LIB_H
+#define COZENAGE_PROCESS_CONTEXT_LIB_H
 
 #include "cell.h"
 
 
-Cell* builtin_file_exists(const Lex* e, const Cell* a);
-Cell* builtin_delete_file(const Lex* e, const Cell* a);
-Cell* builtin_open_input_file(const Lex* e, const Cell* a);
-Cell* builtin_open_binary_input_file(const Lex* e, const Cell* a);
-void lex_add_file_lib(const Lex* e);
+Cell* builtin_get_env_var(const Lex* e, const Cell* a);
+Cell* builtin_get_env_vars(const Lex* e, const Cell* a);
+void lex_add_proc_env_lib(const Lex* e);
 
-#endif //COZENAGE_FILE_LIB_H
+#endif //COZENAGE_PROCESS_CONTEXT_LIB_H

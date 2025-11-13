@@ -17,72 +17,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "process_context_lib.h"
-#include "environment.h"
+#include "../scheme-lib/proc_env_lib.h"
 #include "types.h"
 #include <stdlib.h>
 #include <string.h>
 
-#include "repr.h"
-#include "special_forms.h"
-
 
 extern char **environ;
-extern int is_repl;
-extern int g_argc;
-extern char **g_argv;
-
-Cell* builtin_command_line(const Lex* e, const Cell* a) {
-    (void)e; (void)a;
-    /* Return list of just empty string if using REPL */
-    if (is_repl) {
-        return make_cell_pair(make_cell_string(""), make_cell_nil());
-    }
-    /* Construct the list of args. */
-    Cell* args = make_cell_sexpr();
-    for (int i = 0; i < g_argc; i++) {
-        cell_add(args, make_cell_string(g_argv[i]));
-    }
-    return sexpr_to_list(args);
-}
-
-Cell* builtin_exit(const Lex* e, const Cell* a) {
-    (void)e;
-    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_BOOLEAN);
-    if (err) { return err; }
-
-    /* TODO: run dynamic-wind /after/ procedure here when implemented */
-    if (a->count == 1) {
-        if (a->cell[0]->type == CELL_BOOLEAN) {
-            const int es = a->cell[0]->boolean_v;
-            if (es) {
-                exit(0); /* flip boolean 1 (#t) to exit success (0) */
-            }
-            exit(1);
-        }
-        /* If not bool, int. Just return directly */
-        exit((int)a->cell[0]->integer_v);
-    }
-    exit(0); /* exit success if no arg */
-}
-
-Cell* builtin_emergency_exit(const Lex* e, const Cell* a) {
-    (void)e;
-    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_BOOLEAN);
-    if (err) { return err; }
-    if (a->count == 1) {
-        if (a->cell[0]->type == CELL_BOOLEAN) {
-            const int es = a->cell[0]->boolean_v;
-            if (es) {
-                exit(0); /* flip boolean 1 (#t) to exit success (0) */
-            }
-            exit(1);
-        }
-    /* If not bool, int. Just return directly */
-        exit((int)a->cell[0]->integer_v);
-    }
-    exit(0); /* exit success if no arg */
-}
 
 Cell* builtin_get_env_var(const Lex* e, const Cell* a) {
     (void)e;
@@ -121,10 +62,7 @@ Cell* builtin_get_env_vars(const Lex* e, const Cell* a) {
     return result;
 }
 
-void lex_add_proc_con_lib(const Lex* e) {
-    lex_add_builtin(e, "command-line", builtin_command_line);
-    lex_add_builtin(e, "exit", builtin_exit);
-    lex_add_builtin(e, "emergency-exit", builtin_emergency_exit);
+void lex_add_proc_env_lib(const Lex* e) {
     lex_add_builtin(e, "get-environment-variable", builtin_get_env_var);
     lex_add_builtin(e, "get-environment-variables", builtin_get_env_vars);
 }

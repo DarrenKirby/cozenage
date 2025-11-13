@@ -1,5 +1,5 @@
 /*
- * 'src/inexact_lib.c'
+ * 'math_lib.c'
  * This file is part of Cozenage - https://github.com/DarrenKirby/cozenage
  * Copyright © 2025  Darren Kirby <darren@dragonbyte.ca>
  *
@@ -17,11 +17,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "inexact_lib.h"
+#include "math_lib.h"
 #include "types.h"
+#include "numerics.h"
 #include <math.h>
 #include <complex.h>
-
 
 /* Helper to make C complex from Cell complex */
 static long double complex cell_to_c_complex(const Cell* c)
@@ -255,27 +255,6 @@ Cell* builtin_log10(const Lex* e, const Cell* a) {
     return result;
 }
 
-/* Returns the square root of arg */
-Cell* builtin_sqrt(const Lex* e, const Cell* a) {
-    (void)e;
-    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX);
-    if (err) { return err; }
-    if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
-
-    if (a->cell[0]->type == CELL_COMPLEX)
-    {
-        const long double complex z = cell_to_c_complex(a->cell[0]);
-        const long double complex z_result = csqrtl(z);
-        Cell* real = make_cell_from_double(creall(z_result));
-        Cell* imag = make_cell_from_double(cimagl(z_result));
-        return make_cell_complex(real, imag);
-    }
-
-    const long double n = cell_to_long_double(a->cell[0]);
-    Cell* result = make_cell_from_double(sqrtl(n));
-    return result;
-}
-
 /* Returns the cube root of arg */
 Cell* builtin_cbrt(const Lex* e, const Cell* a) {
     (void)e;
@@ -288,62 +267,232 @@ Cell* builtin_cbrt(const Lex* e, const Cell* a) {
     return result;
 }
 
-/* Predicate to test if val is infinite */
-Cell* builtin_infinite(const Lex* e, const Cell* a) {
-    (void)e;
-    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX);
-    if (err) { return err; }
-    if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
-
-    const Cell* arg = a->cell[0];
-    if (arg->type == CELL_COMPLEX) {
-        const long double r = cell_to_long_double(arg->real);
-        const long double i = cell_to_long_double(arg->imag);
-        return make_cell_boolean(isinf(r) || isinf(i));
+/* Helper for the core GCD algorithm (Euclidean) for two integers. */
+long long gcd_helper(long long x, long long y) {
+    x = llabs(x);
+    y = llabs(y);
+    while (x != 0) {
+        const long long tmp = x;
+        x = y % x;
+        y = tmp;
     }
-
-    const long double n = cell_to_long_double(arg);
-    return make_cell_boolean(isinf(n));
+    return y;
 }
 
-/* Predicate to test if val is finite */
-Cell* builtin_finite(const Lex* e, const Cell* a) {
-    (void)e;
-    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX);
-    if (err) { return err; }
-    if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
-
-    const Cell* arg = a->cell[0];
-    if (arg->type == CELL_COMPLEX) {
-        const long double r = cell_to_long_double(arg->real);
-        const long double i = cell_to_long_double(arg->imag);
-        return make_cell_boolean(isfinite(r) && isfinite(i));
-    }
-
-    const long double n = cell_to_long_double(arg);
-    return make_cell_boolean(isfinite(n));
+/* Helper for the core LCM logic (using the overflow-safe formula). */
+long long lcm_helper(long long x, long long y) {
+    if (x == 0 || y == 0) return 0;
+    x = llabs(x);
+    y = llabs(y);
+    return (x / gcd_helper(x, y)) * y;
 }
 
-/* Predicate to test if val is nan */
-Cell* builtin_nan(const Lex* e, const Cell* a) {
+Cell* builtin_gcd(const Lex* e, const Cell* a) {
+    (void)e;
+    Cell* err = check_arg_types(a, CELL_INTEGER);
+    if (err) return err;
+
+    if (a->count == 0) {
+        return make_cell_integer(0); /* Identity for GCD */
+    }
+
+    long long result = a->cell[0]->integer_v;
+    for (int i = 1; i < a->count; i++) {
+        result = gcd_helper(result, a->cell[i]->integer_v);
+    }
+
+    return make_cell_integer(llabs(result)); /* Final result must be non-negative */
+}
+
+Cell* builtin_lcm(const Lex* e, const Cell* a) {
+    (void)e;
+    Cell* err = check_arg_types(a, CELL_INTEGER);
+    if (err) { return err; }
+
+    if (a->count == 0) {
+        return make_cell_integer(1); /* Identity for LCM */
+    }
+
+    long long result = a->cell[0]->integer_v;
+    for (int i = 1; i < a->count; i++) {
+        result = lcm_helper(result, a->cell[i]->integer_v);
+    }
+
+    return make_cell_integer(llabs(result)); /* Final result must be non-negative */
+}
+
+/* (floor-quotient n1 n2) */
+Cell* builtin_floor_quotient(const Lex* e, const Cell* a)
+{
+    (void)e;
+    Cell* err = check_arg_types(a, CELL_INTEGER);
+    if (err) { return err; }
+    if ((err = CHECK_ARITY_EXACT(a, 2))) { return err; }
+
+    const long long n1 = a->cell[0]->integer_v ;
+    const long long n2 = a->cell[1]->integer_v ;
+
+    long long q = n1 / n2;
+    const long long r = n1 % n2;
+
+    if (r != 0 && n1 > 0 != n2 > 0) {
+        q = q - 1;
+    }
+
+    return make_cell_integer(q);
+}
+
+/* (floor/ n1 n2 ) */
+Cell* builtin_floor_div(const Lex* e, const Cell* a)
+{
+    (void)e;
+    Cell* err = check_arg_types(a, CELL_INTEGER);
+    if (err) { return err; }
+    if ((err = CHECK_ARITY_EXACT(a, 2))) { return err; }
+
+    const long long n1 = a->cell[0]->integer_v;
+    const long long n2 = a->cell[1]->integer_v;
+
+    if (n2 == 0) {
+        return make_cell_error(
+            "truncate/: division by zero",
+            VALUE_ERR);
+    }
+
+    long long q = n1 / n2; /* C's integer division truncates. */
+    long long r = n1 % n2; /* C's modulo is consistent with its division. */
+
+    /* If the remainder is non-zero and the signs of n and d differ,
+     * C's division truncated towards zero, which is the wrong direction
+     * for floor. We need to adjust. */
+    if (r != 0 && n1 > 0 != n2 > 0) {
+        q = q - 1;
+        r = r + n2;
+    }
+
+    Cell* result = make_cell_mrv();
+    cell_add(result, make_cell_integer(q));
+    cell_add(result, make_cell_integer(r));
+    return result;
+}
+
+/* (truncate/ n1 n2 ) */
+Cell* builtin_truncate_div(const Lex* e, const Cell* a)
+{
+    (void)e;
+    Cell* err = check_arg_types(a, CELL_INTEGER);
+    if (err) { return err; }
+    if ((err = CHECK_ARITY_EXACT(a, 2))) { return err; }
+
+    const long long n1 = a->cell[0]->integer_v ;
+    const long long n2 = a->cell[1]->integer_v ;
+
+    if (n2 == 0) {
+        return make_cell_error(
+            "truncate/: division by zero",
+            VALUE_ERR);
+    }
+
+    const long long q = n1 / n2; /* C's integer division truncates. */
+    const long long r = n1 % n2; /* C's modulo is consistent with its division. */
+
+    Cell* result = make_cell_mrv();
+    cell_add(result, make_cell_integer(q));
+    cell_add(result, make_cell_integer(r));
+    return result;
+}
+
+/* 'real-part' -> CELL_REAL|CELL_RATIONAL|CELL_INTEGER - returns the real part of a
+ * complex number */
+Cell* builtin_real_part(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
-    err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX);
-    if (err) { return err; }
-
-    const Cell* arg = a->cell[0];
-    if (arg->type == CELL_COMPLEX) {
-        const long double r = cell_to_long_double(arg->real);
-        const long double i = cell_to_long_double(arg->imag);
-        return make_cell_boolean(isnan(r) || isnan(i));
+    Cell* sub = a->cell[0];
+    if (sub->type == CELL_INTEGER ||
+        sub->type == CELL_REAL ||
+        sub->type == CELL_RATIONAL) {
+        return sub;
     }
-
-    const long double n = cell_to_long_double(arg);
-    return make_cell_boolean(isnan(n));
+    if (sub->type == CELL_COMPLEX) {
+        return sub->real;
+    }
+    /* If we didn't return early, we have the wrong arg type */
+    return check_arg_types(make_sexpr_len1(sub), CELL_COMPLEX|CELL_REAL|CELL_RATIONAL|CELL_INTEGER);
 }
 
-void lex_add_inexact_lib(const Lex* e) {
+/* 'imag-part' -> CELL_REAL|CELL_RATIONAL|CELL_INTEGER - returns the imaginary part of a
+ * complex number */
+Cell* builtin_imag_part(const Lex* e, const Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    if (err) return err;
+    const Cell* sub = a->cell[0];
+    if (sub->type == CELL_INTEGER ||
+        sub->type == CELL_REAL ||
+        sub->type == CELL_RATIONAL) {
+        return make_cell_integer(0);
+        }
+    if (sub->type == CELL_COMPLEX) {
+        return sub->imag;
+    }
+    /* If we didn't return early, we have the wrong arg type */
+    return check_arg_types(make_sexpr_len1(sub), CELL_COMPLEX|CELL_REAL|CELL_RATIONAL|CELL_INTEGER);
+}
+
+/* 'make-rectangular' -> CELL_COMPLEX- convert a complex number to rectangular form */
+Cell* builtin_make_rectangular(const Lex* e, const Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 2);
+    if (err) return err;
+    err = check_arg_types(a, CELL_REAL|CELL_RATIONAL|CELL_INTEGER);
+    if (err) return err;
+
+    return make_cell_complex(a->cell[0], a->cell[1]);
+}
+
+/* 'angle' -> CELL_REAL- calculate angle 'θ' of complex number */
+Cell* builtin_angle(const Lex* e, const Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    if (err) return err;
+    err = check_arg_types(a, CELL_REAL|CELL_RATIONAL|CELL_INTEGER|CELL_COMPLEX);
+    if (err) return err;
+
+    const Cell* arg = a->cell[0];
+    switch (arg->type) {
+        case CELL_COMPLEX: {
+            const long double r = cell_to_long_double(arg->real);
+            const long double i = cell_to_long_double(arg->imag);
+            return make_cell_from_double(atan2l(i, r));
+        }
+        default:
+            return make_cell_from_double(atan2l(0, cell_to_long_double(arg)));
+    }
+}
+
+/* 'make-polar' -> CELL_COMPLEX- convert a complex number to polar form */
+Cell* builtin_make_polar(const Lex* e, const Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 2);
+    if (err) return err;
+    err = check_arg_types(a, CELL_REAL|CELL_RATIONAL|CELL_INTEGER);
+    if (err) return err;
+
+    const long double M = cell_to_long_double(a->cell[0]);
+    const long double A = cell_to_long_double(a->cell[1]);
+
+    const long double real_part = M * cosl(A);
+    const long double imag_part = M * sinl(A);
+
+    return make_cell_complex(
+        make_cell_from_double(real_part),
+        make_cell_from_double(imag_part)
+        );
+}
+
+
+void lex_add_math_lib(const Lex* e) {
     lex_add_builtin(e, "cos", builtin_cos);
     lex_add_builtin(e, "acos", builtin_acos);
     lex_add_builtin(e, "sin", builtin_sin);
@@ -352,11 +501,23 @@ void lex_add_inexact_lib(const Lex* e) {
     lex_add_builtin(e, "atan", builtin_atan);
     lex_add_builtin(e, "exp", builtin_exp);
     lex_add_builtin(e, "log", builtin_log);
-    lex_add_builtin(e, "log2", builtin_log2); /* Non-standard. Move elsewhere? */
-    lex_add_builtin(e, "log10", builtin_log10); /* Non-standard. Move elsewhere? */
-    lex_add_builtin(e, "sqrt", builtin_sqrt);
-    lex_add_builtin(e, "cbrt", builtin_cbrt); /* Non-standard. Move elsewhere? */
-    lex_add_builtin(e, "infinite?", builtin_infinite);
-    lex_add_builtin(e, "finite?", builtin_finite);
-    lex_add_builtin(e, "nan?", builtin_nan);
+    lex_add_builtin(e, "log2", builtin_log2);
+    lex_add_builtin(e, "log10", builtin_log10);
+    lex_add_builtin(e, "cbrt", builtin_cbrt);
+    lex_add_builtin(e, "truncate/", builtin_truncate_div);
+    lex_add_builtin(e, "truncate-quotient", builtin_quotient);
+    lex_add_builtin(e, "truncate-remainder", builtin_remainder);
+    lex_add_builtin(e, "floor/", builtin_floor_div);
+    lex_add_builtin(e, "floor-quotient", builtin_floor_quotient);
+    lex_add_builtin(e, "floor-remainder", builtin_modulo);
+    lex_add_builtin(e, "lcm", builtin_lcm);
+    lex_add_builtin(e, "gcd", builtin_gcd);
+    lex_add_builtin(e, "real-part", builtin_real_part);
+    lex_add_builtin(e, "imag-part", builtin_imag_part);
+    lex_add_builtin(e,"make-rectangular", builtin_make_rectangular);
+    /* 'magnitude' is identical to 'abs' for real/complex numbers -
+     * so we just make an alias */
+    lex_add_builtin(e,"magnitude", builtin_abs);
+    lex_add_builtin(e,"angle", builtin_angle);
+    lex_add_builtin(e,"make-polar", builtin_make_polar);
 }

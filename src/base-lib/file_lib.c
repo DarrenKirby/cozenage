@@ -152,8 +152,5 @@ Cell* builtin_open_binary_output_file(const Lex* e, const Cell* a) {
 void lex_add_file_lib(const Lex* e) {
     lex_add_builtin(e, "file-exists?", builtin_file_exists);
     lex_add_builtin(e, "delete-file", builtin_delete_file);
-    lex_add_builtin(e, "open-input-file", builtin_open_input_file);
-    lex_add_builtin(e, "open-binary-input-file", builtin_open_binary_input_file);
-    lex_add_builtin(e, "open-output-file", builtin_open_output_file);
-    lex_add_builtin(e, "open-binary-output-file", builtin_open_binary_output_file);
+
 }

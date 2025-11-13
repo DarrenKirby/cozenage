@@ -1,5 +1,5 @@
 /*
- * 'src/scheme-lib/complex_lib.h'
+ * 'math_lib.h'
  * This file is part of Cozenage - https://github.com/DarrenKirby/cozenage
  * Copyright © 2025  Darren Kirby <darren@dragonbyte.ca>
  *
@@ -17,17 +17,31 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef COZENAGE_COMPLEX_LIB_H
-#define COZENAGE_COMPLEX_LIB_H
+#ifndef COZENAGE_MATH_LIB_H
+#define COZENAGE_MATH_LIB_H
 
-#include "cell.h"
+#include "cell.c"
 
-
+Cell* builtin_cos(const Lex* e, const Cell* a);
+Cell* builtin_acos(const Lex* e, const Cell* a);
+Cell* builtin_sin(const Lex* e, const Cell* a);
+Cell* builtin_asin(const Lex* e, const Cell* a);
+Cell* builtin_tan(const Lex* e, const Cell* a);
+Cell* builtin_atan(const Lex* e, const Cell* a);
+Cell* builtin_exp(const Lex* e, const Cell* a);
+Cell* builtin_log(const Lex* e, const Cell* a);
+Cell* builtin_log2(const Lex* e, const Cell* a);
+Cell* builtin_log10(const Lex* e, const Cell* a);
+Cell* builtin_cbrt(const Lex* e, const Cell* a);
+Cell* builtin_lcm(const Lex* e, const Cell* a);
+Cell* builtin_gcd(const Lex* e, const Cell* a);
+Cell* builtin_floor_quotient(const Lex* e, const Cell* a);
+Cell* builtin_floor_div(const Lex* e, const Cell* a);
+Cell* builtin_truncate_div(const Lex* e, const Cell* a);
 Cell* builtin_real_part(const Lex* e, const Cell* a);
 Cell* builtin_imag_part(const Lex* e, const Cell* a);
 Cell* builtin_make_rectangular(const Lex* e, const Cell* a);
 Cell* builtin_angle(const Lex* e, const Cell* a);
 Cell* builtin_make_polar(const Lex* e, const Cell* a);
-void lex_add_complex_lib(const Lex* e);
 
-#endif //COZENAGE_COMPLEX_LIB_H
+#endif //COZENAGE_MATH_LIB_H

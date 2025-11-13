@@ -89,7 +89,7 @@ Cell* builtin_current_datetime_utc(const Lex* e, const Cell* a) {
     } else {
         fmt_str = "%Y-%m-%d %H:%M:%S";
     }
-    const time_t t = time(NULL);
+    const time_t t = time(nullptr);
     struct tm ts;
     gmtime_r(&t, &ts);
     char buf[128];
@@ -119,7 +119,7 @@ Cell* builtin_current_datetime_local(const Lex* e, const Cell* a) {
     } else {
         fmt_str = "%Y-%m-%d %H:%M:%S";
     }
-    const time_t t = time(NULL);
+    const time_t t = time(nullptr);
     struct tm ts;
     localtime_r(&t, &ts);
     char buf[128];
