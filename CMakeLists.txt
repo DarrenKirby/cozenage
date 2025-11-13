@@ -4,9 +4,8 @@ cmake_minimum_required(VERSION 3.10)
 # C compiler on the system will be used
 project(cozenage C)
 set(CMAKE_C_STANDARD 23)
-#set(CMAKE_C_STANDARD_REQUIRED ON)
-#set(CMAKE_C_EXTENSIONS OFF)
-set(CMAKE_C_FLAGS "-Wall -Wextra -O0 -g") # -g -fsanitize=address,undefined")
+
+set(CMAKE_C_FLAGS "-Wall -Wextra -Werror -O2") #
 
 # ==============================================================================
 # Find Readline or Libedit
@@ -73,7 +72,8 @@ endif()
 # --- Final Validation and Integration ---
 
 if (READLINE_PROVIDER STREQUAL "None")
-    message(FATAL_ERROR "Neither GNU readline nor libedit could be found. Please install one (e.g., 'brew install readline') or check your PKG_CONFIG_PATH.")
+    message(FATAL_ERROR "Neither GNU readline nor libedit could be found. Please install one
+                        (e.g., 'brew install readline') or check your PKG_CONFIG_PATH.")
 else()
     # Add the necessary include directories for your target.
     include_directories(${READLINE_INCLUDE_DIRS})
@@ -136,14 +136,24 @@ endif()
 # Find math/gc library
 find_library(M_LIB m)
 find_library(GC_LIB gc)
+# MODIFICATION: Find the 'dl' library (for dlopen, dlsym, etc.)
+find_library(DL_LIB dl)
+if(NOT DL_LIB)
+    message(FATAL_ERROR "Could not find the 'dl' library. This is required for dynamic loading.")
+endif()
 
 # Define your project executable
 add_executable(cozenage src/main.c) # Start with just main
 
-# Use a glob to find all your source files recursively
-file(GLOB_RECURSE COZENAGE_SOURCES "src/*.c")
+# MODIFICATION: Changed GLOB_RECURSE to GLOB and "src/*.c"
+# This now *only* finds source files directly in src/,
+# and *excludes* src/base-lib/
+file(GLOB COZENAGE_SOURCES "src/*.c")
 
 # Add these sources to your target
+# MODIFICATION: Removed src/main.c from this list as it's
+# already in add_executable. This prevents it from being listed twice.
+list(REMOVE_ITEM COZENAGE_SOURCES "${PROJECT_SOURCE_DIR}/src/main.c")
 target_sources(cozenage PRIVATE ${COZENAGE_SOURCES})
 
 # IMPORTANT: Tell CMake where to find header files!
@@ -154,10 +164,73 @@ target_include_directories(cozenage PRIVATE
 
 target_link_directories(cozenage PRIVATE ${PC_READLINE_LIBRARY_DIRS})
 
-target_link_libraries(cozenage PRIVATE ${READLINE_LIBRARIES} ${M_LIB} ${GC_LIB} icu::uc)
+# MODIFICATION: Added ${DL_LIB} to the list of linked libraries.
+target_link_libraries(cozenage PRIVATE
+        ${READLINE_LIBRARIES}
+        ${M_LIB}
+        ${GC_LIB}
+        ${DL_LIB}
+        icu::uc
+)
 
 # If we found GNU readline, pass a definition to the C code.
 if (READLINE_PROVIDER MATCHES "GNU readline")
     message(STATUS "Setting compile definition: USE_GNU_READLINE")
     target_compile_definitions(cozenage PRIVATE USE_GNU_READLINE)
 endif()
+
+
+# ==============================================================================
+# MODIFICATION: Build Loadable Modules
+#
+# This new section finds all .c files in src/base-lib/ and builds
+# each one as a separate shared library, outputting them to the 'lib/'
+# directory in the project's root.
+# ==============================================================================
+
+# Define the output directory for modules (e.g., ./lib)
+set(MODULE_OUTPUT_DIR ${PROJECT_SOURCE_DIR}/lib)
+file(MAKE_DIRECTORY ${MODULE_OUTPUT_DIR})
+
+# Find all the .c files in the library directory
+file(GLOB LIB_SOURCES "src/base-lib/*.c")
+
+foreach(LIB_SOURCE ${LIB_SOURCES})
+    # Get the filename without extension (e.g., "math_lib")
+    get_filename_component(LIB_NAME ${LIB_SOURCE} NAME_WE)
+
+    # Strip "_lib" to get the logical target name (e.g., "math")
+    string(REPLACE "_lib" "" LIB_TARGET_NAME ${LIB_NAME})
+
+    # Add the library as a SHARED module
+    add_library(${LIB_TARGET_NAME} SHARED ${LIB_SOURCE})
+
+    # Set properties:
+    # 1. PREFIX: Set to "" to get "math.so" instead of "libmath.so"
+    # 2. LIBRARY_OUTPUT_DIRECTORY: Set to our ./lib folder
+    set_target_properties(${LIB_TARGET_NAME} PROPERTIES
+            PREFIX ""
+            LIBRARY_OUTPUT_DIRECTORY ${MODULE_OUTPUT_DIR}
+    )
+
+    # Make sure the module can find the core headers
+    target_include_directories(${LIB_TARGET_NAME} PRIVATE
+            ${PROJECT_SOURCE_DIR}/src
+            ${PROJECT_SOURCE_DIR}/src/base-lib
+    )
+
+    # MODIFICATION: Add export-dynamic flag on Linux/BSD
+    if(UNIX AND NOT APPLE)
+        message(STATUS "Adding -Wl,--export-dynamic to main executable for plugin support.")
+        target_link_options(cozenage PRIVATE -Wl,--export-dynamic)
+    endif()
+
+    # MODIFICATION: Add platform-specific linker flags for modules
+    if(APPLE)
+        # Tell macOS linker to allow undefined symbols...
+        message(STATUS "Building module ${LIB_TARGET_NAME} with -Wl,-undefined,dynamic_lookup")
+        set_target_properties(${LIB_TARGET_NAME} PROPERTIES
+                LINK_FLAGS "-Wl,-undefined,dynamic_lookup"
+        )
+    endif()
+endforeach()
