@@ -31,8 +31,6 @@
 #include <unicode/uchar.h>
 
 
-
-
 /* Helper for other string procedures.
  * Like strlen, but works with UTF8 */
 int32_t string_length(const Cell* string)
@@ -853,4 +851,228 @@ Cell* builtin_number_string(const Lex* e, const Cell* a) {
     return make_cell_string(result);
 }
 
+/* These procedures apply the Unicode full string uppercasing, lowercasing, and case-folding
+ * algorithms to their arguments and return the result. In certain cases, the result differs in
+ * length from the argument. If the result is equal to the argument in the sense of string=?, the
+ * argument may be returned. */
 
+/* (string-downcase string) */
+Cell* builtin_string_downcase(const Lex* e, const Cell* a) {
+    (void)e;
+    Cell* err = check_arg_types(a, CELL_STRING);
+    if (err) return err;
+    err = CHECK_ARITY_EXACT(a, 1);
+    if (err) return err;
+
+    UErrorCode status = U_ZERO_ERROR;
+    UChar* src = convert_to_utf16(a->cell[0]->str);
+    if (!src) return make_cell_error("string-downcase: malformed UTF-8 string", VALUE_ERR);
+
+    const int32_t src_len = u_countChar32(src, -1);
+
+    UChar* dst = GC_MALLOC(sizeof(UChar) * src_len + 1);;
+    const int32_t dest_len = u_strToLower(dst,
+        src_len + 1,
+        src, -1, nullptr, &status);
+
+    if (dest_len < src_len) {
+        return make_cell_error("string-downcase: some chars not copied!!!", GEN_ERR);
+    }
+
+    char* result = convert_to_utf8(dst);
+    if (!result) {
+        return make_cell_error("string-downcase: malformed UTF-8 string", VALUE_ERR);
+    }
+    return make_cell_string(result);
+}
+
+/* (string-upcase string) */
+Cell* builtin_string_upcase(const Lex* e, const Cell* a) {
+    (void)e;
+    Cell* err = check_arg_types(a, CELL_STRING);
+    if (err) return err;
+    err = CHECK_ARITY_EXACT(a, 1);
+    if (err) return err;
+
+    UErrorCode status = U_ZERO_ERROR;
+    UChar* src = convert_to_utf16(a->cell[0]->str);
+    if (!src) return make_cell_error("string-upcase: malformed UTF-8 string", VALUE_ERR);
+
+    const int32_t src_len = u_countChar32(src, -1);
+
+    UChar* dst = GC_MALLOC(sizeof(UChar) * src_len + 1);;
+    const int32_t dest_len = u_strToUpper(dst,
+        src_len + 1,
+        src, -1, nullptr, &status);
+
+    if (dest_len < src_len) {
+        return make_cell_error("string-upcase: some chars not copied!!!", GEN_ERR);
+    }
+
+    char* result = convert_to_utf8(dst);
+    if (!result) {
+        return make_cell_error("string-upcase: malformed UTF-8 string", VALUE_ERR);
+    }
+    return make_cell_string(result);
+}
+
+/* (string-foldcase string) */
+Cell* builtin_string_foldcase(const Lex* e, const Cell* a) {
+    (void)e;
+    Cell* err = check_arg_types(a, CELL_STRING);
+    if (err) return err;
+    err = CHECK_ARITY_EXACT(a, 1);
+    if (err) return err;
+
+    UErrorCode status = U_ZERO_ERROR;
+    UChar* src = convert_to_utf16(a->cell[0]->str);
+    if (!src) return make_cell_error("string-foldcase: malformed UTF-8 string", VALUE_ERR);
+
+    const int32_t src_len = u_countChar32(src, -1);
+
+    UChar* dst = GC_MALLOC(sizeof(UChar) * src_len + 1);;
+    const int32_t dest_len = u_strFoldCase(dst, src_len + 1, src, -1,
+        U_FOLD_CASE_DEFAULT, &status);
+
+    if (dest_len < src_len) {
+        return make_cell_error("string-foldcase: some chars not copied!!!", GEN_ERR);
+    }
+
+    char* result = convert_to_utf8(dst);
+    if (!result) {
+        return make_cell_error("string-foldcase: malformed UTF-8 string", VALUE_ERR);
+    }
+    return make_cell_string(result);
+}
+
+/* (string-ci=? string1 string2 string3 ... )
+* Returns #t if, after case-folding, all the strings are the same length and contain the same
+* characters in the same positions, otherwise returns #f.*/
+Cell* builtin_string_equal_ci(const Lex* e, const Cell* a) {
+    (void)e;
+    Cell* err = check_arg_types(a, CELL_STRING);
+    if (err) return err;
+    err = CHECK_ARITY_MIN(a, 1);
+    if (err) return err;
+
+    for (int i = 0; i < a->count - 1; i++) {
+        const char* lhs = a->cell[i]->str;
+        const char* rhs = a->cell[i+1]->str;
+
+        /* quick exit before conversion: if the len is not the same,
+         * the strings are not the same */
+        if (strlen(lhs) != strlen(rhs)) {
+            return make_cell_boolean(0);
+        }
+        /* convert to UTF-16 */
+        const UChar* U_lhs = convert_to_utf16(lhs);
+        const UChar* U_rhs = convert_to_utf16(rhs);
+        UErrorCode status = U_ZERO_ERROR;
+        if (u_strCaseCompare(U_lhs, -1, U_rhs, -1,
+            U_FOLD_CASE_DEFAULT, &status) != 0)  {
+            return make_cell_boolean(0);
+        }
+    }
+    /* If we get here, we're equal */
+    return make_cell_boolean(1);
+}
+
+/* (string-ci<? string1 string2 string3 ... ) */
+Cell* builtin_string_lt_ci(const Lex* e, const Cell* a) {
+    (void)e;
+    Cell* err = check_arg_types(a, CELL_STRING);
+    if (err) return err;
+    err = CHECK_ARITY_MIN(a, 1);
+    if (err) return err;
+
+    for (int i = 0; i < a->count - 1; i++) {
+        const char* lhs = a->cell[i]->str;
+        const char* rhs = a->cell[i+1]->str;
+
+        /* convert to UTF-16 */
+        const UChar* U_lhs = convert_to_utf16(lhs);
+        const UChar* U_rhs = convert_to_utf16(rhs);
+        UErrorCode status = U_ZERO_ERROR;
+        if (u_strCaseCompare(U_lhs, -1, U_rhs, -1,
+            U_FOLD_CASE_DEFAULT, &status) >= 0)  {
+            return make_cell_boolean(0);
+        }
+    }
+    /* If we get here, s1 < s2 < sn ... */
+    return make_cell_boolean(1);
+}
+
+/* (string<=? string1 string2 string3 ... ) */
+Cell* builtin_string_lte_ci(const Lex* e, const Cell* a) {
+    (void)e;
+    Cell* err = check_arg_types(a, CELL_STRING);
+    if (err) return err;
+    err = CHECK_ARITY_MIN(a, 1);
+    if (err) return err;
+
+    for (int i = 0; i < a->count - 1; i++) {
+        const char* lhs = a->cell[i]->str;
+        const char* rhs = a->cell[i+1]->str;
+
+        /* convert to UTF-16 */
+        const UChar* U_lhs = convert_to_utf16(lhs);
+        const UChar* U_rhs = convert_to_utf16(rhs);
+        UErrorCode status = U_ZERO_ERROR;
+        if (u_strCaseCompare(U_lhs, -1, U_rhs, -1,
+            U_FOLD_CASE_DEFAULT, &status) > 0)  {
+            return make_cell_boolean(0);
+        }
+    }
+    /* If we get here, s1 <= s2 <= sn ... */
+    return make_cell_boolean(1);
+}
+
+/* (string-ci>? string1 string2 string3 ... ) */
+Cell* builtin_string_gt_ci(const Lex* e, const Cell* a) {
+    (void)e;
+    Cell* err = check_arg_types(a, CELL_STRING);
+    if (err) return err;
+    err = CHECK_ARITY_MIN(a, 1);
+    if (err) return err;
+
+    for (int i = 0; i < a->count - 1; i++) {
+        const char* lhs = a->cell[i]->str;
+        const char* rhs = a->cell[i+1]->str;
+
+        /* convert to UTF-16 */
+        const UChar* U_lhs = convert_to_utf16(lhs);
+        const UChar* U_rhs = convert_to_utf16(rhs);
+        UErrorCode status = U_ZERO_ERROR;
+        if (u_strCaseCompare(U_lhs, -1, U_rhs, -1,
+            U_FOLD_CASE_DEFAULT, &status) <= 0)  {
+            return make_cell_boolean(0);
+        }
+    }
+    /* If we get here, s1 > s2 > sn ... */
+    return make_cell_boolean(1);
+}
+
+/* (string-ci>=? string1 string2 string3 ... ) */
+Cell* builtin_string_gte_ci(const Lex* e, const Cell* a) {
+    (void)e;
+    Cell* err = check_arg_types(a, CELL_STRING);
+    if (err) return err;
+    err = CHECK_ARITY_MIN(a, 1);
+    if (err) return err;
+
+    for (int i = 0; i < a->count - 1; i++) {
+        const char* lhs = a->cell[i]->str;
+        const char* rhs = a->cell[i+1]->str;
+
+        /* convert to UTF-16 */
+        const UChar* U_lhs = convert_to_utf16(lhs);
+        const UChar* U_rhs = convert_to_utf16(rhs);
+        UErrorCode status = U_ZERO_ERROR;
+        if (u_strCaseCompare(U_lhs, -1, U_rhs, -1,
+            U_FOLD_CASE_DEFAULT, &status) >= 0)  {
+            return make_cell_boolean(0);
+        }
+    }
+    /* If we get here, s1 >= s2 >= sn ... */
+    return make_cell_boolean(1);
+}

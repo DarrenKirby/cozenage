@@ -44,6 +44,13 @@ Cell* builtin_string_copy_bang(const Lex* e, const Cell* a);
 Cell* builtin_string_fill(const Lex* e, const Cell* a);
 Cell* builtin_string_number(const Lex* e, const Cell* a);
 Cell* builtin_number_string(const Lex* e, const Cell* a);
-
+Cell* builtin_string_downcase(const Lex* e, const Cell* a);
+Cell* builtin_string_upcase(const Lex* e, const Cell* a);
+Cell* builtin_string_foldcase(const Lex* e, const Cell* a);
+Cell* builtin_string_equal_ci(const Lex* e, const Cell* a);
+Cell* builtin_string_lt_ci(const Lex* e, const Cell* a);
+Cell* builtin_string_lte_ci(const Lex* e, const Cell* a);
+Cell* builtin_string_gt_ci(const Lex* e, const Cell* a);
+Cell* builtin_string_gte_ci(const Lex* e, const Cell* a);
 
 #endif //COZENAGE_STRINGS_H

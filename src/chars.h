@@ -31,5 +31,19 @@ Cell* builtin_char_lt_pred(const Lex* e, const Cell* a);
 Cell* builtin_char_lte_pred(const Lex* e, const Cell* a);
 Cell* builtin_char_gt_pred(const Lex* e, const Cell* a);
 Cell* builtin_char_gte_pred(const Lex* e, const Cell* a);
+Cell* builtin_char_alphabetic(const Lex* e, const Cell* a);
+Cell* builtin_char_whitespace(const Lex* e, const Cell* a);
+Cell* builtin_char_numeric(const Lex* e, const Cell* a);
+Cell* builtin_char_upper_case(const Lex* e, const Cell* a);
+Cell* builtin_char_lower_case(const Lex* e, const Cell* a);
+Cell* builtin_char_upcase(const Lex* e, const Cell* a);
+Cell* builtin_char_downcase(const Lex* e, const Cell* a);
+Cell* builtin_char_foldcase(const Lex* e, const Cell* a);
+Cell* builtin_digit_value(const Lex* e, const Cell* a);
+Cell* builtin_char_equal_ci(const Lex* e, const Cell* a);
+Cell* builtin_char_lt_ci(const Lex* e, const Cell* a);
+Cell* builtin_char_lte_ci(const Lex* e, const Cell* a);
+Cell* builtin_char_gt_ci(const Lex* e, const Cell* a);
+Cell* builtin_char_gte_ci(const Lex* e, const Cell* a);
 
 #endif //COZENAGE_CHARS_H
