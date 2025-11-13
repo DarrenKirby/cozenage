@@ -65,38 +65,19 @@ static void process_library_arg(struct lib_load *l, const char *arg)
     char *token = strtok(arg_copy, ",");
 
     while (token != NULL) {
-        if (strcmp(token, "coz-ext") == 0) {
-            l->coz_ext = 1;
-        } else if (strcmp(token, "case-lambda") == 0) {
-            l->case_lambda = 1;
-        } else if (strcmp(token, "char") == 0) {
-            l->char_lib = 1;
-        } else if (strcmp(token, "complex") == 0) {
-            l->complex = 1;
-        } else if (strcmp(token, "cxr") == 0) {
+
+        if (strcmp(token, "cxr") == 0) {
             l->cxr = 1;
-        } else if (strcmp(token, "eval") == 0) {
-            l->eval = 1;
         } else if (strcmp(token, "file") == 0) {
             l->file = 1;
-        } else if (strcmp(token, "inexact") == 0) {
-            l->inexact = 1;
-        } else if (strcmp(token, "lazy") == 0) {
-            l->lazy = 1;
-        } else if (strcmp(token, "load") == 0) {
-            l->load = 1;
-        } else if (strcmp(token, "process-context") == 0) {
-            l->process_context = 1;
-        } else if (strcmp(token, "read") == 0) {
-            l->read = 1;
-        } else if (strcmp(token, "repl") == 0) {
-            l->repl = 1;
         } else if (strcmp(token, "time") == 0) {
             l->time = 1;
-        } else if (strcmp(token, "write") == 0) {
-            l->write = 1;
+        } else if (strcmp(token, "math") == 0) {
+            l->math = 1;
+        } else if (strcmp(token, "proc-env") == 0) {
+            l->proc_env = 1;
         } else if (strcmp(token, "bits") == 0) {
-            l->coz_bits = 1;
+            l->bits = 1;
         } else {
             fprintf(stderr, "Error: Unknown library name '%s' specified.\n", token);
             fprintf(stderr, "Run with -h for a list of valid library names.\n");
@@ -118,13 +99,12 @@ int main(const int argc, char** argv)
         {"help", no_argument, nullptr, 'h'},
         {"version", no_argument, nullptr, 'V'},
         {"r5rs", no_argument, nullptr, '5'},
-        {"r7rs", no_argument, nullptr, '7'},
         {"library", required_argument, nullptr, 'l'},
         {nullptr,0,nullptr,0}
     };
 
     int opt;
-    while ((opt = getopt_long(argc, argv, "Vh57l:", long_opts, nullptr)) != -1) {
+    while ((opt = getopt_long(argc, argv, "Vh5l:", long_opts, nullptr)) != -1) {
         switch(opt) {
             case 'V':
                 printf("%s%s%s version %s\n", ANSI_BLUE_B, APP_NAME, ANSI_RESET, APP_VERSION);
@@ -133,10 +113,9 @@ int main(const int argc, char** argv)
             case 'h':
                 show_help();
                 exit(EXIT_SUCCESS);
-                /* TODO: implement r5rs and r7rs modes */
+                /* TODO: implement r5rs modes */
             case '5':
-            case '7':
-                printf("--r5rs and --r7rs not implemented yet\n\n");
+                printf("--r5rs not implemented yet\n\n");
                 break;
             case 'l':
                 process_library_arg(&load_libs, optarg);

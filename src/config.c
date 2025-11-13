@@ -23,44 +23,22 @@
 
 void load_initial_libraries(const Lex* e, const lib_load_config load_libs) {
 
-    if (load_libs.coz_ext) {
-        (void)load_scheme_library("coz-ext", e);
-    }
     if (load_libs.file) {
-        (void)load_scheme_library("file", e);
+        (void)load_library("file", e);
     }
-    if (load_libs.process_context) {
-        (void)load_scheme_library("process-context", e);
+    if (load_libs.math) {
+        (void)load_library("math", e);
     }
-    if (load_libs.inexact) {
-        (void)load_scheme_library("inexact", e);
-    }
-    if (load_libs.complex) {
-        (void)load_scheme_library("complex", e);
-    }
-    if (load_libs.char_lib) {
-        (void)load_scheme_library("char", e);
-    }
-    if (load_libs.read) {
-        (void)load_scheme_library("read", e);
-    }
-    if (load_libs.write) {
-        (void)load_scheme_library("write", e);
-    }
-    if (load_libs.eval) {
-        (void)load_scheme_library("eval", e);
-    }
-    if (load_libs.load) {
-        (void)load_scheme_library("load", e);
+    if (load_libs.proc_env) {
+        (void)load_library("process-context", e);
     }
     if (load_libs.cxr) {
-        (void)load_scheme_library("cxr", e);
+        (void)load_library("cxr", e);
     }
     if (load_libs.time) {
-        (void)load_scheme_library("time", e);
+        (void)load_library("time", e);
     }
-    /* Cozenage libs */
-    if (load_libs.coz_bits) {
-        (void)load_scheme_library("bits", e);
+    if (load_libs.bits) {
+        (void)load_library("bits", e);
     }
 }

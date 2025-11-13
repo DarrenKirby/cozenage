@@ -24,22 +24,12 @@
 
 
 typedef struct lib_load {
-    unsigned int coz_ext:1;
-    unsigned int case_lambda:1;
-    unsigned int char_lib:1;
-    unsigned int complex:1;
     unsigned int cxr:1;
-    unsigned int eval:1;
     unsigned int file:1;
-    unsigned int inexact:1;
-    unsigned int lazy:1;
-    unsigned int load:1;
-    unsigned int process_context:1;
-    unsigned int read:1;
-    unsigned int repl:1;
+    unsigned int math:1;
+    unsigned int proc_env:1;
     unsigned int time:1;
-    unsigned int write:1;
-    unsigned int coz_bits:1;
+    unsigned int bits:1;
 } lib_load_config;
 
 void load_initial_libraries(const Lex* e, lib_load_config load_libs);

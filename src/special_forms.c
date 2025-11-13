@@ -484,10 +484,9 @@ HandlerResult sf_import(Lex* e, Cell* a) {
         const char* library_type = import_set->cell[j]->car->str;
         const char* library_name = import_set->cell[j]->cdr->str;
 
-        if (strcmp(library_type, "scheme") == 0 ||
-            strcmp(library_type, "cozenage") == 0) {
+        if (strcmp(library_type, "base") == 0) {
             /* Load the Library */
-            result = load_scheme_library(library_name, e);
+            result = load_library(library_name, e);
         } else {
             /* TODO: Handle User Libraries Here
              * For example, (import (my-libs utils)). */

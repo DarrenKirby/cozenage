@@ -18,18 +18,12 @@
 */
 
 #include "load_library.h"
-#include "char_lib.h"
-#include "complex_lib.h"
-#include "coz_ext_lib.h"
-#include "file_lib.h"
-#include "inexact_lib.h"
-#include "process_context_lib.h"
-#include "io_lib.h"
-#include "eval_lib.h"
-#include "load_lib.h"
-#include "cxr_lib.h"
-#include "time_lib.h"
-#include "coz_bits_lib.h"
+#include "base-lib/file_lib.h"
+#include "base-lib/proc_env_lib.h"
+#include "base-lib/cxr_lib.h"
+#include "base-lib/time_lib.h"
+#include "base-lib/bits_lib.h"
+#include "base-lib/math_lib.h"
 #include <string.h>
 
 
@@ -44,23 +38,17 @@ typedef struct {
 
 /* The registry of all built-in libraries */
 static const LibraryRegistryEntry library_registry[] = {
-    {"complex", lex_add_complex_lib},
-    {"coz-ext", lex_add_coz_ext},
     {"file", lex_add_file_lib},
-    {"inexact", lex_add_inexact_lib},
-    {"process-context", lex_add_proc_con_lib},
-    {"char", lex_add_char_lib},
-    {"eval", lex_add_eval_lib},
-    {"load", lex_add_load_lib},
-    {"write", lex_add_write_lib},
+    {"proc-env", lex_add_proc_env_lib},
     {"cxr", lex_add_cxr_lib},
     {"time",lex_add_time_lib},
-    {"bits", lex_add_coz_bits_lib},
+    {"bits", lex_add_bits_lib},
+    {"math", lex_add_math_lib},
     {nullptr, nullptr}
 };
 
 /* look up and load a library */
-Cell* load_scheme_library(const char* lib_name, const Lex* env) {
+Cell* load_library(const char* lib_name, const Lex* env) {
     /* Check if already loaded to prevent redundant work */
     for (int i = 0; i < loaded_lib_count; i++) {
         if (strcmp(loaded_libs[i], lib_name) == 0) {
