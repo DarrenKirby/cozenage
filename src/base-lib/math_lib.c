@@ -24,6 +24,27 @@
 #include <math.h>
 #include <complex.h>
 
+
+#if defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__NetBSD__) || defined(__DragonFly__)
+/* *BSD does not provide l versions in complex.h; provide fallback ccosl / csinl / ctanl */
+static inline long double complex ccosl(long double complex z) {
+    long double x = creall(z);
+    long double y = cimagl(z);
+    return cosl(x) * coshl(y) - (sinl(x) * sinhl(y)) * I;
+}
+
+static inline long double complex csinl(long double complex z) {
+    long double x = creall(z);
+    long double y = cimagl(z);
+    return sinl(x) * coshl(y) + (cosl(x) * sinhl(y)) * I;
+}
+
+static inline long double complex ctanl(long double complex z) {
+    return csinl(z) / ccosl(z);
+}
+#endif
+
+
 /* Helper to make C complex from Cell complex */
 static long double complex cell_to_c_complex(const Cell* c)
 {
