@@ -554,7 +554,7 @@ Cell* parse_tokens(TokenArray *ta) {
         if (peek(ta)->type == T_SYMBOL) {
             /* Bytevector */
             const char* bv_tok = token_to_string(peek(ta));
-            u_int8_t bv_t;
+            uint8_t bv_t;
             int64_t bv_min;
             int64_t bv_max;
             if (strcmp(bv_tok, "u8") == 0) {
@@ -608,7 +608,7 @@ Cell* parse_tokens(TokenArray *ta) {
                 if (val->integer_v < bv_min || val->integer_v > bv_max) {
                     char buf[256];
                     snprintf(buf, sizeof(buf),
-                        "invalid byte value for %s, must be >%lld and <%llu", bv_tok, bv_min, bv_max);
+                        "invalid byte value for %s, must be >%ld and <%lu", bv_tok, bv_min, bv_max);
                     return make_cell_error(
                         buf,
                         VALUE_ERR);

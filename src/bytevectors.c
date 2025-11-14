@@ -63,7 +63,7 @@ Cell* builtin_bytevector(const Lex* e, const Cell* a)
                 "bytevector: args must be integers 0 to 255 inclusive",
                 VALUE_ERR);
         }
-        byte_add(bv, (u_int8_t)a->cell[i]->integer_v);
+        byte_add(bv, (uint8_t)a->cell[i]->integer_v);
     }
     return bv;
 }
@@ -127,7 +127,7 @@ static Cell* byte_fits(const bv_t type, const int64_t byte) {
 
     if (byte < min || byte > max) {
         char buf[256];
-        snprintf(buf, sizeof(buf), "byte value %lld invalid for %s bytevector", byte, t_s);
+        snprintf(buf, sizeof(buf), "byte value %ld invalid for %s bytevector", byte, t_s);
         return make_cell_error(buf, VALUE_ERR);
     }
     return make_cell_boolean(1);
@@ -194,7 +194,7 @@ Cell* builtin_make_bytevector(const Lex* e, const Cell* a)
             "make-bytevector: arg 1 must be non-negative",
             VALUE_ERR);
     }
-    u_int8_t fill;
+    uint8_t fill;
     if (a->count == 2) {
         fill = a->cell[1]->integer_v;
         if (fill < 0 || fill > UINT8_MAX) {
@@ -378,7 +378,7 @@ Cell* builtin_string_utf8(const Lex* e, const Cell* a)
     Cell* bv = make_cell_bytevector(BV_U8);
     for (size_t i = start; i < end; i++)
     {
-        const u_int8_t the_char = (int)the_s[i];
+        const uint8_t the_char = (int)the_s[i];
         byte_add(bv, the_char);
     }
     return bv;

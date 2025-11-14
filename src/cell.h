@@ -80,7 +80,7 @@ typedef enum {
                                    tail-call */
 } Cell_t;
 
-typedef enum : u_int8_t {
+typedef enum : uint8_t {
     BV_U8,
     BV_S8,
     BV_U16,
@@ -108,7 +108,7 @@ typedef struct Port {
 
 typedef struct ByteV
 {
-    u_int16_t capacity;
+    uint16_t capacity;
     bv_t type;
     void* data;
 } byte_v;
