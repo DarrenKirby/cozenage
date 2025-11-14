@@ -42,6 +42,40 @@ const bv_ops_t BV_OPS[] = {
     [BV_S32] = { get_s32, set_s32, repr_s32, append_s32, sizeof(int32_t)  },
 };
 
+static Cell* byte_fits(const bv_t type, const int64_t byte) {
+    int64_t min;
+    int64_t max;
+    char* t_s;
+    switch (type) {
+    case BV_U8: { min = 0; max = UINT8_MAX; t_s = "u8"; break; }
+    case BV_S8: { min = INT8_MIN; max = INT8_MAX; t_s = "s8"; break;  }
+    case BV_U16: { min = 0; max = UINT16_MAX; t_s = "u16"; break; }
+    case BV_S16: { min = INT16_MIN; max = INT16_MAX; t_s = "s16"; break;  }
+    case BV_U32: { min = 0; max = UINT32_MAX; t_s = "u32"; break;}
+    case BV_S32: { min = INT32_MIN; max = INT32_MAX; t_s = "s32"; break; }
+    default: { min = 0; max = UINT8_MAX; t_s = "u8"; break; }
+    }
+
+    if (byte < min || byte > max) {
+        char buf[256];
+        snprintf(buf, sizeof(buf), "byte value %" PRId64 " invalid for %s bytevector", byte, t_s);
+        return make_cell_error(buf, VALUE_ERR);
+    }
+    return make_cell_boolean(1);
+}
+
+static bv_t get_type(const Cell* t_sym)
+{
+    bv_t type;
+    if (t_sym == make_cell_symbol("u8")) { type = BV_U8; }
+    else if (t_sym == make_cell_symbol("s8")) { type = BV_S8; }
+    else if (t_sym == make_cell_symbol("u16")) { type = BV_U16; }
+    else if (t_sym == make_cell_symbol("s16")) { type = BV_S16; }
+    else if (t_sym == make_cell_symbol("u32")) { type = BV_U32; }
+    else if (t_sym == make_cell_symbol("s32")) { type = BV_S32; }
+    else { type = 255; }
+    return type;
+}
 
 /*------------------------------------------------------------*
  *     Byte vector constructors, selectors, and procedures    *
@@ -56,15 +90,32 @@ Cell* builtin_bytevector(const Lex* e, const Cell* a)
     Cell* err = CHECK_ARITY_MIN(a, 1);
     if (err) return err;
 
-    Cell* bv = make_cell_bytevector(BV_U8);
-    for (int i = 0; i < a->count; i++) {
-        if (a->cell[i]->type != CELL_INTEGER || a->cell[i]->integer_v < 0 ||
-            a->cell[i]->integer_v > UINT8_MAX) {
+    /* See if there's a type argument. */
+    int32_t num_bytes = a->count;
+    bv_t type = BV_U8;
+    if (a->cell[num_bytes - 1]->type == CELL_SYMBOL)
+    {
+        type = get_type(a->cell[num_bytes - 1]);
+        if (type == 255) {
+            /* u8 by default. */
+            type = BV_U8;
+        }
+        /* If it's a legit bytevector type arg,
+         * don't add it to the bytevector */
+        num_bytes--;
+    }
+
+    Cell* bv = make_cell_bytevector(type);
+    for (int i = 0; i < num_bytes; i++) {
+        if (a->cell[i]->type != CELL_INTEGER) {
             return make_cell_error(
-                "bytevector: args must be integers 0 to 255 inclusive",
+                "bytevector: args must be integers",
                 VALUE_ERR);
         }
-        byte_add(bv, (uint8_t)a->cell[i]->integer_v);
+        const int64_t byte = a->cell[i]->integer_v;
+        Cell* check_if = byte_fits(type, byte);
+        if (check_if->type == CELL_ERROR) { return check_if; }
+        byte_add(bv, byte);
     }
     return bv;
 }
@@ -112,27 +163,6 @@ Cell* builtin_bytevector_ref(const Lex* e, const Cell* a)
     return make_cell_integer(BV_OPS[bv->bv->type].get(bv, i));
 }
 
-static Cell* byte_fits(const bv_t type, const int64_t byte) {
-    int64_t min;
-    int64_t max;
-    char* t_s;
-    switch (type) {
-        case BV_U8: { min = 0; max = UINT8_MAX; t_s = "u8"; break; }
-        case BV_S8: { min = INT8_MIN; max = INT8_MAX; t_s = "s8"; break;  }
-        case BV_U16: { min = 0; max = UINT16_MAX; t_s = "u16"; break; }
-        case BV_S16: { min = INT16_MIN; max = INT16_MAX; t_s = "s16"; break;  }
-        case BV_U32: { min = 0; max = UINT32_MAX; t_s = "u32"; break;}
-        case BV_S32: { min = INT32_MIN; max = INT32_MAX; t_s = "s32"; break; }
-        default: { min = 0; max = UINT8_MAX; t_s = "u8"; break; }
-    }
-
-    if (byte < min || byte > max) {
-        char buf[256];
-        snprintf(buf, sizeof(buf), "byte value %" PRId64 " invalid for %s bytevector", byte, t_s);
-        return make_cell_error(buf, VALUE_ERR);
-    }
-    return make_cell_boolean(1);
-}
 
 /* (bytevector-set! bytevector k byte)
  * It is an error if k is not a valid index of the bytevector.
@@ -200,21 +230,16 @@ Cell* builtin_make_bytevector(const Lex* e, const Cell* a)
     /* Check for bv type */
     bv_t type;
     if (a->count == 3) {
-        Cell* t_sym = a->cell[2];
+        const Cell* t_sym = a->cell[2];
         if (t_sym->type != CELL_SYMBOL) {
             return make_cell_error(
-                "make-bytevector: arg 2 must be a symbol",
+                "make-bytevector: arg 3 must be a symbol",
                 TYPE_ERR);
         }
-        if (t_sym == make_cell_symbol("u8")) { type = BV_U8; }
-        else if (t_sym == make_cell_symbol("s8")) { type = BV_S8; }
-        else if (t_sym == make_cell_symbol("u16")) { type = BV_U16; }
-        else if (t_sym == make_cell_symbol("s16")) { type = BV_S16; }
-        else if (t_sym == make_cell_symbol("u32")) { type = BV_U32; }
-        else if (t_sym == make_cell_symbol("s32")) { type = BV_S32; }
-        else {
+        type = get_type(t_sym);
+        if (type == 255) {
             return make_cell_error(
-                "arg 2 must be one of 'u8, 's8, 'u16, 's16, 'u32, or 's32 ",
+                "arg 3 must be one of 'u8, 's8, 'u16, 's16, 'u32, or 's32 ",
                 VALUE_ERR);
         }
     } else {
