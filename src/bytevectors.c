@@ -194,9 +194,9 @@ Cell* builtin_make_bytevector(const Lex* e, const Cell* a)
             "make-bytevector: arg 1 must be non-negative",
             VALUE_ERR);
     }
-    uint8_t fill;
+    int32_t fill;
     if (a->count == 2) {
-        fill = a->cell[1]->integer_v;
+        fill = (int)a->cell[1]->integer_v;
         if (fill < 0 || fill > UINT8_MAX) {
             return make_cell_error(
                 "make-bytevector: arg 2 must be between 0 and 255 inclusive",
@@ -249,7 +249,7 @@ Cell* builtin_bytevector_copy(const Lex* e, const Cell* a)
     return vec;
 }
 
-/* TODO */
+/* TODO - finish this*/
 Cell* builtin_bytevector_copy_bang(const Lex* e, const Cell* a)
 {
     (void)e; (void)a;
