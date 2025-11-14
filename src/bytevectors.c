@@ -22,6 +22,7 @@
 #include "types.h"
 #include <string.h>
 #include <gc/gc.h>
+#include <inttypes.h>
 
 
 DEFINE_BV_TYPE(u8,  uint8_t,  "%u")
@@ -127,7 +128,7 @@ static Cell* byte_fits(const bv_t type, const int64_t byte) {
 
     if (byte < min || byte > max) {
         char buf[256];
-        snprintf(buf, sizeof(buf), "byte value %ld invalid for %s bytevector", byte, t_s);
+        snprintf(buf, sizeof(buf), "byte value %" PRId64 " invalid for %s bytevector", byte, t_s);
         return make_cell_error(buf, VALUE_ERR);
     }
     return make_cell_boolean(1);
@@ -175,13 +176,15 @@ Cell* builtin_bytevector_set_bang(const Lex* e, const Cell* a)
 
 /* (make-bytevector k)
  * (make-bytevector k byte)
+ * (make-bytevector k byte symbol)
  * The make-bytevector procedure returns a newly allocated bytevector of length k. If byte is given,
  * then all elements of the bytevector are initialized to byte, otherwise the contents of each
- * element are set to 0. */
+ * element are set to 0. The optional third symbol argument is one of 'u8 's8 'u16 's16 'u32 or 's32,
+ * the default is a regular u8 bytevector.*/
 Cell* builtin_make_bytevector(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_RANGE(a, 1, 2);
+    Cell* err = CHECK_ARITY_RANGE(a, 1, 3);
     if (err) return err;
     if (a->cell[0]->type != CELL_INTEGER) {
         return make_cell_error(
@@ -194,24 +197,47 @@ Cell* builtin_make_bytevector(const Lex* e, const Cell* a)
             "make-bytevector: arg 1 must be non-negative",
             VALUE_ERR);
     }
-    int32_t fill;
-    if (a->count == 2) {
-        fill = (int)a->cell[1]->integer_v;
-        if (fill < 0 || fill > UINT8_MAX) {
+    /* Check for bv type */
+    bv_t type;
+    if (a->count == 3) {
+        Cell* t_sym = a->cell[2];
+        if (t_sym->type != CELL_SYMBOL) {
             return make_cell_error(
-                "make-bytevector: arg 2 must be between 0 and 255 inclusive",
+                "make-bytevector: arg 2 must be a symbol",
+                TYPE_ERR);
+        }
+        if (t_sym == make_cell_symbol("u8")) { type = BV_U8; }
+        else if (t_sym == make_cell_symbol("s8")) { type = BV_S8; }
+        else if (t_sym == make_cell_symbol("u16")) { type = BV_U16; }
+        else if (t_sym == make_cell_symbol("s16")) { type = BV_S16; }
+        else if (t_sym == make_cell_symbol("u32")) { type = BV_U32; }
+        else if (t_sym == make_cell_symbol("s32")) { type = BV_S32; }
+        else {
+            return make_cell_error(
+                "arg 2 must be one of 'u8, 's8, 'u16, 's16, 'u32, or 's32 ",
                 VALUE_ERR);
+        }
+    } else {
+        type = BV_U8;
+    }
+
+    int64_t fill;
+    if (a->count > 1) {
+        fill = a->cell[1]->integer_v;
+        /* Check the range. */
+        Cell* check_if = byte_fits(type, fill);
+        if (check_if->type == CELL_ERROR) {
+            return check_if;
         }
     } else {
         fill = 0;
     }
-    Cell *vec = make_cell_bytevector(BV_U8);
+    Cell *vec = make_cell_bytevector(type);
     for (int i = 0; i < n; i++) {
         byte_add(vec, fill);
     }
     return vec;
 }
-
 
 /* (bytevector-copy bytevector)
  * (bytevector-copy bytevector start)
