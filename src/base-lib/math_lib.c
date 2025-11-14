@@ -192,7 +192,7 @@ static Cell* builtin_atan(const Lex* e, const Cell* a) {
 
     const long double x = cell_to_long_double(a->cell[0]);
     const long double y = cell_to_long_double(a->cell[1]);
-    Cell* result = make_cell_from_double(atan2l(x, y));
+    Cell* result = make_cell_from_double(atan2l(y, x));
     return result;
 }
 
@@ -357,7 +357,7 @@ static Cell* builtin_floor_quotient(const Lex* e, const Cell* a)
     long long q = n1 / n2;
     const long long r = n1 % n2;
 
-    if (r != 0 && n1 > 0 != n2 > 0) {
+    if (r != 0 && (n1 > 0) != (n2 > 0)) {
         q = q - 1;
     }
 
@@ -387,7 +387,7 @@ static Cell* builtin_floor_div(const Lex* e, const Cell* a)
     /* If the remainder is non-zero and the signs of n and d differ,
      * C's division truncated towards zero, which is the wrong direction
      * for floor. We need to adjust. */
-    if (r != 0 && n1 > 0 != n2 > 0) {
+    if (r != 0 && (n1 > 0) != (n2 > 0)) {
         q = q - 1;
         r = r + n2;
     }
