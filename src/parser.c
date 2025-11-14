@@ -25,6 +25,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <inttypes.h>
 #include <limits.h>
 #include <unicode/uchar.h>
 /* Linux needs this include, macOS and FreeBSD do not */
@@ -608,7 +609,8 @@ Cell* parse_tokens(TokenArray *ta) {
                 if (val->integer_v < bv_min || val->integer_v > bv_max) {
                     char buf[256];
                     snprintf(buf, sizeof(buf),
-                        "invalid byte value for %s, must be >%ld and <%lu", bv_tok, bv_min, bv_max);
+                        "invalid byte value for %s, must be >%" PRId64 " and <%" PRId64,
+                        bv_tok, bv_min, bv_max);
                     return make_cell_error(
                         buf,
                         VALUE_ERR);
