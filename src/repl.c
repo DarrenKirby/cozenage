@@ -191,7 +191,7 @@ char* coz_read()
     char *input = read_multiline(PS1_PROMPT, PS2_PROMPT);
     /* reset bold input */
     printf("%s", ANSI_RESET);
-    if (!input || strcmp(input, "exit") == 0) {
+    if (!input) {
         printf("\n");
         save_history_to_file();
         exit(0);
@@ -231,7 +231,7 @@ int run_repl(const lib_load_config load_libs)
 {
     /* Print Version and Exit Information */
     printf("  %s%s%s version %s\n", ANSI_BLUE_B, APP_NAME, ANSI_RESET, APP_VERSION);
-    printf("  Press <Ctrl+d> or type 'exit' to quit\n\n");
+    printf("  Press <Ctrl+d> or type '(exit)' to quit\n\n");
 
     /* Initialize the is_repl global flag */
     is_repl = 1;
