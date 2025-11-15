@@ -33,9 +33,9 @@ Cell* builtin_not(const Lex* e, const Cell* a)
     Cell* err;
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
     if (a->cell[0]->type == CELL_BOOLEAN && a->cell[0]->boolean_v == 0) {
-        return make_cell_boolean(1);
+        return True_Obj;
     }
-    return make_cell_boolean(0);
+    return False_Obj;
 }
 
 
@@ -46,23 +46,23 @@ Cell* builtin_boolean(const Lex* e, const Cell* a)
     (void)e;
     /* Return #t if no args */
     if (a->count == 0) {
-        return make_cell_boolean(1);
+        return True_Obj;
     }
     /* If not all args are CELL_BOOLEAN, return #f */
     if (check_arg_types(a, CELL_BOOLEAN)) {
-        return make_cell_boolean(0);
+        return False_Obj;
     }
     /* Return #t for single boolean argument */
     if (a->count == 1) {
-        return make_cell_boolean(1);
+        return True_Obj;
     }
     /* Value of first arg */
     const bool v = a->cell[0]->boolean_v;
     /* Compare with subsequent values */
     for (int i = 1; i < a->count; i++) {
         if (v != a->cell[i]->boolean_v) {
-            return make_cell_boolean(0);
+            return False_Obj;
         }
     }
-    return make_cell_boolean(1);
+    return True_Obj;
 }

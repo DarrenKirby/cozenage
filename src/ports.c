@@ -58,7 +58,7 @@ Cell* builtin_input_port_pred(const Lex* e, const Cell* a)
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
     if (a->cell[0]->type != CELL_PORT || a->cell[0]->port->port_t != INPUT_PORT) {
-        return False_Obj; //False_Obj;
+        return False_Obj;
     }
     return True_Obj;
 }
@@ -503,7 +503,6 @@ Cell* builtin_eof(const Lex* e, const Cell* a)
     return EOF_Obj;
 }
 
-/* TODO - move to predicates? */
 /* (read-error? obj) */
 Cell* builtin_read_error(const Lex* e, const Cell* a)
 {
@@ -523,7 +522,6 @@ Cell* builtin_read_error(const Lex* e, const Cell* a)
     return True_Obj;
 }
 
-/* TODO - move to predicates? */
 /* (file-error? obj) */
 Cell* builtin_file_error(const Lex* e, const Cell* a)
 {

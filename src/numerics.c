@@ -64,7 +64,9 @@ Cell* builtin_add(const Lex* e, const Cell* a) {
                 complex_apply(builtin_add, e, result, rhs);
                 break;
             default:
-                return make_cell_error("<builtin '+'> Oops, this shouldn't have happened.", GEN_ERR);
+                return make_cell_error(
+                    "<builtin '+'> Oops, this shouldn't have happened.",
+                    GEN_ERR);
         }
         result->exact = result->exact && rhs->exact;
     }
@@ -107,7 +109,9 @@ Cell* builtin_sub(const Lex* e, const Cell* a) {
                 complex_apply(builtin_sub, e, result, rhs);
                 break;
             default:
-                return make_cell_error("<builtin '-'> Oops, this shouldn't have happened.", GEN_ERR);
+                return make_cell_error(
+                    "<builtin '-'> Oops, this shouldn't have happened.",
+                    GEN_ERR);
         }
         result->exact = result->exact && rhs->exact;
     }
@@ -146,7 +150,9 @@ Cell* builtin_mul(const Lex* e, const Cell* a) {
                 complex_apply(builtin_mul, e, result, rhs);
                 break;
             default:
-                return make_cell_error("<builtin '*'> Oops, this shouldn't have happened.", GEN_ERR);
+                return make_cell_error(
+                    "<builtin '*'> Oops, this shouldn't have happened.",
+                    GEN_ERR);
         }
         result->exact = result->exact && rhs->exact;
     }
@@ -242,7 +248,9 @@ Cell* builtin_div(const Lex* e, const Cell* a) {
             complex_apply(builtin_div, e, result, rhs);
             break;
         default:
-            return make_cell_error("<builtin '/'> Oops, this shouldn't have happened.", GEN_ERR);
+            return make_cell_error(
+                "<builtin '/'> Oops, this shouldn't have happened.",
+                GEN_ERR);
         }
         result->exact = result->exact && rhs->exact;
     }
@@ -363,9 +371,13 @@ Cell* builtin_expt(const Lex* e, const Cell* a) {
             }
             return result;
         }
-        return make_cell_error("expt: complex base with non-integer exponent not implemented", GEN_ERR);
+        return make_cell_error(
+            "expt: complex base with non-integer exponent not implemented",
+            GEN_ERR);
     }
-    return make_cell_error("expt: unreachable code", GEN_ERR);
+    return make_cell_error(
+        "expt: unreachable code",
+        GEN_ERR);
 }
 
 /* 'modulo' -> CELL_INTEGER - returns the remainder of dividing the first argument
@@ -413,7 +425,9 @@ Cell* builtin_max(const Lex* e, const Cell* a) {
     /* Validate that all arguments are real numbers. */
     for (int i = 0; i < a->count; i++) {
         if (!cell_is_real(a->cell[i])) {
-            return make_cell_error("max: all arguments must be real numbers", TYPE_ERR);
+            return make_cell_error(
+                "max: all arguments must be real numbers",
+                TYPE_ERR);
         }
     }
 
@@ -440,7 +454,9 @@ Cell* builtin_min(const Lex* e, const Cell* a) {
 
     for (int i = 0; i < a->count; i++) {
         if (!cell_is_real(a->cell[i])) {
-            return make_cell_error("min: all arguments must be real numbers", TYPE_ERR);
+            return make_cell_error(
+                "min: all arguments must be real numbers",
+                TYPE_ERR);
         }
     }
 
@@ -672,7 +688,6 @@ Cell* builtin_exact_integer_sqrt(const Lex* e, const Cell* a)
     }
 
     const unsigned long long s = integer_sqrt(k);
-    //const unsigned long long s = (long long)sqrtl(k);
     const unsigned long long r = k - s * s;
 
     Cell* result = make_cell_mrv();

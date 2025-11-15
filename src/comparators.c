@@ -67,10 +67,10 @@ Cell* builtin_eq_op(const Lex* e, const Cell* a) {
             default: ; /* this will never run as the types are pre-checked, but without the linter complains */
         }
         if (!the_same) {
-            return make_cell_boolean(0);
+            return False_Obj;
         }
     }
-    return make_cell_boolean(1);
+    return True_Obj;
 }
 
 /* '>' -> CELL_BOOLEAN - returns true if each argument is greater than the one that follows. */

@@ -55,10 +55,14 @@ Cell* builtin_int_to_char(const Lex* e, const Cell* a) {
 
     const UChar32 val = (int)a->cell[0]->integer_v;
     if (val >= 0xD800 && val <= 0xDFFF) {
-        return make_cell_error("integer->char: invalid code point (surrogate)", VALUE_ERR);
+        return make_cell_error(
+            "integer->char: invalid code point (surrogate)",
+            VALUE_ERR);
     }
     if (val < 0 || val > 0x10FFFF) {
-        return make_cell_error("integer->char: invalid code point", VALUE_ERR);
+        return make_cell_error(
+            "integer->char: invalid code point",
+            VALUE_ERR);
     }
     return make_cell_char(val);
 }
@@ -156,7 +160,9 @@ Cell* builtin_char_alphabetic(const Lex* e, const Cell* a) {
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
     if (a->cell[0]->type != CELL_CHAR) {
-        return make_cell_error("char-alphabetic?: arg 1 must be a char", TYPE_ERR);
+        return make_cell_error(
+            "char-alphabetic?: arg 1 must be a char",
+            TYPE_ERR);
     }
     return make_cell_boolean(u_isalpha(a->cell[0]->char_v));
 }
@@ -167,7 +173,9 @@ Cell* builtin_char_whitespace(const Lex* e, const Cell* a) {
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
     if (a->cell[0]->type != CELL_CHAR) {
-        return make_cell_error("char-whitespace?: arg 1 must be a char", TYPE_ERR);
+        return make_cell_error(
+            "char-whitespace?: arg 1 must be a char",
+            TYPE_ERR);
     }
     return make_cell_boolean(u_isspace(a->cell[0]->char_v));
 }
@@ -178,7 +186,9 @@ Cell* builtin_char_numeric(const Lex* e, const Cell* a) {
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
     if (a->cell[0]->type != CELL_CHAR) {
-        return make_cell_error("char-numeric?: arg 1 must be a char", TYPE_ERR);
+        return make_cell_error(
+            "char-numeric?: arg 1 must be a char",
+            TYPE_ERR);
     }
     return make_cell_boolean(u_isdigit(a->cell[0]->char_v));
 }
@@ -189,7 +199,9 @@ Cell* builtin_char_upper_case(const Lex* e, const Cell* a) {
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
     if (a->cell[0]->type != CELL_CHAR) {
-        return make_cell_error("char-upper-case?: arg 1 must be a char", TYPE_ERR);
+        return make_cell_error(
+            "char-upper-case?: arg 1 must be a char",
+TYPE_ERR);
     }
     return make_cell_boolean(u_isupper(a->cell[0]->char_v));
 }
@@ -200,7 +212,9 @@ Cell* builtin_char_lower_case(const Lex* e, const Cell* a) {
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
     if (a->cell[0]->type != CELL_CHAR) {
-        return make_cell_error("char-lower-case?: arg 1 must be a char", TYPE_ERR);
+        return make_cell_error(
+            "char-lower-case?: arg 1 must be a char",
+            TYPE_ERR);
     }
     return make_cell_boolean(u_islower(a->cell[0]->char_v));
 }
@@ -215,7 +229,9 @@ Cell* builtin_char_upcase(const Lex* e, const Cell* a) {
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
     if (a->cell[0]->type != CELL_CHAR) {
-        return make_cell_error("char-upcase: arg 1 must be a char", TYPE_ERR);
+        return make_cell_error(
+            "char-upcase: arg 1 must be a char",
+            TYPE_ERR);
     }
     return make_cell_char(u_toupper(a->cell[0]->char_v));
 }
@@ -230,7 +246,9 @@ Cell* builtin_char_downcase(const Lex* e, const Cell* a) {
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
     if (a->cell[0]->type != CELL_CHAR) {
-        return make_cell_error("char-downcase: arg 1 must be a char", TYPE_ERR);
+        return make_cell_error(
+            "char-downcase: arg 1 must be a char",
+            TYPE_ERR);
     }
     return make_cell_char(u_tolower(a->cell[0]->char_v));
 }
@@ -245,7 +263,9 @@ Cell* builtin_char_foldcase(const Lex* e, const Cell* a) {
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
     if (a->cell[0]->type != CELL_CHAR) {
-        return make_cell_error("char-foldcase: arg 1 must be a char", TYPE_ERR);
+        return make_cell_error(
+            "char-foldcase: arg 1 must be a char",
+            TYPE_ERR);
     }
     const unsigned char c = a->cell[0]->char_v;
     return make_cell_char(u_foldCase(c, U_FOLD_CASE_DEFAULT));
@@ -259,7 +279,9 @@ Cell* builtin_digit_value(const Lex* e, const Cell* a) {
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
     if (a->cell[0]->type != CELL_CHAR) {
-        return make_cell_error("digit-value: arg 1 must be a char", TYPE_ERR);
+        return make_cell_error(
+            "digit-value: arg 1 must be a char",
+            TYPE_ERR);
     }
 
     const int32_t value = u_charDigitValue(a->cell[0]->char_v);

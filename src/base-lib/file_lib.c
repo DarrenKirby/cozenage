@@ -33,9 +33,9 @@ static Cell* file_exists(const Lex* e, const Cell* a) {
 
     const char* filename = a->cell[0]->str;
     if (access(filename, F_OK) == 0) {
-        return make_cell_boolean(1);
+        return True_Obj;
     }
-    return make_cell_boolean(0);
+    return False_Obj;
 }
 
 /* 'delete-file -> CELL_BOOLEAN - delete a file, and return a bool confirming outcome */
@@ -50,7 +50,7 @@ static Cell* delete_file(const Lex* e, const Cell* a) {
         Cell* f_err = make_cell_error(strerror(errno), FILE_ERR);
         return f_err;
     }
-    return make_cell_boolean(1);
+    return True_Obj;
 }
 
 /* Register the procedures in the environment */

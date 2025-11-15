@@ -61,7 +61,7 @@ static Cell* byte_fits(const bv_t type, const int64_t byte) {
         snprintf(buf, sizeof(buf), "byte value %" PRId64 " invalid for %s bytevector", byte, t_s);
         return make_cell_error(buf, VALUE_ERR);
     }
-    return make_cell_boolean(1);
+    return True_Obj;
 }
 
 static bv_t get_type(const Cell* t_sym)

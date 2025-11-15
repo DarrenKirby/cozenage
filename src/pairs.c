@@ -138,7 +138,9 @@ Cell* builtin_set_car(const Lex* e, const Cell* a) {
     Cell* err = CHECK_ARITY_EXACT(a, 2);
     if (err) return err;
     if (a->cell[0]->type != CELL_PAIR) {
-        return make_cell_error("set-car!: arg 1 must be a pair", TYPE_ERR);
+        return make_cell_error(
+            "set-car!: arg 1 must be a pair",
+            TYPE_ERR);
     }
     a->cell[0]->car = a->cell[1];
     return nullptr;
@@ -151,7 +153,9 @@ Cell* builtin_set_cdr(const Lex* e, const Cell* a) {
     Cell* err = CHECK_ARITY_EXACT(a, 2);
     if (err) return err;
     if (a->cell[0]->type != CELL_PAIR) {
-        return make_cell_error("set-cdr!: arg 1 must be a pair", TYPE_ERR);
+        return make_cell_error(
+            "set-cdr!: arg 1 must be a pair",
+            TYPE_ERR);
     }
     a->cell[0]->cdr = a->cell[1];
     return nullptr;
@@ -188,7 +192,9 @@ Cell* builtin_list_length(const Lex* e, const Cell* a) {
     /* The R7RS standard for `length` requires a proper list.
      * If the list doesn't end in `nil`, it's an error. */
     if (p->type != CELL_NIL) {
-        return make_cell_error("length: proper list required", TYPE_ERR);
+        return make_cell_error(
+            "length: proper list required",
+            TYPE_ERR);
     }
 
     /* It's a proper list. */
@@ -203,20 +209,28 @@ Cell* builtin_list_ref(const Lex* e, const Cell* a) {
     if (err) return err;
 
     if (a->cell[0]->type != CELL_PAIR) {
-        return make_cell_error("list-ref: arg 1 must be a list", TYPE_ERR);
+        return make_cell_error(
+            "list-ref: arg 1 must be a list",
+            TYPE_ERR);
     }
     /* Improper list is not a list */
     if (a->cell[0]->type == CELL_PAIR && a->cell[0]->len == -1) {
-        return make_cell_error("list-ref: arg 1 must be a proper list", TYPE_ERR);
+        return make_cell_error(
+            "list-ref: arg 1 must be a proper list",
+            TYPE_ERR);
     }
     if (a->cell[1]->type != CELL_INTEGER) {
-        return make_cell_error("list-ref: arg 2 must be an integer", TYPE_ERR);
+        return make_cell_error(
+            "list-ref: arg 2 must be an integer",
+            TYPE_ERR);
     }
     int i = (int)a->cell[1]->integer_v;
     const int len = a->cell[0]->len;
 
     if (i >= len && len != -1) {
-        return make_cell_error("list-ref: arg 2 out of range", INDEX_ERR);
+        return make_cell_error(
+            "list-ref: arg 2 out of range",
+            INDEX_ERR);
     }
 
     const Cell* p = a->cell[0];
@@ -350,7 +364,9 @@ Cell* builtin_list_reverse(const Lex* e, const Cell* a) {
     }
 
     if (current->type != CELL_NIL) {
-        return make_cell_error("reverse: cannot reverse improper list", TYPE_ERR);
+        return make_cell_error(
+            "reverse: cannot reverse improper list",
+            TYPE_ERR);
     }
 
     /* Set the length on the final result. */
@@ -370,23 +386,31 @@ Cell* builtin_list_tail(const Lex* e, const Cell* a) {
     if (a->cell[0]->type != CELL_PAIR &&
         a->cell[0]->type != CELL_SEXPR &&
         a->cell[0]->type != CELL_NIL) {
-        return make_cell_error("list-tail: arg 1 must be a list", TYPE_ERR);
+        return make_cell_error(
+            "list-tail: arg 1 must be a list",
+            TYPE_ERR);
     }
     if (a->cell[1]->type != CELL_INTEGER) {
-        return make_cell_error("list-tail: arg 2 must be an integer", TYPE_ERR);
+        return make_cell_error(
+            "list-tail: arg 2 must be an integer",
+            TYPE_ERR);
     }
 
     Cell* lst = a->cell[0];
     const long k = a->cell[1]->integer_v;
 
     if (k < 0) {
-        return make_cell_error("list-tail: arg 2 must be non-negative", VALUE_ERR);
+        return make_cell_error(
+            "list-tail: arg 2 must be non-negative",
+            VALUE_ERR);
     }
 
     Cell* p = lst;
     for (long i = 0; i < k; i++) {
         if (p->type != CELL_PAIR) {
-            return make_cell_error("list-tail: arg 2 out of range", INDEX_ERR);
+            return make_cell_error(
+                "list-tail: arg 2 out of range",
+                INDEX_ERR);
         }
         /* Move to the next element in the list */
         p = p->cdr;
@@ -404,7 +428,9 @@ Cell* builtin_make_list(const Lex* e, const Cell* a) {
     Cell* err = CHECK_ARITY_RANGE(a, 1, 2);
     if (err) return err;
     if (a->cell[0]->type != CELL_INTEGER && a->cell[0]->integer_v < 1) {
-        return make_cell_error("make-list: arg 1 must be a positive integer", VALUE_ERR);
+        return make_cell_error(
+            "make-list: arg 1 must be a positive integer",
+            VALUE_ERR);
     }
     Cell* fill;
     if (a->count== 2) {
@@ -431,16 +457,22 @@ Cell* builtin_list_set(const Lex* e, const Cell* a) {
     Cell* err = CHECK_ARITY_EXACT(a, 3);
     if (err) return err;
     if (a->cell[0]->type != CELL_PAIR) {
-        return make_cell_error("list-set!: arg 1 must be a list", TYPE_ERR);
+        return make_cell_error(
+            "list-set!: arg 1 must be a list",
+            TYPE_ERR);
     }
     if (a->cell[1]->type != CELL_INTEGER && a->cell[1]->integer_v < 0) {
-        return make_cell_error("list-set!: arg 2 must be a valid list indice", VALUE_ERR);
+        return make_cell_error(
+            "list-set!: arg 2 must be a valid list indice",
+            VALUE_ERR);
     }
     Cell* p = a->cell[0];
     const int len = (int)a->cell[1]->integer_v;
 
     if (a->cell[0]->len <= len) {
-        return make_cell_error("list-set!: list indice out of range", INDEX_ERR);
+        return make_cell_error(
+            "list-set!: list indice out of range",
+            INDEX_ERR);
     }
 
     for (int i = 0; i < len; i++) {
@@ -462,7 +494,9 @@ Cell* builtin_memq(const Lex* e, const Cell* a) {
     Cell* err = CHECK_ARITY_EXACT(a, 2);
     if (err) return err;
     if (a->cell[1]->type != CELL_PAIR) {
-        return make_cell_error("memq: arg 2 must be a list", TYPE_ERR);
+        return make_cell_error(
+            "memq: arg 2 must be a list",
+            TYPE_ERR);
     }
 
     Cell* lhs = a->cell[1];
@@ -487,7 +521,9 @@ Cell* builtin_memv(const Lex* e, const Cell* a) {
     Cell* err = CHECK_ARITY_EXACT(a, 2);
     if (err) return err;
     if (a->cell[1]->type != CELL_PAIR) {
-        return make_cell_error("memq: arg 2 must be a list", TYPE_ERR);
+        return make_cell_error(
+            "memq: arg 2 must be a list",
+            TYPE_ERR);
     }
 
     Cell* lhs = a->cell[1];
@@ -513,11 +549,15 @@ Cell* builtin_member(const Lex* e, const Cell* a) {
     Cell* err = CHECK_ARITY_RANGE(a, 2, 3);
     if (err) return err;
     if (a->cell[1]->type != CELL_PAIR) {
-        return make_cell_error("member: arg 2 must be a list", TYPE_ERR);
+        return make_cell_error(
+            "member: arg 2 must be a list",
+            TYPE_ERR);
     }
     if (a->count == 3) {
         if (a->cell[2]->type != CELL_PROC) {
-            return make_cell_error("member: arg 3 must be a procedure", TYPE_ERR);
+            return make_cell_error(
+                "member: arg 3 must be a procedure",
+                TYPE_ERR);
         }
     }
 
@@ -550,7 +590,9 @@ Cell* builtin_assq(const Lex* e, const Cell* a) {
     Cell* err = CHECK_ARITY_EXACT(a, 2);
     if (err) return err;
     if (a->cell[1]->type != CELL_PAIR) {
-        return make_cell_error("assq: arg 2 must be a pair", TYPE_ERR);
+        return make_cell_error(
+            "assq: arg 2 must be a pair",
+            TYPE_ERR);
     }
 
     const Cell* p = a->cell[1];
@@ -558,7 +600,9 @@ Cell* builtin_assq(const Lex* e, const Cell* a) {
     while (p->type != CELL_NIL) {
         /* eq? == direct pointer equality */
         if (p->car->type != CELL_PAIR) {
-            return make_cell_error("assq: arg 2 must be an association list", VALUE_ERR);
+            return make_cell_error(
+                "assq: arg 2 must be an association list",
+                VALUE_ERR);
         }
         if (p->car->car == obj) {
             return p->car;
@@ -576,14 +620,18 @@ Cell* builtin_assv(const Lex* e, const Cell* a) {
     Cell* err = CHECK_ARITY_EXACT(a, 2);
     if (err) return err;
     if (a->cell[1]->type != CELL_PAIR) {
-        return make_cell_error("assv: arg 2 must be a pair", TYPE_ERR);
+        return make_cell_error(
+            "assv: arg 2 must be a pair",
+            TYPE_ERR);
     }
 
     const Cell* p = a->cell[1];
     const Cell* obj = a->cell[0];
     while (p->type != CELL_NIL) {
         if (p->car->type != CELL_PAIR) {
-            return make_cell_error("assq: arg 2 must be an association list", VALUE_ERR);
+            return make_cell_error(
+                "assq: arg 2 must be an association list",
+                VALUE_ERR);
         }
         const Cell* p_test = builtin_eqv(e, make_sexpr_len2(p->car->car, obj));
         if (p_test->boolean_v == 1) {
@@ -603,11 +651,15 @@ Cell* builtin_assoc(const Lex* e, const Cell* a) {
     Cell* err = CHECK_ARITY_RANGE(a, 2, 3);
     if (err) return err;
     if (a->cell[1]->type != CELL_PAIR) {
-        return make_cell_error("assoc: arg 2 must be a pair", TYPE_ERR);
+        return make_cell_error(
+            "assoc: arg 2 must be a pair",
+            TYPE_ERR);
     }
     if (a->count == 3) {
         if (a->cell[2]->type != CELL_PROC) {
-            return make_cell_error("assoc: arg 3 must be a procedure", TYPE_ERR);
+            return make_cell_error(
+                "assoc: arg 3 must be a procedure",
+                TYPE_ERR);
         }
     }
 
@@ -615,7 +667,9 @@ Cell* builtin_assoc(const Lex* e, const Cell* a) {
     const Cell* obj = a->cell[0];
     while (p->type != CELL_NIL) {
         if (p->car->type != CELL_PAIR) {
-            return make_cell_error("assoc: arg 2 must be an association list", VALUE_ERR);
+            return make_cell_error(
+                "assoc: arg 2 must be an association list",
+                VALUE_ERR);
         }
         if (a->count == 2) {
             const Cell* p_test = builtin_equal(e, make_sexpr_len2(p->car->car, obj));
@@ -682,14 +736,18 @@ Cell* builtin_filter(const Lex* e, const Cell* a) {
     Cell* err = CHECK_ARITY_EXACT(a, 2);
     if (err) return err;
     if (a->cell[0]->type != CELL_PROC) {
-        return make_cell_error("filter: arg 1 must be a procedure", TYPE_ERR);
+        return make_cell_error(
+            "filter: arg 1 must be a procedure",
+            TYPE_ERR);
     }
     /* Empty list arg :: empty list result */
     if (a->cell[1]->type == CELL_NIL) {
         return make_cell_nil();
     }
     if (a->cell[1]->type != CELL_PAIR || a->cell[1]->len < 1 ) {
-        return make_cell_error("filter: arg 2 must be a proper list", TYPE_ERR);
+        return make_cell_error(
+            "filter: arg 2 must be a proper list",
+            TYPE_ERR);
     }
 
     const Cell* proc = a->cell[0];
@@ -725,7 +783,9 @@ Cell* builtin_foldl(const Lex* e, const Cell* a) {
     Cell* err = CHECK_ARITY_MIN(a, 3);
     if (err) return err;
     if (a->cell[0]->type != CELL_PROC) {
-        return make_cell_error("foldl: arg 1 must be a procedure", TYPE_ERR);
+        return make_cell_error(
+            "foldl: arg 1 must be a procedure",
+            TYPE_ERR);
     }
 
     int shortest_list_length = INT32_MAX;
