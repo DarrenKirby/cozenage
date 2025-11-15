@@ -5,7 +5,18 @@ cmake_minimum_required(VERSION 3.10)
 project(cozenage C)
 set(CMAKE_C_STANDARD 23)
 
-set(CMAKE_C_FLAGS "-Wall -Wextra -Werror -O2") #
+#set(CMAKE_C_FLAGS "-march=native -Wall -Wextra -Werror -Og -g")
+
+option(DEBUG_BUILD "Enable debug CFLAGS" OFF)
+
+if (DEBUG_BUILD)
+    set(CMAKE_C_FLAGS "-march=native -Wall -Wextra -Werror -Og -g -frounding-math -fsigned-zeros")
+    message(STATUS "Building with debugging symbols enabled.")
+else()
+    set(CMAKE_C_FLAGS "-march=native -Wall -Wextra -Werror -O2 -frounding-math -fsigned-zeros")
+endif()
+
+message(STATUS "Building with CFLAGS: ${CMAKE_C_FLAGS}")
 
 # ==============================================================================
 # Find Readline or Libedit
