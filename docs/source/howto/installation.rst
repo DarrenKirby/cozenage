@@ -1,4 +1,4 @@
-How to Install Cozenage
+How to Build and Install Cozenage
 =======================
 
 Get the Source
@@ -13,7 +13,7 @@ use git to download the source tree:
 
 Cozenage provides a unified Makefile which uses either CMake or GNU-make for the build process.
 There is no install target for now, but I will add one upon the stable release. For now, just run
-the binary from the source tree, or manually copy it to a suitable place.
+the binary from the source tree.
 
 Install dependencies
 --------------------
@@ -30,7 +30,29 @@ CMake build
     $ make
 
 This will create a build/ directory in the source root which contains all the intermediate object
-files, and place the ``cozenage`` binary at the top-level of the source tree.
+files. The main ``cozenage`` binary will be placed in the top-level of the source tree. The library modules will be
+placed in a ``lib/`` subdirectory of the source tree. On macOS systems, these modules will be suffixed with ``.dylib``
+extensions. All other systems will suffix them with the ``.so`` extension.
+
+The default build specifies an -02 optimized binary. You can specify a non-optimized build with debugging symbols
+by running:
+
+.. code-block:: bash
+
+    $ make DEBUG=ON
+
+.. tip::
+
+    By default, the Cozenage build prefers Gnu Readline for its extended and configurable tab-completion
+    facilities. On Linux, GNU readline is typically the only readline installed. On BSD or macOS systems,
+    however, libedit is the default system-provided readline library, but GNU readline can also be installed
+    by the user. To force linking against libedit even if GNU readline is installed, you can pass a flag to
+    make:
+
+    .. code-block:: bash
+
+        $ make USE_LIBEDIT=ON
+
 
 GNU make build
 --------------

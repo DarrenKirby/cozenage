@@ -32,6 +32,16 @@ else
 	EXE_LDFLAGS = -Wl,--export-dynamic
 endif
 
+# Check for force libedit flag
+ifeq ($(origin USE_LIBEDIT), undefined)
+	USE_LIBEDIT=OFF
+endif
+
+# Check for debug build flag
+ifeq ($(origin DEBUG), undefined)
+	DEBUG=OFF
+endif
+
 # MODIFICATION: Added flags for building shared libraries
 LIB_CFLAGS = -shared -fPIC
 
@@ -94,7 +104,7 @@ all: cmake_build
 cmake_build:
 	@echo "--- Building with CMake ---"
 	@mkdir -p $(BUILD_DIR)
-	@cd $(BUILD_DIR) && cmake ..
+	@cd $(BUILD_DIR) && cmake -DUSE_LIBEDIT=$(USE_LIBEDIT) -DDEBUG_BUILD=$(DEBUG) ..
 	@$(MAKE) -C $(BUILD_DIR)
 	@cp $(BUILD_DIR)/$(BINARY) .
 

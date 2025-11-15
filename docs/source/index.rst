@@ -12,7 +12,7 @@ kind of 'shell mode' which would act like an interpretive shell with Scheme synt
 This is an educational process for me. I started writing Cozenage to enhance my understanding of
 Scheme, C , and programming language fundamentals in general. Not everything is implemented in
 the most efficient or 'best' way. Cozenage is a work in progress, and as I learn new and better
-techniques I will come back and improve sections of this program.
+techniques I will incrementally improve sections of this program.
 
 .. attention::
 
