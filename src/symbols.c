@@ -21,15 +21,13 @@
 #include "cell.h"
 #include "types.h"
 #include "special_forms.h"
-
+#include "main.h"
 /* For _POSIX_VERSION */
 #include <unistd.h>
 /* For uname */
 #include <string.h>
 #include <errno.h>
 #include <sys/utsname.h>
-
-#include "main.h"
 
 
 /* Declare the symbol table */
@@ -179,7 +177,11 @@ Cell* builtin_features(const Lex* e, const Cell* a)
     cell_add(result_l, make_cell_symbol(uts.machine));
 
     /* Check byte order */
-    const char* endianess = U_IS_BIG_ENDIAN ? "big-endian" : "little-endian";
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+    const char* endianess = "little-endian";
+#else
+    const char* endianess = "big-endian";
+#endif
     cell_add(result_l, make_cell_symbol(endianess));
 
     /* Add Cozenage name and version */

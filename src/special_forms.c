@@ -56,8 +56,8 @@ int is_syntactic_keyword(const char* s) {
 /* Convert a CELL_SEXPR to a proper CELL_PAIR linked-list */
 Cell* sexpr_to_list(Cell* c) {
 
-    /* Direct-return all the atomic types. */
-    if (c->type & (CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX|
+    /* Direct-return all the atomic types, and if it's already a list. */
+    if (c->type & (CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX|CELL_PAIR|
                       CELL_BOOLEAN|CELL_CHAR|CELL_STRING|CELL_NIL|CELL_EOF|
                       CELL_PROC|CELL_PORT|CELL_CONT|CELL_ERROR|CELL_SYMBOL)) {
         return c;
@@ -114,12 +114,59 @@ Cell* sexpr_to_list(Cell* c) {
 Lex* build_lambda_env(const Lex* env, const Cell* formals, const Cell* args) {
     /* Create a new child environment */
     Lex* local_env = new_child_env(env);
-    /* Bind formals to arguments */
 
-    for (int i = 0; i < args->count; i++) {
-        const Cell* sym = formals->cell[i];
-        const Cell* val = args->cell[i];
-        lex_put_local(local_env, sym, val);  /* sym should be CELL_SYMBOL, val evaluated */
+    /* Bind formals to arguments */
+    /* Fully variadic (lambda args ...) */
+    if (formals->type == CELL_SYMBOL) {
+        const Cell* arg_list = sexpr_to_list((Cell*)args);
+        lex_put_local(local_env, formals, arg_list);
+        return local_env;
+    }
+    /* This finds the (define (name . args) ...) form where the formals
+     * are passed as (. args)*/
+    if (formals->type == CELL_SEXPR && formals->count == 2
+        && formals->cell[0]->type == CELL_SYMBOL && strcmp(formals->cell[0]->sym, ".") == 0) {
+        const Cell* arg_list = sexpr_to_list((Cell*)args);
+        lex_put_local(local_env, formals->cell[1], arg_list);
+        return local_env;
+    }
+
+    /* Standard or dotted-tail (lambda (a b) ...) or (lambda (a . r) ...) */
+    const Cell* lf = sexpr_to_list((Cell*) formals);
+    int arg_idx = 0;
+
+    /* Iterate through positional arguments */
+    while (lf->type == CELL_PAIR) {
+        if (arg_idx >= args->count) {
+            fprintf(stderr, "Arity error: wrong number of args for lambda call\n");
+            return nullptr;
+        }
+        const Cell* sym = lf->car;
+        const Cell* val = args->cell[arg_idx];
+        lex_put_local(local_env, sym, val);
+
+        lf = lf->cdr;
+        arg_idx++;
+    }
+
+    /* Check what's at the end of the formal list. */
+    if (lf->type == CELL_NIL) {
+        if (arg_idx != args->count) {
+            /* Too many arguments supplied for a non-variadic lambda. */
+            fprintf(stderr, "Arity error: too many args for lambda call\n");
+            return nullptr;
+        }
+    } else if (lf->type == CELL_SYMBOL) {
+        /* Dotted-tail: this is the 'rest' parameter */
+        Cell* rest = make_cell_sexpr();
+        for (int i = arg_idx; i < args->count; i++) {
+            cell_add(rest, args->cell[i]);
+        }
+        const Cell* rest_list = sexpr_to_list(rest);
+        lex_put_local(local_env, lf, rest_list);
+    } else {
+        fprintf(stderr, "malformed lambda call: bad args\n");
+        return nullptr;
     }
     return local_env;
 }
@@ -168,8 +215,6 @@ static Ch_Env* lex_find_local_frame(const Lex* e, const char* sym) {
  *
  *    (define ⟨variable⟩
  *        (lambda (⟨formals⟩) ⟨body⟩))
- *
- *  TODO: (define (⟨variable⟩ . ⟨formal⟩) ⟨body⟩) form
  */
 HandlerResult sf_define(Lex* e, Cell* a) {
     if (a->count < 2) {
@@ -267,11 +312,13 @@ HandlerResult sf_lambda(Lex* e, Cell* a) {
     Cell* formals = cell_pop(a, first);   /* first arg */
     Cell* body = a;                         /* remaining args */
 
-    /* formals should be a list of symbols */
-    for (int i = 0; i < formals->count; i++) {
-        if (formals->cell[i]->type != CELL_SYMBOL) {
-            Cell* err = make_cell_error("lambda formals must be symbols", TYPE_ERR);
-            return (HandlerResult){ .action = ACTION_RETURN, .value = err };
+    /* formals should be a symbol or list of symbols */
+    if (formals->type != CELL_SYMBOL) {
+        for (int i = 0; i < formals->count; i++) {
+            if (formals->cell[i]->type != CELL_SYMBOL) {
+                Cell* err = make_cell_error("lambda formals must be symbols", TYPE_ERR);
+                return (HandlerResult){ .action = ACTION_RETURN, .value = err };
+            }
         }
     }
     /* Build the lambda cell */
@@ -547,6 +594,8 @@ HandlerResult sf_let(Lex* e, Cell* a) {
             cell_add(vals, local_b->cell[1]);
         }
 
+        debug_print_cell(vars);
+        debug_print_cell(vals);
         /* Create a new child environment */
         Lex* local_env = new_child_env(e);
 

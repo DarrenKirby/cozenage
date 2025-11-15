@@ -96,7 +96,7 @@ Cell* coz_eval(Lex* env, Cell* expr) {
 
         Cell* first = expr->cell[0];
 
-        /* These special forms need to be dispatched out of
+        /* Special forms need to be dispatched out of
          * eval_sexpr() early, so the arguments are not evaluated. */
         if (first->type == CELL_SYMBOL && first->sf_id > 0) {
             const special_form_handler_t handler = SF_DISPATCH_TABLE[first->sf_id];
@@ -128,7 +128,11 @@ Cell* coz_eval(Lex* env, Cell* expr) {
 
         /* Now, evaluate each argument within this new list. */
         for (int i = 0; i < args->count; i++) {
-            args->cell[i] = coz_eval(env, args->cell[i]);
+            Cell* result = coz_eval(env, args->cell[i]);
+            /* Ignore legitimate null */
+            if (!result) { continue; }
+            args->cell[i] = result;
+
             if (args->cell[i]->type == CELL_ERROR) {
                 /* If an argument evaluation fails, return the error. */
                 return cell_take(args, i);
@@ -157,7 +161,11 @@ static Cell* coz_apply(const Cell* proc, const Cell* args, Lex** env_out, Cell**
         return proc->builtin(*env_out, args); /* Return final value */
     }
     /* It's a Scheme lambda, return TCO */
-    *env_out = build_lambda_env(proc->lambda->env, proc->lambda->formals, args);
+    Lex* le = build_lambda_env(proc->lambda->env, proc->lambda->formals, args);
+    if (le == nullptr) {
+        return make_cell_error("bad lambda expression", SYNTAX_ERR);
+    }
+    *env_out = le;
     *expr_out = sequence_sf_body(proc->lambda->body);
     return TCS_Obj;
 }
@@ -178,6 +186,9 @@ Cell* coz_apply_and_get_val(const Cell* proc, const Cell* args, const Lex* env) 
      * tail-call internally. We need to set it up and then kick off a self-
      * contained evaluation loop that runs until it produces a final value. */
     Lex* lambda_env  = build_lambda_env(proc->lambda->env, proc->lambda->formals, args);
+    if (lambda_env == nullptr) {
+        return make_cell_error("bad lambda expression", SYNTAX_ERR);
+    }
     Cell* body_expr = sequence_sf_body(proc->lambda->body);
     return coz_eval(lambda_env, body_expr);
 }
