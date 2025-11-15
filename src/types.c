@@ -105,7 +105,7 @@ Cell* check_arg_types(const Cell* a, const int mask) {
             return make_cell_error(buf, TYPE_ERR);
         }
     }
-    return nullptr;
+    return nullptr; /* all good */
 }
 
 Cell* check_arg_arity(const Cell* a, const int exact, const int min, const int max) {

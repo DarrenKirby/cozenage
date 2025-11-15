@@ -32,11 +32,12 @@ Cell* builtin_number_pred(const Lex* e, const Cell* a) {
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
 
+    // ReSharper disable once CppVariableCanBeMadeConstexpr
     const int mask = CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX;
     if (a->cell[0]->type & mask) {
-        return make_cell_boolean(1);
+        return True_Obj;
     }
-    return make_cell_boolean(0);
+    return False_Obj;
 }
 
 /* (boolean? obj)
@@ -75,12 +76,12 @@ Cell* builtin_list_pred(const Lex* e, const Cell* a) {
     if (err) return err;
     /* '() is a list */
     if (a->cell[0]->type == CELL_NIL) {
-        return make_cell_boolean(1);
+        return True_Obj;
     }
 
     /* If len is not -1, we can trust it's a proper list. */
     if (a->cell[0]->type == CELL_PAIR && a->cell[0]->len > 0) {
-        return make_cell_boolean(1);
+        return True_Obj;
     }
 
     /* If len is -1, this could be an improper list or a proper list
@@ -90,8 +91,7 @@ Cell* builtin_list_pred(const Lex* e, const Cell* a) {
         p = p->cdr;
     }
 
-    return p->type == CELL_NIL ?
-        make_cell_boolean(true) : make_cell_boolean(false);
+    return p->type == CELL_NIL ? True_Obj : False_Obj;
 }
 
 /* 'procedure?' -> CELL_BOOLEAN - return #t if obj is a procedure, else #f */
@@ -189,9 +189,9 @@ Cell* builtin_inexact_pred(const Lex* e, const Cell* a) {
     }
 
     if (a->cell[0]->exact) {
-        return make_cell_boolean(0);
+        return False_Obj;
     }
-    return make_cell_boolean(1);
+    return True_Obj;
 }
 
 /* 'complex?' -> CELL_BOOLEAN - R7RS compliant */
@@ -201,11 +201,12 @@ Cell* builtin_complex(const Lex* e, const Cell* a) {
     if (err) return err;
 
     /* All numbers are complex numbers. */
+    // ReSharper disable once CppVariableCanBeMadeConstexpr
     const int mask = CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX;
     if (a->cell[0]->type & mask) {
-        return make_cell_boolean(1);
+        return True_Obj;
     }
-    return make_cell_boolean(0);
+    return False_Obj;
 }
 
 /* 'real?' -> CELL_BOOLEAN - R7RS compliant */
@@ -219,12 +220,12 @@ Cell* builtin_real(const Lex* e, const Cell* a) {
         case CELL_INTEGER:
         case CELL_RATIONAL:
         case CELL_REAL:
-            return make_cell_boolean(1);
+            return True_Obj;
         case CELL_COMPLEX:
             /* A complex number is real if its imaginary part is zero. */
             return make_cell_boolean(cell_is_real_zero(arg->imag));
         default:
-            return make_cell_boolean(0);
+            return False_Obj;
     }
 }
 
@@ -236,7 +237,7 @@ Cell* builtin_rational(const Lex* e, const Cell* a) {
 
     /* Non-numbers are not rational */
     if (check_arg_types(a, CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX)) {
-        return make_cell_boolean(0);
+        return False_Obj;
     }
     const Cell* arg = a->cell[0];
 
@@ -248,7 +249,7 @@ Cell* builtin_rational(const Lex* e, const Cell* a) {
 
     /* Exact numbers are rational */
     if (arg->exact) {
-        return make_cell_boolean(1);
+        return True_Obj;
     }
 
     /* Finite reals are rational */
@@ -256,7 +257,7 @@ Cell* builtin_rational(const Lex* e, const Cell* a) {
         return make_cell_boolean(isfinite(cell_to_long_double(arg)));
     }
 
-    return make_cell_boolean(0);
+    return False_Obj;
 }
 
 /* 'integer?' -> CELL_BOOLEAN - R7RS compliant */

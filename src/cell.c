@@ -40,11 +40,11 @@ Cell* EOF_Obj = nullptr;
 /* Define global tail call sentinel object */
 Cell* TCS_Obj = nullptr;
 
+
 /* Default ports */
 Cell* default_input_port  = nullptr;
 Cell* default_output_port = nullptr;
 Cell* default_error_port  = nullptr;
-
 
 void init_default_ports(void)
 {

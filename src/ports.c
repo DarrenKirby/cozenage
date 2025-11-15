@@ -58,9 +58,9 @@ Cell* builtin_input_port_pred(const Lex* e, const Cell* a)
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
     if (a->cell[0]->type != CELL_PORT || a->cell[0]->port->port_t != INPUT_PORT) {
-        return make_cell_boolean(0);
+        return False_Obj; //False_Obj;
     }
-    return make_cell_boolean(1);
+    return True_Obj;
 }
 
 Cell* builtin_output_port_pred(const Lex* e, const Cell* a)
@@ -69,9 +69,9 @@ Cell* builtin_output_port_pred(const Lex* e, const Cell* a)
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
     if (a->cell[0]->type != CELL_PORT || a->cell[0]->port->port_t != OUTPUT_PORT) {
-        return make_cell_boolean(0);
+        return False_Obj;
     }
-    return make_cell_boolean(1);
+    return True_Obj;
 }
 
 Cell* builtin_text_port_pred(const Lex* e, const Cell* a)
@@ -80,9 +80,9 @@ Cell* builtin_text_port_pred(const Lex* e, const Cell* a)
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
     if (a->cell[0]->type != CELL_PORT || a->cell[0]->port->stream_t != TEXT_PORT) {
-        return make_cell_boolean(0);
+        return False_Obj;
     }
-    return make_cell_boolean(1);
+    return True_Obj;
 }
 
 Cell* builtin_binary_port_pred(const Lex* e, const Cell* a)
@@ -91,9 +91,9 @@ Cell* builtin_binary_port_pred(const Lex* e, const Cell* a)
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
     if (a->cell[0]->type != CELL_PORT || a->cell[0]->port->stream_t != BINARY_PORT) {
-        return make_cell_boolean(0);
+        return False_Obj;
     }
-    return make_cell_boolean(1);
+    return True_Obj;
 }
 
 Cell* builtin_input_port_open(const Lex* e, const Cell* a)
@@ -104,9 +104,9 @@ Cell* builtin_input_port_open(const Lex* e, const Cell* a)
     if (a->cell[0]->type == CELL_PORT ||
         a->cell[0]->port->port_t != INPUT_PORT ||
         a->cell[0]->is_open == true) {
-        return make_cell_boolean(1);
+        return True_Obj;
         }
-    return make_cell_boolean(0);
+    return False_Obj;
 }
 
 Cell* builtin_output_port_open(const Lex* e, const Cell* a)
@@ -117,9 +117,9 @@ Cell* builtin_output_port_open(const Lex* e, const Cell* a)
     if (a->cell[0]->type == CELL_PORT ||
         a->cell[0]->port->port_t != OUTPUT_PORT ||
         a->cell[0]->is_open == true) {
-        return make_cell_boolean(1);
+        return True_Obj;
     }
-    return make_cell_boolean(0);
+    return False_Obj;
 }
 
 Cell* builtin_close_port(const Lex* e, const Cell* a)
@@ -138,7 +138,7 @@ Cell* builtin_close_port(const Lex* e, const Cell* a)
         fclose(a->cell[0]->port->fh);
         a->cell[0]->is_open = 0;
     }
-    return make_cell_boolean(1);
+    return True_Obj;
 }
 
 Cell* builtin_read_line(const Lex* e, const Cell* a)
@@ -500,8 +500,7 @@ Cell* builtin_eof(const Lex* e, const Cell* a)
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 0);
     if (err) return err;
-
-    return make_cell_eof();
+    return EOF_Obj;
 }
 
 /* TODO - move to predicates? */
@@ -514,14 +513,14 @@ Cell* builtin_read_error(const Lex* e, const Cell* a)
 
     const Cell* obj = a->cell[0];
     if (obj->type != CELL_ERROR) {
-        return make_cell_boolean(0);
+        return False_Obj;
     }
 
     if (obj->err_t != READ_ERR) {
-        return make_cell_boolean(0);
+        return False_Obj;
     }
 
-    return make_cell_boolean(1);
+    return True_Obj;
 }
 
 /* TODO - move to predicates? */
@@ -534,14 +533,14 @@ Cell* builtin_file_error(const Lex* e, const Cell* a)
 
     const Cell* obj = a->cell[0];
     if (obj->type != CELL_ERROR) {
-        return make_cell_boolean(0);
+        return False_Obj;
     }
 
     if (obj->err_t != FILE_ERR) {
-        return make_cell_boolean(0);
+        return False_Obj;
     }
 
-    return make_cell_boolean(1);
+    return True_Obj;
 }
 
 /* (flush-output-port) procedure
@@ -621,7 +620,7 @@ Cell* builtin_char_ready(const Lex* e, const Cell* a)
             "char-ready?: bad file descriptor",
             FILE_ERR);
     }
-    return result ? make_cell_boolean(1) : make_cell_boolean(0);
+    return result ? True_Obj : False_Obj;
 }
 
 
@@ -646,7 +645,7 @@ Cell* builtin_u8_ready(const Lex* e, const Cell* a)
             "u8-ready?: bad file descriptor",
             FILE_ERR);
     }
-    return result ? make_cell_boolean(1) : make_cell_boolean(0);
+    return result ? True_Obj : False_Obj;
 }
 
 Cell* builtin_display(const Lex* e, const Cell* a)

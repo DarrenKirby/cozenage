@@ -52,7 +52,7 @@ special_form_handler_t SF_DISPATCH_TABLE[] = {
     &sf_or,
 };
 
-static Cell* coz_apply(const Cell* proc, const Cell* args, Lex** env_out, Cell** expr_out);
+static Cell* coz_apply(const Cell* proc, Cell* args, Lex** env_out, Cell** expr_out);
 
 /* Evaluate a Cell in the given environment. */
 Cell* coz_eval(Lex* env, Cell* expr) {
@@ -156,7 +156,7 @@ Cell* coz_eval(Lex* env, Cell* expr) {
 }
 
 /* Apply that procedure on them args! */
-static Cell* coz_apply(const Cell* proc, const Cell* args, Lex** env_out, Cell** expr_out) {
+static Cell* coz_apply(const Cell* proc, Cell* args, Lex** env_out, Cell** expr_out) {
     if (proc->is_builtin) {
         return proc->builtin(*env_out, args); /* Return final value */
     }
@@ -176,15 +176,15 @@ static Cell* coz_apply(const Cell* proc, const Cell* args, Lex** env_out, Cell**
  * This function handles the trampoline loop internally for Scheme lambdas,
  * making it safe to call from C code like builtins.
  */
-Cell* coz_apply_and_get_val(const Cell* proc, const Cell* args, const Lex* env) {
+Cell* coz_apply_and_get_val(const Cell* proc, Cell* args, const Lex* env) {
     if (proc->is_builtin) {
         return proc->builtin(env, args);
     }
 
     /*
-     * This is a Scheme lambda. We can't just call it because it might
-     * tail-call internally. We need to set it up and then kick off a self-
-     * contained evaluation loop that runs until it produces a final value. */
+     * This is a Scheme lambda. We can't just call it because it might tail-call
+     * internally. We need to set it up and then kick off a self-contained
+     * evaluation loop that runs until it produces a final value. */
     Lex* lambda_env  = build_lambda_env(proc->lambda->env, proc->lambda->formals, args);
     if (lambda_env == nullptr) {
         return make_cell_error("bad lambda expression", SYNTAX_ERR);

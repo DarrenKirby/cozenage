@@ -200,6 +200,7 @@ static Cell* bits_int_to_bitstring(const Lex* e, const Cell* a) {
     char* str = format_twos_complement(a->cell[0]->integer_v);
     /* 66 = 64 bit max size of long long + '\0' + 'b' prefix */
     char sym_str[66] = "b";
+    /* FIXME: use strlcat() */
     strcat(sym_str, str);
     Cell* result = make_cell_symbol(sym_str);
     free(str);

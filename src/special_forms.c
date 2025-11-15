@@ -53,7 +53,7 @@ int is_syntactic_keyword(const char* s) {
     return 0;
 }
 
-/* Convert a CELL_SEXPR to a proper CELL_PAIR linked-list */
+/* Convert a CELL_SEXPR to a CELL_PAIR linked-list */
 Cell* sexpr_to_list(Cell* c) {
 
     /* Direct-return all the atomic types, and if it's already a list. */
@@ -111,14 +111,14 @@ Cell* sexpr_to_list(Cell* c) {
     return list_head;
 }
 
-Lex* build_lambda_env(const Lex* env, const Cell* formals, const Cell* args) {
+Lex* build_lambda_env(const Lex* env, Cell* formals, Cell* args) {
     /* Create a new child environment */
     Lex* local_env = new_child_env(env);
 
     /* Bind formals to arguments */
     /* Fully variadic (lambda args ...) */
     if (formals->type == CELL_SYMBOL) {
-        const Cell* arg_list = sexpr_to_list((Cell*)args);
+        const Cell* arg_list = sexpr_to_list(args);
         lex_put_local(local_env, formals, arg_list);
         return local_env;
     }
@@ -126,13 +126,13 @@ Lex* build_lambda_env(const Lex* env, const Cell* formals, const Cell* args) {
      * are passed as (. args)*/
     if (formals->type == CELL_SEXPR && formals->count == 2
         && formals->cell[0]->type == CELL_SYMBOL && strcmp(formals->cell[0]->sym, ".") == 0) {
-        const Cell* arg_list = sexpr_to_list((Cell*)args);
+        const Cell* arg_list = sexpr_to_list(args);
         lex_put_local(local_env, formals->cell[1], arg_list);
         return local_env;
     }
 
     /* Standard or dotted-tail (lambda (a b) ...) or (lambda (a . r) ...) */
-    const Cell* lf = sexpr_to_list((Cell*) formals);
+    const Cell* lf = sexpr_to_list(formals);
     int arg_idx = 0;
 
     /* Iterate through positional arguments */

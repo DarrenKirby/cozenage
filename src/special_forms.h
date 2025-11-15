@@ -35,7 +35,7 @@ typedef struct {
 
 int is_syntactic_keyword(const char* s);
 Cell* sexpr_to_list(Cell* c);
-Lex* build_lambda_env(const Lex* env, const Cell* formals, const Cell* args);
+Lex* build_lambda_env(const Lex* env, Cell* formals, Cell* args);
 Cell* sequence_sf_body(const Cell* body);
 /* Special forms */
 HandlerResult sf_define(Lex* e, Cell* a);

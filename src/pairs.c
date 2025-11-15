@@ -765,7 +765,7 @@ Cell* builtin_foldl(const Lex* e, const Cell* a) {
         }
 
         Cell* tmp_result;
-        const Cell* arg_sexpr = make_sexpr_from_list(arg_list);
+        Cell* arg_sexpr = make_sexpr_from_list(arg_list);
         /* If the procedure is a builtin - grab a pointer to it and call it directly
          * otherwise - it is a lambda and needs to be evaluated and applied to the args. */
         if (proc->is_builtin) {

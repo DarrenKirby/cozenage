@@ -383,7 +383,7 @@ Cell* builtin_vector_set_bang(const Lex* e, const Cell* a) {
     }
 
     vec->cell[idx] = obj;
-    return nullptr;
+    return Nil_Obj;
 }
 
 /* (vector-append vector ... )

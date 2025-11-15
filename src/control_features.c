@@ -151,7 +151,7 @@ Cell* builtin_map(const Lex* e, const Cell* a)
             Cell* (*func)(const Lex *, const Cell *) = proc->builtin;
             tmp_result = func(e, make_sexpr_from_list(reversed_arg_list));
         } else {
-            const Cell* arg_sexpr = make_sexpr_from_list(reversed_arg_list);
+            Cell* arg_sexpr = make_sexpr_from_list(reversed_arg_list);
             tmp_result = coz_apply_and_get_val(proc, arg_sexpr, (Lex*)e);
         }
         /* Deal with legitimate null result */

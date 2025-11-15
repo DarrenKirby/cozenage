@@ -189,8 +189,11 @@ typedef struct Cell {
 
 
 /* Declare the global singletons */
-extern Cell* val_nil;
+extern Cell* Nil_Obj;
 extern Cell* TCS_Obj;
+extern Cell* EOF_Obj;
+extern Cell* True_Obj;
+extern Cell* False_Obj;
 extern Cell* default_input_port;
 extern Cell* default_output_port;
 extern Cell* default_error_port;
