@@ -324,6 +324,11 @@ Cell* builtin_bytevector_append(const Lex* e, const Cell* a)
     Cell* result = make_cell_bytevector(type);
     for (int i = 0; i < a->count; i++) {
         const Cell* bv = a->cell[i];
+        if (bv->bv->type != type) {
+            return make_cell_error(
+                "bytevector->append: cannot append different bytevector types",
+                VALUE_ERR);
+        }
         for (int j = 0; j < bv->count; j++) {
             const int64_t byte =  BV_OPS[type].get(bv, j);
             byte_add(result, byte);
