@@ -457,14 +457,14 @@ Cell* cell_copy(const Cell* v) {
         if (v->is_builtin) {
             copy->is_builtin = true;
             copy->builtin = v->builtin;
-            copy->f_name    = GC_strdup(v->f_name);
+            copy->f_name = GC_strdup(v->f_name);
         } else {
             copy->is_builtin = false;
             copy->lambda = GC_MALLOC(sizeof(lambda));
-            copy->lambda->l_name    = v->lambda->l_name ? GC_strdup(v->lambda->l_name) : nullptr;
+            copy->lambda->l_name = v->lambda->l_name ? GC_strdup(v->lambda->l_name) : nullptr;
             copy->lambda->formals = cell_copy(v->lambda->formals) ;
-            copy->lambda->body    = cell_copy(v->lambda->body);
-            copy->lambda->env     = v->lambda->env;   /* DO NOT copy environments; share the pointer. */
+            copy->lambda->body = cell_copy(v->lambda->body);
+            copy->lambda->env = v->lambda->env;   /* DO NOT copy environments; share the pointer. */
         }
         break;
     case CELL_SEXPR:
@@ -510,9 +510,6 @@ Cell* cell_copy(const Cell* v) {
         copy->port->path = GC_strdup(v->port->path);
         break;
     }
-    case CELL_CONT:
-        /* Shallow copy (all fields remain zeroed). */
-        break;
 
     default:
         fprintf(stderr, "cell_copy: unknown type %d\n", v->type);

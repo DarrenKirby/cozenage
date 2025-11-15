@@ -34,13 +34,14 @@
  */
 
 /* Mark a deleted item with sentinel 'tombstone' value so that the get
- * collision chain still works, but set can use the free slot */
+ * collision chain still works, but set can use the free slot. */
 static ht_item HT_DELETED_ITEM = { (char*) -1, nullptr };
 
 /* Initialize a hash table. Initial capacity is directly provided
  * by the caller, so that hash tables for different purposes can be
  * initialized to a sane size, but the argument must be a power of 2. */
-ht_table* ht_create(const int initial_capacity) {
+ht_table* ht_create(const int initial_capacity)
+{
     /* Allocate space for hash table struct. */
     ht_table* table = GC_MALLOC(sizeof(ht_table));
     if (table == NULL) {
@@ -60,7 +61,8 @@ ht_table* ht_create(const int initial_capacity) {
 }
 
 /* Completely free table items and the table itself */
-void ht_destroy(ht_table* table) {
+void ht_destroy(ht_table* table)
+{
     /* First free allocated keys. */
     for (size_t i = 0; i < table->capacity; i++) {
         /* Skip nulls and tombstones */
@@ -75,7 +77,8 @@ void ht_destroy(ht_table* table) {
 
 /* Return 64-bit FNV-1a hash for key (NUL-terminated). See description:
  * https://en.wikipedia.org/wiki/Fowler–Noll–Vo_hash_function */
-static uint64_t get_hash_key(const char* key) {
+static uint64_t get_hash_key(const char* key)
+{
     uint64_t hash = FNV_OFFSET;
     for (const char* p = key; *p; p++) {
         hash ^= (uint64_t)(unsigned char)*p;
@@ -85,7 +88,8 @@ static uint64_t get_hash_key(const char* key) {
 }
 
 /* Given a hash table and key, return a pointer to the object or null */
-Cell* ht_get(const ht_table* table, const char* key) {
+Cell* ht_get(const ht_table* table, const char* key)
+{
     /* AND hash with capacity-1 to ensure it's within entries array. */
     const uint64_t hash = get_hash_key(key);
     size_t index = hash & (uint64_t)(table->capacity - 1);
@@ -111,7 +115,8 @@ Cell* ht_get(const ht_table* table, const char* key) {
 
 /* Internal function to populate a slot with an item */
 static const char* ht_set_item(ht_item* slot, const size_t capacity,
-        const char* key, Cell* value, size_t* p_length) {
+        const char* key, Cell* value, size_t* p_length)
+{
     /* AND hash with capacity-1 to ensure it's within slot array. */
     const uint64_t hash = get_hash_key(key);
     size_t index = hash & (uint64_t)(capacity - 1);
@@ -144,11 +149,12 @@ static const char* ht_set_item(ht_item* slot, const size_t capacity,
 }
 
 /* Expand hash table to twice its current size. */
-static bool ht_resize(ht_table* table) {
+static bool ht_resize(ht_table* table)
+{
     /* Allocate new entries array. */
     const size_t new_capacity = table->capacity * 2;
     if (new_capacity < table->capacity) {
-        return false;  /* overflow (capacity would be too big) */
+        return false;  /* overflow (capacity would be too big). */
     }
     ht_item* new_items = GC_malloc(new_capacity * sizeof(ht_item));
     if (new_items == NULL) {
@@ -170,7 +176,8 @@ static bool ht_resize(ht_table* table) {
     return true;
 }
 
-const char* ht_set(ht_table* table, const char* key, Cell* value) {
+const char* ht_set(ht_table* table, const char* key, Cell* value)
+{
     if (value == NULL) {
         return nullptr;
     }
@@ -186,7 +193,8 @@ const char* ht_set(ht_table* table, const char* key, Cell* value) {
                         &table->count);
 }
 
-void ht_delete(ht_table* table, const char* key) {
+void ht_delete(ht_table* table, const char* key)
+{
     const uint64_t hash = get_hash_key(key);
     size_t index = hash & (uint64_t)(table->capacity - 1);
 
@@ -209,20 +217,23 @@ void ht_delete(ht_table* table, const char* key) {
     }
 }
 
-size_t ht_length(const ht_table* table) {
+size_t ht_length(const ht_table* table)
+{
     return table->count;
 }
 
 /* This iterator (written by Ben Hoyt) is not needed yet, but may be useful
  * when implementing a hash/map/dict scheme type */
-hti ht_iterator(ht_table* table) {
+hti ht_iterator(ht_table* table)
+{
     hti it;
     it._table = table;
     it._index = 0;
     return it;
 }
 
-bool ht_next(hti* it) {
+bool ht_next(hti* it)
+{
     /* Loop till we've hit end of items array. */
     const ht_table* table = it->_table;
     while (it->_index < table->capacity) {

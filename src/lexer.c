@@ -32,39 +32,47 @@ typedef struct {
 
 Scanner scanner;
 
-void init_lexer(const char* source) {
+void init_lexer(const char* source)
+{
     scanner.start = source;
     scanner.current = source;
     scanner.line = 1;
 }
 
-static bool is_digit(const char c) {
+static bool is_digit(const char c)
+{
     return c >= '0' && c <= '9';
 }
 
-static bool is_whitespace(const char c) {
+static bool is_whitespace(const char c)
+{
     return c == ' ' || c == '\t' || c == '\r' || c == '\n';
 }
 
-static bool at_end() {
+static bool at_end()
+{
     return *scanner.current == '\0';
 }
 
-static char advance() {
+static char advance()
+{
     scanner.current++;
     return scanner.current[-1];
 }
 
-static char peek() {
+static char peek()
+{
     return *scanner.current;
 }
 
-static char peekNext() {
+static char peekNext()
+{
     if (at_end()) return '\0';
     return scanner.current[1];
 }
 
-static Token make_token(const TokenType type) {
+static Token make_token(const TokenType type)
+{
     Token token;
     token.type = type;
     token.start = scanner.start;
@@ -73,7 +81,8 @@ static Token make_token(const TokenType type) {
     return token;
 }
 
-static Token error_token(const char* message) {
+static Token error_token(const char* message)
+{
     Token token;
     token.type = T_ERROR;
     token.start = message;
@@ -82,7 +91,8 @@ static Token error_token(const char* message) {
     return token;
 }
 
-static void skip_whitespace() {
+static void skip_whitespace()
+{
     for (;;) {
         const char c = peek();
         switch (c) {
@@ -121,7 +131,8 @@ static void skip_whitespace() {
     }
 }
 
-static Token string() {
+static Token string()
+{
     while (peek() != '"' && !at_end()) {
         const char c = peek();
 
@@ -157,14 +168,16 @@ static Token string() {
     return make_token(T_STRING);
 }
 
-static Token number() {
+static Token number()
+{
     while (!is_whitespace(peek()) && !at_end() && peek() != ')') {
         advance();
     }
     return make_token(T_NUMBER);
 }
 
-static Token boolean() {
+static Token boolean()
+{
     scanner.start = scanner.current;
     while (!is_whitespace(peek()) && !at_end() && peek() != ')') {
         advance();
@@ -172,7 +185,8 @@ static Token boolean() {
     return make_token(T_BOOLEAN);
 }
 
-static Token multi_word_identifier() {
+static Token multi_word_identifier()
+{
     while (peek() != '|' && !at_end()) {
         advance();
     }
@@ -182,14 +196,16 @@ static Token multi_word_identifier() {
     return make_token(T_SYMBOL);
 }
 
-static Token symbol() {
+static Token symbol()
+{
     while (!is_whitespace(peek()) && peek() != ')' && peek() != '(' && !at_end()) {
         advance();
     }
     return make_token(T_SYMBOL);
 }
 
-static Token character() {
+static Token character()
+{
     scanner.start = scanner.current;
     while (!is_whitespace(peek()) && peek() != ')' && peek() != '(' && !at_end()) {
         advance();
@@ -197,7 +213,8 @@ static Token character() {
     return make_token(T_CHAR);
 }
 
-Token lex_token() {
+Token lex_token()
+{
     skip_whitespace();
     scanner.start = scanner.current;
 
@@ -261,7 +278,8 @@ Token lex_token() {
     }
 }
 
-static TokenArray* init_token_array() {
+static TokenArray* init_token_array()
+{
     /* Allocate space for the manager struct itself. */
     TokenArray *ta = GC_MALLOC(sizeof(TokenArray));
     if (ta == NULL) {
@@ -282,7 +300,8 @@ static TokenArray* init_token_array() {
     return ta;
 }
 
-static TokenArray* write_token_array(TokenArray* ta, const Token token) {
+static TokenArray* write_token_array(TokenArray* ta, const Token token)
+{
     /* Check if we need to reallocate. */
     if (ta->count == ta->capacity) {
         ta->capacity *= 2;
@@ -301,21 +320,21 @@ static TokenArray* write_token_array(TokenArray* ta, const Token token) {
     return ta;
 }
 
-TokenArray* scan_all_tokens(const char* source) {
+TokenArray* scan_all_tokens(const char* source)
+{
     TokenArray *t_array = init_token_array();
 
     init_lexer(source);
     for (;;) {
         const Token token = lex_token();
-
         t_array = write_token_array(t_array, token);
-
         if (token.type == T_EOF) break;
     }
     return t_array;
 }
 
-void debug_lexer(const TokenArray* ta) {
+void debug_lexer(const TokenArray* ta)
+{
     int line = -1;
 
     for (int i = 0; i < ta->count; i++) {

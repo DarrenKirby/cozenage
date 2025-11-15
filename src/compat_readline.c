@@ -29,7 +29,8 @@
 
 char **scheme_procedures = NULL;
 
-void populate_dynamic_completions(const Lex* e) {
+void populate_dynamic_completions(const Lex* e)
+{
     int symbol_count = 0;
     /* Iterate once to get number of symbols. */
     hti it = ht_iterator(e->global);
@@ -72,7 +73,8 @@ void populate_dynamic_completions(const Lex* e) {
     scheme_procedures[i] = NULL;
 }
 
-char* scheme_procedure_generator(const char *text, int state) {
+char* scheme_procedure_generator(const char *text, const int state)
+{
     static int list_index, len;
     char *name;
 
@@ -93,7 +95,8 @@ char* scheme_procedure_generator(const char *text, int state) {
     return NULL;
 }
 
-char** completion_dispatcher(const char *text, const int start, const int end) {
+char** completion_dispatcher(const char *text, const int start, const int end)
+{
     (void)end;
     rl_attempted_completion_over = 1; /* Prevents completion on an empty line. */
 
@@ -118,7 +121,7 @@ char** completion_dispatcher(const char *text, const int start, const int end) {
          * Passing NULL as the generator uses the default filename completer. */
         return rl_completion_matches(text, rl_filename_completion_function);
     }
-    /* We are not in a string, so use our custom Scheme procedure completer. */
+    /* We are not in a string, so use our custom procedure completer. */
     return rl_completion_matches(text, scheme_procedure_generator);
 }
 

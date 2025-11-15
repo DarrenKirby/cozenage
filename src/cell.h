@@ -26,7 +26,7 @@
 
 
 /* enum for error types. */
-typedef enum {
+typedef enum : uint8_t  {
     GEN_ERR,
     FILE_ERR,
     READ_ERR,
@@ -38,18 +38,21 @@ typedef enum {
 } err_t;
 
 /* enums for port types. */
-typedef enum {
+typedef enum : uint8_t  {
     INPUT_PORT,
-    OUTPUT_PORT
+    OUTPUT_PORT,
+    ASYNC_PORT
 } port_t;
 
-typedef enum {
+typedef enum : uint8_t  {
     TEXT_PORT,
-    BINARY_PORT
+    BINARY_PORT,
+    STRING_PORT,
+    BV_PORT
 } stream_t;
 
 /* Cell_t type enum. */
-typedef enum {
+typedef enum  : uint32_t {
     /* Primitive Scheme types. */
     CELL_INTEGER    = 1 << 0,   /* integer */
     CELL_RATIONAL   = 1 << 1,   /* rational */
@@ -70,16 +73,16 @@ typedef enum {
     CELL_PROC       = 1 << 13,  /* procedure */
     CELL_PORT       = 1 << 14,  /* port */
     /* Internal-use types. */
-    CELL_CONT       = 1 << 15,  /* continuation (maybe) */
-    CELL_ERROR      = 1 << 16,  /* error */
-    CELL_SEXPR      = 1 << 17,  /* an array of values */
-    CELL_TCS        = 1 << 18,  /* Tail Call Sentinel object */
-    CELL_MRV        = 1 << 19,  /* Multiple Return Value sentinel object */
-    CELL_TRAMPOLINE = 1 << 20   /* Trampoline object - returned from
+    CELL_ERROR      = 1 << 15,  /* error */
+    CELL_SEXPR      = 1 << 16,  /* an array of values */
+    CELL_TCS        = 1 << 17,  /* Tail Call Sentinel object */
+    CELL_MRV        = 1 << 18,  /* Multiple Return Value sentinel object */
+    CELL_TRAMPOLINE = 1 << 19   /* Trampoline object - returned from
                                    first-class procedures to signal a
                                    tail-call */
 } Cell_t;
 
+/* Bytevector types. */
 typedef enum : uint8_t {
     BV_U8,
     BV_S8,
@@ -139,7 +142,7 @@ typedef struct Cell {
         };
 
         struct {
-            bool is_builtin;
+            bool is_builtin;  /* proc object: builtin, or user-defined lambda. */
         };
     };
 
@@ -178,7 +181,7 @@ typedef struct Cell {
         char* str;                /* strings */
         char* error_v;            /* error string */
         long double real_v;       /* reals */
-        long long int integer_v;  /* integers */
+        int64_t integer_v;        /* integers */
         UChar32 char_v;           /* character literal */
         bool boolean_v;           /* boolean */
         lambda* lambda;

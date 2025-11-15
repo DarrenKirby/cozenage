@@ -56,7 +56,7 @@ char* read_file_to_string(const char* filename)
 
     /* Determine file size */
     fseek(file, 0, SEEK_END);
-    const long file_size = ftell(file);
+    const int64_t file_size = ftell(file);
     fseek(file, 0, SEEK_SET);
 
     if (file_size == -1) {

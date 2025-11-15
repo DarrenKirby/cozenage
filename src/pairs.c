@@ -25,7 +25,8 @@
 
 
 /* Helpers */
-inline Cell* car__(const Cell* list) {
+inline Cell* car__(const Cell* list)
+{
     if (!(list->type & CELL_PAIR)) {
         char buf[128];
         snprintf(buf, sizeof(buf),
@@ -37,7 +38,8 @@ inline Cell* car__(const Cell* list) {
     return list->car;
 }
 
-inline Cell* cdr__(const Cell* list) {
+inline Cell* cdr__(const Cell* list)
+{
     if (!(list->type & CELL_PAIR)) {
         char buf[128];
         snprintf(buf, sizeof(buf),
@@ -56,7 +58,8 @@ inline Cell* cdr__(const Cell* list) {
 /* (cons obj1 obj2)
  * Returns a newly allocated pair whose car is obj1 and whose cdr is obj2. The pair is guaranteed
  * to be different (in the sense of eqv?) from every existing object. */
-Cell* builtin_cons(const Lex* e, const Cell* a) {
+Cell* builtin_cons(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2);
     if (err) return err;
@@ -65,7 +68,8 @@ Cell* builtin_cons(const Lex* e, const Cell* a) {
 
 /* (car pair)
  * Returns the contents of the car field of pair. */
-Cell* builtin_car(const Lex* e, const Cell* a) {
+Cell* builtin_car(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
@@ -74,7 +78,8 @@ Cell* builtin_car(const Lex* e, const Cell* a) {
 
 /* (cdr pair)
  * Returns the contents of the cdr field of pair. */
-Cell* builtin_cdr(const Lex* e, const Cell* a) {
+Cell* builtin_cdr(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
@@ -87,28 +92,32 @@ Cell* builtin_cdr(const Lex* e, const Cell* a) {
  *    (define (cdar x) (cdr (car x)))
  *    (define (cddr x) (cdr (cdr x)))
  *    */
-Cell* builtin_caar(const Lex* e, const Cell* a) {
+Cell* builtin_caar(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) { return err; }
     return car__(car__(a->cell[0]));
 }
 
-Cell* builtin_cadr(const Lex* e, const Cell* a) {
+Cell* builtin_cadr(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) { return err; }
     return car__(cdr__(a->cell[0]));
 }
 
-Cell* builtin_cdar(const Lex* e, const Cell* a) {
+Cell* builtin_cdar(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) { return err; }
     return cdr__(car__(a->cell[0]));
 }
 
-Cell* builtin_cddr(const Lex* e, const Cell* a) {
+Cell* builtin_cddr(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) { return err; }
@@ -117,7 +126,8 @@ Cell* builtin_cddr(const Lex* e, const Cell* a) {
 
 /* (list obj ... )
  * Returns a newly allocated list of its arguments. */
-Cell* builtin_list(const Lex* e, const Cell* a) {
+Cell* builtin_list(const Lex* e, const Cell* a)
+{
     (void)e;
     /* start with nil */
     Cell* result = make_cell_nil();
@@ -133,7 +143,8 @@ Cell* builtin_list(const Lex* e, const Cell* a) {
 
 /* (set-car! pair obj)
  * Stores obj in the car field of pair. */
-Cell* builtin_set_car(const Lex* e, const Cell* a) {
+Cell* builtin_set_car(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2);
     if (err) return err;
@@ -148,7 +159,8 @@ Cell* builtin_set_car(const Lex* e, const Cell* a) {
 
 /* (set-cdr! pair obj)
  * Stores obj in the cdr field of pair. */
-Cell* builtin_set_cdr(const Lex* e, const Cell* a) {
+Cell* builtin_set_cdr(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2);
     if (err) return err;
@@ -163,7 +175,8 @@ Cell* builtin_set_cdr(const Lex* e, const Cell* a) {
 
 /* (length list)
  * Returns the length of list. */
-Cell* builtin_list_length(const Lex* e, const Cell* a) {
+Cell* builtin_list_length(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
@@ -203,7 +216,8 @@ Cell* builtin_list_length(const Lex* e, const Cell* a) {
 
 /* (list-ref list k)
  * Returns the kth element of list. (This is the same as the car of (list-tail list k).) */
-Cell* builtin_list_ref(const Lex* e, const Cell* a) {
+Cell* builtin_list_ref(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2);
     if (err) return err;
@@ -247,7 +261,8 @@ Cell* builtin_list_ref(const Lex* e, const Cell* a) {
  * empty list is returned. If there is exactly one argument, it is returned. Otherwise, the resulting
  * list is always newly allocated, except that it shares structure with the last argument. An
  * improper list results if the last argument is not a proper list. */
-Cell* builtin_list_append(const Lex* e, const Cell* a) {
+Cell* builtin_list_append(const Lex* e, const Cell* a)
+{
     (void)e;
     /* Base case: (append) -> '() */
     if (a->count == 0) {
@@ -341,7 +356,8 @@ Cell* builtin_list_append(const Lex* e, const Cell* a) {
 
 /* (reverse list)
  * Returns a newly allocated list consisting of the elements of list in reverse order. */
-Cell* builtin_list_reverse(const Lex* e, const Cell* a) {
+Cell* builtin_list_reverse(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
@@ -378,7 +394,8 @@ Cell* builtin_list_reverse(const Lex* e, const Cell* a) {
 
 /* (list-tail list k)
  * Returns the sublist of list obtained by omitting the first k elements */
-Cell* builtin_list_tail(const Lex* e, const Cell* a) {
+Cell* builtin_list_tail(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2);
     if (err) return err;
@@ -423,7 +440,8 @@ Cell* builtin_list_tail(const Lex* e, const Cell* a) {
  * (make-list k fill)
  * Returns a newly allocated list of k elements. If a second argument is given, then each element is
  * initialized to fill. Otherwise, the initial contents of each element is set to 0. */
-Cell* builtin_make_list(const Lex* e, const Cell* a) {
+Cell* builtin_make_list(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_RANGE(a, 1, 2);
     if (err) return err;
@@ -452,7 +470,8 @@ Cell* builtin_make_list(const Lex* e, const Cell* a) {
 
 /* (list-set! list k obj)
  * The list-set! procedure stores obj in element k of list. */
-Cell* builtin_list_set(const Lex* e, const Cell* a) {
+Cell* builtin_list_set(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 3);
     if (err) return err;
@@ -463,7 +482,7 @@ Cell* builtin_list_set(const Lex* e, const Cell* a) {
     }
     if (a->cell[1]->type != CELL_INTEGER && a->cell[1]->integer_v < 0) {
         return make_cell_error(
-            "list-set!: arg 2 must be a valid list indice",
+            "list-set!: arg 2 must be a valid list index",
             VALUE_ERR);
     }
     Cell* p = a->cell[0];
@@ -471,7 +490,7 @@ Cell* builtin_list_set(const Lex* e, const Cell* a) {
 
     if (a->cell[0]->len <= len) {
         return make_cell_error(
-            "list-set!: list indice out of range",
+            "list-set!: list index out of range",
             INDEX_ERR);
     }
 
@@ -489,7 +508,8 @@ Cell* builtin_list_set(const Lex* e, const Cell* a) {
  * lists returned by (list-tail list k) for k less than the length of list. If obj does not occur in
  * list, then #f (not the empty list) is returned. Uses eq? to compare obj with the elements of list
  */
-Cell* builtin_memq(const Lex* e, const Cell* a) {
+Cell* builtin_memq(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2);
     if (err) return err;
@@ -508,7 +528,7 @@ Cell* builtin_memq(const Lex* e, const Cell* a) {
         }
         lhs = lhs->cdr;
     }
-    return make_cell_boolean(0);
+    return False_Obj;
 }
 
 /* (memv obj list)
@@ -516,7 +536,8 @@ Cell* builtin_memq(const Lex* e, const Cell* a) {
  * lists returned by (list-tail list k) for k less than the length of list. If obj does not occur in
  * list, then #f (not the empty list) is returned. Uses eqv? to compare obj with the elements of list
  */
-Cell* builtin_memv(const Lex* e, const Cell* a) {
+Cell* builtin_memv(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2);
     if (err) return err;
@@ -535,7 +556,7 @@ Cell* builtin_memv(const Lex* e, const Cell* a) {
         }
         lhs = lhs->cdr;
     }
-    return make_cell_boolean(0);
+    return False_Obj;
 }
 
 /* (member obj list)
@@ -544,7 +565,8 @@ Cell* builtin_memv(const Lex* e, const Cell* a) {
  * lists returned by (list-tail list k) for k less than the length of list. If obj does not occur in
  * list, then #f (not the empty list) is returned. Uses equal? to compare obj with the elements of
  * list unless an optional third arg, a comparison procedure, is provided */
-Cell* builtin_member(const Lex* e, const Cell* a) {
+Cell* builtin_member(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_RANGE(a, 2, 3);
     if (err) return err;
@@ -579,13 +601,14 @@ Cell* builtin_member(const Lex* e, const Cell* a) {
         }
         lhs = lhs->cdr;
     }
-    return make_cell_boolean(0);
+    return False_Obj;
 }
 
 /* (assq obj alist )
  * Find the first pair in alist whose car field is obj, and returns that pair. If no pair in alist has obj as its car,
  * then #f is returned. Uses eq? for the comparison. */
-Cell* builtin_assq(const Lex* e, const Cell* a) {
+Cell* builtin_assq(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2);
     if (err) return err;
@@ -609,7 +632,7 @@ Cell* builtin_assq(const Lex* e, const Cell* a) {
         }
         p = p->cdr;
     }
-    return make_cell_boolean(0);
+    return False_Obj;
 }
 
 /* (assv obj alist )
@@ -639,14 +662,15 @@ Cell* builtin_assv(const Lex* e, const Cell* a) {
         }
         p = p->cdr;
     }
-    return make_cell_boolean(0);
+    return False_Obj;
 }
 
 /* (assoc obj alist )
  * (assoc obj alist compare)
  * Find the first pair in alist whose car field is obj, and returns that pair. If no pair in alist has obj as its car,
  * then #f is returned. Uses eq? for the comparison, unless an optional procedure is passed as the third arg. */
-Cell* builtin_assoc(const Lex* e, const Cell* a) {
+Cell* builtin_assoc(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_RANGE(a, 2, 3);
     if (err) return err;
@@ -688,7 +712,7 @@ Cell* builtin_assoc(const Lex* e, const Cell* a) {
         }
         p = p->cdr;
     }
-    return make_cell_boolean(0);
+    return False_Obj;
 }
 
 /* (list-copy obj )
@@ -696,7 +720,8 @@ Cell* builtin_assoc(const Lex* e, const Cell* a) {
 * copied; the cars of the result are the same (in the sense of eqv?) as the cars of list. If obj is
 * an improper list, so is the result, and the final cdr's are the same in the sense of eqv?. An obj
 * which is not a list is returned unchanged. It is an error if obj is a circular list. */
-Cell* builtin_list_copy(const Lex* e, const Cell* a) {
+Cell* builtin_list_copy(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
@@ -731,7 +756,8 @@ Cell* builtin_list_copy(const Lex* e, const Cell* a) {
  *                 List iteration procedures                 *
  * ----------------------------------------------------------*/
 
-Cell* builtin_filter(const Lex* e, const Cell* a) {
+Cell* builtin_filter(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2);
     if (err) return err;
@@ -755,8 +781,8 @@ Cell* builtin_filter(const Lex* e, const Cell* a) {
     const Cell* val = a->cell[1];
     for (int i = 0; i < a->cell[1]->len; i++) {
         Cell* pred_outcome;
-        /* If proc is a builtin, run it directly. Otherwise,
-         * send it to apply */
+        /* If proc is a builtin, run it directly.
+         * Otherwise, send it to apply. */
         if (proc->is_builtin) {
             Cell* (*func)(const Lex *, const Cell *) = proc->builtin;
             pred_outcome = func(e, make_sexpr_len1(val->car));
@@ -766,19 +792,20 @@ Cell* builtin_filter(const Lex* e, const Cell* a) {
         if (pred_outcome->type == CELL_ERROR) {
             return pred_outcome;
         }
-        /* Continue if pred isn't true/truthy */
+        /* Continue if pred isn't true/truthy. */
         if (pred_outcome->type == CELL_BOOLEAN && pred_outcome->boolean_v == 0) {
             val = val->cdr;
             continue;
         }
-        /* Otherwise write it to the result list */
+        /* Otherwise write it to the result list. */
         result = make_cell_pair(val->car, result);
         val = val->cdr;
     }
     return builtin_list_reverse(e, make_sexpr_len1(result));
 }
 
-Cell* builtin_foldl(const Lex* e, const Cell* a) {
+Cell* builtin_foldl(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_MIN(a, 3);
     if (err) return err;
@@ -790,7 +817,7 @@ Cell* builtin_foldl(const Lex* e, const Cell* a) {
 
     int shortest_list_length = INT32_MAX;
     for (int i = 2; i < a->count; i++) {
-        /* If any of the list args is empty, return the accumulator */
+        /* If any of the list args is empty, return the accumulator. */
         if (a->cell[i]->type == CELL_NIL) {
             return a->cell[1];
         }
@@ -810,17 +837,17 @@ Cell* builtin_foldl(const Lex* e, const Cell* a) {
     Cell* init = a->cell[1];
 
     for (int i = 0; i < shortest_len; i++) {
-        /* Build a list of the i-th arguments */
+        /* Build a list of the i-th arguments. */
         Cell* arg_list = make_cell_nil();
-        /* cons the initial/accumulator */
+        /* cons the initial/accumulator. */
         arg_list = make_cell_pair(init, arg_list);
         /* Grab vals starting from the last list, so that after the
-         * 'reversed' list is constructed, order is correct */
+         * 'reversed' list is constructed, order is correct. */
         for (int j = num_lists + 1; j >= 2; j--) {
             const Cell* current_list = a->cell[j];
             Cell* nth_item = list_get_nth_cell_ptr(current_list, i);
             arg_list = make_cell_pair(nth_item, arg_list);
-            /* len is the number of lists plus the accumulator */
+            /* len is the number of lists plus the accumulator. */
             arg_list->len = num_lists + 1;
         }
 
@@ -835,24 +862,25 @@ Cell* builtin_foldl(const Lex* e, const Cell* a) {
             tmp_result = coz_apply_and_get_val(proc, arg_sexpr, (Lex*)e);
         }
         if (tmp_result->type == CELL_ERROR) {
-            /* Propagate any evaluation errors */
+            /* Propagate any evaluation errors. */
             return tmp_result;
         }
-        /* assign the result to the accumulator */
+        /* assign the result to the accumulator. */
         init = tmp_result;
     }
-    /* Return the accumulator after all list args are evaluated */
+    /* Return the accumulator after all list args are evaluated. */
     return init;
 }
 
-Cell* builtin_zip(const Lex* e, const Cell* a) {
+Cell* builtin_zip(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_MIN(a, 2);
     if (err) return err;
 
     int shortest_list_length = INT32_MAX;
     for (int i = 0; i < a->count; i++) {
-        /* If any of the list args is empty, return an empty list */
+        /* If any of the list args is empty, return an empty list. */
         if (a->cell[i]->type == CELL_NIL) {
             return make_cell_nil();
         }
@@ -873,12 +901,12 @@ Cell* builtin_zip(const Lex* e, const Cell* a) {
         Cell* inner_list = make_cell_nil();
 
         /* Grab vals starting from the last list, so that after the
-         * 'reversed' list is constructed, order is correct */
+         * 'reversed' list is constructed, order is correct. */
         for (int j = num_lists-1 ; j >= 0; j--) {
             const Cell* current_list = a->cell[j];
             Cell* nth_item = list_get_nth_cell_ptr(current_list, i);
             inner_list = make_cell_pair(nth_item, inner_list);
-            /* len is the number of lists */
+            /* len is the number of lists. */
             inner_list->len = num_lists;
         }
         outer_list = make_cell_pair(inner_list, outer_list);

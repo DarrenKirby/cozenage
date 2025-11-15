@@ -32,13 +32,13 @@
 static void cell_to_string_worker(const Cell* v, string_builder_t *sb, print_mode_t mode);
 
 
-/* Formats reals to have a trailing '.0' for visual feedback to distinguish from an int */
+/* Formats reals to have a trailing '.0' for visual feedback to distinguish from an int. */
 static void repr_long_double(const long double x, string_builder_t *sb)
 {
     char buf[128];
     snprintf(buf, sizeof buf, "%.15Lg", x);
 
-    /* If there's no '.' or exponent marker, force a ".0" */
+    /* If there's no '.' or exponent marker, force a ".0". */
     if (!strchr(buf, '.') && !strchr(buf, 'e') && !strchr(buf, 'E')) {
         const size_t len = strlen(buf);
         if (len < sizeof(buf) - 3) {
@@ -80,7 +80,7 @@ static void repr_pair(const Cell* v, string_builder_t *sb, const print_mode_t mo
 
 
 /* Generate external representation of sequence types:
- * vector, bytevector, and s-expr. */
+ * vector and s-expr. */
 static void repr_sequence(const Cell* v,
                           const char* prefix,
                           // ReSharper disable once CppDFAConstantParameter
@@ -89,7 +89,6 @@ static void repr_sequence(const Cell* v,
                           const char close,
                           string_builder_t *sb,
                           const print_mode_t mode) {
-    //if (!v) return;
 
     if (prefix) sb_append_fmt(sb, "%s", prefix);
     sb_append_fmt(sb, "%c", open);
@@ -318,16 +317,13 @@ void debug_print_cell(const Cell* v)
     printf("%s\n", s);
 }
 
-/* Dump the environment 'symbol' -> 'value' pairs
- * This will only work in the REPL, but I'm not sure
- * why it would be used anywhere else, so... */
-void print_env(const Lex* e, const Cell* a) {
-    (void)a;
-    /* First print global env hash items */
+/* Dump the environment 'symbol' -> 'value' pairs */
+void debug_print_env(const Lex* e)
+{
+    /* Print global env hash items. */
     hti it = ht_iterator(e->global);
     while (ht_next(&it)) {
         printf("%s%s%s -> ", ANSI_BLUE_B, it.key, ANSI_RESET);
         printf("%s\n", cell_to_string(it.value, MODE_REPL));
     }
-
 }

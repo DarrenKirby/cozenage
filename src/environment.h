@@ -33,6 +33,7 @@ typedef struct Lex {
     ht_table* global;  /* The global hash table */
 } Lex;
 
+
 /* Just parallel arrays for small, short-lived child environments */
 typedef struct Ch_Env {
     int count;              /* Number of occupied slots */
@@ -42,14 +43,17 @@ typedef struct Ch_Env {
     Ch_Env* parent;         /* points to parent env, NULL if top-level */
 } Ch_Env;
 
+
 /* Environment management */
 Lex* lex_initialize_global_env(void);
 Lex* new_child_env(const Lex* parent_env);
+
 
 /* Environment operations */
 Cell* lex_get(const Lex* e, const Cell* k);
 void lex_put_local(Lex* e, const Cell* k, const Cell* v);
 void lex_put_global(const Lex* e, const Cell* k, Cell* v);
+
 
 /* Builtin helpers */
 Cell* lex_make_builtin(const char* name, Cell* (*func)(const Lex*, const Cell*));

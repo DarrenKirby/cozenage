@@ -23,21 +23,22 @@
 #include "cell.h"
 
 typedef enum {
-    /** R7RS `write` mode.
+    /* R7RS `write` mode.
         Strings are quoted, chars are #\, etc. */
     MODE_WRITE,
 
-    /** R7RS `display` mode.
+    /* R7RS `display` mode.
         Strings and chars are printed literally. */
     MODE_DISPLAY,
 
-    /** For the REPL.
+    /* For the REPL.
         Like MODE_WRITE, but with ANSI color codes. */
     MODE_REPL
 } print_mode_t;
 
 char* cell_to_string(const Cell* cell, print_mode_t mode);
 void debug_print_cell(const Cell* v);
+void debug_print_env(const Lex* e);
 void print_env(const Lex* e, const Cell* a);
 
 #endif //COZENAGE_REPR_H

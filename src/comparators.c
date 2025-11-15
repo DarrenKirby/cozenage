@@ -19,9 +19,8 @@
 
 #include "comparators.h"
 #include "types.h"
+#include "bytevectors.h"
 #include <string.h>
-
-#include "repr.h"
 
 
 /* -----------------------------*
@@ -29,7 +28,8 @@
  * -----------------------------*/
 
 /* Helper for '=' which recursively compares complex numbers */
-static int complex_eq_op(const Lex* e, const Cell* lhs, const Cell* rhs) {
+static int complex_eq_op(const Lex* e, const Cell* lhs, const Cell* rhs)
+{
     const Cell* args_real = make_sexpr_len2(lhs->real, rhs->real);
     const Cell* args_imag = make_sexpr_len2(lhs->imag, rhs->imag);
 
@@ -41,7 +41,8 @@ static int complex_eq_op(const Lex* e, const Cell* lhs, const Cell* rhs) {
 }
 
 /* '=' -> CELL_BOOLEAN - returns true if all arguments are equal. */
-Cell* builtin_eq_op(const Lex* e, const Cell* a) {
+Cell* builtin_eq_op(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = check_arg_types(a, CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX);
     if (err) { return err; }
@@ -74,7 +75,8 @@ Cell* builtin_eq_op(const Lex* e, const Cell* a) {
 }
 
 /* '>' -> CELL_BOOLEAN - returns true if each argument is greater than the one that follows. */
-Cell* builtin_gt_op(const Lex* e, const Cell* a) {
+Cell* builtin_gt_op(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = check_arg_types(a, CELL_INTEGER|CELL_REAL|CELL_RATIONAL);
     if (err) { return err; }
@@ -99,14 +101,15 @@ Cell* builtin_gt_op(const Lex* e, const Cell* a) {
             default: ;
         }
         if (!ok) {
-            return make_cell_boolean(0);
+            return False_Obj;
         }
     }
-    return make_cell_boolean(1);
+    return True_Obj;
 }
 
 /* '<' -> CELL_BOOLEAN - returns true if each argument is less than the one that follows. */
-Cell* builtin_lt_op(const Lex* e, const Cell* a) {
+Cell* builtin_lt_op(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = check_arg_types(a, CELL_INTEGER|CELL_REAL|CELL_RATIONAL);
     if (err) { return err; }
@@ -131,14 +134,15 @@ Cell* builtin_lt_op(const Lex* e, const Cell* a) {
             default: ;
         }
         if (!ok) {
-            return make_cell_boolean(0);
+            return False_Obj;
         }
     }
-    return make_cell_boolean(1);
+    return True_Obj;
 }
 
 /* '>=' -> CELL_BOOLEAN - */
-Cell* builtin_gte_op(const Lex* e, const Cell* a) {
+Cell* builtin_gte_op(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = check_arg_types(a, CELL_INTEGER|CELL_REAL|CELL_RATIONAL);
     if (err) { return err; }
@@ -163,14 +167,15 @@ Cell* builtin_gte_op(const Lex* e, const Cell* a) {
             default: ;
         }
         if (!ok) {
-            return make_cell_boolean(0);
+            return False_Obj;
         }
     }
-    return make_cell_boolean(1);
+    return True_Obj;
 }
 
 /* '<=' -> CELL_BOOLEAN - */
-Cell* builtin_lte_op(const Lex* e, const Cell* a) {
+Cell* builtin_lte_op(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = check_arg_types(a, CELL_INTEGER|CELL_REAL|CELL_RATIONAL);
     if (err) { return err; }
@@ -195,10 +200,10 @@ Cell* builtin_lte_op(const Lex* e, const Cell* a) {
             default: ;
         }
         if (!ok) {
-            return make_cell_boolean(0);
+            return False_Obj;
         }
     }
-    return make_cell_boolean(1);
+    return True_Obj;
 }
 
 /* ------------------------------------------*
@@ -209,7 +214,8 @@ Cell* builtin_lte_op(const Lex* e, const Cell* a) {
  * (pointer equality). Typically used for symbols and other non-numeric atoms.
  * May not give meaningful results for numbers or characters, since distinct but
  * equal values aren’t guaranteed to be the same object. */
-Cell* builtin_eq(const Lex* e, const Cell* a) {
+Cell* builtin_eq(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2);
     if (err) return err;
@@ -226,7 +232,8 @@ Cell* builtin_eq(const Lex* e, const Cell* a) {
  * not the same object. Use when: you want a general-purpose equality predicate
  * that works for numbers, characters, and symbols, but you don’t need deep
  * structural comparison. */
-Cell* builtin_eqv(const Lex* e, const Cell* a) {
+Cell* builtin_eqv(const Lex* e, const Cell* a)
+{
     Cell* err = CHECK_ARITY_EXACT(a, 2);
     if (err) return err;
 
@@ -240,7 +247,7 @@ Cell* builtin_eqv(const Lex* e, const Cell* a) {
         return builtin_eq_op(e, make_sexpr_len2(x, y));
     }
 
-    if (x->type != y->type) return make_cell_boolean(0);
+    if (x->type != y->type) return False_Obj;
 
     switch (x->type) {
         case CELL_BOOLEAN: return make_cell_boolean(x->boolean_v == y->boolean_v);
@@ -251,14 +258,15 @@ Cell* builtin_eqv(const Lex* e, const Cell* a) {
 }
 
 /* Helper for equal? */
-static Cell* val_equal(const Lex* e, Cell* x, Cell* y) {
+static Cell* val_equal(const Lex* e, Cell* x, Cell* y)
+{
     /* Just kick numbers over to '='*/
     // ReSharper disable once CppVariableCanBeMadeConstexpr
     const int mask = CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX;
     if (x->type & mask) {
         return builtin_eq_op(e, make_sexpr_len2(x, y));
     }
-    if (x->type != y->type) return make_cell_boolean(0);
+    if (x->type != y->type) return False_Obj;
 
     switch (x->type) {
         case CELL_BOOLEAN: return make_cell_boolean(x->boolean_v == y->boolean_v);
@@ -266,24 +274,32 @@ static Cell* val_equal(const Lex* e, Cell* x, Cell* y) {
         case CELL_SYMBOL:  return make_cell_boolean(strcmp(x->sym, y->sym) == 0);
         case CELL_STRING:  return make_cell_boolean(strcmp(x->str, y->str) == 0);
         case CELL_NIL: return make_cell_boolean(y->type == CELL_NIL);
-
+        case CELL_BYTEVECTOR:
+            if (x->bv->type != y->bv->type || x->count != y->count) {
+                return False_Obj;
+            }
+            for (int i = 0; i < x->count; i++) {
+                if (BV_OPS[x->bv->type].get(x, i) != BV_OPS[y->bv->type].get(y, i)) {
+                    return False_Obj;
+                }
+            }
+            return True_Obj;
         case CELL_PAIR:
         case CELL_SEXPR:
         case CELL_VECTOR:
-        case CELL_BYTEVECTOR:
             if (x->type == CELL_PAIR) {
                 x = make_sexpr_from_list(x);
                 y = make_sexpr_from_list(y);
             }
-            if (x->count != y->count) return make_cell_boolean(0);
+            if (x->count != y->count) return False_Obj;
             for (int i = 0; i < x->count; i++) {
                 const Cell* eq = val_equal(e, x->cell[i], y->cell[i]);
-                if (!eq->boolean_v) { return make_cell_boolean(0); }
+                if (!eq->boolean_v) { return False_Obj; }
             }
-            return make_cell_boolean(1);
+            return True_Obj;
 
         default:
-            return make_cell_boolean(0);
+            return False_Obj;
     }
 }
 

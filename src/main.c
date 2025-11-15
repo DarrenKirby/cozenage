@@ -30,8 +30,9 @@
 #include <getopt.h>
 
 
-/* Initialize load_libs struct to zeros */
+/* Initialize load_libs struct to zeros. */
 lib_load_config load_libs = {0};
+/* 'Global' argc and argv for use by (command-line). */
 int g_argc;
 char** g_argv;
 
@@ -48,9 +49,7 @@ Options:\n\
 \n\
     '-l' and '--library' accept a required comma-delimited list of\n\
     libraries to pre-load. Accepted values are:\n\
-    case-lambda, char, complex, cxr, eval, file, inexact\n\
-    lazy, load, process-context, read, repl, time, write\n\
-    coz-ext, bits\n\n\
+    'bits' 'cxr' 'file' 'math' 'proc-env' and 'time' \n\n\
 Report bugs to <darren@dragonbyte.ca>\n");
 }
 
@@ -113,7 +112,7 @@ int main(const int argc, char** argv)
             case 'h':
                 show_help();
                 exit(EXIT_SUCCESS);
-                /* TODO: implement r5rs modes */
+                /* TODO: implement r5rs mode, maybe. */
             case '5':
                 printf("--r5rs not implemented yet\n\n");
                 break;
@@ -141,7 +140,7 @@ int main(const int argc, char** argv)
         return run_file_script(file_path, load_libs);
     }
 
-    /* REPL Mode (no non-option arguments were provided) */
+    /* REPL Mode (no non-option arguments were provided). */
     run_repl(load_libs);
     return EXIT_SUCCESS;
 }

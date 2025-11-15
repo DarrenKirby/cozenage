@@ -32,7 +32,8 @@
  * -----------------------------------*/
 
 /* '+' -> CELL_INTEGER|CELL_REAL|CELL_RATIONAL|VAL_COMP - returns the sum of its arguments */
-Cell* builtin_add(const Lex* e, const Cell* a) {
+Cell* builtin_add(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = check_arg_types(a, CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX);
     if (err) { return err; }
@@ -74,7 +75,8 @@ Cell* builtin_add(const Lex* e, const Cell* a) {
 }
 
 /* '-' -> CELL_INTEGER|CELL_REAL|CELL_RATIONAL|VAL_COMP - returns the difference of its arguments */
-Cell* builtin_sub(const Lex* e, const Cell* a) {
+Cell* builtin_sub(const Lex* e, const Cell* a)
+{
     Cell* err = check_arg_types(a, CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX);
     if (err) { return err; }
     if ((err = CHECK_ARITY_MIN(a, 1))) { return err; }
@@ -119,7 +121,8 @@ Cell* builtin_sub(const Lex* e, const Cell* a) {
 }
 
 /* '*' -> CELL_INTEGER|VAL_FLOAT|CELL_RATIONAL|VAL_COMP - returns the product of its arguments */
-Cell* builtin_mul(const Lex* e, const Cell* a) {
+Cell* builtin_mul(const Lex* e, const Cell* a)
+{
     Cell* err = check_arg_types(a, CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX);
     if (err) { return err; }
     /* identity law logic */
@@ -160,7 +163,8 @@ Cell* builtin_mul(const Lex* e, const Cell* a) {
 }
 
 /* '+' -> CELL_INTEGER|CELL_REAL|CELL_RATIONAL|VAL_COMP - returns the quotient of its arguments */
-Cell* builtin_div(const Lex* e, const Cell* a) {
+Cell* builtin_div(const Lex* e, const Cell* a)
+{
     Cell* err = check_arg_types(a, CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX);
     if (err) { return err; }
     if ((err = CHECK_ARITY_MIN(a, 1))) { return err; }
@@ -221,7 +225,9 @@ Cell* builtin_div(const Lex* e, const Cell* a) {
         switch (result->type) {
         case CELL_INTEGER:
             if (rhs->integer_v == 0) {
-                return make_cell_error("Division by zero.", VALUE_ERR);
+                return make_cell_error(
+                    "Division by zero.",
+                    VALUE_ERR);
             }
             /* pretty hacky way to get (/ 9 3) -> 3 but (/ 10 3) -> 10/3 */
             const double r = remainder((double)result->integer_v, (double)rhs->integer_v);
@@ -240,7 +246,9 @@ Cell* builtin_div(const Lex* e, const Cell* a) {
             break;
         case CELL_REAL:
             if (rhs->real_v == 0) {
-                return make_cell_error("Division by zero.", VALUE_ERR);
+                return make_cell_error(
+                    "Division by zero.",
+                    VALUE_ERR);
             }
             result->real_v /= rhs->real_v;
             break;
@@ -263,7 +271,8 @@ Cell* builtin_div(const Lex* e, const Cell* a) {
 
 /* 'abs' -> CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX-
  * returns the absolute value (magnitude) of its argument. */
-Cell* builtin_abs(const Lex* e, const Cell* a) {
+Cell* builtin_abs(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = check_arg_types(a, CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX);
     if (err) { return err; }
@@ -297,7 +306,8 @@ Cell* builtin_abs(const Lex* e, const Cell* a) {
 }
 
 /* Helper to bridge expt with complex_apply */
-static Cell* expt_complex_op(const BuiltinFn op, const Lex* e, const Cell* z1, const Cell* z2) {
+static Cell* expt_complex_op(const BuiltinFn op, const Lex* e, const Cell* z1, const Cell* z2)
+{
     /* Copy z1 to serve as the 'result' parameter that complex_apply will modify. */
     Cell* result = cell_copy(z1);
 
@@ -311,7 +321,8 @@ static Cell* expt_complex_op(const BuiltinFn op, const Lex* e, const Cell* z1, c
 
 /* 'expt' -> CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX- returns its first arg calculated
  * to the power of its second arg */
-Cell* builtin_expt(const Lex* e, const Cell* a) {
+Cell* builtin_expt(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = check_arg_types(a, CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX);
     if (err) { return err; }
@@ -382,7 +393,8 @@ Cell* builtin_expt(const Lex* e, const Cell* a) {
 
 /* 'modulo' -> CELL_INTEGER - returns the remainder of dividing the first argument
  * by the second, with the result having the same sign as the divisor.*/
-Cell* builtin_modulo(const Lex* e, const Cell* a) {
+Cell* builtin_modulo(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = check_arg_types(a, CELL_INTEGER);
     if (err) { return err; }
@@ -396,7 +408,8 @@ Cell* builtin_modulo(const Lex* e, const Cell* a) {
 
 /* 'quotient' -> CELL_INTEGER - returns the integer result of dividing
  * the first argument by the second, discarding any remainder.*/
-Cell* builtin_quotient(const Lex* e, const Cell* a) {
+Cell* builtin_quotient(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = check_arg_types(a, CELL_INTEGER);
     if (err) { return err; }
@@ -406,7 +419,8 @@ Cell* builtin_quotient(const Lex* e, const Cell* a) {
 
 /* 'remainder' -> CELL_INTEGER - returns the remainder of dividing the first argument
  * by the second, with the result having the same sign as the dividend.*/
-Cell* builtin_remainder(const Lex* e, const Cell* a) {
+Cell* builtin_remainder(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = check_arg_types(a, CELL_INTEGER);
     if (err) { return err; }
@@ -416,7 +430,8 @@ Cell* builtin_remainder(const Lex* e, const Cell* a) {
 
 
 /* 'max' -> CELL_INTEGER|CELL_RATIONAL|CELL_REAL - return the largest value in numeric args */
-Cell* builtin_max(const Lex* e, const Cell* a) {
+Cell* builtin_max(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX);
     if (err) { return err; }
@@ -446,7 +461,8 @@ Cell* builtin_max(const Lex* e, const Cell* a) {
 }
 
 /* 'min' -> CELL_INTEGER|CELL_RATIONAL|CELL_REAL - return the smallest value in numeric args */
-Cell* builtin_min(const Lex* e, const Cell* a) {
+Cell* builtin_min(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX);
     if (err) { return err; }
@@ -474,7 +490,8 @@ Cell* builtin_min(const Lex* e, const Cell* a) {
     return smallest_so_far;
 }
 
-Cell* builtin_floor(const Lex* e, const Cell* a) {
+Cell* builtin_floor(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL);
     if (err) { return err; }
@@ -486,7 +503,8 @@ Cell* builtin_floor(const Lex* e, const Cell* a) {
     return make_cell_from_double(val);
 }
 
-Cell* builtin_ceiling(const Lex* e, const Cell* a) {
+Cell* builtin_ceiling(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL);
     if (err) { return err; }
@@ -498,7 +516,8 @@ Cell* builtin_ceiling(const Lex* e, const Cell* a) {
     return make_cell_from_double(val);
 }
 
-Cell* builtin_round(const Lex* e, const Cell* a) {
+Cell* builtin_round(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL);
     if (err) { return err; }
@@ -510,7 +529,8 @@ Cell* builtin_round(const Lex* e, const Cell* a) {
     return make_cell_from_double(val);
 }
 
-Cell* builtin_truncate(const Lex* e, const Cell* a) {
+Cell* builtin_truncate(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL);
     if (err) { return err; }
@@ -522,26 +542,28 @@ Cell* builtin_truncate(const Lex* e, const Cell* a) {
     return make_cell_from_double(val);
 }
 
-Cell* builtin_numerator(const Lex* e, const Cell* a) {
+Cell* builtin_numerator(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL);
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
 
-    /* return ints unchanged */
+    /* Return ints unchanged. */
     if (a->cell[0]->type == CELL_INTEGER) {
         return a->cell[0];
     }
     return make_cell_integer(a->cell[0]->num);
 }
 
-Cell* builtin_denominator(const Lex* e, const Cell* a) {
+Cell* builtin_denominator(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL);
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
 
-    /* denominator of int always 1 */
+    /* Denominator of int is always 1. */
     if (a->cell[0]->type == CELL_INTEGER) {
         return make_cell_integer(1);
     }
@@ -606,7 +628,8 @@ Cell* builtin_rationalize(const Lex* e, const Cell* a)
     return make_cell_rational(mantissa_as_int, denominator, true);
 }
 
-Cell* builtin_square(const Lex* e, const Cell* a) {
+Cell* builtin_square(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX);
     if (err) { return err; }
@@ -616,18 +639,9 @@ Cell* builtin_square(const Lex* e, const Cell* a) {
     return builtin_mul(e, args);
 }
 
-/* TODO remove redundancy of this helper between this file and math_lib.c */
-/* Helper to make C complex from Cell complex */
-static long double complex cell_to_c_complex(const Cell* c)
-{
-    long double a = cell_to_long_double(c->real);
-    long double b = cell_to_long_double(c->imag);
-
-    return CMPLXL(a, b);
-}
-
 /* Returns the square root of arg */
-Cell* builtin_sqrt(const Lex* e, const Cell* a) {
+Cell* builtin_sqrt(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX);
     if (err) { return err; }
@@ -649,7 +663,8 @@ Cell* builtin_sqrt(const Lex* e, const Cell* a) {
 
 /* Implements exact-integer-sqrt for unsigned 64-bit integers.
  * Returns s, the integer square root. */
-static unsigned long long integer_sqrt(const unsigned long long k) {
+static unsigned long long integer_sqrt(const unsigned long long k)
+{
     if (k == 0) return 0;
 
     /* Initial guess is a good, but low, approximation. */
@@ -696,7 +711,8 @@ Cell* builtin_exact_integer_sqrt(const Lex* e, const Cell* a)
     return result;
 }
 
-Cell* builtin_exact(const Lex* e, const Cell* a) {
+Cell* builtin_exact(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX);
     if (err) { return err; }
@@ -714,13 +730,14 @@ Cell* builtin_exact(const Lex* e, const Cell* a) {
     return a->cell[0];
 }
 
-Cell* builtin_inexact(const Lex* e, const Cell* a) {
+Cell* builtin_inexact(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX);
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
 
-    /* Just return if it's already inexact */
+    /* Just return if it's already inexact. */
     if (a->cell[0]->exact == 0) {
         return a->cell[0];
     }
@@ -733,7 +750,8 @@ Cell* builtin_inexact(const Lex* e, const Cell* a) {
 }
 
 /* Predicate to test if val is infinite */
-Cell* builtin_infinite(const Lex* e, const Cell* a) {
+Cell* builtin_infinite(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX);
     if (err) { return err; }
@@ -751,7 +769,8 @@ Cell* builtin_infinite(const Lex* e, const Cell* a) {
 }
 
 /* Predicate to test if val is finite */
-Cell* builtin_finite(const Lex* e, const Cell* a) {
+Cell* builtin_finite(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX);
     if (err) { return err; }
@@ -769,7 +788,8 @@ Cell* builtin_finite(const Lex* e, const Cell* a) {
 }
 
 /* Predicate to test if val is nan */
-Cell* builtin_nan(const Lex* e, const Cell* a) {
+Cell* builtin_nan(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;

@@ -31,7 +31,8 @@
 /* (vector obj ...)
 * Returns a newly allocated vector whose elements contain the given arguments.
 * It is analogous to list. */
-Cell* builtin_vector(const Lex* e, const Cell* a) {
+Cell* builtin_vector(const Lex* e, const Cell* a)
+{
     (void)e;
     if (a->count == 0) {
         return make_cell_vector();
@@ -46,7 +47,8 @@ Cell* builtin_vector(const Lex* e, const Cell* a) {
 
 /* (vector-length vector )
 * Returns the number of elements in vector as an exact integer. */
-Cell* builtin_vector_length(const Lex* e, const Cell* a) {
+Cell* builtin_vector_length(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
@@ -58,7 +60,8 @@ Cell* builtin_vector_length(const Lex* e, const Cell* a) {
 
 /* (vector-ref vector k)
  * The vector-ref procedure returns the object and index k in vector */
-Cell* builtin_vector_ref(const Lex* e, const Cell* a) {
+Cell* builtin_vector_ref(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2);
     if (err) return err;
@@ -86,7 +89,8 @@ Cell* builtin_vector_ref(const Lex* e, const Cell* a) {
  * (make-vector k fill)
  * Returns a newly allocated vector of k elements. If a second argument is given, then each element
  * is initialized to fill. Otherwise, the initial contents of each element is unspecified. */
-Cell* builtin_make_vector(const Lex* e, const Cell* a) {
+Cell* builtin_make_vector(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_RANGE(a, 1, 2);
     if (err) return err;
@@ -121,7 +125,8 @@ Cell* builtin_make_vector(const Lex* e, const Cell* a) {
 /* (list->vector list)
  * The list->vector procedure returns a newly created vector initialized to the elements of the list
  * 'list'. Order is preserved. */
-Cell* builtin_list_to_vector(const Lex* e, const Cell* a) {
+Cell* builtin_list_to_vector(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
@@ -154,7 +159,8 @@ Cell* builtin_list_to_vector(const Lex* e, const Cell* a) {
  * (vector->list vector start end)
  * The vector->list procedure returns a newly allocated list of the objects contained in the
  * elements of vector between start and end. Order is preserved. */
-Cell* builtin_vector_to_list(const Lex* e, const Cell* a) {
+Cell* builtin_vector_to_list(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_RANGE(a, 1, 3);
     if (err) return err;
@@ -214,7 +220,8 @@ Cell* builtin_vector_to_list(const Lex* e, const Cell* a) {
  * (vector-copy vector start end)
  * Returns a newly allocated copy of the elements of the given vector between start and end. The
  * elements of the new vector are the same (in the sense of eqv?) as the elements of the old. */
-Cell* builtin_vector_copy(const Lex* e, const Cell* a) {
+Cell* builtin_vector_copy(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_RANGE(a, 1, 3);
     if (err) return err;
@@ -245,7 +252,8 @@ Cell* builtin_vector_copy(const Lex* e, const Cell* a) {
  * (vector->string vector start end)
  * The vector->string procedure returns a newly allocated string of the objects contained in the
  * elements of vector between start and end. Order is preserved. */
-Cell* builtin_vector_to_string(const Lex* e, const Cell* a) {
+Cell* builtin_vector_to_string(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_RANGE(a, 1, 3);
     if (err) return err;
@@ -295,7 +303,8 @@ Cell* builtin_vector_to_string(const Lex* e, const Cell* a) {
  * It is an error if any element of vector between start and end is not a character. The
  * string->vector procedure returns a newly created vector initialized to the elements of the string
  * 'string' between start and end. Order is preserved. */
-Cell* builtin_string_to_vector(const Lex* e, const Cell* a) {
+Cell* builtin_string_to_vector(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_RANGE(a, 1, 3);
     if (err) return err;
@@ -308,9 +317,9 @@ Cell* builtin_string_to_vector(const Lex* e, const Cell* a) {
     const char* the_string = a->cell[0]->str;
     const size_t string_byte_len = strlen(the_string);
 
-    /* Get optional start/end character indices from args */
+    /* Get optional start/end character indices from args. */
     int start_char_idx = 0;
-    int end_char_idx = -1; /* Use -1 to signify 'to the end' */
+    int end_char_idx = -1; /* Use -1 to signify 'to the end'. */
 
     if (a->count >= 2) {
         if (a->cell[1]->type != CELL_INTEGER) {
@@ -342,7 +351,7 @@ Cell* builtin_string_to_vector(const Lex* e, const Cell* a) {
 
     /* Grab characters until we reach the end. */
     while (byte_idx < (int)string_byte_len) {
-        /* Stop if we've reached the user-specified end character index */
+        /* Stop if we've reached the user-specified end character index. */
         if (end_char_idx != -1 && char_idx >= end_char_idx) {
             break;
         }
@@ -357,7 +366,8 @@ Cell* builtin_string_to_vector(const Lex* e, const Cell* a) {
 /* (vector-set! vector k obj)
  * It is an error if k is not a valid index of vector. This procedure stores obj in the kth position
  * of vector */
-Cell* builtin_vector_set_bang(const Lex* e, const Cell* a) {
+Cell* builtin_vector_set_bang(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 3);
     if (err) return err;
@@ -389,22 +399,23 @@ Cell* builtin_vector_set_bang(const Lex* e, const Cell* a) {
 /* (vector-append vector ... )
  * Returns a newly allocated vector whose elements are the concatenation of the elements of the
  * given vectors. */
-Cell* builtin_vector_append(const Lex* e, const Cell* a) {
+Cell* builtin_vector_append(const Lex* e, const Cell* a)
+{
     (void)e;
-    /* No args returns an empty vector, not an error */
+    /* No args returns an empty vector, not an error. */
     if (a->count == 0) {
         return make_cell_vector();
     }
-    /* Now that we know there's at least one arg, check that all args are vectors */
+    /* Now that we know there's at least one arg, check that all args are vectors. */
     Cell* err = check_arg_types(a, CELL_VECTOR);
     if (err) return err;
 
-    /* One arg returns the arg */
+    /* One arg returns the arg. */
     if (a->count == 1) {
         return a->cell[0];
     }
 
-    /* Deal with multiple args */
+    /* Deal with multiple args. */
     Cell* result = make_cell_vector();
     /* For each vector argument... */
     for (int i = 0; i < (int)a->count; i++) {
@@ -418,7 +429,8 @@ Cell* builtin_vector_append(const Lex* e, const Cell* a) {
 }
 
 /* TODO: finish this! */
-Cell* builtin_vector_copy_bang(const Lex* e, const Cell* a) {
+Cell* builtin_vector_copy_bang(const Lex* e, const Cell* a)
+{
     (void)e; (void)a;
     return make_cell_boolean(0);
 }
@@ -427,7 +439,8 @@ Cell* builtin_vector_copy_bang(const Lex* e, const Cell* a) {
  * (vector-fill! vector fill start)
  * (vector-fill! vector fill start end)
  * The vector-fill! procedure stores fill in the elements of vector between start and end. */
-Cell* builtin_vector_fill_bang(const Lex* e, const Cell* a) {
+Cell* builtin_vector_fill_bang(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_RANGE(a, 2, 4);
     if (err) return err;
@@ -441,19 +454,27 @@ Cell* builtin_vector_fill_bang(const Lex* e, const Cell* a) {
     Cell* fill = a->cell[1];
     if (a->count > 2) {
         if (a->cell[2]->type != CELL_INTEGER) {
-            return make_cell_error("vector-fill!: arg 3 must be an integer", TYPE_ERR);
+            return make_cell_error(
+                "vector-fill!: arg 3 must be an integer",
+                TYPE_ERR);
         }
         start = (int)a->cell[2]->integer_v;
         if (start < 0 || start >= a->cell[0]->count) {
-            return make_cell_error("vector-fill!: start out of range", INDEX_ERR);
+            return make_cell_error(
+                "vector-fill!: start out of range",
+                INDEX_ERR);
         }
         if (a->count == 4) {
             if (a->cell[3]->type != CELL_INTEGER) {
-                return make_cell_error("vector-fill!: arg 4 must be an integer", TYPE_ERR);
+                return make_cell_error(
+                    "vector-fill!: arg 4 must be an integer",
+                    TYPE_ERR);
             }
             end = (int)a->cell[3]->integer_v;
             if (end < 0 || end >= a->cell[0]->count || end < start) {
-                return make_cell_error("vector-fill!: end out of range", INDEX_ERR);
+                return make_cell_error(
+                    "vector-fill!: end out of range",
+                    INDEX_ERR);
             }
         }
     }

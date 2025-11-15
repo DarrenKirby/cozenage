@@ -22,6 +22,7 @@
 
 #include "environment.h"
 #include <stdio.h>
+#include <complex.h>
 #include <unicode/umachine.h>
 
 
@@ -58,6 +59,7 @@ Cell* make_sexpr_len4(const Cell* a, const Cell* b, const Cell* c, const Cell* d
 Cell* make_sexpr_from_list(Cell* v);
 Cell* make_sexpr_from_array(int count, Cell** cells);
 Cell* flatten_sexpr(const Cell* sexpr);
+long double complex cell_to_c_complex(const Cell* c);
 bool cell_is_real_zero(const Cell* c);
 bool cell_is_integer(const Cell* c);
 bool cell_is_real(const Cell* c);

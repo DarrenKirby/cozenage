@@ -29,8 +29,9 @@
 #include <unicode/ustring.h>
 
 
-/* Turn a single type into a string (for error reporting) */
-const char* cell_type_name(const int t) {
+/* Turn a single type into a string (for error reporting). */
+const char* cell_type_name(const int t)
+{
     switch (t) {
         case CELL_INTEGER:     return "integer";
         case CELL_REAL:        return "float";
@@ -55,8 +56,9 @@ const char* cell_type_name(const int t) {
 
 /* Turn a mask (possibly multiple flags ORed together) into a string
    e.g. (CELL_INTEGER | CELL_REAL) -> "int|real" */
-const char* cell_mask_types(const int mask) {
-    static char buf[128];  /* static to return pointer safely */
+const char* cell_mask_types(const int mask)
+{
+    static char buf[128];  /* static to return pointer safely. */
     buf[0] = '\0';
 
     if (mask & CELL_INTEGER)     strcat(buf, "integer|");
@@ -77,7 +79,7 @@ const char* cell_mask_types(const int mask) {
     if (mask & CELL_EOF)         strcat(buf, "eof|");
     if (mask & CELL_MRV)         strcat(buf, "multiple return value|");
 
-    /* remove trailing '|' */
+    /* remove trailing '|'. */
     const size_t len = strlen(buf);
     if (len > 0 && buf[len-1] == '|') {
         buf[len-1] = '\0';
@@ -89,8 +91,9 @@ const char* cell_mask_types(const int mask) {
  *      Procedure argument arity and type validators       *
  * --------------------------------------------------------*/
 
-/* Return NULL if all args are valid, else return a CELL_ERROR */
-Cell* check_arg_types(const Cell* a, const int mask) {
+/* Return NULL if all args are valid, else return a CELL_ERROR. */
+Cell* check_arg_types(const Cell* a, const int mask)
+{
     for (int i = 0; i < a->count; i++) {
         const Cell* arg = a->cell[i];
 
@@ -105,10 +108,11 @@ Cell* check_arg_types(const Cell* a, const int mask) {
             return make_cell_error(buf, TYPE_ERR);
         }
     }
-    return nullptr; /* all good */
+    return nullptr; /* all good. */
 }
 
-Cell* check_arg_arity(const Cell* a, const int exact, const int min, const int max) {
+Cell* check_arg_arity(const Cell* a, const int exact, const int min, const int max)
+{
     const int argc = a->count;
 
     if (exact >= 0 && argc != exact) {
@@ -139,25 +143,30 @@ Cell* check_arg_arity(const Cell* a, const int exact, const int min, const int m
  *       Helper functions for numeric type promotion       *
  * --------------------------------------------------------*/
 
-/* Convertors */
-Cell* int_to_rat(const Cell* v) {
+/* Convertors. */
+Cell* int_to_rat(const Cell* v)
+{
     return make_cell_rational(v->integer_v, 1, 0);
 }
 
-Cell* int_to_real(const Cell* v) {
+Cell* int_to_real(const Cell* v)
+{
     return make_cell_real((long double)v->integer_v);
 }
 
-Cell* rat_to_real(const Cell* v) {
+Cell* rat_to_real(const Cell* v)
+{
     return make_cell_real((long double)v->num / (long double)v->den);
 }
 
-Cell* to_complex(Cell* v) {
+Cell* to_complex(Cell* v)
+{
     return make_cell_complex(v, make_cell_integer(0));
 }
 
 /* Promote two numbers to the same type, modifying lhs and rhs in-place. */
-void numeric_promote(Cell** lhs, Cell** rhs) {
+void numeric_promote(Cell** lhs, Cell** rhs)
+{
     Cell* a = *lhs;
     Cell* b = *rhs;
 
@@ -193,8 +202,9 @@ void numeric_promote(Cell** lhs, Cell** rhs) {
  *      Helper functions for using builtins internally     *
  * --------------------------------------------------------*/
 
-/* Construct an S-expression with exactly one element */
-Cell* make_sexpr_len1(const Cell* a) {
+/* Construct an S-expression with exactly one element. */
+Cell* make_sexpr_len1(const Cell* a)
+{
     Cell* v = make_cell_sexpr();
     v->count = 1;
     v->cell = GC_MALLOC(sizeof(Cell*));
@@ -202,8 +212,9 @@ Cell* make_sexpr_len1(const Cell* a) {
     return v;
 }
 
-/* Construct an S-expression with exactly two elements */
-Cell* make_sexpr_len2(const Cell* a, const Cell* b) {
+/* Construct an S-expression with exactly two elements. */
+Cell* make_sexpr_len2(const Cell* a, const Cell* b)
+{
     Cell* v = make_cell_sexpr();
     v->count = 2;
     v->cell = GC_MALLOC(sizeof(Cell*) * 2);
@@ -212,8 +223,9 @@ Cell* make_sexpr_len2(const Cell* a, const Cell* b) {
     return v;
 }
 
-/* Construct an S-expression with exactly four elements */
-Cell* make_sexpr_len4(const Cell* a, const Cell* b, const Cell* c, const Cell* d) {
+/* Construct an S-expression with exactly four elements. */
+Cell* make_sexpr_len4(const Cell* a, const Cell* b, const Cell* c, const Cell* d)
+{
     Cell* v = make_cell_sexpr();
     v->count = 4;
     v->cell = GC_MALLOC(sizeof(Cell*) * 4);
@@ -241,7 +253,7 @@ Cell* make_sexpr_from_list(Cell* v)
         return result;
     }
 
-    /* Improper List Handling */
+    /* Improper List Handling. */
     count = 0;
     const Cell* traverser = v;
 
@@ -274,7 +286,7 @@ Cell* make_sexpr_from_array(const int count, Cell** cells)
     v->count = count;
     v->cell = GC_MALLOC(sizeof(Cell*) * count);
 
-    /* Copy each cell pointer from the source array */
+    /* Copy each cell pointer from the source array. */
     for (int i = 0; i < count; i++) {
         v->cell[i] = cell_copy(cells[i]);
     }
@@ -284,7 +296,7 @@ Cell* make_sexpr_from_array(const int count, Cell** cells)
 
 Cell* flatten_sexpr(const Cell* sexpr)
 {
-    /* Calculate the total size of the flattened S-expression */
+    /* Calculate the total size of the flattened S-expression. */
     int new_count = 0;
     for (int i = 0; i < sexpr->count; i++) {
         const Cell* current_item = sexpr->cell[i];
@@ -296,7 +308,7 @@ Cell* flatten_sexpr(const Cell* sexpr)
         }
     }
 
-    /* Allocation */
+    /* Allocation. */
     Cell* result = make_cell_sexpr();
     result->count = new_count;
     if (new_count == 0) {
@@ -304,7 +316,7 @@ Cell* flatten_sexpr(const Cell* sexpr)
     }
     result->cell = GC_MALLOC(sizeof(Cell*) * new_count);
 
-    /* Populate the new S-expression's cell array */
+    /* Populate the new S-expression's cell array. */
     int result_idx = 0;
     for (int i = 0; i < sexpr->count; i++) {
         const Cell* current_item = sexpr->cell[i];
@@ -326,6 +338,15 @@ Cell* flatten_sexpr(const Cell* sexpr)
 /*-------------------------------------------*
  *       Miscellaneous numeric helpers       *
  * ------------------------------------------*/
+
+/* Helper to make C complex from Cell complex */
+long double complex cell_to_c_complex(const Cell* c)
+{
+    long double a = cell_to_long_double(c->real);
+    long double b = cell_to_long_double(c->imag);
+
+    return CMPLXL(a, b);
+}
 
 /* Helper to check if a non-complex numeric cell has a value of zero. */
 bool cell_is_real_zero(const Cell* c)
@@ -534,26 +555,28 @@ Cell* simplify_rational(Cell* v)
 
     if (v->den == 0) {
         /* undefined fraction, return an error */
-        Cell* err = make_cell_error("simplify_rational: denominator is zero!", GEN_ERR);
+        Cell* err = make_cell_error(
+            "simplify_rational: denominator is zero!",
+            GEN_ERR);
         return err;
     }
     if (v->num == v->den) {
-        /* Return as integer 1 */
+        /* Return as integer 1. */
         return make_cell_integer(1);
     }
     if (v->den == 1) {
-        /* Return as integer */
+        /* Return as integer. */
         Cell* int_cell = make_cell_integer(v->num);
         return int_cell;
     }
     return v;
 }
 
-/* Helper for performing arithmetic on complex numbers */
+/* Helper for performing arithmetic on complex numbers. */
 void complex_apply(BuiltinFn fn, const Lex* e, Cell* result, const Cell* rhs)
 {
     if (fn == builtin_add || fn == builtin_sub) {
-        /* addition/subtraction: elementwise using recursion */
+        /* addition/subtraction: elementwise using recursion. */
         const Cell* real_args = make_sexpr_len2(result->real, rhs->real);
         const Cell* imag_args = make_sexpr_len2(result->imag, rhs->imag);
 
@@ -571,7 +594,7 @@ void complex_apply(BuiltinFn fn, const Lex* e, Cell* result, const Cell* rhs)
     const Cell* c = rhs->real;
     const Cell* d = rhs->imag;
 
-    /* Create temporary argument lists and perform calculations */
+    /* Create temporary argument lists and perform calculations. */
     const Cell* ac_args = make_sexpr_len2(a, c);
     const Cell* bd_args = make_sexpr_len2(b, d);
     const Cell* ad_args = make_sexpr_len2(a, d);
@@ -586,7 +609,7 @@ void complex_apply(BuiltinFn fn, const Lex* e, Cell* result, const Cell* rhs)
     Cell* new_imag = nullptr;
 
     if (fn == builtin_mul) {
-        /* Create temporary argument lists for final operations */
+        /* Create temporary argument lists for final operations. */
         const Cell* real_args = make_sexpr_len2(ac, bd);
         const Cell* imag_args = make_sexpr_len2(ad, bc);
 
@@ -594,7 +617,7 @@ void complex_apply(BuiltinFn fn, const Lex* e, Cell* result, const Cell* rhs)
         new_imag = builtin_add(e, imag_args);
     }
     else if (fn == builtin_div) {
-        /* Create temporary argument lists for denominator calculation */
+        /* Create temporary argument lists for denominator calculation. */
         const Cell* c_sq_args = make_sexpr_len2(c, c);
         const Cell* d_sq_args = make_sexpr_len2(d, d);
 
@@ -604,14 +627,14 @@ void complex_apply(BuiltinFn fn, const Lex* e, Cell* result, const Cell* rhs)
         const Cell* denom_args = make_sexpr_len2(c_sq, d_sq);
         const Cell* denom = builtin_add(e, denom_args);
 
-        /* Create temporary argument lists for numerators */
+        /* Create temporary argument lists for numerators. */
         const Cell* real_num_args = make_sexpr_len2(ac, bd);
         const Cell* imag_num_args = make_sexpr_len2(bc, ad);
 
         const Cell* real_num = builtin_add(e, real_num_args);
         const Cell* imag_num = builtin_sub(e, imag_num_args);
 
-        /* Create temporary argument lists for final division */
+        /* Create temporary argument lists for final division. */
         const Cell* final_real_args = make_sexpr_len2(real_num, denom);
         const Cell* final_imag_args = make_sexpr_len2(imag_num, denom);
 
@@ -624,7 +647,8 @@ void complex_apply(BuiltinFn fn, const Lex* e, Cell* result, const Cell* rhs)
 }
 
 /* Helper to convert any real-valued cell to a C long double. */
-long double cell_to_long_double(const Cell* c) {
+long double cell_to_long_double(const Cell* c)
+{
     switch (c->type) {
         case CELL_INTEGER:
             return (long double)c->integer_v;
@@ -639,7 +663,8 @@ long double cell_to_long_double(const Cell* c) {
 }
 
 /* Helper to construct appropriate cell from a long double */
-Cell* make_cell_from_double(const long double d) {
+Cell* make_cell_from_double(const long double d)
+{
     if (d == floorl(d) && d >= LLONG_MIN && d <= LLONG_MAX) {
         return make_cell_integer((long long)d);
     }
@@ -647,7 +672,8 @@ Cell* make_cell_from_double(const long double d) {
 }
 
 /* A version of strdup that allocates memory using the garbage collector. */
-char* GC_strdup(const char* s) {
+char* GC_strdup(const char* s)
+{
     if (s == NULL) {
         return nullptr;
     }
@@ -664,7 +690,8 @@ char* GC_strdup(const char* s) {
 }
 
 /* A version of strndup that allocates memory using the garbage collector. */
-char* GC_strndup(const char* s, const size_t n) {
+char* GC_strndup(const char* s, const size_t n)
+{
     /* Find the actual length of the substring, up to n. */
     size_t len = strnlen(s, n);
 
@@ -739,14 +766,16 @@ static const NamedChar named_chars[] = {
 
 /* This function is required by bsearch to compare a key (the string name)
  * with an element in the NamedChar array. */
-int compare_named_chars(const void* key, const void* element) {
+int compare_named_chars(const void* key, const void* element)
+{
     const char* name_key = key;
     const NamedChar* char_element = element;
     return strcmp(name_key, char_element->name);
 }
 
 /* Returns a pointer to the found NamedChar, or NULL if not found. */
-const NamedChar* find_named_char(const char* name) {
+const NamedChar* find_named_char(const char* name)
+{
     return bsearch(
         name,                                      /* The key to search for */
         named_chars,                              /* The array to search in */
@@ -758,30 +787,32 @@ const NamedChar* find_named_char(const char* name) {
 
 /* helper to get a pointer to the value in the Nth node of a list.
  * Returns NULL if the index is out of bounds or the input is not a list. */
-Cell* list_get_nth_cell_ptr(const Cell* list, const long n) {
+Cell* list_get_nth_cell_ptr(const Cell* list, const long n)
+{
     const Cell* current = list;
     for (long i = 0; i < n; i++) {
-        /* Make sure we are still on a pair before trying to get the cdr */
+        /* Make sure we are still on a pair before trying to get the cdr. */
         if (current->type != CELL_PAIR) {
             return nullptr;
         }
         current = current->cdr;
     }
 
-    /* After the loop, `current` is the pair holding our desired element */
+    /* After the loop, `current` is the pair holding our desired element. */
     if (current->type != CELL_PAIR) {
         return nullptr;
     }
-    /* The value we want is the CAR of this final pair */
+    /* The value we want is the CAR of this final pair. */
     return current->car;
 }
 
-char* convert_to_utf8(const UChar* ustr) {
+char* convert_to_utf8(const UChar* ustr)
+{
     UErrorCode status = U_ZERO_ERROR;
     int32_t char_len = 0;
     char* result_utf8_str = nullptr;
 
-    /* Get required buffer length in bytes */
+    /* Get required buffer length in bytes. */
     u_strToUTF8(nullptr, 0, &char_len, ustr, -1, &status);
 
     if (status == U_BUFFER_OVERFLOW_ERROR) {
@@ -798,12 +829,13 @@ char* convert_to_utf8(const UChar* ustr) {
     return result_utf8_str;
 }
 
-UChar* convert_to_utf16(const char* str) {
+UChar* convert_to_utf16(const char* str)
+{
     UErrorCode status = U_ZERO_ERROR;
     int32_t uchar_len = 0;
     UChar* my_utf16_str = nullptr;
 
-    /* Pre-flight: Get the required buffer length in UChars */
+    /* Pre-flight: Get the required buffer length in UChars. */
     u_strFromUTF8(nullptr, 0, &uchar_len, str, -1, &status);
 
     /* The pre-flight call sets an error code that we expect. */
@@ -812,7 +844,7 @@ UChar* convert_to_utf16(const char* str) {
         my_utf16_str = (UChar*)GC_malloc(sizeof(UChar) * (uchar_len + 1));
         if (!my_utf16_str) { return nullptr; }
 
-        /* Call the function again with the allocated buffer */
+        /* Call the function again with the allocated buffer. */
         u_strFromUTF8(my_utf16_str, uchar_len + 1, nullptr, str, -1, &status);
 
         if (U_FAILURE(status)) {

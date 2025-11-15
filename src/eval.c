@@ -25,7 +25,8 @@
 
 
 /* Helper to extract procedure args from s-expr */
-static Cell* get_args_from_sexpr(const Cell* v) {
+static Cell* get_args_from_sexpr(const Cell* v)
+{
     Cell* args = make_cell_sexpr();
     for (int i = 1; i < v->count; i++) {
         cell_add(args, v->cell[i]);
@@ -55,7 +56,8 @@ special_form_handler_t SF_DISPATCH_TABLE[] = {
 static Cell* coz_apply(const Cell* proc, Cell* args, Lex** env_out, Cell** expr_out);
 
 /* Evaluate a Cell in the given environment. */
-Cell* coz_eval(Lex* env, Cell* expr) {
+Cell* coz_eval(Lex* env, Cell* expr)
+{
     while (true) {
         if (!expr) return nullptr;
 
@@ -63,17 +65,17 @@ Cell* coz_eval(Lex* env, Cell* expr) {
         if (expr->type & (CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX|
                           CELL_BOOLEAN|CELL_CHAR|CELL_STRING|CELL_PAIR|
                           CELL_VECTOR|CELL_BYTEVECTOR|CELL_NIL|CELL_EOF|
-                          CELL_PROC|CELL_PORT|CELL_CONT|CELL_ERROR)) {
+                          CELL_PROC|CELL_PORT|CELL_ERROR)) {
             return expr;
                           }
 
-        /* Multiple return values - just return for now,
-         * this will have to  be fixed when call-with-values is implemented */
+        /* Multiple return values - just return for now.
+         * Need to decide what, if anything,to do with these.  */
         if (expr->type == CELL_MRV) {
             return expr;
         }
 
-        /* Symbols: look them up in the environment unless quoted */
+        /* Symbols: look them up in the environment. */
         if (expr->type & CELL_SYMBOL) {
 
             /* Scold for using syntax dumbly */
@@ -91,7 +93,9 @@ Cell* coz_eval(Lex* env, Cell* expr) {
         /* Grab first element without evaluating yet */
         if (expr->count == 0) {
             /* Unquoted "()" */
-            return make_cell_error("bad expression: '()'", SYNTAX_ERR);
+            return make_cell_error(
+                "bad expression: '()'",
+                SYNTAX_ERR);
         }
 
         Cell* first = expr->cell[0];
@@ -156,14 +160,19 @@ Cell* coz_eval(Lex* env, Cell* expr) {
 }
 
 /* Apply that procedure on them args! */
-static Cell* coz_apply(const Cell* proc, Cell* args, Lex** env_out, Cell** expr_out) {
+static Cell* coz_apply(const Cell* proc, Cell* args, Lex** env_out, Cell** expr_out)
+{
     if (proc->is_builtin) {
         return proc->builtin(*env_out, args); /* Return final value */
     }
     /* It's a Scheme lambda, return TCO */
     Lex* le = build_lambda_env(proc->lambda->env, proc->lambda->formals, args);
     if (le == nullptr) {
-        return make_cell_error("bad lambda expression", SYNTAX_ERR);
+        /* We cannot return a specific error message from build_lambda_env(),
+         * so we have to return this generic error. */
+        return make_cell_error(
+            "bad lambda expression",
+            SYNTAX_ERR);
     }
     *env_out = le;
     *expr_out = sequence_sf_body(proc->lambda->body);
@@ -176,7 +185,8 @@ static Cell* coz_apply(const Cell* proc, Cell* args, Lex** env_out, Cell** expr_
  * This function handles the trampoline loop internally for Scheme lambdas,
  * making it safe to call from C code like builtins.
  */
-Cell* coz_apply_and_get_val(const Cell* proc, Cell* args, const Lex* env) {
+Cell* coz_apply_and_get_val(const Cell* proc, Cell* args, const Lex* env)
+{
     if (proc->is_builtin) {
         return proc->builtin(env, args);
     }
@@ -187,7 +197,11 @@ Cell* coz_apply_and_get_val(const Cell* proc, Cell* args, const Lex* env) {
      * evaluation loop that runs until it produces a final value. */
     Lex* lambda_env  = build_lambda_env(proc->lambda->env, proc->lambda->formals, args);
     if (lambda_env == nullptr) {
-        return make_cell_error("bad lambda expression", SYNTAX_ERR);
+        /* We cannot return a specific error message from build_lambda_env(),
+         * so we have to return this generic error. */
+        return make_cell_error(
+            "bad lambda expression",
+            SYNTAX_ERR);
     }
     Cell* body_expr = sequence_sf_body(proc->lambda->body);
     return coz_eval(lambda_env, body_expr);

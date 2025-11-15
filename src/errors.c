@@ -28,7 +28,7 @@ Cell* builtin_error_object(const Lex* e, const Cell* a)
     if (err) return err;
 
     if (a->cell[0]->type == CELL_ERROR) {
-        return make_cell_boolean(1);
+        return True_Obj;
     }
-    return make_cell_boolean(0);
+    return False_Obj;
 }

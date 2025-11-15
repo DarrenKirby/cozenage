@@ -32,7 +32,7 @@
 
 
 /* Helper for other string procedures.
- * Like strlen, but works with UTF8 */
+ * Like strlen, but returns UTF8 char count rather than byte count. */
 int32_t string_length(const Cell* string)
 {
     const char* s = string->str;
@@ -42,10 +42,10 @@ int32_t string_length(const Cell* string)
     int32_t code_point_count = 0;
     UChar32 c;
 
-    /* Iterate through the string one code point at a time */
+    /* Iterate through the string one code point at a time. */
     while (i < len_bytes) {
         U8_NEXT(s, i, len_bytes, c);
-        /* A negative value for 'c' indicates an invalid UTF-8 sequence */
+        /* A negative value for 'c' indicates an invalid UTF-8 sequence. */
         if (c < 0) {
             return -1;
         }
@@ -67,7 +67,7 @@ Cell* builtin_string(const Lex* e, const Cell* a)
     if (err) return err;
 
     const int str_len = a->count;
-    /* 4-bytes per char, plus 1 for null */
+    /* 4-bytes per char, plus 1 for null. */
     char* the_string = GC_MALLOC_ATOMIC(str_len * 4 + 1);
     int32_t j = 0;
     for (int i = 0; i < str_len; i++) {
@@ -107,20 +107,20 @@ Cell* builtin_string_eq_pred(const Lex* e, const Cell* a)
         const char* lhs = a->cell[i]->str;
         const char* rhs = a->cell[i+1]->str;
 
-        /* quick exit before conversion: if the len is not the same,
-         * the strings are not the same */
+        /* Quick exit before conversion: if the len is not the same,
+         * the strings are not the same. */
         if (strlen(lhs) != strlen(rhs)) {
-            return make_cell_boolean(0);
+            return False_Obj;
         }
-        /* convert to UTF-16 */
+        /* Convert to UTF-16. */
         const UChar* U_lhs = convert_to_utf16(lhs);
         const UChar* U_rhs = convert_to_utf16(rhs);
         if (u_strcmpCodePointOrder(U_lhs, U_rhs) != 0)  {
-            return make_cell_boolean(0);
+            return False_Obj;
         }
     }
-    /* If we get here, we're equal */
-    return make_cell_boolean(1);
+    /* If we get here, we're equal. */
+    return True_Obj;
 }
 
 Cell* builtin_string_lt_pred(const Lex* e, const Cell* a)
@@ -139,11 +139,11 @@ Cell* builtin_string_lt_pred(const Lex* e, const Cell* a)
         const UChar* U_lhs = convert_to_utf16(lhs);
         const UChar* U_rhs = convert_to_utf16(rhs);
         if (u_strcmpCodePointOrder(U_lhs, U_rhs) >= 0)  {
-            return make_cell_boolean(0);
+            return False_Obj;
         }
     }
     /* If we get here, s1 < s2 < sn ... */
-    return make_cell_boolean(1);
+    return True_Obj;
 }
 
 Cell* builtin_string_lte_pred(const Lex* e, const Cell* a)
@@ -162,11 +162,11 @@ Cell* builtin_string_lte_pred(const Lex* e, const Cell* a)
         const UChar* U_lhs = convert_to_utf16(lhs);
         const UChar* U_rhs = convert_to_utf16(rhs);
         if (u_strcmpCodePointOrder(U_lhs, U_rhs) > 0)  {
-            return make_cell_boolean(0);
+            return False_Obj;
         }
     }
     /* If we get here, s1 <= s2 <= sn ... */
-    return make_cell_boolean(1);
+    return True_Obj;
 }
 
 Cell* builtin_string_gt_pred(const Lex* e, const Cell* a)
@@ -185,11 +185,11 @@ Cell* builtin_string_gt_pred(const Lex* e, const Cell* a)
         const UChar* U_lhs = convert_to_utf16(lhs);
         const UChar* U_rhs = convert_to_utf16(rhs);
         if (u_strcmpCodePointOrder(U_lhs, U_rhs) <= 0)  {
-            return make_cell_boolean(0);
+            return False_Obj;
         }
     }
     /* If we get here, s1 > s2 > sn ... */
-    return make_cell_boolean(1);
+    return True_Obj;
 }
 
 Cell* builtin_string_gte_pred(const Lex* e, const Cell* a)
@@ -208,11 +208,11 @@ Cell* builtin_string_gte_pred(const Lex* e, const Cell* a)
         const UChar* U_lhs = convert_to_utf16(lhs);
         const UChar* U_rhs = convert_to_utf16(rhs);
         if (u_strcmpCodePointOrder(U_lhs, U_rhs) >= 0)  {
-            return make_cell_boolean(0);
+            return False_Obj;
         }
     }
     /* If we get here, s1 >= s2 >= sn ... */
-    return make_cell_boolean(1);
+    return True_Obj;
 }
 
 /* (string-append string ...)
@@ -226,12 +226,12 @@ Cell* builtin_string_append(const Lex* e, const Cell* a)
     err = CHECK_ARITY_MIN(a, 1);
     if (err) return err;
 
-    /* (string-append "foo") -> "foo */
+    /* (string-append "foo") -> "foo. */
     if (a->count == 1) {
         return a->cell[0];
     }
 
-    /* Calculate length needed for buffer */
+    /* Calculate length needed for buffer. */
     uint32_t total_len = 0;
     for (int i = 0; i < a->count; i++) {
         total_len += strlen(a->cell[i]->str);
@@ -289,9 +289,9 @@ Cell* builtin_string_ref(const Lex* e, const Cell* a)
                 INDEX_ERR);
         }
 
-        U8_NEXT(s, byte_index, -1, c);  /* -1: null terminated */
+        U8_NEXT(s, byte_index, -1, c);  /* -1: null terminated. */
 
-        /* If this was the character we were looking for, return it */
+        /* If this was the character we were looking for, return it. */
         if (current_char_index == char_index) {
             return make_cell_char(c);
         }
@@ -322,7 +322,7 @@ Cell* builtin_make_string(const Lex* e, const Cell* a)
     UChar32 fill_char;
     const int32_t str_len = (int)a->cell[0]->integer_v;
     if (a->count == 1) {
-        fill_char = 0x0020;
+        fill_char = 0x0020; /* fill char is a space. */
     } else {
         if (a->cell[1]->type != CELL_CHAR) {
             return make_cell_error(
@@ -334,10 +334,10 @@ Cell* builtin_make_string(const Lex* e, const Cell* a)
 
     const int32_t bytes_per_char = U8_LENGTH(fill_char);
 
-    /* Calculate total bytes needed for the string data */
+    /* Calculate total bytes needed for the string data. */
     const int32_t total_string_bytes = str_len * bytes_per_char;
 
-    /* Allocate memory, adding +1 for the null terminator */
+    /* Allocate memory, adding +1 for the null terminator. */
     char *new_string = GC_MALLOC_ATOMIC(total_string_bytes + 1);
     if (!new_string) {
         fprintf(stderr, "ENOMEM: out of memory");
@@ -347,7 +347,7 @@ Cell* builtin_make_string(const Lex* e, const Cell* a)
     int32_t byte_index = 0;
     for (int32_t i = 0; i < str_len; i++) {
         /* U8_APPEND will write the char's bytes and
-         * advance byte_index by the correct amount (4, in this case) */
+         * advance byte_index by the correct amount (4, in this case). */
         U8_APPEND_UNSAFE(new_string, byte_index, fill_char);
     }
     /* Don't forget the null terminator! */
@@ -402,10 +402,10 @@ Cell* builtin_string_list(const Lex* e, const Cell* a)
             INDEX_ERR);
         }
 
-    /* Build the list */
+    /* Build the list. */
     int32_t byte_index = 0;
     int32_t char_index = 0;
-    int32_t current_list_len = end - start; /* Start with the total length */
+    int32_t current_list_len = end - start; /* Start with the total length. */
     UChar32 c = 0;
     Cell* head = make_cell_nil();
     Cell* tail = nullptr;
@@ -419,11 +419,11 @@ Cell* builtin_string_list(const Lex* e, const Cell* a)
             current_list_len--;
 
             if (head->type == CELL_NIL) {
-                /* This is the first node */
+                /* This is the first node. */
                 head = new_pair;
                 tail = new_pair;
             } else {
-                /* This is a subsequent node */
+                /* This is a subsequent node. */
                 tail->cdr = new_pair;
                 tail = new_pair;
             }
@@ -461,9 +461,9 @@ Cell* builtin_list_string(const Lex* e, const Cell* a)
 
     UErrorCode status = U_ZERO_ERROR;
 
-    /* Pre-flight to get the required buffer size */
+    /* Pre-flight to get the required buffer size. */
 
-    /* Explicit endianness-check required, as ICU assumes big-endian if no BOM */
+    /* Explicit endianness-check required, as ICU assumes big-endian if no BOM. */
     // ReSharper disable once CppDFAUnreachableCode
     const char* fromConverterName = U_IS_BIG_ENDIAN ? "UTF-32BE" : "UTF-32LE";
     /* Call with NULL destination to get the size*/
@@ -484,10 +484,10 @@ Cell* builtin_list_string(const Lex* e, const Cell* a)
         return make_cell_error(buf, GEN_ERR);
     }
 
-    /* Reset status after expected "overflow" */
+    /* Reset status after expected "overflow". */
     status = U_ZERO_ERROR;
 
-    /* Allocate and perform the real conversion */
+    /* Allocate and perform the real conversion. */
     char *utf8Buffer = GC_MALLOC(requiredByteCapacity + 1);
     if (!utf8Buffer) {
         fprintf(stderr, "ENOMEM: malloc failed\n");
@@ -512,7 +512,7 @@ Cell* builtin_list_string(const Lex* e, const Cell* a)
         return make_cell_error(buf, GEN_ERR);
     }
 
-    /* Null-terminate the resulting UTF-8 string */
+    /* Null-terminate the resulting UTF-8 string. */
     utf8Buffer[requiredByteCapacity] = '\0';
     return make_cell_string(utf8Buffer);
 }
@@ -523,7 +523,7 @@ Cell* builtin_list_string(const Lex* e, const Cell* a)
  * with the same arguments, but is provided for backward compatibility and stylistic flexibility. */
 Cell* builtin_substring(const Lex* e, const Cell* a)
 {
-    /* Just check that we have 3 args and kick it to string-copy... */
+    /* Just check that we have 3 args and kick it to string-copy. */
     Cell* err = CHECK_ARITY_EXACT(a, 3);
     if (err) return err;
     return builtin_string_copy(e, a);
@@ -556,17 +556,17 @@ Cell* builtin_string_copy(const Lex* e, const Cell* a)
     }
     const char* str = a->cell[0]->str;
 
-    /* Simplest case, copy entire string */
+    /* Simplest case, copy entire string. */
     if (a->count == 1) {
         return make_cell_string(GC_strdup(str));
     }
 
-    /* Difficult cases, true substrings with start and end indices */
+    /* Difficult cases, true substrings with start and end indices. */
     const int32_t total_byte_len = (int)strlen(a->cell[0]->str);
     int32_t start_idx = 0;
     int32_t end_idx = total_byte_len;
 
-    /* Check args for non-default indices */
+    /* Check args for non-default indices. */
     if (a->count == 2 || a->count == 3) {
         if (a->cell[1]->type != CELL_INTEGER) {
             return make_cell_error(
@@ -584,7 +584,7 @@ Cell* builtin_string_copy(const Lex* e, const Cell* a)
         }
     }
 
-    /* Validate for legal indices */
+    /* Validate for legal indices. */
     const int32_t char_length = string_length(a->cell[0]);
     if (start_idx < 0) {
         return make_cell_error(
@@ -612,14 +612,14 @@ Cell* builtin_string_copy(const Lex* e, const Cell* a)
             INDEX_ERR);
     }
 
-    /* Calculate the UTF8 codepoint indices */
+    /* Calculate the UTF8 codepoint indices. */
     int32_t byte_start_idx = 0;
     U8_FWD_N(str, byte_start_idx, total_byte_len, start_idx);
     const int32_t code_points_to_copy = end_idx - start_idx;
     int32_t byte_end_idx = byte_start_idx;
     U8_FWD_N(str, byte_end_idx, total_byte_len, code_points_to_copy);
 
-    /* Allocate and copy */
+    /* Allocate and copy. */
     int32_t bytes_to_copy = byte_end_idx - byte_start_idx;
     char *new_str = GC_MALLOC_ATOMIC(bytes_to_copy + 1);
     memcpy(new_str, str + byte_start_idx, bytes_to_copy);
@@ -643,7 +643,7 @@ Cell* builtin_string_copy_bang(const Lex* e, const Cell* a)
     Cell* err = CHECK_ARITY_RANGE(a, 3, 5);
     if (err) return err;
 
-    /* Validate Arg Types. */
+    /* Validate arg Types. */
     if (a->cell[0]->type != CELL_STRING)
         return make_cell_error(
             "string-copy!: arg 1 must be a string (to)",
@@ -717,7 +717,7 @@ Cell* builtin_string_copy_bang(const Lex* e, const Cell* a)
 
     /* Calculate all BYTE offsets. */
 
-    /* 'to' prefix (before 'at') */
+    /* 'to' prefix (before 'at'). */
     int32_t to_prefix_byte_end = 0;
     U8_FWD_N(to_str, to_prefix_byte_end, to_byte_len, to_start_idx);
 
@@ -728,12 +728,12 @@ Cell* builtin_string_copy_bang(const Lex* e, const Cell* a)
     U8_FWD_N(from_str, from_byte_end, from_byte_len, code_points_to_copy);
     const int32_t bytes_to_copy = from_byte_end - from_byte_start;
 
-    /* 'to' suffix (after copied part) */
+    /* 'to' suffix (after copied part). */
     int32_t to_suffix_byte_start = to_prefix_byte_end;
     U8_FWD_N(to_str, to_suffix_byte_start, to_byte_len, code_points_to_copy);
     const int32_t to_suffix_bytes = to_byte_len - to_suffix_byte_start;
 
-    /* Build New String */
+    /* Build new string. */
     const int32_t to_prefix_bytes = to_prefix_byte_end;
     const int32_t new_total_bytes = to_prefix_bytes + bytes_to_copy + to_suffix_bytes;
 
@@ -821,22 +821,23 @@ Cell* builtin_string_number(const Lex* e, const Cell* a)
     TokenArray* ta = scan_all_tokens(the_num);
     Cell* result = parse_tokens(ta);
 
-    /* Return false on parse errors */
+    /* Return false on parse errors. */
     if (result->type == CELL_ERROR) {
-        return make_cell_boolean(0);
+        return False_Obj;
     }
 
     /* Ditto if it's not actually a number. */
     // ReSharper disable once CppVariableCanBeMadeConstexpr
     const int mask = CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX;
     if (!(result->type & mask)) {
-        return make_cell_boolean(0);
+        return False_Obj;
     }
     return result;
 }
 
 /* TODO - the radix??? */
-Cell* builtin_number_string(const Lex* e, const Cell* a) {
+Cell* builtin_number_string(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_RANGE(a, 1, 2);
     if (err) return err;
@@ -857,7 +858,8 @@ Cell* builtin_number_string(const Lex* e, const Cell* a) {
  * argument may be returned. */
 
 /* (string-downcase string) */
-Cell* builtin_string_downcase(const Lex* e, const Cell* a) {
+Cell* builtin_string_downcase(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING);
     if (err) return err;
@@ -866,7 +868,9 @@ Cell* builtin_string_downcase(const Lex* e, const Cell* a) {
 
     UErrorCode status = U_ZERO_ERROR;
     UChar* src = convert_to_utf16(a->cell[0]->str);
-    if (!src) return make_cell_error("string-downcase: malformed UTF-8 string", VALUE_ERR);
+    if (!src) return make_cell_error(
+        "string-downcase: malformed UTF-8 string",
+        VALUE_ERR);
 
     const int32_t src_len = u_countChar32(src, -1);
 
@@ -876,18 +880,23 @@ Cell* builtin_string_downcase(const Lex* e, const Cell* a) {
         src, -1, nullptr, &status);
 
     if (dest_len < src_len) {
-        return make_cell_error("string-downcase: some chars not copied!!!", GEN_ERR);
+        return make_cell_error(
+            "string-downcase: some chars not copied!!!",
+            GEN_ERR);
     }
 
     char* result = convert_to_utf8(dst);
     if (!result) {
-        return make_cell_error("string-downcase: malformed UTF-8 string", VALUE_ERR);
+        return make_cell_error(
+            "string-downcase: malformed UTF-8 string",
+            VALUE_ERR);
     }
     return make_cell_string(result);
 }
 
 /* (string-upcase string) */
-Cell* builtin_string_upcase(const Lex* e, const Cell* a) {
+Cell* builtin_string_upcase(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING);
     if (err) return err;
@@ -896,7 +905,9 @@ Cell* builtin_string_upcase(const Lex* e, const Cell* a) {
 
     UErrorCode status = U_ZERO_ERROR;
     UChar* src = convert_to_utf16(a->cell[0]->str);
-    if (!src) return make_cell_error("string-upcase: malformed UTF-8 string", VALUE_ERR);
+    if (!src) return make_cell_error(
+        "string-upcase: malformed UTF-8 string",
+        VALUE_ERR);
 
     const int32_t src_len = u_countChar32(src, -1);
 
@@ -906,18 +917,23 @@ Cell* builtin_string_upcase(const Lex* e, const Cell* a) {
         src, -1, nullptr, &status);
 
     if (dest_len < src_len) {
-        return make_cell_error("string-upcase: some chars not copied!!!", GEN_ERR);
+        return make_cell_error(
+            "string-upcase: some chars not copied!!!",
+            GEN_ERR);
     }
 
     char* result = convert_to_utf8(dst);
     if (!result) {
-        return make_cell_error("string-upcase: malformed UTF-8 string", VALUE_ERR);
+        return make_cell_error(
+            "string-upcase: malformed UTF-8 string",
+            VALUE_ERR);
     }
     return make_cell_string(result);
 }
 
 /* (string-foldcase string) */
-Cell* builtin_string_foldcase(const Lex* e, const Cell* a) {
+Cell* builtin_string_foldcase(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING);
     if (err) return err;
@@ -926,7 +942,9 @@ Cell* builtin_string_foldcase(const Lex* e, const Cell* a) {
 
     UErrorCode status = U_ZERO_ERROR;
     UChar* src = convert_to_utf16(a->cell[0]->str);
-    if (!src) return make_cell_error("string-foldcase: malformed UTF-8 string", VALUE_ERR);
+    if (!src) return make_cell_error(
+        "string-foldcase: malformed UTF-8 string",
+        VALUE_ERR);
 
     const int32_t src_len = u_countChar32(src, -1);
 
@@ -935,12 +953,16 @@ Cell* builtin_string_foldcase(const Lex* e, const Cell* a) {
         U_FOLD_CASE_DEFAULT, &status);
 
     if (dest_len < src_len) {
-        return make_cell_error("string-foldcase: some chars not copied!!!", GEN_ERR);
+        return make_cell_error(
+            "string-foldcase: some chars not copied!!!",
+            GEN_ERR);
     }
 
     char* result = convert_to_utf8(dst);
     if (!result) {
-        return make_cell_error("string-foldcase: malformed UTF-8 string", VALUE_ERR);
+        return make_cell_error(
+            "string-foldcase: malformed UTF-8 string",
+            VALUE_ERR);
     }
     return make_cell_string(result);
 }
@@ -948,7 +970,8 @@ Cell* builtin_string_foldcase(const Lex* e, const Cell* a) {
 /* (string-ci=? string1 string2 string3 ... )
 * Returns #t if, after case-folding, all the strings are the same length and contain the same
 * characters in the same positions, otherwise returns #f.*/
-Cell* builtin_string_equal_ci(const Lex* e, const Cell* a) {
+Cell* builtin_string_equal_ci(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING);
     if (err) return err;
@@ -960,9 +983,9 @@ Cell* builtin_string_equal_ci(const Lex* e, const Cell* a) {
         const char* rhs = a->cell[i+1]->str;
 
         /* quick exit before conversion: if the len is not the same,
-         * the strings are not the same */
+         * the strings are not the same. */
         if (strlen(lhs) != strlen(rhs)) {
-            return make_cell_boolean(0);
+            return False_Obj;
         }
         /* convert to UTF-16 */
         const UChar* U_lhs = convert_to_utf16(lhs);
@@ -970,11 +993,11 @@ Cell* builtin_string_equal_ci(const Lex* e, const Cell* a) {
         UErrorCode status = U_ZERO_ERROR;
         if (u_strCaseCompare(U_lhs, -1, U_rhs, -1,
             U_FOLD_CASE_DEFAULT, &status) != 0)  {
-            return make_cell_boolean(0);
+            return False_Obj;
         }
     }
     /* If we get here, we're equal */
-    return make_cell_boolean(1);
+    return True_Obj;
 }
 
 /* (string-ci<? string1 string2 string3 ... ) */
@@ -995,11 +1018,11 @@ Cell* builtin_string_lt_ci(const Lex* e, const Cell* a) {
         UErrorCode status = U_ZERO_ERROR;
         if (u_strCaseCompare(U_lhs, -1, U_rhs, -1,
             U_FOLD_CASE_DEFAULT, &status) >= 0)  {
-            return make_cell_boolean(0);
+            return False_Obj;
         }
     }
     /* If we get here, s1 < s2 < sn ... */
-    return make_cell_boolean(1);
+    return True_Obj;
 }
 
 /* (string<=? string1 string2 string3 ... ) */
@@ -1020,11 +1043,11 @@ Cell* builtin_string_lte_ci(const Lex* e, const Cell* a) {
         UErrorCode status = U_ZERO_ERROR;
         if (u_strCaseCompare(U_lhs, -1, U_rhs, -1,
             U_FOLD_CASE_DEFAULT, &status) > 0)  {
-            return make_cell_boolean(0);
+            return False_Obj;
         }
     }
     /* If we get here, s1 <= s2 <= sn ... */
-    return make_cell_boolean(1);
+    return True_Obj;
 }
 
 /* (string-ci>? string1 string2 string3 ... ) */
@@ -1045,11 +1068,11 @@ Cell* builtin_string_gt_ci(const Lex* e, const Cell* a) {
         UErrorCode status = U_ZERO_ERROR;
         if (u_strCaseCompare(U_lhs, -1, U_rhs, -1,
             U_FOLD_CASE_DEFAULT, &status) <= 0)  {
-            return make_cell_boolean(0);
+            return False_Obj;
         }
     }
     /* If we get here, s1 > s2 > sn ... */
-    return make_cell_boolean(1);
+    return True_Obj;
 }
 
 /* (string-ci>=? string1 string2 string3 ... ) */
@@ -1070,9 +1093,9 @@ Cell* builtin_string_gte_ci(const Lex* e, const Cell* a) {
         UErrorCode status = U_ZERO_ERROR;
         if (u_strCaseCompare(U_lhs, -1, U_rhs, -1,
             U_FOLD_CASE_DEFAULT, &status) >= 0)  {
-            return make_cell_boolean(0);
+            return False_Obj;
         }
     }
     /* If we get here, s1 >= s2 >= sn ... */
-    return make_cell_boolean(1);
+    return True_Obj;
 }

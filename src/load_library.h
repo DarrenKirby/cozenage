@@ -22,8 +22,6 @@
 
 #include "cell.h"
 
-#define MAX_LOADED_LIBS 32
-
 
 Cell* load_library(const char* lib_name, const Lex* env);
 

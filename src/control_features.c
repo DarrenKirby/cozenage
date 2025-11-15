@@ -24,15 +24,21 @@
 #include "strings.h"
 #include "runner.h"
 #include "lexer.h"
+#include "repl.h"
 #include "repr.h"
 #include <stdlib.h>
 
+
+extern int is_repl;
+extern int g_argc;
+extern char **g_argv;
 
 /*-------------------------------------------------------*
  *    Control features and list iteration procedures     *
  * ------------------------------------------------------*/
 
-Cell* builtin_eval(const Lex* e, const Cell* a) {
+Cell* builtin_eval(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_MIN(a, 1);
     if (err) return err;
@@ -127,7 +133,7 @@ Cell* builtin_map(const Lex* e, const Cell* a)
 
     const int shortest_len = shortest_list_length;
     const int num_lists = a->count - 1;
-    Cell* proc = a->cell[0];
+    const Cell* proc = a->cell[0];
 
     Cell* final_result = make_cell_nil();
 
@@ -280,7 +286,8 @@ Cell* builtin_string_map(const Lex* e, const Cell* a)
 /* (for-each proc list1 list2 ... )
  * The arguments to for-each are like the arguments to map, but for-each calls proc for its side effects
  * rather than for its values. */
-Cell* builtin_foreach(const Lex* e, const Cell* a) {
+Cell* builtin_foreach(const Lex* e, const Cell* a)
+{
     /* Just send the args to map and discard results. */
     (void)builtin_map(e, a);
     return nullptr;
@@ -290,7 +297,8 @@ Cell* builtin_foreach(const Lex* e, const Cell* a) {
 /* (vector-for-each proc vector1 vector2 ... )
  * The arguments to vector-for-each are like the arguments to vector-map, but vector-for-each calls proc for its side
  * effects rather than for its values. */
-Cell* builtin_vector_foreach(const Lex* e, const Cell* a) {
+Cell* builtin_vector_foreach(const Lex* e, const Cell* a)
+{
     /* Just send the args to vector-map and discard results. */
     (void)builtin_vector_map(e, a);
     return nullptr;
@@ -300,13 +308,15 @@ Cell* builtin_vector_foreach(const Lex* e, const Cell* a) {
 /* (string-for-each proc string1 string2 ... )
  * The arguments to string-for-each are like the arguments to string-map, but string-for-each calls proc for its side
  * effects rather than for its values. */
-Cell* builtin_string_foreach(const Lex* e, const Cell* a) {
+Cell* builtin_string_foreach(const Lex* e, const Cell* a)
+{
     /* Just send the args to string-map and discard results. */
     (void)builtin_string_map(e, a);
     return nullptr;
 }
 
-Cell* builtin_load(const Lex* e, const Cell* a) {
+Cell* builtin_load(const Lex* e, const Cell* a)
+{
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
     if (a->cell[0]->type != CELL_STRING) {
@@ -319,38 +329,41 @@ Cell* builtin_load(const Lex* e, const Cell* a) {
 
     if (result && result->type == CELL_ERROR) {
         fprintf(stderr, "%s\n", cell_to_string(result, MODE_REPL));
-        return make_cell_boolean(0);
+        return False_Obj;
     }
-    return make_cell_boolean(1);
+    return True_Obj;
 }
 
-Cell* builtin_exit(const Lex* e, const Cell* a) {
+Cell* builtin_exit(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = check_arg_types(a, CELL_INTEGER|CELL_BOOLEAN);
     if (err) { return err; }
 
+    /* Save history if we're in REPL mode. */
+    if (is_repl) {
+        save_history_to_file();
+    }
+
+    /* Convert boolean value to exit success or failure. */
     if (a->count == 1) {
         if (a->cell[0]->type == CELL_BOOLEAN) {
             const int es = a->cell[0]->boolean_v;
             if (es) {
-                exit(0); /* flip boolean 1 (#t) to exit success (0) */
+                exit(0); /* flip boolean 1 (#t) to exit success (0). */
             }
             exit(1);
         }
-        /* If not bool, int. Just return directly */
+        /* If not bool, int. Just return directly. */
         exit((int)a->cell[0]->integer_v);
     }
-    exit(0); /* exit success if no arg */
+    exit(0); /* exit success if no arg. */
 }
 
-
-extern int is_repl;
-extern int g_argc;
-extern char **g_argv;
-
-Cell* builtin_command_line(const Lex* e, const Cell* a) {
+Cell* builtin_command_line(const Lex* e, const Cell* a)
+{
     (void)e; (void)a;
-    /* Return list of just empty string if using REPL */
+    /* Return list of just one empty string if using REPL. */
     if (is_repl) {
         return make_cell_pair(make_cell_string(""), make_cell_nil());
     }

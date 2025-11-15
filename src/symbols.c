@@ -30,10 +30,10 @@
 #include <sys/utsname.h>
 
 
-/* Declare the symbol table */
+/* Declare the symbol table. */
 ht_table* symbol_table = nullptr;
 
-/* Definitions of Global Symbols for Special Forms */
+/* Definitions of Global Symbols for Special Forms. */
 Cell* G_define_sym = nullptr;
 Cell* G_quote_sym = nullptr;
 Cell* G_lambda_sym = nullptr;
@@ -51,7 +51,7 @@ Cell* G_and_sym = nullptr;
 Cell* G_or_sym = nullptr;
 Cell* G_else_sym = nullptr;
 
-/* Initialize canonical symbols and configure their special form IDs */
+/* Initialize canonical symbols and configure their special form IDs. */
 void init_special_forms(void) {
     G_define_sym = make_cell_symbol("define");
     G_define_sym->sf_id = SF_ID_DEFINE;
@@ -106,7 +106,8 @@ void init_special_forms(void) {
  *                  Symbol procedures                    *
  * ------------------------------------------------------*/
 
-Cell* builtin_symbol_equal_pred(const Lex* e, const Cell* a) {
+Cell* builtin_symbol_equal_pred(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = check_arg_types(a, CELL_SYMBOL);
     if (err) return err;
@@ -118,19 +119,22 @@ Cell* builtin_symbol_equal_pred(const Lex* e, const Cell* a) {
         const char* rhs = a->cell[i+1]->sym;
 
         if (lhs != rhs)  {
-            return make_cell_boolean(0);
+            return False_Obj;
         }
     }
     /* If we get here, we're equal */
-    return make_cell_boolean(1);
+    return True_Obj;
 }
 
-Cell* builtin_string_to_symbol(const Lex* e, const Cell* a) {
+Cell* builtin_string_to_symbol(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
     if (a->cell[0]->type != CELL_STRING) {
-        return make_cell_error("string->symbol: arg 1 must be a string", TYPE_ERR);
+        return make_cell_error(
+            "string->symbol: arg 1 must be a string",
+            TYPE_ERR);
     }
     return make_cell_symbol(a->cell[0]->str);
 }
@@ -141,7 +145,9 @@ Cell* builtin_symbol_to_string(const Lex* e, const Cell* a)
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
     if (a->cell[0]->type != CELL_SYMBOL) {
-        return make_cell_error("symbol->string: arg 1 must be a symbol", TYPE_ERR);
+        return make_cell_error(
+            "symbol->string: arg 1 must be a symbol",
+            TYPE_ERR);
     }
     return make_cell_string(a->cell[0]->sym);
 }
@@ -155,10 +161,11 @@ Cell* builtin_features(const Lex* e, const Cell* a)
     if (err) return err;
 
     Cell* result_l = make_cell_sexpr();
-    /* Start by adding all the builtin features always present */
+    /* Start by adding all the builtin features always present. */
     char* feature_array[] =  {
         "exact-closed", "exact-complex", "ieee-float", "full-unicode", "ratios"
     };
+    // ReSharper disable once CppVariableCanBeMadeConstexpr
     const int feature_count = sizeof(feature_array) / sizeof(feature_array[0]);
 
     for (int i = 0; i < feature_count; i++) {
@@ -176,7 +183,7 @@ Cell* builtin_features(const Lex* e, const Cell* a)
     cell_add(result_l, make_cell_symbol(uts.sysname));
     cell_add(result_l, make_cell_symbol(uts.machine));
 
-    /* Check byte order */
+    /* Check byte order. */
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
     const char* endianess = "little-endian";
 #else
@@ -184,7 +191,7 @@ Cell* builtin_features(const Lex* e, const Cell* a)
 #endif
     cell_add(result_l, make_cell_symbol(endianess));
 
-    /* Add Cozenage name and version */
+    /* Add Cozenage name and version. */
     cell_add(result_l, make_cell_symbol(APP_NAME));
 
     char buf[64];

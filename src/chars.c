@@ -33,7 +33,8 @@
  * between #xE000 and #x10FFFF which is equal to the Unicode scalar value of that character. Given
  * a non-Unicode character, it returns an exact integer greater than #x10FFFF. This is true
  * independent of whether the implementation uses the Unicode representation internally. */
-Cell* builtin_char_to_int(const Lex* e, const Cell* a) {
+Cell* builtin_char_to_int(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
@@ -46,7 +47,8 @@ Cell* builtin_char_to_int(const Lex* e, const Cell* a) {
 /* (integer->char n)
  * Given an exact integer that is the value returned by a character when char->integer is applied
  * to it, integer->char returns that character. */
-Cell* builtin_int_to_char(const Lex* e, const Cell* a) {
+Cell* builtin_int_to_char(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
@@ -72,7 +74,8 @@ Cell* builtin_int_to_char(const Lex* e, const Cell* a) {
  * non-decreasing, or monotonically non-increasing. */
 
 /* (char=? char1 char2 char3 ... ) */
-Cell* builtin_char_equal_pred(const Lex* e, const Cell* a) {
+Cell* builtin_char_equal_pred(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = check_arg_types(a, CELL_CHAR);
     if (err) return err;
@@ -87,7 +90,8 @@ Cell* builtin_char_equal_pred(const Lex* e, const Cell* a) {
 }
 
 /* (char<? char1 char2 char3 ... ) */
-Cell* builtin_char_lt_pred(const Lex* e, const Cell* a) {
+Cell* builtin_char_lt_pred(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = check_arg_types(a, CELL_CHAR);
     if (err) return err;
@@ -102,7 +106,8 @@ Cell* builtin_char_lt_pred(const Lex* e, const Cell* a) {
 }
 
 /* (char<=? char1 char2 char3 ... )   */
-Cell* builtin_char_lte_pred(const Lex* e, const Cell* a) {
+Cell* builtin_char_lte_pred(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = check_arg_types(a, CELL_CHAR);
     if (err) return err;
@@ -117,7 +122,8 @@ Cell* builtin_char_lte_pred(const Lex* e, const Cell* a) {
 }
 
 /* (char>? char1 char2 char3 ... )   */
-Cell* builtin_char_gt_pred(const Lex* e, const Cell* a) {
+Cell* builtin_char_gt_pred(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = check_arg_types(a, CELL_CHAR);
     if (err) return err;
@@ -132,7 +138,8 @@ Cell* builtin_char_gt_pred(const Lex* e, const Cell* a) {
 }
 
 /* (char>=? char1 char2 char3 ... )   */
-Cell* builtin_char_gte_pred(const Lex* e, const Cell* a) {
+Cell* builtin_char_gte_pred(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = check_arg_types(a, CELL_CHAR);
     if (err) return err;
@@ -155,7 +162,8 @@ Cell* builtin_char_gte_pred(const Lex* e, const Cell* a) {
  * neither upper nor lower case. */
 
 /* (char-alphabetic? char) */
-Cell* builtin_char_alphabetic(const Lex* e, const Cell* a) {
+Cell* builtin_char_alphabetic(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
@@ -168,7 +176,8 @@ Cell* builtin_char_alphabetic(const Lex* e, const Cell* a) {
 }
 
 /* (char-whitespace? char) */
-Cell* builtin_char_whitespace(const Lex* e, const Cell* a) {
+Cell* builtin_char_whitespace(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
@@ -181,7 +190,8 @@ Cell* builtin_char_whitespace(const Lex* e, const Cell* a) {
 }
 
 /* (char-numeric? char) */
-Cell* builtin_char_numeric(const Lex* e, const Cell* a) {
+Cell* builtin_char_numeric(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
@@ -194,7 +204,8 @@ Cell* builtin_char_numeric(const Lex* e, const Cell* a) {
 }
 
 /* (char-upper-case? letter) */
-Cell* builtin_char_upper_case(const Lex* e, const Cell* a) {
+Cell* builtin_char_upper_case(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
@@ -205,6 +216,7 @@ TYPE_ERR);
     }
     return make_cell_boolean(u_isupper(a->cell[0]->char_v));
 }
+
 
 /* (char-lower-case? letter) */
 Cell* builtin_char_lower_case(const Lex* e, const Cell* a) {
@@ -224,7 +236,8 @@ Cell* builtin_char_lower_case(const Lex* e, const Cell* a) {
  * returns the uppercase member of the pair, provided that both characters are supported by the
  * Scheme implementation. Note that language-sensitive casing pairs are not used. If the argument is
  * not the lowercase member of such a pair, it is returned. */
-Cell* builtin_char_upcase(const Lex* e, const Cell* a) {
+Cell* builtin_char_upcase(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
@@ -241,7 +254,8 @@ Cell* builtin_char_upcase(const Lex* e, const Cell* a) {
  * pair, returns the lowercase member of the pair, provided that both characters are supported by
  * the Scheme implementation. Note that language-sensitive casing pairs are not used. If the
  * argument is not the uppercase member of such a pair, it is returned. */
-Cell* builtin_char_downcase(const Lex* e, const Cell* a) {
+Cell* builtin_char_downcase(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
@@ -258,7 +272,8 @@ Cell* builtin_char_downcase(const Lex* e, const Cell* a) {
  * returns the result. Note that language-sensitive folding is not used. If the argument is an
  * uppercase letter, the result will be either a lowercase letter or the same as the argument if the
  * lowercase letter does not exist or is not supported by the implementation. */
-Cell* builtin_char_foldcase(const Lex* e, const Cell* a) {
+Cell* builtin_char_foldcase(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
@@ -271,10 +286,12 @@ Cell* builtin_char_foldcase(const Lex* e, const Cell* a) {
     return make_cell_char(u_foldCase(c, U_FOLD_CASE_DEFAULT));
 }
 
+
 /* (digit-value char)
  * This procedure returns the numeric value (0 to 9) of its argument if it is a numeric digit (that
  * is, if char-numeric? returns #t), or #f on any other character. */
-Cell* builtin_digit_value(const Lex* e, const Cell* a) {
+Cell* builtin_digit_value(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
@@ -287,13 +304,14 @@ Cell* builtin_digit_value(const Lex* e, const Cell* a) {
     const int32_t value = u_charDigitValue(a->cell[0]->char_v);
 
     if (value == -1) {
-        return make_cell_boolean(0);
+        return False_Obj;
     }
     return make_cell_integer(value);
 }
 
 /*  */
-Cell* builtin_char_equal_ci(const Lex* e, const Cell* a) {
+Cell* builtin_char_equal_ci(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = check_arg_types(a, CELL_CHAR);
     if (err) return err;
@@ -305,12 +323,13 @@ Cell* builtin_char_equal_ci(const Lex* e, const Cell* a) {
         cells[i] = make_cell_integer(the_char_fc->char_v);
     }
 
-    Cell* cell_sexpr = make_sexpr_from_array(a->count, cells);
+    const Cell* cell_sexpr = make_sexpr_from_array(a->count, cells);
     return builtin_eq_op(e, cell_sexpr);
 }
 
 /*  */
-Cell* builtin_char_lt_ci(const Lex* e, const Cell* a) {
+Cell* builtin_char_lt_ci(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = check_arg_types(a, CELL_CHAR);
     if (err) return err;
@@ -327,7 +346,8 @@ Cell* builtin_char_lt_ci(const Lex* e, const Cell* a) {
 }
 
 /*  */
-Cell* builtin_char_lte_ci(const Lex* e, const Cell* a) {
+Cell* builtin_char_lte_ci(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = check_arg_types(a, CELL_CHAR);
     if (err) return err;
@@ -339,12 +359,13 @@ Cell* builtin_char_lte_ci(const Lex* e, const Cell* a) {
         cells[i] = make_cell_integer(the_char_fc->char_v);
     }
 
-    Cell* cell_sexpr = make_sexpr_from_array(a->count, cells);
+    const Cell* cell_sexpr = make_sexpr_from_array(a->count, cells);
     return builtin_lte_op(e, cell_sexpr);
 }
 
 /*  */
-Cell* builtin_char_gt_ci(const Lex* e, const Cell* a) {
+Cell* builtin_char_gt_ci(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = check_arg_types(a, CELL_CHAR);
     if (err) return err;
@@ -356,12 +377,13 @@ Cell* builtin_char_gt_ci(const Lex* e, const Cell* a) {
         cells[i] = make_cell_integer(the_char_fc->char_v);
     }
 
-    Cell* cell_sexpr = make_sexpr_from_array(a->count, cells);
+    const Cell* cell_sexpr = make_sexpr_from_array(a->count, cells);
     return builtin_gt_op(e, cell_sexpr);
 }
 
 /*  */
-Cell* builtin_char_gte_ci(const Lex* e, const Cell* a) {
+Cell* builtin_char_gte_ci(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = check_arg_types(a, CELL_CHAR);
     if (err) return err;
@@ -373,6 +395,6 @@ Cell* builtin_char_gte_ci(const Lex* e, const Cell* a) {
         cells[i] = make_cell_integer(the_char_fc->char_v);
     }
 
-    Cell* cell_sexpr = make_sexpr_from_array(a->count, cells);
+    const Cell* cell_sexpr = make_sexpr_from_array(a->count, cells);
     return builtin_gte_op(e, cell_sexpr);
 }

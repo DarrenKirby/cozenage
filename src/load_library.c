@@ -42,7 +42,8 @@ typedef void (*CznLibInitFunc)(const Lex*);
  *
  * Returns 1 on success, 0 on failure.
  */
-int internal_cozenage_load_lib(const char* libname, const Lex* env) {
+int internal_cozenage_load_lib(const char* libname, const Lex* env)
+{
     char filepath[1024];
     CznLibInitFunc init_func;
 
@@ -95,14 +96,14 @@ int internal_cozenage_load_lib(const char* libname, const Lex* env) {
     return 1; /* Success. */
 }
 
-Cell* load_library(const char* libname, const Lex* env) {
-
+Cell* load_library(const char* libname, const Lex* env)
+{
     /* Call the internal loader */
     const int success = internal_cozenage_load_lib(libname, env);
 
     /* Return a Cozenage value */
     if (success) {
-        return make_cell_boolean(1);
+        return True_Obj;
     }
-    return make_cell_boolean(0);
+    return False_Obj;
 }

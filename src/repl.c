@@ -81,12 +81,11 @@ static void read_history_from_file()
 
 
 /* Write out the history. */
-static void save_history_to_file()
+void save_history_to_file()
 {
     const char *hf = tilde_expand(HIST_FILE);
     write_history(hf);
 }
-
 
 /* Count parens to decide if we have a full expression,
  * or need to wait for more input. */
@@ -94,7 +93,7 @@ int paren_balance(const char *s, int *in_string)
 {
     int balance = 0;
     int escaped = 0;
-    int string = *in_string;  /* carry-over state from previous line */
+    int string = *in_string;  /* carry-over state from previous line. */
 
     for (const char *p = s; *p; p++) {
         if (string) {
@@ -103,17 +102,17 @@ int paren_balance(const char *s, int *in_string)
             } else if (*p == '\\') {
                 escaped = 1;
             } else if (*p == '"') {
-                string = 0; /* string closed */
+                string = 0; /* string closed. */
             }
             continue;
         }
 
-        /* not in a string */
+        /* not in a string. */
         if (*p == '"') {
             string = 1;
             escaped = 0;
         } else if (*p == '#' && *(p+1) == '\\') {
-            /* char literal — skip this and next */
+            /* char literal — skip this and next. */
             p++;
             if (*p && *(p+1)) p++;
         } else if (*p == '(') {
@@ -123,7 +122,7 @@ int paren_balance(const char *s, int *in_string)
         }
     }
 
-    *in_string = string;  /* pass string-state back */
+    *in_string = string;  /* pass string-state back. */
     return balance;
 }
 
@@ -137,14 +136,14 @@ static char* read_multiline(const char* prompt, const char* cont_prompt)
 #endif
     size_t total_len = 0;
     int balance = 0;
-    int in_string = 0;   /* track string literal state across lines */
+    int in_string = 0;   /* track string literal state across lines. */
 
     char *line = readline(prompt);
     if (!line) return nullptr;
     if (got_sigint) {
         free(line);
         got_sigint = 0;
-        return GC_strdup("");  /* return empty input so REPL just re-prompts */
+        return GC_strdup("");  /* return empty input so REPL just re-prompts. */
     }
 
     balance += paren_balance(line, &in_string);
@@ -159,7 +158,7 @@ static char* read_multiline(const char* prompt, const char* cont_prompt)
         if (got_sigint) {
             free(line);
             got_sigint = 0;
-            return GC_strdup("");  /* abort multiline and reset prompt */
+            return GC_strdup("");  /* abort multiline and reset prompt. */
         }
 
         balance += paren_balance(line, &in_string);
@@ -189,14 +188,14 @@ void coz_print(const Cell* v)
 char* coz_read()
 {
     char *input = read_multiline(PS1_PROMPT, PS2_PROMPT);
-    /* reset bold input */
+    /* reset bold input. */
     printf("%s", ANSI_RESET);
     if (!input) {
         printf("\n");
         save_history_to_file();
         exit(0);
     }
-    /* Add expression to history */
+    /* Add expression to history. */
     if (input != nullptr) {
         add_history(input);
     }
@@ -205,18 +204,18 @@ char* coz_read()
 
 
 /* repl()
- * Read-Evaluate-Print loop */
+ * Read-Evaluate-Print loop. */
 void repl(Lex* e)
 {
     // ReSharper disable once CppDFAEndlessLoop
     while (true) {
-        /* Get the input */
+        /* Get the input. */
         const char* input = coz_read();
-        /* Run it through the lexer */
+        /* Run it through the lexer. */
         TokenArray* ta = scan_all_tokens(input);
-        /* Run it through the parser and evaluate */
+        /* Run it through the parser and evaluate. */
         Cell* result = parse_all_expressions(e, ta, true);
-        /* Print either new prompt or error */
+        /* Print either new prompt or error. */
         if (!result) {
             continue;
         }
@@ -229,45 +228,45 @@ void repl(Lex* e)
 
 int run_repl(const lib_load_config load_libs)
 {
-    /* Print Version and Exit Information */
+    /* Print Version and Exit Information. */
     printf("  %s%s%s version %s\n", ANSI_BLUE_B, APP_NAME, ANSI_RESET, APP_VERSION);
     printf("  Press <Ctrl+d> or type '(exit)' to quit\n\n");
 
-    /* Initialize the is_repl global flag */
+    /* Initialize the is_repl global flag. */
     is_repl = 1;
 
-    /* Set up keybinding and signal for Ctrl-G and CTRL-C */
+    /* Set up keybinding and signal for Ctrl-G and CTRL-C. */
 #ifdef __linux__
-    rl_bind_key('\007', discard_continuation);  /* 7 = Ctrl-G */
+    rl_bind_key('\007', discard_continuation);  /* 7 = Ctrl-G. */
 #endif
     signal(SIGINT, sigint_handler);
 
-    /* Initialize symbol table with initial size of 128 */
+    /* Initialize symbol table with initial size of 128. */
     symbol_table = ht_create(128);
-    /* Load readline history */
+    /* Load readline history. */
     read_history_from_file();
-    /* Initialize default ports */
+    /* Initialize default ports. */
     init_default_ports();
-    /* Initialize global singleton objects, nil, #t, #f, and EOF */
+    /* Initialize global singleton objects. */
     init_global_singletons();
-    /* Initialize global environment */
+    /* Initialize global environment. */
     Lex* e = lex_initialize_global_env();
-    /* Load (scheme base) procedures into the environment. */
+    /* Load base procedures into the environment. */
     lex_add_builtins(e);
-    /* Loads the CLI-specified R7RS libraries into the environment. */
+    /* Loads the CLI-specified libraries into the environment. */
     load_initial_libraries(e, load_libs);
 
 #ifdef USE_GNU_READLINE
     /* Bind the TAB key to the completion function. */
     rl_bind_key('\t', rl_complete);
-    /* Load tab-completion candidate array from symbols in the environment */
+    /* Load tab-completion candidate array from symbols in the environment. */
     populate_dynamic_completions(e);
 #endif
 
     /* Initialize special form lookup table */
     init_special_forms();
 
-    /* Run until we don't */
+    /* Run until we don't. */
     repl(e);
     return 0;
 }

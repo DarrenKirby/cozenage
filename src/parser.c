@@ -34,7 +34,8 @@
 #endif
 
 
-static long long parse_int_checked(const char* str, char* err_buf, const int base, int* ok) {
+static long long parse_int_checked(const char* str, char* err_buf, const int base, int* ok)
+{
     errno = 0;
     char* end_ptr;
     const long long val = strtoll(str, &end_ptr, base);
@@ -59,7 +60,8 @@ static long long parse_int_checked(const char* str, char* err_buf, const int bas
     return val;
 }
 
-static long double parse_float_checked(const char* str, char* err_buf, int* ok) {
+static long double parse_float_checked(const char* str, char* err_buf, int* ok)
+{
     errno = 0;
     char* end_ptr;
     const long double val = strtold(str, &end_ptr);
@@ -90,7 +92,8 @@ static long double parse_float_checked(const char* str, char* err_buf, int* ok) 
     return val;
 }
 
-static char* token_to_string(const Token* token) {
+static char* token_to_string(const Token* token)
+{
     /* Allocate memory for the new string (+1 for the null terminator) */
     char* str = GC_MALLOC(token->length + 1);
     if (str == NULL) {
@@ -107,7 +110,8 @@ static char* token_to_string(const Token* token) {
     return str;
 }
 
-static Cell* parse_number(char* token, const int line, int len) {
+static Cell* parse_number(char* token, const int line, int len)
+{
     int base = 10;   /* Default to base 10 */
     int exact = -1;  /* Default to unspecified */
     int ok = 0;      /* error flag */
@@ -200,7 +204,7 @@ static Cell* parse_number(char* token, const int line, int len) {
             i = parse_number(buf, line, len);
         }
 
-        /* Propagate errors */
+        /* Propagate errors. */
         if (r->type == CELL_ERROR) {
             return r;
         }
@@ -212,7 +216,7 @@ static Cell* parse_number(char* token, const int line, int len) {
         return result;
     }
 
-    /* Rational number */
+    /* Rational number. */
     if (strchr(tok, '/')) {
         char *p;
         p = GC_strdup(tok);
@@ -284,7 +288,8 @@ static Cell* parse_number(char* token, const int line, int len) {
     return make_cell_error(err_buf, SYNTAX_ERR);
 }
 
-static Cell* parse_string(const char* str, const int len) {
+static Cell* parse_string(const char* str, const int len)
+{
     /* Allocate a new buffer. The final string will be
        less than or equal to the original length. */
     char* internal_buffer = GC_MALLOC_ATOMIC(len + 1);
@@ -331,35 +336,35 @@ static Cell* parse_string(const char* str, const int len) {
         default: ;
         }
 
-        /* Check for optional intra-line whitespace (\ + <sp/tab>...) */
+        /* Check for optional intra-line whitespace (\ + <sp/tab>...). */
         bool hiw = false;
         if (next_char == ' ' || next_char == '\t') {
             hiw = true;
-            lex_idx++; /* Consume the first space/tab */
+            lex_idx++; /* Consume the first space/tab. */
 
-            /* Consume all *other* following spaces/tabs */
+            /* Consume all *other* following spaces/tabs. */
             while (lex_idx < length && (str[lex_idx] == ' ' || str[lex_idx] == '\t')) {
                 lex_idx++;
             }
-            if (lex_idx >= length) break; /* String ended in \ + spaces */
+            if (lex_idx >= length) break; /* String ended in \ + spaces. */
 
-            next_char = str[lex_idx]; /* Look at what's after the spaces */
+            next_char = str[lex_idx]; /* Look at what's after the spaces. */
         }
 
-        /* Check for the newline (either immediately after \ or after spaces) */
+        /* Check for the newline (either immediately after \ or after spaces). */
         bool newline_found = false;
         if (next_char == '\n') {
-            lex_idx++; /* Consume \n */
+            lex_idx++; /* Consume \n. */
             newline_found = true;
         } else if (next_char == '\r') {
-            lex_idx++; /* Consume \r */
+            lex_idx++; /* Consume \r. */
             if (lex_idx < length && str[lex_idx] == '\n') {
-                lex_idx++; /* Consume \n (for \r\n pair) */
+                lex_idx++; /* Consume \n (for \r\n pair). */
             }
             newline_found = true;
         }
 
-        /* If it *was* a line continuation, consume leading whitespace on *next* line */
+        /* If it *was* a line continuation, consume leading whitespace on *next* line. */
         if (newline_found) {
             while (lex_idx < length && (str[lex_idx] == ' ' || str[lex_idx] == '\t')) {
                 lex_idx++;
@@ -385,17 +390,18 @@ static Cell* parse_string(const char* str, const int len) {
         lex_idx++;
     }
 
-    /* Null-terminate the new, clean string */
+    /* Null-terminate the new, clean string. */
     internal_buffer[buf_idx] = '\0';
     return make_cell_string(internal_buffer);
 }
 
-static Cell* parse_boolean(const char* tok, const int line) {
+static Cell* parse_boolean(const char* tok, const int line)
+{
     if (strcmp(tok, "t") == 0 ||
         strcmp(tok, "true") == 0) return make_cell_boolean(1);
     if (strcmp(tok, "f") == 0 ||
         strcmp(tok, "false") == 0) return make_cell_boolean(0);
-    /* Otherwise an error */
+    /* Otherwise an error. */
     char err_buf[128] = {0};
     snprintf(err_buf, sizeof(err_buf), "Line %d: Unable to parse token: '%s#%s%s'",
                     line,
@@ -403,7 +409,8 @@ static Cell* parse_boolean(const char* tok, const int line) {
     return make_cell_error(err_buf, SYNTAX_ERR);
 }
 
-static Cell* parse_symbol(char* tok, const int line, const int len) {
+static Cell* parse_symbol(char* tok, const int line, const int len)
+{
     /* This is kind of an ugly kludge, but I'm
      * not sure how to do it more elegantly. */
     if (strcmp(tok, "+inf.0") == 0 ||
@@ -417,17 +424,18 @@ static Cell* parse_symbol(char* tok, const int line, const int len) {
     return make_cell_symbol(tok);
 }
 
-static Cell* parse_character(char* tok, const int line, const int len) {
+static Cell* parse_character(char* tok, const int line, const int len)
+{
     char err_buf[128] = {0};
     
-    /* Handle the special '#\' -> space case */
+    /* Handle the special '#\' -> space case. */
     if (len == 0) {
         return make_cell_char(' ');
     }
 
     /* Check for multi-letter named characters and hex literals. */
     if (len > 1 || tok[0] == 'x') {
-        /* Handle (R7RS required) named characters */
+        /* Handle (R7RS required) named characters. */
         if (strcmp(tok, "space") == 0) return make_cell_char(' ');
         if (strcmp(tok, "newline") == 0) return make_cell_char('\n');
         if (strcmp(tok, "alarm") == 0) return make_cell_char(0x7);
@@ -438,7 +446,7 @@ static Cell* parse_character(char* tok, const int line, const int len) {
         if (strcmp(tok, "return") == 0) return make_cell_char(0xd);
         if (strcmp(tok, "tab") == 0) return make_cell_char('\t');
 
-        /* Check mapping of implementation-specific named chars */
+        /* Check mapping of implementation-specific named chars. */
         const NamedChar* named_char = find_named_char(tok);
         if (named_char) {
             return make_cell_char(named_char->codepoint);
@@ -487,18 +495,21 @@ static Cell* parse_character(char* tok, const int line, const int len) {
     return make_cell_char(code_point);
 }
 
-static Token *peek(const TokenArray *p) {
+static Token *peek(const TokenArray *p)
+{
     if (p->position < p->count) return &p->tokens[p->position];
     return nullptr;
 }
 
-static Token *advance(TokenArray *p) {
+static Token *advance(TokenArray *p)
+{
     if (p->position < p->count) return &p->tokens[p->position++];
     return nullptr;
 }
 
-Cell* parse_tokens(TokenArray *ta) {
-    /* First check that the expression is balanced */
+Cell* parse_tokens(TokenArray *ta)
+{
+    /* First check that the expression is balanced. */
     int left_count = 0, right_count = 0;
 
     for (int i = 0; i < ta->count; i++) {
@@ -512,13 +523,13 @@ Cell* parse_tokens(TokenArray *ta) {
             SYNTAX_ERR);
     }
 
-    /* Check token type and dispatch accordingly */
+    /* Check token type and dispatch accordingly. */
     Token *token = &ta->tokens[ta->position];
     if (!token) return nullptr;
 
     switch (token->type) {
-        case T_EOF: return nullptr; /* We're done */
-        /* Dispatch out the atoms, first */
+        case T_EOF: return nullptr; /* We're done. */
+        /* Dispatch out the atoms, first. */
         case T_NUMBER: return parse_number(token_to_string(token), token->line, token->length);
         case T_STRING: return parse_string(token_to_string(token), token->length);
         case T_SYMBOL: return parse_symbol(token_to_string(token), token->line, token->length);
@@ -528,13 +539,13 @@ Cell* parse_tokens(TokenArray *ta) {
         default: break;
     }
 
-    /* It's a compound type */
+    /* It's a compound type. */
     char err_buf[128] = {0};
 
-    /* Just handle quote and quasiquote the same for now */
+    /* Just handle quote and quasiquote the same for now. */
     if (token->type == T_QUOTE || token->type == T_QUASIQUOTE) {
-        /* Grab the next token */
-        Token* t = advance(ta);
+        /* Grab the next token. */
+        const Token* t = advance(ta);
         Cell *quoted = parse_tokens(ta);
         if (!quoted) {
             snprintf(err_buf, sizeof(err_buf),
@@ -588,7 +599,7 @@ Cell* parse_tokens(TokenArray *ta) {
                     SYNTAX_ERR);
             }
             Cell* bv = make_cell_bytevector(bv_t);
-            token = advance(ta); /* consume 'u8' */
+            token = advance(ta); /* consume 'u8'. */
 
             if (peek(ta)->type != T_LEFT_PAREN) {
                 snprintf(err_buf, sizeof(err_buf),
@@ -597,7 +608,7 @@ Cell* parse_tokens(TokenArray *ta) {
                 return make_cell_error(err_buf, SYNTAX_ERR);
             }
 
-            token = advance(ta); /* Consume '(' */
+            token = advance(ta); /* Consume '('. */
             while (peek(ta)->type != T_RIGHT_PAREN) {
                 const Cell* val = parse_tokens(ta);
                 if (val->type != CELL_INTEGER) {
@@ -629,7 +640,7 @@ Cell* parse_tokens(TokenArray *ta) {
             return bv;
         }
 
-        /* Vector */
+        /* Vector. */
         Cell* vec = make_cell_vector();
 
         if (peek(ta)->type != T_LEFT_PAREN) {
@@ -639,7 +650,7 @@ Cell* parse_tokens(TokenArray *ta) {
             return make_cell_error(err_buf, SYNTAX_ERR);
         }
 
-        token = advance(ta); /* Consume '(' */
+        token = advance(ta); /* Consume '('. */
         while (peek(ta)->type != T_RIGHT_PAREN) {
             cell_add(vec, parse_tokens(ta));
             advance(ta);
@@ -654,7 +665,7 @@ Cell* parse_tokens(TokenArray *ta) {
         return vec;
     }
 
-    /* S-expression */
+    /* S-expression. */
     if (token->type == T_LEFT_PAREN) {
         token = advance(ta); /* Consume '(' */
         if (token->type == T_RIGHT_PAREN) {
