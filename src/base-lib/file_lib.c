@@ -24,8 +24,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
+#ifdef __APPLE__
 #include <sys/syslimits.h>
-
+#endif
 
 /*-------------------------------------------------------*
  *         Local helpers for file/dir procedures         *
@@ -43,7 +44,8 @@ typedef enum : uint8_t {
     F_ERR     /* stat call error. */
 } f_type;
 
-static f_type f_get_type(const char* file) {
+static f_type f_get_type(const char* file)
+{
     struct stat buf;
     if (lstat(file, &buf) < 0) {
         /* Signal error to caller. */
@@ -65,7 +67,8 @@ static f_type f_get_type(const char* file) {
  *        File type and other file/dir predicates        *
  * ------------------------------------------------------*/
 
-static Cell* reg_file_pred(const Lex* e, const Cell* a) {
+static Cell* reg_file_pred(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING);
     if (err) { return err; }
@@ -85,7 +88,8 @@ static Cell* reg_file_pred(const Lex* e, const Cell* a) {
     return False_Obj;
 }
 
-static Cell* directory_pred(const Lex* e, const Cell* a) {
+static Cell* directory_pred(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING);
     if (err) { return err; }
@@ -105,7 +109,8 @@ static Cell* directory_pred(const Lex* e, const Cell* a) {
     return False_Obj;
 }
 
-static Cell* symlink_pred(const Lex* e, const Cell* a) {
+static Cell* symlink_pred(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING);
     if (err) { return err; }
@@ -125,7 +130,8 @@ static Cell* symlink_pred(const Lex* e, const Cell* a) {
     return False_Obj;
 }
 
-static Cell* char_device_pred(const Lex* e, const Cell* a) {
+static Cell* char_device_pred(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING);
     if (err) { return err; }
@@ -145,7 +151,8 @@ static Cell* char_device_pred(const Lex* e, const Cell* a) {
     return False_Obj;
 }
 
-static Cell* block_device_pred(const Lex* e, const Cell* a) {
+static Cell* block_device_pred(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING);
     if (err) { return err; }
@@ -165,7 +172,8 @@ static Cell* block_device_pred(const Lex* e, const Cell* a) {
     return False_Obj;
 }
 
-static Cell* pipe_pred(const Lex* e, const Cell* a) {
+static Cell* pipe_pred(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING);
     if (err) { return err; }
@@ -185,7 +193,8 @@ static Cell* pipe_pred(const Lex* e, const Cell* a) {
     return False_Obj;
 }
 
-static Cell* socket_pred(const Lex* e, const Cell* a) {
+static Cell* socket_pred(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING);
     if (err) { return err; }
@@ -206,7 +215,8 @@ static Cell* socket_pred(const Lex* e, const Cell* a) {
 }
 
 /* 'file-exists?' -> CELL_BOOLEAN - file exists predicate */
-static Cell* file_exists_pred(const Lex* e, const Cell* a) {
+static Cell* file_exists_pred(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING);
     if (err) { return err; }
@@ -223,7 +233,8 @@ static Cell* file_exists_pred(const Lex* e, const Cell* a) {
  *            Basic file operation procedures            *
  * ------------------------------------------------------*/
 
-static Cell* get_cwd(const Lex* e, const Cell* a) {
+static Cell* get_cwd(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 0);
     if (err) { return err; }
@@ -274,7 +285,8 @@ static Cell* mkdir__(const Lex* e, const Cell* a)
 }
 
 /* 'delete-file -> CELL_BOOLEAN - delete a file, and return a bool confirming outcome. */
-static Cell* unlink_file(const Lex* e, const Cell* a) {
+static Cell* unlink_file(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING);
     if (err) { return err; }
@@ -289,7 +301,8 @@ static Cell* unlink_file(const Lex* e, const Cell* a) {
 }
 
 /* Register the procedures in the environment. */
-void cozenage_library_init(const Lex* e) {
+void cozenage_library_init(const Lex* e)
+{
     lex_add_builtin(e, "reg-file?", reg_file_pred);
     lex_add_builtin(e, "directory?", directory_pred);
     lex_add_builtin(e, "symlink?", symlink_pred);

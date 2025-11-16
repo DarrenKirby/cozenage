@@ -26,7 +26,8 @@
 
 extern char **environ;
 
-static Cell* builtin_get_env_var(const Lex* e, const Cell* a) {
+static Cell* builtin_get_env_var(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING);
     if (err) { return err; }
@@ -34,13 +35,14 @@ static Cell* builtin_get_env_var(const Lex* e, const Cell* a) {
 
     const char *env = getenv(a->cell[0]->str);
     if (env == NULL) {
-        return make_cell_boolean(0);
+        return False_Obj;
     }
     const char* var_string = GC_strdup(env);
     return make_cell_string(var_string);
 }
 
-static Cell* builtin_get_env_vars(const Lex* e, const Cell* a) {
+static Cell* builtin_get_env_vars(const Lex* e, const Cell* a)
+{
     (void)e; (void)a;
     Cell* err = CHECK_ARITY_EXACT(a, 0);
     if (err) { return err; }
@@ -63,7 +65,8 @@ static Cell* builtin_get_env_vars(const Lex* e, const Cell* a) {
     return result;
 }
 
-void cozenage_library_init(const Lex* e) {
+void cozenage_library_init(const Lex* e)
+{
     lex_add_builtin(e, "get-environment-variable", builtin_get_env_var);
     lex_add_builtin(e, "get-environment-variables", builtin_get_env_vars);
 }

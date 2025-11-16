@@ -17,13 +17,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-
 #include "types.h"
 #include "cell.h"
 #include <time.h>
 
+
 /* R7RSs "suitable constant" (TAI-UTC offset)
- * As of 2025, this is 37.0 seconds. */
+ * As of June 2025, this is 37.0 seconds. */
 #define TAI_UTC_OFFSET 37.0;
 
 
@@ -33,7 +33,8 @@
  * midnight Universal Time) and the value 1.0 represents one TAI second later. Neither high accuracy
  * nor high precision are required; in particular, returning Coordinated Universal Time plus a
  * suitable constant might be the best an implementation can do. */
-static Cell* builtin_current_second(const Lex* e, const Cell* a) {
+static Cell* builtin_current_second(const Lex* e, const Cell* a)
+{
     (void)e; (void)a;
     struct timespec ts;
 
@@ -55,7 +56,8 @@ static Cell* builtin_current_second(const Lex* e, const Cell* a) {
  * implementation-defined epoch. A jiffy is an implementation-defined fraction of a second which is
  * defined by the return value of the jiffies-per-second procedure. The starting epoch is guaranteed
  * to be constant during a run of the program, but may vary between runs. */
-static Cell* builtin_current_jiffy(const Lex* e, const Cell* a) {
+static Cell* builtin_current_jiffy(const Lex* e, const Cell* a)
+{
     (void)e; (void)a;
     struct timespec ts;
 
@@ -74,7 +76,8 @@ static Cell* builtin_current_jiffy(const Lex* e, const Cell* a) {
 /* (jiffies-per-second)
  * Returns an exact integer representing the number of jiffies per SI second. This value is an
  * implementation-specified constant. Cozenage uses 1 billion, ie: nanoseconds. */
-static Cell* builtin_jiffies_per_second(const Lex* e, const Cell* a) {
+static Cell* builtin_jiffies_per_second(const Lex* e, const Cell* a)
+{
     (void)e; (void)a;
     return make_cell_integer(1000000000);
 }
@@ -83,7 +86,8 @@ static Cell* builtin_jiffies_per_second(const Lex* e, const Cell* a) {
  * Can be called with zero or one argument. If an argument is provided, it must be a string which is
  * a format specification as per the C library function strftime(3). With no argument, the format
  * specifier is "%Y-%m-%d %H:%M:%S", which prints the date/time as: "2025-10-23 17:00:17" in UTC. */
-static Cell* builtin_current_datetime_utc(const Lex* e, const Cell* a) {
+static Cell* builtin_current_datetime_utc(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_RANGE(a, 0, 1);
     if (err) return err;
@@ -113,7 +117,8 @@ static Cell* builtin_current_datetime_utc(const Lex* e, const Cell* a) {
  * a format specification as per the C library function strftime(3). With no argument, the format
  * specifier is "%Y-%m-%d %H:%M:%S", which prints the date/time as: "2025-10-23 17:00:17" in the
  * local time. */
-static Cell* builtin_current_datetime_local(const Lex* e, const Cell* a) {
+static Cell* builtin_current_datetime_local(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_RANGE(a, 0, 1);
     if (err) return err;
@@ -138,7 +143,8 @@ static Cell* builtin_current_datetime_local(const Lex* e, const Cell* a) {
     return make_cell_string(buf);
 }
 
-void cozenage_library_init(const Lex* e) {
+void cozenage_library_init(const Lex* e)
+{
     lex_add_builtin(e, "current-second", builtin_current_second);
     lex_add_builtin(e, "current-jiffy", builtin_current_jiffy);
     lex_add_builtin(e, "jiffies-per-second", builtin_jiffies_per_second);

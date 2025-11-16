@@ -29,7 +29,8 @@ static Cell* bits_int_to_bitstring(const Lex* e, const Cell* a);
 
 /* Helper which returns a variable-width two's complement representation
  * of a signed long long */
-static char* format_twos_complement(const long long val) {
+static char* format_twos_complement(const long long val)
+{
     /* Handle the zero case, which is special. */
     if (val == 0) {
         char* zero_str = malloc(2);
@@ -83,7 +84,8 @@ static char* format_twos_complement(const long long val) {
  *            (cozenage bits) library procedures              *
  * -----------------------------------------------------------*/
 
-static Cell* bits_right_shift(const Lex* e, const Cell* a) {
+static Cell* bits_right_shift(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2);
     if (err) return err;
@@ -107,7 +109,8 @@ static Cell* bits_right_shift(const Lex* e, const Cell* a) {
     return result;
 }
 
-static Cell* bits_left_shift(const Lex* e, const Cell* a) {
+static Cell* bits_left_shift(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2);
     if (err) return err;
@@ -131,7 +134,8 @@ static Cell* bits_left_shift(const Lex* e, const Cell* a) {
     return result;
 }
 
-static Cell* bits_bitwise_and(const Lex* e, const Cell* a) {
+static Cell* bits_bitwise_and(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2);
     if (err) return err;
@@ -139,14 +143,17 @@ static Cell* bits_bitwise_and(const Lex* e, const Cell* a) {
     if (err) return err;
 
     if (a->cell[0]->type == CELL_SYMBOL) {
-        return make_cell_error("Bitstrings not implemented yet", GEN_ERR);
+        return make_cell_error(
+            "Bitstrings not implemented yet",
+            GEN_ERR);
     }
     const long long lhs = (long long)cell_to_long_double(a->cell[0]);
     const long long rhs = (int)cell_to_long_double(a->cell[1]);
     return make_cell_integer(lhs & rhs);
 }
 
-static Cell* bits_bitwise_or(const Lex* e, const Cell* a) {
+static Cell* bits_bitwise_or(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2);
     if (err) return err;
@@ -154,14 +161,17 @@ static Cell* bits_bitwise_or(const Lex* e, const Cell* a) {
     if (err) return err;
 
     if (a->cell[0]->type == CELL_SYMBOL) {
-        return make_cell_error("Bitstrings not implemented yet", GEN_ERR);
+        return make_cell_error(
+            "Bitstrings not implemented yet",
+            GEN_ERR);
     }
     const long long lhs = (long long)cell_to_long_double(a->cell[0]);
     const long long rhs = (long long)cell_to_long_double(a->cell[1]);
     return make_cell_integer(lhs | rhs);
 }
 
-static Cell* bits_bitwise_xor(const Lex* e, const Cell* a) {
+static Cell* bits_bitwise_xor(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2);
     if (err) return err;
@@ -169,14 +179,17 @@ static Cell* bits_bitwise_xor(const Lex* e, const Cell* a) {
     if (err) return err;
 
     if (a->cell[0]->type == CELL_SYMBOL) {
-        return make_cell_error("Bitstrings not implemented yet", GEN_ERR);
+        return make_cell_error(
+            "Bitstrings not implemented yet",
+            GEN_ERR);
     }
     const long long lhs = (long long)cell_to_long_double(a->cell[0]);
     const long long rhs = (long long)cell_to_long_double(a->cell[1]);
     return make_cell_integer(lhs ^ rhs);
 }
 
-static Cell* bits_bitwise_not(const Lex* e, const Cell* a) {
+static Cell* bits_bitwise_not(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
@@ -184,13 +197,16 @@ static Cell* bits_bitwise_not(const Lex* e, const Cell* a) {
     if (err) return err;
 
     if (a->cell[0]->type == CELL_SYMBOL) {
-        return make_cell_error("Bitstrings not implemented yet", GEN_ERR);
+        return make_cell_error(
+            "Bitstrings not implemented yet",
+            GEN_ERR);
     }
     const long long val = (long long)cell_to_long_double(a->cell[0]);
     return make_cell_integer(~val);
 }
 
-static Cell* bits_int_to_bitstring(const Lex* e, const Cell* a) {
+static Cell* bits_int_to_bitstring(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
@@ -207,7 +223,8 @@ static Cell* bits_int_to_bitstring(const Lex* e, const Cell* a) {
     return result;
 }
 
-static Cell* bits_bitstring_to_int(const Lex* e, const Cell* a) {
+static Cell* bits_bitstring_to_int(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
@@ -220,14 +237,18 @@ static Cell* bits_bitstring_to_int(const Lex* e, const Cell* a) {
     if (ros[0] == '0') {
         const long long result = strtoll(ros, &end_ptr, 2);
         if (*end_ptr != '\0') {
-            return make_cell_error("bitstring->int: invalid bitstring", VALUE_ERR);
+            return make_cell_error(
+                "bitstring->int: invalid bitstring",
+                VALUE_ERR);
         }
         return make_cell_integer(result);
     }
     const size_t len = strlen(ros);
     const long long positive_part = strtoll(ros + 1, &end_ptr, 2);
     if (*end_ptr != '\0') {
-        return make_cell_error("bitstring->int: invalid bitstring", VALUE_ERR);
+        return make_cell_error(
+            "bitstring->int: invalid bitstring",
+            VALUE_ERR);
     }
     /* The value of the leading '1' (the negative part)
      * This is -(2^(len-1)) */

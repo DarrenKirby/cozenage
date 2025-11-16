@@ -22,7 +22,8 @@
 #include "pairs.h"
 
 
-static Cell* builtin_caaar(const Lex* e, const Cell* a) {
+static Cell* builtin_caaar(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) { return err; }
@@ -30,7 +31,8 @@ static Cell* builtin_caaar(const Lex* e, const Cell* a) {
     return car__(car__(car__(a->cell[0])));
 }
 
-static Cell* builtin_caaaar(const Lex* e, const Cell* a) {
+static Cell* builtin_caaaar(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) { return err; }
@@ -38,7 +40,8 @@ static Cell* builtin_caaaar(const Lex* e, const Cell* a) {
     return car__(car__(car__(car__(a->cell[0]))));
 }
 
-static Cell* builtin_caaddr(const Lex* e, const Cell* a) {
+static Cell* builtin_caaddr(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) { return err; }
@@ -46,7 +49,8 @@ static Cell* builtin_caaddr(const Lex* e, const Cell* a) {
     return car__(car__(cdr__(cdr__(a->cell[0]))));
 }
 
-static Cell* builtin_cadaar(const Lex* e, const Cell* a) {
+static Cell* builtin_cadaar(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) { return err; }
@@ -54,7 +58,8 @@ static Cell* builtin_cadaar(const Lex* e, const Cell* a) {
     return car__(cdr__(car__(car__(a->cell[0]))));
 }
 
-static Cell* builtin_cadar(const Lex* e, const Cell* a) {
+static Cell* builtin_cadar(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) { return err; }
@@ -62,7 +67,8 @@ static Cell* builtin_cadar(const Lex* e, const Cell* a) {
     return car__(cdr__(car__(a->cell[0])));
 }
 
-static Cell* builtin_cadddr(const Lex* e, const Cell* a) {
+static Cell* builtin_cadddr(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) { return err; }
@@ -70,7 +76,8 @@ static Cell* builtin_cadddr(const Lex* e, const Cell* a) {
     return car__(cdr__(cdr__(cdr__(a->cell[0]))));
 }
 
-static Cell* builtin_cdaaar(const Lex* e, const Cell* a) {
+static Cell* builtin_cdaaar(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) { return err; }
@@ -78,7 +85,8 @@ static Cell* builtin_cdaaar(const Lex* e, const Cell* a) {
     return cdr__(car__(car__(car__(a->cell[0]))));
 }
 
-static Cell* builtin_cdaar(const Lex* e, const Cell* a) {
+static Cell* builtin_cdaar(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) { return err; }
@@ -86,7 +94,8 @@ static Cell* builtin_cdaar(const Lex* e, const Cell* a) {
     return cdr__(car__(car__(a->cell[0])));
 }
 
-static Cell* builtin_cdaddr(const Lex* e, const Cell* a) {
+static Cell* builtin_cdaddr(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) { return err; }
@@ -94,7 +103,8 @@ static Cell* builtin_cdaddr(const Lex* e, const Cell* a) {
     return cdr__(car__(cdr__(cdr__(a->cell[0]))));
 }
 
-static Cell* builtin_cddaar(const Lex* e, const Cell* a) {
+static Cell* builtin_cddaar(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) { return err; }
@@ -102,7 +112,8 @@ static Cell* builtin_cddaar(const Lex* e, const Cell* a) {
     return cdr__(cdr__(car__(car__(a->cell[0]))));
 }
 
-static Cell* builtin_cddar(const Lex* e, const Cell* a) {
+static Cell* builtin_cddar(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) { return err; }
@@ -110,7 +121,8 @@ static Cell* builtin_cddar(const Lex* e, const Cell* a) {
     return cdr__(cdr__(car__(a->cell[0])));
 }
 
-static Cell* builtin_cddddr(const Lex* e, const Cell* a) {
+static Cell* builtin_cddddr(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) { return err; }
@@ -118,7 +130,8 @@ static Cell* builtin_cddddr(const Lex* e, const Cell* a) {
     return cdr__(cdr__(cdr__(cdr__(a->cell[0]))));
 }
 
-static Cell* builtin_caaadr(const Lex* e, const Cell* a) {
+static Cell* builtin_caaadr(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) { return err; }
@@ -126,7 +139,8 @@ static Cell* builtin_caaadr(const Lex* e, const Cell* a) {
     return car__(car__(car__(cdr__(a->cell[0]))));
 }
 
-static Cell* builtin_caadar(const Lex* e, const Cell* a) {
+static Cell* builtin_caadar(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) { return err; }
@@ -134,7 +148,8 @@ static Cell* builtin_caadar(const Lex* e, const Cell* a) {
     return car__(car__(cdr__(car__(a->cell[0]))));
 }
 
-static Cell* builtin_caadr(const Lex* e, const Cell* a) {
+static Cell* builtin_caadr(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) { return err; }
@@ -142,7 +157,8 @@ static Cell* builtin_caadr(const Lex* e, const Cell* a) {
     return car__(car__(cdr__(a->cell[0])));
 }
 
-static Cell* builtin_cadadr(const Lex* e, const Cell* a) {
+static Cell* builtin_cadadr(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) { return err; }
@@ -150,7 +166,8 @@ static Cell* builtin_cadadr(const Lex* e, const Cell* a) {
     return car__(cdr__(car__(cdr__(a->cell[0]))));
 }
 
-static Cell* builtin_caddar(const Lex* e, const Cell* a) {
+static Cell* builtin_caddar(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) { return err; }
@@ -158,7 +175,8 @@ static Cell* builtin_caddar(const Lex* e, const Cell* a) {
     return car__(cdr__(cdr__(car__(a->cell[0]))));
 }
 
-static Cell* builtin_caddr(const Lex* e, const Cell* a) {
+static Cell* builtin_caddr(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) { return err; }
@@ -166,7 +184,8 @@ static Cell* builtin_caddr(const Lex* e, const Cell* a) {
     return car__(cdr__(cdr__(a->cell[0])));
 }
 
-static Cell* builtin_cdaadr(const Lex* e, const Cell* a) {
+static Cell* builtin_cdaadr(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) { return err; }
@@ -174,7 +193,8 @@ static Cell* builtin_cdaadr(const Lex* e, const Cell* a) {
     return cdr__(car__(car__(cdr__(a->cell[0]))));
 }
 
-static Cell* builtin_cdadar(const Lex* e, const Cell* a) {
+static Cell* builtin_cdadar(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) { return err; }
@@ -182,7 +202,8 @@ static Cell* builtin_cdadar(const Lex* e, const Cell* a) {
     return cdr__(car__(cdr__(car__(a->cell[0]))));
 }
 
-static Cell* builtin_cdadr(const Lex* e, const Cell* a) {
+static Cell* builtin_cdadr(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) { return err; }
@@ -190,7 +211,8 @@ static Cell* builtin_cdadr(const Lex* e, const Cell* a) {
     return cdr__(car__(cdr__(a->cell[0])));
 }
 
-static Cell* builtin_cddadr(const Lex* e, const Cell* a) {
+static Cell* builtin_cddadr(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) { return err; }
@@ -198,7 +220,8 @@ static Cell* builtin_cddadr(const Lex* e, const Cell* a) {
     return cdr__(cdr__(car__(cdr__(a->cell[0]))));
 }
 
-static Cell* builtin_cdddar(const Lex* e, const Cell* a) {
+static Cell* builtin_cdddar(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) { return err; }
@@ -206,7 +229,8 @@ static Cell* builtin_cdddar(const Lex* e, const Cell* a) {
     return cdr__(cdr__(cdr__(car__(a->cell[0]))));
 }
 
-static Cell* builtin_cdddr(const Lex* e, const Cell* a) {
+static Cell* builtin_cdddr(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) { return err; }
