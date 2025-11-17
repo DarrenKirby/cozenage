@@ -32,6 +32,8 @@
 #include "chars.h"
 #include "symbols.h"
 #include "errors.h"
+#include "random.h"
+
 #include <gc.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -415,4 +417,8 @@ void lex_add_builtins(const Lex* e)
     lex_add_builtin(e, "read-error?", builtin_read_error);
     lex_add_builtin(e, "file-error?", builtin_file_error);
     lex_add_builtin(e, "error-object?", builtin_error_object);
+    /* Random numbers */
+    lex_add_builtin(e, "randint", builtin_randint);
+    lex_add_builtin(e, "randbl", builtin_randbl);
+    lex_add_builtin(e, "shuffle", builtin_shuffle);
 }
