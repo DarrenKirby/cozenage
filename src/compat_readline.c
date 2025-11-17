@@ -22,6 +22,7 @@
 #ifdef USE_GNU_READLINE
 
 #include "hash.h"
+
 #include <string.h>
 #include <stdlib.h>
 #include <gc/gc.h>

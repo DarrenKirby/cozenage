@@ -19,6 +19,7 @@
 
 #include "hash.h"
 #include "types.h"
+
 #include <string.h>
 #include <stdlib.h>
 #include <gc/gc.h>

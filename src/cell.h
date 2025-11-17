@@ -21,6 +21,7 @@
 #define COZENAGE_CELL_H
 
 #include "environment.h"
+
 #include <stdio.h>
 #include <unicode/umachine.h>
 

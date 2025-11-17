@@ -22,6 +22,7 @@
 #include "symbols.h"
 #include "hash.h"
 #include "bytevectors.h"
+
 #include <gc/gc.h>
 #include <stdlib.h>
 #include <string.h>

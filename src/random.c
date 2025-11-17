@@ -19,11 +19,10 @@
 
 #include "random.h"
 #include "cell.h"
+#include "special_forms.h"
 
 #include <openssl/ssl.h>
 #include <openssl/rand.h>
-
-#include "special_forms.h"
 
 
 /* Random integer in [0, limit) */

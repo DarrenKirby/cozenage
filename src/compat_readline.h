@@ -21,8 +21,6 @@
 #define COZENAGE_COMPAT_READLINE_H
 
 
-
-
 #ifdef _WIN32
 #include <string.h>
 

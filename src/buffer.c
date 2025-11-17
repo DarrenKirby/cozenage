@@ -18,6 +18,7 @@
 */
 
 #include "buffer.h"
+
 #include <string.h>
 #include <stdarg.h>
 #include <gc/gc.h>
