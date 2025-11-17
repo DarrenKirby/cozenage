@@ -26,6 +26,8 @@
 #include <sys/stat.h>
 #ifdef __APPLE__
 #include <sys/syslimits.h>
+#else
+#include <limits.h>
 #endif
 
 /*-------------------------------------------------------*
