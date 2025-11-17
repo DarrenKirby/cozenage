@@ -10,7 +10,7 @@ set(CMAKE_C_STANDARD 23)
 option(DEBUG_BUILD "Enable debug CFLAGS" OFF)
 
 if (DEBUG_BUILD)
-    set(CMAKE_C_FLAGS "-march=native -Wall -Wextra -Werror -Og -g -frounding-math -fsigned-zeros")
+    set(CMAKE_C_FLAGS "-march=native -Wall -Wextra -Werror -O0 -g -frounding-math -fsigned-zeros")
     message(STATUS "Building with debugging symbols enabled.")
 else()
     set(CMAKE_C_FLAGS "-march=native -Wall -Wextra -Werror -O2 -frounding-math -fsigned-zeros")
@@ -146,7 +146,19 @@ endif()
 
 # Find math/gc library
 find_library(M_LIB m)
+# No need to check - standard C library
+
 find_library(GC_LIB gc)
+if(NOT GC_LIB)
+    message(FATAL_ERROR "Could not find the 'gc' library. This is required for garbage collection.")
+endif()
+
+find_package(OpenSSL REQUIRED)
+
+#if(NOT OpenSSL)
+#    message(FATAL_ERROR "Could not find the 'ssl' library. This is required for random numbers.")
+#endif()
+
 # MODIFICATION: Find the 'dl' library (for dlopen, dlsym, etc.)
 find_library(DL_LIB dl)
 if(NOT DL_LIB)
@@ -181,6 +193,7 @@ target_link_libraries(cozenage PRIVATE
         ${M_LIB}
         ${GC_LIB}
         ${DL_LIB}
+        OpenSSL::SSL
         icu::uc
 )
 
