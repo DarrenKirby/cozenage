@@ -237,6 +237,66 @@ Cell* make_sexpr_len4(const Cell* a, const Cell* b, const Cell* c, const Cell* d
     return v;
 }
 
+/* Convert a CELL_SEXPR to a CELL_PAIR linked-list. */
+Cell* make_list_from_sexpr(Cell* c)
+{
+
+    /* Direct-return all the atomic types, and if it's already a list. */
+    if (c->type & (CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX|CELL_PAIR|
+                      CELL_BOOLEAN|CELL_CHAR|CELL_STRING|CELL_NIL|CELL_EOF|
+                      CELL_PROC|CELL_PORT|CELL_ERROR|CELL_SYMBOL)) {
+        return c;
+    }
+
+    /* Leave the top-level vector be, but convert internal members. */
+    if (c->type == CELL_VECTOR) {
+        Cell* result = make_cell_vector();
+        for (int i = 0; i < c->count; i++) {
+            cell_add(result, make_list_from_sexpr(c->cell[i]));
+        }
+        return result;
+    }
+
+    /* It is an S-expression. Check for improper list syntax. */
+    int dot_pos = -1;
+    if (c->count > 1) {
+        const Cell* dot_candidate = c->cell[c->count - 2];
+        if (dot_candidate->type == CELL_SYMBOL && strcmp(dot_candidate->sym, ".") == 0) {
+            dot_pos = c->count - 2;
+        }
+    }
+
+    /* Handle Improper List */
+    if (dot_pos != -1) {
+        /* The final cdr is the very last element in the S-expression. */
+        Cell* final_cdr = make_list_from_sexpr(c->cell[c->count - 1]);
+
+        /* Build the list chain backwards from the element *before* the dot. */
+        Cell* list_head = final_cdr;
+        for (int i = dot_pos - 1; i >= 0; i--) {
+            Cell* element = make_list_from_sexpr(c->cell[i]);
+            list_head = make_cell_pair(element, list_head);
+        }
+        return list_head;
+    }
+
+    /* Handle Proper List. */
+    Cell* list_head = make_cell_nil();
+    const int len = c->count;
+
+    for (int i = len - 1; i >= 0; i--) {
+        /* Recursively call this function on each element to ensure
+         * any nested S-expressions are also converted. */
+        Cell* element = make_list_from_sexpr(c->cell[i]);
+
+        /* Prepend the new element to the head of our list. */
+        list_head = make_cell_pair(element, list_head);
+        list_head->len = len - i;
+    }
+    return list_head;
+}
+
+
 Cell* make_sexpr_from_list(Cell* v)
 {
     Cell* result = make_cell_sexpr();

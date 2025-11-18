@@ -132,7 +132,7 @@ Cell* builtin_shuffle(const Lex* e, const Cell* a)
 
     Cell* sexp = make_sexpr_from_array(arr_size, c_arr);
     if (list) {
-        return sexpr_to_list(sexp);
+        return make_list_from_sexpr(sexp);
     }
     sexp->type = CELL_VECTOR;
     return sexp;

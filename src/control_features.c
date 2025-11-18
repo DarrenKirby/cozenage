@@ -373,5 +373,5 @@ Cell* builtin_command_line(const Lex* e, const Cell* a)
     for (int i = 0; i < g_argc; i++) {
         cell_add(args, make_cell_string(g_argv[i]));
     }
-    return sexpr_to_list(args);
+    return make_list_from_sexpr(args);
 }

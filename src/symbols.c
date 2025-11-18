@@ -199,5 +199,5 @@ Cell* builtin_features(const Lex* e, const Cell* a)
     snprintf(buf, sizeof(buf), "%s-%s", APP_NAME, APP_VERSION);
     cell_add(result_l, make_cell_symbol(buf));
 
-    return sexpr_to_list(result_l);
+    return make_list_from_sexpr(result_l);
 }

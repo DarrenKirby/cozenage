@@ -55,66 +55,6 @@ int is_syntactic_keyword(const char* s)
     return 0;
 }
 
-/* Convert a CELL_SEXPR to a CELL_PAIR linked-list */
-/* TODO - this should probably be in types.c */
-Cell* sexpr_to_list(Cell* c)
-{
-
-    /* Direct-return all the atomic types, and if it's already a list. */
-    if (c->type & (CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX|CELL_PAIR|
-                      CELL_BOOLEAN|CELL_CHAR|CELL_STRING|CELL_NIL|CELL_EOF|
-                      CELL_PROC|CELL_PORT|CELL_ERROR|CELL_SYMBOL)) {
-        return c;
-    }
-
-    /* Leave the top-level vector be, but convert internal members. */
-    if (c->type == CELL_VECTOR) {
-        Cell* result = make_cell_vector();
-        for (int i = 0; i < c->count; i++) {
-            cell_add(result, sexpr_to_list(c->cell[i]));
-        }
-        return result;
-    }
-
-    /* It is an S-expression. Check for improper list syntax. */
-    int dot_pos = -1;
-    if (c->count > 1) {
-        const Cell* dot_candidate = c->cell[c->count - 2];
-        if (dot_candidate->type == CELL_SYMBOL && strcmp(dot_candidate->sym, ".") == 0) {
-            dot_pos = c->count - 2;
-        }
-    }
-
-    /* Handle Improper List */
-    if (dot_pos != -1) {
-        /* The final cdr is the very last element in the S-expression. */
-        Cell* final_cdr = sexpr_to_list(c->cell[c->count - 1]);
-
-        /* Build the list chain backwards from the element *before* the dot. */
-        Cell* list_head = final_cdr;
-        for (int i = dot_pos - 1; i >= 0; i--) {
-            Cell* element = sexpr_to_list(c->cell[i]);
-            list_head = make_cell_pair(element, list_head);
-        }
-        return list_head;
-    }
-
-    /* Handle Proper List. */
-    Cell* list_head = make_cell_nil();
-    const int len = c->count;
-
-    for (int i = len - 1; i >= 0; i--) {
-        /* Recursively call this function on each element to ensure
-         * any nested S-expressions are also converted. */
-        Cell* element = sexpr_to_list(c->cell[i]);
-
-        /* Prepend the new element to the head of our list. */
-        list_head = make_cell_pair(element, list_head);
-        list_head->len = len - i;
-    }
-    return list_head;
-}
-
 Lex* build_lambda_env(const Lex* env, Cell* formals, Cell* args)
 {
     /* Create a new child environment. */
@@ -123,22 +63,13 @@ Lex* build_lambda_env(const Lex* env, Cell* formals, Cell* args)
     /* Bind formals to arguments. */
     /* Fully variadic (lambda args ...) */
     if (formals->type == CELL_SYMBOL) {
-        const Cell* arg_list = sexpr_to_list(args);
+        const Cell* arg_list = make_list_from_sexpr(args);
         lex_put_local(local_env, formals, arg_list);
-        return local_env;
-    }
-    /* This finds the (define (name . args) ...) form where the formals
-     * are passed as (. args)*/
-    /* TODO - is this even necessary? */
-    if (formals->type == CELL_SEXPR && formals->count == 2
-        && formals->cell[0]->type == CELL_SYMBOL && strcmp(formals->cell[0]->sym, ".") == 0) {
-        const Cell* arg_list = sexpr_to_list(args);
-        lex_put_local(local_env, formals->cell[1], arg_list);
         return local_env;
     }
 
     /* Standard or dotted-tail (lambda (a b) ...) or (lambda (a . r) ...) */
-    const Cell* lf = sexpr_to_list(formals);
+    const Cell* lf = make_list_from_sexpr(formals);
     int arg_idx = 0;
 
     /* Iterate through positional arguments */
@@ -168,7 +99,7 @@ Lex* build_lambda_env(const Lex* env, Cell* formals, Cell* args)
         for (int i = arg_idx; i < args->count; i++) {
             cell_add(rest, args->cell[i]);
         }
-        const Cell* rest_list = sexpr_to_list(rest);
+        const Cell* rest_list = make_list_from_sexpr(rest);
         lex_put_local(local_env, lf, rest_list);
     } else {
         fprintf(stderr, "malformed lambda call: bad args\n");
@@ -310,7 +241,7 @@ HandlerResult sf_quote(Lex* e, Cell* a)
     /* Extract the expression that was quoted. */
     Cell* qexpr = cell_take(a, 0);
 
-    Cell* result = sexpr_to_list(qexpr);
+    Cell* result = make_list_from_sexpr(qexpr);
     return (HandlerResult){ .action = ACTION_RETURN, .value = result };
 }
 
@@ -770,14 +701,10 @@ HandlerResult sf_letrec(Lex* e, Cell* a)
     const Cell* body = a;
     /* Create a new child environment. */
     Lex* local_env = new_child_env(e);
-    /* Iterate and bind placeholders. */
+    /* Iterate and bind 'unspecified' placeholders. */
     for (int i = 0; i < bindings->count; i++) {
         const Cell* variable = bindings->cell[i]->cell[0];
-        /* Use CELL_EOF for now to designate an 'unspecified' value,
-         * rather than create an explicit CELL_UNSPECIFIED type. */
-        /* TODO - should probably make an explicit unspecified type then
-         * change this to use it. */
-        lex_put_local(local_env, variable, make_cell_eof());
+        lex_put_local(local_env, variable, USP_Obj);
     }
     /* Iterate and bind init-expressions (lambdas) to variables (lambda names). */
     for (int i = 0; i < bindings->count; i++) {
