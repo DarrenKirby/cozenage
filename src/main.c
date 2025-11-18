@@ -50,7 +50,7 @@ Options:\n\
 \n\
     '-l' and '--library' accept a required comma-delimited list of\n\
     libraries to pre-load. Accepted values are:\n\
-    'bits' 'cxr' 'file' 'math' 'proc-env' and 'time' \n\n\
+    'bits' 'cxr' 'file' 'math' 'system' and 'time' \n\n\
 Report bugs to <darren@dragonbyte.ca>\n");
 }
 
@@ -74,8 +74,8 @@ static void process_library_arg(struct lib_load *l, const char *arg)
             l->time = 1;
         } else if (strcmp(token, "math") == 0) {
             l->math = 1;
-        } else if (strcmp(token, "proc-env") == 0) {
-            l->proc_env = 1;
+        } else if (strcmp(token, "system") == 0) {
+            l->system = 1;
         } else if (strcmp(token, "bits") == 0) {
             l->bits = 1;
         } else {

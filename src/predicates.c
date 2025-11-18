@@ -181,7 +181,7 @@ Cell* builtin_eof_pred(const Lex* e, const Cell* a)
 Cell* builtin_exact_pred(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX);
+    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX, "exact?");
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
     Cell* z = a->cell[0];
@@ -195,7 +195,7 @@ Cell* builtin_exact_pred(const Lex* e, const Cell* a)
 Cell* builtin_inexact_pred(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX);
+    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX, "inexact?");
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
 
@@ -255,7 +255,7 @@ Cell* builtin_rational(const Lex* e, const Cell* a)
     if (err) return err;
 
     /* Non-numbers are not rational */
-    if (check_arg_types(a, CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX)) {
+    if (check_arg_types(a, CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX, "rational?")) {
         return False_Obj;
     }
     const Cell* arg = a->cell[0];
@@ -308,7 +308,7 @@ Cell* builtin_exact_integer(const Lex* e, const Cell* a)
 Cell* builtin_zero(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX);
+    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX, "zero?");
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
 
@@ -327,7 +327,7 @@ Cell* builtin_zero(const Lex* e, const Cell* a)
 Cell* builtin_positive(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX);
+    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX, "positive?");
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
 
@@ -347,7 +347,7 @@ Cell* builtin_positive(const Lex* e, const Cell* a)
 Cell* builtin_negative(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX);
+    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX, "negative?");
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
 
@@ -367,7 +367,7 @@ Cell* builtin_negative(const Lex* e, const Cell* a)
 Cell* builtin_odd(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX);
+    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX, "odd?");
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
 
@@ -378,7 +378,7 @@ Cell* builtin_odd(const Lex* e, const Cell* a)
 Cell* builtin_even(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX);
+    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX, "even?");
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
 

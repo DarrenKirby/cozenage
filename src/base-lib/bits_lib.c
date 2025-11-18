@@ -22,6 +22,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <gc/gc.h>
 
 
 /* Forward declaration */
@@ -34,8 +35,8 @@ static char* format_twos_complement(const long long val)
 {
     /* Handle the zero case, which is special. */
     if (val == 0) {
-        char* zero_str = malloc(2);
-        strcpy(zero_str, "0");
+        char* zero_str = GC_MALLOC(2);
+        strncpy(zero_str, "0", 1);
         return zero_str;
     }
 
@@ -90,7 +91,7 @@ static Cell* bits_right_shift(const Lex* e, const Cell* a)
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2);
     if (err) return err;
-    err = check_arg_types(a, CELL_INTEGER|CELL_SYMBOL);
+    err = check_arg_types(a, CELL_INTEGER|CELL_SYMBOL, ">>");
     if (err) return err;
 
     const Cell* arg1 = a->cell[0];
@@ -115,7 +116,7 @@ static Cell* bits_left_shift(const Lex* e, const Cell* a)
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2);
     if (err) return err;
-    err = check_arg_types(a, CELL_INTEGER|CELL_SYMBOL);
+    err = check_arg_types(a, CELL_INTEGER|CELL_SYMBOL, "<<");
     if (err) return err;
 
     const Cell* arg1 = a->cell[0];
@@ -140,7 +141,7 @@ static Cell* bits_bitwise_and(const Lex* e, const Cell* a)
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2);
     if (err) return err;
-    err = check_arg_types(a, CELL_INTEGER|CELL_SYMBOL);
+    err = check_arg_types(a, CELL_INTEGER|CELL_SYMBOL, "&");
     if (err) return err;
 
     if (a->cell[0]->type == CELL_SYMBOL) {
@@ -158,7 +159,7 @@ static Cell* bits_bitwise_or(const Lex* e, const Cell* a)
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2);
     if (err) return err;
-    err = check_arg_types(a, CELL_INTEGER|CELL_SYMBOL);
+    err = check_arg_types(a, CELL_INTEGER|CELL_SYMBOL, "|");
     if (err) return err;
 
     if (a->cell[0]->type == CELL_SYMBOL) {
@@ -176,7 +177,7 @@ static Cell* bits_bitwise_xor(const Lex* e, const Cell* a)
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2);
     if (err) return err;
-    err = check_arg_types(a, CELL_INTEGER|CELL_SYMBOL);
+    err = check_arg_types(a, CELL_INTEGER|CELL_SYMBOL, "^");
     if (err) return err;
 
     if (a->cell[0]->type == CELL_SYMBOL) {
@@ -194,7 +195,7 @@ static Cell* bits_bitwise_not(const Lex* e, const Cell* a)
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
-    err = check_arg_types(a, CELL_INTEGER|CELL_SYMBOL);
+    err = check_arg_types(a, CELL_INTEGER|CELL_SYMBOL, "~");
     if (err) return err;
 
     if (a->cell[0]->type == CELL_SYMBOL) {
@@ -211,7 +212,7 @@ static Cell* bits_int_to_bitstring(const Lex* e, const Cell* a)
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
-    err = check_arg_types(a, CELL_INTEGER);
+    err = check_arg_types(a, CELL_INTEGER, "int->bitstring");
     if (err) return err;
 
     char* str = format_twos_complement(a->cell[0]->integer_v);
@@ -229,7 +230,7 @@ static Cell* bits_bitstring_to_int(const Lex* e, const Cell* a)
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
-    err = check_arg_types(a, CELL_SYMBOL);
+    err = check_arg_types(a, CELL_SYMBOL, "bitstring->int");
     if (err) return err;
 
     const char *binaryString = a->cell[0]->sym;

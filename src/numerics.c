@@ -36,7 +36,7 @@
 Cell* builtin_add(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX);
+    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX, "+");
     if (err) { return err; }
     /* identity law logic */
     if (a->count == 0) return make_cell_integer(0);
@@ -78,7 +78,7 @@ Cell* builtin_add(const Lex* e, const Cell* a)
 /* '-' -> CELL_INTEGER|CELL_REAL|CELL_RATIONAL|VAL_COMP - returns the difference of its arguments */
 Cell* builtin_sub(const Lex* e, const Cell* a)
 {
-    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX);
+    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX, "-");
     if (err) { return err; }
     if ((err = CHECK_ARITY_MIN(a, 1))) { return err; }
 
@@ -124,7 +124,7 @@ Cell* builtin_sub(const Lex* e, const Cell* a)
 /* '*' -> CELL_INTEGER|VAL_FLOAT|CELL_RATIONAL|VAL_COMP - returns the product of its arguments */
 Cell* builtin_mul(const Lex* e, const Cell* a)
 {
-    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX);
+    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX, "*");
     if (err) { return err; }
     /* identity law logic */
     if (a->count == 0) return make_cell_integer(1);
@@ -163,10 +163,10 @@ Cell* builtin_mul(const Lex* e, const Cell* a)
     return result;
 }
 
-/* '+' -> CELL_INTEGER|CELL_REAL|CELL_RATIONAL|VAL_COMP - returns the quotient of its arguments */
+/* '/' -> CELL_INTEGER|CELL_REAL|CELL_RATIONAL|VAL_COMP - returns the quotient of its arguments */
 Cell* builtin_div(const Lex* e, const Cell* a)
 {
-    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX);
+    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX, "/");
     if (err) { return err; }
     if ((err = CHECK_ARITY_MIN(a, 1))) { return err; }
 
@@ -275,7 +275,7 @@ Cell* builtin_div(const Lex* e, const Cell* a)
 Cell* builtin_abs(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX);
+    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX, "abs");
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
 
@@ -325,7 +325,7 @@ static Cell* expt_complex_op(const BuiltinFn op, const Lex* e, const Cell* z1, c
 Cell* builtin_expt(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX);
+    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX, "expt");
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 2))) { return err; }
 
@@ -397,7 +397,7 @@ Cell* builtin_expt(const Lex* e, const Cell* a)
 Cell* builtin_modulo(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_INTEGER);
+    Cell* err = check_arg_types(a, CELL_INTEGER, "modulo");
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 2))) { return err; }
     long long r = a->cell[0]->integer_v % a->cell[1]->integer_v;
@@ -412,7 +412,7 @@ Cell* builtin_modulo(const Lex* e, const Cell* a)
 Cell* builtin_quotient(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_INTEGER);
+    Cell* err = check_arg_types(a, CELL_INTEGER, "quotient");
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 2))) { return err; }
     return make_cell_integer(a->cell[0]->integer_v / a->cell[1]->integer_v);
@@ -423,7 +423,7 @@ Cell* builtin_quotient(const Lex* e, const Cell* a)
 Cell* builtin_remainder(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_INTEGER);
+    Cell* err = check_arg_types(a, CELL_INTEGER, "remainder");
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 2))) { return err; }
     return make_cell_integer(a->cell[0]->integer_v % a->cell[1]->integer_v);
@@ -434,7 +434,7 @@ Cell* builtin_remainder(const Lex* e, const Cell* a)
 Cell* builtin_max(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX);
+    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX, "max");
     if (err) { return err; }
     if ((err = CHECK_ARITY_MIN(a, 1))) { return err; }
 
@@ -465,7 +465,7 @@ Cell* builtin_max(const Lex* e, const Cell* a)
 Cell* builtin_min(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX);
+    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX, "min");
     if (err) { return err; }
     if ((err = CHECK_ARITY_MIN(a, 1))) { return err; }
 
@@ -494,7 +494,7 @@ Cell* builtin_min(const Lex* e, const Cell* a)
 Cell* builtin_floor(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL);
+    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL, "floor");
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
 
@@ -507,7 +507,7 @@ Cell* builtin_floor(const Lex* e, const Cell* a)
 Cell* builtin_ceiling(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL);
+    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL, "ceiling");
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
 
@@ -520,7 +520,7 @@ Cell* builtin_ceiling(const Lex* e, const Cell* a)
 Cell* builtin_round(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL);
+    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL, "round");
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
 
@@ -533,7 +533,7 @@ Cell* builtin_round(const Lex* e, const Cell* a)
 Cell* builtin_truncate(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL);
+    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL, "truncate");
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
 
@@ -546,7 +546,7 @@ Cell* builtin_truncate(const Lex* e, const Cell* a)
 Cell* builtin_numerator(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL);
+    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL, "numerator");
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
 
@@ -560,7 +560,7 @@ Cell* builtin_numerator(const Lex* e, const Cell* a)
 Cell* builtin_denominator(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL);
+    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL, "denominator");
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
 
@@ -580,7 +580,7 @@ Cell* builtin_denominator(const Lex* e, const Cell* a)
 Cell* builtin_rationalize(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL);
+    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL, "rationalize");
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 2))) { return err; }
 
@@ -632,7 +632,7 @@ Cell* builtin_rationalize(const Lex* e, const Cell* a)
 Cell* builtin_square(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX);
+    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX, "square");
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
 
@@ -644,7 +644,7 @@ Cell* builtin_square(const Lex* e, const Cell* a)
 Cell* builtin_sqrt(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX);
+    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX, "sqrt");
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
 
@@ -693,7 +693,7 @@ static unsigned long long integer_sqrt(const unsigned long long k)
 Cell* builtin_exact_integer_sqrt(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_INTEGER);
+    Cell* err = check_arg_types(a, CELL_INTEGER, "exact-integer-sqrt");
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
     const long long k = a->cell[0]->integer_v;
@@ -715,7 +715,7 @@ Cell* builtin_exact_integer_sqrt(const Lex* e, const Cell* a)
 Cell* builtin_exact(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX);
+    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX, "exact");
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
 
@@ -734,7 +734,7 @@ Cell* builtin_exact(const Lex* e, const Cell* a)
 Cell* builtin_inexact(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX);
+    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX, "inexact");
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
 
@@ -754,7 +754,7 @@ Cell* builtin_inexact(const Lex* e, const Cell* a)
 Cell* builtin_infinite(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX);
+    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX, "infinite?");
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
 
@@ -773,7 +773,7 @@ Cell* builtin_infinite(const Lex* e, const Cell* a)
 Cell* builtin_finite(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX);
+    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX, "finite?");
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
 
@@ -794,7 +794,7 @@ Cell* builtin_nan(const Lex* e, const Cell* a)
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
-    err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX);
+    err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX,"nan?");
     if (err) { return err; }
 
     const Cell* arg = a->cell[0];

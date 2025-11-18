@@ -20,7 +20,6 @@
 #include "symbols.h"
 #include "cell.h"
 #include "types.h"
-#include "special_forms.h"
 #include "main.h"
 
 /* For _POSIX_VERSION */
@@ -110,7 +109,7 @@ void init_special_forms(void) {
 Cell* builtin_symbol_equal_pred(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_SYMBOL);
+    Cell* err = check_arg_types(a, CELL_SYMBOL, "symbol=?");
     if (err) return err;
     err = CHECK_ARITY_MIN(a, 1);
     if (err) return err;

@@ -93,16 +93,17 @@ const char* cell_mask_types(const int mask)
  * --------------------------------------------------------*/
 
 /* Return NULL if all args are valid, else return a CELL_ERROR. */
-Cell* check_arg_types(const Cell* a, const int mask)
+Cell* check_arg_types(const Cell* a, const int mask, const char* fname)
 {
     for (int i = 0; i < a->count; i++) {
         const Cell* arg = a->cell[i];
 
-        /* bitwise AND: if arg->type isn't in mask, it's invalid */
+        /* bitwise AND: if arg->type isn't in mask, it's invalid. */
         if (!(arg->type & mask)) {
             char buf[128];
             snprintf(buf, sizeof(buf),
-                     "bad type at arg %d: got %s, expected %s",
+                     "%s: bad type at arg %d: got %s, expected %s",
+                     fname,
                      i+1,
                      cell_type_name(arg->type),
                      cell_mask_types(mask));

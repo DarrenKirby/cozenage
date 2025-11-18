@@ -39,7 +39,7 @@ Cell* builtin_char_to_int(const Lex* e, const Cell* a)
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
-    err = check_arg_types(a, CELL_CHAR);
+    err = check_arg_types(a, CELL_CHAR, "char->integer");
     if (err) return err;
 
     return make_cell_integer(a->cell[0]->char_v);
@@ -53,7 +53,7 @@ Cell* builtin_int_to_char(const Lex* e, const Cell* a)
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
-    err = check_arg_types(a, CELL_INTEGER);
+    err = check_arg_types(a, CELL_INTEGER, "integer->char");
     if (err) return err;
 
     const UChar32 val = (int)a->cell[0]->integer_v;
@@ -78,7 +78,7 @@ Cell* builtin_int_to_char(const Lex* e, const Cell* a)
 Cell* builtin_char_equal_pred(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_CHAR);
+    Cell* err = check_arg_types(a, CELL_CHAR, "char=?");
     if (err) return err;
 
     Cell** cells = GC_MALLOC(sizeof(Cell*) * a->count);;
@@ -94,7 +94,7 @@ Cell* builtin_char_equal_pred(const Lex* e, const Cell* a)
 Cell* builtin_char_lt_pred(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_CHAR);
+    Cell* err = check_arg_types(a, CELL_CHAR, "char<?");
     if (err) return err;
 
     Cell** cells = GC_MALLOC(sizeof(Cell*) * a->count);;
@@ -110,7 +110,7 @@ Cell* builtin_char_lt_pred(const Lex* e, const Cell* a)
 Cell* builtin_char_lte_pred(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_CHAR);
+    Cell* err = check_arg_types(a, CELL_CHAR, "char<=?");
     if (err) return err;
 
     Cell** cells = GC_MALLOC(sizeof(Cell*) * a->count);;
@@ -126,7 +126,7 @@ Cell* builtin_char_lte_pred(const Lex* e, const Cell* a)
 Cell* builtin_char_gt_pred(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_CHAR);
+    Cell* err = check_arg_types(a, CELL_CHAR, "char>?");
     if (err) return err;
 
     Cell** cells = GC_MALLOC(sizeof(Cell*) * a->count);;
@@ -142,7 +142,7 @@ Cell* builtin_char_gt_pred(const Lex* e, const Cell* a)
 Cell* builtin_char_gte_pred(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_CHAR);
+    Cell* err = check_arg_types(a, CELL_CHAR, "char>=?");
     if (err) return err;
 
     Cell** cells = GC_MALLOC(sizeof(Cell*) * a->count);;
@@ -314,7 +314,7 @@ Cell* builtin_digit_value(const Lex* e, const Cell* a)
 Cell* builtin_char_equal_ci(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_CHAR);
+    Cell* err = check_arg_types(a, CELL_CHAR, "char-ci=?");
     if (err) return err;
 
     Cell** cells = GC_MALLOC(sizeof(Cell*) * a->count);;
@@ -332,7 +332,7 @@ Cell* builtin_char_equal_ci(const Lex* e, const Cell* a)
 Cell* builtin_char_lt_ci(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_CHAR);
+    Cell* err = check_arg_types(a, CELL_CHAR, "char-ci<?");
     if (err) return err;
 
     Cell** cells = GC_MALLOC(sizeof(Cell*) * a->count);;
@@ -350,7 +350,7 @@ Cell* builtin_char_lt_ci(const Lex* e, const Cell* a)
 Cell* builtin_char_lte_ci(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_CHAR);
+    Cell* err = check_arg_types(a, CELL_CHAR, "char-ci<=?");
     if (err) return err;
 
     Cell** cells = GC_MALLOC(sizeof(Cell*) * a->count);;
@@ -368,7 +368,7 @@ Cell* builtin_char_lte_ci(const Lex* e, const Cell* a)
 Cell* builtin_char_gt_ci(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_CHAR);
+    Cell* err = check_arg_types(a, CELL_CHAR, "char-ci>?");
     if (err) return err;
 
     Cell** cells = GC_MALLOC(sizeof(Cell*) * a->count);;
@@ -386,7 +386,7 @@ Cell* builtin_char_gt_ci(const Lex* e, const Cell* a)
 Cell* builtin_char_gte_ci(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_CHAR);
+    Cell* err = check_arg_types(a, CELL_CHAR, "char-ci>=?");
     if (err) return err;
 
     Cell** cells = GC_MALLOC(sizeof(Cell*) * a->count);;

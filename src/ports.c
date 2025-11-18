@@ -147,7 +147,7 @@ Cell* builtin_read_line(const Lex* e, const Cell* a)
     (void)e;
     Cell* err = CHECK_ARITY_RANGE(a, 0, 1);
     if (err) return err;
-    err = check_arg_types(a, CELL_PORT);
+    err = check_arg_types(a, CELL_PORT, "read-line");
     if (err) return err;
 
     Cell* port;
@@ -245,7 +245,7 @@ Cell* builtin_read_char(const Lex* e, const Cell* a)
     (void)e;
     Cell* err = CHECK_ARITY_RANGE(a, 0, 1);
     if (err) return err;
-    err = check_arg_types(a, CELL_PORT);
+    err = check_arg_types(a, CELL_PORT,"read-char");
     if (err) return err;
 
     Cell* port;
@@ -279,7 +279,7 @@ Cell* builtin_peek_char(const Lex* e, const Cell* a)
     (void)e;
     Cell* err = CHECK_ARITY_RANGE(a, 0, 1);
     if (err) return err;
-    err = check_arg_types(a, CELL_PORT);
+    err = check_arg_types(a, CELL_PORT, "peek-char");
     if (err) return err;
 
     Cell* port;
@@ -553,7 +553,7 @@ Cell* builtin_flush_output_port(const Lex* e, const Cell* a)
     if (a->count == 0) {
         port = builtin_current_output_port(e, a);
     } else {
-        err = check_arg_types(a, CELL_PORT);
+        err = check_arg_types(a, CELL_PORT, "flush-output-port");
         if (err) return err;
         port = a->cell[0];
     }
@@ -608,7 +608,7 @@ Cell* builtin_char_ready(const Lex* e, const Cell* a)
     if (a->count == 0) {
         port = builtin_current_output_port(e, a);
     } else {
-        err = check_arg_types(a, CELL_PORT);
+        err = check_arg_types(a, CELL_PORT, "char-ready?");
         if (err) return err;
         port = a->cell[0];
     }
@@ -633,7 +633,7 @@ Cell* builtin_u8_ready(const Lex* e, const Cell* a)
     if (a->count == 0) {
         port = builtin_current_output_port(e, a);
     } else {
-        err = check_arg_types(a, CELL_PORT);
+        err = check_arg_types(a, CELL_PORT, "u8-ready?");
         if (err) return err;
         port = a->cell[0];
     }
@@ -690,7 +690,7 @@ Cell* builtin_write(const Lex* e, const Cell* a)
 Cell* builtin_open_input_file(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_STRING);
+    Cell* err = check_arg_types(a, CELL_STRING, "open-input-file");
     if (err) { return err; }
     err = CHECK_ARITY_EXACT(a, 1);
     if (err) { return err; }
@@ -715,7 +715,7 @@ Cell* builtin_open_input_file(const Lex* e, const Cell* a)
 Cell* builtin_open_binary_input_file(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_STRING);
+    Cell* err = check_arg_types(a, CELL_STRING,"open-binary-input-file");
     if (err) { return err; }
     err = CHECK_ARITY_EXACT(a, 1);
     if (err) { return err; }
@@ -732,7 +732,7 @@ Cell* builtin_open_binary_input_file(const Lex* e, const Cell* a)
 Cell* builtin_open_output_file(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_STRING);
+    Cell* err = check_arg_types(a, CELL_STRING,"open-output-file");
     if (err) { return err; }
     err = CHECK_ARITY_RANGE(a, 1, 2);
     if (err) { return err; }
@@ -760,7 +760,7 @@ Cell* builtin_open_output_file(const Lex* e, const Cell* a)
 Cell* builtin_open_binary_output_file(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_STRING);
+    Cell* err = check_arg_types(a, CELL_STRING, "open-binary-output-file");
     if (err) { return err; }
     err = CHECK_ARITY_EXACT(a, 1);
     if (err) { return err; }

@@ -50,7 +50,7 @@ typedef Cell* (*BuiltinFn)(const Lex* e, const Cell* args);
 
 const char* cell_type_name(int t);
 const char* cell_mask_types(int mask);
-Cell* check_arg_types(const Cell* a, int mask);
+Cell* check_arg_types(const Cell* a, int mask, const char* fname);
 Cell* check_arg_arity(const Cell* a, int exact, int min, int max);
 void numeric_promote(Cell** lhs, Cell** rhs);
 Cell* make_sexpr_len1(const Cell* a);

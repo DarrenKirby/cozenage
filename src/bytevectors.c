@@ -129,7 +129,7 @@ Cell* builtin_bytevector_length(const Lex* e, const Cell* a)
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
-    err = check_arg_types(a, CELL_BYTEVECTOR);
+    err = check_arg_types(a, CELL_BYTEVECTOR, "bytevector-length");
     if (err) return err;
 
     return make_cell_integer(a->cell[0]->count);
@@ -314,7 +314,7 @@ the concatenation of the elements in the given bytevectors. */
 Cell* builtin_bytevector_append(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_BYTEVECTOR);
+    Cell* err = check_arg_types(a, CELL_BYTEVECTOR, "bytevector-append");
     if (err) return err;
 
     if (a->count == 0) {
@@ -327,7 +327,7 @@ Cell* builtin_bytevector_append(const Lex* e, const Cell* a)
         const Cell* bv = a->cell[i];
         if (bv->bv->type != type) {
             return make_cell_error(
-                "bytevector->append: cannot append different bytevector types",
+                "bytevector-append: cannot append different bytevector types",
                 VALUE_ERR);
         }
         for (int j = 0; j < bv->count; j++) {

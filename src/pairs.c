@@ -180,7 +180,7 @@ Cell* builtin_list_length(const Lex* e, const Cell* a)
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
-    err = check_arg_types(a, CELL_PAIR|CELL_NIL);
+    err = check_arg_types(a, CELL_PAIR|CELL_NIL, "length");
     if (err) { return err; }
 
     const Cell* list = a->cell[0];
@@ -361,7 +361,7 @@ Cell* builtin_list_reverse(const Lex* e, const Cell* a)
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
-    err = check_arg_types(a, CELL_PAIR|CELL_NIL);
+    err = check_arg_types(a, CELL_PAIR|CELL_NIL, "reverse");
     if (err) { return err; }
 
     const Cell* original_list = a->cell[0];

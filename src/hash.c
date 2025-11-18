@@ -97,7 +97,7 @@ Cell* ht_get(const ht_table* table, const char* key)
 
     /* Loop till we find an empty entry. */
     while (table->items[index].key != NULL) {
-        /* Keep iterating if slot marked as deleted */
+        /* Keep iterating if slot marked as deleted. */
         if (table->items[index].key != HT_DELETED_ITEM.key) {
             if (strcmp(key, table->items[index].key) == 0) {
                 /* Found key, return value. */

@@ -53,7 +53,7 @@ Cell* builtin_vector_length(const Lex* e, const Cell* a)
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
-    err = check_arg_types(a, CELL_VECTOR);
+    err = check_arg_types(a, CELL_VECTOR, "vector-length");
     if (err) return err;
 
     return make_cell_integer(a->cell[0]->count);
@@ -408,7 +408,7 @@ Cell* builtin_vector_append(const Lex* e, const Cell* a)
         return make_cell_vector();
     }
     /* Now that we know there's at least one arg, check that all args are vectors. */
-    Cell* err = check_arg_types(a, CELL_VECTOR);
+    Cell* err = check_arg_types(a, CELL_VECTOR, "vector-append");
     if (err) return err;
 
     /* One arg returns the arg. */

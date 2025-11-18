@@ -338,7 +338,7 @@ Cell* builtin_load(const Lex* e, const Cell* a)
 Cell* builtin_exit(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_BOOLEAN);
+    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_BOOLEAN, "exit");
     if (err) { return err; }
 
     /* Save history if we're in REPL mode. */

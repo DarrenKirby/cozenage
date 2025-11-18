@@ -49,7 +49,7 @@ Cell* builtin_boolean(const Lex* e, const Cell* a)
         return True_Obj;
     }
     /* If not all args are CELL_BOOLEAN, return #f */
-    if (check_arg_types(a, CELL_BOOLEAN)) {
+    if (check_arg_types(a, CELL_BOOLEAN, "boolean=?")) {
         return False_Obj;
     }
     /* Return #t for single boolean argument */

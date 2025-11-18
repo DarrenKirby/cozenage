@@ -73,7 +73,7 @@ static f_type f_get_type(const char* file)
 static Cell* reg_file_pred(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_STRING);
+    Cell* err = check_arg_types(a, CELL_STRING, "reg-file?");
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
 
@@ -94,7 +94,7 @@ static Cell* reg_file_pred(const Lex* e, const Cell* a)
 static Cell* directory_pred(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_STRING);
+    Cell* err = check_arg_types(a, CELL_STRING, "directory?");
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
 
@@ -115,7 +115,7 @@ static Cell* directory_pred(const Lex* e, const Cell* a)
 static Cell* symlink_pred(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_STRING);
+    Cell* err = check_arg_types(a, CELL_STRING, "symlink?");
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
 
@@ -136,7 +136,7 @@ static Cell* symlink_pred(const Lex* e, const Cell* a)
 static Cell* char_device_pred(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_STRING);
+    Cell* err = check_arg_types(a, CELL_STRING, "char-device?");
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
 
@@ -157,7 +157,7 @@ static Cell* char_device_pred(const Lex* e, const Cell* a)
 static Cell* block_device_pred(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_STRING);
+    Cell* err = check_arg_types(a, CELL_STRING, "blk-device?");
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
 
@@ -178,7 +178,7 @@ static Cell* block_device_pred(const Lex* e, const Cell* a)
 static Cell* pipe_pred(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_STRING);
+    Cell* err = check_arg_types(a, CELL_STRING, "fifo?");
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
 
@@ -199,7 +199,7 @@ static Cell* pipe_pred(const Lex* e, const Cell* a)
 static Cell* socket_pred(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_STRING);
+    Cell* err = check_arg_types(a, CELL_STRING, "socket?");
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
 
@@ -221,7 +221,7 @@ static Cell* socket_pred(const Lex* e, const Cell* a)
 static Cell* file_exists_pred(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_STRING);
+    Cell* err = check_arg_types(a, CELL_STRING, "file-exists?");
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
 
@@ -256,7 +256,7 @@ static Cell* rmdir__(const Lex* e, const Cell* a)
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) { return err; }
-    err = check_arg_types(a, CELL_STRING);
+    err = check_arg_types(a, CELL_STRING, "rmdir");
     if (err) { return err; }
 
     const char* path = a->cell[0]->str;
@@ -273,7 +273,7 @@ static Cell* rmdir__(const Lex* e, const Cell* a)
 static Cell* mkdir__(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_STRING);
+    Cell* err = check_arg_types(a, CELL_STRING, "mkdir");
     if (err) { return err; }
     err = CHECK_ARITY_EXACT(a, 1);
     if (err) { return err; }
@@ -291,7 +291,7 @@ static Cell* mkdir__(const Lex* e, const Cell* a)
 static Cell* unlink_file(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_STRING);
+    Cell* err = check_arg_types(a, CELL_STRING, "unlink?");
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
 
