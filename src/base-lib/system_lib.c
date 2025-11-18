@@ -21,16 +21,35 @@
 #include "types.h"
 #include "cell.h"
 
+#include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
 
 
 extern char **environ;
 
-static Cell* builtin_get_env_var(const Lex* e, const Cell* a)
+static Cell* system_get_pid(const Lex* e, const Cell* a)
+{
+    (void) e; (void)a;
+    Cell* err = CHECK_ARITY_EXACT(a, 0);
+    if (err) { return err; }
+
+    return make_cell_integer(getpid());
+}
+
+static Cell* system_get_ppid(const Lex* e, const Cell* a)
+{
+    (void) e; (void)a;
+    Cell* err = CHECK_ARITY_EXACT(a, 0);
+    if (err) { return err; }
+
+    return make_cell_integer(getppid());
+}
+
+static Cell* system_get_env_var(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_STRING);
+    Cell* err = check_arg_types(a, CELL_STRING, "get-environment-variable");
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
 
@@ -42,7 +61,7 @@ static Cell* builtin_get_env_var(const Lex* e, const Cell* a)
     return make_cell_string(var_string);
 }
 
-static Cell* builtin_get_env_vars(const Lex* e, const Cell* a)
+static Cell* system_get_env_vars(const Lex* e, const Cell* a)
 {
     (void)e; (void)a;
     Cell* err = CHECK_ARITY_EXACT(a, 0);
@@ -68,6 +87,8 @@ static Cell* builtin_get_env_vars(const Lex* e, const Cell* a)
 
 void cozenage_library_init(const Lex* e)
 {
-    lex_add_builtin(e, "get-environment-variable", builtin_get_env_var);
-    lex_add_builtin(e, "get-environment-variables", builtin_get_env_vars);
+    lex_add_builtin(e, "get-pid", system_get_pid);
+    lex_add_builtin(e, "get-ppid", system_get_ppid);
+    lex_add_builtin(e, "get-environment-variable", system_get_env_var);
+    lex_add_builtin(e, "get-environment-variables", system_get_env_vars);
 }

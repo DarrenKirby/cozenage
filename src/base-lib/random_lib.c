@@ -17,9 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "random.h"
+#include "types.h"
 #include "cell.h"
-#include "special_forms.h"
 
 #include <openssl/ssl.h>
 #include <openssl/rand.h>
@@ -27,7 +26,7 @@
 
 /* Random integer in [0, limit)
  * Implements the Lemire method. */
-unsigned int random_uint(const uint32_t limit) {
+static unsigned int rand_uint(const uint32_t limit) {
     const uint32_t t = -limit % limit;
 
     union {
@@ -58,7 +57,7 @@ unsigned int random_uint(const uint32_t limit) {
 #define RAND_DOUBLE_SCALE 9007199254740992.0 /* 2⁵³ */
 
 /* Random double in [0.0, 1.0). */
-double random_double() {
+static double rand_double() {
     union {
         uint64_t i;
         unsigned char c[sizeof(uint64_t)];
@@ -75,30 +74,30 @@ double random_double() {
 
 //////// end of helpers
 
-Cell* builtin_randint(const Lex* e, const Cell* a)
+static Cell* random_randint(const Lex* e, const Cell* a)
 {
     (void)e;
     uint32_t limit = UINT32_MAX;
     if (a->count == 1) {
         limit = a->cell[0]->integer_v;
     }
-    return make_cell_integer(random_uint(limit));
+    return make_cell_integer(rand_uint(limit));
 }
 
-Cell* builtin_randbl(const Lex* e, const Cell* a)
+static Cell* random_randbl(const Lex* e, const Cell* a)
 {
     (void)e; (void)a;
-    return make_cell_real(random_double());
+    return make_cell_real(rand_double());
 }
 
 /* Implements a 'modern' version of the
  * Fisher-Yates shuffle. */
-Cell* builtin_shuffle(const Lex* e, const Cell* a)
+static Cell* random_shuffle(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
-    err = check_arg_types(a, CELL_PAIR|CELL_VECTOR|CELL_SEXPR);
+    err = check_arg_types(a, CELL_PAIR|CELL_VECTOR|CELL_SEXPR, "shuffle");
     if (err) return err;
 
     Cell* arr;
@@ -122,7 +121,7 @@ Cell* builtin_shuffle(const Lex* e, const Cell* a)
     }
     for (int i = arr_size - 1; i > 0; i--) {
         /* Pick a random index from 0 to i (inclusive). */
-        uint32_t j = random_uint(i + 1);
+        uint32_t j = rand_uint(i + 1);
 
         /* Swap the element at i with the randomly chosen element at j. */
         Cell* tmp = c_arr[i];
@@ -136,4 +135,11 @@ Cell* builtin_shuffle(const Lex* e, const Cell* a)
     }
     sexp->type = CELL_VECTOR;
     return sexp;
+}
+
+void cozenage_library_init(const Lex* e)
+{
+    lex_add_builtin(e, "rand-int", random_randint);
+    lex_add_builtin(e, "rand-dbl", random_randbl);
+    lex_add_builtin(e, "shuffle", random_shuffle);
 }
