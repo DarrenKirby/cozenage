@@ -25,30 +25,39 @@
 #include <openssl/rand.h>
 
 
-/* Random integer in [0, limit) */
+/* Random integer in [0, limit)
+ * Implements the Lemire method. */
 unsigned int random_uint(const uint32_t limit) {
+    const uint32_t t = -limit % limit;
+
     union {
         uint32_t i;
         unsigned char c[sizeof(uint32_t)];
     } u;
-    u.i = 0;
-    if (!RAND_bytes(u.c, sizeof(u.c))) {
-        fprintf(stderr, "Can't get random bytes!\n");
-        exit(1);
-    }
 
-    const uint32_t t = -limit % limit;
     uint64_t m;
     uint32_t l;
+    u.i = 0; /* This is just to shut the linter up. */
+
     do {
+        /* Get a new random number on each iteration. */
+        if (!RAND_bytes(u.c, sizeof(u.c))) {
+            fprintf(stderr, "Can't get random bytes!\n");
+            exit(1);
+        }
+
         const uint32_t x = u.i;
         m = (uint64_t)x * (uint64_t)limit;
         l = (uint32_t)m;
-    } while (l < t);
+    } while (l < t); /* Reject if the lower bits fall in the biased range. */
+
+    /* The upper 32 bits of the product are the unbiased, scaled result. */
     return m >> 32;
 }
 
-/* Random double in [0.0, 1.0) */
+#define RAND_DOUBLE_SCALE 9007199254740992.0 /* 2⁵³ */
+
+/* Random double in [0.0, 1.0). */
 double random_double() {
     union {
         uint64_t i;
@@ -61,7 +70,7 @@ double random_double() {
         exit(1);
     }
     /* 53 bits / 2**53 */
-    return (u.i >> 11) * (1.0/9007199254740992.0);
+    return (u.i >> 11) * (1.0/RAND_DOUBLE_SCALE);
 }
 
 //////// end of helpers
@@ -82,6 +91,8 @@ Cell* builtin_randbl(const Lex* e, const Cell* a)
     return make_cell_real(random_double());
 }
 
+/* Implements a 'modern' version of the
+ * Fisher-Yates shuffle. */
 Cell* builtin_shuffle(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -99,7 +110,7 @@ Cell* builtin_shuffle(const Lex* e, const Cell* a)
         arr = a->cell[0];
     }
 
-    /* Quoted list */
+    /* Quoted list. */
     if (a->cell[0]->type == CELL_SEXPR) {
         list = true;
     }
@@ -109,12 +120,16 @@ Cell* builtin_shuffle(const Lex* e, const Cell* a)
     for (int i = 0; i < arr_size; i++) {
         c_arr[i] = arr->cell[i];
     }
-    for (int i = 0; i < arr_size; i++) {
-        uint32_t j = random_uint(arr->count);
+    for (int i = arr_size - 1; i > 0; i--) {
+        /* Pick a random index from 0 to i (inclusive). */
+        uint32_t j = random_uint(i + 1);
+
+        /* Swap the element at i with the randomly chosen element at j. */
         Cell* tmp = c_arr[i];
         c_arr[i] = c_arr[j];
         c_arr[j] = tmp;
     }
+
     Cell* sexp = make_sexpr_from_array(arr_size, c_arr);
     if (list) {
         return sexpr_to_list(sexp);
