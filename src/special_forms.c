@@ -487,6 +487,12 @@ HandlerResult sf_import(Lex* e, Cell* a)
     /* Make a new sexpr which contains pairs of (library . name), */
     int i;
     for (i = 0; i < a->count; i++) {
+        if (a->cell[i]->count < 2) {
+            Cell* err = make_cell_error(
+                "import: import-set must include 'library' and 'name' identifiers. (Did you forget 'base'?)",
+                GEN_ERR);
+            return (HandlerResult){ .action = ACTION_RETURN, .value = err };
+        }
         const char* lib = GC_strdup(a->cell[i]->cell[0]->sym);
         const char* name = GC_strdup(a->cell[i]->cell[1]->sym);
         import_set->cell[i] = make_cell_pair(make_cell_string(lib),

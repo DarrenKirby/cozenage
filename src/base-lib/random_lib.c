@@ -90,6 +90,21 @@ static Cell* random_randbl(const Lex* e, const Cell* a)
     return make_cell_real(rand_double());
 }
 
+/* Random double in [min, max). */
+static Cell* random_uniform(const Lex* e, const Cell* a)
+{
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 2);
+    if (err) return err;
+    err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL, "rand-uniform");
+    if (err) return err;
+
+    const long double min = cell_to_long_double(a->cell[0]);
+    const long double max = cell_to_long_double(a->cell[1]);
+
+    return make_cell_real(min + (max - min) * rand_double());
+}
+
 /* Implements a 'modern' version of the
  * Fisher-Yates shuffle. */
 static Cell* random_shuffle(const Lex* e, const Cell* a)
@@ -137,9 +152,82 @@ static Cell* random_shuffle(const Lex* e, const Cell* a)
     return sexp;
 }
 
+static Cell* random_choice(const Lex* e, const Cell* a)
+{
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    if (err) return err;
+    err = check_arg_types(a, CELL_PAIR|CELL_VECTOR|CELL_SEXPR, "shuffle");
+    if (err) return err;
+
+    Cell* arr;
+    if (a->cell[0]->type == CELL_PAIR) {
+        arr = make_sexpr_from_list(a->cell[0]);
+    } else {
+        arr = a->cell[0];
+    }
+
+    const int32_t arr_size = arr->count;
+    Cell* c_arr[arr_size];
+    for (int i = 0; i < arr_size; i++) {
+        c_arr[i] = arr->cell[i];
+    }
+
+    return c_arr[rand_uint(arr_size)];
+}
+
+static Cell* random_choices(const Lex* e, const Cell* a)
+{
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 2);
+    if (err) return err;
+    const int mask = CELL_PAIR|CELL_VECTOR|CELL_SEXPR;
+    if (!(a->cell[0]->type & mask)) {
+        return make_cell_error("rand-choices: arg1 must be a list or vector", TYPE_ERR);
+    }
+    if (a->cell[1]->type != CELL_INTEGER) {
+        return make_cell_error("rand-choices: arg2 must be an integer", TYPE_ERR);
+    }
+
+    Cell* arr;
+    bool list = false;
+    if (a->cell[0]->type == CELL_PAIR) {
+        list = true;
+        arr = make_sexpr_from_list(a->cell[0]);
+    } else {
+        arr = a->cell[0];
+    }
+
+    /* Quoted list. */
+    if (a->cell[0]->type == CELL_SEXPR) {
+        list = true;
+    }
+
+    const int32_t k = a->cell[1]->integer_v;
+    const int32_t arr_size = arr->count;
+    Cell* c_arr[arr_size];
+    for (int i = 0; i < arr_size; i++) {
+        c_arr[i] = arr->cell[i];
+    }
+
+    Cell* result_arr = make_cell_sexpr();
+    for (int i = 0; i < k; i++) {
+        cell_add(result_arr, c_arr[rand_uint(arr_size)]);
+    }
+
+    if (list) {
+        return make_list_from_sexpr(result_arr);
+    }
+    result_arr->type = CELL_VECTOR;
+    return result_arr;
+}
+
 void cozenage_library_init(const Lex* e)
 {
     lex_add_builtin(e, "rand-int", random_randint);
     lex_add_builtin(e, "rand-dbl", random_randbl);
+    lex_add_builtin(e, "rand-uniform", random_uniform);
     lex_add_builtin(e, "shuffle", random_shuffle);
+    lex_add_builtin(e, "rand-choice", random_choice);
+    lex_add_builtin(e, "rand-choices", random_choices);
 }

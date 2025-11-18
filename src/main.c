@@ -40,17 +40,15 @@ char** g_argv;
 static void show_help(void)
 {
     printf("Usage: cozenage [option ...] [file] \n\n\
-A (not just yet) R5RS and R7RS-compliant Scheme REPL and code runner\n\n\
+A Scheme-derived REPL and code runner\n\n\
 Options:\n\
-    -5, --r5rs\t\t load only names defined in R5RS standard\n\
-    -7, --r7rs\t\t load only (scheme base) names defined in R7RS standard\n\
     -l, --library\t preload R7RS and/or Cozenage libraries at startup\n\
     -h, --help\t\t display this help\n\
     -V, --version\t display version information\n\n\
 \n\
     '-l' and '--library' accept a required comma-delimited list of\n\
     libraries to pre-load. Accepted values are:\n\
-    'bits' 'cxr' 'file' 'math' 'system' and 'time' \n\n\
+    'bits' 'cxr' 'file' 'math' 'random' 'system' and 'time' \n\n\
 Report bugs to <darren@dragonbyte.ca>\n");
 }
 
@@ -78,6 +76,8 @@ static void process_library_arg(struct lib_load *l, const char *arg)
             l->system = 1;
         } else if (strcmp(token, "bits") == 0) {
             l->bits = 1;
+        } else if (strcmp(token, "random") == 0) {
+            l->random = 1;
         } else {
             fprintf(stderr, "Error: Unknown library name '%s' specified.\n", token);
             fprintf(stderr, "Run with -h for a list of valid library names.\n");

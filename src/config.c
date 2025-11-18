@@ -40,4 +40,7 @@ void load_initial_libraries(const Lex* e, const lib_load_config load_libs) {
     if (load_libs.bits) {
         (void)load_library("bits", e);
     }
+    if (load_libs.random) {
+        (void)load_library("random", e);
+    }
 }

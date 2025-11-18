@@ -30,6 +30,7 @@ typedef struct lib_load {
     unsigned int system:1;
     unsigned int time:1;
     unsigned int bits:1;
+    unsigned int random:1;
 } lib_load_config;
 
 void load_initial_libraries(const Lex* e, lib_load_config load_libs);
