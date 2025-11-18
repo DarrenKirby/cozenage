@@ -108,6 +108,7 @@ static void cell_to_string_worker(const Cell* v,
 {
     if (v == NULL) return;
     switch (v->type) {
+
         case CELL_REAL:
             repr_long_double(v->real_v, sb);
             break;
@@ -300,7 +301,7 @@ static void cell_to_string_worker(const Cell* v,
 /* Generates the external representation of a Cell as a string. */
 char* cell_to_string(const Cell* cell, const print_mode_t mode)
 {
-    if (cell == NULL) return "";
+    if (cell == NULL || cell->type == CELL_UNSPEC) return "";
     string_builder_t *sb = sb_new();
     cell_to_string_worker(cell, sb, mode);
     return sb->buffer;

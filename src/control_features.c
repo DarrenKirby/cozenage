@@ -291,7 +291,7 @@ Cell* builtin_foreach(const Lex* e, const Cell* a)
 {
     /* Just send the args to map and discard results. */
     (void)builtin_map(e, a);
-    return nullptr;
+    return USP_Obj;
 }
 
 
@@ -302,7 +302,7 @@ Cell* builtin_vector_foreach(const Lex* e, const Cell* a)
 {
     /* Just send the args to vector-map and discard results. */
     (void)builtin_vector_map(e, a);
-    return nullptr;
+    return USP_Obj;
 }
 
 
@@ -313,7 +313,7 @@ Cell* builtin_string_foreach(const Lex* e, const Cell* a)
 {
     /* Just send the args to string-map and discard results. */
     (void)builtin_string_map(e, a);
-    return nullptr;
+    return USP_Obj;
 }
 
 Cell* builtin_load(const Lex* e, const Cell* a)

@@ -146,11 +146,16 @@ Cell* parse_all_expressions(Lex* e, TokenArray* ta, const bool is_repl)
 
         Cell* result = coz_eval(e, expression);
 
-        if (result && result->type == CELL_ERROR) {
+        if (!result) {
+            printf("EVAL RETURNED NULL!!!!"); /* Want to try to eliminate these 'legitimate' null returns */
+            break;
+        }
+
+        if (result->type == CELL_ERROR) {
             return result;
         }
 
-        if (result && is_repl) {
+        if (is_repl && result->type != CELL_UNSPEC) {
             coz_print(result);
         }
 

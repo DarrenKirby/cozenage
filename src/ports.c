@@ -343,7 +343,7 @@ Cell* builtin_write_char(const Lex* e, const Cell* a)
         snprintf(buf, sizeof(buf), "write-char failed: %s", strerror(errno));
         return make_cell_error(buf, FILE_ERR);
     }
-    return nullptr;
+    return USP_Obj;
 }
 
 Cell* builtin_write_string(const Lex* e, const Cell* a)
@@ -395,7 +395,7 @@ Cell* builtin_write_string(const Lex* e, const Cell* a)
         return make_cell_error(strerror(errno), FILE_ERR);
     }
     /* No meaningful return value */
-    return nullptr;
+    return USP_Obj;
 }
 
 Cell* builtin_write_u8(const Lex* e, const Cell* a)
@@ -422,7 +422,7 @@ Cell* builtin_write_u8(const Lex* e, const Cell* a)
         snprintf(buf, sizeof(buf), "write-u8 failed: %s", strerror(errno));
         return make_cell_error(strerror(errno), FILE_ERR);
     }
-    return nullptr;
+    return USP_Obj;
 }
 
 Cell* builtin_write_bytevector(const Lex* e, const Cell* a)
@@ -475,7 +475,7 @@ Cell* builtin_write_bytevector(const Lex* e, const Cell* a)
             return make_cell_error(strerror(errno), FILE_ERR);
         }
     }
-    return nullptr;
+    return USP_Obj;
 }
 
 Cell* builtin_newline(const Lex* e, const Cell* a)
@@ -493,7 +493,7 @@ Cell* builtin_newline(const Lex* e, const Cell* a)
         return make_cell_error(strerror(errno), FILE_ERR);
     }
     /* No meaningful return value */
-    return nullptr;
+    return USP_Obj;
 }
 
 Cell* builtin_eof(const Lex* e, const Cell* a)
@@ -562,7 +562,7 @@ Cell* builtin_flush_output_port(const Lex* e, const Cell* a)
     if ((es = fflush(port->port->fh)) != 0) {
         return make_cell_error(strerror(es), FILE_ERR);
     }
-    return nullptr;
+    return USP_Obj;
 }
 
 /* A simple function to check if a character is ready on a FILE* stream.
@@ -663,7 +663,7 @@ Cell* builtin_display(const Lex* e, const Cell* a)
     }
     const Cell* val = a->cell[0];
     fprintf(port->port->fh, "%s", cell_to_string(val, MODE_DISPLAY));
-    return nullptr;
+    return USP_Obj;
 }
 
 /* TODO: does not handle circular objects/datum labels */
@@ -683,7 +683,7 @@ Cell* builtin_write(const Lex* e, const Cell* a)
     }
     const Cell* val = a->cell[0];
     fprintf(port->port->fh, "%s", cell_to_string(val, MODE_WRITE));
-    return nullptr;
+    return USP_Obj;
 }
 
 /* 'open-input-file' -> CELL_PORT - open a file and bind it to a text port */

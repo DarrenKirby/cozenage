@@ -484,5 +484,5 @@ Cell* builtin_vector_fill_bang(const Lex* e, const Cell* a)
     for (int i = start; i < end; i++) {
         a->cell[0]->cell[i] = fill;
     }
-    return nullptr;
+    return USP_Obj;
 }

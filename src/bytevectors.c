@@ -201,7 +201,7 @@ Cell* builtin_bytevector_set_bang(const Lex* e, const Cell* a)
     }
 
     BV_OPS[type].set(bv, idx, byte);
-    return nullptr;
+    return USP_Obj;
 }
 
 
@@ -305,7 +305,7 @@ Cell* builtin_bytevector_copy(const Lex* e, const Cell* a)
 Cell* builtin_bytevector_copy_bang(const Lex* e, const Cell* a)
 {
     (void)e; (void)a;
-    return nullptr;
+    return USP_Obj;
 }
 
 /* (bytevector-append bytevector ...)

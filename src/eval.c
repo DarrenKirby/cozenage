@@ -59,13 +59,13 @@ static Cell* coz_apply(const Cell* proc, Cell* args, Lex** env_out, Cell** expr_
 Cell* coz_eval(Lex* env, Cell* expr)
 {
     while (true) {
-        if (!expr) return nullptr;
+        if (!expr) return USP_Obj;
 
         /* Turf all the self-evaluating types. */
         if (expr->type & (CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX|
                           CELL_BOOLEAN|CELL_CHAR|CELL_STRING|CELL_PAIR|
                           CELL_VECTOR|CELL_BYTEVECTOR|CELL_NIL|CELL_EOF|
-                          CELL_PROC|CELL_PORT|CELL_ERROR)) {
+                          CELL_PROC|CELL_PORT|CELL_ERROR|CELL_UNSPEC)) {
             return expr;
                           }
 

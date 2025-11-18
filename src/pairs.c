@@ -154,7 +154,7 @@ Cell* builtin_set_car(const Lex* e, const Cell* a)
             TYPE_ERR);
     }
     a->cell[0]->car = a->cell[1];
-    return nullptr;
+    return USP_Obj;
 }
 
 /* (set-cdr! pair obj)
@@ -170,7 +170,7 @@ Cell* builtin_set_cdr(const Lex* e, const Cell* a)
             TYPE_ERR);
     }
     a->cell[0]->cdr = a->cell[1];
-    return nullptr;
+    return USP_Obj;
 }
 
 /* (length list)
@@ -500,7 +500,7 @@ Cell* builtin_list_set(const Lex* e, const Cell* a)
     /* Now p is pointing at the pair to mutate*/
     p->car = a->cell[2];
     /* No meaningful return value */
-    return nullptr;
+    return USP_Obj;
 }
 
 /* (memq obj list)

@@ -28,19 +28,21 @@
 #include <string.h>
 
 
-/* Define the global nil */
+/* The global nil */
 Cell* Nil_Obj = nullptr;
 
-/* Define global #t and #f */
+/* Global #t and #f */
 Cell* True_Obj = nullptr;
 Cell* False_Obj = nullptr;
 
-/* Define global EOF object */
+/* Global End Of File object */
 Cell* EOF_Obj = nullptr;
 
-/* Define global tail call sentinel object */
+/* Global tail call sentinel object */
 Cell* TCS_Obj = nullptr;
 
+/* Global unspecified object */
+Cell* USP_Obj = nullptr;
 
 /* Default ports */
 Cell* default_input_port  = nullptr;
@@ -93,6 +95,12 @@ static Cell* make_cell_tcs__(void)
     return tcs_obj;
 }
 
+static Cell* make_cell_usp__(void)
+{
+    Cell* usp_obj = GC_MALLOC_ATOMIC_UNCOLLECTABLE(sizeof(Cell));
+    usp_obj->type = CELL_UNSPEC;
+    return usp_obj;
+}
 
 void init_global_singletons(void)
 {
@@ -101,6 +109,7 @@ void init_global_singletons(void)
     False_Obj = make_cell_boolean__(0);
     EOF_Obj = make_cell_eof__();
     TCS_Obj = make_cell_tcs__();
+    USP_Obj = make_cell_usp__();
 }
 
 /*------------------------------------*
@@ -134,6 +143,11 @@ Cell* make_cell_tcs(void)
     return TCS_Obj;
 }
 
+/* Thin wrapper that returns the singleton TCS object. */
+Cell* make_cell_usp(void)
+{
+    return USP_Obj;
+}
 
 Cell* make_cell_real(const long double the_real)
 {

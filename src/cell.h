@@ -78,9 +78,10 @@ typedef enum  : uint32_t {
     CELL_SEXPR      = 1 << 16,  /* an array of values */
     CELL_TCS        = 1 << 17,  /* Tail Call Sentinel object */
     CELL_MRV        = 1 << 18,  /* Multiple Return Value sentinel object */
-    CELL_TRAMPOLINE = 1 << 19   /* Trampoline object - returned from
+    CELL_TRAMPOLINE = 1 << 19,  /* Trampoline object - returned from
                                    first-class procedures to signal a
                                    tail-call */
+    CELL_UNSPEC     = 1 << 20   /* Unspecified object */
 } Cell_t;
 
 /* Bytevector types. */
@@ -198,6 +199,7 @@ extern Cell* TCS_Obj;
 extern Cell* EOF_Obj;
 extern Cell* True_Obj;
 extern Cell* False_Obj;
+extern Cell* USP_Obj;
 extern Cell* default_input_port;
 extern Cell* default_output_port;
 extern Cell* default_error_port;
@@ -209,6 +211,7 @@ Cell* make_cell_nil(void);
 Cell* make_cell_boolean(int the_boolean);
 Cell* make_cell_eof(void);
 Cell* make_cell_tcs(void);
+Cell* make_cell_usp(void);
 Cell* make_cell_real(long double the_real);
 Cell* make_cell_integer(long long the_integer);
 Cell* make_cell_rational(long int numerator, long int denominator, bool simplify);
