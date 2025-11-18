@@ -28,8 +28,8 @@ void load_initial_libraries(const Lex* e, const lib_load_config load_libs) {
     if (load_libs.math) {
         (void)load_library("math", e);
     }
-    if (load_libs.proc_env) {
-        (void)load_library("proc_env", e);
+    if (load_libs.system) {
+        (void)load_library("system", e);
     }
     if (load_libs.cxr) {
         (void)load_library("cxr", e);

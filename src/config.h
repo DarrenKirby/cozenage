@@ -27,7 +27,7 @@ typedef struct lib_load {
     unsigned int cxr:1;
     unsigned int file:1;
     unsigned int math:1;
-    unsigned int proc_env:1;
+    unsigned int system:1;
     unsigned int time:1;
     unsigned int bits:1;
 } lib_load_config;
