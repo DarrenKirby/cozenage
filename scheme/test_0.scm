@@ -1,4 +1,4 @@
-(import (scheme write))
+
 
 (display (+ 34 45))
 (newline)

@@ -9,7 +9,6 @@
 ; Test 3.4 ('letrec' check 7): "odd"
 ; -------------------------
 
-(import (scheme write))
 
 (define my-list (list 1 2 3 4 5))
 

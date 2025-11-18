@@ -8,7 +8,6 @@
 ; Test 2.3 ('let*' sequential): 35
 ; -------------------------
 
-(import (scheme write))
 
 ; Define a function
 (define (add-five n)

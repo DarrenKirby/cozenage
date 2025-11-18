@@ -10,7 +10,6 @@
 ; Test 1.3 (Strings): hello world
 ; -------------------------
 
-(import (scheme write))
 
 (display "Test 1.1 (Simple Math): ")
 (display (+ 10 20))
