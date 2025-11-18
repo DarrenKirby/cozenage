@@ -5,8 +5,6 @@ cmake_minimum_required(VERSION 3.10)
 project(cozenage C)
 set(CMAKE_C_STANDARD 23)
 
-#set(CMAKE_C_FLAGS "-march=native -Wall -Wextra -Werror -Og -g")
-
 option(DEBUG_BUILD "Enable debug CFLAGS" OFF)
 
 if (DEBUG_BUILD)
@@ -153,13 +151,14 @@ if(NOT GC_LIB)
     message(FATAL_ERROR "Could not find the 'gc' library. This is required for garbage collection.")
 endif()
 
-find_package(OpenSSL REQUIRED)
+find_package(OpenSSL)
+if(OpenSSL_FOUND)
+    message(STATUS "Found OpenSSL version: ${OPENSSL_VERSION}. 'random' module will be built.")
+else()
+    message(STATUS "OpenSSL not found. 'random' module will NOT be built.")
+endif()
 
-#if(NOT OpenSSL)
-#    message(FATAL_ERROR "Could not find the 'ssl' library. This is required for random numbers.")
-#endif()
-
-# MODIFICATION: Find the 'dl' library (for dlopen, dlsym, etc.)
+# Find the 'dl' library (for dlopen, dlsym, etc.)
 find_library(DL_LIB dl)
 if(NOT DL_LIB)
     message(FATAL_ERROR "Could not find the 'dl' library. This is required for dynamic loading.")
@@ -168,13 +167,13 @@ endif()
 # Define your project executable
 add_executable(cozenage src/main.c) # Start with just main
 
-# MODIFICATION: Changed GLOB_RECURSE to GLOB and "src/*.c"
+# Changed GLOB_RECURSE to GLOB and "src/*.c"
 # This now *only* finds source files directly in src/,
 # and *excludes* src/base-lib/
 file(GLOB COZENAGE_SOURCES "src/*.c")
 
 # Add these sources to your target
-# MODIFICATION: Removed src/main.c from this list as it's
+#  Removed src/main.c from this list as it's
 # already in add_executable. This prevents it from being listed twice.
 list(REMOVE_ITEM COZENAGE_SOURCES "${PROJECT_SOURCE_DIR}/src/main.c")
 target_sources(cozenage PRIVATE ${COZENAGE_SOURCES})
@@ -187,13 +186,12 @@ target_include_directories(cozenage PRIVATE
 
 target_link_directories(cozenage PRIVATE ${PC_READLINE_LIBRARY_DIRS})
 
-# MODIFICATION: Added ${DL_LIB} to the list of linked libraries.
+# Added ${DL_LIB} to the list of linked libraries.
 target_link_libraries(cozenage PRIVATE
         ${READLINE_LIBRARIES}
         ${M_LIB}
         ${GC_LIB}
         ${DL_LIB}
-        OpenSSL::SSL
         icu::uc
 )
 
@@ -205,7 +203,7 @@ endif()
 
 
 # ==============================================================================
-# MODIFICATION: Build Loadable Modules
+# Build Loadable Modules
 #
 # This new section finds all .c files in src/base-lib/ and builds
 # each one as a separate shared library, outputting them to the 'lib/'
@@ -226,6 +224,13 @@ foreach(LIB_SOURCE ${LIB_SOURCES})
     # Strip "_lib" to get the logical target name (e.g., "math")
     string(REPLACE "_lib" "" LIB_TARGET_NAME ${LIB_NAME})
 
+    # --- Check for Optional Dependency (OpenSSL) ---
+    if(LIB_TARGET_NAME STREQUAL "random" AND NOT OpenSSL_FOUND)
+        # If OpenSSL is missing, we skip all build commands for this file.
+        # CMake will simply start the next iteration of the loop.
+        continue() # Use 'continue()' for clarity (requires CMake 3.1)
+    endif()
+
     # Add the library as a SHARED module
     add_library(${LIB_TARGET_NAME} SHARED ${LIB_SOURCE})
 
@@ -243,13 +248,22 @@ foreach(LIB_SOURCE ${LIB_SOURCES})
             ${PROJECT_SOURCE_DIR}/src/base-lib
     )
 
-    # MODIFICATION: Add export-dynamic flag on Linux/BSD
+    # Conditional Linking (for 'random' only)
+    if(LIB_TARGET_NAME STREQUAL "random")
+        message(STATUS "Linking ${LIB_TARGET_NAME} module against OpenSSL.")
+        target_link_libraries(${LIB_TARGET_NAME} PRIVATE
+                OpenSSL::SSL
+                #OpenSSL::Crypto
+        )
+    endif()
+
+    # Add export-dynamic flag on Linux/BSD
     if(UNIX AND NOT APPLE)
         message(STATUS "Adding -Wl,--export-dynamic to main executable for plugin support.")
         target_link_options(cozenage PRIVATE -Wl,--export-dynamic)
     endif()
 
-    # MODIFICATION: Add platform-specific linker flags for modules
+    # Add platform-specific linker flags for modules
     if(APPLE)
         # Tell macOS linker to allow undefined symbols...
         message(STATUS "Building module ${LIB_TARGET_NAME} with -Wl,-undefined,dynamic_lookup")
