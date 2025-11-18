@@ -36,7 +36,7 @@ static char* format_twos_complement(const long long val)
     /* Handle the zero case, which is special. */
     if (val == 0) {
         char* zero_str = GC_MALLOC(2);
-        strncpy(zero_str, "0", 1);
+        strncpy(zero_str, "0", 2);
         return zero_str;
     }
 
