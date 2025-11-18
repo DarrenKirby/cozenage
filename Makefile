@@ -123,7 +123,6 @@ test: $(TEST_BINARY)
 clean:
 	@echo "--- Cleaning all build artifacts ---"
 	@rm -f $(BINARY) $(TEST_BINARY)
-	# MODIFICATION: Also remove the 'lib' directory
 	@rm -rf $(BUILD_DIR) $(OBJ_DIR) lib
 
 # Target to clean and then rebuild using the default method
