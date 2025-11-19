@@ -1,2 +1,0 @@
-Scheme Case-lambda Library
-==========================

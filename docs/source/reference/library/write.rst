@@ -1,2 +1,0 @@
-Scheme Write Library
-====================

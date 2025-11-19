@@ -1,2 +1,0 @@
-Scheme Lazy Library
-===================

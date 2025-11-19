@@ -1,407 +1,343 @@
-# Cozenage R7RS Implementation Status
+# Cozenage Procedure Implementation Status
 
-This document tracks the implementation status of the R7RS standard libraries in the Cozenage Scheme interpreter.
-
----
-
-## `(scheme base)`
-
-| Status | Procedure                        |
-|:------:|:---------------------------------|
-|   ✅    | `*`                              |
-|   ✅    | `+`                              |
-|   ✅    | `-`                              |
-|   ✅    | `/`                              |
-|   ✅    | `<`                              |
-|   ✅    | `<=`                             |
-|   ✅    | `=`                              |
-|   ✅    | `>`                              |
-|   ✅    | `>=`                             |
-|   ✅    | `abs`                            |
-|   ✅    | `append`                         |
-|   ✅    | `apply`                          |
-|   ✅    | `assoc`                          |
-|   ✅    | `assq`                           |
-|   ✅    | `assv`                           |
-|   ✅    | `binary-port?`                   |
-|   ✅    | `boolean=?`                      |
-|   ✅    | `boolean?`                       |
-|   ✅    | `bytevector`                     |
-|    ✅    | `bytevector-append`              |
-|   ✅    | `bytevector-copy`                |
-|   ❌    | `bytevector-copy!`               |
-|   ✅    | `bytevector-length`              |
-|   ✅    | `bytevector-u8-ref`              |
-|   ✅    | `bytevector-u8-set!`             |
-|   ✅    | `bytevector?`                    |
-|   ✅    | `caar`                           |
-|   ✅    | `cadr`                           |
-|   ❌    | `call-with-current-continuation` |
-|   ❌    | `call-with-port`                 |
-|   ❌    | `call-with-values`               |
-|   ❌    | `call/cc`                        |
-|   ✅    | `car`                            |
-|   ✅    | `cdar`                           |
-|   ✅    | `cddr`                           |
-|   ✅    | `cdr`                            |
-|   ✅    | `ceiling`                        |
-|   ✅    | `char->integer`                  |
-|   ✅    | `char-ready?`                    |
-|   ✅    | `char<=?`                        |
-|   ✅    | `char<?`                         |
-|   ✅    | `char=?`                         |
-|   ✅    | `char>=?`                        |
-|   ✅    | `char>?`                         |
-|   ✅    | `char?`                          |
-|   ✅    | `close-input-port`               |
-|   ✅    | `close-output-port`              |
-|   ✅    | `close-port`                     |
-|   ✅    | `complex?`                       |
-|   ✅    | `cons`                           |
-|   ✅    | `current-error-port`             |
-|   ✅    | `current-input-port`             |
-|   ✅    | `current-output-port`            |
-|   ✅    | `denominator`                    |
-|   ❌    | `dynamic-wind`                   |
-|   ✅    | `eof-object`                     |
-|   ✅    | `eof-object?`                    |
-|   ✅    | `eq?`                            |
-|   ✅    | `equal?`                         |
-|   ✅    | `eqv?`                           |
-|   ❌    | `error`                          |
-|   ❌    | `error-object-irritants`         |
-|   ❌    | `error-object-message`           |
-|   ✅    | `error-object?`                  |
-|   ✅    | `even?`                          |
-|   ✅    | `exact`                          |
-|   ✅    | `exact-integer-sqrt`             |
-|   ✅    | `exact-integer?`                 |
-|   ✅    | `exact?`                         |
-|   ✅    | `expt`                           |
-|   ✅    | `features`                       |
-|   ✅    | `file-error?`                    |
-|   ✅    | `floor`                          |
-|   ✅    | `floor-quotient`                 |
-|   ✅    | `floor-remainder`                |
-|   ✅    | `floor/`                         |
-|   ✅    | `flush-output-port`              |
-|   ✅    | `for-each`                       |
-|   ✅    | `gcd`                            |
-|   ❌    | `get-output-bytevector`          |
-|   ❌    | `get-output-string`              |
-|   ✅    | `inexact`                        |
-|   ✅    | `inexact?`                       |
-|   ✅    | `input-port-open?`               |
-|   ✅    | `input-port?`                    |
-|   ✅    | `integer->char`                  |
-|   ✅    | `integer?`                       |
-|   ✅    | `lcm`                            |
-|   ✅    | `length`                         |
-|   ✅    | `list`                           |
-|   ✅    | `list->string`                   |
-|   ✅    | `list->vector`                   |
-|   ✅    | `list-copy`                      |
-|   ✅    | `list-ref`                       |
-|   ✅    | `list-set!`                      |
-|   ✅    | `list-tail`                      |
-|   ✅    | `list?`                          |
-|   ✅    | `make-bytevector`                |
-|   ✅    | `make-list`                      |
-|   ❌    | `make-parameter`                 |
-|   ✅    | `make-string`                    |
-|   ✅    | `make-vector`                    |
-|   ✅    | `map`                            |
-|   ✅    | `max`                            |
-|   ✅    | `member`                         |
-|   ✅    | `memq`                           |
-|   ✅    | `memv`                           |
-|   ✅    | `min`                            |
-|   ✅    | `modulo`                         |
-|   ✅    | `negative?`                      |
-|   ✅    | `newline`                        |
-|   ✅    | `not`                            |
-|   ✅    | `null?`                          |
-|   ✅    | `number->string`                 |
-|   ✅    | `number?`                        |
-|   ✅    | `numerator`                      |
-|   ✅    | `odd?`                           |
-|   ❌    | `open-input-bytevector`          |
-|   ❌    | `open-input-string`              |
-|   ❌    | `open-output-bytevector`         |
-|   ❌    | `open-output-string`             |
-|   ✅    | `output-port-open?`              |
-|   ✅    | `output-port?`                   |
-|   ✅    | `pair?`                          |
-|   ❌    | `parameterize`                   |
-|   ✅    | `peek-char`                      |
-|   ❌    | `peek-u8`                        |
-|   ✅    | `port?`                          |
-|   ✅    | `positive?`                      |
-|   ✅    | `procedure?`                     |
-|   ✅    | `quotient`                       |
-|   ❌    | `raise`                          |
-|   ❌    | `raise-continuable`              |
-|   ✅    | `rational?`                      |
-|   ✅    | `rationalize`                    |
-|   ❌    | `read-bytevector`                |
-|   ❌    | `read-bytevector!`               |
-|   ✅    | `read-char`                      |
-|   ✅    | `read-error?`                    |
-|   ✅    | `read-line`                      |
-|   ✅    | `read-string`                    |
-|   ❌    | `read-u8`                        |
-|   ✅    | `real?`                          |
-|   ✅    | `remainder`                      |
-|   ✅    | `reverse`                        |
-|   ✅    | `round`                          |
-|   ✅    | `set-car!`                       |
-|   ✅    | `set-cdr!`                       |
-|   ✅    | `square`                         |
-|   ✅    | `string`                         |
-|   ✅    | `string->list`                   |
-|   ✅    | `string->number`                 |
-|   ✅    | `string->symbol`                 |
-|   ✅    | `string->utf8`                   |
-|   ✅    | `string->vector`                 |
-|   ✅    | `string-append`                  |
-|   ✅    | `string-copy`                    |
-|   ✅    | `string-copy!`                   |
-|   ❌    | `string-fill!`                   |
-|   ✅    | `string-for-each`                |
-|   ✅    | `string-length`                  |
-|   ✅    | `string-map`                     |
-|   ✅    | `string-ref`                     |
-|   ❌    | `string-set!`                    |
-|   ✅    | `string<=?`                      |
-|   ✅    | `string<?`                       |
-|   ✅    | `string=?`                       |
-|   ✅    | `string>=?`                      |
-|   ✅    | `string>?`                       |
-|   ✅    | `string?`                        |
-|   ✅    | `substring`                      |
-|   ✅    | `symbol->string`                 |
-|   ✅    | `symbol=?`                       |
-|   ✅    | `symbol?`                        |
-|   ✅    | `textual-port?`                  |
-|   ✅    | `truncate`                       |
-|   ✅    | `truncate-quotient`              |
-|   ✅    | `truncate-remainder`             |
-|   ✅    | `truncate/`                      |
-|   ✅    | `u8-ready?`                      |
-|   ✅    | `utf8->string`                   |
-|   ❌    | `values`                         |
-|   ✅    | `vector`                         |
-|   ✅    | `vector->list`                   |
-|   ✅    | `vector->string`                 |
-|   ✅    | `vector-append`                  |
-|   ✅    | `vector-copy`                    |
-|   ❌    | `vector-copy!`                   |
-|   ✅    | `vector-fill!`                   |
-|   ✅    | `vector-for-each`                |
-|   ✅    | `vector-length`                  |
-|   ✅    | `vector-map`                     |
-|   ✅    | `vector-ref`                     |
-|   ✅    | `vector-set!`                    |
-|   ✅    | `vector?`                        |
-|   ❌    | `with-exception-handler`         |
-|   ✅    | `write-bytevector`               |
-|   ✅    | `write-char`                     |
-|   ✅    | `write-string`                   |
-|   ✅    | `write-u8`                       |
-|   ✅    | `zero?`                          |
+This document tracks the implementation status of procedures in the Cozenage interpreter.
 
 ---
 
-## `(scheme case-lambda)`
+## Core Interpreter Procedures
+
+| Status | Procedure                 |
+|:------:|:--------------------------|
+|   ✅    | `*`                       |
+|   ✅    | `+`                       |
+|   ✅    | `-`                       |
+|   ✅    | `/`                       |
+|   ✅    | `<`                       |
+|   ✅    | `<=`                      |
+|   ✅    | `=`                       |
+|   ✅    | `>`                       |
+|   ✅    | `>=`                      |
+|   ✅    | `abs`                     |
+|   ✅    | `append`                  |
+|   ✅    | `apply`                   |
+|   ✅    | `assoc`                   |
+|   ✅    | `assq`                    |
+|   ✅    | `assv`                    |
+|   ✅    | `binary-port?`            |
+|   ✅    | `boolean=?`               |
+|   ✅    | `boolean?`                |
+|   ✅    | `bytevector`              |
+|   ✅    | `bytevector-append`       |
+|   ✅    | `bytevector-copy`         |
+|   ❌    | `bytevector-copy!`        |
+|   ✅    | `bytevector-length`       |
+|   ✅    | `bytevector-u8-ref`       |
+|   ✅    | `bytevector-u8-set!`      |
+|   ✅    | `bytevector?`             |
+|   ❌    | `call-with-input-file`    |
+|   ❌    | `call-with-output-file`   |
+|   ✅    | `caar`                    |
+|   ✅    | `cadr`                    |
+|   ✅    | `car`                     |
+|   ✅    | `cdar`                    |
+|   ✅    | `cddr`                    |
+|   ✅    | `cdr`                     |
+|   ✅    | `ceiling`                 |
+|   ✅    | `char->integer`           |
+|   ✅    | `char-ready?`             |
+|   ✅    | `char<=?`                 |
+|   ✅    | `char<?`                  |
+|   ✅    | `char=?`                  |
+|   ✅    | `char>=?`                 |
+|   ✅    | `char>?`                  |
+|   ✅    | `char?`                   |
+|   ✅    | `char-alphabetic?`        |
+|   ✅    | `char-ci<=?`              |
+|   ✅    | `char-ci<?`               |
+|   ✅    | `char-ci=?`               |
+|   ✅    | `char-ci>=?`              |
+|   ✅    | `char-ci>?`               |
+|   ✅    | `char-downcase`           |
+|   ✅    | `char-foldcase`           |
+|   ✅    | `char-lower-case?`        |
+|   ✅    | `char-numeric?`           |
+|   ✅    | `char-upcase`             |
+|   ✅    | `char-upper-case?`        |
+|   ✅    | `char-whitespace?`        |
+|   ✅    | `close-input-port`        |
+|   ✅    | `close-output-port`       |
+|   ✅    | `close-port`              |
+|   ✅    | `command-line`            |
+|   ✅    | `complex?`                |
+|   ✅    | `cons`                    |
+|   ✅    | `current-error-port`      |
+|   ✅    | `current-input-port`      |
+|   ✅    | `current-output-port`     |
+|   ✅    | `denominator`             |
+|   ✅    | `digit-value`             |
+|   ✅    | `display`                 |
+|   ✅    | `eof-object`              |
+|   ✅    | `eof-object?`             |
+|   ✅    | `eq?`                     |
+|   ✅    | `equal?`                  |
+|   ✅    | `eqv?`                    |
+|   ❌    | `error`                   |
+|   ❌    | `error-object-irritants`  |
+|   ❌    | `error-object-message`    |
+|   ✅    | `error-object?`           |
+|   ✅    | `even?`                   |
+|   ✅    | `eval`                    |
+|   ✅    | `exact`                   |
+|   ✅    | `exact-integer?`          |
+|   ✅    | `exact?`                  |
+|   ✅    | `expt`                    |
+|   ✅    | `exit`                    |
+|   ✅    | `features`                |
+|   ✅    | `file-error?`             |
+|   ✅    | `floor`                   |
+|   ✅    | `flush-output-port`       |
+|   ✅    | `for-each`                |
+|   ✅    | `gcd`                     |
+|   ❌    | `get-output-bytevector`   |
+|   ❌    | `get-output-string`       |
+|   ✅    | `inexact`                 |
+|   ✅    | `inexact?`                |
+|   ✅    | `input-port-open?`        |
+|   ✅    | `input-port?`             |
+|   ✅    | `integer->char`           |
+|   ✅    | `integer?`                |
+|   ✅    | `lcm`                     |
+|   ✅    | `length`                  |
+|   ✅    | `list`                    |
+|   ✅    | `list->string`            |
+|   ✅    | `list->vector`            |
+|   ✅    | `list-copy`               |
+|   ✅    | `list-ref`                |
+|   ✅    | `list-set!`               |
+|   ✅    | `list-tail`               |
+|   ✅    | `list?`                   |
+|   ✅    | `load`                    |
+|   ✅    | `make-bytevector`         |
+|   ✅    | `make-list`               |
+|   ✅    | `make-string`             |
+|   ✅    | `make-vector`             |
+|   ✅    | `map`                     |
+|   ✅    | `max`                     |
+|   ✅    | `member`                  |
+|   ✅    | `memq`                    |
+|   ✅    | `memv`                    |
+|   ✅    | `min`                     |
+|   ✅    | `modulo`                  |
+|   ✅    | `negative?`               |
+|   ✅    | `newline`                 |
+|   ✅    | `not`                     |
+|   ✅    | `null?`                   |
+|   ✅    | `number->string`          |
+|   ✅    | `number?`                 |
+|   ✅    | `numerator`               |
+|   ✅    | `odd?`                    |
+|   ❌    | `open-input-bytevector`   |
+|   ❌    | `open-input-string`       |
+|   ❌    | `open-output-bytevector`  |
+|   ❌    | `open-output-string`      |
+|   ✅    | `open-binary-input-file`  |
+|   ✅    | `open-binary-output-file` |
+|   ✅    | `open-input-file`         |
+|   ✅    | `open-output-file`        |
+|   ✅    | `output-port-open?`       |
+|   ✅    | `output-port?`            |
+|   ✅    | `pair?`                   |
+|   ✅    | `peek-char`               |
+|   ❌    | `peek-u8`                 |
+|   ✅    | `port?`                   |
+|   ✅    | `positive?`               |
+|   ✅    | `procedure?`              |
+|   ✅    | `quotient`                |
+|   ❌    | `raise`                   |
+|   ✅    | `rational?`               |
+|   ❌    | `read`                    |
+|   ❌    | `read-bytevector`         |
+|   ❌    | `read-bytevector!`        |
+|   ✅    | `read-char`               |
+|   ✅    | `read-error?`             |
+|   ✅    | `read-line`               |
+|   ✅    | `read-string`             |
+|   ❌    | `read-u8`                 |
+|   ✅    | `real?`                   |
+|   ✅    | `remainder`               |
+|   ✅    | `reverse`                 |
+|   ✅    | `round`                   |
+|   ✅    | `set-car!`                |
+|   ✅    | `set-cdr!`                |
+|   ✅    | `square`                  |
+|   ✅    | `string`                  |
+|   ✅    | `string->list`            |
+|   ✅    | `string->number`          |
+|   ✅    | `string->symbol`          |
+|   ✅    | `string->utf8`            |
+|   ✅    | `string->vector`          |
+|   ✅    | `string-append`           |
+|   ✅    | `string-copy`             |
+|   ✅    | `string-copy!`            |
+|   ❌    | `string-fill!`            |
+|   ✅    | `string-for-each`         |
+|   ✅    | `string-length`           |
+|   ✅    | `string-map`              |
+|   ✅    | `string-ref`              |
+|   ❌    | `string-set!`             |
+|   ✅    | `string<=?`               |
+|   ✅    | `string<?`                |
+|   ✅    | `string=?`                |
+|   ✅    | `string>=?`               |
+|   ✅    | `string>?`                |
+|   ✅    | `string?`                 |
+|   ✅    | `string-ci<=?`            |
+|   ✅    | `string-ci<?`             |
+|   ✅    | `string-ci=?`             |
+|   ✅    | `string-ci>=?`            |
+|   ✅    | `string-ci>?`             |
+|   ✅    | `string-downcase`         |
+|   ✅    | `string-foldcase`         |
+|   ✅    | `string-upcase`           |
+|   ✅    | `sqrt`                    |
+|   ✅    | `substring`               |
+|   ✅    | `symbol->string`          |
+|   ✅    | `symbol=?`                |
+|   ✅    | `symbol?`                 |
+|   ✅    | `textual-port?`           |
+|   ✅    | `truncate`                |
+|   ✅    | `u8-ready?`               |
+|   ✅    | `utf8->string`            |
+|   ✅    | `vector`                  |
+|   ✅    | `vector->list`            |
+|   ✅    | `vector->string`          |
+|   ✅    | `vector-append`           |
+|   ✅    | `vector-copy`             |
+|   ❌    | `vector-copy!`            |
+|   ✅    | `vector-fill!`            |
+|   ✅    | `vector-for-each`         |
+|   ✅    | `vector-length`           |
+|   ✅    | `vector-map`              |
+|   ✅    | `vector-ref`              |
+|   ✅    | `vector-set!`             |
+|   ✅    | `vector?`                 |
+|   ❌    | `with-exception-handler`  |
+|   ❌    | `with-input-from-file`    |
+|   ❌    | `with-output-to-file`     |
+|   ✅    | `write`                   |
+|   ✅    | `write-bytevector`        |
+|   ✅    | `write-char`              |
+|   ✅    | `write-string`            |
+|   ✅    | `write-u8`                |
+|   ✅    | `zero?`                   |
+
+---
+
+## `(base math)`
+
+| Status | Procedure            |
+|:------:|:---------------------|
+|   ✅    | `angle`              |
+|   ✅    | `imag-part`          |
+|   ✅    | `magnitude`          |
+|   ✅    | `make-polar`         |
+|   ✅    | `make-rectangular`   |
+|   ✅    | `real-part`          |
+|   ✅    | `acos`               |
+|   ✅    | `asin`               |
+|   ✅    | `atan`               |
+|   ✅    | `cos`                |
+|   ✅    | `exp`                |
+|   ✅    | `finite?`            |
+|   ✅    | `infinite?`          |
+|   ✅    | `log`                |
+|   ✅    | `nan?`               |
+|   ✅    | `sin`                |
+|   ✅    | `tan`                |
+|   ✅    | `floor/`             |
+|   ✅    | `truncate/`          |
+|   ✅    | `truncate-quotient`  |
+|   ✅    | `truncate-remainder` |
+|   ✅    | `rationalize`        |
+|   ✅    | `exact-integer-sqrt` |
+|   ✅    | `floor-quotient`     |
+|   ✅    | `floor-remainder`    |
+
+---
+
+## `(base cxr)`
 
 | Status | Procedure |
-|:---:|:---|
-| ❌ | `case-lambda` |
+|:------:|:----------|
+|   ✅    | `caaaar`  |
+|   ✅    | `caaadr`  |
+|   ✅    | `caaar`   |
+|   ✅    | `caadar`  |
+|   ✅    | `caaddr`  |
+|   ✅    | `caadr`   |
+|   ✅    | `cadaar`  |
+|   ✅    | `cadadr`  |
+|   ✅    | `cadar`   |
+|   ✅    | `caddar`  |
+|   ✅    | `cadddr`  |
+|   ✅    | `caddr`   |
+|   ✅    | `cdaaar`  |
+|   ✅    | `cdaadr`  |
+|   ✅    | `cdaar`   |
+|   ✅    | `cdadar`  |
+|   ✅    | `cdaddr`  |
+|   ✅    | `cdadr`   |
+|   ✅    | `cddaar`  |
+|   ✅    | `cddadr`  |
+|   ✅    | `cddar`   |
+|   ✅    | `cdddar`  |
+|   ✅    | `cddddr`  |
+|   ✅    | `cdddr`   |
+
 
 ---
 
-## `(scheme char)`
+## `(base file)`
 
-| Status | Procedure |
-|:---:|:---|
-| ✅ | `char-alphabetic?` |
-| ✅ | `char-ci<=?` |
-| ✅ | `char-ci<?` |
-| ✅ | `char-ci=?` |
-| ✅ | `char-ci>=?` |
-| ✅ | `char-ci>?` |
-| ✅ | `char-downcase` |
-| ✅ | `char-foldcase` |
-| ✅ | `char-lower-case?` |
-| ✅ | `char-numeric?` |
-| ✅ | `char-upcase` |
-| ✅ | `char-upper-case?` |
-| ✅ | `char-whitespace?` |
-| ✅ | `digit-value` |
-| ✅ | `string-ci<=?` |
-| ✅ | `string-ci<?` |
-| ✅ | `string-ci=?` |
-| ✅ | `string-ci>=?` |
-| ✅ | `string-ci>?` |
-| ✅ | `string-downcase` |
-| ✅ | `string-foldcase` |
-| ✅ | `string-upcase` |
+| Status | Procedure             |
+|:------:|:----------------------|
+|   ✅    | `reg-file?`           |
+|   ✅    | `directory?`          |
+|   ✅    | `symlink?`            |
+|   ✅    | `char-device?`        |
+|   ✅    | `block-device?`       |
+|   ✅    | `fifo?`               |
+|   ✅    | `socket?`             |
+|   ✅    | `getcwd`              |
+|   ✅    | `rmdir`               |
+|   ✅    | `mkdir`               |
+|   ✅    | `unlink!`             |
+|   ✅    | `file-exists?`        |
+
 
 ---
 
-## `(scheme complex)`
+## `(base system)`
 
-| Status | Procedure |
-|:---:|:---|
-| ✅ | `angle` |
-| ✅ | `imag-part` |
-| ✅ | `magnitude` |
-| ✅ | `make-polar` |
-| ✅ | `make-rectangular` |
-| ✅ | `real-part` |
+|  Status  | Procedure                   |
+|:--------:|:----------------------------|
+|    ✅     | `get-pid`                   |
+|    ✅     | `get-ppid`                  |
+|    ✅     | `get-environment-variable`  |
+|    ✅     | `get-environment-variables` |
 
----
-
-## `(scheme cxr)`
-
-| Status | Procedure |
-|:---:|:---|
-| ✅ | `caaaar` |
-| ✅ | `caaadr` |
-| ✅ | `caaar` |
-| ✅ | `caadar` |
-| ✅ | `caaddr` |
-| ✅ | `caadr` |
-| ✅ | `cadaar` |
-| ✅ | `cadadr` |
-| ✅ | `cadar` |
-| ✅ | `caddar` |
-| ✅ | `cadddr` |
-| ✅ | `caddr` |
-| ✅ | `cdaaar` |
-| ✅ | `cdaadr` |
-| ✅ | `cdaar` |
-| ✅ | `cdadar` |
-| ✅ | `cdaddr` |
-| ✅ | `cdadr` |
-| ✅ | `cddaar` |
-| ✅ | `cddadr` |
-| ✅ | `cddar` |
-| ✅ | `cdddar` |
-| ✅ | `cddddr` |
-| ✅ | `cdddr` |
 
 ---
 
-## `(scheme eval)`
+## `(base time)`
 
-| Status | Procedure |
-|:---:|:---|
-| ❌ | `environment` |
-| ✅ | `eval` |
-
----
-
-## `(scheme file)`
-
-| Status | Procedure |
-|:---:|:---|
-| ❌ | `call-with-input-file` |
-| ❌ | `call-with-output-file` |
-| ✅ | `delete-file` |
-| ✅ | `file-exists?` |
-| ✅ | `open-binary-input-file` |
-| ✅ | `open-binary-output-file` |
-| ✅ | `open-input-file` |
-| ✅ | `open-output-file` |
-| ❌ | `with-input-from-file` |
-| ❌ | `with-output-to-file` |
+| Status | Procedure            |
+|:------:|:---------------------|
+|   ✅    | `current-jiffy`      |
+|   ✅    | `current-second`     |
+|   ✅    | `jiffies-per-second` |
+|   ✅    | `current-dt-utc`     |
+|   ✅    | `current-dt-local`   |
 
 ---
-
-## `(scheme inexact)`
-
-| Status | Procedure |
-|:---:|:---|
-| ✅ | `acos` |
-| ✅ | `asin` |
-| ✅ | `atan` |
-| ✅ | `cos` |
-| ✅ | `exp` |
-| ✅ | `finite?` |
-| ✅ | `infinite?` |
-| ✅ | `log` |
-| ✅ | `nan?` |
-| ✅ | `sin` |
-| ✅ | `sqrt` |
-| ✅ | `tan` |
-
----
-
-## `(scheme lazy)`
-
-| Status | Procedure |
-|:---:|:---|
-| ❌ | `delay` |
-| ❌ | `delay-force` |
-| ❌ | `force` |
-| ❌ | `make-promise` |
-| ❌ | `promise?` |
-
----
-
-## `(scheme load)`
-
-| Status | Procedure |
-|:---:|:---|
-| ✅ | `load` |
-
----
-
-## `(scheme process-context)`
-
-| Status | Procedure |
-|:---:|:---|
-| ✅ | `command-line` |
-| ✅ | `exit` |
-| ✅ | `get-environment-variable` |
-| ✅ | `get-environment-variables` |
-| ❌ | `emergency-exit` |
-
----
-
-## `(scheme read)`
-
-| Status | Procedure |
-|:---:|:---|
-| ❌ | `read` |
-
----
-
-## `(scheme repl)`
-
-| Status | Procedure |
-|:---:|:---|
-| ❌ | `interaction-environment` |
-
----
-
-## `(scheme time)`
-
-| Status | Procedure |
-|:---:|:---|
-| ✅ | `current-jiffy` |
-| ✅ | `current-second` |
-| ✅ | `jiffies-per-second` |
-
----
-
-## `(scheme write)`
-
-| Status | Procedure |
-|:---:|:---|
-| ✅ | `display` |
-| ❌ | `write-shared` |
-| ✅ | `write` |
-| ✅ | `write-simple` |
 

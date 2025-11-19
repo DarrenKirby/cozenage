@@ -1,10 +1,7 @@
-Scheme Time Library
+Base Time Library
 ===================
 
-The ``(scheme time)`` library provides access to time-related values.
-
-R7RS procedures
----------------
+The ``(base time)`` library provides access to time-related values.
 
 .. _proc:current-seconds:
 
@@ -127,10 +124,6 @@ R7RS procedures
        Running (slow-fib 30)...
        Execution time: 0.048215 seconds
 
-Cozenage Extensions
--------------------
-
-The following procedures are not part of the R7RS standard but are included in Cozenage for convenience.
 
 .. _proc::current-dt-utc:
 

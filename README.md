@@ -63,7 +63,7 @@ To run the REPL just run the program with no arguments:
 
 ## Status of built-in procedures and special forms
 
-The status of the base procedures, and the other scheme libraries 
+The status of the base procedures
 are documented on another page: 
 
 [built-in and library procedures](README.status.md)
