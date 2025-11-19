@@ -94,9 +94,11 @@ This document tracks the implementation status of procedures in the Cozenage int
 |   ✅    | `exit`                    |
 |   ✅    | `features`                |
 |   ✅    | `file-error?`             |
+|   ✅    | `filter`                  |
 |   ✅    | `floor`                   |
 |   ✅    | `flush-output-port`       |
 |   ✅    | `for-each`                |
+|   ✅    | `foldl`                   |
 |   ✅    | `gcd`                     |
 |   ❌    | `get-output-bytevector`   |
 |   ❌    | `get-output-string`       |
@@ -230,7 +232,7 @@ This document tracks the implementation status of procedures in the Cozenage int
 |   ✅    | `write-string`            |
 |   ✅    | `write-u8`                |
 |   ✅    | `zero?`                   |
-
+|   ✅    | `zip`                     |
 ---
 
 ## `(base math)`
