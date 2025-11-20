@@ -24,11 +24,24 @@
 #include <gc.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdarg.h>
 #include <string.h>
+#include <errno.h>
 #include <math.h>
 #include <limits.h>
 #include <unicode/ustring.h>
 
+
+const char* fmt_err(const char *fmt, ...)
+{
+    static char buf[512];
+    va_list args;
+    va_start(args, fmt);
+    if (vsnprintf(buf, 512, fmt, args) < 0) {
+        fprintf(stderr, "vsnprintf failed!: %s\n", strerror(errno));
+    }
+    return buf;
+}
 
 /* Turn a single type into a string (for error reporting). */
 const char* cell_type_name(const int t)
@@ -100,14 +113,12 @@ Cell* check_arg_types(const Cell* a, const int mask, const char* fname)
 
         /* bitwise AND: if arg->type isn't in mask, it's invalid. */
         if (!(arg->type & mask)) {
-            char buf[128];
-            snprintf(buf, sizeof(buf),
-                     "%s: bad type at arg %d: got %s, expected %s",
+            return make_cell_error(
+            fmt_err("%s: bad type at arg %d: got %s, expected %s",
                      fname,
                      i+1,
                      cell_type_name(arg->type),
-                     cell_mask_types(mask));
-            return make_cell_error(buf, TYPE_ERR);
+                     cell_mask_types(mask)), TYPE_ERR);
         }
     }
     return nullptr; /* all good. */
@@ -118,25 +129,19 @@ Cell* check_arg_arity(const Cell* a, const int exact, const int min, const int m
     const int argc = a->count;
 
     if (exact >= 0 && argc != exact) {
-        char buf[128];
-        snprintf(buf, sizeof(buf),
-                 "expected exactly %d arg%s, got %d",
-                 exact, exact == 1 ? "" : "s", argc);
-        return make_cell_error(buf, ARITY_ERR);
+        return make_cell_error(
+            fmt_err(
+                "expected exactly %d arg%s, got %d",
+                exact, exact == 1 ? "" : "s", argc), ARITY_ERR);
     }
     if (min >= 0 && argc < min) {
-        char buf[128];
-        snprintf(buf, sizeof(buf),
-                 "expected at least %d arg%s, got %d",
-                 min, min == 1 ? "" : "s", argc);
-        return make_cell_error(buf, ARITY_ERR);
+        return make_cell_error(
+            fmt_err("expected at least %d arg%s, got %d",
+                 min, min == 1 ? "" : "s", argc), ARITY_ERR);
     }
     if (max >= 0 && argc > max) {
-        char buf[128];
-        snprintf(buf, sizeof(buf),
-                 "expected at most %d arg%s, got %d",
-                 max, max == 1 ? "" : "s", argc);
-        return make_cell_error(buf, ARITY_ERR);
+        return make_cell_error(fmt_err("expected at most %d arg%s, got %d",
+                 max, max == 1 ? "" : "s", argc), ARITY_ERR);
     }
     return nullptr; /* all good */
 }
@@ -581,7 +586,9 @@ Cell* negate_numeric(const Cell* x)
                 negate_numeric(x->imag)
             );
         default:
-            return make_cell_error("negate_numeric: Oops, this isn't right!", GEN_ERR);
+            return make_cell_error(
+                "negate numeris: bad arg type",
+                TYPE_ERR);
     }
 }
 

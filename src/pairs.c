@@ -28,12 +28,11 @@
 inline Cell* car__(const Cell* list)
 {
     if (!(list->type & CELL_PAIR)) {
-        char buf[128];
-        snprintf(buf, sizeof(buf),
-                 "car: got %s, expected %s",
-                 cell_type_name(list->type),
-                 cell_mask_types(CELL_PAIR));
-        return make_cell_error(buf, TYPE_ERR);
+        return make_cell_error(
+        fmt_err("car: got %s, expected %s",
+             cell_type_name(list->type),
+             cell_mask_types(CELL_PAIR)),
+            TYPE_ERR);
     }
     return list->car;
 }
@@ -41,12 +40,11 @@ inline Cell* car__(const Cell* list)
 inline Cell* cdr__(const Cell* list)
 {
     if (!(list->type & CELL_PAIR)) {
-        char buf[128];
-        snprintf(buf, sizeof(buf),
-                 "cdr: got %s, expected %s",
-                 cell_type_name(list->type),
-                 cell_mask_types(CELL_PAIR));
-        return make_cell_error(buf, TYPE_ERR);
+        return make_cell_error(
+        fmt_err("car: got %s, expected %s",
+             cell_type_name(list->type),
+             cell_mask_types(CELL_PAIR)),
+            TYPE_ERR);
     }
     return list->cdr;
 }
@@ -282,9 +280,9 @@ Cell* builtin_list_append(const Lex* e, const Cell* a)
         }
         /* All but the last argument must be a list */
         if (current_list->type != CELL_PAIR) {
-            char buf[128];
-            snprintf(buf, sizeof(buf), "append: arg%d is not a list", i+1);
-            return make_cell_error(buf, TYPE_ERR);
+            return make_cell_error(
+                fmt_err("append: arg%d is not a list", i+1),
+                TYPE_ERR);
         }
 
         /* Now, walk the list to ensure it's a *proper* list */
@@ -293,9 +291,9 @@ Cell* builtin_list_append(const Lex* e, const Cell* a)
             p = p->cdr;
         }
         if (p->type != CELL_NIL) {
-            char buf[128];
-            snprintf(buf, sizeof(buf), "append: arg%d is not a proper list", i+1);
-            return make_cell_error(buf, TYPE_ERR);
+            return make_cell_error(
+                fmt_err("append: arg%d is not a proper list", i+1),
+                TYPE_ERR);
         }
 
         /* If we get here, the list is proper. Add its length. */
@@ -821,10 +819,11 @@ Cell* builtin_foldl(const Lex* e, const Cell* a)
         if (a->cell[i]->type == CELL_NIL) {
             return a->cell[1];
         }
-        char buf[128];
+
         if (a->cell[i]->type != CELL_PAIR || a->cell[i]->len == -1) {
-            snprintf(buf, 128, "foldl: arg %d must be a proper list", i+1);
-            return make_cell_error(buf, TYPE_ERR);
+            return make_cell_error(
+                fmt_err("foldl: arg %d must be a proper list", i+1),
+                TYPE_ERR);
         }
         if (a->cell[i]->len < shortest_list_length) {
             shortest_list_length = a->cell[i]->len;
@@ -884,10 +883,11 @@ Cell* builtin_zip(const Lex* e, const Cell* a)
         if (a->cell[i]->type == CELL_NIL) {
             return make_cell_nil();
         }
-        char buf[128];
+
         if (a->cell[i]->type != CELL_PAIR || a->cell[i]->len == -1) {
-            snprintf(buf, 128, "zip: arg %d must be a proper list", i+1);
-            return make_cell_error(buf, TYPE_ERR);
+            return make_cell_error(
+                fmt_err("zip: arg %d must be a proper list", i+1),
+                TYPE_ERR);
         }
         if (a->cell[i]->len < shortest_list_length) {
             shortest_list_length = a->cell[i]->len;

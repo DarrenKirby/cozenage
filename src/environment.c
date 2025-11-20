@@ -93,9 +93,9 @@ Cell* lex_get(const Lex* e, const Cell* k)
     }
 
     /* If not found anywhere, the symbol is unbound. */
-    char buf[128];
-    snprintf(buf, sizeof(buf), "Unbound symbol: '%s'", k->sym);
-    return make_cell_error(buf, VALUE_ERR);
+    return make_cell_error(
+        fmt_err("Unbound symbol: '%s'", k->sym),
+        VALUE_ERR);
 }
 
 

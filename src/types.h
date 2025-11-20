@@ -48,6 +48,7 @@ typedef struct {
 
 typedef Cell* (*BuiltinFn)(const Lex* e, const Cell* args);
 
+const char* fmt_err(const char *fmt, ...);
 const char* cell_type_name(int t);
 const char* cell_mask_types(int mask);
 Cell* check_arg_types(const Cell* a, int mask, const char* fname);

@@ -122,10 +122,11 @@ Cell* builtin_map(const Lex* e, const Cell* a)
         if (a->cell[i]->type == CELL_NIL) {
             return make_cell_nil();
         }
-        char buf[100];
+
         if (a->cell[i]->type != CELL_PAIR || a->cell[i]->len == -1) {
-            snprintf(buf, 100, "map: arg %d must be a proper list", i+1);
-            return make_cell_error(buf, TYPE_ERR);
+            return make_cell_error(
+                fmt_err("map: arg %d must be a proper list", i+1),
+                TYPE_ERR);
         }
         if (a->cell[i]->len < shortest_list_length) {
             shortest_list_length = a->cell[i]->len;
@@ -199,10 +200,11 @@ Cell* builtin_vector_map(const Lex* e, const Cell* a)
         if (a->cell[i]->count == 0) {
             return make_cell_vector();
         }
-        char buf[100];
+
         if (a->cell[i]->type != CELL_VECTOR) {
-            snprintf(buf, 100, "vector-map: arg %d must be a proper list", i+1);
-            return make_cell_error(buf, TYPE_ERR);
+            return make_cell_error(
+                fmt_err("vector-map: arg %d must be a proper list", i+1),
+                TYPE_ERR);
         }
         if (a->cell[i]->len < shortest_vec_length) {
             shortest_vec_length = a->cell[i]->len;
@@ -269,9 +271,9 @@ Cell* builtin_string_map(const Lex* e, const Cell* a)
     for (int i = 1; i < a->count; i++) {
         /* Ensure we have nothing but lists in a[1:]. */
         if (a->cell[i]->type != CELL_STRING) {
-            char buf[256];
-            snprintf(buf, 256, "string-map: arg %d must be a string", i+1);
-            return make_cell_error(buf, TYPE_ERR);
+            return make_cell_error(
+                fmt_err("string-map: arg %d must be a string", i+1),
+                TYPE_ERR);
         }
         Cell* str_to_lst = builtin_string_list(e, make_sexpr_len1(a->cell[i]));
         cell_add(sexp_for_map, str_to_lst);
@@ -321,7 +323,9 @@ Cell* builtin_load(const Lex* e, const Cell* a)
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
     if (a->cell[0]->type != CELL_STRING) {
-        return make_cell_error("load: arg must be a string", TYPE_ERR);
+        return make_cell_error(
+            "load: arg must be a string",
+            TYPE_ERR);
     }
     const char* file = a->cell[0]->str;
     const char* input = read_file_to_string(file);

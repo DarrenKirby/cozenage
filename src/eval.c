@@ -20,6 +20,7 @@
 #include "eval.h"
 #include "special_forms.h"
 #include "cell.h"
+#include "types.h"
 #include "repr.h"
 #include "symbols.h"
 
@@ -80,10 +81,9 @@ Cell* coz_eval(Lex* env, Cell* expr)
 
             /* Scold for using syntax dumbly */
             if (is_syntactic_keyword(expr->sym)) {
-                char err_buf[128];
-                snprintf(err_buf, sizeof(err_buf),
-                         "Syntax keyword '%s' cannot be used as a variable", expr->sym);
-                return make_cell_error(err_buf, SYNTAX_ERR);
+                return make_cell_error(
+                    fmt_err("Syntax keyword '%s' cannot be used as a variable", expr->sym),
+                    SYNTAX_ERR);
             }
 
             return lex_get(env, expr);
@@ -121,10 +121,10 @@ Cell* coz_eval(Lex* env, Cell* expr)
             return f;
         }
         if (f->type != CELL_PROC) {
-            char buf[512];
-            snprintf(buf, sizeof(buf), "bad identifier: '%s'. Expression must start with a procedure",
-                cell_to_string(f, MODE_REPL));
-            return make_cell_error(buf, TYPE_ERR);
+            return make_cell_error(
+                fmt_err("bad identifier: '%s'. Expression must start with a procedure",
+                    cell_to_string(f, MODE_REPL)),
+                TYPE_ERR);
         }
 
         /* Create a new list containing the unevaluated arguments. */

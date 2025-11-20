@@ -66,9 +66,7 @@ Cell* builtin_add(const Lex* e, const Cell* a)
                 complex_apply(builtin_add, e, result, rhs);
                 break;
             default:
-                return make_cell_error(
-                    "<builtin '+'> Oops, this shouldn't have happened.",
-                    GEN_ERR);
+                ;
         }
         result->exact = result->exact && rhs->exact;
     }
@@ -112,9 +110,7 @@ Cell* builtin_sub(const Lex* e, const Cell* a)
                 complex_apply(builtin_sub, e, result, rhs);
                 break;
             default:
-                return make_cell_error(
-                    "<builtin '-'> Oops, this shouldn't have happened.",
-                    GEN_ERR);
+                ;
         }
         result->exact = result->exact && rhs->exact;
     }
@@ -154,9 +150,7 @@ Cell* builtin_mul(const Lex* e, const Cell* a)
                 complex_apply(builtin_mul, e, result, rhs);
                 break;
             default:
-                return make_cell_error(
-                    "<builtin '*'> Oops, this shouldn't have happened.",
-                    GEN_ERR);
+                ;
         }
         result->exact = result->exact && rhs->exact;
     }
@@ -257,9 +251,7 @@ Cell* builtin_div(const Lex* e, const Cell* a)
             complex_apply(builtin_div, e, result, rhs);
             break;
         default:
-            return make_cell_error(
-                "<builtin '/'> Oops, this shouldn't have happened.",
-                GEN_ERR);
+            ;
         }
         result->exact = result->exact && rhs->exact;
     }

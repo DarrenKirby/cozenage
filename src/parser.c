@@ -29,6 +29,8 @@
 #include <inttypes.h>
 #include <limits.h>
 #include <unicode/uchar.h>
+
+#include "repr.h"
 /* Linux needs this include, macOS and FreeBSD do not */
 #ifdef __linux__
 #include <ctype.h>
@@ -226,10 +228,8 @@ static Cell* parse_number(char* token, const int line, int len)
         const char *tok2 = strsep(&p, "/");
 
         if (p != NULL) {
-            snprintf(err_buf, sizeof(err_buf), "Line %d: Invalid token: '%s%s%s'",
-                line,
-                ANSI_RED_B, tok, ANSI_RESET);
-            return make_cell_error(err_buf, SYNTAX_ERR);
+            return make_cell_error(fmt_err("Line %d: Invalid token: '%s%s%s'",
+                line, ANSI_RED_B, tok, ANSI_RESET), SYNTAX_ERR);
         }
 
         const long long n = parse_int_checked(tok1, err_buf, base, &ok);
@@ -283,10 +283,8 @@ static Cell* parse_number(char* token, const int line, int len)
     }
 
     /* If we get here, something's really wrong */
-    snprintf(err_buf, sizeof(err_buf),
-        "Line %d: Unable to parse numeric token: '%s%s%s'",
-        line, ANSI_RED_B, tok, ANSI_RESET);
-    return make_cell_error(err_buf, SYNTAX_ERR);
+    return make_cell_error(fmt_err("Line %d: Unable to parse numeric token: '%s%s%s'",
+        line, ANSI_RED_B, tok, ANSI_RESET), SYNTAX_ERR);
 }
 
 static Cell* parse_string(const char* str, const int len)
@@ -403,11 +401,8 @@ static Cell* parse_boolean(const char* tok, const int line)
     if (strcmp(tok, "f") == 0 ||
         strcmp(tok, "false") == 0) return make_cell_boolean(0);
     /* Otherwise an error. */
-    char err_buf[128] = {0};
-    snprintf(err_buf, sizeof(err_buf), "Line %d: Unable to parse token: '%s#%s%s'",
-                    line,
-                    ANSI_RED_B, tok, ANSI_RESET);
-    return make_cell_error(err_buf, SYNTAX_ERR);
+    return make_cell_error(fmt_err("Line %d: Unable to parse token: '%s#%s%s'",
+                    line, ANSI_RED_B, tok, ANSI_RESET), SYNTAX_ERR);
 }
 
 static Cell* parse_symbol(char* tok, const int line, const int len)
@@ -427,8 +422,6 @@ static Cell* parse_symbol(char* tok, const int line, const int len)
 
 static Cell* parse_character(char* tok, const int line, const int len)
 {
-    char err_buf[128] = {0};
-    
     /* Handle the special '#\' -> space case. */
     if (len == 0) {
         return make_cell_char(' ');
@@ -459,17 +452,14 @@ static Cell* parse_character(char* tok, const int line, const int len)
             const long code = strtol(tok + 1, &end_ptr, 16);
 
             if (code >= 0xD800 && code <= 0xDFFF) {
-                snprintf(err_buf, sizeof(err_buf),
+                return make_cell_error(fmt_err(
                     "Line %d, Invalid Unicode hex value (surrogate): '%s%s%s'",
-                    line, ANSI_RED_B, tok, ANSI_RESET);
-                return make_cell_error(err_buf, VALUE_ERR);
+                    line, ANSI_RED_B, tok, ANSI_RESET), VALUE_ERR);
             }
 
             if (*end_ptr != '\0' || code < 0 || code > 0x10FFFF) {
-                snprintf(err_buf, sizeof(err_buf),
-                    "Line %d, Invalid Unicode hex value: '%s%s%s'",
-                    line, ANSI_RED_B, tok, ANSI_RESET);
-                return make_cell_error(err_buf, VALUE_ERR);
+                return make_cell_error(fmt_err("Line %d, Invalid Unicode hex value: '%s%s%s'",
+                    line, ANSI_RED_B, tok, ANSI_RESET), VALUE_ERR);
             }
             return make_cell_char((UChar32)code);
         }
@@ -487,10 +477,8 @@ static Cell* parse_character(char* tok, const int line, const int len)
      * more than one character after #\ (e.g., #\ab or #\λa),
      * which is an error according to the R7RS standard. */
     if (i != len) {
-        snprintf(err_buf, sizeof(err_buf),
-            "Line %d, Invalid character literal: '%s%s%s'",
-            line, ANSI_RED_B, tok, ANSI_RESET);
-        return make_cell_error(err_buf, SYNTAX_ERR);
+        return make_cell_error(fmt_err("Line %d, Invalid character literal: '%s%s%s'",
+            line, ANSI_RED_B, tok, ANSI_RESET), SYNTAX_ERR);
     }
 
     return make_cell_char(code_point);
@@ -540,19 +528,14 @@ Cell* parse_tokens(TokenArray *ta)
         default: break;
     }
 
-    /* It's a compound type. */
-    char err_buf[128] = {0};
-
     /* Just handle quote and quasiquote the same for now. */
     if (token->type == T_QUOTE || token->type == T_QUASIQUOTE) {
         /* Grab the next token. */
         const Token* t = advance(ta);
         Cell *quoted = parse_tokens(ta);
         if (!quoted) {
-            snprintf(err_buf, sizeof(err_buf),
-                        "Line %d: Expected expression after quote: '%s%s%s'",
-                        t->line, ANSI_RED_B, token_to_string(t), ANSI_RESET);
-            return make_cell_error(err_buf, SYNTAX_ERR);
+            return make_cell_error(fmt_err("Line %d: Expected expression after quote: '%s%s%s'",
+                        t->line, ANSI_RED_B, token_to_string(t), ANSI_RESET), SYNTAX_ERR);
         }
         Cell *qexpr = make_cell_sexpr();
         cell_add(qexpr, make_cell_symbol("quote"));
@@ -596,17 +579,18 @@ Cell* parse_tokens(TokenArray *ta)
                 bv_max = INT32_MAX;
             } else {
                 return make_cell_error(
-                    "Bad bytevector label",
+                    fmt_err("Line %d: Bad bytevector label: %s", token->line, bv_tok),
                     SYNTAX_ERR);
             }
             Cell* bv = make_cell_bytevector(bv_t);
             token = advance(ta); /* consume 'u8'. */
 
             if (peek(ta)->type != T_LEFT_PAREN) {
-                snprintf(err_buf, sizeof(err_buf),
-                            "Line %d: Expected '(' in bytevector literal: '%s%s%s'",
-                            token->line, ANSI_RED_B, token_to_string(token), ANSI_RESET);
-                return make_cell_error(err_buf, SYNTAX_ERR);
+                return make_cell_error(
+                    fmt_err(
+                    "Line %d: Expected '(' in bytevector literal: '%s%s%s'",
+                    token->line, ANSI_RED_B, token_to_string(token), ANSI_RESET),
+                    SYNTAX_ERR);
             }
 
             token = advance(ta); /* Consume '('. */
@@ -614,17 +598,17 @@ Cell* parse_tokens(TokenArray *ta)
                 const Cell* val = parse_tokens(ta);
                 if (val->type != CELL_INTEGER) {
                     return make_cell_error(
-                        "bytevector literals can only contain bytes",
+                        fmt_err("Line %d: bad value: '%s'. bytevector literals can only contain bytes",
+                        token->line, cell_to_string(val, MODE_REPL)),
                         TYPE_ERR);
                 }
 
                 if (val->integer_v < bv_min || val->integer_v > bv_max) {
-                    char buf[256];
-                    snprintf(buf, sizeof(buf),
-                        "invalid byte value for %s, must be >%" PRId64 " and <%" PRId64,
-                        bv_tok, bv_min, bv_max);
                     return make_cell_error(
-                        buf,
+                        fmt_err(
+                            "Line %d: invalid byte value for %s, must be (byte >= %"
+                            PRId64 ") and (byte <= %" PRId64 ")",
+                            token->line, bv_tok, bv_min, bv_max),
                         VALUE_ERR);
                 }
                 const int64_t byte = val->integer_v;
@@ -633,10 +617,9 @@ Cell* parse_tokens(TokenArray *ta)
             }
 
             if (!peek(ta)) {
-                snprintf(err_buf, sizeof(err_buf),
-                            "Line %d: Unmatched '(' in bytevector literal: '%s%s%s'",
-                            token->line, ANSI_RED_B, token_to_string(token), ANSI_RESET);
-                return make_cell_error(err_buf, SYNTAX_ERR);
+                return make_cell_error(
+                    fmt_err("Line %d: Unmatched '(' in bytevector literal: '%s%s%s'",
+                    token->line, ANSI_RED_B, token_to_string(token), ANSI_RESET), SYNTAX_ERR);
             }
             return bv;
         }
@@ -645,10 +628,9 @@ Cell* parse_tokens(TokenArray *ta)
         Cell* vec = make_cell_vector();
 
         if (peek(ta)->type != T_LEFT_PAREN) {
-            snprintf(err_buf, sizeof(err_buf),
-                        "Line %d: Expected '(' in vector literal: '%s%s%s'",
-                        token->line, ANSI_RED_B, token_to_string(token), ANSI_RESET);
-            return make_cell_error(err_buf, SYNTAX_ERR);
+            return make_cell_error(
+                fmt_err("Line %d: Expected '(' in vector literal: '%s%s%s'",
+                token->line, ANSI_RED_B, token_to_string(token), ANSI_RESET), SYNTAX_ERR);
         }
 
         token = advance(ta); /* Consume '('. */
@@ -658,10 +640,9 @@ Cell* parse_tokens(TokenArray *ta)
         }
 
         if (!peek(ta)) {
-            snprintf(err_buf, sizeof(err_buf),
-                        "Line %d: Unmatched '(' in vector literal: '%s%s%s'",
-                        token->line, ANSI_RED_B, token_to_string(token), ANSI_RESET);
-            return make_cell_error(err_buf, SYNTAX_ERR);
+            return make_cell_error(
+                fmt_err("Line %d: Unmatched '(' in vector literal: '%s%s%s'",
+                token->line, ANSI_RED_B, token_to_string(token), ANSI_RESET), SYNTAX_ERR);
         }
         return vec;
     }
@@ -671,9 +652,9 @@ Cell* parse_tokens(TokenArray *ta)
         token = advance(ta); /* Consume '(' */
         if (token->type == T_RIGHT_PAREN) {
             /* Unquoted nil is an error */
-            snprintf(err_buf, sizeof(err_buf),
-                        "Line %d: Empty S-expression.", token->line);
-            return make_cell_error(err_buf, SYNTAX_ERR);
+            return make_cell_error(
+                fmt_err("Line %d: Empty S-expression.", token->line),
+                SYNTAX_ERR);
         }
         Cell *sexpr = make_cell_sexpr();
 
@@ -682,13 +663,14 @@ Cell* parse_tokens(TokenArray *ta)
             advance(ta);
         }
         if (!peek(ta)) {
-            snprintf(err_buf, sizeof(err_buf),
-                        "Line %d: Unmatched '('.", token->line);
-            return make_cell_error(err_buf, SYNTAX_ERR);
+            return make_cell_error(
+                fmt_err("Line %d: Unmatched '('.", token->line),
+                SYNTAX_ERR);
         }
         return sexpr;
     }
     /* Should not ever get here, but maybe it's a hash with no vector? */
-    snprintf(err_buf, sizeof(err_buf), "Line %d: bad token", token->line);
-    return make_cell_error(err_buf, SYNTAX_ERR);
+    return make_cell_error(
+        fmt_err("Line %d: bad token", token->line),
+        SYNTAX_ERR);
 }

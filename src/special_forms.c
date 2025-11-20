@@ -161,17 +161,16 @@ HandlerResult sf_define(Lex* e, Cell* a)
         Cell* err = make_cell_error(
             "define requires at least 2 arguments",
             ARITY_ERR);
-        return (HandlerResult){ .action = ACTION_RETURN, .value = err };
+        return (HandlerResult) { .action = ACTION_RETURN, .value = err };
     }
     const Cell* target = a->cell[0];
 
     /* Disallow rebinding of keywords. */
     if (is_syntactic_keyword(target->sym)) {
-        char err_buf[128];
-        snprintf(err_buf, sizeof(err_buf),
-                 "Syntax keyword '%s' cannot be used as a variable", target->sym);
-        Cell* err = make_cell_error(err_buf, VALUE_ERR);
-        return (HandlerResult){ .action = ACTION_RETURN, .value = err };
+        Cell* err = make_cell_error(
+            fmt_err("Syntax keyword '%s' cannot be used as a variable", target->sym),
+            VALUE_ERR);
+        return (HandlerResult) { .action = ACTION_RETURN, .value = err };
     }
 
     /* (define <symbol> <expr>) */
@@ -186,7 +185,7 @@ HandlerResult sf_define(Lex* e, Cell* a)
             val->lambda->l_name = target->sym;
         }
         lex_put_global(e, target, val);
-        return (HandlerResult){ .action = ACTION_RETURN, .value = val };
+        return (HandlerResult) { .action = ACTION_RETURN, .value = val };
     }
 
     /* (define (<f-name> <args>) <body>) */
@@ -217,7 +216,7 @@ HandlerResult sf_define(Lex* e, Cell* a)
         Cell* lam = lex_make_named_lambda(fname->sym, formals, body, e);
         lex_put_global(e, fname, lam);
         return (HandlerResult){ .action = ACTION_RETURN, .value = lam };
-        }
+    }
 
     Cell* err = make_cell_error(
         "invalid define syntax",
@@ -385,7 +384,7 @@ HandlerResult sf_cond(Lex* e, Cell* a)
         Cell* err = make_cell_error(
             "ill-formed cond expression",
             VALUE_ERR);
-        return (HandlerResult){ .action = ACTION_RETURN, .value = err };
+        return (HandlerResult) { .action = ACTION_RETURN, .value = err };
     }
 
     for (int i = 0; i < a->count; i++) {
@@ -396,7 +395,7 @@ HandlerResult sf_cond(Lex* e, Cell* a)
             Cell* err = make_cell_error(
                 "cond clause must be a non-empty list",
                 SYNTAX_ERR);
-            return (HandlerResult){ .action = ACTION_RETURN, .value = err };
+            return (HandlerResult) { .action = ACTION_RETURN, .value = err };
         }
 
         /* Check for 'else' clause and if found evaluate any expressions. */
@@ -406,7 +405,7 @@ HandlerResult sf_cond(Lex* e, Cell* a)
                 Cell* err = make_cell_error(
                     "else clause must be last in the cond expression",
                     SYNTAX_ERR);
-                return (HandlerResult){ .action = ACTION_RETURN, .value = err };
+                return (HandlerResult) { .action = ACTION_RETURN, .value = err };
             }
             /* eval the first n-1 expressions. */
             for (int j = 1; j < last(clause); j++) {
@@ -416,7 +415,7 @@ HandlerResult sf_cond(Lex* e, Cell* a)
                 }
             }
             /* return the tail call. */
-            return (HandlerResult){ .action = ACTION_CONTINUE, .value = clause->cell[last(clause)] };
+            return (HandlerResult) { .action = ACTION_CONTINUE, .value = clause->cell[last(clause)] };
         }
 
         /* Not an else, so evaluate the test. */
@@ -430,7 +429,7 @@ HandlerResult sf_cond(Lex* e, Cell* a)
         /* Test is truthy - first see if there is an expression. */
         if (clause->count == 1) {
             /* No expression, return the test result. */
-            return (HandlerResult){ .action = ACTION_RETURN, .value = test };
+            return (HandlerResult) { .action = ACTION_RETURN, .value = test };
         }
 
         /* Check for cond '=>' form. */
@@ -439,7 +438,7 @@ HandlerResult sf_cond(Lex* e, Cell* a)
                 Cell* err = make_cell_error(
                     "cond '=>' form must have an expression",
                     SYNTAX_ERR);
-                return (HandlerResult){ .action = ACTION_RETURN, .value = err };
+                return (HandlerResult) { .action = ACTION_RETURN, .value = err };
             }
 
             /* '=>' form can only have one expression after the test. */
@@ -447,7 +446,7 @@ HandlerResult sf_cond(Lex* e, Cell* a)
                 Cell* err = make_cell_error(
                     "cond '=>' form can only have 1 expression after the test",
                     SYNTAX_ERR);
-                return (HandlerResult){ .action = ACTION_RETURN, .value = err };
+                return (HandlerResult) { .action = ACTION_RETURN, .value = err };
             }
             const Cell* proc = coz_eval(e, clause->cell[2]);
             /* Expression must evaluate to a procedure. */
@@ -455,7 +454,7 @@ HandlerResult sf_cond(Lex* e, Cell* a)
                 Cell* err = make_cell_error(
                     "expression after '=>' must evaluate to a procedure",
                     SYNTAX_ERR);
-                return (HandlerResult){ .action = ACTION_RETURN, .value = err };
+                return (HandlerResult) { .action = ACTION_RETURN, .value = err };
             }
             /* A tail call. */
             Cell* tmp = make_sexpr_len2(proc, test);
@@ -465,7 +464,7 @@ HandlerResult sf_cond(Lex* e, Cell* a)
         for (int j = 1; j < last(clause); j++) {
             Cell* exp = coz_eval(e, clause->cell[j]);
             if (exp && exp->type == CELL_ERROR) {
-                return (HandlerResult){ .action = ACTION_RETURN, .value = exp };
+                return (HandlerResult) { .action = ACTION_RETURN, .value = exp };
             }
         }
         /* Return the last expression itself for the tail call. */
@@ -514,7 +513,7 @@ HandlerResult sf_import(Lex* e, Cell* a)
             Cell* err = make_cell_error(
                 "import: user-defined libraries not yet supported",
                 GEN_ERR);
-            return (HandlerResult){ .action = ACTION_RETURN, .value = err };
+            return (HandlerResult) { .action = ACTION_RETURN, .value = err };
         }
     }
     /* Re-generate the completion array if we're in the REPL (and have GNU readline). */
@@ -524,7 +523,7 @@ HandlerResult sf_import(Lex* e, Cell* a)
     }
 #endif
 
-    return (HandlerResult){ .action = ACTION_RETURN, .value = result };
+    return (HandlerResult) { .action = ACTION_RETURN, .value = result };
 }
 
 /* (let ⟨bindings⟩ ⟨body⟩) where ⟨Bindings⟩ has the form ((⟨variable1⟩ ⟨init1⟩) ...)
@@ -545,7 +544,7 @@ HandlerResult sf_let(Lex* e, Cell* a)
             Cell* err = make_cell_error(
                 "Bindings must be a list",
                 VALUE_ERR);
-            return (HandlerResult){ .action = ACTION_RETURN, .value = err };
+            return (HandlerResult) { .action = ACTION_RETURN, .value = err };
         }
         const Cell* body = a;
 
@@ -559,26 +558,24 @@ HandlerResult sf_let(Lex* e, Cell* a)
                 Cell* err = make_cell_error(
                     "Bindings must be a list",
                     VALUE_ERR);
-                return (HandlerResult){ .action = ACTION_RETURN, .value = err };
+                return (HandlerResult) { .action = ACTION_RETURN, .value = err };
             }
             if (local_b->count != 2) {
                 Cell* err = make_cell_error(
                     "bindings must contain exactly 2 items",
                     VALUE_ERR);
-                return (HandlerResult){ .action = ACTION_RETURN, .value = err };
+                return (HandlerResult) { .action = ACTION_RETURN, .value = err };
             }
             if (local_b->cell[0]->type != CELL_SYMBOL) {
                 Cell* err = make_cell_error(
                     "first value in binding must be a symbol",
                     VALUE_ERR);
-                return (HandlerResult){ .action = ACTION_RETURN, .value = err };
+                return (HandlerResult) { .action = ACTION_RETURN, .value = err };
             }
             cell_add(vars, local_b->cell[0]);
             cell_add(vals, local_b->cell[1]);
         }
 
-        debug_print_cell(vars);
-        debug_print_cell(vals);
         /* Create a new child environment. */
         Lex* local_env = new_child_env(e);
 
@@ -594,7 +591,7 @@ HandlerResult sf_let(Lex* e, Cell* a)
         for (int i = 0; i < body->count; i++) {
             result = coz_eval(local_env, body->cell[i]);
         }
-        return (HandlerResult){ .action = ACTION_RETURN, .value = result };
+        return (HandlerResult) { .action = ACTION_RETURN, .value = result };
     }
     /* Named let - de-sugar into a letrec */
     /* Really need to handle this transformation better.  */
@@ -642,7 +639,7 @@ HandlerResult sf_let_star(Lex* e, Cell* a)
         Cell* err = make_cell_error(
             "Bindings must be a list",
             VALUE_ERR);
-        return (HandlerResult){ .action = ACTION_RETURN, .value = err };
+        return (HandlerResult) { .action = ACTION_RETURN, .value = err };
     }
     const Cell* body = a;
 
@@ -655,19 +652,19 @@ HandlerResult sf_let_star(Lex* e, Cell* a)
             Cell* err = make_cell_error(
                 "Bindings must be a list",
                 VALUE_ERR);
-            return (HandlerResult){ .action = ACTION_RETURN, .value = err };
+            return (HandlerResult) { .action = ACTION_RETURN, .value = err };
         }
         if (local_b->count != 2) {
             Cell* err = make_cell_error(
                 "bindings must contain exactly 2 items",
                 VALUE_ERR);
-            return (HandlerResult){ .action = ACTION_RETURN, .value = err };
+            return (HandlerResult) { .action = ACTION_RETURN, .value = err };
         }
         if (local_b->cell[0]->type != CELL_SYMBOL) {
             Cell* err = make_cell_error(
                 "first value in binding must be a symbol",
                 VALUE_ERR);
-            return (HandlerResult){ .action = ACTION_RETURN, .value = err };
+            return (HandlerResult) { .action = ACTION_RETURN, .value = err };
         }
         const Cell* formal = local_b->cell[0];
         Cell* arg = local_b->cell[1];
@@ -691,7 +688,7 @@ HandlerResult sf_let_star(Lex* e, Cell* a)
     for (int i = 0; i < body->count; i++) {
         result = coz_eval(current_env, body->cell[i]);
     }
-    return (HandlerResult){ .action = ACTION_RETURN, .value = result };
+    return (HandlerResult) { .action = ACTION_RETURN, .value = result };
 }
 
 HandlerResult sf_letrec(Lex* e, Cell* a)
@@ -701,7 +698,7 @@ HandlerResult sf_letrec(Lex* e, Cell* a)
         Cell* err = make_cell_error(
             "Bindings must be a list",
             VALUE_ERR);
-        return (HandlerResult){ .action = ACTION_RETURN, .value = err };
+        return (HandlerResult) { .action = ACTION_RETURN, .value = err };
     }
 
     const Cell* body = a;
@@ -719,11 +716,11 @@ HandlerResult sf_letrec(Lex* e, Cell* a)
         const Cell* init_exp = coz_eval(local_env, local_bind);
 
         if (init_exp->type == CELL_ERROR) {
-            char buf[128];
-            snprintf(buf, sizeof(buf), "letrec: variable '%s' used before initialization",
-                cell_to_string(local_bind, MODE_REPL));
-            Cell* err = make_cell_error(buf, VALUE_ERR);
-            return (HandlerResult){ .action = ACTION_RETURN, .value = err };
+            Cell* err = make_cell_error(
+                fmt_err("letrec: variable '%s' used before initialization",
+                cell_to_string(local_bind, MODE_REPL)),
+                VALUE_ERR);
+            return (HandlerResult) { .action = ACTION_RETURN, .value = err };
         }
         lex_put_local(local_env, variable, init_exp);
     }
@@ -732,7 +729,7 @@ HandlerResult sf_letrec(Lex* e, Cell* a)
     for (int i = 0; i < body->count; i++) {
         result = coz_eval(local_env, body->cell[i]);
     }
-    return (HandlerResult){ .action = ACTION_RETURN, .value = result };
+    return (HandlerResult) { .action = ACTION_RETURN, .value = result };
 }
 
 /* (set! ⟨variable⟩ ⟨expression⟩)
@@ -746,7 +743,7 @@ HandlerResult sf_set_bang(Lex* e, Cell* a)
     const Cell* variable = a->cell[first];
     if (variable->type != CELL_SYMBOL) {
         err = make_cell_error("arg1 must be a symbol", TYPE_ERR);
-        return (HandlerResult){ .action = ACTION_RETURN, .value = err };
+        return (HandlerResult) { .action = ACTION_RETURN, .value = err };
     }
 
     const char* sym_to_set = a->cell[0]->sym;
@@ -763,8 +760,8 @@ HandlerResult sf_set_bang(Lex* e, Cell* a)
                 target_frame->vals[i] = value_to_set;
                 /* R7RS says the return from set! is unspecified.
                  * Cozenage will return the value set, for visual
-                 * feedback that the operation was successful */
-                return (HandlerResult){ .action = ACTION_RETURN, .value = value_to_set };
+                 * feedback that the operation was successful (REPL-only) */
+                return (HandlerResult) { .action = ACTION_RETURN, .value = value_to_set };
             }
         }
     } else {
@@ -773,14 +770,13 @@ HandlerResult sf_set_bang(Lex* e, Cell* a)
         if (ht_get(e->global, sym_to_set)) {
             /* It exists globally, so update it in the hash table. */
             ht_set(e->global, sym_to_set, value_to_set);
-            return (HandlerResult){ .action = ACTION_RETURN, .value = value_to_set };
+            return (HandlerResult) { .action = ACTION_RETURN, .value = value_to_set };
         }
     }
 
     /* The variable was not found anywhere. This is an error. */
-    char buf[128];
-    snprintf(buf, sizeof(buf), "set!: Unbound symbol: '%s'", sym_to_set);
-    return (HandlerResult){ .action = ACTION_RETURN, .value = make_cell_error(buf, VALUE_ERR) };
+    err = make_cell_error(fmt_err("set!: Unbound symbol: '%s'", sym_to_set), TYPE_ERR);
+    return (HandlerResult) { .action = ACTION_RETURN, .value = err };
 }
 
 /* (begin ⟨expression1 ⟩ ⟨expression2 ⟩ ... )
@@ -793,7 +789,7 @@ HandlerResult sf_begin(Lex* e, Cell* a)
     const long long n_expressions = a->count;
     /* If there is just one expression, return it to eval. */
     if (n_expressions == 1) {
-        return (HandlerResult){ .action = ACTION_CONTINUE, .value = a->cell[0] };
+        return (HandlerResult) { .action = ACTION_CONTINUE, .value = a->cell[0] };
     }
     /* Otherwise, eval all but the last. */
     for (int i = 0; i < n_expressions-1; i++) {
@@ -801,11 +797,11 @@ HandlerResult sf_begin(Lex* e, Cell* a)
         /* null return will segfault the error check. */
         if (!result) { continue; }
         if (result->type == CELL_ERROR) {
-            return (HandlerResult){ .action = ACTION_RETURN, .value = result };
+            return (HandlerResult) { .action = ACTION_RETURN, .value = result };
         }
     }
     /* Send last expr back to eval. */
-    return (HandlerResult){ .action = ACTION_CONTINUE, .value = a->cell[n_expressions-1] };
+    return (HandlerResult) { .action = ACTION_CONTINUE, .value = a->cell[n_expressions-1] };
 }
 
 /* (and ⟨test1⟩ ... )
@@ -817,21 +813,21 @@ HandlerResult sf_and(Lex* e, Cell* a)
 {
     /* (and) -> #t. */
     if (a->count == 0) {
-        return (HandlerResult){ .action = ACTION_RETURN, .value = make_cell_boolean(1) };
+        return (HandlerResult) { .action = ACTION_RETURN, .value = make_cell_boolean(1) };
     }
     /* (and <tail expression>). */
     if (a->count == 1) {
-        return (HandlerResult){ .action = ACTION_CONTINUE, .value = a->cell[0] };
+        return (HandlerResult) { .action = ACTION_CONTINUE, .value = a->cell[0] };
     }
     /* (and e1 e2 ...). */
     Cell *test_result = coz_eval(e, a->cell[0]);
 
     if (test_result && test_result->type == CELL_ERROR) {
-        return (HandlerResult){ .action = ACTION_RETURN, .value = test_result };
+        return (HandlerResult) { .action = ACTION_RETURN, .value = test_result };
     }
     /* Check for #f. */
     if (test_result && test_result->type == CELL_BOOLEAN && test_result->boolean_v == 0) {
-        return (HandlerResult){ .action = ACTION_RETURN, .value = make_cell_boolean(0) };
+        return (HandlerResult) { .action = ACTION_RETURN, .value = make_cell_boolean(0) };
     }
     /* Truthy or NULL → build a new '(and e2 ...)' and tail-call. */
     Cell* rest_of_and = make_cell_sexpr();
@@ -839,7 +835,7 @@ HandlerResult sf_and(Lex* e, Cell* a)
     for (int i = 1; i < a->count; i++) {
         cell_add(rest_of_and, a->cell[i]);
     }
-    return (HandlerResult){ .action = ACTION_CONTINUE, .value = rest_of_and };
+    return (HandlerResult) { .action = ACTION_CONTINUE, .value = rest_of_and };
 }
 
 /* (or ⟨test1⟩ ... )
@@ -850,11 +846,11 @@ HandlerResult sf_or(Lex* e, Cell* a)
 {
     /* (or) -> #f. */
     if (a->count == 0) {
-        return (HandlerResult){ .action = ACTION_RETURN, .value = make_cell_boolean(0) };
+        return (HandlerResult) { .action = ACTION_RETURN, .value = make_cell_boolean(0) };
     }
     /* (or <tail expression>). */
     if (a->count == 1) {
-        return (HandlerResult){ .action = ACTION_CONTINUE, .value = a->cell[0] };
+        return (HandlerResult) { .action = ACTION_CONTINUE, .value = a->cell[0] };
     }
     /* (or e1 e2 ...). */
     Cell *test_result = coz_eval(e, a->cell[0]);
@@ -865,8 +861,8 @@ HandlerResult sf_or(Lex* e, Cell* a)
         for (int i = 1; i < a->count; i++) {
             cell_add(rest_of_or, a->cell[i]);
         }
-        return (HandlerResult){ .action = ACTION_CONTINUE, .value = rest_of_or };
+        return (HandlerResult) { .action = ACTION_CONTINUE, .value = rest_of_or };
     }
     /* It's a TRUTHY value (or NULL). We're done. Short-circuit and return this value. */
-    return (HandlerResult){ .action = ACTION_RETURN, .value = test_result };
+    return (HandlerResult) { .action = ACTION_RETURN, .value = test_result };
 }
