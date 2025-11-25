@@ -163,7 +163,7 @@ HandlerResult sf_define(Lex* e, Cell* a)
             ARITY_ERR);
         return (HandlerResult) { .action = ACTION_RETURN, .value = err };
     }
-    const Cell* target = a->cell[0];
+    Cell* target = a->cell[0];
 
     /* Disallow rebinding of keywords. */
     if (is_syntactic_keyword(target->sym)) {
@@ -185,7 +185,7 @@ HandlerResult sf_define(Lex* e, Cell* a)
             val->lambda->l_name = target->sym;
         }
         lex_put_global(e, target, val);
-        return (HandlerResult) { .action = ACTION_RETURN, .value = val };
+        return (HandlerResult) { .action = ACTION_RETURN, .value = target };
     }
 
     /* (define (<f-name> <args>) <body>) */
