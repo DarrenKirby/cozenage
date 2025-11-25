@@ -29,7 +29,7 @@ This document tracks the implementation status of procedures in the Cozenage int
 |   ✅    | `bytevector`              |
 |   ✅    | `bytevector-append`       |
 |   ✅    | `bytevector-copy`         |
-|   ❌    | `bytevector-copy!`        |
+|   ✅    | `bytevector-copy!`        |
 |   ✅    | `bytevector-length`       |
 |   ✅    | `bytevector-u8-ref`       |
 |   ✅    | `bytevector-u8-set!`      |
@@ -215,7 +215,7 @@ This document tracks the implementation status of procedures in the Cozenage int
 |   ✅    | `vector->string`          |
 |   ✅    | `vector-append`           |
 |   ✅    | `vector-copy`             |
-|   ❌    | `vector-copy!`            |
+|   ✅    | `vector-copy!`            |
 |   ✅    | `vector-fill!`            |
 |   ✅    | `vector-for-each`         |
 |   ✅    | `vector-length`           |

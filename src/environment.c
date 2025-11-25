@@ -302,6 +302,7 @@ void lex_add_builtins(const Lex* e)
     lex_add_builtin(e, "list->vector", builtin_list_to_vector);
     lex_add_builtin(e, "vector->list", builtin_vector_to_list);
     lex_add_builtin(e, "vector-copy", builtin_vector_copy);
+    lex_add_builtin(e, "vector-copy!", builtin_vector_copy_bang);
     lex_add_builtin(e, "vector->string", builtin_vector_to_string);
     lex_add_builtin(e, "string->vector", builtin_string_to_vector);
     lex_add_builtin(e, "vector-set!", builtin_vector_set_bang);
@@ -314,6 +315,7 @@ void lex_add_builtins(const Lex* e)
     lex_add_builtin(e, "bytevector-set!", builtin_bytevector_set_bang);
     lex_add_builtin(e, "make-bytevector", builtin_make_bytevector);
     lex_add_builtin(e, "bytevector-copy", builtin_bytevector_copy);
+    lex_add_builtin(e, "bytevector-copy!", builtin_bytevector_copy_bang);
     lex_add_builtin(e, "bytevector-append", builtin_bytevector_append);
     lex_add_builtin(e, "utf8->string", builtin_utf8_string);
     lex_add_builtin(e, "string->utf8", builtin_string_utf8);

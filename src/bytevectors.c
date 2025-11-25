@@ -78,6 +78,21 @@ static bv_t get_type(const Cell* t_sym)
     return type;
 }
 
+static char* get_type_string(const bv_t type)
+{
+    char* t_string;
+    switch (type) {
+        case BV_U8: {t_string = "u8"; break; }
+        case BV_S8: {t_string = "s8"; break; }
+        case BV_U16: {t_string = "u16"; break; }
+        case BV_S16: {t_string = "s16"; break; }
+        case BV_U32: {t_string = "u32"; break; }
+        case BV_S32: {t_string = "s32"; break; }
+        default: { t_string = "unknown"; break; }
+    }
+    return t_string;
+}
+
 /*------------------------------------------------------------*
  *     Byte vector constructors, selectors, and procedures    *
  * -----------------------------------------------------------*/
@@ -301,10 +316,93 @@ Cell* builtin_bytevector_copy(const Lex* e, const Cell* a)
     return vec;
 }
 
-/* TODO - finish this*/
+/* (bytevector-copy! to at from)
+ * (bytevector-copy! to at from start)
+ * (bytevector-copy! to at from start end)
+ * Copies the bytes of bytevector 'from' between start and end to bytevector 'to' , starting at 'at' . The order in which
+ * bytes are copied is unspecified, except that if the source and destination overlap, copying takes place as if the
+ * source is first copied into a temporary bytevector and then into the destination. */
 Cell* builtin_bytevector_copy_bang(const Lex* e, const Cell* a)
 {
-    (void)e; (void)a;
+    (void)e;
+    Cell* err = CHECK_ARITY_RANGE(a, 3, 5);
+    if (err) return err;
+
+    /* Validate arg Types. */
+    if (a->cell[0]->type != CELL_BYTEVECTOR)
+        return make_cell_error(
+            "bytevector-copy!: arg 1 must be a bytevector (to)",
+            TYPE_ERR);
+    if (a->cell[1]->type != CELL_INTEGER)
+        return make_cell_error(
+            "bytevector-copy!: arg 2 must be an integer (at)",
+            TYPE_ERR);
+    if (a->cell[2]->type != CELL_BYTEVECTOR)
+        return make_cell_error(
+            "bytevector-copy!: arg 3 must be a bytevector (from)",
+            TYPE_ERR);
+
+    /* Get 'to' bytevector and 'at' index. */
+    Cell* to_bv = a->cell[0];
+    const int32_t to_bv_len = to_bv->count;
+    const int32_t to_start_idx = (int32_t)a->cell[1]->integer_v;
+
+    /* Get 'from' bytevector and 'start'/'end' indices. */
+    const Cell* from_bv = a->cell[2];
+    const int32_t from_bv_len = from_bv->count;
+
+    int32_t from_start_idx = 0;
+    int32_t from_end_idx = from_bv_len; /* Default to char length. */
+
+    /* Ensure bytevectors are compatible. */
+    const uint8_t from_type = from_bv->bv->type;
+    const uint8_t to_type = from_bv->bv->type;
+    if (from_type != to_type)
+    {
+        return make_cell_error(
+            fmt_err("Incompatible bytevector types: '%s' and '%s'",
+            get_type_string(from_type), get_type_string(to_type)), TYPE_ERR);
+    }
+
+    if (a->count >= 4) {
+        if (a->cell[3]->type != CELL_INTEGER)
+            return make_cell_error(
+                "bytevector-copy!: arg 4 must be an integer (start)",
+                TYPE_ERR);
+        from_start_idx = (int32_t)a->cell[3]->integer_v;
+    }
+    if (a->count == 5) {
+        if (a->cell[4]->type != CELL_INTEGER)
+            return make_cell_error(
+                "bytevector-copy!: arg 5 must be an integer (end)",
+                TYPE_ERR);
+        from_end_idx = (int32_t)a->cell[4]->integer_v;
+    }
+
+    /* R7RS Index Validation. */
+    if (to_start_idx < 0 || to_start_idx > to_bv_len)
+        return make_cell_error(
+            "bytevector-copy!: 'at' index is out of bounds for 'to' bytevector",
+            INDEX_ERR);
+    if (from_start_idx < 0 || from_start_idx > from_bv_len)
+        return make_cell_error(
+            "bytevector-copy!: 'start' index is out of bounds for 'from' bytevector",
+            INDEX_ERR);
+    if (from_end_idx < 0 || from_end_idx > from_bv_len)
+        return make_cell_error(
+            "bytevector-copy!: 'end' index is out of bounds for 'from' bytevector",
+            INDEX_ERR);
+    if (from_start_idx > from_end_idx)
+        return make_cell_error(
+            "bytevector-copy!: 'start' index cannot be greater than 'end' index",
+            INDEX_ERR);
+
+    const int32_t num_bytes = from_end_idx - from_start_idx;
+    for (int i = to_start_idx; i <= num_bytes; i++) {
+        const int64_t byte = BV_OPS[from_type].get(from_bv, from_start_idx);
+        BV_OPS[to_type].set(to_bv, i, byte);
+        from_start_idx++;
+    }
     return USP_Obj;
 }
 

@@ -430,10 +430,83 @@ Cell* builtin_vector_append(const Lex* e, const Cell* a)
 }
 
 /* TODO: finish this! */
+/* (vector-copy! to at from)
+ * (vector-copy! to at from start)
+ * (vector-copy! to at from start end)
+ * Copies the elements of vector 'from' between start and end to vector 'to' , starting at 'at' . The order in which
+ * elements are copied is unspecified, except that if the source and destination overlap, copying takes place as if the
+ * source is first copied into a temporary vector and then into the destination. */
 Cell* builtin_vector_copy_bang(const Lex* e, const Cell* a)
 {
-    (void)e; (void)a;
-    return make_cell_boolean(0);
+    (void)e;
+    Cell* err = CHECK_ARITY_RANGE(a, 3, 5);
+    if (err) return err;
+
+    /* Validate arg Types. */
+    if (a->cell[0]->type != CELL_VECTOR)
+        return make_cell_error(
+            "vector-copy!: arg 1 must be a vector (to)",
+            TYPE_ERR);
+    if (a->cell[1]->type != CELL_INTEGER)
+        return make_cell_error(
+            "vector-copy!: arg 2 must be an integer (at)",
+            TYPE_ERR);
+    if (a->cell[2]->type != CELL_VECTOR)
+        return make_cell_error(
+            "vector-copy!: arg 3 must be a vector (from)",
+            TYPE_ERR);
+
+    /* Get 'to' bytevector and 'at' index. */
+    Cell* to_vec = a->cell[0];
+    const int32_t to_vec_len = to_vec->count;
+    const int32_t to_start_idx = (int32_t)a->cell[1]->integer_v;
+
+    /* Get 'from' bytevector and 'start'/'end' indices. */
+    const Cell* from_vec = a->cell[2];
+    const int32_t from_vec_len = from_vec->count;
+
+    int32_t from_start_idx = 0;
+    int32_t from_end_idx = from_vec_len; /* Default to char length. */
+
+    if (a->count >= 4) {
+        if (a->cell[3]->type != CELL_INTEGER)
+            return make_cell_error(
+                "vector-copy!: arg 4 must be an integer (start)",
+                TYPE_ERR);
+        from_start_idx = (int32_t)a->cell[3]->integer_v;
+    }
+    if (a->count == 5) {
+        if (a->cell[4]->type != CELL_INTEGER)
+            return make_cell_error(
+                "vector-copy!: arg 5 must be an integer (end)",
+                TYPE_ERR);
+        from_end_idx = (int32_t)a->cell[4]->integer_v;
+    }
+
+    /* R7RS Index Validation. */
+    if (to_start_idx < 0 || to_start_idx > to_vec_len)
+        return make_cell_error(
+            "vector-copy!: 'at' index is out of bounds for 'to' vector",
+            INDEX_ERR);
+    if (from_start_idx < 0 || from_start_idx > from_vec_len)
+        return make_cell_error(
+            "vector-copy!: 'start' index is out of bounds for 'from' vector",
+            INDEX_ERR);
+    if (from_end_idx < 0 || from_end_idx > from_vec_len)
+        return make_cell_error(
+            "vector-copy!: 'end' index is out of bounds for 'from' vector",
+            INDEX_ERR);
+    if (from_start_idx > from_end_idx)
+        return make_cell_error(
+            "bytevector-copy!: 'start' index cannot be greater than 'end' index",
+            INDEX_ERR);
+
+    const int32_t num_bytes = from_end_idx - from_start_idx;
+    for (int i = to_start_idx; i <= num_bytes; i++) {
+        to_vec->cell[i] = from_vec->cell[from_start_idx];
+        from_start_idx++;
+    }
+    return USP_Obj;
 }
 
 /* (vector-fill! vector fill)
