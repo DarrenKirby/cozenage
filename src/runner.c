@@ -28,8 +28,18 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <signal.h>
 #include <ctype.h>
 #include <gc/gc.h>
+
+
+void ctrl_c_handler(const int signum)
+{
+    /* Add cleanup code here */
+    printf("\nCaught a <CTRL-C>! Exiting gracefully...\n");
+    save_history_to_file();
+    exit(signum);
+}
 
 
 /* Check the file extension and print a warning if it's non-standard. */
@@ -134,6 +144,8 @@ int run_file_script(const char *file_path, const lib_load_config load_libs)
 
 Cell* parse_all_expressions(Lex* e, TokenArray* ta, const bool is_repl)
 {
+    signal(SIGINT, ctrl_c_handler);
+
     while (ta->position <= ta->count) {
         Cell* expression = parse_tokens(ta);
         if (!expression) {
