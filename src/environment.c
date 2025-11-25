@@ -388,8 +388,6 @@ void lex_add_builtins(const Lex* e)
     lex_add_builtin(e, "current-error-port", builtin_current_error_port);
     lex_add_builtin(e, "input-port?", builtin_input_port_pred);
     lex_add_builtin(e, "output-port?", builtin_output_port_pred);
-    lex_add_builtin(e, "textual-port?", builtin_text_port_pred);
-    lex_add_builtin(e, "binary-port?", builtin_binary_port_pred);
     lex_add_builtin(e, "input-port-open?", builtin_input_port_open);
     lex_add_builtin(e, "output-port-open?", builtin_output_port_open);
     lex_add_builtin(e, "close-port", builtin_close_port);
@@ -397,8 +395,10 @@ void lex_add_builtins(const Lex* e)
     lex_add_builtin(e, "close-output-port", builtin_close_port);
     lex_add_builtin(e, "read-line", builtin_read_line);
     lex_add_builtin(e, "read-char", builtin_read_char);
+    lex_add_builtin(e, "read-u8", builtin_read_char); /* Alias - no distinction between binary and text. */
     lex_add_builtin(e, "read-string", builtin_read_string);
     lex_add_builtin(e, "peek-char", builtin_peek_char);
+    lex_add_builtin(e, "peek-u8", builtin_peek_char); /* Alias - no distinction between binary and text. */
     lex_add_builtin(e, "char-ready?", builtin_char_ready);
     lex_add_builtin(e, "u8-ready?", builtin_u8_ready);
     lex_add_builtin(e, "write-char", builtin_write_char);
@@ -409,13 +409,12 @@ void lex_add_builtins(const Lex* e)
     lex_add_builtin(e, "eof-object", builtin_eof);
     lex_add_builtin(e, "flush-output-port", builtin_flush_output_port);
     lex_add_builtin(e, "open-input-file", builtin_open_input_file);
-    lex_add_builtin(e, "open-binary-input-file", builtin_open_binary_input_file);
     lex_add_builtin(e, "open-output-file", builtin_open_output_file);
-    lex_add_builtin(e, "open-binary-output-file", builtin_open_binary_output_file);
     lex_add_builtin(e, "display", builtin_display);
     lex_add_builtin(e, "write", builtin_write);
     /* Error procedures. */
     lex_add_builtin(e, "read-error?", builtin_read_error);
     lex_add_builtin(e, "file-error?", builtin_file_error);
     lex_add_builtin(e, "error-object?", builtin_error_object);
+    lex_add_builtin(e, "raise", builtin_raise);
 }

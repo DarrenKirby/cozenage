@@ -151,7 +151,7 @@ Cell* builtin_bytevector_length(const Lex* e, const Cell* a)
 }
 
 
-/* (bytevector-u8-ref bytevector k)
+/* (bytevector-ref bytevector k)
  * Returns the kth byte of bytevector. */
 Cell* builtin_bytevector_ref(const Lex* e, const Cell* a)
 {

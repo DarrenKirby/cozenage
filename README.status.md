@@ -23,7 +23,6 @@ This document tracks the implementation status of procedures in the Cozenage int
 |   ✅    | `assoc`                   |
 |   ✅    | `assq`                    |
 |   ✅    | `assv`                    |
-|   ✅    | `binary-port?`            |
 |   ✅    | `boolean=?`               |
 |   ✅    | `boolean?`                |
 |   ✅    | `bytevector`              |
@@ -31,8 +30,8 @@ This document tracks the implementation status of procedures in the Cozenage int
 |   ✅    | `bytevector-copy`         |
 |   ✅    | `bytevector-copy!`        |
 |   ✅    | `bytevector-length`       |
-|   ✅    | `bytevector-u8-ref`       |
-|   ✅    | `bytevector-u8-set!`      |
+|   ✅    | `bytevector-ref`          |
+|   ✅    | `bytevector-set!`         |
 |   ✅    | `bytevector?`             |
 |   ❌    | `call-with-input-file`    |
 |   ❌    | `call-with-output-file`   |
@@ -81,9 +80,6 @@ This document tracks the implementation status of procedures in the Cozenage int
 |   ✅    | `eq?`                     |
 |   ✅    | `equal?`                  |
 |   ✅    | `eqv?`                    |
-|   ❌    | `error`                   |
-|   ❌    | `error-object-irritants`  |
-|   ❌    | `error-object-message`    |
 |   ✅    | `error-object?`           |
 |   ✅    | `even?`                   |
 |   ✅    | `eval`                    |
@@ -142,20 +138,18 @@ This document tracks the implementation status of procedures in the Cozenage int
 |   ❌    | `open-input-string`       |
 |   ❌    | `open-output-bytevector`  |
 |   ❌    | `open-output-string`      |
-|   ✅    | `open-binary-input-file`  |
-|   ✅    | `open-binary-output-file` |
 |   ✅    | `open-input-file`         |
 |   ✅    | `open-output-file`        |
 |   ✅    | `output-port-open?`       |
 |   ✅    | `output-port?`            |
 |   ✅    | `pair?`                   |
 |   ✅    | `peek-char`               |
-|   ❌    | `peek-u8`                 |
+|   ✅    | `peek-u8`                 |
 |   ✅    | `port?`                   |
 |   ✅    | `positive?`               |
 |   ✅    | `procedure?`              |
 |   ✅    | `quotient`                |
-|   ❌    | `raise`                   |
+|   ✅    | `raise`                   |
 |   ✅    | `rational?`               |
 |   ❌    | `read`                    |
 |   ❌    | `read-bytevector`         |
@@ -164,7 +158,7 @@ This document tracks the implementation status of procedures in the Cozenage int
 |   ✅    | `read-error?`             |
 |   ✅    | `read-line`               |
 |   ✅    | `read-string`             |
-|   ❌    | `read-u8`                 |
+|   ✅    | `read-u8`                 |
 |   ✅    | `real?`                   |
 |   ✅    | `remainder`               |
 |   ✅    | `reverse`                 |
@@ -206,7 +200,6 @@ This document tracks the implementation status of procedures in the Cozenage int
 |   ✅    | `symbol->string`          |
 |   ✅    | `symbol=?`                |
 |   ✅    | `symbol?`                 |
-|   ✅    | `textual-port?`           |
 |   ✅    | `truncate`                |
 |   ✅    | `u8-ready?`               |
 |   ✅    | `utf8->string`            |
@@ -223,7 +216,6 @@ This document tracks the implementation status of procedures in the Cozenage int
 |   ✅    | `vector-ref`              |
 |   ✅    | `vector-set!`             |
 |   ✅    | `vector?`                 |
-|   ❌    | `with-exception-handler`  |
 |   ❌    | `with-input-from-file`    |
 |   ❌    | `with-output-to-file`     |
 |   ✅    | `write`                   |

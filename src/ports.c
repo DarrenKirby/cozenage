@@ -75,28 +75,6 @@ Cell* builtin_output_port_pred(const Lex* e, const Cell* a)
     return True_Obj;
 }
 
-Cell* builtin_text_port_pred(const Lex* e, const Cell* a)
-{
-    (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 1);
-    if (err) return err;
-    if (a->cell[0]->type != CELL_PORT || a->cell[0]->port->stream_t != TEXT_PORT) {
-        return False_Obj;
-    }
-    return True_Obj;
-}
-
-Cell* builtin_binary_port_pred(const Lex* e, const Cell* a)
-{
-    (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 1);
-    if (err) return err;
-    if (a->cell[0]->type != CELL_PORT || a->cell[0]->port->stream_t != BINARY_PORT) {
-        return False_Obj;
-    }
-    return True_Obj;
-}
-
 Cell* builtin_input_port_open(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -686,7 +664,7 @@ Cell* builtin_write(const Lex* e, const Cell* a)
     return USP_Obj;
 }
 
-/* 'open-input-file' -> CELL_PORT - open a file and bind it to a text port */
+/* 'open-input-file' -> CELL_PORT - open a file and bind it to a port */
 Cell* builtin_open_input_file(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -708,24 +686,6 @@ Cell* builtin_open_input_file(const Lex* e, const Cell* a)
     }
 
     Cell* p = make_cell_port(ptr, fp, INPUT_PORT, TEXT_PORT);
-    return p;
-}
-
-/* 'open-binary-input-file' -> CELL_PORT - open a file and bind it to a binary port */
-Cell* builtin_open_binary_input_file(const Lex* e, const Cell* a)
-{
-    (void)e;
-    Cell* err = check_arg_types(a, CELL_STRING,"open-binary-input-file");
-    if (err) { return err; }
-    err = CHECK_ARITY_EXACT(a, 1);
-    if (err) { return err; }
-
-    const char* filename = a->cell[0]->str;
-    FILE *fp = fopen(filename, "r");
-    if (fp == NULL) {
-        return make_cell_error(strerror(errno), FILE_ERR);
-    }
-    Cell* p = make_cell_port(filename, fp, INPUT_PORT, BINARY_PORT);
     return p;
 }
 
@@ -754,22 +714,5 @@ Cell* builtin_open_output_file(const Lex* e, const Cell* a)
     }
 
     Cell* p = make_cell_port(filename, fp, OUTPUT_PORT, TEXT_PORT);
-    return p;
-}
-
-Cell* builtin_open_binary_output_file(const Lex* e, const Cell* a)
-{
-    (void)e;
-    Cell* err = check_arg_types(a, CELL_STRING, "open-binary-output-file");
-    if (err) { return err; }
-    err = CHECK_ARITY_EXACT(a, 1);
-    if (err) { return err; }
-
-    const char* filename = a->cell[0]->str;
-    FILE *fp = fopen(filename, "w");
-    if (fp == NULL) {
-        return make_cell_error(strerror(errno), FILE_ERR);
-    }
-    Cell* p = make_cell_port(filename, fp, OUTPUT_PORT, BINARY_PORT);
     return p;
 }

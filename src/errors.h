@@ -22,6 +22,8 @@
 
 #include "environment.h"
 
+
 Cell* builtin_error_object(const Lex* e, const Cell* a);
+Cell* builtin_raise(const Lex* e, const Cell* a);
 
 #endif //COZENAGE_ERRORS_H

@@ -21,6 +21,7 @@
 #include "cell.h"
 #include "types.h"
 
+
 Cell* builtin_error_object(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -31,4 +32,18 @@ Cell* builtin_error_object(const Lex* e, const Cell* a)
         return True_Obj;
     }
     return False_Obj;
+}
+
+Cell* builtin_raise(const Lex* e, const Cell* a)
+{
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    if (err) return err;
+
+    if (a->cell[0]->type != CELL_STRING) {
+        return make_cell_error(
+            "raise: arg must be string",
+            TYPE_ERR);
+    }
+    return make_cell_error(a->cell[0]->str, GEN_ERR);
 }
