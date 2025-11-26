@@ -685,7 +685,7 @@ Cell* builtin_open_input_file(const Lex* e, const Cell* a)
         return make_cell_error(strerror(errno), FILE_ERR);
     }
 
-    Cell* p = make_cell_port(ptr, fp, INPUT_PORT, TEXT_PORT);
+    Cell* p = make_cell_port(ptr, fp, INPUT_PORT, FILE_PORT);
     return p;
 }
 
@@ -713,6 +713,6 @@ Cell* builtin_open_output_file(const Lex* e, const Cell* a)
         return make_cell_error(strerror(errno), FILE_ERR);
     }
 
-    Cell* p = make_cell_port(filename, fp, OUTPUT_PORT, TEXT_PORT);
+    Cell* p = make_cell_port(filename, fp, OUTPUT_PORT, FILE_PORT);
     return p;
 }

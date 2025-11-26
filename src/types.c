@@ -177,7 +177,7 @@ void numeric_promote(Cell** lhs, Cell** rhs)
     Cell* a = *lhs;
     Cell* b = *rhs;
 
-    if (a->type == CELL_COMPLEX|| b->type == CELL_COMPLEX) {
+    if (a->type == CELL_COMPLEX || b->type == CELL_COMPLEX) {
         if (a->type != CELL_COMPLEX) {
             a = to_complex(a);
         }

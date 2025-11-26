@@ -66,7 +66,8 @@ Cell* coz_eval(Lex* env, Cell* expr)
         if (expr->type & (CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX|
                           CELL_BOOLEAN|CELL_CHAR|CELL_STRING|CELL_PAIR|
                           CELL_VECTOR|CELL_BYTEVECTOR|CELL_NIL|CELL_EOF|
-                          CELL_PROC|CELL_PORT|CELL_ERROR|CELL_UNSPEC)) {
+                          CELL_PROC|CELL_PORT|CELL_ERROR|CELL_UNSPEC|
+                          CELL_BIGINT|CELL_BIGFLOAT)) {
             return expr;
                           }
 

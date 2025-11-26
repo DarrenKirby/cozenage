@@ -51,9 +51,9 @@ Cell* default_error_port  = nullptr;
 
 void init_default_ports(void)
 {
-    default_input_port  = make_cell_port("stdin",  stdin,  INPUT_PORT, TEXT_PORT);
-    default_output_port = make_cell_port("stdout", stdout, OUTPUT_PORT, TEXT_PORT);
-    default_error_port  = make_cell_port("stderr", stderr, OUTPUT_PORT, TEXT_PORT);
+    default_input_port  = make_cell_port("stdin",  stdin,  INPUT_PORT, FILE_PORT);
+    default_output_port = make_cell_port("stdout", stdout, OUTPUT_PORT, FILE_PORT);
+    default_error_port  = make_cell_port("stderr", stderr, OUTPUT_PORT, FILE_PORT);
 }
 
 /*-------------------------------------------*
@@ -369,6 +369,33 @@ Cell* make_cell_mrv(void)
     v->cell = nullptr;
     return v;
 }
+
+Cell* make_cell_bigint(const char* s)
+{
+    Cell* v = GC_MALLOC(sizeof(Cell));
+    if (!v) {
+        fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
+        exit(EXIT_FAILURE);
+    }
+    v->type = CELL_BIGINT;
+    mpz_init_set_str(v->bi, s, 10);
+    return v;
+}
+
+Cell* make_cell_bigfloat(const char* s)
+{
+    Cell* v = GC_MALLOC(sizeof(Cell));
+    if (!v) {
+        fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
+        exit(EXIT_FAILURE);
+    }
+    v->type = CELL_BIGINT;
+    mpf_t n;
+    mpf_init_set_str(n, s, 10);
+    v->bf = &n;
+    return v;
+}
+
 
 /*------------------------------------------------*
  *    Cell accessors, destructors, and helpers    *

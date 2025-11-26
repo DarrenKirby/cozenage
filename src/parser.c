@@ -252,6 +252,14 @@ static Cell* parse_number(char* token, const int line, int len)
 
     /* Integers and reals */
 
+    /* Parse as bigint/bigfloat */
+    if (len >= 18) {
+        if (!strchr(tok, '.')) {
+            return make_cell_bigint(tok);
+        }
+        return make_cell_bigfloat(tok);
+    }
+
     /* Try integer parsing if not base 10, or no decimal */
     if (base != 10 || !strchr(tok, '.')) {
         const long long i = parse_int_checked(tok, err_buf, base, &ok);

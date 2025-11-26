@@ -24,6 +24,7 @@
 
 #include <stdio.h>
 #include <unicode/umachine.h>
+#include <gmp.h>
 
 
 /* enum for error types. */
@@ -46,8 +47,7 @@ typedef enum : uint8_t  {
 } port_t;
 
 typedef enum : uint8_t  {
-    TEXT_PORT,
-    BINARY_PORT,
+    FILE_PORT,
     STRING_PORT,
     BV_PORT
 } stream_t;
@@ -81,7 +81,10 @@ typedef enum  : uint32_t {
     CELL_TRAMPOLINE = 1 << 19,  /* Trampoline object - returned from
                                    first-class procedures to signal a
                                    tail-call */
-    CELL_UNSPEC     = 1 << 20   /* Unspecified object */
+    CELL_UNSPEC     = 1 << 20,   /* Unspecified object */
+    /* bigint/float */
+    CELL_BIGINT     = 1 << 21,
+    CELL_BIGFLOAT   = 1 << 22,
 } Cell_t;
 
 /* Bytevector types. */
@@ -96,23 +99,22 @@ typedef enum : uint8_t {
 
 /* Anonymous and named lambdas. */
 typedef struct Lambda {
-     char* l_name;     /* Name of builtin and named lambda procedures. */
-     Cell* formals;    /* Must be symbols. */
-     Cell* body;       /* S-expression for lambda. */
-     Lex* env;         /* Closure environment. */
+    char* l_name;     /* Name of builtin and named lambda procedures. */
+    Cell* formals;    /* Must be symbols. */
+    Cell* body;       /* S-expression for lambda. */
+    Lex* env;         /* Closure environment. */
  } lambda;
 
 
  /* Ports */
 typedef struct Port {
-     char* path;       /* File path of associated fh. */
-     FILE* fh;         /* The file handle. */
-     int port_t;       /* Input or output. */
-     int stream_t;     /* Binary or textual. */
+    char* path;       /* File path of associated fh. */
+    FILE* fh;         /* The file handle. */
+    int port_t;       /* Input or output. */
+    uint8_t stream_t; /* Stream type */
 } port;
 
-typedef struct ByteV
-{
+typedef struct ByteV {
     uint16_t capacity;
     bv_t type;
     void* data;
@@ -186,9 +188,11 @@ typedef struct Cell {
         int64_t integer_v;        /* integers */
         UChar32 char_v;           /* character literal */
         bool boolean_v;           /* boolean */
-        lambda* lambda;
-        port* port;
-        byte_v* bv;
+        lambda* lambda;           /* Pointer to lambda struct */
+        port* port;               /* Pointer to port struct */
+        byte_v* bv;               /* Pointer to bytevector struct */
+        mpz_t bi;                 /* -> CELL_BIGINT integer */
+        mpf_t* bf;                /* -> CELL_BIGFLOAT float */
     };
 } Cell;
 
@@ -223,6 +227,8 @@ Cell* make_cell_symbol(const char* the_symbol);
 Cell* make_cell_string(const char* the_string);
 Cell* make_cell_sexpr(void);
 Cell* make_cell_mrv(void);
+Cell* make_cell_bigint(const char* s);
+Cell* make_cell_bigfloat(const char* s);
 Cell* make_cell_pair(Cell* car, Cell* cdr);
 Cell* make_cell_error(const char* error_string, err_t error_type);
 Cell* make_cell_port(const char* path, FILE* fh, int io_t, int stream_t);

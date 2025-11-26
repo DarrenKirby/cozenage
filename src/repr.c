@@ -239,18 +239,33 @@ static void cell_to_string_worker(const Cell* v,
             break;
 
         case CELL_PORT:
+        /* FIXME: no binary/text distinction */
             if (mode == MODE_REPL) {
                 sb_append_fmt(sb, "<%s%s %s-port '%s%s%s'>", v->is_open ? "open:" : "closed:",
-                    v->port->stream_t == TEXT_PORT ? "text" : "binary",
+                    v->port->stream_t == FILE_PORT ? "text" : "binary",
                     v->port->port_t == INPUT_PORT ? "input" : "output",
                     ANSI_BLUE_B, v->port->path, ANSI_RESET);
             } else {
                 sb_append_fmt(sb, "#<%s%s %s-port '%s'>", v->is_open ? "open:" : "closed:",
-                    v->port->stream_t == TEXT_PORT ? "text" : "binary",
+                    v->port->stream_t == FILE_PORT ? "text" : "binary",
                     v->port->port_t == INPUT_PORT ? "input" : "output",
                     v->port->path);
             }
             break;
+
+        case CELL_BIGINT: {
+            char ibuf[1024];
+            gmp_snprintf(ibuf, sizeof(ibuf), "%Zd", v->bi);
+            sb_append_str(sb, ibuf);
+            break;
+            }
+
+        case CELL_BIGFLOAT: {
+            char fbuf[1024];
+            gmp_snprintf(fbuf, sizeof(fbuf), "%Ff", v->bi);
+            sb_append_str(sb, fbuf);
+            break;
+            }
 
         case CELL_SYMBOL:
             sb_append_fmt(sb, "%s", v->sym);
@@ -258,7 +273,7 @@ static void cell_to_string_worker(const Cell* v,
 
         case CELL_PAIR:
             repr_pair(v, sb, mode);
-                break;
+            break;
 
         case CELL_NIL:
             sb_append_str(sb, "()");
