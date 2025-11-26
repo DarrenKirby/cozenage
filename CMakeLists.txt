@@ -164,6 +164,13 @@ if(NOT DL_LIB)
     message(FATAL_ERROR "Could not find the 'dl' library. This is required for dynamic loading.")
 endif()
 
+find_library(GMP_LIB gmp)
+if(NOT GMP_LIB)
+    message(FATAL_ERROR "Could not find the 'gmp' library. This is required for bigints/bigfloats.")
+else()
+    message(STATUS "Found GNU GMP library for bigints and bigfloats.")
+endif()
+
 # Define your project executable
 add_executable(cozenage src/main.c) # Start with just main
 
@@ -192,6 +199,7 @@ target_link_libraries(cozenage PRIVATE
         ${M_LIB}
         ${GC_LIB}
         ${DL_LIB}
+        ${GMP_LIB}
         icu::uc
 )
 
