@@ -15,7 +15,7 @@ Cozenage has:
 
 - The typical menu of disjoint primitive objects: ``number``, ``string``, ``char``, ``symbol``, ``pair``, ``null``, ``vector``, ``boolean``, ``port``, and ``procedure``.
 - A selection of ``bytevector`` objects implemented using native C type arrays: ``u8``, ``s8``, ``u16``, ``s16``, ``u32``, and ``s32``.
-- Full 'numeric tower' of derived types including ``integer``, ``rational``, ``real``, and ``complex`` numbers.
+- Full 'numeric tower' of derived numeric types including ``integer``, ``rational``, ``real``, and ``complex`` numbers.
 - Exact and inexact numbers.
 - Proper tail-call optimization where applicable.
 - Garbage collection.
@@ -25,18 +25,21 @@ Cozenage has:
 
 Typical Scheme features that Cozenage does NOT have:
 
-- Arbitrary size and precision integers and real numbers. Currently, the magnitude of numbers is limited by the underlying C long long and long double types provided by the platform. While I do intend to implement 'bugnums' and 'bigfloats' at some point, it is somewhat low-priority currently.
 - call/cc and first-class continuations. I'm not likely to ever implement this. Rather, I am more likely to implement control flow patterns typically implemented via call/cc as primitive syntax.  
 - Hygienic macros. I will likely implement this at some point, but it is low-priority.
 - Quasiquotation. Currently, only standard quotation is supported.
 - Delayed, or lazy evaluation. On the todo, but low-priority.
+
+Typical Scheme features currently in progress:
+
+- Arbitrary size and precision integers, rationals, and real numbers. Currently, only bigints are supported, and that support is limited. Thus far, only ``+``, ``-``, ``*``, ``/``, and ``abs`` have full support, but this changes every day as I wire up the numeric procedures to support them. bigfloat, then bigrat will happen after that. It is also important to understand that currently, mixing bigint with rat, real, and complex type operands will break catastrophically.   
 
 ## Dependencies
 
 `Cozenage` requires one of [readline](https://tiswww.cwru.edu/php/chet/readline/rltop.html) or 
 libedit for the REPL. It requires [ICU](https://github.com/unicode-org/icu) for UTF-8.
 These will almost certainly be installed already on any sort of development rig. It requires the [Boehm-Demers-Weiser Garbage Collector](https://github.com/bdwgc/bdwgc)
-which may or may not be installed already on your system.
+which may or may not be installed already on your system. The [GNU GMP library](https://gmplib.org/) is required for the fledgling arbitrary size/precision numeric types I am currently implementing. The [GNU MPFR library](https://www.mpfr.org/) will be required soon, as I wire up bigfloats. 
 
 ## Building Cozenage
 
