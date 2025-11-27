@@ -370,7 +370,7 @@ Cell* make_cell_mrv(void)
     return v;
 }
 
-Cell* make_cell_bigint(const char* s)
+Cell* make_cell_bigint(const char* s, const uint8_t base)
 {
     Cell* v = GC_MALLOC(sizeof(Cell));
     if (!v) {
@@ -378,7 +378,7 @@ Cell* make_cell_bigint(const char* s)
         exit(EXIT_FAILURE);
     }
     v->type = CELL_BIGINT;
-    mpz_init_set_str(v->bi, s, 10);
+    mpz_init_set_str(v->bi, s, base);
     return v;
 }
 

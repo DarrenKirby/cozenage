@@ -20,6 +20,7 @@
 #include "main.h"
 #include "parser.h"
 #include "types.h"
+#include "repr.h"
 
 #include <gc.h>
 #include <stdio.h>
@@ -30,7 +31,6 @@
 #include <limits.h>
 #include <unicode/uchar.h>
 
-#include "repr.h"
 /* Linux needs this include, macOS and FreeBSD do not */
 #ifdef __linux__
 #include <ctype.h>
@@ -111,6 +111,21 @@ static char* token_to_string(const Token* token)
     str[token->length] = '\0';
 
     return str;
+}
+
+bool fits_in_int64(const char *s) {
+    const int neg = s[0] == '-';
+    const char *p = neg ? s + 1 : s;
+
+    const char *limit = neg ? "9223372036854775808" : "9223372036854775807";
+
+    const size_t len = strlen(p);
+    const size_t limit_len = strlen(limit);
+
+    if (len < limit_len) return true;
+    if (len > limit_len) return false;
+
+    return strcmp(p, limit) <= 0;
 }
 
 static Cell* parse_number(char* token, const int line, int len)
@@ -253,12 +268,11 @@ static Cell* parse_number(char* token, const int line, int len)
     /* Integers and reals */
 
     /* Parse as bigint/bigfloat */
-    if (len >= 18) {
-        if (!strchr(tok, '.')) {
-            return make_cell_bigint(tok);
-        }
-        return make_cell_bigfloat(tok);
+    if (!fits_in_int64(tok) && !strchr(tok, '.')) {
+        return make_cell_bigint(tok, base);
     }
+        //return make_cell_bigfloat(tok);
+        // 9,223,372,036,854,775,807.
 
     /* Try integer parsing if not base 10, or no decimal */
     if (base != 10 || !strchr(tok, '.')) {
@@ -270,7 +284,12 @@ static Cell* parse_number(char* token, const int line, int len)
             }
             return result;
         }
+        if (!ok) {
+            fprintf(stderr, "Error in numeric on line %d:\n", line);
+            return make_cell_error(err_buf, SYNTAX_ERR);
+        }
     }
+
 
     /* Otherwise, try float */
     if (base == 10) {

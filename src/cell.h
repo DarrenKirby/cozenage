@@ -227,7 +227,7 @@ Cell* make_cell_symbol(const char* the_symbol);
 Cell* make_cell_string(const char* the_string);
 Cell* make_cell_sexpr(void);
 Cell* make_cell_mrv(void);
-Cell* make_cell_bigint(const char* s);
+Cell* make_cell_bigint(const char* s, uint8_t base);
 Cell* make_cell_bigfloat(const char* s);
 Cell* make_cell_pair(Cell* car, Cell* cdr);
 Cell* make_cell_error(const char* error_string, err_t error_type);
