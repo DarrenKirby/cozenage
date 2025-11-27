@@ -35,7 +35,7 @@ Cell* builtin_number_pred(const Lex* e, const Cell* a)
     if (err) return err;
 
     // ReSharper disable once CppVariableCanBeMadeConstexpr
-    const int mask = CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX;
+    const int mask = CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX|CELL_BIGINT|CELL_BIGFLOAT;
     if (a->cell[0]->type & mask) {
         return True_Obj;
     }
@@ -298,6 +298,30 @@ Cell* builtin_exact_integer(const Lex* e, const Cell* a)
     const Cell* arg = a->cell[0];
     /* The value must be an integer AND the number must be exact. */
     return make_cell_boolean(cell_is_integer(arg) && arg->exact);
+}
+
+Cell* builtin_bigint(const Lex* e, const Cell* a)
+{
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    if (err) return err;
+
+    if (a->cell[0]->type == CELL_BIGINT) {
+        return True_Obj;
+    }
+    return False_Obj;
+}
+
+Cell* builtin_bigfloat(const Lex* e, const Cell* a)
+{
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    if (err) return err;
+
+    if (a->cell[0]->type == CELL_BIGFLOAT) {
+        return True_Obj;
+    }
+    return False_Obj;
 }
 
 /* ---------------------------------------*
