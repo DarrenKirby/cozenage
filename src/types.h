@@ -43,7 +43,7 @@ check_arg_arity((a), -1, (lo), (hi))
 /* For named chars */
 typedef struct {
     const char* name;
-    UChar32     codepoint;
+    UChar32 codepoint;
 } NamedChar;
 
 typedef Cell* (*BuiltinFn)(const Lex* e, const Cell* args);

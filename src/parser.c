@@ -269,7 +269,7 @@ static Cell* parse_number(char* token, const int line, int len)
 
     /* Parse as bigint/bigfloat */
     if (!fits_in_int64(tok) && !strchr(tok, '.')) {
-        return make_cell_bigint(tok, base);
+        return make_cell_bigint(tok, nullptr, base);
     }
         //return make_cell_bigfloat(tok);
         // 9,223,372,036,854,775,807.

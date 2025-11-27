@@ -83,8 +83,8 @@ typedef enum  : uint32_t {
                                    tail-call */
     CELL_UNSPEC     = 1 << 20,   /* Unspecified object */
     /* bigint/float */
-    CELL_BIGINT     = 1 << 21,
-    CELL_BIGFLOAT   = 1 << 22,
+    CELL_BIGINT     = 1 << 21,   /* Arbitrary size/precision integer */
+    CELL_BIGFLOAT   = 1 << 22,   /* Arbitrary size/precision float */
 } Cell_t;
 
 /* Bytevector types. */
@@ -191,7 +191,7 @@ typedef struct Cell {
         lambda* lambda;           /* Pointer to lambda struct */
         port* port;               /* Pointer to port struct */
         byte_v* bv;               /* Pointer to bytevector struct */
-        mpz_t bi;                 /* -> CELL_BIGINT integer */
+        mpz_t* bi;                 /* -> CELL_BIGINT integer */
         mpf_t* bf;                /* -> CELL_BIGFLOAT float */
     };
 } Cell;
@@ -227,7 +227,7 @@ Cell* make_cell_symbol(const char* the_symbol);
 Cell* make_cell_string(const char* the_string);
 Cell* make_cell_sexpr(void);
 Cell* make_cell_mrv(void);
-Cell* make_cell_bigint(const char* s, uint8_t base);
+Cell* make_cell_bigint(const char* s, const Cell* a, uint8_t base);
 Cell* make_cell_bigfloat(const char* s);
 Cell* make_cell_pair(Cell* car, Cell* cdr);
 Cell* make_cell_error(const char* error_string, err_t error_type);

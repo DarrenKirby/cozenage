@@ -21,6 +21,7 @@
 #include "types.h"
 #include "environment.h"
 #include "comparators.h"
+#include "bignum.h"
 
 #include <math.h>
 #include <complex.h>
@@ -36,7 +37,8 @@
 Cell* builtin_add(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX, "+");
+    Cell* err = check_arg_types(a,
+        CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX|CELL_BIGINT|CELL_BIGFLOAT, "+");
     if (err) { return err; }
     /* identity law logic */
     if (a->count == 0) return make_cell_integer(0);
@@ -50,9 +52,16 @@ Cell* builtin_add(const Lex* e, const Cell* a)
         numeric_promote(&result, &rhs);
 
         switch (result->type) {
-            case CELL_INTEGER:
-                result->integer_v += rhs->integer_v;
+            case CELL_INTEGER: {
+                int64_t out;
+                if (add_will_overflow_i64(result->integer_v, rhs->integer_v, &out)) {
+                    result = bigint_add(make_cell_bigint(nullptr, result, 10),
+                        make_cell_bigint(nullptr, rhs, 10));
+                } else {
+                    result->integer_v = out;
+                }
                 break;
+            }
             case CELL_RATIONAL:
                 /* (a/b) + (c/d) = (ad + bc)/bd */
                 result->num = result->num * rhs->den + rhs->num * result->den;
@@ -65,6 +74,9 @@ Cell* builtin_add(const Lex* e, const Cell* a)
             case CELL_COMPLEX:
                 complex_apply(builtin_add, e, result, rhs);
                 break;
+            case CELL_BIGINT:
+                result = bigint_add(result, rhs);
+                break;
             default:
                 ;
         }
@@ -76,13 +88,14 @@ Cell* builtin_add(const Lex* e, const Cell* a)
 /* '-' -> CELL_INTEGER|CELL_REAL|CELL_RATIONAL|VAL_COMP - returns the difference of its arguments */
 Cell* builtin_sub(const Lex* e, const Cell* a)
 {
-    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX, "-");
+    Cell* err = check_arg_types(a,
+        CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX|CELL_BIGINT|CELL_BIGFLOAT, "-");
     if (err) { return err; }
     if ((err = CHECK_ARITY_MIN(a, 1))) { return err; }
 
     /* Handle unary minus */
     if (a->count == 1) {
-        return negate_numeric(a->cell[0]);
+        return negate_numeric(cell_copy(a->cell[0]));
     }
     /* multiple args */
     /* deep-copy required as result gets mutated */
@@ -93,9 +106,16 @@ Cell* builtin_sub(const Lex* e, const Cell* a)
         numeric_promote(&result, &rhs);
 
         switch (result->type) {
-            case CELL_INTEGER:
-                result->integer_v -= rhs->integer_v;
+            case CELL_INTEGER: {
+                int64_t out;
+                if (sub_will_overflow_i64(result->integer_v, rhs->integer_v, &out)) {
+                    result = bigint_sub(make_cell_bigint(nullptr, result, 10),
+                        make_cell_bigint(nullptr, rhs, 10));
+                } else {
+                    result->integer_v = out;
+                }
                 break;
+            }
             case CELL_RATIONAL:
                 /* (a/b) - (c/d) = (ad - bc)/bd */
                 /* 1/1 - 1/2 = ((1)(2) - (1)(1))/(1)(2) = (2 - 1)/2 = 1/2 */
@@ -109,6 +129,13 @@ Cell* builtin_sub(const Lex* e, const Cell* a)
             case CELL_COMPLEX:
                 complex_apply(builtin_sub, e, result, rhs);
                 break;
+            case CELL_BIGINT:
+                result = bigint_sub(result, rhs);
+                /* Check if we can demote back to int64_t */
+                if (mpz_fits_int64(*result->bi)) {
+                    const int64_t v = mpz_get_i64_checked(*result->bi);
+                    result = make_cell_integer(v);
+                }
             default:
                 ;
         }
@@ -120,7 +147,8 @@ Cell* builtin_sub(const Lex* e, const Cell* a)
 /* '*' -> CELL_INTEGER|VAL_FLOAT|CELL_RATIONAL|VAL_COMP - returns the product of its arguments */
 Cell* builtin_mul(const Lex* e, const Cell* a)
 {
-    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX, "*");
+    Cell* err = check_arg_types(a,
+        CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX|CELL_BIGINT, "*");
     if (err) { return err; }
     /* identity law logic */
     if (a->count == 0) return make_cell_integer(1);
@@ -134,9 +162,16 @@ Cell* builtin_mul(const Lex* e, const Cell* a)
         numeric_promote(&result, &rhs);
 
         switch (result->type) {
-            case CELL_INTEGER:
-                result->integer_v *= rhs->integer_v;
+            case CELL_INTEGER: {
+                int64_t out;
+                if (mul_will_overflow_i64(result->integer_v, rhs->integer_v, &out)) {
+                    result = bigint_mul(make_cell_bigint(nullptr, result, 10),
+                        make_cell_bigint(nullptr, rhs, 10));
+                } else {
+                    result->integer_v = out;
+                }
                 break;
+            }
             case CELL_RATIONAL:
                 /* (a/b) * (c/d) = (a * c)/(b * d) */
                 result->num = result->num * rhs->num;
@@ -149,6 +184,9 @@ Cell* builtin_mul(const Lex* e, const Cell* a)
             case CELL_COMPLEX:
                 complex_apply(builtin_mul, e, result, rhs);
                 break;
+            case CELL_BIGINT:
+                result = bigint_mul(result, rhs);
+                break;
             default:
                 ;
         }
@@ -160,7 +198,8 @@ Cell* builtin_mul(const Lex* e, const Cell* a)
 /* '/' -> CELL_INTEGER|CELL_REAL|CELL_RATIONAL|VAL_COMP - returns the quotient of its arguments */
 Cell* builtin_div(const Lex* e, const Cell* a)
 {
-    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX, "/");
+    Cell* err = check_arg_types(a,
+        CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX|CELL_BIGINT, "/");
     if (err) { return err; }
     if ((err = CHECK_ARITY_MIN(a, 1))) { return err; }
 
@@ -250,6 +289,14 @@ Cell* builtin_div(const Lex* e, const Cell* a)
         case CELL_COMPLEX:
             complex_apply(builtin_div, e, result, rhs);
             break;
+        case CELL_BIGINT:
+            result = bigint_div(result, rhs);
+            /* Check if we can demote back to int64_t */
+            if (mpz_fits_int64(*result->bi)) {
+                const int64_t v = mpz_get_i64_checked(*result->bi);
+                result = make_cell_integer(v);
+            }
+            break;
         default:
             ;
         }
@@ -267,11 +314,22 @@ Cell* builtin_div(const Lex* e, const Cell* a)
 Cell* builtin_abs(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX, "abs");
+    Cell* err = check_arg_types(a,
+        CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX|CELL_BIGINT|CELL_BIGFLOAT, "abs");
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
 
     const Cell* arg = a->cell[0];
+
+    if (arg->type == CELL_BIGINT) {
+        /* Check signedness - if negative, return
+         * a negated copy of the value, else, just return it directly */
+        const int sign = mpz_sgn(*arg->bi);
+        if (sign == -1) {
+            return bigint_neg(cell_copy(arg));
+        }
+        return (Cell*)arg;
+    }
 
     /* Handle all real numbers */
     if (cell_is_real(arg)) {

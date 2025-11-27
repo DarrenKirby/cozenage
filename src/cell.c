@@ -370,7 +370,7 @@ Cell* make_cell_mrv(void)
     return v;
 }
 
-Cell* make_cell_bigint(const char* s, const uint8_t base)
+Cell* make_cell_bigint(const char* s, const Cell* a,  const uint8_t base)
 {
     Cell* v = GC_MALLOC(sizeof(Cell));
     if (!v) {
@@ -378,7 +378,18 @@ Cell* make_cell_bigint(const char* s, const uint8_t base)
         exit(EXIT_FAILURE);
     }
     v->type = CELL_BIGINT;
-    mpz_init_set_str(v->bi, s, base);
+    v->exact = true;
+    v->bi = GC_MALLOC(sizeof(mpz_t));
+    if (s) {
+        /* Set from string (from the parser) */
+        const int status = mpz_init_set_str(*v->bi, s, base);
+        if (status != 0) {
+            return make_cell_error("bigint construction failed!", GEN_ERR);
+        }
+    } else {
+        /* Set from integer (type promotion) */
+        mpz_init_set_si(*v->bi, a->integer_v);
+    }
     return v;
 }
 
@@ -552,7 +563,10 @@ Cell* cell_copy(const Cell* v) {
         copy->port->path = GC_strdup(v->port->path);
         break;
     }
-
+    case CELL_BIGINT:
+        copy->bi = GC_MALLOC(sizeof(mpz_t));
+        copy->bi = v->bi;
+        break;
     default:
         fprintf(stderr, "cell_copy: unknown type %d\n", v->type);
         return nullptr;

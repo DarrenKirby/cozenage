@@ -20,6 +20,7 @@
 #include "types.h"
 #include "cell.h"
 #include "numerics.h"
+#include "bignum.h"
 
 #include <gc.h>
 #include <stdio.h>
@@ -64,6 +65,8 @@ const char* cell_type_name(const int t)
         case CELL_BYTEVECTOR:  return "byte vector";
         case CELL_EOF:         return "eof";
         case CELL_MRV:         return "multiple return value";
+        case CELL_BIGINT:      return "bigint";
+        case CELL_BIGFLOAT:    return "bigfloat";
         default:               return "unknown";
     }
 }
@@ -92,6 +95,8 @@ const char* cell_mask_types(const int mask)
     if (mask & CELL_BYTEVECTOR)  strcat(buf, "byte vector|");
     if (mask & CELL_EOF)         strcat(buf, "eof|");
     if (mask & CELL_MRV)         strcat(buf, "multiple return value|");
+    if (mask & CELL_BIGINT)      strcat(buf, "bigint|");
+    if (mask & CELL_BIGFLOAT)    strcat(buf, "bigfloat|");
 
     /* remove trailing '|'. */
     const size_t len = strlen(buf);
@@ -151,24 +156,29 @@ Cell* check_arg_arity(const Cell* a, const int exact, const int min, const int m
  * --------------------------------------------------------*/
 
 /* Convertors. */
-Cell* int_to_rat(const Cell* v)
+static Cell* int_to_rat(const Cell* v)
 {
     return make_cell_rational(v->integer_v, 1, 0);
 }
 
-Cell* int_to_real(const Cell* v)
+static Cell* int_to_real(const Cell* v)
 {
     return make_cell_real((long double)v->integer_v);
 }
 
-Cell* rat_to_real(const Cell* v)
+static Cell* rat_to_real(const Cell* v)
 {
     return make_cell_real((long double)v->num / (long double)v->den);
 }
 
-Cell* to_complex(Cell* v)
+static Cell* to_complex(Cell* v)
 {
     return make_cell_complex(v, make_cell_integer(0));
+}
+
+static Cell* to_bigint(Cell* v)
+{
+    return make_cell_bigint(nullptr, v, 10);
 }
 
 /* Promote two numbers to the same type, modifying lhs and rhs in-place. */
@@ -177,23 +187,28 @@ void numeric_promote(Cell** lhs, Cell** rhs)
     Cell* a = *lhs;
     Cell* b = *rhs;
 
-    if (a->type == CELL_COMPLEX || b->type == CELL_COMPLEX) {
+    if (a->type == CELL_BIGINT || b->type == CELL_BIGINT) {
+        if (a->type != CELL_BIGINT) {
+            a = to_bigint(a);
+        }
+        if (b->type != CELL_BIGINT) {
+            b = to_bigint(b);
+        }
+    } else if (a->type == CELL_COMPLEX || b->type == CELL_COMPLEX) {
         if (a->type != CELL_COMPLEX) {
             a = to_complex(a);
         }
         if (b->type != CELL_COMPLEX) {
             b = to_complex(b);
         }
-    }
-    else if (a->type == CELL_REAL || b->type == CELL_REAL) {
+    } else if (a->type == CELL_REAL || b->type == CELL_REAL) {
         if (a->type == CELL_INTEGER || a->type == CELL_RATIONAL) {
             a = a->type == CELL_INTEGER ? int_to_real(a) : rat_to_real(a);
         }
         if (b->type == CELL_INTEGER || b->type == CELL_RATIONAL) {
             b = b->type == CELL_INTEGER ? int_to_real(b) : rat_to_real(b);
         }
-    }
-    else if (a->type == CELL_RATIONAL || b->type == CELL_RATIONAL) {
+    } else if (a->type == CELL_RATIONAL || b->type == CELL_RATIONAL) {
         if (a->type == CELL_INTEGER) {
             a = int_to_rat(a);
         }
@@ -444,6 +459,7 @@ bool cell_is_integer(const Cell* c)
 
     switch (c->type) {
         case CELL_INTEGER:
+        case CELL_BIGINT:
             return true;
         case CELL_RATIONAL:
             /* A simplified rational is an integer if its denominator is 1. */
@@ -472,6 +488,7 @@ bool cell_is_real(const Cell* c)
 
     switch (c->type) {
         case CELL_INTEGER:
+        case CELL_BIGINT:
         case CELL_RATIONAL:
         case CELL_REAL:
             return true;
@@ -585,9 +602,11 @@ Cell* negate_numeric(const Cell* x)
                 negate_numeric(x->real),
                 negate_numeric(x->imag)
             );
+        case CELL_BIGINT:
+            return bigint_neg((Cell*)x);
         default:
             return make_cell_error(
-                "negate numeris: bad arg type",
+                "negate numeric: bad arg type",
                 TYPE_ERR);
     }
 }

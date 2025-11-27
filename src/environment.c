@@ -260,6 +260,8 @@ void lex_add_builtins(const Lex* e)
     lex_add_builtin(e, "rational?", builtin_rational);
     lex_add_builtin(e, "integer?", builtin_integer);
     lex_add_builtin(e, "exact-integer?", builtin_exact_integer);
+    lex_add_builtin(e, "bigint?", builtin_bigint);
+    lex_add_builtin(e, "bigfloat?", builtin_bigfloat);
     lex_add_builtin(e, "infinite?", builtin_infinite);
     lex_add_builtin(e, "finite?", builtin_finite);
     lex_add_builtin(e, "nan?", builtin_nan);
