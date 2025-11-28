@@ -435,6 +435,8 @@ bool cell_is_real_zero(const Cell* c)
 {
     if (!c) return false;
     switch (c->type) {
+        case CELL_BIGINT:
+            if (mpz_cmp_si(*c->bi, 0) == 0) return true;
         case CELL_INTEGER:
             return c->integer_v == 0;
         case CELL_RATIONAL:
@@ -506,17 +508,12 @@ bool cell_is_positive(const Cell* c)
 {
     if (!c) return false;
 
-    const long double num = cell_to_long_double(c);
-    if (isinf(num)) {
-        return num > 0 ? true : false;
+    if (c->type == CELL_BIGINT) {
+        return mpz_sgn(*c->bi) == 1 ? true : false;
     }
 
-    switch (c->type) {
-        case CELL_INTEGER: return c->integer_v > 0;
-        case CELL_REAL: return c->real_v > 0.0L;
-        case CELL_RATIONAL: return c->num > 0; /* Assumes den is always positive */
-        default: return false;
-    }
+    const long double num = cell_to_long_double(c);
+    return num > 0 ? true : false;
 }
 
 /* Helper for negative? (< 0) */
@@ -524,17 +521,12 @@ bool cell_is_negative(const Cell* c)
 {
     if (!c) return false;
 
-    const long double num = cell_to_long_double(c);
-    if (isinf(num)) {
-        return num > 0 ? false : true;
+    if (c->type == CELL_BIGINT) {
+        return mpz_sgn(*c->bi) == -1 ? true : false;
     }
 
-    switch (c->type) {
-        case CELL_INTEGER: return c->integer_v < 0;
-        case CELL_REAL: return c->real_v < 0.0L;
-        case CELL_RATIONAL: return c->num < 0; /* Assumes den is always positive */
-        default: return false;
-    }
+    const long double num = cell_to_long_double(c);
+    return num < 0 ? true : false;
 }
 
 /* Helper for odd? */
@@ -542,21 +534,25 @@ bool cell_is_odd(const Cell* c)
 {
     /* Must be an integer to be odd or even. */
     if (!cell_is_integer(c)) {
-        return 0;
+        return false;
     }
 
     /* inf.0 neither even nor odd */
     if (isinf(cell_to_long_double(c))) {
-        return 0;
+        return false;
     }
 
-    const Cell* int_cell = (c->type == CELL_COMPLEX) ? c->real : c;
+    /* Already determined c is an integer represented as a complex */
+    if (c->type == CELL_COMPLEX) {
+        c = c->real;
+    }
 
     long long val;
-    switch (int_cell->type) {
-        case CELL_INTEGER:  val = int_cell->integer_v; break;
-        case CELL_REAL: val = (long long)int_cell->real_v; break;
-        case CELL_RATIONAL:  val = int_cell->num; break; /* den is 1 if it's an integer */
+    switch (c->type) {
+        case CELL_BIGINT: return mpz_odd_p(*c->bi) == 1 ? true : false;
+        case CELL_INTEGER:  val = c->integer_v; break;
+        case CELL_REAL: val = (long long)c->real_v; break;
+        case CELL_RATIONAL:  val = c->num; break; /* den is 1 if it's an integer */
         default: return false; /* Unreachable */
     }
     return val % 2 != 0;
@@ -575,13 +571,17 @@ bool cell_is_even(const Cell* c)
         return false;
     }
 
-    const Cell* int_cell = (c->type == CELL_COMPLEX) ? c->real : c;
+    /* Already determined c is an integer represented as a complex */
+    if (c->type == CELL_COMPLEX) {
+        c = c->real;
+    }
 
     long long val;
-    switch (int_cell->type) {
-        case CELL_INTEGER:  val = int_cell->integer_v; break;
-        case CELL_REAL: val = (long long)int_cell->real_v; break;
-        case CELL_RATIONAL:  val = int_cell->num; break; /* den is 1 if it's an integer */
+    switch (c->type) {
+        case CELL_BIGINT: return mpz_even_p(*c->bi) == 1 ? true : false;
+        case CELL_INTEGER:  val = c->integer_v; break;
+        case CELL_REAL: val = (long long)c->real_v; break;
+        case CELL_RATIONAL:  val = c->num; break; /* den is 1 if it's an integer */
         default: return false; /* Unreachable */
     }
     return val % 2 == 0;

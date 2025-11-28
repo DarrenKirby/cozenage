@@ -181,10 +181,12 @@ Cell* builtin_eof_pred(const Lex* e, const Cell* a)
 Cell* builtin_exact_pred(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX, "exact?");
+    Cell* err = check_arg_types(a,
+        CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX|CELL_BIGINT,
+        "exact?");
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
-    Cell* z = a->cell[0];
+    const Cell* z = a->cell[0];
     if (z->type == CELL_COMPLEX) {
         return make_cell_boolean(z->real->exact & z->imag->exact);
     }
@@ -195,7 +197,9 @@ Cell* builtin_exact_pred(const Lex* e, const Cell* a)
 Cell* builtin_inexact_pred(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX, "inexact?");
+    Cell* err = check_arg_types(a,
+        CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX|CELL_BIGINT,
+        "inexact?");
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
 
@@ -219,7 +223,7 @@ Cell* builtin_complex(const Lex* e, const Cell* a)
 
     /* All numbers are complex numbers. */
     // ReSharper disable once CppVariableCanBeMadeConstexpr
-    const int mask = CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX;
+    const int mask = CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX|CELL_BIGINT;
     if (a->cell[0]->type & mask) {
         return True_Obj;
     }
@@ -236,6 +240,7 @@ Cell* builtin_real(const Lex* e, const Cell* a)
     const Cell* arg = a->cell[0];
     switch (arg->type) {
         case CELL_INTEGER:
+        case CELL_BIGINT:
         case CELL_RATIONAL:
         case CELL_REAL:
             return True_Obj;
@@ -255,7 +260,9 @@ Cell* builtin_rational(const Lex* e, const Cell* a)
     if (err) return err;
 
     /* Non-numbers are not rational */
-    if (check_arg_types(a, CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX, "rational?")) {
+    if (check_arg_types(a,
+        CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX|CELL_BIGINT,
+        "rational?")) {
         return False_Obj;
     }
     const Cell* arg = a->cell[0];
@@ -332,7 +339,9 @@ Cell* builtin_bigfloat(const Lex* e, const Cell* a)
 Cell* builtin_zero(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX, "zero?");
+    Cell* err = check_arg_types(a,
+        CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX|CELL_BIGINT,
+        "zero?");
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
 
@@ -351,17 +360,19 @@ Cell* builtin_zero(const Lex* e, const Cell* a)
 Cell* builtin_positive(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX, "positive?");
+    Cell* err = check_arg_types(a,
+        CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX|CELL_BIGINT,
+        "positive?");
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
 
     const Cell* val = a->cell[0];
-    if (a->cell[0]->type == CELL_COMPLEX) {
+    if (val->type == CELL_COMPLEX) {
         /* Must be a real number to be positive */
-        if (!cell_is_real_zero(a->cell[0]->imag)) return make_cell_error(
+        if (!cell_is_real_zero(val->imag)) return make_cell_error(
             "positive?: expected real, got complex",
             VALUE_ERR);
-        val = a->cell[0]->real;
+        val = val->real;
     }
 
     return make_cell_boolean(cell_is_positive(val));
@@ -371,17 +382,19 @@ Cell* builtin_positive(const Lex* e, const Cell* a)
 Cell* builtin_negative(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX, "negative?");
+    Cell* err = check_arg_types(a,
+        CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX|CELL_BIGINT,
+        "negative?");
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
 
     const Cell* val = a->cell[0];
-    if (a->cell[0]->type == CELL_COMPLEX) {
+    if (val->type == CELL_COMPLEX) {
         /* Must be a real number to be negative */
-        if (!cell_is_real_zero(a->cell[0]->imag)) return make_cell_error(
-            "positive?: expected real, got complex",
+        if (!cell_is_real_zero(val->imag)) return make_cell_error(
+            "negative?: expected real, got complex",
             VALUE_ERR);
-        val = a->cell[0]->real;
+        val = val->real;
     }
 
     return make_cell_boolean(cell_is_negative(val));
@@ -391,9 +404,17 @@ Cell* builtin_negative(const Lex* e, const Cell* a)
 Cell* builtin_odd(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX, "odd?");
+    Cell* err = check_arg_types(a,
+        CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX|CELL_BIGINT,
+        "odd?");
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
+
+    if (!cell_is_integer(a->cell[0])) {
+        return make_cell_error(
+            "odd?: expected integer",
+            VALUE_ERR);
+    }
 
     return make_cell_boolean(cell_is_odd(a->cell[0]));
 }
@@ -402,9 +423,17 @@ Cell* builtin_odd(const Lex* e, const Cell* a)
 Cell* builtin_even(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX, "even?");
+    Cell* err = check_arg_types(a,
+        CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX|CELL_BIGINT,
+        "even?");
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
+
+    if (!cell_is_integer(a->cell[0])) {
+        return make_cell_error(
+            "even?: expected integer",
+            VALUE_ERR);
+    }
 
     return make_cell_boolean(cell_is_even(a->cell[0]));
 }
