@@ -45,7 +45,9 @@ static int complex_eq_op(const Lex* e, const Cell* lhs, const Cell* rhs)
 Cell* builtin_eq_op(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX, "=");
+    Cell* err = check_arg_types(a,
+        CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX|CELL_BIGINT,
+        "=");
     if (err) { return err; }
     for (int i = 0; i < a->count - 1; i++) {
         int the_same = 0;
@@ -66,6 +68,9 @@ Cell* builtin_eq_op(const Lex* e, const Cell* a)
             case CELL_COMPLEX:
                 if (complex_eq_op(e, lhs, rhs)) { the_same = 1; }
                 break;
+            case CELL_BIGINT:
+                if (mpz_cmp(*lhs->bi, *rhs->bi) == 0) { the_same = 1; }
+                break;
             default: ; /* this will never run as the types are pre-checked, but without the linter complains */
         }
         if (!the_same) {
@@ -79,7 +84,9 @@ Cell* builtin_eq_op(const Lex* e, const Cell* a)
 Cell* builtin_gt_op(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_REAL|CELL_RATIONAL, ">");
+    Cell* err = check_arg_types(a,
+        CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_BIGINT,
+        ">");
     if (err) { return err; }
     for (int i = 0; i < a->count - 1; i++) {
         int ok = 0;
@@ -99,6 +106,10 @@ Cell* builtin_gt_op(const Lex* e, const Cell* a)
                 if (lhs->num * rhs->den > lhs->den * rhs->num) { ok = 1; }
                 break;
             }
+            case CELL_BIGINT: {
+                if (mpz_cmp(*lhs->bi, *rhs->bi) > 0) { ok = 1; }
+                break;
+            }
             default: ;
         }
         if (!ok) {
@@ -112,7 +123,9 @@ Cell* builtin_gt_op(const Lex* e, const Cell* a)
 Cell* builtin_lt_op(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_REAL|CELL_RATIONAL, "<");
+    Cell* err = check_arg_types(a,
+        CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_BIGINT,
+        "<");
     if (err) { return err; }
     for (int i = 0; i < a->count - 1; i++) {
         int ok = 0;
@@ -132,6 +145,10 @@ Cell* builtin_lt_op(const Lex* e, const Cell* a)
                 if (lhs->num * rhs->den < lhs->den * rhs->num) { ok = 1; }
                 break;
             }
+            case CELL_BIGINT: {
+                if (mpz_cmp(*lhs->bi, *rhs->bi) < 0) { ok = 1; }
+                break;
+            }
             default: ;
         }
         if (!ok) {
@@ -145,7 +162,9 @@ Cell* builtin_lt_op(const Lex* e, const Cell* a)
 Cell* builtin_gte_op(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_REAL|CELL_RATIONAL, ">=");
+    Cell* err = check_arg_types(a,
+        CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_BIGINT,
+        ">=");
     if (err) { return err; }
     for (int i = 0; i < a->count - 1; i++) {
         int ok = 0;
@@ -165,6 +184,10 @@ Cell* builtin_gte_op(const Lex* e, const Cell* a)
                 if (lhs->num * rhs->den >= (lhs->den * rhs->num)) { ok = 1; }
                 break;
             }
+            case CELL_BIGINT: {
+                if (mpz_cmp(*lhs->bi, *rhs->bi) >= 0) { ok = 1; }
+                break;
+            }
             default: ;
         }
         if (!ok) {
@@ -178,7 +201,9 @@ Cell* builtin_gte_op(const Lex* e, const Cell* a)
 Cell* builtin_lte_op(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_REAL|CELL_RATIONAL, "<=");
+    Cell* err = check_arg_types(a,
+        CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_BIGINT,
+        "<=");
     if (err) { return err; }
     for (int i = 0; i < a->count - 1; i++) {
         int ok = 0;
@@ -196,6 +221,10 @@ Cell* builtin_lte_op(const Lex* e, const Cell* a)
             }
             case CELL_RATIONAL: {
                 if (lhs->num * rhs->den <= lhs->den * rhs->num) { ok = 1; }
+                break;
+            }
+            case CELL_BIGINT: {
+                if (mpz_cmp(*lhs->bi, *rhs->bi) <= 0) { ok = 1; }
                 break;
             }
             default: ;
