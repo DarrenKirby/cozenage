@@ -375,12 +375,24 @@ static Cell* expt_complex_op(const BuiltinFn op, const Lex* e, const Cell* z1, c
 Cell* builtin_expt(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX, "expt");
+    Cell* err = check_arg_types(a,
+        CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX|CELL_BIGINT,
+        "expt");
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 2))) { return err; }
 
     const Cell* base = a->cell[0];
     const Cell* exp = a->cell[1];
+
+    /* Handle bigints */
+    if (base->type == CELL_BIGINT) {
+        if (exp->type != CELL_INTEGER) {
+            return make_cell_error(
+                "expt: bigint base must have integer exponent",
+                VALUE_ERR);
+        }
+        return bigint_expt((Cell*)base, (int)exp->integer_v);
+    }
 
     /* Handle simple edge cases */
     if (cell_is_real_zero(exp)) { return make_cell_integer(1); }
