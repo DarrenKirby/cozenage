@@ -144,14 +144,26 @@ static Cell* bits_bitwise_and(const Lex* e, const Cell* a)
     err = check_arg_types(a, CELL_INTEGER|CELL_SYMBOL, "&");
     if (err) return err;
 
-    if (a->cell[0]->type == CELL_SYMBOL) {
-        return make_cell_error(
-            "Bitstrings not implemented yet",
-            GEN_ERR);
+    const Cell* arg1 = a->cell[0];
+    const Cell* arg2 = a->cell[1];
+
+    bool bs = false;
+    if (arg1->type == CELL_SYMBOL) {
+        arg1 = bits_bitstring_to_int(e, make_sexpr_len1(arg1));
+        bs = true;
     }
-    const long long lhs = (long long)cell_to_long_double(a->cell[0]);
-    const long long rhs = (int)cell_to_long_double(a->cell[1]);
-    return make_cell_integer(lhs & rhs);
+    if (arg2->type == CELL_SYMBOL) {
+        arg2 = bits_bitstring_to_int(e, make_sexpr_len1(arg2));
+        bs = true;
+    }
+
+    const long long lhs = (long long)cell_to_long_double(arg1);
+    const long long rhs = (int)cell_to_long_double(arg2);
+    Cell* result = make_cell_integer(lhs & rhs);
+    if (bs) {
+        return bits_int_to_bitstring(e, make_sexpr_len1(result));
+    }
+    return result;
 }
 
 static Cell* bits_bitwise_or(const Lex* e, const Cell* a)
@@ -162,14 +174,26 @@ static Cell* bits_bitwise_or(const Lex* e, const Cell* a)
     err = check_arg_types(a, CELL_INTEGER|CELL_SYMBOL, "|");
     if (err) return err;
 
-    if (a->cell[0]->type == CELL_SYMBOL) {
-        return make_cell_error(
-            "Bitstrings not implemented yet",
-            GEN_ERR);
+    const Cell* arg1 = a->cell[0];
+    const Cell* arg2 = a->cell[1];
+
+    bool bs = false;
+    if (arg1->type == CELL_SYMBOL) {
+        arg1 = bits_bitstring_to_int(e, make_sexpr_len1(arg1));
+        bs = true;
     }
-    const long long lhs = (long long)cell_to_long_double(a->cell[0]);
-    const long long rhs = (long long)cell_to_long_double(a->cell[1]);
-    return make_cell_integer(lhs | rhs);
+    if (arg2->type == CELL_SYMBOL) {
+        arg2 = bits_bitstring_to_int(e, make_sexpr_len1(arg2));
+        bs = true;
+    }
+
+    const long long lhs = (long long)cell_to_long_double(arg1);
+    const long long rhs = (long long)cell_to_long_double(arg2);
+    Cell* result =  make_cell_integer(lhs | rhs);
+    if (bs) {
+        return bits_int_to_bitstring(e, make_sexpr_len1(result));
+    }
+    return result;
 }
 
 static Cell* bits_bitwise_xor(const Lex* e, const Cell* a)
@@ -180,14 +204,26 @@ static Cell* bits_bitwise_xor(const Lex* e, const Cell* a)
     err = check_arg_types(a, CELL_INTEGER|CELL_SYMBOL, "^");
     if (err) return err;
 
-    if (a->cell[0]->type == CELL_SYMBOL) {
-        return make_cell_error(
-            "Bitstrings not implemented yet",
-            GEN_ERR);
+    const Cell* arg1 = a->cell[0];
+    const Cell* arg2 = a->cell[1];
+
+    bool bs = false;
+    if (arg1->type == CELL_SYMBOL) {
+        arg1 = bits_bitstring_to_int(e, make_sexpr_len1(arg1));
+        bs = true;
     }
-    const long long lhs = (long long)cell_to_long_double(a->cell[0]);
-    const long long rhs = (long long)cell_to_long_double(a->cell[1]);
-    return make_cell_integer(lhs ^ rhs);
+    if (arg2->type == CELL_SYMBOL) {
+        arg2 = bits_bitstring_to_int(e, make_sexpr_len1(arg2));
+        bs = true;
+    }
+
+    const long long lhs = (long long)cell_to_long_double(arg1);
+    const long long rhs = (long long)cell_to_long_double(arg2);
+    Cell* result = make_cell_integer(lhs ^ rhs);
+    if (bs) {
+        return bits_int_to_bitstring(e, make_sexpr_len1(result));
+    }
+    return result;
 }
 
 static Cell* bits_bitwise_not(const Lex* e, const Cell* a)
@@ -198,13 +234,20 @@ static Cell* bits_bitwise_not(const Lex* e, const Cell* a)
     err = check_arg_types(a, CELL_INTEGER|CELL_SYMBOL, "~");
     if (err) return err;
 
-    if (a->cell[0]->type == CELL_SYMBOL) {
-        return make_cell_error(
-            "Bitstrings not implemented yet",
-            GEN_ERR);
+    const Cell* arg1 = a->cell[0];
+
+    bool bs = false;
+    if (arg1->type == CELL_SYMBOL) {
+        arg1 = bits_bitstring_to_int(e, make_sexpr_len1(arg1));
+        bs = true;
     }
-    const long long val = (long long)cell_to_long_double(a->cell[0]);
-    return make_cell_integer(~val);
+
+    const long long val = (long long)cell_to_long_double(arg1);
+    Cell* result = make_cell_integer(~val);
+    if (bs) {
+        return bits_int_to_bitstring(e, make_sexpr_len1(result));
+    }
+    return result;
 }
 
 static Cell* bits_int_to_bitstring(const Lex* e, const Cell* a)
@@ -218,8 +261,7 @@ static Cell* bits_int_to_bitstring(const Lex* e, const Cell* a)
     char* str = format_twos_complement(a->cell[0]->integer_v);
     /* 66 = 64 bit max size of long long + '\0' + 'b' prefix */
     char sym_str[66] = "b";
-    /* FIXME: use strlcat() */
-    strcat(sym_str, str);
+    strlcat(sym_str, str, 66);
     Cell* result = make_cell_symbol(sym_str);
     free(str);
     return result;
