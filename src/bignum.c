@@ -95,3 +95,9 @@ Cell* bigint_neg(Cell* a)
     mpz_neg(*a->bi, *a->bi);
     return a;
 }
+
+Cell* bigint_expt(Cell* a, const int exp)
+{
+    mpz_pow_ui(*a->bi, *a->bi, exp);
+    return a;
+}

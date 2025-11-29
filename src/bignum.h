@@ -38,7 +38,7 @@ Cell* bigint_sub(Cell* a, const Cell* b);
 Cell* bigint_mul(Cell* a, const Cell* b);
 Cell* bigint_div(Cell* a, const Cell* b);
 Cell* bigint_mod(Cell* a, const Cell* b);
-Cell* bigint_expt(Cell* a, const Cell* b);
+Cell* bigint_expt(Cell* a, int exp);
 
 Cell* bigint_neg(Cell* a);
 
