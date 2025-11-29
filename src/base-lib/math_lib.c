@@ -316,11 +316,27 @@ static long long lcm_helper(long long x, long long y)
 static Cell* math_gcd(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_INTEGER, "gcd");
+    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_BIGINT, "gcd");
     if (err) return err;
 
     if (a->count == 0) {
         return make_cell_integer(0); /* Identity for GCD */
+    }
+
+    bool bigint_seen = false;
+    for (int i = 0; i < a->count; i++) {
+        if (a->cell[i]->type == CELL_BIGINT) {
+            bigint_seen = true;
+        }
+    }
+
+    if (bigint_seen) {
+        Cell* result = cell_copy(a->cell[0]);
+        for (int i = 1; i < a->count; i++) {
+            numeric_promote(&result, &a->cell[i]);
+            mpz_gcd(*result->bi, *result->bi, *a->cell[i]->bi);
+        }
+        return result;
     }
 
     long long result = a->cell[0]->integer_v;
@@ -334,11 +350,27 @@ static Cell* math_gcd(const Lex* e, const Cell* a)
 static Cell* math_lcm(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_INTEGER, "lcm");
+    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_BIGINT, "lcm");
     if (err) { return err; }
 
     if (a->count == 0) {
         return make_cell_integer(1); /* Identity for LCM */
+    }
+
+    bool bigint_seen = false;
+    for (int i = 0; i < a->count; i++) {
+        if (a->cell[i]->type == CELL_BIGINT) {
+            bigint_seen = true;
+        }
+    }
+
+    if (bigint_seen) {
+        Cell* result = cell_copy(a->cell[0]);
+        for (int i = 1; i < a->count; i++) {
+            numeric_promote(&result, &a->cell[i]);
+            mpz_lcm(*result->bi, *result->bi, *a->cell[i]->bi);
+        }
+        return result;
     }
 
     long long result = a->cell[0]->integer_v;
@@ -383,7 +415,7 @@ static Cell* math_floor_div(const Lex* e, const Cell* a)
 
     if (n2 == 0) {
         return make_cell_error(
-            "truncate/: division by zero",
+            "floor/: division by zero",
             VALUE_ERR);
     }
 
@@ -439,6 +471,7 @@ static Cell* math_real_part(const Lex* e, const Cell* a)
     if (err) return err;
     Cell* sub = a->cell[0];
     if (sub->type == CELL_INTEGER ||
+        sub->type == CELL_BIGINT ||
         sub->type == CELL_REAL ||
         sub->type == CELL_RATIONAL) {
         return sub;
@@ -448,7 +481,8 @@ static Cell* math_real_part(const Lex* e, const Cell* a)
     }
     /* If we didn't return early, we have the wrong arg type */
     return check_arg_types(make_sexpr_len1(sub),
-        CELL_COMPLEX|CELL_REAL|CELL_RATIONAL|CELL_INTEGER, "real=part");
+        CELL_COMPLEX|CELL_REAL|CELL_RATIONAL|CELL_INTEGER|CELL_BIGINT,
+        "real-part");
 }
 
 /* 'imag-part' -> CELL_REAL|CELL_RATIONAL|CELL_INTEGER - returns the imaginary part of a
@@ -459,6 +493,7 @@ static Cell* math_imag_part(const Lex* e, const Cell* a) {
     if (err) return err;
     const Cell* sub = a->cell[0];
     if (sub->type == CELL_INTEGER ||
+        sub->type == CELL_BIGINT ||
         sub->type == CELL_REAL ||
         sub->type == CELL_RATIONAL) {
         return make_cell_integer(0);
@@ -468,7 +503,8 @@ static Cell* math_imag_part(const Lex* e, const Cell* a) {
     }
     /* If we didn't return early, we have the wrong arg type */
     return check_arg_types(make_sexpr_len1(sub),
-        CELL_COMPLEX|CELL_REAL|CELL_RATIONAL|CELL_INTEGER, "imag-part");
+        CELL_COMPLEX|CELL_REAL|CELL_RATIONAL|CELL_INTEGER|CELL_BIGINT,
+        "imag-part");
 }
 
 /* 'make-rectangular' -> CELL_COMPLEX- convert a complex number to rectangular form */
