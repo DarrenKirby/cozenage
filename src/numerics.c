@@ -459,9 +459,23 @@ Cell* builtin_expt(const Lex* e, const Cell* a)
 Cell* builtin_modulo(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_INTEGER, "modulo");
+    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_BIGINT, "modulo");
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 2))) { return err; }
+
+    if (a->cell[0]->type == CELL_BIGINT) {
+        Cell* result = cell_copy(a->cell[0]);
+        if (a->cell[1]->type == CELL_INTEGER) {
+            mpz_mod_ui(*result->bi, *a->cell[0]->bi, a->cell[1]->integer_v);
+        } else {
+            mpz_mod(*result->bi, *a->cell[0]->bi, *a->cell[1]->bi);
+        }
+        if (mpz_fits_int64(*result->bi)) {
+            return make_cell_integer(mpz_get_i64_checked(*result->bi));
+        }
+        return result;
+    }
+
     long long r = a->cell[0]->integer_v % a->cell[1]->integer_v;
     if (r != 0 && ((a->cell[1]->integer_v > 0 && r < 0) || (a->cell[1]->integer_v < 0 && r > 0))) {
         r += a->cell[1]->integer_v;
@@ -477,6 +491,23 @@ Cell* builtin_quotient(const Lex* e, const Cell* a)
     Cell* err = check_arg_types(a, CELL_INTEGER, "quotient");
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 2))) { return err; }
+
+    if (a->cell[0]->type == CELL_BIGINT) {
+        Cell* result = cell_copy(a->cell[0]);
+        Cell* d;
+        if (a->cell[1]->type == CELL_INTEGER) {
+            d = make_cell_bigint(nullptr, a->cell[1], 10);
+        } else {
+            d = a->cell[0];
+        }
+        mpz_tdiv_q(*result->bi, *a->cell[0]->bi, *d->bi);
+
+        if (mpz_fits_int64(*result->bi)) {
+            return make_cell_integer(mpz_get_i64_checked(*result->bi));
+        }
+        return result;
+    }
+
     return make_cell_integer(a->cell[0]->integer_v / a->cell[1]->integer_v);
 }
 
@@ -488,6 +519,23 @@ Cell* builtin_remainder(const Lex* e, const Cell* a)
     Cell* err = check_arg_types(a, CELL_INTEGER, "remainder");
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 2))) { return err; }
+
+    if (a->cell[0]->type == CELL_BIGINT) {
+        Cell* result = cell_copy(a->cell[0]);
+        Cell* d;
+        if (a->cell[1]->type == CELL_INTEGER) {
+            d = make_cell_bigint(nullptr, a->cell[1], 10);
+        } else {
+            d = a->cell[0];
+        }
+        mpz_tdiv_r(*result->bi, *a->cell[0]->bi, *d->bi);
+
+        if (mpz_fits_int64(*result->bi)) {
+            return make_cell_integer(mpz_get_i64_checked(*result->bi));
+        }
+        return result;
+    }
+
     return make_cell_integer(a->cell[0]->integer_v % a->cell[1]->integer_v);
 }
 
@@ -496,7 +544,9 @@ Cell* builtin_remainder(const Lex* e, const Cell* a)
 Cell* builtin_max(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX, "max");
+    Cell* err = check_arg_types(a,
+        CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX|CELL_BIGINT,
+        "max");
     if (err) { return err; }
     if ((err = CHECK_ARITY_MIN(a, 1))) { return err; }
 
@@ -527,7 +577,9 @@ Cell* builtin_max(const Lex* e, const Cell* a)
 Cell* builtin_min(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX, "min");
+    Cell* err = check_arg_types(a,
+        CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX|CELL_BIGINT,
+        "min");
     if (err) { return err; }
     if ((err = CHECK_ARITY_MIN(a, 1))) { return err; }
 
@@ -556,9 +608,15 @@ Cell* builtin_min(const Lex* e, const Cell* a)
 Cell* builtin_floor(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL, "floor");
+    Cell* err = check_arg_types(a,
+        CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_BIGINT,
+        "floor");
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
+
+    if (a->cell[0]->type == CELL_BIGINT) {
+        return a->cell[0];
+    }
 
     long double val = cell_to_long_double(a->cell[0]);
     val = floorl(val);
@@ -569,9 +627,15 @@ Cell* builtin_floor(const Lex* e, const Cell* a)
 Cell* builtin_ceiling(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL, "ceiling");
+    Cell* err = check_arg_types(a,
+        CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_BIGINT,
+        "ceiling");
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
+
+    if (a->cell[0]->type == CELL_BIGINT) {
+        return a->cell[0];
+    }
 
     long double val = cell_to_long_double(a->cell[0]);
     val = ceill(val);
@@ -582,9 +646,15 @@ Cell* builtin_ceiling(const Lex* e, const Cell* a)
 Cell* builtin_round(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL, "round");
+    Cell* err = check_arg_types(a,
+        CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_BIGINT,
+        "round");
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
+
+    if (a->cell[0]->type == CELL_BIGINT) {
+        return a->cell[0];
+    }
 
     long double val = cell_to_long_double(a->cell[0]);
     val = roundl(val);
@@ -595,9 +665,15 @@ Cell* builtin_round(const Lex* e, const Cell* a)
 Cell* builtin_truncate(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL, "truncate");
+    Cell* err = check_arg_types(a,
+        CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_BIGINT,
+        "truncate");
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
+
+    if (a->cell[0]->type == CELL_BIGINT) {
+        return a->cell[0];
+    }
 
     long double val = cell_to_long_double(a->cell[0]);
     val = truncl(val);
@@ -608,12 +684,14 @@ Cell* builtin_truncate(const Lex* e, const Cell* a)
 Cell* builtin_numerator(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL, "numerator");
+    Cell* err = check_arg_types(a,
+        CELL_INTEGER|CELL_RATIONAL|CELL_BIGINT,
+        "numerator");
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
 
     /* Return ints unchanged. */
-    if (a->cell[0]->type == CELL_INTEGER) {
+    if (a->cell[0]->type == CELL_INTEGER || a->cell[0]->type == CELL_BIGINT) {
         return a->cell[0];
     }
     return make_cell_integer(a->cell[0]->num);
@@ -622,12 +700,14 @@ Cell* builtin_numerator(const Lex* e, const Cell* a)
 Cell* builtin_denominator(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL, "denominator");
+    Cell* err = check_arg_types(a,
+        CELL_INTEGER|CELL_RATIONAL,
+        "denominator");
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
 
     /* Denominator of int is always 1. */
-    if (a->cell[0]->type == CELL_INTEGER) {
+    if (a->cell[0]->type == CELL_INTEGER || a->cell[0]->type == CELL_BIGINT) {
         return make_cell_integer(1);
     }
     return make_cell_integer(a->cell[0]->den);
@@ -694,9 +774,17 @@ Cell* builtin_rationalize(const Lex* e, const Cell* a)
 Cell* builtin_square(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX, "square");
+    Cell* err = check_arg_types(a,
+        CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX|CELL_BIGINT,
+        "square");
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
+
+    if (a->cell[0]->type == CELL_BIGINT) {
+        Cell* result = cell_copy(a->cell[0]);
+        mpz_mul(*result->bi, *result->bi, *result->bi);
+        return result;
+    }
 
     const Cell* args = make_sexpr_len2(a->cell[0], a->cell[0]);
     return builtin_mul(e, args);
