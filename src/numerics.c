@@ -843,7 +843,8 @@ static unsigned long long integer_sqrt(const unsigned long long k)
 Cell* builtin_exact_integer_sqrt(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_INTEGER, "exact-integer-sqrt");
+    Cell* err = check_arg_types(a,
+        CELL_INTEGER|CELL_BIGINT, "exact-integer-sqrt");
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
     const long long k = a->cell[0]->integer_v;
@@ -851,6 +852,12 @@ Cell* builtin_exact_integer_sqrt(const Lex* e, const Cell* a)
         make_cell_error(
             "exact-integer-sqrt: arg1 must be an exact positive integer",
             VALUE_ERR);
+    }
+
+    if (a->cell[0]->type == CELL_BIGINT) {
+        Cell* result = cell_copy(a->cell[0]);
+        mpz_sqrt(*result->bi, *result->bi);
+        return result;
     }
 
     const unsigned long long s = integer_sqrt(k);
@@ -865,7 +872,9 @@ Cell* builtin_exact_integer_sqrt(const Lex* e, const Cell* a)
 Cell* builtin_exact(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX, "exact");
+    Cell* err = check_arg_types(a,
+        CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX|CELL_BIGINT,
+        "exact");
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
 
@@ -884,7 +893,9 @@ Cell* builtin_exact(const Lex* e, const Cell* a)
 Cell* builtin_inexact(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX, "inexact");
+    Cell* err = check_arg_types(a,
+        CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX|CELL_BIGINT,
+        "inexact");
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
 
@@ -904,9 +915,15 @@ Cell* builtin_inexact(const Lex* e, const Cell* a)
 Cell* builtin_infinite(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX, "infinite?");
+    Cell* err = check_arg_types(a,
+        CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX|CELL_BIGINT,
+        "infinite?");
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
+
+    if (a->cell[0]->type == CELL_BIGINT) {
+        return False_Obj;
+    }
 
     const Cell* arg = a->cell[0];
     if (arg->type == CELL_COMPLEX) {
@@ -923,9 +940,15 @@ Cell* builtin_infinite(const Lex* e, const Cell* a)
 Cell* builtin_finite(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX, "finite?");
+    Cell* err = check_arg_types(a,
+        CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX|CELL_BIGINT,
+        "finite?");
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
+
+    if (a->cell[0]->type == CELL_BIGINT) {
+        return True_Obj;
+    }
 
     const Cell* arg = a->cell[0];
     if (arg->type == CELL_COMPLEX) {
@@ -944,8 +967,14 @@ Cell* builtin_nan(const Lex* e, const Cell* a)
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1);
     if (err) return err;
-    err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX,"nan?");
+    err = check_arg_types(a,
+        CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX|CELL_BIGINT,
+        "nan?");
     if (err) { return err; }
+
+    if (a->cell[0]->type == CELL_BIGINT) {
+        return False_Obj;
+    }
 
     const Cell* arg = a->cell[0];
     if (arg->type == CELL_COMPLEX) {
