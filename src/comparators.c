@@ -272,7 +272,7 @@ Cell* builtin_eqv(const Lex* e, const Cell* a)
 
     /* Just kick numbers over to '='*/
     // ReSharper disable once CppVariableCanBeMadeConstexpr
-    const int mask = CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX;
+    const int mask = CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX|CELL_BIGINT;
     if (x->type & mask) {
         return builtin_eq_op(e, make_sexpr_len2(x, y));
     }
@@ -292,7 +292,7 @@ static Cell* val_equal(const Lex* e, Cell* x, Cell* y)
 {
     /* Just kick numbers over to '='*/
     // ReSharper disable once CppVariableCanBeMadeConstexpr
-    const int mask = CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX;
+    const int mask = CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX|CELL_BIGINT;
     if (x->type & mask) {
         return builtin_eq_op(e, make_sexpr_len2(x, y));
     }
