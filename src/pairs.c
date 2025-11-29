@@ -59,7 +59,7 @@ inline Cell* cdr__(const Cell* list)
 Cell* builtin_cons(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 2);
+    Cell* err = CHECK_ARITY_EXACT(a, 2, "cons");
     if (err) return err;
     return make_cell_pair(a->cell[0], a->cell[1]);
 }
@@ -69,7 +69,7 @@ Cell* builtin_cons(const Lex* e, const Cell* a)
 Cell* builtin_car(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "car");
     if (err) return err;
     return car__(a->cell[0]);
 }
@@ -79,7 +79,7 @@ Cell* builtin_car(const Lex* e, const Cell* a)
 Cell* builtin_cdr(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "cdr");
     if (err) return err;
     return cdr__(a->cell[0]);
 }
@@ -93,7 +93,7 @@ Cell* builtin_cdr(const Lex* e, const Cell* a)
 Cell* builtin_caar(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "caar");
     if (err) { return err; }
     return car__(car__(a->cell[0]));
 }
@@ -101,7 +101,7 @@ Cell* builtin_caar(const Lex* e, const Cell* a)
 Cell* builtin_cadr(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "cadr");
     if (err) { return err; }
     return car__(cdr__(a->cell[0]));
 }
@@ -109,7 +109,7 @@ Cell* builtin_cadr(const Lex* e, const Cell* a)
 Cell* builtin_cdar(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "cdar");
     if (err) { return err; }
     return cdr__(car__(a->cell[0]));
 }
@@ -117,7 +117,7 @@ Cell* builtin_cdar(const Lex* e, const Cell* a)
 Cell* builtin_cddr(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "cddr");
     if (err) { return err; }
     return cdr__(cdr__(a->cell[0]));
 }
@@ -144,7 +144,7 @@ Cell* builtin_list(const Lex* e, const Cell* a)
 Cell* builtin_set_car(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 2);
+    Cell* err = CHECK_ARITY_EXACT(a, 2, "set-car!");
     if (err) return err;
     if (a->cell[0]->type != CELL_PAIR) {
         return make_cell_error(
@@ -160,7 +160,7 @@ Cell* builtin_set_car(const Lex* e, const Cell* a)
 Cell* builtin_set_cdr(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 2);
+    Cell* err = CHECK_ARITY_EXACT(a, 2, "set-cdr!");
     if (err) return err;
     if (a->cell[0]->type != CELL_PAIR) {
         return make_cell_error(
@@ -176,7 +176,7 @@ Cell* builtin_set_cdr(const Lex* e, const Cell* a)
 Cell* builtin_list_length(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "length");
     if (err) return err;
     err = check_arg_types(a, CELL_PAIR|CELL_NIL, "length");
     if (err) { return err; }
@@ -217,7 +217,7 @@ Cell* builtin_list_length(const Lex* e, const Cell* a)
 Cell* builtin_list_ref(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 2);
+    Cell* err = CHECK_ARITY_EXACT(a, 2, "list-ref");
     if (err) return err;
 
     if (a->cell[0]->type != CELL_PAIR) {
@@ -357,7 +357,7 @@ Cell* builtin_list_append(const Lex* e, const Cell* a)
 Cell* builtin_list_reverse(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "list-reverse");
     if (err) return err;
     err = check_arg_types(a, CELL_PAIR|CELL_NIL, "reverse");
     if (err) { return err; }
@@ -395,7 +395,7 @@ Cell* builtin_list_reverse(const Lex* e, const Cell* a)
 Cell* builtin_list_tail(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 2);
+    Cell* err = CHECK_ARITY_EXACT(a, 2, "list-tail");
     if (err) return err;
 
     if (a->cell[0]->type != CELL_PAIR &&
@@ -441,7 +441,7 @@ Cell* builtin_list_tail(const Lex* e, const Cell* a)
 Cell* builtin_make_list(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_RANGE(a, 1, 2);
+    Cell* err = CHECK_ARITY_RANGE(a, 1, 2, "make-list");
     if (err) return err;
     if (a->cell[0]->type != CELL_INTEGER && a->cell[0]->integer_v < 1) {
         return make_cell_error(
@@ -471,7 +471,7 @@ Cell* builtin_make_list(const Lex* e, const Cell* a)
 Cell* builtin_list_set(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 3);
+    Cell* err = CHECK_ARITY_EXACT(a, 3, "list-set!");
     if (err) return err;
     if (a->cell[0]->type != CELL_PAIR) {
         return make_cell_error(
@@ -509,7 +509,7 @@ Cell* builtin_list_set(const Lex* e, const Cell* a)
 Cell* builtin_memq(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 2);
+    Cell* err = CHECK_ARITY_EXACT(a, 2, "memq");
     if (err) return err;
     if (a->cell[1]->type != CELL_PAIR) {
         return make_cell_error(
@@ -537,7 +537,7 @@ Cell* builtin_memq(const Lex* e, const Cell* a)
 Cell* builtin_memv(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 2);
+    Cell* err = CHECK_ARITY_EXACT(a, 2, "memv");
     if (err) return err;
     if (a->cell[1]->type != CELL_PAIR) {
         return make_cell_error(
@@ -566,7 +566,7 @@ Cell* builtin_memv(const Lex* e, const Cell* a)
 Cell* builtin_member(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_RANGE(a, 2, 3);
+    Cell* err = CHECK_ARITY_RANGE(a, 2, 3, "member");
     if (err) return err;
     if (a->cell[1]->type != CELL_PAIR) {
         return make_cell_error(
@@ -608,7 +608,7 @@ Cell* builtin_member(const Lex* e, const Cell* a)
 Cell* builtin_assq(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 2);
+    Cell* err = CHECK_ARITY_EXACT(a, 2, "assq");
     if (err) return err;
     if (a->cell[1]->type != CELL_PAIR) {
         return make_cell_error(
@@ -638,7 +638,7 @@ Cell* builtin_assq(const Lex* e, const Cell* a)
  * then #f is returned. Uses eqv? for the comparison. */
 Cell* builtin_assv(const Lex* e, const Cell* a) {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 2);
+    Cell* err = CHECK_ARITY_EXACT(a, 2, "assv");
     if (err) return err;
     if (a->cell[1]->type != CELL_PAIR) {
         return make_cell_error(
@@ -670,7 +670,7 @@ Cell* builtin_assv(const Lex* e, const Cell* a) {
 Cell* builtin_assoc(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_RANGE(a, 2, 3);
+    Cell* err = CHECK_ARITY_RANGE(a, 2, 3, "assoc");
     if (err) return err;
     if (a->cell[1]->type != CELL_PAIR) {
         return make_cell_error(
@@ -721,7 +721,7 @@ Cell* builtin_assoc(const Lex* e, const Cell* a)
 Cell* builtin_list_copy(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "list-copy");
     if (err) return err;
     /* Non-pairs get returned unaltered */
     if (a->cell[0]->type != CELL_PAIR) {
@@ -757,7 +757,7 @@ Cell* builtin_list_copy(const Lex* e, const Cell* a)
 Cell* builtin_filter(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 2);
+    Cell* err = CHECK_ARITY_EXACT(a, 2, "filter");
     if (err) return err;
     if (a->cell[0]->type != CELL_PROC) {
         return make_cell_error(
@@ -805,7 +805,7 @@ Cell* builtin_filter(const Lex* e, const Cell* a)
 Cell* builtin_foldl(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_MIN(a, 3);
+    Cell* err = CHECK_ARITY_MIN(a, 3, "foldl");
     if (err) return err;
     if (a->cell[0]->type != CELL_PROC) {
         return make_cell_error(
@@ -874,7 +874,7 @@ Cell* builtin_foldl(const Lex* e, const Cell* a)
 Cell* builtin_zip(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_MIN(a, 2);
+    Cell* err = CHECK_ARITY_MIN(a, 2, "zip");
     if (err) return err;
 
     int shortest_list_length = INT32_MAX;

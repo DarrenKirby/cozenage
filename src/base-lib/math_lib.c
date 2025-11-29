@@ -51,7 +51,7 @@ static Cell* math_cos(const Lex* e, const Cell* a)
     (void)e;
     Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX, "cos");
     if (err) { return err; }
-    if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
+    if ((err = CHECK_ARITY_EXACT(a, 1, "cos"))) { return err; }
 
     if (a->cell[0]->type == CELL_COMPLEX)
     {
@@ -73,7 +73,7 @@ static Cell* math_acos(const Lex* e, const Cell* a)
     (void)e;
     Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX, "acos");
     if (err) { return err; }
-    if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
+    if ((err = CHECK_ARITY_EXACT(a, 1, "acos"))) { return err; }
 
     if (a->cell[0]->type == CELL_COMPLEX)
     {
@@ -95,7 +95,7 @@ static Cell* math_sin(const Lex* e, const Cell* a)
     (void)e;
     Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX, "sin");
     if (err) { return err; }
-    if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
+    if ((err = CHECK_ARITY_EXACT(a, 1, "sin"))) { return err; }
 
     if (a->cell[0]->type == CELL_COMPLEX)
     {
@@ -117,7 +117,7 @@ static Cell* math_asin(const Lex* e, const Cell* a)
     (void)e;
     Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX, "asin");
     if (err) { return err; }
-    if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
+    if ((err = CHECK_ARITY_EXACT(a, 1, "asin"))) { return err; }
 
     if (a->cell[0]->type == CELL_COMPLEX)
     {
@@ -139,7 +139,7 @@ static Cell* math_tan(const Lex* e, const Cell* a)
     (void)e;
     Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX, "tan");
     if (err) { return err; }
-    if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
+    if ((err = CHECK_ARITY_EXACT(a, 1, "tan"))) { return err; }
 
     if (a->cell[0]->type == CELL_COMPLEX)
     {
@@ -163,7 +163,7 @@ static Cell* math_atan(const Lex* e, const Cell* a)
     (void)e;
     Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX, "atan");
     if (err) { return err; }
-    if ((err = CHECK_ARITY_RANGE(a, 1, 2))) { return err; }
+    if ((err = CHECK_ARITY_RANGE(a, 1, 2, "atan"))) { return err; }
 
     if (a->count == 1) {
 
@@ -199,7 +199,7 @@ static Cell* math_exp(const Lex* e, const Cell* a)
     (void)e;
     Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX, "exp");
     if (err) { return err; }
-    if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
+    if ((err = CHECK_ARITY_EXACT(a, 1, "exp"))) { return err; }
 
     if (a->cell[0]->type == CELL_COMPLEX)
     {
@@ -222,7 +222,7 @@ static Cell* math_log(const Lex* e, const Cell* a)
     (void)e;
     Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX, "log");
     if (err) { return err; }
-    if ((err = CHECK_ARITY_RANGE(a, 1, 2))) { return err; }
+    if ((err = CHECK_ARITY_RANGE(a, 1, 2, "log"))) { return err; }
 
     if (a->count == 1) {
 
@@ -258,7 +258,7 @@ static Cell* math_log2(const Lex* e, const Cell* a)
     (void)e;
     Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL, "log2");
     if (err) { return err; }
-    if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
+    if ((err = CHECK_ARITY_EXACT(a, 1, "log2"))) { return err; }
 
     const long double n = cell_to_long_double(a->cell[0]);
     Cell* result = make_cell_from_double(log2l(n));
@@ -271,7 +271,7 @@ static Cell* math_log10(const Lex* e, const Cell* a)
     (void)e;
     Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL, "log10");
     if (err) { return err; }
-    if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
+    if ((err = CHECK_ARITY_EXACT(a, 1, "log10"))) { return err; }
 
     const long double n = cell_to_long_double(a->cell[0]);
     Cell* result = make_cell_from_double(log10l(n));
@@ -284,7 +284,7 @@ static Cell* math_cbrt(const Lex* e, const Cell* a)
     (void)e;
     Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL, "cbrt");
     if (err) { return err; }
-    if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
+    if ((err = CHECK_ARITY_EXACT(a, 1, "cbrt"))) { return err; }
 
     const long double n = cell_to_long_double(a->cell[0]);
     Cell* result = make_cell_from_double(cbrtl(n));
@@ -387,7 +387,7 @@ static Cell* math_floor_quotient(const Lex* e, const Cell* a)
     (void)e;
     Cell* err = check_arg_types(a, CELL_INTEGER, "floor-quotient");
     if (err) { return err; }
-    if ((err = CHECK_ARITY_EXACT(a, 2))) { return err; }
+    if ((err = CHECK_ARITY_EXACT(a, 2, "floor-quotient"))) { return err; }
 
     const long long n1 = a->cell[0]->integer_v ;
     const long long n2 = a->cell[1]->integer_v ;
@@ -408,7 +408,7 @@ static Cell* math_floor_div(const Lex* e, const Cell* a)
     (void)e;
     Cell* err = check_arg_types(a, CELL_INTEGER, "floor/");
     if (err) { return err; }
-    if ((err = CHECK_ARITY_EXACT(a, 2))) { return err; }
+    if ((err = CHECK_ARITY_EXACT(a, 2, "floor/"))) { return err; }
 
     const long long n1 = a->cell[0]->integer_v;
     const long long n2 = a->cell[1]->integer_v;
@@ -442,7 +442,7 @@ static Cell* math_truncate_div(const Lex* e, const Cell* a)
     (void)e;
     Cell* err = check_arg_types(a, CELL_INTEGER, "truncate/");
     if (err) { return err; }
-    if ((err = CHECK_ARITY_EXACT(a, 2))) { return err; }
+    if ((err = CHECK_ARITY_EXACT(a, 2, "truncate/"))) { return err; }
 
     const long long n1 = a->cell[0]->integer_v ;
     const long long n2 = a->cell[1]->integer_v ;
@@ -467,7 +467,7 @@ static Cell* math_truncate_div(const Lex* e, const Cell* a)
 static Cell* math_real_part(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "real-part");
     if (err) return err;
     Cell* sub = a->cell[0];
     if (sub->type == CELL_INTEGER ||
@@ -489,7 +489,7 @@ static Cell* math_real_part(const Lex* e, const Cell* a)
  * complex number */
 static Cell* math_imag_part(const Lex* e, const Cell* a) {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "imag-part");
     if (err) return err;
     const Cell* sub = a->cell[0];
     if (sub->type == CELL_INTEGER ||
@@ -511,7 +511,7 @@ static Cell* math_imag_part(const Lex* e, const Cell* a) {
 static Cell* math_make_rectangular(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 2);
+    Cell* err = CHECK_ARITY_EXACT(a, 2, "make-rectangular");
     if (err) return err;
     err = check_arg_types(a, CELL_REAL|CELL_RATIONAL|CELL_INTEGER, "make-rectangular");
     if (err) return err;
@@ -523,7 +523,7 @@ static Cell* math_make_rectangular(const Lex* e, const Cell* a)
 static Cell* math_angle(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "angle");
     if (err) return err;
     err = check_arg_types(a, CELL_REAL|CELL_RATIONAL|CELL_INTEGER|CELL_COMPLEX, "angle");
     if (err) return err;
@@ -544,7 +544,7 @@ static Cell* math_angle(const Lex* e, const Cell* a)
 static Cell* math_make_polar(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 2);
+    Cell* err = CHECK_ARITY_EXACT(a, 2, "make-polar");
     if (err) return err;
     err = check_arg_types(a, CELL_REAL|CELL_RATIONAL|CELL_INTEGER, "make-polar");
     if (err) return err;

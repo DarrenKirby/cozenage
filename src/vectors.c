@@ -51,7 +51,7 @@ Cell* builtin_vector(const Lex* e, const Cell* a)
 Cell* builtin_vector_length(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "vector-length");
     if (err) return err;
     err = check_arg_types(a, CELL_VECTOR, "vector-length");
     if (err) return err;
@@ -64,7 +64,7 @@ Cell* builtin_vector_length(const Lex* e, const Cell* a)
 Cell* builtin_vector_ref(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 2);
+    Cell* err = CHECK_ARITY_EXACT(a, 2, "vector-ref");
     if (err) return err;
     if (a->cell[0]->type != CELL_VECTOR) {
         return make_cell_error(
@@ -93,7 +93,7 @@ Cell* builtin_vector_ref(const Lex* e, const Cell* a)
 Cell* builtin_make_vector(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_RANGE(a, 1, 2);
+    Cell* err = CHECK_ARITY_RANGE(a, 1, 2, "make-vector");
     if (err) return err;
     if (a->cell[0]->type != CELL_INTEGER) {
         return make_cell_error(
@@ -129,7 +129,7 @@ Cell* builtin_make_vector(const Lex* e, const Cell* a)
 Cell* builtin_list_to_vector(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "list->vector");
     if (err) return err;
     /* '() -> #() */
     if (a->cell[0]->type == CELL_NIL) {
@@ -163,7 +163,7 @@ Cell* builtin_list_to_vector(const Lex* e, const Cell* a)
 Cell* builtin_vector_to_list(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_RANGE(a, 1, 3);
+    Cell* err = CHECK_ARITY_RANGE(a, 1, 3, "vector->list");
     if (err) return err;
     if (a->cell[0]->type != CELL_VECTOR) {
         return make_cell_error(
@@ -224,7 +224,7 @@ Cell* builtin_vector_to_list(const Lex* e, const Cell* a)
 Cell* builtin_vector_copy(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_RANGE(a, 1, 3);
+    Cell* err = CHECK_ARITY_RANGE(a, 1, 3, "vector-copy");
     if (err) return err;
     if (a->cell[0]->type != CELL_VECTOR) {
         return make_cell_error(
@@ -256,7 +256,7 @@ Cell* builtin_vector_copy(const Lex* e, const Cell* a)
 Cell* builtin_vector_to_string(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_RANGE(a, 1, 3);
+    Cell* err = CHECK_ARITY_RANGE(a, 1, 3, "vector->string");
     if (err) return err;
     if (a->cell[0]->type != CELL_VECTOR) {
         return make_cell_error(
@@ -307,7 +307,7 @@ Cell* builtin_vector_to_string(const Lex* e, const Cell* a)
 Cell* builtin_string_to_vector(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_RANGE(a, 1, 3);
+    Cell* err = CHECK_ARITY_RANGE(a, 1, 3, "string->vector");
     if (err) return err;
     if (a->cell[0]->type != CELL_STRING) {
         return make_cell_error(
@@ -370,7 +370,7 @@ Cell* builtin_string_to_vector(const Lex* e, const Cell* a)
 Cell* builtin_vector_set_bang(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 3);
+    Cell* err = CHECK_ARITY_EXACT(a, 3, "vector-set!");
     if (err) return err;
     if (a->cell[0]->type != CELL_VECTOR) {
         return make_cell_error(
@@ -439,7 +439,7 @@ Cell* builtin_vector_append(const Lex* e, const Cell* a)
 Cell* builtin_vector_copy_bang(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_RANGE(a, 3, 5);
+    Cell* err = CHECK_ARITY_RANGE(a, 3, 5, "vector-copy!");
     if (err) return err;
 
     /* Validate arg Types. */
@@ -516,7 +516,7 @@ Cell* builtin_vector_copy_bang(const Lex* e, const Cell* a)
 Cell* builtin_vector_fill_bang(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_RANGE(a, 2, 4);
+    Cell* err = CHECK_ARITY_RANGE(a, 2, 4, "vector-fill!");
     if (err) return err;
     if (a->cell[0]->type != CELL_VECTOR) {
         return make_cell_error(

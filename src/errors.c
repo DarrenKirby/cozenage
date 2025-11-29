@@ -25,7 +25,7 @@
 Cell* builtin_error_object(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "error-object?");
     if (err) return err;
 
     if (a->cell[0]->type == CELL_ERROR) {
@@ -37,7 +37,7 @@ Cell* builtin_error_object(const Lex* e, const Cell* a)
 Cell* builtin_raise(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "raise");
     if (err) return err;
 
     if (a->cell[0]->type != CELL_STRING) {

@@ -27,17 +27,17 @@
 
 
 /* Convenience macros for readability */
-#define CHECK_ARITY_EXACT(a, n) \
-check_arg_arity((a), (n), -1, -1)
+#define CHECK_ARITY_EXACT(a, n, s) \
+check_arg_arity((a), (n), -1, -1, (s))
 
-#define CHECK_ARITY_MIN(a, n) \
-check_arg_arity((a), -1, (n), -1)
+#define CHECK_ARITY_MIN(a, n, s) \
+check_arg_arity((a), -1, (n), -1, (s))
 
-#define CHECK_ARITY_MAX(a, n) \
-check_arg_arity((a), -1, -1, (n))
+#define CHECK_ARITY_MAX(a, n, s) \
+check_arg_arity((a), -1, -1, (n), (s))
 
-#define CHECK_ARITY_RANGE(a, lo, hi) \
-check_arg_arity((a), -1, (lo), (hi))
+#define CHECK_ARITY_RANGE(a, lo, hi, s) \
+check_arg_arity((a), -1, (lo), (hi), (s))
 
 
 /* For named chars */
@@ -52,7 +52,7 @@ const char* fmt_err(const char *fmt, ...);
 const char* cell_type_name(int t);
 const char* cell_mask_types(int mask);
 Cell* check_arg_types(const Cell* a, int mask, const char* fname);
-Cell* check_arg_arity(const Cell* a, int exact, int min, int max);
+Cell* check_arg_arity(const Cell* a, int exact, int min, int max, const char* fname);
 void numeric_promote(Cell** lhs, Cell** rhs);
 Cell* make_sexpr_len1(const Cell* a);
 Cell* make_sexpr_len2(const Cell* a, const Cell* b);

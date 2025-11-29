@@ -69,7 +69,7 @@ static double rand_double() {
         exit(1);
     }
     /* 53 bits / 2**53 */
-    return (u.i >> 11) * (1.0/RAND_DOUBLE_SCALE);
+    return (double)(u.i >> 11) * (1.0/RAND_DOUBLE_SCALE);
 }
 
 //////// end of helpers
@@ -94,7 +94,7 @@ static Cell* random_randbl(const Lex* e, const Cell* a)
 static Cell* random_uniform(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 2);
+    Cell* err = CHECK_ARITY_EXACT(a, 2, "rand-uniform");
     if (err) return err;
     err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL, "rand-uniform");
     if (err) return err;
@@ -110,7 +110,7 @@ static Cell* random_uniform(const Lex* e, const Cell* a)
 static Cell* random_shuffle(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "shuffle");
     if (err) return err;
     err = check_arg_types(a, CELL_PAIR|CELL_VECTOR|CELL_SEXPR, "shuffle");
     if (err) return err;
@@ -155,9 +155,9 @@ static Cell* random_shuffle(const Lex* e, const Cell* a)
 static Cell* random_choice(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "rand-choice");
     if (err) return err;
-    err = check_arg_types(a, CELL_PAIR|CELL_VECTOR|CELL_SEXPR, "shuffle");
+    err = check_arg_types(a, CELL_PAIR|CELL_VECTOR|CELL_SEXPR, "rand-choice");
     if (err) return err;
 
     Cell* arr;
@@ -179,8 +179,9 @@ static Cell* random_choice(const Lex* e, const Cell* a)
 static Cell* random_choices(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 2);
+    Cell* err = CHECK_ARITY_EXACT(a, 2, "rand-choices");
     if (err) return err;
+    // ReSharper disable once CppVariableCanBeMadeConstexpr
     const int mask = CELL_PAIR|CELL_VECTOR|CELL_SEXPR;
     if (!(a->cell[0]->type & mask)) {
         return make_cell_error("rand-choices: arg1 must be a list or vector", TYPE_ERR);
@@ -203,7 +204,7 @@ static Cell* random_choices(const Lex* e, const Cell* a)
         list = true;
     }
 
-    const int32_t k = a->cell[1]->integer_v;
+    const int32_t k = (int)a->cell[1]->integer_v;
     const int32_t arr_size = arr->count;
     Cell* c_arr[arr_size];
     for (int i = 0; i < arr_size; i++) {

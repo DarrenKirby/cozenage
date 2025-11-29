@@ -41,7 +41,7 @@ extern char **g_argv;
 Cell* builtin_eval(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_MIN(a, 1);
+    Cell* err = CHECK_ARITY_MIN(a, 1, "eval");
     if (err) return err;
     Cell* args;
     /* Convert list to s-expr if we are handed a quote */
@@ -66,7 +66,7 @@ Cell* builtin_eval(const Lex* e, const Cell* a)
 Cell* builtin_apply(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_MIN(a, 2);
+    Cell* err = CHECK_ARITY_MIN(a, 2, "apply");
     if (err) return err;
     if (a->cell[0]->type != CELL_PROC) {
         return make_cell_error(
@@ -109,7 +109,7 @@ Cell* builtin_apply(const Lex* e, const Cell* a)
 Cell* builtin_map(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_MIN(a, 2);
+    Cell* err = CHECK_ARITY_MIN(a, 2, "map");
     if (err) return err;
     if (a->cell[0]->type != CELL_PROC) {
         return make_cell_error(
@@ -187,7 +187,7 @@ Cell* builtin_map(const Lex* e, const Cell* a)
 Cell* builtin_vector_map(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_MIN(a, 2);
+    Cell* err = CHECK_ARITY_MIN(a, 2, "vector-map");
     if (err) return err;
     if (a->cell[0]->type != CELL_PROC) {
         return make_cell_error(
@@ -256,7 +256,7 @@ Cell* builtin_vector_map(const Lex* e, const Cell* a)
 Cell* builtin_string_map(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_MIN(a, 2);
+    Cell* err = CHECK_ARITY_MIN(a, 2, "string-map");
     if (err) return err;
     if (a->cell[0]->type != CELL_PROC) {
         return make_cell_error(
@@ -320,7 +320,7 @@ Cell* builtin_string_foreach(const Lex* e, const Cell* a)
 
 Cell* builtin_load(const Lex* e, const Cell* a)
 {
-    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "load");
     if (err) return err;
     if (a->cell[0]->type != CELL_STRING) {
         return make_cell_error(

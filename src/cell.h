@@ -82,9 +82,10 @@ typedef enum  : uint32_t {
                                    first-class procedures to signal a
                                    tail-call */
     CELL_UNSPEC     = 1 << 20,   /* Unspecified object */
-    /* bigint/float */
+    /* bigint/rat/float */
     CELL_BIGINT     = 1 << 21,   /* Arbitrary size/precision integer */
-    CELL_BIGFLOAT   = 1 << 22,   /* Arbitrary size/precision float */
+    CELL_BIGRAT     = 1 << 22,   /* Arbitrary size/precision rational */
+    CELL_BIGFLOAT   = 1 << 23,   /* Arbitrary size/precision float */
 } Cell_t;
 
 /* Bytevector types. */
@@ -108,7 +109,7 @@ typedef struct Lambda {
 
  /* Ports */
 typedef struct Port {
-    char* path;       /* File path of associated fh. */
+    char* path;       /* File path of associated fh (or string for string port). */
     FILE* fh;         /* The file handle. */
     int port_t;       /* Input or output. */
     uint8_t stream_t; /* Stream type */

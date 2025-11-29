@@ -247,7 +247,7 @@ Cell* builtin_lte_op(const Lex* e, const Cell* a)
 Cell* builtin_eq(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 2);
+    Cell* err = CHECK_ARITY_EXACT(a, 2, "eq?");
     if (err) return err;
 
     const Cell* x = a->cell[0];
@@ -264,7 +264,7 @@ Cell* builtin_eq(const Lex* e, const Cell* a)
  * structural comparison. */
 Cell* builtin_eqv(const Lex* e, const Cell* a)
 {
-    Cell* err = CHECK_ARITY_EXACT(a, 2);
+    Cell* err = CHECK_ARITY_EXACT(a, 2, "eqv?");
     if (err) return err;
 
     const Cell* x = a->cell[0];
@@ -339,7 +339,7 @@ static Cell* val_equal(const Lex* e, Cell* x, Cell* y)
  * Use when: you want to compare data structures by content, not identity.*/
 Cell* builtin_equal(const Lex* e, const Cell* a) {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 2);
+    Cell* err = CHECK_ARITY_EXACT(a, 2, "equal?");
     if (err) return err;
     return val_equal(e, a->cell[0], a->cell[1]);
 }

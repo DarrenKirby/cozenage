@@ -85,7 +85,7 @@ Cell* builtin_string(const Lex* e, const Cell* a)
 Cell* builtin_string_length(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "string-length");
     if (err) return err;
     if (a->cell[0]->type != CELL_STRING) {
         return make_cell_error(
@@ -101,7 +101,7 @@ Cell* builtin_string_eq_pred(const Lex* e, const Cell* a)
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING, "string=?");
     if (err) return err;
-    err = CHECK_ARITY_MIN(a, 1);
+    err = CHECK_ARITY_MIN(a, 1, "string=?");
     if (err) return err;
 
     for (int i = 0; i < a->count - 1; i++) {
@@ -129,7 +129,7 @@ Cell* builtin_string_lt_pred(const Lex* e, const Cell* a)
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING, "string<?");
     if (err) return err;
-    err = CHECK_ARITY_MIN(a, 1);
+    err = CHECK_ARITY_MIN(a, 1, "string<?");
     if (err) return err;
 
     for (int i = 0; i < a->count - 1; i++) {
@@ -152,7 +152,7 @@ Cell* builtin_string_lte_pred(const Lex* e, const Cell* a)
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING, "string<=");
     if (err) return err;
-    err = CHECK_ARITY_MIN(a, 1);
+    err = CHECK_ARITY_MIN(a, 1, "string<=");
     if (err) return err;
 
     for (int i = 0; i < a->count - 1; i++) {
@@ -175,7 +175,7 @@ Cell* builtin_string_gt_pred(const Lex* e, const Cell* a)
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING, "string>?");
     if (err) return err;
-    err = CHECK_ARITY_MIN(a, 1);
+    err = CHECK_ARITY_MIN(a, 1, "string>?");
     if (err) return err;
 
     for (int i = 0; i < a->count - 1; i++) {
@@ -198,7 +198,7 @@ Cell* builtin_string_gte_pred(const Lex* e, const Cell* a)
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING, "string>=?");
     if (err) return err;
-    err = CHECK_ARITY_MIN(a, 1);
+    err = CHECK_ARITY_MIN(a, 1, "string>=?");
     if (err) return err;
 
     for (int i = 0; i < a->count - 1; i++) {
@@ -224,7 +224,7 @@ Cell* builtin_string_append(const Lex* e, const Cell* a)
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING, "string-append");
     if (err) return err;
-    err = CHECK_ARITY_MIN(a, 1);
+    err = CHECK_ARITY_MIN(a, 1, "string-append");
     if (err) return err;
 
     /* (string-append "foo") -> "foo. */
@@ -262,7 +262,7 @@ Cell* builtin_string_append(const Lex* e, const Cell* a)
 Cell* builtin_string_ref(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 2);
+    Cell* err = CHECK_ARITY_EXACT(a, 2, "string-ref");
     if (err) return err;
     if (a->cell[0]->type != CELL_STRING) {
         return make_cell_error(
@@ -312,7 +312,7 @@ Cell* builtin_string_ref(const Lex* e, const Cell* a)
 Cell* builtin_make_string(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_RANGE(a, 1, 2);
+    Cell* err = CHECK_ARITY_RANGE(a, 1, 2, "make-string");
     if (err) return err;
     if (a->cell[0]->type != CELL_INTEGER) {
         return make_cell_error(
@@ -365,7 +365,7 @@ Cell* builtin_make_string(const Lex* e, const Cell* a)
 Cell* builtin_string_list(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_RANGE(a, 1, 3);
+    Cell* err = CHECK_ARITY_RANGE(a, 1, 3, "string->list");
     if (err) return err;
     if (a->cell[0]->type != CELL_STRING) {
         return make_cell_error(
@@ -441,7 +441,7 @@ Cell* builtin_string_list(const Lex* e, const Cell* a)
 Cell* builtin_list_string(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "list->string");
     if (err) return err;
 
     const Cell* l = a->cell[0];
@@ -525,7 +525,7 @@ Cell* builtin_list_string(const Lex* e, const Cell* a)
 Cell* builtin_substring(const Lex* e, const Cell* a)
 {
     /* Just check that we have 3 args and kick it to string-copy. */
-    Cell* err = CHECK_ARITY_EXACT(a, 3);
+    Cell* err = CHECK_ARITY_EXACT(a, 3, "substring");
     if (err) return err;
     return builtin_string_copy(e, a);
 }
@@ -548,7 +548,7 @@ Cell* builtin_string_set_bang(const Lex* e, const Cell* a)
 Cell* builtin_string_copy(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_RANGE(a, 1, 3);
+    Cell* err = CHECK_ARITY_RANGE(a, 1, 3, "string_copy");
     if (err) return err;
     if (a->cell[0]->type != CELL_STRING) {
         return make_cell_error(
@@ -641,7 +641,7 @@ Cell* builtin_string_copy(const Lex* e, const Cell* a)
 Cell* builtin_string_copy_bang(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_RANGE(a, 3, 5);
+    Cell* err = CHECK_ARITY_RANGE(a, 3, 5, "string_copy!");
     if (err) return err;
 
     /* Validate arg Types. */
@@ -776,7 +776,7 @@ Cell* builtin_string_fill(const Lex* e, const Cell* a)
 Cell* builtin_string_number(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_RANGE(a, 1, 2);
+    Cell* err = CHECK_ARITY_RANGE(a, 1, 2, "string->number");
     if (err) return err;
 
     if (a->cell[0]->type != CELL_STRING) {
@@ -840,7 +840,7 @@ Cell* builtin_string_number(const Lex* e, const Cell* a)
 Cell* builtin_number_string(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_RANGE(a, 1, 2);
+    Cell* err = CHECK_ARITY_RANGE(a, 1, 2, "number->string");
     if (err) return err;
     // ReSharper disable once CppVariableCanBeMadeConstexpr
     const int mask = CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX;
@@ -864,7 +864,7 @@ Cell* builtin_string_downcase(const Lex* e, const Cell* a)
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING, "string-downcase");
     if (err) return err;
-    err = CHECK_ARITY_EXACT(a, 1);
+    err = CHECK_ARITY_EXACT(a, 1, "string-downcase");
     if (err) return err;
 
     UErrorCode status = U_ZERO_ERROR;
@@ -901,7 +901,7 @@ Cell* builtin_string_upcase(const Lex* e, const Cell* a)
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING, "string-upcase");
     if (err) return err;
-    err = CHECK_ARITY_EXACT(a, 1);
+    err = CHECK_ARITY_EXACT(a, 1, "string-upcase");
     if (err) return err;
 
     UErrorCode status = U_ZERO_ERROR;
@@ -938,7 +938,7 @@ Cell* builtin_string_foldcase(const Lex* e, const Cell* a)
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING, "string-foldcase");
     if (err) return err;
-    err = CHECK_ARITY_EXACT(a, 1);
+    err = CHECK_ARITY_EXACT(a, 1, "string-foldcase");
     if (err) return err;
 
     UErrorCode status = U_ZERO_ERROR;
@@ -976,7 +976,7 @@ Cell* builtin_string_equal_ci(const Lex* e, const Cell* a)
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING, "string-ci=?");
     if (err) return err;
-    err = CHECK_ARITY_MIN(a, 1);
+    err = CHECK_ARITY_MIN(a, 1, "string-ci=?");
     if (err) return err;
 
     for (int i = 0; i < a->count - 1; i++) {
@@ -1006,7 +1006,7 @@ Cell* builtin_string_lt_ci(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING, "string-ci<?");
     if (err) return err;
-    err = CHECK_ARITY_MIN(a, 1);
+    err = CHECK_ARITY_MIN(a, 1, "string-ci<?");
     if (err) return err;
 
     for (int i = 0; i < a->count - 1; i++) {
@@ -1031,7 +1031,7 @@ Cell* builtin_string_lte_ci(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING, "string-ci<=?");
     if (err) return err;
-    err = CHECK_ARITY_MIN(a, 1);
+    err = CHECK_ARITY_MIN(a, 1, "string-ci<=?");
     if (err) return err;
 
     for (int i = 0; i < a->count - 1; i++) {
@@ -1056,7 +1056,7 @@ Cell* builtin_string_gt_ci(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING, "string-ci>?");
     if (err) return err;
-    err = CHECK_ARITY_MIN(a, 1);
+    err = CHECK_ARITY_MIN(a, 1, "string-ci>?");
     if (err) return err;
 
     for (int i = 0; i < a->count - 1; i++) {
@@ -1081,7 +1081,7 @@ Cell* builtin_string_gte_ci(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING, "string-ci>=?");
     if (err) return err;
-    err = CHECK_ARITY_MIN(a, 1);
+    err = CHECK_ARITY_MIN(a, 1, "string-ci>=?");
     if (err) return err;
 
     for (int i = 0; i < a->count - 1; i++) {

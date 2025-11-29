@@ -89,7 +89,7 @@ static char* format_twos_complement(const long long val)
 static Cell* bits_right_shift(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 2);
+    Cell* err = CHECK_ARITY_EXACT(a, 2, ">>");
     if (err) return err;
     err = check_arg_types(a, CELL_INTEGER|CELL_SYMBOL, ">>");
     if (err) return err;
@@ -114,7 +114,7 @@ static Cell* bits_right_shift(const Lex* e, const Cell* a)
 static Cell* bits_left_shift(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 2);
+    Cell* err = CHECK_ARITY_EXACT(a, 2, "<<");
     if (err) return err;
     err = check_arg_types(a, CELL_INTEGER|CELL_SYMBOL, "<<");
     if (err) return err;
@@ -139,7 +139,7 @@ static Cell* bits_left_shift(const Lex* e, const Cell* a)
 static Cell* bits_bitwise_and(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 2);
+    Cell* err = CHECK_ARITY_EXACT(a, 2, "&");
     if (err) return err;
     err = check_arg_types(a, CELL_INTEGER|CELL_SYMBOL, "&");
     if (err) return err;
@@ -169,7 +169,7 @@ static Cell* bits_bitwise_and(const Lex* e, const Cell* a)
 static Cell* bits_bitwise_or(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 2);
+    Cell* err = CHECK_ARITY_EXACT(a, 2, "|");
     if (err) return err;
     err = check_arg_types(a, CELL_INTEGER|CELL_SYMBOL, "|");
     if (err) return err;
@@ -199,7 +199,7 @@ static Cell* bits_bitwise_or(const Lex* e, const Cell* a)
 static Cell* bits_bitwise_xor(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 2);
+    Cell* err = CHECK_ARITY_EXACT(a, 2, "^");
     if (err) return err;
     err = check_arg_types(a, CELL_INTEGER|CELL_SYMBOL, "^");
     if (err) return err;
@@ -229,7 +229,7 @@ static Cell* bits_bitwise_xor(const Lex* e, const Cell* a)
 static Cell* bits_bitwise_not(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "~");
     if (err) return err;
     err = check_arg_types(a, CELL_INTEGER|CELL_SYMBOL, "~");
     if (err) return err;
@@ -253,7 +253,7 @@ static Cell* bits_bitwise_not(const Lex* e, const Cell* a)
 static Cell* bits_int_to_bitstring(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "int->bitstring");
     if (err) return err;
     err = check_arg_types(a, CELL_INTEGER, "int->bitstring");
     if (err) return err;
@@ -270,7 +270,7 @@ static Cell* bits_int_to_bitstring(const Lex* e, const Cell* a)
 static Cell* bits_bitstring_to_int(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "bitstring->int");
     if (err) return err;
     err = check_arg_types(a, CELL_SYMBOL, "bitstring->int");
     if (err) return err;

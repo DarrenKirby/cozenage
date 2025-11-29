@@ -111,7 +111,7 @@ Cell* builtin_symbol_equal_pred(const Lex* e, const Cell* a)
     (void)e;
     Cell* err = check_arg_types(a, CELL_SYMBOL, "symbol=?");
     if (err) return err;
-    err = CHECK_ARITY_MIN(a, 1);
+    err = CHECK_ARITY_MIN(a, 1, "symbol=?");
     if (err) return err;
 
     for (int i = 0; i < a->count - 1; i++) {
@@ -129,7 +129,7 @@ Cell* builtin_symbol_equal_pred(const Lex* e, const Cell* a)
 Cell* builtin_string_to_symbol(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "string->symbol");
     if (err) return err;
     if (a->cell[0]->type != CELL_STRING) {
         return make_cell_error(
@@ -142,7 +142,7 @@ Cell* builtin_string_to_symbol(const Lex* e, const Cell* a)
 Cell* builtin_symbol_to_string(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "symbol->string");
     if (err) return err;
     if (a->cell[0]->type != CELL_SYMBOL) {
         return make_cell_error(
@@ -157,7 +157,7 @@ Cell* builtin_symbol_to_string(const Lex* e, const Cell* a)
 Cell* builtin_features(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 0);
+    Cell* err = CHECK_ARITY_EXACT(a, 0, "features");
     if (err) return err;
 
     Cell* result_l = make_cell_sexpr();

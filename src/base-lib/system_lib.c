@@ -31,7 +31,7 @@ extern char **environ;
 static Cell* system_get_pid(const Lex* e, const Cell* a)
 {
     (void) e; (void)a;
-    Cell* err = CHECK_ARITY_EXACT(a, 0);
+    Cell* err = CHECK_ARITY_EXACT(a, 0, "get-pid");
     if (err) { return err; }
 
     return make_cell_integer(getpid());
@@ -40,7 +40,7 @@ static Cell* system_get_pid(const Lex* e, const Cell* a)
 static Cell* system_get_ppid(const Lex* e, const Cell* a)
 {
     (void) e; (void)a;
-    Cell* err = CHECK_ARITY_EXACT(a, 0);
+    Cell* err = CHECK_ARITY_EXACT(a, 0, "get-ppid");
     if (err) { return err; }
 
     return make_cell_integer(getppid());
@@ -51,7 +51,7 @@ static Cell* system_get_env_var(const Lex* e, const Cell* a)
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING, "get-environment-variable");
     if (err) { return err; }
-    if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
+    if ((err = CHECK_ARITY_EXACT(a, 1, "get-environment-variable"))) { return err; }
 
     const char *env = getenv(a->cell[0]->str);
     if (env == NULL) {
@@ -64,7 +64,7 @@ static Cell* system_get_env_var(const Lex* e, const Cell* a)
 static Cell* system_get_env_vars(const Lex* e, const Cell* a)
 {
     (void)e; (void)a;
-    Cell* err = CHECK_ARITY_EXACT(a, 0);
+    Cell* err = CHECK_ARITY_EXACT(a, 0, "get-environment-variables");
     if (err) { return err; }
 
     /* start with nil */

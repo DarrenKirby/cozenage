@@ -26,7 +26,6 @@
 #include <string.h>
 #include <errno.h>
 #include <wchar.h>
-#include <limits.h>
 #include <gc/gc.h>
 #include <sys/select.h>
 
@@ -56,7 +55,7 @@ Cell* builtin_current_error_port(const Lex* e, const Cell* a)
 Cell* builtin_input_port_pred(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "input-port?");
     if (err) return err;
     if (a->cell[0]->type != CELL_PORT || a->cell[0]->port->port_t != INPUT_PORT) {
         return False_Obj;
@@ -67,7 +66,7 @@ Cell* builtin_input_port_pred(const Lex* e, const Cell* a)
 Cell* builtin_output_port_pred(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "output-port?");
     if (err) return err;
     if (a->cell[0]->type != CELL_PORT || a->cell[0]->port->port_t != OUTPUT_PORT) {
         return False_Obj;
@@ -78,7 +77,7 @@ Cell* builtin_output_port_pred(const Lex* e, const Cell* a)
 Cell* builtin_input_port_open(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "input-port-open?");
     if (err) return err;
     if (a->cell[0]->type == CELL_PORT ||
         a->cell[0]->port->port_t != INPUT_PORT ||
@@ -91,7 +90,7 @@ Cell* builtin_input_port_open(const Lex* e, const Cell* a)
 Cell* builtin_output_port_open(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "output-port-open?");
     if (err) return err;
     if (a->cell[0]->type == CELL_PORT ||
         a->cell[0]->port->port_t != OUTPUT_PORT ||
@@ -104,7 +103,7 @@ Cell* builtin_output_port_open(const Lex* e, const Cell* a)
 Cell* builtin_close_port(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "close-port");
     if (err) return err;
     if (a->cell[0]->type != CELL_PORT) {
         return make_cell_error(
@@ -123,7 +122,7 @@ Cell* builtin_close_port(const Lex* e, const Cell* a)
 Cell* builtin_read_line(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_RANGE(a, 0, 1);
+    Cell* err = CHECK_ARITY_RANGE(a, 0, 1, "read-line");
     if (err) return err;
     err = check_arg_types(a, CELL_PORT, "read-line");
     if (err) return err;
@@ -154,7 +153,7 @@ Cell* builtin_read_line(const Lex* e, const Cell* a)
 
 Cell* builtin_read_string(const Lex* e, const Cell* a) {
     (void)e;
-    Cell* err = CHECK_ARITY_RANGE(a, 1, 2);
+    Cell* err = CHECK_ARITY_RANGE(a, 1, 2, "read-string");
     if (err) return err;
     if (a->cell[0]->type != CELL_INTEGER) {
         return make_cell_error(
@@ -221,7 +220,7 @@ Cell* builtin_read_string(const Lex* e, const Cell* a) {
 Cell* builtin_read_char(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_RANGE(a, 0, 1);
+    Cell* err = CHECK_ARITY_RANGE(a, 0, 1, "read-char");
     if (err) return err;
     err = check_arg_types(a, CELL_PORT,"read-char");
     if (err) return err;
@@ -255,7 +254,7 @@ Cell* builtin_read_char(const Lex* e, const Cell* a)
 Cell* builtin_peek_char(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_RANGE(a, 0, 1);
+    Cell* err = CHECK_ARITY_RANGE(a, 0, 1, "peek-char");
     if (err) return err;
     err = check_arg_types(a, CELL_PORT, "peek-char");
     if (err) return err;
@@ -295,7 +294,7 @@ Cell* builtin_peek_char(const Lex* e, const Cell* a)
 
 Cell* builtin_write_char(const Lex* e, const Cell* a)
 {
-    Cell* err = CHECK_ARITY_RANGE(a, 1, 2);
+    Cell* err = CHECK_ARITY_RANGE(a, 1, 2, "write-char");
     if (err) return err;
     if (a->cell[0]->type != CELL_CHAR) {
         return make_cell_error(
@@ -326,7 +325,7 @@ Cell* builtin_write_char(const Lex* e, const Cell* a)
 
 Cell* builtin_write_string(const Lex* e, const Cell* a)
 {
-    Cell* err = CHECK_ARITY_RANGE(a, 1, 4);
+    Cell* err = CHECK_ARITY_RANGE(a, 1, 4, "write-string");
     if (err) return err;
     if (a->cell[0]->type != CELL_STRING) {
         return make_cell_error("arg1 must be a string", TYPE_ERR);
@@ -378,7 +377,7 @@ Cell* builtin_write_string(const Lex* e, const Cell* a)
 
 Cell* builtin_write_u8(const Lex* e, const Cell* a)
 {
-    Cell* err = CHECK_ARITY_RANGE(a, 1, 2);
+    Cell* err = CHECK_ARITY_RANGE(a, 1, 2, "write-u8");
     if (err) return err;
     if (a->cell[0]->type != CELL_INTEGER && (a->cell[0]->integer_v > 256 || a->cell[0]->integer_v < 0)) {
         return make_cell_error("arg1 must be an unsigned byte: 0 >= n <= 255", TYPE_ERR);
@@ -406,7 +405,7 @@ Cell* builtin_write_u8(const Lex* e, const Cell* a)
 Cell* builtin_write_bytevector(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_RANGE(a, 1, 4);
+    Cell* err = CHECK_ARITY_RANGE(a, 1, 4, "write-bytevector");
     if (err) return err;
     if (a->cell[0]->type != CELL_BYTEVECTOR) {
         return make_cell_error("arg1 must be a bytevector", TYPE_ERR);
@@ -458,7 +457,7 @@ Cell* builtin_write_bytevector(const Lex* e, const Cell* a)
 
 Cell* builtin_newline(const Lex* e, const Cell* a)
 {
-    Cell* err = CHECK_ARITY_RANGE(a, 0, 1);
+    Cell* err = CHECK_ARITY_RANGE(a, 0, 1, "newline");
     if (err) return err;
 
     Cell* port;
@@ -477,7 +476,7 @@ Cell* builtin_newline(const Lex* e, const Cell* a)
 Cell* builtin_eof(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 0);
+    Cell* err = CHECK_ARITY_EXACT(a, 0, "eof");
     if (err) return err;
     return EOF_Obj;
 }
@@ -486,7 +485,7 @@ Cell* builtin_eof(const Lex* e, const Cell* a)
 Cell* builtin_read_error(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "read-error?");
     if (err) return err;
 
     const Cell* obj = a->cell[0];
@@ -505,7 +504,7 @@ Cell* builtin_read_error(const Lex* e, const Cell* a)
 Cell* builtin_file_error(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "file-error?");
     if (err) return err;
 
     const Cell* obj = a->cell[0];
@@ -524,7 +523,7 @@ Cell* builtin_file_error(const Lex* e, const Cell* a)
 (flush-output-port port ) */
 Cell* builtin_flush_output_port(const Lex* e, const Cell* a)
 {
-    Cell* err = CHECK_ARITY_RANGE(a, 0, 1);
+    Cell* err = CHECK_ARITY_RANGE(a, 0, 1, "flush-output-port");
     if (err) return err;
 
     Cell* port;
@@ -579,7 +578,7 @@ static int is_char_ready(FILE *fp) {
 Cell* builtin_char_ready(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_RANGE(a, 0, 1);
+    Cell* err = CHECK_ARITY_RANGE(a, 0, 1, "char-ready?");
     if (err) return err;
 
     Cell* port;
@@ -604,7 +603,7 @@ Cell* builtin_char_ready(const Lex* e, const Cell* a)
 Cell* builtin_u8_ready(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_RANGE(a, 0, 1);
+    Cell* err = CHECK_ARITY_RANGE(a, 0, 1, "u8-ready?");
     if (err) return err;
 
     Cell* port;
@@ -627,7 +626,7 @@ Cell* builtin_u8_ready(const Lex* e, const Cell* a)
 
 Cell* builtin_display(const Lex* e, const Cell* a)
 {
-    Cell* err = CHECK_ARITY_RANGE(a, 1, 2);
+    Cell* err = CHECK_ARITY_RANGE(a, 1, 2, "display");
     if (err) return err;
 
     Cell* port;
@@ -647,7 +646,7 @@ Cell* builtin_display(const Lex* e, const Cell* a)
 /* TODO: does not handle circular objects/datum labels */
 Cell* builtin_write(const Lex* e, const Cell* a)
 {
-    Cell* err = CHECK_ARITY_RANGE(a, 1, 2);
+    Cell* err = CHECK_ARITY_RANGE(a, 1, 2, "write");
     if (err) return err;
 
     Cell* port;
@@ -670,7 +669,7 @@ Cell* builtin_open_input_file(const Lex* e, const Cell* a)
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING, "open-input-file");
     if (err) { return err; }
-    err = CHECK_ARITY_EXACT(a, 1);
+    err = CHECK_ARITY_EXACT(a, 1, "open-input-file");
     if (err) { return err; }
 
     const char* filename = a->cell[0]->str;
@@ -694,7 +693,7 @@ Cell* builtin_open_output_file(const Lex* e, const Cell* a)
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING,"open-output-file");
     if (err) { return err; }
-    err = CHECK_ARITY_RANGE(a, 1, 2);
+    err = CHECK_ARITY_RANGE(a, 1, 2, "open-output-file");
     if (err) { return err; }
 
     const char *mode = "w";

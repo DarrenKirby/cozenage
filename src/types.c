@@ -129,23 +129,23 @@ Cell* check_arg_types(const Cell* a, const int mask, const char* fname)
     return nullptr; /* all good. */
 }
 
-Cell* check_arg_arity(const Cell* a, const int exact, const int min, const int max)
+Cell* check_arg_arity(const Cell* a, const int exact, const int min, const int max, const char* fname)
 {
     const int argc = a->count;
 
     if (exact >= 0 && argc != exact) {
         return make_cell_error(
             fmt_err(
-                "expected exactly %d arg%s, got %d",
+                "%s: expected exactly %d arg%s, got %d", fname,
                 exact, exact == 1 ? "" : "s", argc), ARITY_ERR);
     }
     if (min >= 0 && argc < min) {
         return make_cell_error(
-            fmt_err("expected at least %d arg%s, got %d",
+            fmt_err("%s: expected at least %d arg%s, got %d", fname,
                  min, min == 1 ? "" : "s", argc), ARITY_ERR);
     }
     if (max >= 0 && argc > max) {
-        return make_cell_error(fmt_err("expected at most %d arg%s, got %d",
+        return make_cell_error(fmt_err("%s: expected at most %d arg%s, got %d", fname,
                  max, max == 1 ? "" : "s", argc), ARITY_ERR);
     }
     return nullptr; /* all good */

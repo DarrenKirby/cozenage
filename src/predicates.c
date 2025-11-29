@@ -31,7 +31,7 @@
 Cell* builtin_number_pred(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "number?");
     if (err) return err;
 
     // ReSharper disable once CppVariableCanBeMadeConstexpr
@@ -47,7 +47,7 @@ Cell* builtin_number_pred(const Lex* e, const Cell* a)
 Cell* builtin_boolean_pred(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "boolean?");
     if (err) return err;
     return make_cell_boolean(a->cell[0]->type == CELL_BOOLEAN);
 }
@@ -57,7 +57,7 @@ Cell* builtin_boolean_pred(const Lex* e, const Cell* a)
 Cell* builtin_null_pred(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "null?");
     if (err) return err;
     return make_cell_boolean(a->cell[0]->type == CELL_NIL);
 }
@@ -67,7 +67,7 @@ Cell* builtin_null_pred(const Lex* e, const Cell* a)
 Cell *builtin_pair_pred(const Lex *e, const Cell *a)
 {
     (void) e;
-    Cell *err = CHECK_ARITY_EXACT(a, 1);
+    Cell *err = CHECK_ARITY_EXACT(a, 1, "pair?");
     if (err) return err;
     return make_cell_boolean(a->cell[0]->type == CELL_PAIR);
 }
@@ -78,7 +78,7 @@ Cell *builtin_pair_pred(const Lex *e, const Cell *a)
 Cell* builtin_list_pred(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "list?");
     if (err) return err;
     /* '() is a list */
     if (a->cell[0]->type == CELL_NIL) {
@@ -104,7 +104,7 @@ Cell* builtin_list_pred(const Lex* e, const Cell* a)
 Cell* builtin_proc_pred(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "procedure?");
     if (err) return err;
     return make_cell_boolean(a->cell[0]->type == CELL_PROC);
 }
@@ -113,7 +113,7 @@ Cell* builtin_proc_pred(const Lex* e, const Cell* a)
 Cell* builtin_sym_pred(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "symbol?");
     if (err) return err;
     return make_cell_boolean(a->cell[0]->type == CELL_SYMBOL);
 }
@@ -122,7 +122,7 @@ Cell* builtin_sym_pred(const Lex* e, const Cell* a)
 Cell* builtin_string_pred(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "string?");
     if (err) return err;
     return make_cell_boolean(a->cell[0]->type == CELL_STRING);
 }
@@ -131,7 +131,7 @@ Cell* builtin_string_pred(const Lex* e, const Cell* a)
 Cell* builtin_char_pred(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "char?");
     if (err) return err;
     return make_cell_boolean(a->cell[0]->type == CELL_CHAR);
 }
@@ -140,7 +140,7 @@ Cell* builtin_char_pred(const Lex* e, const Cell* a)
 Cell* builtin_vector_pred(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "vector?");
     if (err) return err;
     return make_cell_boolean(a->cell[0]->type == CELL_VECTOR);
 }
@@ -150,7 +150,7 @@ Cell* builtin_vector_pred(const Lex* e, const Cell* a)
 Cell* builtin_bytevector_pred(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "bytevector?");
     if (err) return err;
     return make_cell_boolean(a->cell[0]->type == CELL_BYTEVECTOR);
 }
@@ -159,7 +159,7 @@ Cell* builtin_bytevector_pred(const Lex* e, const Cell* a)
 Cell* builtin_port_pred(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "port?");
     if (err) return err;
     return make_cell_boolean(a->cell[0]->type == CELL_PORT);
 }
@@ -168,7 +168,7 @@ Cell* builtin_port_pred(const Lex* e, const Cell* a)
 Cell* builtin_eof_pred(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "eof-object?");
     if (err) return err;
     return make_cell_boolean(a->cell[0]->type == CELL_EOF);
 }
@@ -185,7 +185,7 @@ Cell* builtin_exact_pred(const Lex* e, const Cell* a)
         CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX|CELL_BIGINT,
         "exact?");
     if (err) { return err; }
-    if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
+    if ((err = CHECK_ARITY_EXACT(a, 1, "exact?"))) { return err; }
     const Cell* z = a->cell[0];
     if (z->type == CELL_COMPLEX) {
         return make_cell_boolean(z->real->exact & z->imag->exact);
@@ -201,7 +201,7 @@ Cell* builtin_inexact_pred(const Lex* e, const Cell* a)
         CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX|CELL_BIGINT,
         "inexact?");
     if (err) { return err; }
-    if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
+    if ((err = CHECK_ARITY_EXACT(a, 1, "inexact?"))) { return err; }
 
     if (a->cell[0]->type == CELL_COMPLEX) {
         return a->cell[0]->real->exact && a->cell[0]->imag->exact ?
@@ -218,7 +218,7 @@ Cell* builtin_inexact_pred(const Lex* e, const Cell* a)
 Cell* builtin_complex(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "complex?");
     if (err) return err;
 
     /* All numbers are complex numbers. */
@@ -234,7 +234,7 @@ Cell* builtin_complex(const Lex* e, const Cell* a)
 Cell* builtin_real(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "real?");
     if (err) return err;
 
     const Cell* arg = a->cell[0];
@@ -256,7 +256,7 @@ Cell* builtin_real(const Lex* e, const Cell* a)
 Cell* builtin_rational(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "rational?");
     if (err) return err;
 
     /* Non-numbers are not rational */
@@ -290,7 +290,7 @@ Cell* builtin_rational(const Lex* e, const Cell* a)
 Cell* builtin_integer(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "integer?");
     if (err) return err;
     return make_cell_boolean(cell_is_integer(a->cell[0]));
 }
@@ -299,7 +299,7 @@ Cell* builtin_integer(const Lex* e, const Cell* a)
 Cell* builtin_exact_integer(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "exact-integer?");
     if (err) return err;
 
     const Cell* arg = a->cell[0];
@@ -310,7 +310,7 @@ Cell* builtin_exact_integer(const Lex* e, const Cell* a)
 Cell* builtin_bigint(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "bigint?");
     if (err) return err;
 
     if (a->cell[0]->type == CELL_BIGINT) {
@@ -319,10 +319,22 @@ Cell* builtin_bigint(const Lex* e, const Cell* a)
     return False_Obj;
 }
 
+Cell* builtin_bigrat(const Lex* e, const Cell* a)
+{
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "bigrat?");
+    if (err) return err;
+
+    if (a->cell[0]->type == CELL_BIGRAT) {
+        return True_Obj;
+    }
+    return False_Obj;
+}
+
 Cell* builtin_bigfloat(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "bigfloat?");
     if (err) return err;
 
     if (a->cell[0]->type == CELL_BIGFLOAT) {
@@ -343,7 +355,7 @@ Cell* builtin_zero(const Lex* e, const Cell* a)
         CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX|CELL_BIGINT,
         "zero?");
     if (err) { return err; }
-    if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
+    if ((err = CHECK_ARITY_EXACT(a, 1, "zero?"))) { return err; }
 
     const Cell* arg = a->cell[0];
     bool is_zero;
@@ -364,7 +376,7 @@ Cell* builtin_positive(const Lex* e, const Cell* a)
         CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX|CELL_BIGINT,
         "positive?");
     if (err) { return err; }
-    if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
+    if ((err = CHECK_ARITY_EXACT(a, 1, "positive?"))) { return err; }
 
     const Cell* val = a->cell[0];
     if (val->type == CELL_COMPLEX) {
@@ -386,7 +398,7 @@ Cell* builtin_negative(const Lex* e, const Cell* a)
         CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX|CELL_BIGINT,
         "negative?");
     if (err) { return err; }
-    if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
+    if ((err = CHECK_ARITY_EXACT(a, 1, "negative?"))) { return err; }
 
     const Cell* val = a->cell[0];
     if (val->type == CELL_COMPLEX) {
@@ -408,7 +420,7 @@ Cell* builtin_odd(const Lex* e, const Cell* a)
         CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX|CELL_BIGINT,
         "odd?");
     if (err) { return err; }
-    if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
+    if ((err = CHECK_ARITY_EXACT(a, 1, "odd?"))) { return err; }
 
     if (!cell_is_integer(a->cell[0])) {
         return make_cell_error(
@@ -427,7 +439,7 @@ Cell* builtin_even(const Lex* e, const Cell* a)
         CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX|CELL_BIGINT,
         "even?");
     if (err) { return err; }
-    if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
+    if ((err = CHECK_ARITY_EXACT(a, 1, "even?"))) { return err; }
 
     if (!cell_is_integer(a->cell[0])) {
         return make_cell_error(

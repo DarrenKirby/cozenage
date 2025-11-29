@@ -238,20 +238,25 @@ static void cell_to_string_worker(const Cell* v,
             }
             break;
 
-        case CELL_PORT:
-        /* FIXME: no binary/text distinction */
+        case CELL_PORT: {
+            char *stream_type = "\0";
+            if (v->port->stream_t == FILE_PORT) { stream_type = "file-port"; }
+            if (v->port->stream_t == STRING_PORT) { stream_type = "string-port"; }
+            if (v->port->stream_t == BV_PORT) { stream_type = "bytevector-port"; }
+
             if (mode == MODE_REPL) {
                 sb_append_fmt(sb, "<%s%s %s-port '%s%s%s'>", v->is_open ? "open:" : "closed:",
-                    v->port->stream_t == FILE_PORT ? "text" : "binary",
+                    stream_type,
                     v->port->port_t == INPUT_PORT ? "input" : "output",
                     ANSI_BLUE_B, v->port->path, ANSI_RESET);
             } else {
                 sb_append_fmt(sb, "#<%s%s %s-port '%s'>", v->is_open ? "open:" : "closed:",
-                    v->port->stream_t == FILE_PORT ? "text" : "binary",
+                    stream_type,
                     v->port->port_t == INPUT_PORT ? "input" : "output",
                     v->port->path);
             }
             break;
+        }
 
         case CELL_BIGINT: {
             char ibuf[1024];

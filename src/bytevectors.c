@@ -103,7 +103,7 @@ static char* get_type_string(const bv_t type)
 Cell* builtin_bytevector(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_MIN(a, 1);
+    Cell* err = CHECK_ARITY_MIN(a, 1, "bytevector");
     if (err) return err;
 
     /* See if there's a type argument. */
@@ -142,7 +142,7 @@ Cell* builtin_bytevector(const Lex* e, const Cell* a)
 Cell* builtin_bytevector_length(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "bytevector-length");
     if (err) return err;
     err = check_arg_types(a, CELL_BYTEVECTOR, "bytevector-length");
     if (err) return err;
@@ -156,7 +156,7 @@ Cell* builtin_bytevector_length(const Lex* e, const Cell* a)
 Cell* builtin_bytevector_ref(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 2);
+    Cell* err = CHECK_ARITY_EXACT(a, 2, "bytevector-ref");
     if (err) return err;
     if (a->cell[0]->type != CELL_BYTEVECTOR) {
         return make_cell_error(
@@ -186,7 +186,7 @@ Cell* builtin_bytevector_ref(const Lex* e, const Cell* a)
 Cell* builtin_bytevector_set_bang(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 3);
+    Cell* err = CHECK_ARITY_EXACT(a, 3, "bytevector-set!");
     if (err) return err;
     if (a->cell[0]->type != CELL_BYTEVECTOR) {
         return make_cell_error(
@@ -230,7 +230,7 @@ Cell* builtin_bytevector_set_bang(const Lex* e, const Cell* a)
 Cell* builtin_make_bytevector(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_RANGE(a, 1, 3);
+    Cell* err = CHECK_ARITY_RANGE(a, 1, 3, "make-bytevector");
     if (err) return err;
     if (a->cell[0]->type != CELL_INTEGER) {
         return make_cell_error(
@@ -287,7 +287,7 @@ Cell* builtin_make_bytevector(const Lex* e, const Cell* a)
 Cell* builtin_bytevector_copy(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_RANGE(a, 1, 3);
+    Cell* err = CHECK_ARITY_RANGE(a, 1, 3, "bytevector-copy");
     if (err) return err;
     if (a->cell[0]->type != CELL_BYTEVECTOR) {
         return make_cell_error(
@@ -325,7 +325,7 @@ Cell* builtin_bytevector_copy(const Lex* e, const Cell* a)
 Cell* builtin_bytevector_copy_bang(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_RANGE(a, 3, 5);
+    Cell* err = CHECK_ARITY_RANGE(a, 3, 5, "bytevector-copy!");
     if (err) return err;
 
     /* Validate arg Types. */
@@ -440,11 +440,11 @@ Cell* builtin_utf8_string(const Lex* e, const Cell* a)
 {
     (void)e;
     const Cell* bv = a->cell[0];
-    Cell* err = CHECK_ARITY_RANGE(a, 1, 3);
+    Cell* err = CHECK_ARITY_RANGE(a, 1, 3, "utf8->string");
     if (err) return err;
     if (bv->type != CELL_BYTEVECTOR || bv->bv->type != BV_U8) {
         return make_cell_error(
-            "string->utf8: arg 1 must be a u8 bytevector",
+            "utf8->string: arg 1 must be a u8 bytevector",
             TYPE_ERR);
     }
 
@@ -453,12 +453,12 @@ Cell* builtin_utf8_string(const Lex* e, const Cell* a)
     if (a->count > 1) {
         if (a->cell[1]->type != CELL_INTEGER) {
             return make_cell_error(
-                "string->utf8: arg 2 must be an exact positive integer",
+                "utf8->string: arg 2 must be an exact positive integer",
                 TYPE_ERR);
         }
         if (a->cell[1]->integer_v < 0) {
             return make_cell_error(
-                "string->utf8: arg 2 must be non-negative",
+                "utf8->string: arg 2 must be non-negative",
                 VALUE_ERR);
         }
         start = (int)a->cell[1]->integer_v;
@@ -466,12 +466,12 @@ Cell* builtin_utf8_string(const Lex* e, const Cell* a)
     if (a->count == 3) {
         if (a->cell[2]->type != CELL_INTEGER) {
             return make_cell_error(
-                "string->utf8: arg 3 must be an exact positive integer",
+                "utf8->string: arg 3 must be an exact positive integer",
                 TYPE_ERR);
         }
         if (a->cell[2]->integer_v < 0) {
             return make_cell_error(
-                "string->utf8: arg 3 must be non-negative",
+                "utf8->string: arg 3 must be non-negative",
                 VALUE_ERR);
         }
         end = (int)a->cell[2]->integer_v;
@@ -492,7 +492,7 @@ Cell* builtin_utf8_string(const Lex* e, const Cell* a)
 Cell* builtin_string_utf8(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_RANGE(a, 1, 3);
+    Cell* err = CHECK_ARITY_RANGE(a, 1, 3, "string->utf8");
     if (err) return err;
     if (a->cell[0]->type != CELL_STRING) {
         return make_cell_error(

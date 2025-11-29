@@ -90,7 +90,7 @@ static Cell* builtin_jiffies_per_second(const Lex* e, const Cell* a)
 static Cell* builtin_current_datetime_utc(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_RANGE(a, 0, 1);
+    Cell* err = CHECK_ARITY_RANGE(a, 0, 1, "current-datetime-utc");
     if (err) return err;
 
     char* fmt_str;
@@ -121,7 +121,7 @@ static Cell* builtin_current_datetime_utc(const Lex* e, const Cell* a)
 static Cell* builtin_current_datetime_local(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_RANGE(a, 0, 1);
+    Cell* err = CHECK_ARITY_RANGE(a, 0, 1, "current-datetime-local");
     if (err) return err;
 
     char* fmt_str;

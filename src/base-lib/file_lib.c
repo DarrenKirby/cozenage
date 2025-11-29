@@ -75,7 +75,7 @@ static Cell* reg_file_pred(const Lex* e, const Cell* a)
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING, "reg-file?");
     if (err) { return err; }
-    if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
+    if ((err = CHECK_ARITY_EXACT(a, 1, "reg-file?"))) { return err; }
 
     const char* filename = a->cell[0]->str;
     const int8_t ft = f_get_type(filename);
@@ -96,7 +96,7 @@ static Cell* directory_pred(const Lex* e, const Cell* a)
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING, "directory?");
     if (err) { return err; }
-    if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
+    if ((err = CHECK_ARITY_EXACT(a, 1, "directory?"))) { return err; }
 
     const char* filename = a->cell[0]->str;
     const int8_t ft = f_get_type(filename);
@@ -117,7 +117,7 @@ static Cell* symlink_pred(const Lex* e, const Cell* a)
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING, "symlink?");
     if (err) { return err; }
-    if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
+    if ((err = CHECK_ARITY_EXACT(a, 1, "symlink?"))) { return err; }
 
     const char* filename = a->cell[0]->str;
     const int8_t ft = f_get_type(filename);
@@ -138,7 +138,7 @@ static Cell* char_device_pred(const Lex* e, const Cell* a)
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING, "char-device?");
     if (err) { return err; }
-    if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
+    if ((err = CHECK_ARITY_EXACT(a, 1, "char-device?"))) { return err; }
 
     const char* filename = a->cell[0]->str;
     const int8_t ft = f_get_type(filename);
@@ -159,7 +159,7 @@ static Cell* block_device_pred(const Lex* e, const Cell* a)
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING, "blk-device?");
     if (err) { return err; }
-    if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
+    if ((err = CHECK_ARITY_EXACT(a, 1, "blk-pred?"))) { return err; }
 
     const char* filename = a->cell[0]->str;
     const int8_t ft = f_get_type(filename);
@@ -180,7 +180,7 @@ static Cell* pipe_pred(const Lex* e, const Cell* a)
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING, "fifo?");
     if (err) { return err; }
-    if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
+    if ((err = CHECK_ARITY_EXACT(a, 1, "fifo?"))) { return err; }
 
     const char* filename = a->cell[0]->str;
     const int8_t ft = f_get_type(filename);
@@ -201,7 +201,7 @@ static Cell* socket_pred(const Lex* e, const Cell* a)
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING, "socket?");
     if (err) { return err; }
-    if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
+    if ((err = CHECK_ARITY_EXACT(a, 1, "socket?"))) { return err; }
 
     const char* filename = a->cell[0]->str;
     const int8_t ft = f_get_type(filename);
@@ -223,7 +223,7 @@ static Cell* file_exists_pred(const Lex* e, const Cell* a)
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING, "file-exists?");
     if (err) { return err; }
-    if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
+    if ((err = CHECK_ARITY_EXACT(a, 1, "file-exists?"))) { return err; }
 
     const char* filename = a->cell[0]->str;
     if (access(filename, F_OK) == 0) {
@@ -239,7 +239,7 @@ static Cell* file_exists_pred(const Lex* e, const Cell* a)
 static Cell* get_cwd(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 0);
+    Cell* err = CHECK_ARITY_EXACT(a, 0, "getcwd");
     if (err) { return err; }
 
     char buf[PATH_MAX];
@@ -254,7 +254,7 @@ static Cell* get_cwd(const Lex* e, const Cell* a)
 static Cell* rmdir__(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "rmdir");
     if (err) { return err; }
     err = check_arg_types(a, CELL_STRING, "rmdir");
     if (err) { return err; }
@@ -275,7 +275,7 @@ static Cell* mkdir__(const Lex* e, const Cell* a)
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING, "mkdir");
     if (err) { return err; }
-    err = CHECK_ARITY_EXACT(a, 1);
+    err = CHECK_ARITY_EXACT(a, 1, "mkdir");
     if (err) { return err; }
 
     const char* path = a->cell[0]->str;
@@ -293,7 +293,7 @@ static Cell* unlink_file(const Lex* e, const Cell* a)
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING, "unlink?");
     if (err) { return err; }
-    if ((err = CHECK_ARITY_EXACT(a, 1))) { return err; }
+    if ((err = CHECK_ARITY_EXACT(a, 1, "unlink"))) { return err; }
 
     const char* filename = a->cell[0]->str;
     if (unlink(filename) != 0) {

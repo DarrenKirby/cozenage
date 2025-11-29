@@ -202,7 +202,7 @@ HandlerResult sf_define(Lex* e, Cell* a)
                 Cell* err = make_cell_error(
                     "lambda formals must be symbols",
                     TYPE_ERR);
-                return (HandlerResult){ .action = ACTION_RETURN, .value = err };
+                return (HandlerResult) { .action = ACTION_RETURN, .value = err };
             }
             cell_add(formals, target->cell[i]);
         }
@@ -221,7 +221,7 @@ HandlerResult sf_define(Lex* e, Cell* a)
     Cell* err = make_cell_error(
         "invalid define syntax",
         SYNTAX_ERR);
-    return (HandlerResult){ .action = ACTION_RETURN, .value = err };
+    return (HandlerResult) { .action = ACTION_RETURN, .value = err };
 }
 
 /* (quote ⟨datum⟩) OR '⟨datum⟩
@@ -241,7 +241,7 @@ HandlerResult sf_quote(Lex* e, Cell* a)
     Cell* qexpr = cell_take(a, 0);
 
     Cell* result = make_list_from_sexpr(qexpr);
-    return (HandlerResult){ .action = ACTION_RETURN, .value = result };
+    return (HandlerResult) { .action = ACTION_RETURN, .value = result };
 }
 
 /* (lambda ⟨formals⟩ ⟨body⟩)
@@ -276,7 +276,7 @@ HandlerResult sf_lambda(Lex* e, Cell* a)
     }
     /* Build the lambda cell */
     Cell* lambda = lex_make_lambda(formals, body, e);
-    return (HandlerResult){ .action = ACTION_RETURN, .value = lambda };
+    return (HandlerResult) { .action = ACTION_RETURN, .value = lambda };
 }
 
 /* (if ⟨test⟩ ⟨consequent⟩ ⟨alternate⟩)
@@ -285,7 +285,7 @@ HandlerResult sf_lambda(Lex* e, Cell* a)
  * and its values are returned. If no <alternate> is provided to evaluate, it returns null */
 HandlerResult sf_if(Lex* e, Cell* a)
 {
-    Cell* err = CHECK_ARITY_RANGE(a, 2, 3);
+    Cell* err = CHECK_ARITY_RANGE(a, 2, 3, "if");
     if (err) {
         return (HandlerResult){ .action = ACTION_RETURN, .value = err };
     }
@@ -305,7 +305,7 @@ HandlerResult sf_if(Lex* e, Cell* a)
      * Check if an alternative exists before accessing it. */
     if (a->count == 3) {
         /* It exists, so evaluate it as a tail call. */
-        return (HandlerResult){ .action = ACTION_CONTINUE, .value = a->cell[third] };
+        return (HandlerResult) { .action = ACTION_CONTINUE, .value = a->cell[third] };
     }
 
     /* No alternative was provided. Return an unspecified value. */
@@ -318,7 +318,7 @@ HandlerResult sf_if(Lex* e, Cell* a)
  * of the last expression evaluated, or null if the test evaluates to #f. */
 HandlerResult sf_when(Lex* e, Cell* a)
 {
-    Cell* err = CHECK_ARITY_MIN(a, 2);
+    Cell* err = CHECK_ARITY_MIN(a, 2, "when");
     if (err) return (HandlerResult){ .action = ACTION_RETURN, .value = err };
 
     /* Pop off the test */
@@ -328,12 +328,12 @@ HandlerResult sf_when(Lex* e, Cell* a)
      * and check for literal #f */
     if (test && test->type == CELL_BOOLEAN && test->boolean_v == 0) {
         /* Test was false, return unspecified. */
-        return (HandlerResult){ .action = ACTION_RETURN, .value = nullptr };
+        return (HandlerResult) { .action = ACTION_RETURN, .value = nullptr };
     }
 
     /* Sequence remaining expressions into a 'begin' and tail-call */
     Cell* body_block = sequence_sf_body(a);
-    return (HandlerResult){ .action = ACTION_CONTINUE, .value = body_block };
+    return (HandlerResult) { .action = ACTION_CONTINUE, .value = body_block };
 }
 
 /*  (unless ⟨test⟩ ⟨expression1⟩ ⟨expression2⟩ ... )
@@ -342,8 +342,8 @@ HandlerResult sf_when(Lex* e, Cell* a)
  *  last expression evaluated, or null if the test is truthy. */
 HandlerResult sf_unless(Lex* e, Cell* a)
 {
-    Cell* err = CHECK_ARITY_MIN(a, 2);
-    if (err) return (HandlerResult){ .action = ACTION_RETURN, .value = err };
+    Cell* err = CHECK_ARITY_MIN(a, 2, "unless");
+    if (err) return (HandlerResult) { .action = ACTION_RETURN, .value = err };
 
     /* Pop off the test. */
     const Cell* test = coz_eval(e, cell_pop(a, first));
@@ -353,11 +353,11 @@ HandlerResult sf_unless(Lex* e, Cell* a)
     if (test && test->type == CELL_BOOLEAN && test->boolean_v == 0) {
         /* Sequence remaining expressions into a 'begin' and tail-call. */
         Cell* body_block = sequence_sf_body(a);
-        return (HandlerResult){ .action = ACTION_CONTINUE, .value = body_block };
+        return (HandlerResult) { .action = ACTION_CONTINUE, .value = body_block };
     }
 
     /* Test was true (or null), return unspecified. */
-    return (HandlerResult){ .action = ACTION_RETURN, .value = nullptr };
+    return (HandlerResult) { .action = ACTION_RETURN, .value = nullptr };
 }
 
 /* (cond ⟨clause1⟩ ⟨clause2⟩ ... )
@@ -738,7 +738,7 @@ HandlerResult sf_letrec(Lex* e, Cell* a)
  * expression or else globally. The result of the set! expression is unspecified. */
 HandlerResult sf_set_bang(Lex* e, Cell* a)
 {
-    Cell* err = CHECK_ARITY_EXACT(a, 2);
+    Cell* err = CHECK_ARITY_EXACT(a, 2, "set!");
     if (err) return (HandlerResult){ .action = ACTION_RETURN, .value = err };
     const Cell* variable = a->cell[first];
     if (variable->type != CELL_SYMBOL) {

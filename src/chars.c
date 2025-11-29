@@ -37,7 +37,7 @@
 Cell* builtin_char_to_int(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "char->integer");
     if (err) return err;
     err = check_arg_types(a, CELL_CHAR, "char->integer");
     if (err) return err;
@@ -51,7 +51,7 @@ Cell* builtin_char_to_int(const Lex* e, const Cell* a)
 Cell* builtin_int_to_char(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "integer->char");
     if (err) return err;
     err = check_arg_types(a, CELL_INTEGER, "integer->char");
     if (err) return err;
@@ -166,7 +166,7 @@ Cell* builtin_char_gte_pred(const Lex* e, const Cell* a)
 Cell* builtin_char_alphabetic(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "char-alphabetic?");
     if (err) return err;
     if (a->cell[0]->type != CELL_CHAR) {
         return make_cell_error(
@@ -180,7 +180,7 @@ Cell* builtin_char_alphabetic(const Lex* e, const Cell* a)
 Cell* builtin_char_whitespace(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "char-whitespace?");
     if (err) return err;
     if (a->cell[0]->type != CELL_CHAR) {
         return make_cell_error(
@@ -194,7 +194,7 @@ Cell* builtin_char_whitespace(const Lex* e, const Cell* a)
 Cell* builtin_char_numeric(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "char-numeric?");
     if (err) return err;
     if (a->cell[0]->type != CELL_CHAR) {
         return make_cell_error(
@@ -208,7 +208,7 @@ Cell* builtin_char_numeric(const Lex* e, const Cell* a)
 Cell* builtin_char_upper_case(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "char-upper-case?");
     if (err) return err;
     if (a->cell[0]->type != CELL_CHAR) {
         return make_cell_error(
@@ -222,7 +222,7 @@ TYPE_ERR);
 /* (char-lower-case? letter) */
 Cell* builtin_char_lower_case(const Lex* e, const Cell* a) {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "char-lower-case?");
     if (err) return err;
     if (a->cell[0]->type != CELL_CHAR) {
         return make_cell_error(
@@ -240,7 +240,7 @@ Cell* builtin_char_lower_case(const Lex* e, const Cell* a) {
 Cell* builtin_char_upcase(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "char-upcase");
     if (err) return err;
     if (a->cell[0]->type != CELL_CHAR) {
         return make_cell_error(
@@ -258,7 +258,7 @@ Cell* builtin_char_upcase(const Lex* e, const Cell* a)
 Cell* builtin_char_downcase(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "char-downcase");
     if (err) return err;
     if (a->cell[0]->type != CELL_CHAR) {
         return make_cell_error(
@@ -276,7 +276,7 @@ Cell* builtin_char_downcase(const Lex* e, const Cell* a)
 Cell* builtin_char_foldcase(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "char-foldcase");
     if (err) return err;
     if (a->cell[0]->type != CELL_CHAR) {
         return make_cell_error(
@@ -294,7 +294,7 @@ Cell* builtin_char_foldcase(const Lex* e, const Cell* a)
 Cell* builtin_digit_value(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 1);
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "digit-value");
     if (err) return err;
     if (a->cell[0]->type != CELL_CHAR) {
         return make_cell_error(
