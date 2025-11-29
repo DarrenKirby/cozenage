@@ -2,11 +2,9 @@
 How to run Cozenage
 ===================
 
-Cozenage provides both a file runner for evaluating Scheme code in external files, and a fully-featured interactive
+Cozenage provides both a file runner for evaluating code in external files, and a fully-featured interactive
 :abbr:`REPL (Read-Eval-Print Loop)` which allows for experimentation and quick discovery. These two methods of running
 Cozenage will be treated in order, after a short introduction to command-line flags which affect the operation of both.
-Note that by default, Cozenage loads the definitions from R7RS ``(scheme base)`` in both file runner and REPL mode.
-All other R7RS Scheme libraries must be imported as usual.
 
 Cozenage command line flags
 ---------------------------
@@ -17,20 +15,12 @@ Cozenage command line flags
 ``-V`` and ``--version``
     Print the version number of the currently installed Cozenage binary, and print when it was compiled.
 
-``-5`` and ``--r5rs`` (Note: not implemented yet)
-    Strict R5RS mode. Only loads procedures defined in the R5RS Scheme specification.
-
-``-7`` and ``--r7rs`` (Note: not implemented yet)
-    Strict R7RS mode. Only loads the syntax and special forms defined in the R7RS Scheme specification. Note that this
-    mode will not load even the ``(scheme base)`` names, which are typically loaded by default.
-
 ``-l`` and ``--library``
     Preload Scheme and/or Cozenage libraries at startup. Accepts a mandatory comma-delimited list of libraries to load.
     This is a convenience flag which is identical to manually loading libraries using the ``(import (scheme foo))``
     syntax. Valid arguments to this flag are:
 
-    ``case-lambda``, ``char``, ``complex``, ``cxr``, ``eval``, ``file``, ``inexact``, ``lazy``, ``load``,
-    ``process-context``, ``read``, ``repl``, ``time``, ``write``, and ``bits``.
+    ``bits``, ``cxr``, ``file``, ``math``, ``random``, ``system``, and ``time``.
 
 Using the file runner
 ---------------------
@@ -64,7 +54,6 @@ In your script file:
 
 .. code-block:: scheme
 
-    (import (scheme load))
     (load "file1.scm")
     (load "file2.scm")
     (load "file3.scm")
@@ -81,14 +70,14 @@ You can use the ``-l`` or ``--library`` flag as a convenience to pre-load librar
 
 .. code-block:: bash
 
-    $ cozenage -l file,write script.scm
+    $ cozenage -l file,system script.scm
 
 This is functionally equivalent to adding ``(import)`` expressions at the top of your scheme source file:
 
 .. code-block:: scheme
 
     (import (scheme file))
-    (import (scheme write))
+    (import (scheme system))
     ;;; etc
 
 .. tip::
@@ -98,14 +87,10 @@ This is functionally equivalent to adding ``(import)`` expressions at the top of
     of the run can be determined by inspecting the output of ``echo $?``.
 
 You can pass flags and arguments to the Scheme file you are running and these will be made available through the
-``(command-line)`` procedure which returns them as a list of strings. This procedure needs to be loaded from the
-``process-context`` library, using either the ``-l`` or ``--library`` command-line flag, or using the ``import``
-procedure. As an example, let's say we have these definitions in a file:
+``(command-line)`` procedure which returns them as a list of strings. As an example, let's say we have these
+definitions in a file:
 
 .. code-block:: scheme
-
-    (import (scheme process-context))
-    (import (scheme write))
 
     (write (command-line))
     (newline)

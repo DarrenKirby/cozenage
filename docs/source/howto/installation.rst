@@ -20,7 +20,8 @@ Install dependencies
 
 Cozenage requires one of `GNU Readline <https://www.gnu.org/software/readline/>`_,
 or \*BSD libedit installed for the REPL. It requires `ICU <https://icu.unicode.org/>`_ for Unicode.
-It requires `libgc <https://www.hboehm.info/gc/>`_ for garbage collection.
+It requires `libgc <https://www.hboehm.info/gc/>`_ for garbage collection. It requires GNU GMP for ``bigint`` support,
+and will soon require GNU MPFR for bigfloat support.
 
 CMake build
 -----------
