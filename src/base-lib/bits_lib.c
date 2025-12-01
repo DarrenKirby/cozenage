@@ -250,6 +250,70 @@ static Cell* bits_bitwise_not(const Lex* e, const Cell* a)
     return result;
 }
 
+static Cell* bits_add(const Lex* e, const Cell* a)
+{
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 2, "bs+");
+    if (err) return err;
+    err = check_arg_types(a, CELL_SYMBOL, "bs+");
+    if (err) return err;
+
+    const Cell* arg1 = bits_bitstring_to_int(e, make_sexpr_len1(a->cell[0]));
+    const Cell* arg2 = bits_bitstring_to_int(e, make_sexpr_len1(a->cell[1]));
+
+    const Cell* result = make_cell_integer(arg1->integer_v + arg2->integer_v);
+    return bits_int_to_bitstring(e, make_sexpr_len1(result));
+}
+
+static Cell* bits_sub(const Lex* e, const Cell* a)
+{
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 2, "bs-");
+    if (err) return err;
+    err = check_arg_types(a, CELL_SYMBOL, "bs-");
+    if (err) return err;
+
+    const Cell* arg1 = bits_bitstring_to_int(e, make_sexpr_len1(a->cell[0]));
+    const Cell* arg2 = bits_bitstring_to_int(e, make_sexpr_len1(a->cell[1]));
+
+    const Cell* result = make_cell_integer(arg1->integer_v - arg2->integer_v);
+    return bits_int_to_bitstring(e, make_sexpr_len1(result));
+}
+
+static Cell* bits_mul(const Lex* e, const Cell* a)
+{
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 2, "bs*");
+    if (err) return err;
+    err = check_arg_types(a, CELL_SYMBOL, "bs*");
+    if (err) return err;
+
+    const Cell* arg1 = bits_bitstring_to_int(e, make_sexpr_len1(a->cell[0]));
+    const Cell* arg2 = bits_bitstring_to_int(e, make_sexpr_len1(a->cell[1]));
+
+    const Cell* result = make_cell_integer(arg1->integer_v * arg2->integer_v);
+    return bits_int_to_bitstring(e, make_sexpr_len1(result));
+}
+
+static Cell* bits_div(const Lex* e, const Cell* a)
+{
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 2, "bs/");
+    if (err) return err;
+    err = check_arg_types(a, CELL_SYMBOL, "bs/");
+    if (err) return err;
+
+    const Cell* arg1 = bits_bitstring_to_int(e, make_sexpr_len1(a->cell[0]));
+    const Cell* arg2 = bits_bitstring_to_int(e, make_sexpr_len1(a->cell[1]));
+
+    if (arg2->integer_v == 0) {
+        return make_cell_error("bs/: division by zero", VALUE_ERR);
+    }
+
+    const Cell* result = make_cell_integer(arg1->integer_v / arg2->integer_v);
+    return bits_int_to_bitstring(e, make_sexpr_len1(result));
+}
+
 static Cell* bits_int_to_bitstring(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -308,6 +372,10 @@ void cozenage_library_init(const Lex* e) {
     lex_add_builtin(e, "|", bits_bitwise_or);
     lex_add_builtin(e, "^", bits_bitwise_xor);
     lex_add_builtin(e, "~", bits_bitwise_not);
+    lex_add_builtin(e, "bs+", bits_add);
+    lex_add_builtin(e, "bs-", bits_sub);
+    lex_add_builtin(e, "bs*", bits_mul);
+    lex_add_builtin(e, "bs/", bits_div);
     lex_add_builtin(e, "bitstring->int", bits_bitstring_to_int);
     lex_add_builtin(e, "int->bitstring", bits_int_to_bitstring);
 }
