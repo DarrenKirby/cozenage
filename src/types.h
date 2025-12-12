@@ -79,6 +79,8 @@ char* GC_strndup(const char* s, size_t n);
 int compare_named_chars(const void* key, const void* element);
 const NamedChar* find_named_char(const char* name);
 Cell* list_get_nth_cell_ptr(const Cell* list, long n);
+int32_t string_length_utf8(const char* s);
+bool is_pure_ascii(const char *str, size_t len);
 char* convert_to_utf8(const UChar* ustr);
 UChar* convert_to_utf16(const char* str);
 
