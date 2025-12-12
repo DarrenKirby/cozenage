@@ -903,12 +903,16 @@ Cell* builtin_inexact(const Lex* e, const Cell* a)
 
     /* Just return if it's already inexact. */
     if (a->cell[0]->exact == 0) {
+        Cell* slug = make_cell_real(0.0000);
+        numeric_promote(&a->cell[0], &slug);
         return a->cell[0];
     }
     if (a->cell[0]->type == CELL_COMPLEX) {
         a->cell[0]->real->exact = 0;
         a->cell[0]->imag->exact = 0;
     }
+    Cell* slug = make_cell_real(0.0000);
+    numeric_promote(&a->cell[0], &slug);
     a->cell[0]->exact = 0;
     return a->cell[0];
 }
