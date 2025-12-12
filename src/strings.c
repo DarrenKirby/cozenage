@@ -32,29 +32,6 @@
 #include <unicode/uchar.h>
 
 
-/* Helper for other string procedures.
- * Like strlen, but returns UTF8 char count rather than byte count. */
-int32_t string_length(const Cell* string)
-{
-    const char* s = string->str;
-    const int32_t len_bytes = (int)strlen(s);
-
-    int32_t i = 0;
-    int32_t code_point_count = 0;
-    UChar32 c;
-
-    /* Iterate through the string one code point at a time. */
-    while (i < len_bytes) {
-        U8_NEXT(s, i, len_bytes, c);
-        /* A negative value for 'c' indicates an invalid UTF-8 sequence. */
-        if (c < 0) {
-            return -1;
-        }
-        code_point_count++;
-    }
-    return code_point_count;
-}
-
 /*-------------------------------------------------------*
  *     String constructors, selectors, and procedures    *
  * ------------------------------------------------------*/
@@ -67,6 +44,7 @@ Cell* builtin_string(const Lex* e, const Cell* a)
     Cell* err = check_arg_types(a, CELL_CHAR, "string");
     if (err) return err;
 
+    /* This is the number of chars in the 'a' Sexpr */
     const int str_len = a->count;
     /* 4-bytes per char, plus 1 for null. */
     char* the_string = GC_MALLOC_ATOMIC(str_len * 4 + 1);
@@ -92,7 +70,7 @@ Cell* builtin_string_length(const Lex* e, const Cell* a)
             "string-length: arg 1 must be a string",
             TYPE_ERR);
     }
-    return make_cell_integer(string_length(a->cell[0]));
+    return make_cell_integer(a->cell[0]->char_count);
 }
 
 /* */
@@ -373,7 +351,7 @@ Cell* builtin_string_list(const Lex* e, const Cell* a)
             TYPE_ERR);
     }
 
-    const int32_t str_len = string_length(a->cell[0]);
+    const int32_t str_len = a->cell[0]->char_count;
     int32_t start = 0;
     int32_t end = str_len;
     const char* s = a->cell[0]->str;
@@ -586,7 +564,7 @@ Cell* builtin_string_copy(const Lex* e, const Cell* a)
     }
 
     /* Validate for legal indices. */
-    const int32_t char_length = string_length(a->cell[0]);
+    const int32_t char_length = a->cell[0]->char_count;
     if (start_idx < 0) {
         return make_cell_error(
             "string-copy: start index must be non-negative",
@@ -661,13 +639,13 @@ Cell* builtin_string_copy_bang(const Lex* e, const Cell* a)
     /* Get 'to' string and 'at' index. */
     Cell* to_cell = a->cell[0];
     const char* to_str = to_cell->str;
-    const int32_t to_char_len = string_length(to_cell);
+    const int32_t to_char_len = to_cell->char_count;
     const int32_t to_byte_len = (int32_t)strlen(to_str);
     const int32_t to_start_idx = (int32_t)a->cell[1]->integer_v;
 
     /* Get 'from' string and 'start'/'end' indices. */
     const char* from_str = a->cell[2]->str;
-    const int32_t from_char_len = string_length(a->cell[2]);
+    const int32_t from_char_len = a->cell[2]->char_count;
     const int32_t from_byte_len = (int32_t)strlen(from_str);
 
     int32_t from_start_idx = 0;
