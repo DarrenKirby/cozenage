@@ -338,7 +338,7 @@ Cell* builtin_write_string(const Lex* e, const Cell* a)
 
     int start = 0;
     int end = 0;
-    int num_chars = string_length(a->cell[0]);
+    int num_chars = a->cell[0]->char_count;
 
     if (a->count >= 3) {
         if (a->cell[2]->type != CELL_INTEGER) {
