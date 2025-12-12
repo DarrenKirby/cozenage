@@ -27,6 +27,8 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
+#include <stdint.h>
+#include <string.h>
 #include <errno.h>
 #include <math.h>
 #include <limits.h>
@@ -892,6 +894,66 @@ Cell* list_get_nth_cell_ptr(const Cell* list, const long n)
     }
     /* The value we want is the CAR of this final pair. */
     return current->car;
+}
+
+/* Helpers for dealing with strings and Unicode */
+
+int32_t string_length_utf8(const char* s)
+{
+    const int32_t len_bytes = (int)strlen(s);
+
+    int32_t i = 0;
+    int32_t code_point_count = 0;
+    UChar32 c;
+
+    /* Iterate through the string one code point at a time. */
+    while (i < len_bytes) {
+        U8_NEXT(s, i, len_bytes, c);
+        /* A negative value for 'c' indicates an invalid UTF-8 sequence. */
+        if (c < 0) {
+            return -1;
+        }
+        code_point_count++;
+    }
+    return code_point_count;
+}
+
+bool is_pure_ascii(const char *str, size_t len) {
+    const unsigned char *ptr = (const unsigned char *)str;
+
+    /* Alignment Loop: Process bytes one by one until pointer is 8-byte aligned.
+       We check ((uintptr_t)ptr & 7) to see if we are aligned. */
+    while (len > 0 && ((uintptr_t)ptr & 7)) {
+        if (*ptr & 0x80) return false;
+        ptr++;
+        len--;
+    }
+
+    /* Process 8 bytes at a time.
+       Cast to uint64_t pointer now that we know we are aligned. */
+    const uint64_t *ptr64 = (const uint64_t *)ptr;
+    // ReSharper disable once CppTooWideScope
+    // ReSharper disable once CppVariableCanBeMadeConstexpr
+    const uint64_t high_bit_mask = 0x8080808080808080ULL;
+
+    while (len >= 8) {
+        /* If (chunk & mask) is non-zero, one of the bytes had the high bit set. */
+        if (*ptr64 & high_bit_mask) {
+            return false;
+        }
+        ptr64++;
+        len -= 8;
+    }
+
+    /* Cleanup Loop: Process any remaining bytes (0-7 bytes left). */
+    ptr = (const unsigned char *)ptr64;
+    while (len > 0) {
+        if (*ptr & 0x80) return false;
+        ptr++;
+        len--;
+    }
+
+    return true;
 }
 
 char* convert_to_utf8(const UChar* ustr)
