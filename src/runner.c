@@ -29,7 +29,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <signal.h>
-#include <ctype.h>
 #include <gc/gc.h>
 
 
