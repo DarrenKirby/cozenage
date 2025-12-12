@@ -127,7 +127,7 @@ typedef struct Cell {
 
     union {
         struct {
-            int count;   /* length of compound type. */
+            int count;   /* length of compound type. (n-bytes for strings)*/
         };
 
         struct {
@@ -181,9 +181,15 @@ typedef struct Cell {
             int sf_id;        /* Special form id */
         };
 
+        /* Strings */
+        struct {
+            char* str;           /* The string data */
+            int32_t char_count;  /* Number of codepoints */
+            bool ascii;          /* Just ASCII or Unicode? */
+        };
+
         /* Single-field types */
         Cell** cell;              /* for compound types (sexpr, vector) */
-        char* str;                /* strings */
         char* error_v;            /* error string */
         long double real_v;       /* reals */
         int64_t integer_v;        /* integers */
@@ -192,7 +198,7 @@ typedef struct Cell {
         lambda* lambda;           /* Pointer to lambda struct */
         port* port;               /* Pointer to port struct */
         byte_v* bv;               /* Pointer to bytevector struct */
-        mpz_t* bi;                 /* -> CELL_BIGINT integer */
+        mpz_t* bi;                /* -> CELL_BIGINT integer */
         mpf_t* bf;                /* -> CELL_BIGFLOAT float */
     };
 } Cell;

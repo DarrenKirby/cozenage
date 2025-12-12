@@ -245,6 +245,20 @@ Cell* make_cell_string(const char* the_string)
         fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
         exit(EXIT_FAILURE);
     }
+
+    const int32_t byte_len = (int)strlen(the_string);
+    v->count = byte_len;
+
+    /* Run the SWAR check */
+    if (is_pure_ascii(the_string, byte_len)) {
+        v->ascii = 1;
+        v->char_count = byte_len; /* For ASCII, bytes == chars */
+    } else {
+        /* Scan string to count actual UTF-8 codepoints */
+        v->ascii = 0;
+        v->char_count = string_length_utf8(the_string);
+    }
+
     v->type = CELL_STRING;
     v->str = GC_strdup(the_string);
     return v;
