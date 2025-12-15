@@ -1,5 +1,5 @@
 /*
- * 'strings.c'
+ * 'src/strings.c'
  * This file is part of Cozenage - https://github.com/DarrenKirby/cozenage
  * Copyright © 2025  Darren Kirby <darren@dragonbyte.ca>
  *
@@ -22,6 +22,7 @@
 #include "lexer.h"
 #include "repr.h"
 #include "parser.h"
+#include "vectors.h"
 
 #include <string.h>
 #include <stdlib.h>
@@ -58,6 +59,7 @@ Cell* builtin_string(const Lex* e, const Cell* a)
     return make_cell_string(the_string);
 }
 
+
 /* (string-length string)
  * Returns the number of characters in the given string. */
 Cell* builtin_string_length(const Lex* e, const Cell* a)
@@ -72,6 +74,7 @@ Cell* builtin_string_length(const Lex* e, const Cell* a)
     }
     return make_cell_integer(a->cell[0]->char_count);
 }
+
 
 /* */
 Cell* builtin_string_eq_pred(const Lex* e, const Cell* a)
@@ -102,6 +105,7 @@ Cell* builtin_string_eq_pred(const Lex* e, const Cell* a)
     return True_Obj;
 }
 
+
 Cell* builtin_string_lt_pred(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -124,6 +128,7 @@ Cell* builtin_string_lt_pred(const Lex* e, const Cell* a)
     /* If we get here, s1 < s2 < sn ... */
     return True_Obj;
 }
+
 
 Cell* builtin_string_lte_pred(const Lex* e, const Cell* a)
 {
@@ -148,6 +153,7 @@ Cell* builtin_string_lte_pred(const Lex* e, const Cell* a)
     return True_Obj;
 }
 
+
 Cell* builtin_string_gt_pred(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -170,6 +176,7 @@ Cell* builtin_string_gt_pred(const Lex* e, const Cell* a)
     /* If we get here, s1 > s2 > sn ... */
     return True_Obj;
 }
+
 
 Cell* builtin_string_gte_pred(const Lex* e, const Cell* a)
 {
@@ -194,6 +201,7 @@ Cell* builtin_string_gte_pred(const Lex* e, const Cell* a)
     return True_Obj;
 }
 
+
 /* (string-append string ...)
  * Returns a newly allocated string whose characters are the concatenation of the characters in the
  * given strings. */
@@ -205,7 +213,7 @@ Cell* builtin_string_append(const Lex* e, const Cell* a)
     err = CHECK_ARITY_MIN(a, 1, "string-append");
     if (err) return err;
 
-    /* (string-append "foo") -> "foo. */
+    /* (string-append "foo") -> "foo" */
     if (a->count == 1) {
         return a->cell[0];
     }
@@ -233,6 +241,7 @@ Cell* builtin_string_append(const Lex* e, const Cell* a)
     return make_cell_string(convert_to_utf8(result));
 }
 
+
 /* (string-ref string k)
 * It is an error if k is not a valid index of string. The string-ref procedure returns character k
 * of string using zero-origin indexing. There is no requirement for this procedure to execute in
@@ -253,11 +262,17 @@ Cell* builtin_string_ref(const Lex* e, const Cell* a)
             TYPE_ERR);
     }
 
+    const int32_t char_index = (int)a->cell[1]->integer_v;
+    const char* s = a->cell[0]->str;
+
+    /* Early exit for pure-ASCII string */
+    if (a->cell[0]->ascii) {
+        return make_cell_char(s[char_index]);
+    }
+
     int32_t byte_index = 0;
     int32_t current_char_index = 0;
     UChar32 c = 0;
-    const int32_t char_index = (int)a->cell[1]->integer_v;
-    const char* s = a->cell[0]->str;
 
     while (current_char_index <= char_index) {
 
@@ -281,6 +296,7 @@ Cell* builtin_string_ref(const Lex* e, const Cell* a)
         "string-ref: invalid or malformed string",
         VALUE_ERR);
 }
+
 
 /* (make-string k)
  * (make-string k char)
@@ -311,6 +327,17 @@ Cell* builtin_make_string(const Lex* e, const Cell* a)
         fill_char = a->cell[1]->char_v;
     }
 
+    /* Char is ascii -> early exit */
+    if (fill_char <= 0x7F) {
+        /* Allocate memory, adding +1 for the null terminator. */
+        char *new_string = GC_MALLOC_ATOMIC(str_len + 1);
+        for (int32_t i = 0; i < str_len; i++) {
+            new_string[i] = (char)fill_char;
+        }
+        new_string[str_len] = '\0';
+        return make_cell_string(new_string);
+    }
+
     const int32_t bytes_per_char = U8_LENGTH(fill_char);
 
     /* Calculate total bytes needed for the string data. */
@@ -334,6 +361,7 @@ Cell* builtin_make_string(const Lex* e, const Cell* a)
 
     return make_cell_string(new_string);
 }
+
 
 /* (string->list string)
  * (string->list string start )
@@ -411,6 +439,7 @@ Cell* builtin_string_list(const Lex* e, const Cell* a)
     }
     return head;
 }
+
 
 /* (list->string list)
  * It is an error if any element of list is not a character. list->string returns a newly allocated
@@ -496,6 +525,7 @@ Cell* builtin_list_string(const Lex* e, const Cell* a)
     return make_cell_string(utf8Buffer);
 }
 
+
 /* (substring string start end)
  * The substring procedure returns a newly allocated string formed from the characters of string
  * beginning with index start and ending with index end. This is equivalent to calling string-copy
@@ -508,6 +538,7 @@ Cell* builtin_substring(const Lex* e, const Cell* a)
     return builtin_string_copy(e, a);
 }
 
+
 /* (string-set! string k char)
  * It is an error if k is not a valid index of string. The string-set! procedure stores char in
  * element k of string. */
@@ -518,6 +549,7 @@ Cell* builtin_string_set_bang(const Lex* e, const Cell* a)
     (void)a;
     return make_cell_error("Not implemented yet", VALUE_ERR);
 }
+
 
 /* (string-copy string )
  * (string-copy string start )
@@ -605,6 +637,7 @@ Cell* builtin_string_copy(const Lex* e, const Cell* a)
     new_str[bytes_to_copy] = '\0';
     return make_cell_string(new_str);
 }
+
 
 /* (string-copy! to at from )
  * (string-copy! to at from start )
@@ -738,6 +771,7 @@ Cell* builtin_string_copy_bang(const Lex* e, const Cell* a)
     return to_cell;
 }
 
+
 /* (string-fill! string fill)
  * (string-fill! string fill start)
  * (string-fill! string fill start end)
@@ -750,6 +784,7 @@ Cell* builtin_string_fill(const Lex* e, const Cell* a)
     (void)a;
     return make_cell_error("Not implemented yet", VALUE_ERR);
 }
+
 
 Cell* builtin_string_number(const Lex* e, const Cell* a)
 {
@@ -814,6 +849,7 @@ Cell* builtin_string_number(const Lex* e, const Cell* a)
     return result;
 }
 
+
 /* TODO - the radix??? */
 Cell* builtin_number_string(const Lex* e, const Cell* a)
 {
@@ -830,6 +866,7 @@ Cell* builtin_number_string(const Lex* e, const Cell* a)
     const char* result = cell_to_string(a->cell[0], MODE_DISPLAY);
     return make_cell_string(result);
 }
+
 
 /* These procedures apply the Unicode full string uppercasing, lowercasing, and case-folding
  * algorithms to their arguments and return the result. In certain cases, the result differs in
@@ -873,6 +910,7 @@ Cell* builtin_string_downcase(const Lex* e, const Cell* a)
     return make_cell_string(result);
 }
 
+
 /* (string-upcase string) */
 Cell* builtin_string_upcase(const Lex* e, const Cell* a)
 {
@@ -910,6 +948,7 @@ Cell* builtin_string_upcase(const Lex* e, const Cell* a)
     return make_cell_string(result);
 }
 
+
 /* (string-foldcase string) */
 Cell* builtin_string_foldcase(const Lex* e, const Cell* a)
 {
@@ -946,6 +985,7 @@ Cell* builtin_string_foldcase(const Lex* e, const Cell* a)
     return make_cell_string(result);
 }
 
+
 /* (string-ci=? string1 string2 string3 ... )
 * Returns #t if, after case-folding, all the strings are the same length and contain the same
 * characters in the same positions, otherwise returns #f.*/
@@ -979,6 +1019,7 @@ Cell* builtin_string_equal_ci(const Lex* e, const Cell* a)
     return True_Obj;
 }
 
+
 /* (string-ci<? string1 string2 string3 ... ) */
 Cell* builtin_string_lt_ci(const Lex* e, const Cell* a) {
     (void)e;
@@ -1003,6 +1044,7 @@ Cell* builtin_string_lt_ci(const Lex* e, const Cell* a) {
     /* If we get here, s1 < s2 < sn ... */
     return True_Obj;
 }
+
 
 /* (string<=? string1 string2 string3 ... ) */
 Cell* builtin_string_lte_ci(const Lex* e, const Cell* a) {
@@ -1029,6 +1071,7 @@ Cell* builtin_string_lte_ci(const Lex* e, const Cell* a) {
     return True_Obj;
 }
 
+
 /* (string-ci>? string1 string2 string3 ... ) */
 Cell* builtin_string_gt_ci(const Lex* e, const Cell* a) {
     (void)e;
@@ -1054,6 +1097,7 @@ Cell* builtin_string_gt_ci(const Lex* e, const Cell* a) {
     return True_Obj;
 }
 
+
 /* (string-ci>=? string1 string2 string3 ... ) */
 Cell* builtin_string_gte_ci(const Lex* e, const Cell* a) {
     (void)e;
@@ -1077,4 +1121,30 @@ Cell* builtin_string_gte_ci(const Lex* e, const Cell* a) {
     }
     /* If we get here, s1 >= s2 >= sn ... */
     return True_Obj;
+}
+
+Cell* builtin_string_split(const Lex* e, const Cell* a) {
+    (void)e;
+    Cell* err = check_arg_types(a, CELL_STRING, "string-split");
+    if (err) return err;
+    err = CHECK_ARITY_RANGE(a, 1, 2, "string-split");
+    if (err) return err;
+
+    char* sep;
+    if (a->count == 2) {
+        sep = a->cell[1]->str;
+    } else {
+        sep = " ";
+    }
+
+    char* src = GC_strdup(a->cell[0]->str);
+    Cell* result = make_cell_vector();
+    char* token;
+
+    while ((token = strsep(&src, sep)) != NULL) {
+        Cell* s = make_cell_string(token);
+        cell_add(result, s);
+    }
+
+    return builtin_vector_to_list(e, make_sexpr_len1(result));
 }

@@ -1,5 +1,5 @@
 /*
- * 'strings.h'
+ * 'src/strings.h'
  * This file is part of Cozenage - https://github.com/DarrenKirby/cozenage
  * Copyright © 2025  Darren Kirby <darren@dragonbyte.ca>
  *
@@ -24,7 +24,6 @@
 
 
 /* String constructors, selectors, and procedures */
-//int32_t string_length(const Cell* string);
 Cell* builtin_string(const Lex* e, const Cell* a);
 Cell* builtin_string_length(const Lex* e, const Cell* a);
 Cell* builtin_string_eq_pred(const Lex* e, const Cell* a);
@@ -52,5 +51,6 @@ Cell* builtin_string_lt_ci(const Lex* e, const Cell* a);
 Cell* builtin_string_lte_ci(const Lex* e, const Cell* a);
 Cell* builtin_string_gt_ci(const Lex* e, const Cell* a);
 Cell* builtin_string_gte_ci(const Lex* e, const Cell* a);
+Cell* builtin_string_split(const Lex* e, const Cell* a);
 
 #endif //COZENAGE_STRINGS_H
