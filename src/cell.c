@@ -1,5 +1,5 @@
 /*
- * 'cell.c'
+ * 'src/cell.c'
  * This file is part of Cozenage - https://github.com/DarrenKirby/cozenage
  * Copyright © 2025  Darren Kirby <darren@dragonbyte.ca>
  *
@@ -49,6 +49,7 @@ Cell* default_input_port  = nullptr;
 Cell* default_output_port = nullptr;
 Cell* default_error_port  = nullptr;
 
+
 void init_default_ports(void)
 {
     default_input_port  = make_cell_port("stdin",  stdin,  INPUT_PORT, FILE_PORT);
@@ -95,12 +96,14 @@ static Cell* make_cell_tcs__(void)
     return tcs_obj;
 }
 
+
 static Cell* make_cell_usp__(void)
 {
     Cell* usp_obj = GC_MALLOC_ATOMIC_UNCOLLECTABLE(sizeof(Cell));
     usp_obj->type = CELL_UNSPEC;
     return usp_obj;
 }
+
 
 void init_global_singletons(void)
 {
@@ -320,6 +323,7 @@ Cell* make_cell_vector(void)
     return v;
 }
 
+
 Cell* make_cell_bytevector(const bv_t t)
 {
     Cell* v = GC_MALLOC(sizeof(Cell));
@@ -341,6 +345,7 @@ Cell* make_cell_bytevector(const bv_t t)
     return v;
 }
 
+
 Cell* make_cell_error(const char* error_string, const err_t error_type)
 {
     Cell* v = GC_MALLOC(sizeof(Cell));
@@ -353,6 +358,7 @@ Cell* make_cell_error(const char* error_string, const err_t error_type)
     v->error_v = GC_strdup(error_string);
     return v;
 }
+
 
 Cell* make_cell_port(const char* path, FILE* fh, const int io_t, const int stream_t)
 {
@@ -371,6 +377,7 @@ Cell* make_cell_port(const char* path, FILE* fh, const int io_t, const int strea
     return v;
 }
 
+
 Cell* make_cell_mrv(void)
 {
     Cell* v = GC_MALLOC(sizeof(Cell));
@@ -383,6 +390,7 @@ Cell* make_cell_mrv(void)
     v->cell = nullptr;
     return v;
 }
+
 
 Cell* make_cell_bigint(const char* s, const Cell* a,  const uint8_t base)
 {
@@ -406,6 +414,7 @@ Cell* make_cell_bigint(const char* s, const Cell* a,  const uint8_t base)
     }
     return v;
 }
+
 
 Cell* make_cell_bigfloat(const char* s)
 {
@@ -440,6 +449,7 @@ Cell* byte_add(Cell* bv, const int64_t value)
     BV_OPS[bv->bv->type].append(bv, value);
     return bv;
 }
+
 
 Cell* cell_pop(Cell* v, const int i)
 {
@@ -536,7 +546,6 @@ Cell* cell_copy(const Cell* v) {
         break;
     case CELL_SEXPR:
     case CELL_VECTOR:
-    //case CELL_BYTEVECTOR:
         copy->count = v->count;
         if (v->count) {
             copy->cell = GC_MALLOC(sizeof(Cell*) * v->count);
@@ -547,15 +556,12 @@ Cell* cell_copy(const Cell* v) {
             copy->cell[i] = cell_copy(v->cell[i]);
         }
         break;
-    case CELL_NIL:
-        /* Return the singleton instead of allocating. */
-        return make_cell_nil();
     case CELL_PAIR: {
         copy->car = cell_copy(v->car);
         copy->cdr = cell_copy(v->cdr);
         copy->len = v->len;
         break;
-        }
+    }
     case CELL_RATIONAL: {
         copy->exact = v->exact;
         copy->num = v->num;
@@ -567,7 +573,7 @@ Cell* cell_copy(const Cell* v) {
         copy->real = cell_copy(v->real);
         copy->imag = cell_copy(v->imag);
         break;
-        }
+    }
     case CELL_PORT: {
         copy->is_open = v->is_open;
         copy->port = GC_MALLOC(sizeof(port));
@@ -581,6 +587,14 @@ Cell* cell_copy(const Cell* v) {
         copy->bi = GC_MALLOC(sizeof(mpz_t));
         copy->bi = v->bi;
         break;
+    /* Return the singleton objects instead of allocating for these types. */
+    case CELL_NIL:
+        return make_cell_nil();
+    case CELL_TCS:
+        return make_cell_tcs();
+    case CELL_UNSPEC:
+        return make_cell_usp();
+
     default:
         fprintf(stderr, "cell_copy: unknown type %d\n", v->type);
         return nullptr;
