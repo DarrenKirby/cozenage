@@ -1,5 +1,5 @@
 /*
- * 'ports.h'
+ * 'src/ports.h'
  * This file is part of Cozenage - https://github.com/DarrenKirby/cozenage
  * Copyright © 2025  Darren Kirby <darren@dragonbyte.ca>
  *
@@ -34,6 +34,7 @@ Cell* builtin_input_port_open(const Lex* e, const Cell* a);
 Cell* builtin_output_port_open(const Lex* e, const Cell* a);
 Cell* builtin_close_port(const Lex* e, const Cell* a);
 Cell* builtin_read_line(const Lex* e, const Cell* a);
+Cell* builtin_read_lines(const Lex* e, const Cell* a);
 Cell* builtin_read_char(const Lex* e, const Cell* a);
 Cell* builtin_read_string(const Lex* e, const Cell* a);
 Cell* builtin_peek_char(const Lex* e, const Cell* a);
@@ -49,6 +50,7 @@ Cell* builtin_read_error(const Lex* e, const Cell* a);
 Cell* builtin_file_error(const Lex* e, const Cell* a);
 Cell* builtin_flush_output_port(const Lex* e, const Cell* a);
 Cell* builtin_display(const Lex* e, const Cell* a);
+Cell* builtin_println(const Lex* e, const Cell* a);
 Cell* builtin_write(const Lex* e, const Cell* a);
 Cell* builtin_open_input_file(const Lex* e, const Cell* a);
 Cell* builtin_open_binary_input_file(const Lex* e, const Cell* a);

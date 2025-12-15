@@ -1,5 +1,5 @@
 /*
- * 'ports.c'
+ * 'src/ports.c'
  * This file is part of Cozenage - https://github.com/DarrenKirby/cozenage
  * Copyright © 2025  Darren Kirby <darren@dragonbyte.ca>
  *
@@ -21,6 +21,7 @@
 #include "types.h"
 #include "strings.h"
 #include "repr.h"
+#include "vectors.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -40,17 +41,20 @@ Cell* builtin_current_input_port(const Lex* e, const Cell* a)
     return default_input_port;
 }
 
+
 Cell* builtin_current_output_port(const Lex* e, const Cell* a)
 {
     (void)e; (void)a;
     return default_output_port;
 }
 
+
 Cell* builtin_current_error_port(const Lex* e, const Cell* a)
 {
     (void)e; (void)a;
     return default_error_port;
 }
+
 
 Cell* builtin_input_port_pred(const Lex* e, const Cell* a)
 {
@@ -63,6 +67,7 @@ Cell* builtin_input_port_pred(const Lex* e, const Cell* a)
     return True_Obj;
 }
 
+
 Cell* builtin_output_port_pred(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -73,6 +78,7 @@ Cell* builtin_output_port_pred(const Lex* e, const Cell* a)
     }
     return True_Obj;
 }
+
 
 Cell* builtin_input_port_open(const Lex* e, const Cell* a)
 {
@@ -87,6 +93,7 @@ Cell* builtin_input_port_open(const Lex* e, const Cell* a)
     return False_Obj;
 }
 
+
 Cell* builtin_output_port_open(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -99,6 +106,7 @@ Cell* builtin_output_port_open(const Lex* e, const Cell* a)
     }
     return False_Obj;
 }
+
 
 Cell* builtin_close_port(const Lex* e, const Cell* a)
 {
@@ -118,6 +126,7 @@ Cell* builtin_close_port(const Lex* e, const Cell* a)
     }
     return True_Obj;
 }
+
 
 Cell* builtin_read_line(const Lex* e, const Cell* a)
 {
@@ -150,6 +159,43 @@ Cell* builtin_read_line(const Lex* e, const Cell* a)
     free(line);
     return result;
 }
+
+
+Cell* builtin_read_lines(const Lex* e, const Cell* a)
+{
+    (void)e;
+    Cell* err = CHECK_ARITY_RANGE(a, 0, 1, "read-lines");
+    if (err) return err;
+    err = check_arg_types(a, CELL_PORT, "read-lines");
+    if (err) return err;
+
+    Cell* port;
+    if (a->count == 0) {
+        port = builtin_current_input_port(e, a);
+    } else {
+        port = a->cell[0];
+    }
+
+    if (port->is_open == 0 || port->port->port_t != INPUT_PORT)
+        return make_cell_error(
+            "port is not open for input",
+            GEN_ERR);
+
+    Cell* result = make_cell_vector();
+    size_t n = 2048;
+    char *line = GC_MALLOC_ATOMIC(n);
+    ssize_t len;
+    while ((len = getline(&line, &n, port->port->fh)) > 0) {
+        if (len <= 0) { break; }
+        /* remove newline if present */
+        if (line[len-1] == '\n') line[len-1] = '\0';
+
+        Cell* s = make_cell_string(line);
+        cell_add(result, s);
+    }
+    return builtin_vector_to_list(e, make_sexpr_len1(result));
+}
+
 
 Cell* builtin_read_string(const Lex* e, const Cell* a) {
     (void)e;
@@ -217,6 +263,7 @@ Cell* builtin_read_string(const Lex* e, const Cell* a) {
     return make_cell_string(buffer);
 }
 
+
 Cell* builtin_read_char(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -250,6 +297,7 @@ Cell* builtin_read_char(const Lex* e, const Cell* a)
     }
     return make_cell_char((int)wc);
 }
+
 
 Cell* builtin_peek_char(const Lex* e, const Cell* a)
 {
@@ -292,6 +340,7 @@ Cell* builtin_peek_char(const Lex* e, const Cell* a)
     return make_cell_char((int)wc);
 }
 
+
 Cell* builtin_write_char(const Lex* e, const Cell* a)
 {
     Cell* err = CHECK_ARITY_RANGE(a, 1, 2, "write-char");
@@ -322,6 +371,7 @@ Cell* builtin_write_char(const Lex* e, const Cell* a)
     }
     return USP_Obj;
 }
+
 
 Cell* builtin_write_string(const Lex* e, const Cell* a)
 {
@@ -375,6 +425,7 @@ Cell* builtin_write_string(const Lex* e, const Cell* a)
     return USP_Obj;
 }
 
+
 Cell* builtin_write_u8(const Lex* e, const Cell* a)
 {
     Cell* err = CHECK_ARITY_RANGE(a, 1, 2, "write-u8");
@@ -401,6 +452,7 @@ Cell* builtin_write_u8(const Lex* e, const Cell* a)
     }
     return USP_Obj;
 }
+
 
 Cell* builtin_write_bytevector(const Lex* e, const Cell* a)
 {
@@ -455,6 +507,7 @@ Cell* builtin_write_bytevector(const Lex* e, const Cell* a)
     return USP_Obj;
 }
 
+
 Cell* builtin_newline(const Lex* e, const Cell* a)
 {
     Cell* err = CHECK_ARITY_RANGE(a, 0, 1, "newline");
@@ -473,6 +526,7 @@ Cell* builtin_newline(const Lex* e, const Cell* a)
     return USP_Obj;
 }
 
+
 Cell* builtin_eof(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -480,6 +534,7 @@ Cell* builtin_eof(const Lex* e, const Cell* a)
     if (err) return err;
     return EOF_Obj;
 }
+
 
 /* (read-error? obj) */
 Cell* builtin_read_error(const Lex* e, const Cell* a)
@@ -500,6 +555,7 @@ Cell* builtin_read_error(const Lex* e, const Cell* a)
     return True_Obj;
 }
 
+
 /* (file-error? obj) */
 Cell* builtin_file_error(const Lex* e, const Cell* a)
 {
@@ -518,6 +574,7 @@ Cell* builtin_file_error(const Lex* e, const Cell* a)
 
     return True_Obj;
 }
+
 
 /* (flush-output-port) procedure
 (flush-output-port port ) */
@@ -541,6 +598,7 @@ Cell* builtin_flush_output_port(const Lex* e, const Cell* a)
     }
     return USP_Obj;
 }
+
 
 /* A simple function to check if a character is ready on a FILE* stream.
  * This directly implements the logic for char-ready? and u8-ready? */
@@ -574,6 +632,7 @@ static int is_char_ready(FILE *fp) {
      * FD_ISSET is technically the most correct check. */
     return result > 0 && FD_ISSET(fd, &readfds);
 }
+
 
 Cell* builtin_char_ready(const Lex* e, const Cell* a)
 {
@@ -624,6 +683,7 @@ Cell* builtin_u8_ready(const Lex* e, const Cell* a)
     return result ? True_Obj : False_Obj;
 }
 
+
 Cell* builtin_display(const Lex* e, const Cell* a)
 {
     Cell* err = CHECK_ARITY_RANGE(a, 1, 2, "display");
@@ -634,7 +694,7 @@ Cell* builtin_display(const Lex* e, const Cell* a)
         port = builtin_current_output_port(e, a);
     } else {
         if (a->cell[1]->type != CELL_PORT) {
-            return make_cell_error("arg1 must be a port", TYPE_ERR);
+            return make_cell_error("display: arg1 must be a port", TYPE_ERR);
         }
         port = a->cell[1];
     }
@@ -642,6 +702,28 @@ Cell* builtin_display(const Lex* e, const Cell* a)
     fprintf(port->port->fh, "%s", cell_to_string(val, MODE_DISPLAY));
     return USP_Obj;
 }
+
+
+/* Identical to 'display', but add the newline for convenience */
+Cell* builtin_println(const Lex* e, const Cell* a)
+{
+    Cell* err = CHECK_ARITY_RANGE(a, 1, 2, "println");
+    if (err) return err;
+
+    Cell* port;
+    if (a->count == 1) {
+        port = builtin_current_output_port(e, a);
+    } else {
+        if (a->cell[1]->type != CELL_PORT) {
+            return make_cell_error("println: must be a port", TYPE_ERR);
+        }
+        port = a->cell[1];
+    }
+    const Cell* val = a->cell[0];
+    fprintf(port->port->fh, "%s\n", cell_to_string(val, MODE_DISPLAY));
+    return USP_Obj;
+}
+
 
 /* TODO: does not handle circular objects/datum labels */
 Cell* builtin_write(const Lex* e, const Cell* a)
@@ -662,6 +744,7 @@ Cell* builtin_write(const Lex* e, const Cell* a)
     fprintf(port->port->fh, "%s", cell_to_string(val, MODE_WRITE));
     return USP_Obj;
 }
+
 
 /* 'open-input-file' -> CELL_PORT - open a file and bind it to a port */
 Cell* builtin_open_input_file(const Lex* e, const Cell* a)
@@ -687,6 +770,7 @@ Cell* builtin_open_input_file(const Lex* e, const Cell* a)
     Cell* p = make_cell_port(ptr, fp, INPUT_PORT, FILE_PORT);
     return p;
 }
+
 
 Cell* builtin_open_output_file(const Lex* e, const Cell* a)
 {
