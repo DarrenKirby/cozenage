@@ -46,6 +46,7 @@ const char* fmt_err(const char *fmt, ...)
     return buf;
 }
 
+
 /* Turn a single type into a string (for error reporting). */
 const char* cell_type_name(const int t)
 {
@@ -72,6 +73,7 @@ const char* cell_type_name(const int t)
         default:               return "unknown";
     }
 }
+
 
 /* Turn a mask (possibly multiple flags ORed together) into a string
    e.g. (CELL_INTEGER | CELL_REAL) -> "int|real" */
@@ -131,6 +133,7 @@ Cell* check_arg_types(const Cell* a, const int mask, const char* fname)
     return nullptr; /* all good. */
 }
 
+
 Cell* check_arg_arity(const Cell* a, const int exact, const int min, const int max, const char* fname)
 {
     const int argc = a->count;
@@ -163,25 +166,30 @@ static Cell* int_to_rat(const Cell* v)
     return make_cell_rational(v->integer_v, 1, 0);
 }
 
+
 static Cell* int_to_real(const Cell* v)
 {
     return make_cell_real((long double)v->integer_v);
 }
+
 
 static Cell* rat_to_real(const Cell* v)
 {
     return make_cell_real((long double)v->num / (long double)v->den);
 }
 
+
 static Cell* to_complex(Cell* v)
 {
     return make_cell_complex(v, make_cell_integer(0));
 }
 
+
 static Cell* to_bigint(Cell* v)
 {
     return make_cell_bigint(nullptr, v, 10);
 }
+
 
 /* Promote two numbers to the same type, modifying lhs and rhs in-place. */
 void numeric_promote(Cell** lhs, Cell** rhs)
@@ -236,6 +244,7 @@ Cell* make_sexpr_len1(const Cell* a)
     return v;
 }
 
+
 /* Construct an S-expression with exactly two elements. */
 Cell* make_sexpr_len2(const Cell* a, const Cell* b)
 {
@@ -246,6 +255,7 @@ Cell* make_sexpr_len2(const Cell* a, const Cell* b)
     v->cell[1] = cell_copy(b);
     return v;
 }
+
 
 /* Construct an S-expression with exactly four elements. */
 Cell* make_sexpr_len4(const Cell* a, const Cell* b, const Cell* c, const Cell* d)
@@ -259,6 +269,7 @@ Cell* make_sexpr_len4(const Cell* a, const Cell* b, const Cell* c, const Cell* d
     v->cell[3] = cell_copy(d);
     return v;
 }
+
 
 /* Convert a CELL_SEXPR to a CELL_PAIR linked-list. */
 Cell* make_list_from_sexpr(Cell* c)
@@ -363,6 +374,7 @@ Cell* make_sexpr_from_list(Cell* v)
     return result;
 }
 
+
 /* Constructs an S-expression from a C array of Cell pointers. */
 Cell* make_sexpr_from_array(const int count, Cell** cells)
 {
@@ -377,6 +389,7 @@ Cell* make_sexpr_from_array(const int count, Cell** cells)
 
     return v;
 }
+
 
 Cell* flatten_sexpr(const Cell* sexpr)
 {
@@ -432,6 +445,7 @@ long double complex cell_to_c_complex(const Cell* c)
     return CMPLXL(a, b);
 }
 
+
 /* Helper to check if a non-complex numeric cell has a value of zero. */
 bool cell_is_real_zero(const Cell* c)
 {
@@ -450,6 +464,7 @@ bool cell_is_real_zero(const Cell* c)
             return false;
     }
 }
+
 
 /* Helper to check if a cell represents an integer value, per R7RS tower. */
 bool cell_is_integer(const Cell* c)
@@ -480,6 +495,7 @@ bool cell_is_integer(const Cell* c)
     }
 }
 
+
 /* Checks if a number is real-valued (i.e., has a zero imaginary part). */
 bool cell_is_real(const Cell* c)
 {
@@ -504,6 +520,7 @@ bool cell_is_real(const Cell* c)
     }
 }
 
+
 /* Helper for positive? (> 0)
  * Note: R7RS 'positive?' is strictly greater than 0. */
 bool cell_is_positive(const Cell* c)
@@ -518,6 +535,7 @@ bool cell_is_positive(const Cell* c)
     return num > 0 ? true : false;
 }
 
+
 /* Helper for negative? (< 0) */
 bool cell_is_negative(const Cell* c)
 {
@@ -530,6 +548,7 @@ bool cell_is_negative(const Cell* c)
     const long double num = cell_to_long_double(c);
     return num < 0 ? true : false;
 }
+
 
 /* Helper for odd? */
 bool cell_is_odd(const Cell* c)
@@ -559,6 +578,7 @@ bool cell_is_odd(const Cell* c)
     }
     return val % 2 != 0;
 }
+
 
 /* Helper for even? */
 bool cell_is_even(const Cell* c)
@@ -613,6 +633,7 @@ Cell* negate_numeric(const Cell* x)
     }
 }
 
+
 /* gcd helper, iterative and safe */
 static long int gcd_ll(long int a, long int b)
 {
@@ -625,6 +646,7 @@ static long int gcd_ll(long int a, long int b)
     }
     return a;
 }
+
 
 /* simplify rational: reduce to the lowest terms, normalize sign */
 Cell* simplify_rational(Cell* v)
@@ -661,6 +683,7 @@ Cell* simplify_rational(Cell* v)
     }
     return v;
 }
+
 
 /* Helper for performing arithmetic on complex numbers. */
 void complex_apply(BuiltinFn fn, const Lex* e, Cell* result, const Cell* rhs)
@@ -736,6 +759,7 @@ void complex_apply(BuiltinFn fn, const Lex* e, Cell* result, const Cell* rhs)
     result->imag = new_imag;
 }
 
+
 /* Helper to convert any real-valued cell to a C long double. */
 long double cell_to_long_double(const Cell* c)
 {
@@ -752,6 +776,7 @@ long double cell_to_long_double(const Cell* c)
     }
 }
 
+
 /* Helper to construct appropriate cell from a long double */
 Cell* make_cell_from_double(const long double d)
 {
@@ -760,6 +785,7 @@ Cell* make_cell_from_double(const long double d)
     }
     return make_cell_real(d);
 }
+
 
 /* A version of strdup that allocates memory using the garbage collector. */
 char* GC_strdup(const char* s)
@@ -778,6 +804,7 @@ char* GC_strdup(const char* s)
     memcpy(new_str, s, len);
     return new_str;
 }
+
 
 /* A version of strndup that allocates memory using the garbage collector. */
 char* GC_strndup(const char* s, const size_t n)
@@ -798,6 +825,7 @@ char* GC_strndup(const char* s, const size_t n)
 
     return new_str;
 }
+
 
 /* Mapping of char names to Unicode codepoints.
  * This array MUST be kept sorted alphabetically. */
@@ -854,6 +882,7 @@ static const NamedChar named_chars[] = {
     {"zeta",      0x03B6}
 };
 
+
 /* This function is required by bsearch to compare a key (the string name)
  * with an element in the NamedChar array. */
 int compare_named_chars(const void* key, const void* element)
@@ -862,6 +891,7 @@ int compare_named_chars(const void* key, const void* element)
     const NamedChar* char_element = element;
     return strcmp(name_key, char_element->name);
 }
+
 
 /* Returns a pointer to the found NamedChar, or NULL if not found. */
 const NamedChar* find_named_char(const char* name)
@@ -874,6 +904,7 @@ const NamedChar* find_named_char(const char* name)
         compare_named_chars                            /* The comparison function */
     );
 }
+
 
 /* helper to get a pointer to the value in the Nth node of a list.
  * Returns NULL if the index is out of bounds or the input is not a list. */
@@ -896,6 +927,7 @@ Cell* list_get_nth_cell_ptr(const Cell* list, const long n)
     return current->car;
 }
 
+
 /* Helpers for dealing with strings and Unicode */
 
 int32_t string_length_utf8(const char* s)
@@ -917,6 +949,7 @@ int32_t string_length_utf8(const char* s)
     }
     return code_point_count;
 }
+
 
 bool is_pure_ascii(const char *str, size_t len) {
     const unsigned char *ptr = (const unsigned char *)str;
@@ -956,6 +989,7 @@ bool is_pure_ascii(const char *str, size_t len) {
     return true;
 }
 
+
 char* convert_to_utf8(const UChar* ustr)
 {
     UErrorCode status = U_ZERO_ERROR;
@@ -978,6 +1012,7 @@ char* convert_to_utf8(const UChar* ustr)
     }
     return result_utf8_str;
 }
+
 
 UChar* convert_to_utf16(const char* str)
 {

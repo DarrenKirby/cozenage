@@ -1,5 +1,5 @@
 /*
- * 'vectors.c'
+ * 'src/vectors.c'
  * This file is part of Cozenage - https://github.com/DarrenKirby/cozenage
  * Copyright © 2025  Darren Kirby <darren@dragonbyte.ca>
  *
