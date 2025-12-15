@@ -1,5 +1,5 @@
 /*
- * 'symbols.c'
+ * 'src/symbols.c'
  * This file is part of Cozenage - https://github.com/DarrenKirby/cozenage
  * Copyright © 2025  Darren Kirby <darren@dragonbyte.ca>
  *
@@ -50,6 +50,7 @@ Cell* G_begin_sym = nullptr;
 Cell* G_and_sym = nullptr;
 Cell* G_or_sym = nullptr;
 Cell* G_else_sym = nullptr;
+
 
 /* Initialize canonical symbols and configure their special form IDs. */
 void init_special_forms(void) {
@@ -126,6 +127,7 @@ Cell* builtin_symbol_equal_pred(const Lex* e, const Cell* a)
     return True_Obj;
 }
 
+
 Cell* builtin_string_to_symbol(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -139,6 +141,7 @@ Cell* builtin_string_to_symbol(const Lex* e, const Cell* a)
     return make_cell_symbol(a->cell[0]->str);
 }
 
+
 Cell* builtin_symbol_to_string(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -151,6 +154,7 @@ Cell* builtin_symbol_to_string(const Lex* e, const Cell* a)
     }
     return make_cell_string(a->cell[0]->sym);
 }
+
 
 /* This may not belong in this file - but it's a short file,
  * and is as good a place as any to define this. */

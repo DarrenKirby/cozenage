@@ -1,5 +1,5 @@
 /*
- * 'bignum.c'
+ * 'src/bignum.c'
  * This file is part of Cozenage - https://github.com/DarrenKirby/cozenage
  * Copyright © 2025  Darren Kirby <darren@dragonbyte.ca>
  *
@@ -29,13 +29,16 @@ bool add_will_overflow_i64(int64_t a, int64_t b, int64_t *out) {
     return __builtin_add_overflow(a, b, out);
 }
 
+
 bool sub_will_overflow_i64(int64_t a, int64_t b, int64_t *out) {
     return __builtin_sub_overflow(a, b, out);
 }
 
+
 bool mul_will_overflow_i64(int64_t a, int64_t b, int64_t *out) {
     return __builtin_mul_overflow(a, b, out);
 }
+
 
 bool div_will_overflow_i64(int64_t a, int64_t b, int64_t *out) {
     if (b == 0) { /* error: division by zero */ return true; }
@@ -43,6 +46,7 @@ bool div_will_overflow_i64(int64_t a, int64_t b, int64_t *out) {
     *out = a / b;
     return false;
 }
+
 
 /* bigint demotion check helpers */
 bool mpz_fits_int64(const mpz_t z) {
@@ -60,10 +64,12 @@ bool mpz_fits_int64(const mpz_t z) {
     return (cmp_low >= 0 && cmp_high <= 0);
 }
 
+
 int64_t mpz_get_i64_checked(const mpz_t z) {
     /* If mpz_fits_int64 returns true; then calling this is safe. */
     return (int64_t) mpz_get_si(z);
 }
+
 
 /* bigint arithmetic procedures */
 Cell* bigint_add(Cell* a, const Cell* b)
@@ -72,11 +78,13 @@ Cell* bigint_add(Cell* a, const Cell* b)
     return a;
 }
 
+
 Cell* bigint_sub(Cell* a, const Cell* b)
 {
     mpz_sub(*a->bi, *a->bi, *b->bi);
     return a;
 }
+
 
 Cell* bigint_mul(Cell* a, const Cell* b)
 {
@@ -84,17 +92,20 @@ Cell* bigint_mul(Cell* a, const Cell* b)
     return a;
 }
 
+
 Cell* bigint_div(Cell* a, const Cell* b)
 {
     mpz_div(*a->bi, *a->bi, *b->bi);
     return a;
 }
 
+
 Cell* bigint_neg(Cell* a)
 {
     mpz_neg(*a->bi, *a->bi);
     return a;
 }
+
 
 Cell* bigint_expt(Cell* a, const int exp)
 {

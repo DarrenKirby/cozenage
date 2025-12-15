@@ -1,5 +1,5 @@
 /*
- * 'random.c'
+ * 'src/base-lib/random.c'
  * This file is part of Cozenage - https://github.com/DarrenKirby/cozenage
  * Copyright © 2025  Darren Kirby <darren@dragonbyte.ca>
  *
@@ -54,6 +54,7 @@ static unsigned int rand_uint(const uint32_t limit) {
     return m >> 32;
 }
 
+
 #define RAND_DOUBLE_SCALE 9007199254740992.0 /* 2⁵³ */
 
 /* Random double in [0.0, 1.0). */
@@ -72,7 +73,6 @@ static double rand_double() {
     return (double)(u.i >> 11) * (1.0/RAND_DOUBLE_SCALE);
 }
 
-//////// end of helpers
 
 static Cell* random_randint(const Lex* e, const Cell* a)
 {
@@ -84,11 +84,13 @@ static Cell* random_randint(const Lex* e, const Cell* a)
     return make_cell_integer(rand_uint(limit));
 }
 
+
 static Cell* random_randbl(const Lex* e, const Cell* a)
 {
     (void)e; (void)a;
     return make_cell_real(rand_double());
 }
+
 
 /* Random double in [min, max). */
 static Cell* random_uniform(const Lex* e, const Cell* a)
@@ -104,6 +106,7 @@ static Cell* random_uniform(const Lex* e, const Cell* a)
 
     return make_cell_real(min + (max - min) * rand_double());
 }
+
 
 /* Implements a 'modern' version of the
  * Fisher-Yates shuffle. */

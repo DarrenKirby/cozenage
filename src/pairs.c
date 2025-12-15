@@ -1,5 +1,5 @@
 /*
- * 'pairs.c'
+ * 'src/pairs.c'
  * This file is part of Cozenage - https://github.com/DarrenKirby/cozenage
  * Copyright © 2025  Darren Kirby <darren@dragonbyte.ca>
  *
@@ -37,6 +37,7 @@ inline Cell* car__(const Cell* list)
     return list->car;
 }
 
+
 inline Cell* cdr__(const Cell* list)
 {
     if (!(list->type & CELL_PAIR)) {
@@ -64,6 +65,7 @@ Cell* builtin_cons(const Lex* e, const Cell* a)
     return make_cell_pair(a->cell[0], a->cell[1]);
 }
 
+
 /* (car pair)
  * Returns the contents of the car field of pair. */
 Cell* builtin_car(const Lex* e, const Cell* a)
@@ -74,6 +76,7 @@ Cell* builtin_car(const Lex* e, const Cell* a)
     return car__(a->cell[0]);
 }
 
+
 /* (cdr pair)
  * Returns the contents of the cdr field of pair. */
 Cell* builtin_cdr(const Lex* e, const Cell* a)
@@ -83,6 +86,7 @@ Cell* builtin_cdr(const Lex* e, const Cell* a)
     if (err) return err;
     return cdr__(a->cell[0]);
 }
+
 
 /* These procedures are compositions of car and cdr as follows:
  *    (define (caar x) (car (car x)))
@@ -98,6 +102,7 @@ Cell* builtin_caar(const Lex* e, const Cell* a)
     return car__(car__(a->cell[0]));
 }
 
+
 Cell* builtin_cadr(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -105,6 +110,7 @@ Cell* builtin_cadr(const Lex* e, const Cell* a)
     if (err) { return err; }
     return car__(cdr__(a->cell[0]));
 }
+
 
 Cell* builtin_cdar(const Lex* e, const Cell* a)
 {
@@ -114,6 +120,7 @@ Cell* builtin_cdar(const Lex* e, const Cell* a)
     return cdr__(car__(a->cell[0]));
 }
 
+
 Cell* builtin_cddr(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -121,6 +128,7 @@ Cell* builtin_cddr(const Lex* e, const Cell* a)
     if (err) { return err; }
     return cdr__(cdr__(a->cell[0]));
 }
+
 
 /* (list obj ... )
  * Returns a newly allocated list of its arguments. */
@@ -139,6 +147,7 @@ Cell* builtin_list(const Lex* e, const Cell* a)
     return result;
 }
 
+
 /* (set-car! pair obj)
  * Stores obj in the car field of pair. */
 Cell* builtin_set_car(const Lex* e, const Cell* a)
@@ -155,6 +164,7 @@ Cell* builtin_set_car(const Lex* e, const Cell* a)
     return USP_Obj;
 }
 
+
 /* (set-cdr! pair obj)
  * Stores obj in the cdr field of pair. */
 Cell* builtin_set_cdr(const Lex* e, const Cell* a)
@@ -170,6 +180,7 @@ Cell* builtin_set_cdr(const Lex* e, const Cell* a)
     a->cell[0]->cdr = a->cell[1];
     return USP_Obj;
 }
+
 
 /* (length list)
  * Returns the length of list. */
@@ -212,6 +223,7 @@ Cell* builtin_list_length(const Lex* e, const Cell* a)
     return make_cell_integer(count);
 }
 
+
 /* (list-ref list k)
  * Returns the kth element of list. (This is the same as the car of (list-tail list k).) */
 Cell* builtin_list_ref(const Lex* e, const Cell* a)
@@ -252,6 +264,7 @@ Cell* builtin_list_ref(const Lex* e, const Cell* a)
     }
     return p->car;
 }
+
 
 /* (append list ...)
  * The last argument, if there is one, can be of any type. Returns a list consisting of the elements
@@ -351,6 +364,7 @@ Cell* builtin_list_append(const Lex* e, const Cell* a)
     result_tail->cdr = (Cell*)last_arg;
     return result_head;
 }
+
 
 /* (reverse list)
  * Returns a newly allocated list consisting of the elements of list in reverse order. */
