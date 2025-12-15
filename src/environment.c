@@ -374,6 +374,7 @@ void lex_add_builtins(const Lex* e)
     lex_add_builtin(e, "string-ci<=?", builtin_string_lte_ci);
     lex_add_builtin(e, "string-ci>?", builtin_string_gt_ci);
     lex_add_builtin(e, "string-ci>=?", builtin_string_gte_ci);
+    lex_add_builtin(e, "string-split", builtin_string_split);
     /* Control features. */
     lex_add_builtin(e, "eval", builtin_eval);
     lex_add_builtin(e, "apply", builtin_apply);
@@ -397,6 +398,7 @@ void lex_add_builtins(const Lex* e)
     lex_add_builtin(e, "close-input-port", builtin_close_port); /* no distinction yet... */
     lex_add_builtin(e, "close-output-port", builtin_close_port);
     lex_add_builtin(e, "read-line", builtin_read_line);
+    lex_add_builtin(e, "read-lines", builtin_read_lines);
     lex_add_builtin(e, "read-char", builtin_read_char);
     lex_add_builtin(e, "read-u8", builtin_read_char); /* Alias - no distinction between binary and text. */
     lex_add_builtin(e, "read-string", builtin_read_string);
@@ -414,6 +416,7 @@ void lex_add_builtins(const Lex* e)
     lex_add_builtin(e, "open-input-file", builtin_open_input_file);
     lex_add_builtin(e, "open-output-file", builtin_open_output_file);
     lex_add_builtin(e, "display", builtin_display);
+    lex_add_builtin(e, "println", builtin_println);
     lex_add_builtin(e, "write", builtin_write);
     /* Error procedures. */
     lex_add_builtin(e, "read-error?", builtin_read_error);
