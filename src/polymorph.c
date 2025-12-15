@@ -58,6 +58,8 @@ static Cell* bytevector_reverse(const Cell* v)
     }
     return result;
 }
+
+
 /* fast-ascii and slow-Unicode reverse helpers for strings. */
 static char* ascii_reverse(const char* input, const size_t len) {
     char* reversed = GC_MALLOC_ATOMIC(len + 1);
@@ -70,6 +72,7 @@ static char* ascii_reverse(const char* input, const size_t len) {
     reversed[len] = '\0';
     return reversed;
 }
+
 
 static char* unicode_reverse(const char* input, const int32_t byte_len) {
     UErrorCode status = U_ZERO_ERROR;
@@ -122,6 +125,7 @@ static char* unicode_reverse(const char* input, const int32_t byte_len) {
     return reversed;
 }
 
+
 static Cell* string_reverse(const Cell* v)
 {
     (void)v;
@@ -165,6 +169,7 @@ static Cell* list_idx(const Lex* e, const Cell* a)
     return builtin_vector_to_list(e, make_sexpr_len1(result));
 }
 
+
 static Cell* vector_idx(const Cell* a)
 {
     const Cell* v = a->cell[0];
@@ -184,6 +189,7 @@ static Cell* vector_idx(const Cell* a)
     }
     return result;
 }
+
 
 Cell* builtin_len(const Lex* e, const Cell* a) {
     (void)e;
@@ -234,6 +240,7 @@ Cell* builtin_idx(const Lex* e, const Cell* a)
             cell_type_name(a->cell[0]->type)), TYPE_ERR);
     }
 }
+
 
 Cell* builtin_rev(const Lex* e, const Cell* a)
 {
