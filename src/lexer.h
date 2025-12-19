@@ -1,5 +1,5 @@
 /*
- * 'lexer.h'
+ * 'src/lexer.h'
  * This file is part of Cozenage - https://github.com/DarrenKirby/cozenage
  * Copyright © 2025  Darren Kirby <darren@dragonbyte.ca>
  *
@@ -55,8 +55,7 @@ typedef struct {
 
 #define TA_CAPACITY 8
 
-//void init_lexer(const char *source);
-//Token lex_token();
+
 TokenArray* scan_all_tokens(const char* source);
 void debug_lexer(const TokenArray* ta);
 

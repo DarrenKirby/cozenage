@@ -1,5 +1,5 @@
 /*
- * 'lexer.c'
+ * 'src/lexer.c'
  * This file is part of Cozenage - https://github.com/DarrenKirby/cozenage
  * Copyright © 2025  Darren Kirby <darren@dragonbyte.ca>
  *
@@ -331,6 +331,7 @@ TokenArray* scan_all_tokens(const char* source)
         t_array = write_token_array(t_array, token);
         if (token.type == T_EOF) break;
     }
+
     return t_array;
 }
 
