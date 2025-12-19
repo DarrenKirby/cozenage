@@ -38,6 +38,7 @@
 /* import needs to know if we're in the REPL */
 extern int is_repl;
 
+
 /* A helper to check if a symbol name is a reserved syntactic keyword */
 int is_syntactic_keyword(const char* s)
 {
@@ -54,6 +55,7 @@ int is_syntactic_keyword(const char* s)
     }
     return 0;
 }
+
 
 Lex* build_lambda_env(const Lex* env, Cell* formals, Cell* args)
 {
@@ -108,6 +110,7 @@ Lex* build_lambda_env(const Lex* env, Cell* formals, Cell* args)
     return local_env;
 }
 
+
 /* Just takes body statements and stuffs them in a 'begin' expression */
 Cell* sequence_sf_body(const Cell* body)
 {
@@ -121,6 +124,7 @@ Cell* sequence_sf_body(const Cell* body)
     }
     return seq;
 }
+
 
 /* Searches the local environment chain and returns the specific frame
  * where 'sym' is bound. Returns NULL if not found in any local frame. */
@@ -192,10 +196,10 @@ HandlerResult sf_define(Lex* e, Cell* a)
     if (target->type == CELL_SEXPR && target->count > 0 &&
         target->cell[0]->type == CELL_SYMBOL) {
 
-        /* first element is function name. */
+        /* First element is function name. */
         const Cell* fname = target->cell[0];
 
-        /* rest are formal args. */
+        /* Rest are formal args. */
         Cell* formals = make_cell_sexpr();
         for (int i = 1; i < target->count; i++) {
             if (target->cell[i]->type != CELL_SYMBOL) {
@@ -207,13 +211,10 @@ HandlerResult sf_define(Lex* e, Cell* a)
             cell_add(formals, target->cell[i]);
         }
 
-        /* build lambda with args + body. */
-        Cell* body = make_cell_sexpr();
-        for (int i = 1; i < a->count; i++) {
-            cell_add(body, a->cell[i]);
-        }
-
+        /* Build lambda with args + body. */
+        Cell* body = a->cell[1];
         Cell* lam = lex_make_named_lambda(fname->sym, formals, body, e);
+
         lex_put_global(e, fname, lam);
         return (HandlerResult){ .action = ACTION_RETURN, .value = lam };
     }
@@ -223,6 +224,7 @@ HandlerResult sf_define(Lex* e, Cell* a)
         SYNTAX_ERR);
     return (HandlerResult) { .action = ACTION_RETURN, .value = err };
 }
+
 
 /* (quote ⟨datum⟩) OR '⟨datum⟩
  * (quote ⟨datum⟩) evaluates to ⟨datum⟩. ⟨Datum⟩ can be any external representation of a Scheme
@@ -244,11 +246,12 @@ HandlerResult sf_quote(Lex* e, Cell* a)
     return (HandlerResult) { .action = ACTION_RETURN, .value = result };
 }
 
+
 /* (lambda ⟨formals⟩ ⟨body⟩)
  * A lambda expression evaluates to a procedure. The environment in effect when the
- * lambda expression is evaluated is remembered as part of the procedure; it is called the closing
+ * lambda expression is evaluated is remembered as part of the procedure. It is called the closing
  * environment. When the procedure is later called with some arguments, the closing environment is
- * extended by binding the variables in the formal parameter list to fresh locations, and the
+ * extended by binding the variables in the formal parameter list to fresh locations. Then the
  * locations are filled with the arguments according to rules about to be given. The new environment
  * created by this process is referred to as the invocation environment. */
 HandlerResult sf_lambda(Lex* e, Cell* a)
@@ -260,10 +263,10 @@ HandlerResult sf_lambda(Lex* e, Cell* a)
         return (HandlerResult){ .action = ACTION_RETURN, .value = err };
     }
 
-    Cell* formals = cell_pop(a, first);   /* first arg */
-    Cell* body = a;                         /* remaining args */
+    Cell* formals = a->cell[0];   /* first arg */
+    Cell* body = a->cell[1];      /* remaining args */
 
-    /* formals should be a symbol or list of symbols */
+    /* Formals should be a symbol or list of symbols. */
     if (formals->type != CELL_SYMBOL) {
         for (int i = 0; i < formals->count; i++) {
             if (formals->cell[i]->type != CELL_SYMBOL) {
@@ -274,10 +277,11 @@ HandlerResult sf_lambda(Lex* e, Cell* a)
             }
         }
     }
-    /* Build the lambda cell */
+    /* Build the lambda cell. */
     Cell* lambda = lex_make_lambda(formals, body, e);
     return (HandlerResult) { .action = ACTION_RETURN, .value = lambda };
 }
+
 
 /* (if ⟨test⟩ ⟨consequent⟩ ⟨alternate⟩)
  * An if expression is evaluated as follows: first, ⟨test⟩ is evaluated. If it yields a true value,
@@ -312,9 +316,10 @@ HandlerResult sf_if(Lex* e, Cell* a)
     return (HandlerResult){ .action = ACTION_RETURN, .value = nullptr };
 }
 
+
 /* (when ⟨test⟩ ⟨expression1⟩ ⟨expression2⟩ ... )
  * The test is evaluated, and if it evaluates to a true value, the expressions are evaluated in
- * order. The result of the when expression is unspecified, per R7RS, but Cozenage returns the value
+ * order. The result of the 'when' expression is unspecified, per R7RS, but Cozenage returns the value
  * of the last expression evaluated, or null if the test evaluates to #f. */
 HandlerResult sf_when(Lex* e, Cell* a)
 {
@@ -335,6 +340,7 @@ HandlerResult sf_when(Lex* e, Cell* a)
     Cell* body_block = sequence_sf_body(a);
     return (HandlerResult) { .action = ACTION_CONTINUE, .value = body_block };
 }
+
 
 /*  (unless ⟨test⟩ ⟨expression1⟩ ⟨expression2⟩ ... )
  *  The test is evaluated, and if it evaluates to #f, the expressions are evaluated in order. The
@@ -360,13 +366,14 @@ HandlerResult sf_unless(Lex* e, Cell* a)
     return (HandlerResult) { .action = ACTION_RETURN, .value = nullptr };
 }
 
+
 /* (cond ⟨clause1⟩ ⟨clause2⟩ ... )
  * where ⟨clause⟩ is (⟨test⟩ ⟨expression1⟩ ...) OR (⟨test⟩ => ⟨expression⟩)
  * The last ⟨clause⟩ can be an “else clause”. A cond expression is evaluated by evaluating the
  * ⟨test⟩ expressions of successive ⟨clause⟩s in order until one of them evaluates to a true value.
  * When a ⟨test⟩ evaluates to a true value, the remaining ⟨expression⟩s in its ⟨clause⟩ are
  * evaluated in order, and the results of the last ⟨expression⟩ in the ⟨clause⟩ are returned as the
- * results of the entire cond expression
+ * results of the entire cond expression.
  *
  * If the selected ⟨clause⟩ contains only the ⟨test⟩ and no ⟨expression⟩s, then the value of the
  * ⟨test⟩ is returned as the result. If the selected ⟨clause⟩ uses the => alternate form, then the
@@ -474,6 +481,7 @@ HandlerResult sf_cond(Lex* e, Cell* a)
     return (HandlerResult){ .action = ACTION_RETURN, .value = nullptr };
 }
 
+
 /* (import ⟨import-set⟩ ...)
  * An import declaration provides a way to import identifiers exported by a library. Each
  * ⟨import set⟩ names a set of bindings from a library and possibly specifies local names for the
@@ -526,13 +534,14 @@ HandlerResult sf_import(Lex* e, Cell* a)
     return (HandlerResult) { .action = ACTION_RETURN, .value = result };
 }
 
+
 /* (let ⟨bindings⟩ ⟨body⟩) where ⟨Bindings⟩ has the form ((⟨variable1⟩ ⟨init1⟩) ...)
  * where each ⟨init⟩ is an expression, and ⟨body⟩ is a sequence of zero or more definitions followed
  * by a sequence of one or more expressions. It is an error for a ⟨variable⟩ to appear more than
  * once in the list of variables being bound.
  *
- * The ⟨init⟩s are evaluated in the current environment (in some unspecified order), the ⟨variable⟩s
- * are bound to fresh locations holding the results, the ⟨body⟩ is evaluated in the extended
+ * The ⟨init⟩s are evaluated in the current environment (in some unspecified order). The ⟨variable⟩s
+ * are bound to fresh locations holding the results. The ⟨body⟩ is evaluated in the extended
  * environment, and the values of the last expression of ⟨body⟩ are returned. Each binding of a
  * ⟨variable⟩ has ⟨body⟩ as its region. */
 HandlerResult sf_let(Lex* e, Cell* a)
@@ -549,7 +558,7 @@ HandlerResult sf_let(Lex* e, Cell* a)
         const Cell* body = a;
 
         /* Separate variables and values from bindings. */
-        /* TODO: raise error if not all variables are unique*/
+        /* TODO: raise error if not all variables are unique! */
         Cell* vars = make_cell_sexpr();
         Cell* vals = make_cell_sexpr();
         for (int i = 0; i < bindings->count; i++) {
@@ -593,6 +602,7 @@ HandlerResult sf_let(Lex* e, Cell* a)
         }
         return (HandlerResult) { .action = ACTION_RETURN, .value = result };
     }
+
     /* Named let - de-sugar into a letrec */
     /* Really need to handle this transformation better.  */
     Cell* nl_name = a->cell[0];
@@ -624,12 +634,13 @@ HandlerResult sf_let(Lex* e, Cell* a)
     return sf_letrec(e, letrec_expr);
 }
 
+
 /* (let* ⟨bindings⟩ ⟨body⟩) where ⟨Bindings⟩ has the form ((⟨variable1⟩ ⟨init1⟩) ...)
  * where each ⟨init⟩ is an expression, and ⟨body⟩ is a sequence of zero or more definitions followed
  * by a sequence of one or more expressions.
  *
  * The let* binding construct is similar to let, but the bindings are performed sequentially from
- * left to right, and the region of a binding indicated by (⟨variable⟩ ⟨init⟩) is that part of the
+ * left to right. Also, the region of a binding indicated by (⟨variable⟩ ⟨init⟩) is that part of the
  * let* expression to the right of the binding. Thus, the second binding is done in an environment
  * in which the first binding is visible, and so on. The ⟨variable⟩s need not be distinct. */
 HandlerResult sf_let_star(Lex* e, Cell* a)
@@ -691,6 +702,7 @@ HandlerResult sf_let_star(Lex* e, Cell* a)
     return (HandlerResult) { .action = ACTION_RETURN, .value = result };
 }
 
+
 HandlerResult sf_letrec(Lex* e, Cell* a)
 {
     const Cell* bindings = cell_pop(a, 0);
@@ -731,6 +743,7 @@ HandlerResult sf_letrec(Lex* e, Cell* a)
     }
     return (HandlerResult) { .action = ACTION_RETURN, .value = result };
 }
+
 
 /* (set! ⟨variable⟩ ⟨expression⟩)
  * ⟨Expression⟩ is evaluated, and the resulting value is stored in the location to which ⟨variable⟩
@@ -779,6 +792,7 @@ HandlerResult sf_set_bang(Lex* e, Cell* a)
     return (HandlerResult) { .action = ACTION_RETURN, .value = err };
 }
 
+
 /* (begin ⟨expression1 ⟩ ⟨expression2 ⟩ ... )
  * This form of begin can be used as an ordinary expression. The ⟨expression⟩s are evaluated
  * sequentially from left to right, and the values of the last ⟨expression⟩ are returned. This
@@ -803,6 +817,7 @@ HandlerResult sf_begin(Lex* e, Cell* a)
     /* Send last expr back to eval. */
     return (HandlerResult) { .action = ACTION_CONTINUE, .value = a->cell[n_expressions-1] };
 }
+
 
 /* (and ⟨test1⟩ ... )
  * The ⟨test⟩ expressions are evaluated from left to right, and if any expression evaluates to #f,
@@ -837,6 +852,7 @@ HandlerResult sf_and(Lex* e, Cell* a)
     }
     return (HandlerResult) { .action = ACTION_CONTINUE, .value = rest_of_and };
 }
+
 
 /* (or ⟨test1⟩ ... )
  * The ⟨test⟩ expressions are evaluated from left to right, and the value of the first expression
