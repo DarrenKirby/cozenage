@@ -24,6 +24,7 @@
 #include "eval.h"
 #include "repl.h"
 #include "repr.h"
+#include "transforms.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -145,16 +146,24 @@ Cell* parse_all_expressions(Lex* e, TokenArray* ta, const bool is_repl)
 {
     signal(SIGINT, ctrl_c_handler);
 
+    /* Parse the token array and get each parsed expression. */
     while (ta->position <= ta->count) {
         Cell* expression = parse_tokens(ta);
         if (!expression) {
             break;
         }
 
+        /* Kick all S-expressions off to the transformer. */
+        if (expression->type == CELL_SEXPR) {
+            expression = expand(expression);
+        }
+
+        /* Raise error if generated in parsing or transforming. */
         if (expression->type == CELL_ERROR) {
             return expression;
         }
 
+        /* Evaluate the expression. */
         Cell* result = coz_eval(e, expression);
 
         if (!result) {
@@ -170,7 +179,7 @@ Cell* parse_all_expressions(Lex* e, TokenArray* ta, const bool is_repl)
             coz_print(result);
         }
 
-        /* Bump the token position */
+        /* Bump the token position. */
         ta->position++;
     }
     /* No more expressions... */
