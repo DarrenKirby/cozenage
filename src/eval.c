@@ -110,7 +110,7 @@ Cell* coz_eval(Lex* env, Cell* expr)
             if (result.action == ACTION_RETURN) {
                 return result.value;
             }
-            /* ACTION_CONTINUE from a tail call */
+            /* ACTION_CONTINUE from a tail call. */
             expr = result.value;
             continue;
         }
@@ -160,13 +160,14 @@ Cell* coz_eval(Lex* env, Cell* expr)
     }
 }
 
+
 /* Apply that procedure on them args! */
 static Cell* coz_apply(const Cell* proc, Cell* args, Lex** env_out, Cell** expr_out)
 {
     if (proc->is_builtin) {
         return proc->builtin(*env_out, args); /* Return final value */
     }
-    /* It's a Scheme lambda, return TCO */
+    /* It's a Scheme lambda, return TCO. */
     Lex* le = build_lambda_env(proc->lambda->env, proc->lambda->formals, args);
     if (le == nullptr) {
         /* We cannot return a specific error message from build_lambda_env(),
@@ -176,9 +177,10 @@ static Cell* coz_apply(const Cell* proc, Cell* args, Lex** env_out, Cell** expr_
             SYNTAX_ERR);
     }
     *env_out = le;
-    *expr_out = sequence_sf_body(proc->lambda->body);
+    *expr_out = proc->lambda->body;
     return TCS_Obj;
 }
+
 
 /*
  * Applies a procedure to a list of ARGUMENTS (which are already evaluated)
@@ -204,6 +206,6 @@ Cell* coz_apply_and_get_val(const Cell* proc, Cell* args, const Lex* env)
             "bad lambda expression",
             SYNTAX_ERR);
     }
-    Cell* body_expr = sequence_sf_body(proc->lambda->body);
+    Cell* body_expr = proc->lambda->body;
     return coz_eval(lambda_env, body_expr);
 }
