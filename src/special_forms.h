@@ -40,7 +40,7 @@ Cell* sequence_sf_body(const Cell* body);
 /* Special forms */
 HandlerResult sf_define(Lex* e, Cell* a);
 HandlerResult sf_quote(Lex* e, Cell* a);
-HandlerResult sf_lambda(Lex* e, Cell* a);;
+HandlerResult sf_lambda(Lex* e, Cell* a);
 HandlerResult sf_if(Lex* e, Cell* a);
 HandlerResult sf_when(Lex* e, Cell* a);
 HandlerResult sf_unless(Lex* e, Cell* a);

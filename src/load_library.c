@@ -76,7 +76,7 @@ int internal_cozenage_load_lib(const char* libname, const Lex* env)
     /* We have a valid handle. Now, find the init function.
      * dlsym() searches for a symbol (function name) in the handle.
      * We cast the resulting 'void*' to our function pointer type. */
-    *(void**)(&init_func) = dlsym(lib_handle, "cozenage_library_init");
+    *(void**)&init_func = dlsym(lib_handle, "cozenage_library_init");
 
     if (!init_func) {
         /* Could not find the init function. */

@@ -45,7 +45,7 @@ static char* format_twos_complement(const long long val)
     if (val > 0) {
         /* Find the smallest N such that val fits in N-1 bits. */
         for (int i = 1; i < 64; ++i) {
-            if (val < (1LL << (i - 1))) {
+            if (val < 1LL << (i - 1)) {
                 n_bits = i;
                 break;
             }

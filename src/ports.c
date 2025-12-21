@@ -295,7 +295,7 @@ Cell* builtin_read_char(const Lex* e, const Cell* a)
         snprintf(buf, 256, "read-char failed: %s", strerror(errno));
         return make_cell_error(buf, FILE_ERR);
     }
-    return make_cell_char((int)wc);
+    return make_cell_char(wc);
 }
 
 
@@ -337,7 +337,7 @@ Cell* builtin_peek_char(const Lex* e, const Cell* a)
            "char pushback failed!",
            FILE_ERR);
     }
-    return make_cell_char((int)wc);
+    return make_cell_char(wc);
 }
 
 
@@ -444,7 +444,7 @@ Cell* builtin_write_u8(const Lex* e, const Cell* a)
     } else {
         port = a->cell[1];
     }
-    int byte = (int)a->cell[0]->integer_v;
+    const int byte = (int)a->cell[0]->integer_v;
     if (putc(byte, port->port->fh) == EOF) {
         char buf[256];
         snprintf(buf, sizeof(buf), "write-u8 failed: %s", strerror(errno));

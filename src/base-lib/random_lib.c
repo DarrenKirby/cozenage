@@ -139,7 +139,7 @@ static Cell* random_shuffle(const Lex* e, const Cell* a)
     }
     for (int i = arr_size - 1; i > 0; i--) {
         /* Pick a random index from 0 to i (inclusive). */
-        uint32_t j = rand_uint(i + 1);
+        const uint32_t j = rand_uint(i + 1);
 
         /* Swap the element at i with the randomly chosen element at j. */
         Cell* tmp = c_arr[i];

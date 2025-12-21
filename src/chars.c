@@ -81,7 +81,7 @@ Cell* builtin_char_equal_pred(const Lex* e, const Cell* a)
     Cell* err = check_arg_types(a, CELL_CHAR, "char=?");
     if (err) return err;
 
-    Cell** cells = GC_MALLOC(sizeof(Cell*) * a->count);;
+    Cell** cells = GC_MALLOC(sizeof(Cell*) * a->count);
     for (int i = 0; i < a->count; i++) {
         cells[i] = make_cell_integer(a->cell[i]->char_v);
     }
@@ -97,7 +97,7 @@ Cell* builtin_char_lt_pred(const Lex* e, const Cell* a)
     Cell* err = check_arg_types(a, CELL_CHAR, "char<?");
     if (err) return err;
 
-    Cell** cells = GC_MALLOC(sizeof(Cell*) * a->count);;
+    Cell** cells = GC_MALLOC(sizeof(Cell*) * a->count);
     for (int i = 0; i < a->count; i++) {
         cells[i] = make_cell_integer(a->cell[i]->char_v);
     }
@@ -113,7 +113,7 @@ Cell* builtin_char_lte_pred(const Lex* e, const Cell* a)
     Cell* err = check_arg_types(a, CELL_CHAR, "char<=?");
     if (err) return err;
 
-    Cell** cells = GC_MALLOC(sizeof(Cell*) * a->count);;
+    Cell** cells = GC_MALLOC(sizeof(Cell*) * a->count);
     for (int i = 0; i < a->count; i++) {
         cells[i] = make_cell_integer(a->cell[i]->char_v);
     }
@@ -129,7 +129,7 @@ Cell* builtin_char_gt_pred(const Lex* e, const Cell* a)
     Cell* err = check_arg_types(a, CELL_CHAR, "char>?");
     if (err) return err;
 
-    Cell** cells = GC_MALLOC(sizeof(Cell*) * a->count);;
+    Cell** cells = GC_MALLOC(sizeof(Cell*) * a->count);
     for (int i = 0; i < a->count; i++) {
         cells[i] = make_cell_integer(a->cell[i]->char_v);
     }
@@ -145,7 +145,7 @@ Cell* builtin_char_gte_pred(const Lex* e, const Cell* a)
     Cell* err = check_arg_types(a, CELL_CHAR, "char>=?");
     if (err) return err;
 
-    Cell** cells = GC_MALLOC(sizeof(Cell*) * a->count);;
+    Cell** cells = GC_MALLOC(sizeof(Cell*) * a->count);
     for (int i = 0; i < a->count; i++) {
         cells[i] = make_cell_integer(a->cell[i]->char_v);
     }
@@ -317,7 +317,7 @@ Cell* builtin_char_equal_ci(const Lex* e, const Cell* a)
     Cell* err = check_arg_types(a, CELL_CHAR, "char-ci=?");
     if (err) return err;
 
-    Cell** cells = GC_MALLOC(sizeof(Cell*) * a->count);;
+    Cell** cells = GC_MALLOC(sizeof(Cell*) * a->count);
     for (int i = 0; i < a->count; i++) {
         const Cell* the_char = a->cell[i];
         const Cell* the_char_fc = builtin_char_foldcase(e, make_sexpr_len1(the_char));
@@ -335,7 +335,7 @@ Cell* builtin_char_lt_ci(const Lex* e, const Cell* a)
     Cell* err = check_arg_types(a, CELL_CHAR, "char-ci<?");
     if (err) return err;
 
-    Cell** cells = GC_MALLOC(sizeof(Cell*) * a->count);;
+    Cell** cells = GC_MALLOC(sizeof(Cell*) * a->count);
     for (int i = 0; i < a->count; i++) {
         const Cell* the_char = a->cell[i];
         const Cell* the_char_fc = builtin_char_foldcase(e, make_sexpr_len1(the_char));
@@ -353,7 +353,7 @@ Cell* builtin_char_lte_ci(const Lex* e, const Cell* a)
     Cell* err = check_arg_types(a, CELL_CHAR, "char-ci<=?");
     if (err) return err;
 
-    Cell** cells = GC_MALLOC(sizeof(Cell*) * a->count);;
+    Cell** cells = GC_MALLOC(sizeof(Cell*) * a->count);
     for (int i = 0; i < a->count; i++) {
         const Cell* the_char = a->cell[i];
         const Cell* the_char_fc = builtin_char_foldcase(e, make_sexpr_len1(the_char));
@@ -371,7 +371,7 @@ Cell* builtin_char_gt_ci(const Lex* e, const Cell* a)
     Cell* err = check_arg_types(a, CELL_CHAR, "char-ci>?");
     if (err) return err;
 
-    Cell** cells = GC_MALLOC(sizeof(Cell*) * a->count);;
+    Cell** cells = GC_MALLOC(sizeof(Cell*) * a->count);
     for (int i = 0; i < a->count; i++) {
         const Cell* the_char = a->cell[i];
         const Cell* the_char_fc = builtin_char_foldcase(e, make_sexpr_len1(the_char));
@@ -389,7 +389,7 @@ Cell* builtin_char_gte_ci(const Lex* e, const Cell* a)
     Cell* err = check_arg_types(a, CELL_CHAR, "char-ci>=?");
     if (err) return err;
 
-    Cell** cells = GC_MALLOC(sizeof(Cell*) * a->count);;
+    Cell** cells = GC_MALLOC(sizeof(Cell*) * a->count);
     for (int i = 0; i < a->count; i++) {
         const Cell* the_char = a->cell[i];
         const Cell* the_char_fc = builtin_char_foldcase(e, make_sexpr_len1(the_char));

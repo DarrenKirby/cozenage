@@ -589,7 +589,7 @@ Cell* builtin_member(const Lex* e, const Cell* a)
 
     const Cell* key = a->cell[0];
     Cell* list = a->cell[1];
-    Cell* predicate = (a->count == 3) ? a->cell[2] : nullptr;
+    Cell* predicate = a->count == 3 ? a->cell[2] : USP_Obj;
 
     while (list != NULL && list->type == CELL_PAIR) {
         Cell* result;

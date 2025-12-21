@@ -457,7 +457,7 @@ Cell* builtin_vector_copy_bang(const Lex* e, const Cell* a)
             TYPE_ERR);
 
     /* Get 'to' bytevector and 'at' index. */
-    Cell* to_vec = a->cell[0];
+    const Cell* to_vec = a->cell[0];
     const int32_t to_vec_len = to_vec->count;
     const int32_t to_start_idx = (int32_t)a->cell[1]->integer_v;
 

@@ -310,7 +310,7 @@ static long long lcm_helper(long long x, long long y)
     if (x == 0 || y == 0) return 0;
     x = llabs(x);
     y = llabs(y);
-    return (x / gcd_helper(x, y)) * y;
+    return x / gcd_helper(x, y) * y;
 }
 
 static Cell* math_gcd(const Lex* e, const Cell* a)
@@ -395,7 +395,7 @@ static Cell* math_floor_quotient(const Lex* e, const Cell* a)
     long long q = n1 / n2;
     const long long r = n1 % n2;
 
-    if (r != 0 && (n1 > 0) != (n2 > 0)) {
+    if (r != 0 && n1 > 0 != n2 > 0) {
         q = q - 1;
     }
 
@@ -425,7 +425,7 @@ static Cell* math_floor_div(const Lex* e, const Cell* a)
     /* If the remainder is non-zero and the signs of n and d differ,
      * C's division truncated towards zero, which is the wrong direction
      * for floor. We need to adjust. */
-    if (r != 0 && (n1 > 0) != (n2 > 0)) {
+    if (r != 0 && n1 > 0 != n2 > 0) {
         q = q - 1;
         r = r + n2;
     }

@@ -890,7 +890,7 @@ Cell* builtin_string_downcase(const Lex* e, const Cell* a)
 
     const int32_t src_len = u_countChar32(src, -1);
 
-    UChar* dst = GC_MALLOC(sizeof(UChar) * src_len + 1);;
+    UChar* dst = GC_MALLOC(sizeof(UChar) * src_len + 1);
     const int32_t dest_len = u_strToLower(dst,
         src_len + 1,
         src, -1, nullptr, &status);
@@ -928,7 +928,7 @@ Cell* builtin_string_upcase(const Lex* e, const Cell* a)
 
     const int32_t src_len = u_countChar32(src, -1);
 
-    UChar* dst = GC_MALLOC(sizeof(UChar) * src_len + 1);;
+    UChar* dst = GC_MALLOC(sizeof(UChar) * src_len + 1);
     const int32_t dest_len = u_strToUpper(dst,
         src_len + 1,
         src, -1, nullptr, &status);
@@ -966,7 +966,7 @@ Cell* builtin_string_foldcase(const Lex* e, const Cell* a)
 
     const int32_t src_len = u_countChar32(src, -1);
 
-    UChar* dst = GC_MALLOC(sizeof(UChar) * src_len + 1);;
+    UChar* dst = GC_MALLOC(sizeof(UChar) * src_len + 1);
     const int32_t dest_len = u_strFoldCase(dst, src_len + 1, src, -1,
         U_FOLD_CASE_DEFAULT, &status);
 

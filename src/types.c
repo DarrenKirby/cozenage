@@ -185,7 +185,7 @@ static Cell* to_complex(Cell* v)
 }
 
 
-static Cell* to_bigint(Cell* v)
+static Cell* to_bigint(const Cell* v)
 {
     return make_cell_bigint(nullptr, v, 10);
 }
@@ -655,7 +655,7 @@ Cell* simplify_rational(Cell* v)
         return v; /* nothing to do */
     }
 
-    long int g = gcd_ll(v->num, v->den);
+    const long int g = gcd_ll(v->num, v->den);
     v->num /= g;
     v->den /= g;
 
@@ -686,7 +686,7 @@ Cell* simplify_rational(Cell* v)
 
 
 /* Helper for performing arithmetic on complex numbers. */
-void complex_apply(BuiltinFn fn, const Lex* e, Cell* result, const Cell* rhs)
+void complex_apply(const BuiltinFn fn, const Lex* e, Cell* result, const Cell* rhs)
 {
     if (fn == builtin_add || fn == builtin_sub) {
         /* addition/subtraction: elementwise using recursion. */
@@ -956,7 +956,7 @@ bool is_pure_ascii(const char *str, size_t len) {
 
     /* Alignment Loop: Process bytes one by one until pointer is 8-byte aligned.
        We check ((uintptr_t)ptr & 7) to see if we are aligned. */
-    while (len > 0 && ((uintptr_t)ptr & 7)) {
+    while (len > 0 && (uintptr_t)ptr & 7) {
         if (*ptr & 0x80) return false;
         ptr++;
         len--;

@@ -181,7 +181,7 @@ Cell* builtin_gte_op(const Lex* e, const Cell* a)
                 break;
             }
             case CELL_RATIONAL: {
-                if (lhs->num * rhs->den >= (lhs->den * rhs->num)) { ok = 1; }
+                if (lhs->num * rhs->den >= lhs->den * rhs->num) { ok = 1; }
                 break;
             }
             case CELL_BIGINT: {

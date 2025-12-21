@@ -28,7 +28,7 @@
 #include <gc/gc.h>
 
 
-char **scheme_procedures = NULL;
+char **scheme_procedures = nullptr;
 
 void populate_dynamic_completions(const Lex* e)
 {
@@ -41,7 +41,7 @@ void populate_dynamic_completions(const Lex* e)
 
     /* Special forms have to be added manually. */
     char* special_forms[] = { "quote", "define", "lambda", "let", "let*", "letrec", "set!", "if",
-        "when", "unless", "cond", "else", "begin", "import", "and", "or" };
+        "when", "unless", "cond", "else", "begin", "import", "and", "or", "do", "case" };
     /* Why tho, does CLion always think this is C++ code? */
     // ReSharper disable once CppVariableCanBeMadeConstexpr
     const int num_sfs = sizeof(special_forms) / sizeof(special_forms[0]);
@@ -71,7 +71,7 @@ void populate_dynamic_completions(const Lex* e)
     // }
 
     /* The list must be NULL-terminated for the generator to know when to stop. */
-    scheme_procedures[i] = NULL;
+    scheme_procedures[i] = nullptr;
 }
 
 char* scheme_procedure_generator(const char *text, const int state)
@@ -82,7 +82,7 @@ char* scheme_procedure_generator(const char *text, const int state)
     /* If this is the first call for this completion, reset the state. */
     if (!state) {
         list_index = 0;
-        len = strlen(text);
+        len = (int)strlen(text);
     }
 
     /* Iterate through the procedure list and return the next match. */
@@ -93,7 +93,7 @@ char* scheme_procedure_generator(const char *text, const int state)
     }
 
     /* No more matches found. */
-    return NULL;
+    return nullptr;
 }
 
 char** completion_dispatcher(const char *text, const int start, const int end)

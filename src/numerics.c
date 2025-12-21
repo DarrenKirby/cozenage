@@ -717,7 +717,7 @@ Cell* builtin_denominator(const Lex* e, const Cell* a)
 
 /* (rationalize x y)
  * The rationalize procedure returns the simplest rational number differing from x by no more than y. A rational
- * number r1 is simpler than another rational number r2 if r1 = p1/q1 and r2 = p2/q2 (in lowest terms) and
+ * number r1 is simpler than another rational number r2 if r1 = p1/q1 and r2 = p2/q2 (in the lowest terms) and
  * |p1| ≤ |p2|and |q1| ≤ |q2|. Thus, 3/5 is simpler than 4/7. Although not all rationals are comparable in this ordering
  * (consider 2/7 and 3/5), any interval contains a rational number that is simpler than every other rational number in
  * that interval(the simpler 2/5 lies between 2/7 and 3/5). Note that 0 = 0/1 is the simplest rational of all. */
@@ -744,13 +744,13 @@ Cell* builtin_rationalize(const Lex* e, const Cell* a)
     }
 
     for (long long q = 1; q < MAX_DENOMINATOR; ++q) {
-        // We need to find an integer p in the range [q * lower, q * upper]
-        long double p_lower_bound = q * lower;
-        long double p_upper_bound = q * upper;
+        /* We need to find an integer p in the range [q * lower, q * upper] */
+        const long double p_lower_bound = q * lower;
+        const long double p_upper_bound = q * upper;
 
         /* Find the smallest integer p that is >= p_lower_bound.
          * That's just ceil(p_lower_bound). */
-        long long p = (long long)ceill(p_lower_bound);
+        const long long p = (long long)ceill(p_lower_bound);
 
         /* Now, check if this p is within the upper bound. */
         if (p <= p_upper_bound) {

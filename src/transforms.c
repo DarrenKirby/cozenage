@@ -203,7 +203,7 @@ static Cell* expand_case(const Cell* c) {
 
     /* Iterate through clauses starting at index 2. */
     for (int i = 2; i < c->count; i++) {
-        Cell* clause = c->cell[i];
+        const Cell* clause = c->cell[i];
         if (clause->type != CELL_SEXPR || clause->count < 2) continue;
 
         Cell* cond_clause = make_cell_sexpr();
