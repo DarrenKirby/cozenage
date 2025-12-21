@@ -41,6 +41,7 @@ Cell* G_if_sym = nullptr;
 Cell* G_when_sym = nullptr;
 Cell* G_unless_sym = nullptr;
 Cell* G_cond_sym = nullptr;
+Cell* G_case_sym = nullptr;
 Cell* G_import_sym = nullptr;
 Cell* G_let_sym = nullptr;
 Cell* G_let_star_sym = nullptr;
@@ -49,6 +50,7 @@ Cell* G_set_bang_sym = nullptr;
 Cell* G_begin_sym = nullptr;
 Cell* G_and_sym = nullptr;
 Cell* G_or_sym = nullptr;
+Cell* G_do_sym = nullptr;
 Cell* G_else_sym = nullptr;
 
 
@@ -75,6 +77,9 @@ void init_special_forms(void) {
     G_cond_sym = make_cell_symbol("cond");
     G_cond_sym->sf_id = SF_ID_COND;
 
+    /* Transformed syntax -- no sf_id */
+    G_case_sym = make_cell_symbol("case");
+
     G_import_sym = make_cell_symbol("import");
     G_import_sym->sf_id = SF_ID_IMPORT;
 
@@ -98,6 +103,9 @@ void init_special_forms(void) {
 
     G_or_sym = make_cell_symbol("or");
     G_or_sym->sf_id = SF_ID_OR;
+
+    /* Transformed syntax -- no sf_id */
+    G_do_sym = make_cell_symbol("do");
 
     G_else_sym = make_cell_symbol("else");
     G_else_sym->sf_id = SF_ID_ELSE;

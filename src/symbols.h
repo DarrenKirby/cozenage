@@ -24,7 +24,10 @@
 #include "environment.h"
 
 
-typedef enum {
+/* This is only for special forms that are manually
+ * implemented in special_forms.c -- do not add
+ * transformed syntax here! */
+typedef enum : int8_t {
     SF_ID_DEFINE = 1,
     SF_ID_QUOTE,
     SF_ID_LAMBDA,
@@ -51,6 +54,7 @@ extern Cell* G_if_sym;
 extern Cell* G_when_sym;
 extern Cell* G_unless_sym;
 extern Cell* G_cond_sym;
+extern Cell* G_case_sym;
 extern Cell* G_import_sym;
 extern Cell* G_let_sym;
 extern Cell* G_let_star_sym;
@@ -59,6 +63,7 @@ extern Cell* G_set_bang_sym;
 extern Cell* G_begin_sym;
 extern Cell* G_and_sym;
 extern Cell* G_or_sym;
+extern Cell* G_do_sym;
 extern Cell* G_else_sym;
 
 /* The global symbol table */
