@@ -290,6 +290,7 @@ Cell* builtin_eqv(const Lex* e, const Cell* a)
 /* Helper for equal? */
 static Cell* val_equal(const Lex* e, Cell* x, Cell* y)
 {
+    if (x->type != y->type) { return False_Obj; }
     /* Just kick numbers over to '='*/
     // ReSharper disable once CppVariableCanBeMadeConstexpr
     const int mask = CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX|CELL_BIGINT;
