@@ -404,6 +404,7 @@ Cell* builtin_list_reverse(const Lex* e, const Cell* a)
     return reversed_list;
 }
 
+
 /* (list-tail list k)
  * Returns the sublist of list obtained by omitting the first k elements */
 Cell* builtin_list_tail(const Lex* e, const Cell* a)
@@ -448,6 +449,7 @@ Cell* builtin_list_tail(const Lex* e, const Cell* a)
     return p;
 }
 
+
 /* (make-list k)
  * (make-list k fill)
  * Returns a newly allocated list of k elements. If a second argument is given, then each element is
@@ -479,6 +481,7 @@ Cell* builtin_make_list(const Lex* e, const Cell* a)
     }
     return result;
 }
+
 
 /* (list-set! list k obj)
  * The list-set! procedure stores obj in element k of list. */
@@ -515,6 +518,7 @@ Cell* builtin_list_set(const Lex* e, const Cell* a)
     return USP_Obj;
 }
 
+
 /* (memq obj list)
  * Return the first sublist of list whose car is obj, where the sublists of list are the non-empty
  * lists returned by (list-tail list k) for k less than the length of list. If obj does not occur in
@@ -525,23 +529,19 @@ Cell* builtin_memq(const Lex* e, const Cell* a)
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2, "memq");
     if (err) return err;
-    if (a->cell[1]->type != CELL_PAIR) {
-        return make_cell_error(
-            "memq: arg 2 must be a list",
-            TYPE_ERR);
-    }
 
-    Cell* lhs = a->cell[1];
-    const Cell* rhs = a->cell[0];
-    for (int i = 0; i < a->cell[1]->count; i++) {
-        /* eq? == direct pointer equality */
-        if (lhs->car == rhs) {
-            return lhs;
+    const Cell* key = a->cell[0];
+    Cell* list = a->cell[1];
+
+    while (list != NULL && list->type == CELL_PAIR) {
+        if (list->car == key) {
+            return list;
         }
-        lhs = lhs->cdr;
+        list = list->cdr;
     }
     return False_Obj;
 }
+
 
 /* (memv obj list)
  * Return the first sublist of list whose car is obj, where the sublists of list are the non-empty
@@ -550,26 +550,31 @@ Cell* builtin_memq(const Lex* e, const Cell* a)
  */
 Cell* builtin_memv(const Lex* e, const Cell* a)
 {
-    (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2, "memv");
     if (err) return err;
-    if (a->cell[1]->type != CELL_PAIR) {
-        return make_cell_error(
-            "memq: arg 2 must be a list",
-            TYPE_ERR);
-    }
 
-    Cell* lhs = a->cell[1];
-    const Cell* rhs = a->cell[0];
-    for (int i = 0; i < a->cell[1]->count; i++) {
-        const Cell* result = builtin_eqv(e, make_sexpr_len2(lhs->car, rhs));
-        if (result->boolean_v == 1) {
-            return lhs;
+    const Cell* key = a->cell[0];
+    Cell* list = a->cell[1];
+
+    /* Iterate until we hit the end of the list (Empty/False_Obj) */
+    while (list != NULL && list->type == CELL_PAIR) {
+        /* Prepare args for eqv? : (key element) */
+        Cell* eqv_args = make_cell_sexpr();
+        cell_add(eqv_args, (Cell*)key);
+        cell_add(eqv_args, list->car);
+
+        const Cell* result = builtin_eqv(e, eqv_args);
+
+        /* Only False_Obj is false. */
+        if (result != False_Obj && result->boolean_v == 1) {
+            return list;
         }
-        lhs = lhs->cdr;
+
+        list = list->cdr;
     }
     return False_Obj;
 }
+
 
 /* (member obj list)
  * (member obj list compare)
@@ -579,42 +584,35 @@ Cell* builtin_memv(const Lex* e, const Cell* a)
  * list unless an optional third arg, a comparison procedure, is provided */
 Cell* builtin_member(const Lex* e, const Cell* a)
 {
-    (void)e;
     Cell* err = CHECK_ARITY_RANGE(a, 2, 3, "member");
     if (err) return err;
-    if (a->cell[1]->type != CELL_PAIR) {
-        return make_cell_error(
-            "member: arg 2 must be a list",
-            TYPE_ERR);
-    }
-    if (a->count == 3) {
-        if (a->cell[2]->type != CELL_PROC) {
-            return make_cell_error(
-                "member: arg 3 must be a procedure",
-                TYPE_ERR);
-        }
-    }
 
-    Cell* lhs = a->cell[1];
-    const Cell* rhs = a->cell[0];
-    for (int i = 0; i < a->cell[1]->count; i++) {
+    const Cell* key = a->cell[0];
+    Cell* list = a->cell[1];
+    Cell* predicate = (a->count == 3) ? a->cell[2] : nullptr;
+
+    while (list != NULL && list->type == CELL_PAIR) {
         Cell* result;
-        if (a->count == 2) {
-            result = builtin_equal(e, make_sexpr_len2(lhs->car, rhs));
+        if (predicate == NULL) {
+            /* Default to equal? */
+            result = builtin_equal(e, make_sexpr_len2(list->car, (Cell*)key));
         } else {
+            /* Use custom predicate: (proc element key) */
             Cell* args = make_cell_sexpr();
-            cell_add(args, a->cell[2]);
-            cell_add(args, lhs);
-            cell_add(args, (Cell*)rhs);
+            cell_add(args, predicate);
+            cell_add(args, (Cell*)key);
+            cell_add(args, list->car); /* Current element */
             result = coz_eval((Lex*)e, args);
         }
-        if (result->boolean_v == 1) {
-            return lhs;
+
+        if (result != False_Obj && result->boolean_v == 1) {
+            return list;
         }
-        lhs = lhs->cdr;
+        list = list->cdr;
     }
     return False_Obj;
 }
+
 
 /* (assq obj alist )
  * Find the first pair in alist whose car field is obj, and returns that pair. If no pair in alist has obj as its car,
@@ -647,6 +645,7 @@ Cell* builtin_assq(const Lex* e, const Cell* a)
     return False_Obj;
 }
 
+
 /* (assv obj alist )
  * Find the first pair in alist whose car field is obj, and returns that pair. If no pair in alist has obj as its car,
  * then #f is returned. Uses eqv? for the comparison. */
@@ -676,6 +675,7 @@ Cell* builtin_assv(const Lex* e, const Cell* a) {
     }
     return False_Obj;
 }
+
 
 /* (assoc obj alist )
  * (assoc obj alist compare)
@@ -727,6 +727,7 @@ Cell* builtin_assoc(const Lex* e, const Cell* a)
     return False_Obj;
 }
 
+
 /* (list-copy obj )
 * Returns a newly allocated copy of the given obj if it is a list. Only the pairs themselves are
 * copied; the cars of the result are the same (in the sense of eqv?) as the cars of list. If obj is
@@ -767,6 +768,7 @@ Cell* builtin_list_copy(const Lex* e, const Cell* a)
 /* ----------------------------------------------------------*
  *                 List iteration procedures                 *
  * ----------------------------------------------------------*/
+
 
 Cell* builtin_filter(const Lex* e, const Cell* a)
 {
@@ -815,6 +817,7 @@ Cell* builtin_filter(const Lex* e, const Cell* a)
     }
     return builtin_list_reverse(e, make_sexpr_len1(result));
 }
+
 
 Cell* builtin_foldl(const Lex* e, const Cell* a)
 {
@@ -884,6 +887,7 @@ Cell* builtin_foldl(const Lex* e, const Cell* a)
     /* Return the accumulator after all list args are evaluated. */
     return init;
 }
+
 
 Cell* builtin_zip(const Lex* e, const Cell* a)
 {
