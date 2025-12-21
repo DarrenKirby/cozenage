@@ -23,6 +23,8 @@
 #include "hash.h"
 #include "environment.h"
 
+#include <stdint.h>
+
 
 /* This is only for special forms that are manually
  * implemented in special_forms.c -- do not add

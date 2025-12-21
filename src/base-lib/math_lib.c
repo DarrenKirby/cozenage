@@ -395,7 +395,7 @@ static Cell* math_floor_quotient(const Lex* e, const Cell* a)
     long long q = n1 / n2;
     const long long r = n1 % n2;
 
-    if (r != 0 && n1 > 0 != n2 > 0) {
+    if (r != 0 && (n1 > 0) != (n2 > 0)) {
         q = q - 1;
     }
 
@@ -425,7 +425,7 @@ static Cell* math_floor_div(const Lex* e, const Cell* a)
     /* If the remainder is non-zero and the signs of n and d differ,
      * C's division truncated towards zero, which is the wrong direction
      * for floor. We need to adjust. */
-    if (r != 0 && n1 > 0 != n2 > 0) {
+    if (r != 0 && (n1 > 0) != (n2 > 0)) {
         q = q - 1;
         r = r + n2;
     }

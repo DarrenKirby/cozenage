@@ -453,6 +453,7 @@ bool cell_is_real_zero(const Cell* c)
     switch (c->type) {
         case CELL_BIGINT:
             if (mpz_cmp_si(*c->bi, 0) == 0) return true;
+            return false;
         case CELL_INTEGER:
             return c->integer_v == 0;
         case CELL_RATIONAL:
