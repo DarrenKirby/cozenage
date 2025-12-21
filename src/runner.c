@@ -153,10 +153,17 @@ Cell* parse_all_expressions(Lex* e, TokenArray* ta, const bool is_repl)
             break;
         }
 
+        /* For transform debugging */
+        //printf("Before transform: \n");
+        //debug_print_cell(expression);
         /* Kick all S-expressions off to the transformer. */
         if (expression->type == CELL_SEXPR) {
             expression = expand(expression);
         }
+
+        /* For transform debugging */
+        //printf("After transform: \n");
+        //debug_print_cell(expression);
 
         /* Raise error if generated in parsing or transforming. */
         if (expression->type == CELL_ERROR) {
