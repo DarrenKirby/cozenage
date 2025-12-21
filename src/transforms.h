@@ -24,7 +24,6 @@
 
 
 Cell* expand_body_expressions(const Cell* body_elements, int start_index);
-Cell* transform_defines_to_bindings(const Cell* inner_defines);
 Cell* expand(Cell* c);
 
 #endif //COZENAGE_TRANSFORMS_H
