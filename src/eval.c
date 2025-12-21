@@ -35,6 +35,10 @@ static Cell* get_args_from_sexpr(const Cell* v)
     return args;
 }
 
+
+/* This is only for special forms that are manually
+ * implemented in special_forms.c -- do not add
+ * transformed syntax here! */
 special_form_handler_t SF_DISPATCH_TABLE[] = {
     nullptr,
     &sf_define,
