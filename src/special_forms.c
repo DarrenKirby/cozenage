@@ -77,7 +77,7 @@ Lex* build_lambda_env(const Lex* env, Cell* formals, Cell* args)
     /* Iterate through positional arguments */
     while (lf->type == CELL_PAIR) {
         if (arg_idx >= args->count) {
-            fprintf(stderr, "Arity error: wrong number of args for lambda call\n");
+            fprintf(stderr, "lambda: Arity error: wrong number of args for lambda call\n");
             return nullptr;
         }
         const Cell* sym = lf->car;
@@ -92,7 +92,7 @@ Lex* build_lambda_env(const Lex* env, Cell* formals, Cell* args)
     if (lf->type == CELL_NIL) {
         if (arg_idx != args->count) {
             /* Too many arguments supplied for a non-variadic lambda. */
-            fprintf(stderr, "Arity error: too many args for lambda call\n");
+            fprintf(stderr, "lambda: Arity error: too many args for lambda call\n");
             return nullptr;
         }
     } else if (lf->type == CELL_SYMBOL) {
@@ -104,7 +104,7 @@ Lex* build_lambda_env(const Lex* env, Cell* formals, Cell* args)
         const Cell* rest_list = make_list_from_sexpr(rest);
         lex_put_local(local_env, lf, rest_list);
     } else {
-        fprintf(stderr, "malformed lambda call: bad args\n");
+        fprintf(stderr, "lambda: malformed lambda call: bad args\n");
         return nullptr;
     }
     return local_env;
@@ -163,7 +163,7 @@ HandlerResult sf_define(Lex* e, Cell* a)
 {
     if (a->count < 2) {
         Cell* err = make_cell_error(
-            "define requires at least 2 arguments",
+            "define: define requires at least 2 arguments",
             ARITY_ERR);
         return (HandlerResult) { .action = ACTION_RETURN, .value = err };
     }
@@ -172,7 +172,7 @@ HandlerResult sf_define(Lex* e, Cell* a)
     /* Disallow rebinding of keywords. */
     if (is_syntactic_keyword(target->sym)) {
         Cell* err = make_cell_error(
-            fmt_err("Syntax keyword '%s' cannot be used as a variable", target->sym),
+            fmt_err("define: syntax keyword '%s' cannot be used as a variable", target->sym),
             VALUE_ERR);
         return (HandlerResult) { .action = ACTION_RETURN, .value = err };
     }
@@ -204,7 +204,7 @@ HandlerResult sf_define(Lex* e, Cell* a)
         for (int i = 1; i < target->count; i++) {
             if (target->cell[i]->type != CELL_SYMBOL) {
                 Cell* err = make_cell_error(
-                    "lambda formals must be symbols",
+                    "lambda: formals must be symbols",
                     TYPE_ERR);
                 return (HandlerResult) { .action = ACTION_RETURN, .value = err };
             }
@@ -220,7 +220,7 @@ HandlerResult sf_define(Lex* e, Cell* a)
     }
 
     Cell* err = make_cell_error(
-        "invalid define syntax",
+        "define: invalid define syntax",
         SYNTAX_ERR);
     return (HandlerResult) { .action = ACTION_RETURN, .value = err };
 }
@@ -234,7 +234,7 @@ HandlerResult sf_quote(Lex* e, Cell* a)
     (void)e;
     if (a->count != 1) {
         Cell* err = make_cell_error(
-            "quote takes exactly one argument",
+            "quote: takes exactly one argument",
             ARITY_ERR);
         return (HandlerResult){ .action = ACTION_RETURN, .value = err };
     }
@@ -258,7 +258,7 @@ HandlerResult sf_lambda(Lex* e, Cell* a)
 {
     if (a->count < 2) {
         Cell* err = make_cell_error(
-            "lambda requires formals and a body",
+            "lambda: requires formals and a body",
             SYNTAX_ERR);
         return (HandlerResult){ .action = ACTION_RETURN, .value = err };
     }
@@ -271,7 +271,7 @@ HandlerResult sf_lambda(Lex* e, Cell* a)
         for (int i = 0; i < formals->count; i++) {
             if (formals->cell[i]->type != CELL_SYMBOL) {
                 Cell* err = make_cell_error(
-                    "lambda formals must be symbols",
+                    "lambda: formals must be symbols",
                     TYPE_ERR);
                 return (HandlerResult){ .action = ACTION_RETURN, .value = err };
             }
@@ -313,7 +313,7 @@ HandlerResult sf_if(Lex* e, Cell* a)
     }
 
     /* No alternative was provided. Return an unspecified value. */
-    return (HandlerResult){ .action = ACTION_RETURN, .value = nullptr };
+    return (HandlerResult){ .action = ACTION_RETURN, .value = USP_Obj };
 }
 
 
@@ -333,7 +333,7 @@ HandlerResult sf_when(Lex* e, Cell* a)
      * and check for literal #f */
     if (test && test->type == CELL_BOOLEAN && test->boolean_v == 0) {
         /* Test was false, return unspecified. */
-        return (HandlerResult) { .action = ACTION_RETURN, .value = nullptr };
+        return (HandlerResult) { .action = ACTION_RETURN, .value = USP_Obj };
     }
 
     /* Sequence remaining expressions into a 'begin' and tail-call */
@@ -363,7 +363,7 @@ HandlerResult sf_unless(Lex* e, Cell* a)
     }
 
     /* Test was true (or null), return unspecified. */
-    return (HandlerResult) { .action = ACTION_RETURN, .value = nullptr };
+    return (HandlerResult) { .action = ACTION_RETURN, .value = USP_Obj };
 }
 
 
@@ -389,7 +389,7 @@ HandlerResult sf_cond(Lex* e, Cell* a)
 {
     if (a->count == 0) {
         Cell* err = make_cell_error(
-            "ill-formed cond expression",
+            "cond: ill-formed cond expression",
             VALUE_ERR);
         return (HandlerResult) { .action = ACTION_RETURN, .value = err };
     }
@@ -400,7 +400,7 @@ HandlerResult sf_cond(Lex* e, Cell* a)
         /* Clause must be a list. */
         if (clause->type != CELL_SEXPR || clause->count == 0) {
             Cell* err = make_cell_error(
-                "cond clause must be a non-empty list",
+                "cond: clause must be a non-empty list",
                 SYNTAX_ERR);
             return (HandlerResult) { .action = ACTION_RETURN, .value = err };
         }
@@ -410,7 +410,7 @@ HandlerResult sf_cond(Lex* e, Cell* a)
             /* else clause must be last */
             if (i != last(a)) {
                 Cell* err = make_cell_error(
-                    "else clause must be last in the cond expression",
+                    "cond: else clause must be last in the cond expression",
                     SYNTAX_ERR);
                 return (HandlerResult) { .action = ACTION_RETURN, .value = err };
             }
@@ -443,7 +443,7 @@ HandlerResult sf_cond(Lex* e, Cell* a)
         if (clause->cell[1]->type == CELL_SYMBOL && strcmp(clause->cell[1]->sym, "=>") == 0) {
             if (clause->count <= 2) {
                 Cell* err = make_cell_error(
-                    "cond '=>' form must have an expression",
+                    "cond: '=>' form must have an expression",
                     SYNTAX_ERR);
                 return (HandlerResult) { .action = ACTION_RETURN, .value = err };
             }
@@ -451,7 +451,7 @@ HandlerResult sf_cond(Lex* e, Cell* a)
             /* '=>' form can only have one expression after the test. */
             if (clause->count > 3) {
                 Cell* err = make_cell_error(
-                    "cond '=>' form can only have 1 expression after the test",
+                    "cond: '=>' form can only have 1 expression after the test",
                     SYNTAX_ERR);
                 return (HandlerResult) { .action = ACTION_RETURN, .value = err };
             }
@@ -459,7 +459,7 @@ HandlerResult sf_cond(Lex* e, Cell* a)
             /* Expression must evaluate to a procedure. */
             if (proc->type != CELL_PROC) {
                 Cell* err = make_cell_error(
-                    "expression after '=>' must evaluate to a procedure",
+                    "cond: expression after '=>' must evaluate to a procedure",
                     SYNTAX_ERR);
                 return (HandlerResult) { .action = ACTION_RETURN, .value = err };
             }
@@ -551,7 +551,7 @@ HandlerResult sf_let(Lex* e, Cell* a)
         const Cell* bindings = cell_pop(a, 0);
         if (bindings->type != CELL_SEXPR) {
             Cell* err = make_cell_error(
-                "Bindings must be a list",
+                "let: Bindings must be a list",
                 VALUE_ERR);
             return (HandlerResult) { .action = ACTION_RETURN, .value = err };
         }
@@ -565,19 +565,19 @@ HandlerResult sf_let(Lex* e, Cell* a)
             const Cell* local_b = bindings->cell[i];
             if (local_b->type != CELL_SEXPR) {
                 Cell* err = make_cell_error(
-                    "Bindings must be a list",
+                    "let: Bindings must be a list",
                     VALUE_ERR);
                 return (HandlerResult) { .action = ACTION_RETURN, .value = err };
             }
             if (local_b->count != 2) {
                 Cell* err = make_cell_error(
-                    "bindings must contain exactly 2 items",
+                    "let: bindings must contain exactly 2 items",
                     VALUE_ERR);
                 return (HandlerResult) { .action = ACTION_RETURN, .value = err };
             }
             if (local_b->cell[0]->type != CELL_SYMBOL) {
                 Cell* err = make_cell_error(
-                    "first value in binding must be a symbol",
+                    "let: first value in binding must be a symbol",
                     VALUE_ERR);
                 return (HandlerResult) { .action = ACTION_RETURN, .value = err };
             }
@@ -648,7 +648,7 @@ HandlerResult sf_let_star(Lex* e, Cell* a)
     const Cell* bindings = cell_pop(a, 0);
     if (bindings->type != CELL_SEXPR) {
         Cell* err = make_cell_error(
-            "Bindings must be a list",
+            "let*: Bindings must be a list",
             VALUE_ERR);
         return (HandlerResult) { .action = ACTION_RETURN, .value = err };
     }
@@ -661,19 +661,19 @@ HandlerResult sf_let_star(Lex* e, Cell* a)
         const Cell* local_b = bindings->cell[i];
         if (local_b->type != CELL_SEXPR) {
             Cell* err = make_cell_error(
-                "Bindings must be a list",
+                "let*: Bindings must be a list",
                 VALUE_ERR);
             return (HandlerResult) { .action = ACTION_RETURN, .value = err };
         }
         if (local_b->count != 2) {
             Cell* err = make_cell_error(
-                "bindings must contain exactly 2 items",
+                "let*: bindings must contain exactly 2 items",
                 VALUE_ERR);
             return (HandlerResult) { .action = ACTION_RETURN, .value = err };
         }
         if (local_b->cell[0]->type != CELL_SYMBOL) {
             Cell* err = make_cell_error(
-                "first value in binding must be a symbol",
+                "let*: first value in binding must be a symbol",
                 VALUE_ERR);
             return (HandlerResult) { .action = ACTION_RETURN, .value = err };
         }
@@ -708,7 +708,7 @@ HandlerResult sf_letrec(Lex* e, Cell* a)
     const Cell* bindings = cell_pop(a, 0);
     if (bindings->type != CELL_SEXPR) {
         Cell* err = make_cell_error(
-            "Bindings must be a list",
+            "letrec: Bindings must be a list",
             VALUE_ERR);
         return (HandlerResult) { .action = ACTION_RETURN, .value = err };
     }
@@ -753,9 +753,10 @@ HandlerResult sf_set_bang(Lex* e, Cell* a)
 {
     Cell* err = CHECK_ARITY_EXACT(a, 2, "set!");
     if (err) return (HandlerResult){ .action = ACTION_RETURN, .value = err };
+
     const Cell* variable = a->cell[first];
     if (variable->type != CELL_SYMBOL) {
-        err = make_cell_error("arg1 must be a symbol", TYPE_ERR);
+        err = make_cell_error("set!: arg1 must be a symbol", TYPE_ERR);
         return (HandlerResult) { .action = ACTION_RETURN, .value = err };
     }
 
