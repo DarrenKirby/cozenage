@@ -107,6 +107,8 @@ static void cell_to_string_worker(const Cell* v,
                                   const print_mode_t mode)
 {
     if (v == NULL) return;
+    if (v == USP_Obj) return;
+
     switch (v->type) {
 
         case CELL_REAL:
