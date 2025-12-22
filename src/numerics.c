@@ -280,10 +280,9 @@ Cell* builtin_div(const Lex* e, const Cell* a)
             result = simplify_rational(result);
             break;
         case CELL_REAL:
-            if (rhs->real_v == 0) {
-                return make_cell_error(
-                    "Division by zero.",
-                    VALUE_ERR);
+            if (result->real_v == 0 && rhs->real_v == 0) {
+                /* IEEE-754: (/ 0.0 0.0) -> nan */
+                return make_cell_real(NAN);
             }
             result->real_v /= rhs->real_v;
             break;
