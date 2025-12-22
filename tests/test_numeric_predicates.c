@@ -27,13 +27,13 @@ Test(end_to_end_numeric_predicates, test_exact_predicate, .init = setup_each_tes
     cr_assert_str_eq(t_eval("(exact? #i3/4)"), "#false"); // Equivalent to 0.75
 
     // ## Non-numeric types ##
-    cr_assert_str_eq(t_eval("(exact? #true)"), " Type error: bad type at arg 1: got bool, expected integer|real|rational|complex");
-    cr_assert_str_eq(t_eval("(exact? \"hello\")"), " Type error: bad type at arg 1: got string, expected integer|real|rational|complex");
-    cr_assert_str_eq(t_eval("(exact? 'foo)"), " Type error: bad type at arg 1: got symbol, expected integer|real|rational|complex");
+    cr_assert_str_eq(t_eval("(exact? #true)"), " Type error: exact?: bad type at arg 1: got bool, expected integer|real|rational|complex|bigint");
+    cr_assert_str_eq(t_eval("(exact? \"hello\")"), " Type error: exact?: bad type at arg 1: got string, expected integer|real|rational|complex|bigint");
+    cr_assert_str_eq(t_eval("(exact? 'foo)"), " Type error: exact?: bad type at arg 1: got symbol, expected integer|real|rational|complex|bigint");
 
     // ## Arity ##
-    cr_assert_str_eq(t_eval("(exact?)"), " Arity error: expected exactly 1 arg, got 0");
-    cr_assert_str_eq(t_eval("(exact? 1 2)"), " Arity error: expected exactly 1 arg, got 2");
+    cr_assert_str_eq(t_eval("(exact?)"), " Arity error: exact?: expected exactly 1 arg, got 0");
+    cr_assert_str_eq(t_eval("(exact? 1 2)"), " Arity error: exact?: expected exactly 1 arg, got 2");
 }
 
 Test(end_to_end_numeric_predicates, test_inexact_predicate, .init = setup_each_test, .fini = teardown_each_test) {
@@ -56,13 +56,13 @@ Test(end_to_end_numeric_predicates, test_inexact_predicate, .init = setup_each_t
     cr_assert_str_eq(t_eval("(inexact? #e123)"), "#false");
 
     // ## Non-numeric types ##
-    cr_assert_str_eq(t_eval("(inexact? #false)"), " Type error: bad type at arg 1: got bool, expected integer|real|rational|complex");
-    cr_assert_str_eq(t_eval("(inexact? #\\a)"), " Type error: bad type at arg 1: got char, expected integer|real|rational|complex");
-    cr_assert_str_eq(t_eval("(inexact? '(1 2))"), " Type error: bad type at arg 1: got pair, expected integer|real|rational|complex");
+    cr_assert_str_eq(t_eval("(inexact? #false)"), " Type error: inexact?: bad type at arg 1: got bool, expected integer|real|rational|complex|bigint");
+    cr_assert_str_eq(t_eval("(inexact? #\\a)"), " Type error: inexact?: bad type at arg 1: got char, expected integer|real|rational|complex|bigint");
+    cr_assert_str_eq(t_eval("(inexact? '(1 2))"), " Type error: inexact?: bad type at arg 1: got pair, expected integer|real|rational|complex|bigint");
 
     // ## Arity ##
-    cr_assert_str_eq(t_eval("(inexact?)"), " Arity error: expected exactly 1 arg, got 0");
-    cr_assert_str_eq(t_eval("(inexact? 1 2)"), " Arity error: expected exactly 1 arg, got 2");
+    cr_assert_str_eq(t_eval("(inexact?)"), " Arity error: inexact?: expected exactly 1 arg, got 0");
+    cr_assert_str_eq(t_eval("(inexact? 1 2)"), " Arity error: inexact?: expected exactly 1 arg, got 2");
 }
 
 Test(end_to_end_numeric_predicates, test_complex_predicate, .init = setup_each_test, .fini = teardown_each_test) {
@@ -81,7 +81,7 @@ Test(end_to_end_numeric_predicates, test_complex_predicate, .init = setup_each_t
     cr_assert_str_eq(t_eval("(complex? \"1+2i\")"), "#false");
 
     // ## Arity ##
-    cr_assert_str_eq(t_eval("(complex?)"), " Arity error: expected exactly 1 arg, got 0");
+    cr_assert_str_eq(t_eval("(complex?)"), " Arity error: complex?: expected exactly 1 arg, got 0");
 }
 
 Test(end_to_end_numeric_predicates, test_real_predicate, .init = setup_each_test, .fini = teardown_each_test) {
@@ -107,7 +107,7 @@ Test(end_to_end_numeric_predicates, test_real_predicate, .init = setup_each_test
     cr_assert_str_eq(t_eval("(real? 'foo)"), "#false");
 
     // ## Arity ##
-    cr_assert_str_eq(t_eval("(real? 1 2)"), " Arity error: expected exactly 1 arg, got 2");
+    cr_assert_str_eq(t_eval("(real? 1 2)"), " Arity error: real?: expected exactly 1 arg, got 2");
 }
 
 Test(end_to_end_numeric_predicates, test_rational_predicate, .init = setup_each_test, .fini = teardown_each_test) {
@@ -129,7 +129,7 @@ Test(end_to_end_numeric_predicates, test_rational_predicate, .init = setup_each_
     cr_assert_str_eq(t_eval("(rational? '())"), "#false");
 
     // ## Arity ##
-    cr_assert_str_eq(t_eval("(rational?)"), " Arity error: expected exactly 1 arg, got 0");
+    cr_assert_str_eq(t_eval("(rational?)"), " Arity error: rational?: expected exactly 1 arg, got 0");
 }
 
 Test(end_to_end_numeric_predicates, test_integer_predicate, .init = setup_each_test, .fini = teardown_each_test) {
@@ -153,7 +153,7 @@ Test(end_to_end_numeric_predicates, test_integer_predicate, .init = setup_each_t
     cr_assert_str_eq(t_eval("(integer? #\\5)"), "#false");
 
     // ## Arity ##
-    cr_assert_str_eq(t_eval("(integer?)"), " Arity error: expected exactly 1 arg, got 0");
+    cr_assert_str_eq(t_eval("(integer?)"), " Arity error: integer?: expected exactly 1 arg, got 0");
 }
 
 Test(end_to_end_numeric_predicates, test_exact_integer_predicate, .init = setup_each_test, .fini = teardown_each_test) {
@@ -175,7 +175,7 @@ Test(end_to_end_numeric_predicates, test_exact_integer_predicate, .init = setup_
     cr_assert_str_eq(t_eval("(exact-integer? \"5\")"), "#false");
 
     // ## Arity ##
-    cr_assert_str_eq(t_eval("(exact-integer?)"), " Arity error: expected exactly 1 arg, got 0");
+    cr_assert_str_eq(t_eval("(exact-integer?)"), " Arity error: exact-integer?: expected exactly 1 arg, got 0");
 }
 
 Test(end_to_end_numeric_predicates, test_zero_predicate, .init = setup_each_test, .fini = teardown_each_test) {
@@ -196,13 +196,13 @@ Test(end_to_end_numeric_predicates, test_zero_predicate, .init = setup_each_test
     cr_assert_str_eq(t_eval("(zero? +nan.0)"), "#false");
 
     // ## Type Errors ##
-    cr_assert_str_eq(t_eval("(zero? 'a)"), " Type error: bad type at arg 1: got symbol, expected integer|real|rational|complex");
+    cr_assert_str_eq(t_eval("(zero? 'a)"), " Type error: zero?: bad type at arg 1: got symbol, expected integer|real|rational|complex|bigint");
     cr_assert_str_eq(t_eval("(zero? 1+2i)"), "#false");
 
 
     // ## Arity ##
-    cr_assert_str_eq(t_eval("(zero?)"), " Arity error: expected exactly 1 arg, got 0");
-    cr_assert_str_eq(t_eval("(zero? 0 0)"), " Arity error: expected exactly 1 arg, got 2");
+    cr_assert_str_eq(t_eval("(zero?)"), " Arity error: zero?: expected exactly 1 arg, got 0");
+    cr_assert_str_eq(t_eval("(zero? 0 0)"), " Arity error: zero?: expected exactly 1 arg, got 2");
 }
 
 Test(end_to_end_numeric_predicates, test_positive_predicate, .init = setup_each_test, .fini = teardown_each_test) {
@@ -224,7 +224,7 @@ Test(end_to_end_numeric_predicates, test_positive_predicate, .init = setup_each_
     cr_assert_str_eq(t_eval("(positive? 1+2i)"), " Value error: positive?: expected real, got complex");
 
     // ## Arity ##
-    cr_assert_str_eq(t_eval("(positive?)"), " Arity error: expected exactly 1 arg, got 0");
+    cr_assert_str_eq(t_eval("(positive?)"), " Arity error: positive?: expected exactly 1 arg, got 0");
 }
 
 Test(end_to_end_numeric_predicates, test_negative_predicate, .init = setup_each_test, .fini = teardown_each_test) {
@@ -243,10 +243,10 @@ Test(end_to_end_numeric_predicates, test_negative_predicate, .init = setup_each_
     cr_assert_str_eq(t_eval("(negative? +nan.0)"), "#false");
 
     // ## Type Errors ##
-    cr_assert_str_eq(t_eval("(negative? #true)"), " Type error: bad type at arg 1: got bool, expected integer|real|rational|complex");
+    cr_assert_str_eq(t_eval("(negative? #true)"), " Type error: negative?: bad type at arg 1: got bool, expected integer|real|rational|complex|bigint");
 
     // ## Arity ##
-    cr_assert_str_eq(t_eval("(negative? -1 -2)"), " Arity error: expected exactly 1 arg, got 2");
+    cr_assert_str_eq(t_eval("(negative? -1 -2)"), " Arity error: negative?: expected exactly 1 arg, got 2");
 }
 
 Test(end_to_end_numeric_predicates, test_odd_predicate, .init = setup_each_test, .fini = teardown_each_test) {
@@ -263,12 +263,12 @@ Test(end_to_end_numeric_predicates, test_odd_predicate, .init = setup_each_test,
 
     // ## Type Errors (must be an integer) ##
     cr_assert_str_eq(t_eval("(odd? 1.0)"), "#true");
-    cr_assert_str_eq(t_eval("(odd? 3/2)"), "#false");
-    cr_assert_str_eq(t_eval("(odd? +inf.0)"), "#false");
-    cr_assert_str_eq(t_eval("(odd? 'foo)"), " Type error: bad type at arg 1: got symbol, expected integer|real|rational|complex");
+    cr_assert_str_eq(t_eval("(odd? 3/2)"), " Value error: odd?: expected integer");
+    cr_assert_str_eq(t_eval("(odd? +inf.0)"), " Value error: odd?: expected integer");
+    cr_assert_str_eq(t_eval("(odd? 'foo)"), " Type error: odd?: bad type at arg 1: got symbol, expected integer|real|rational|complex|bigint");
 
     // ## Arity ##
-    cr_assert_str_eq(t_eval("(odd?)"), " Arity error: expected exactly 1 arg, got 0");
+    cr_assert_str_eq(t_eval("(odd?)"), " Arity error: odd?: expected exactly 1 arg, got 0");
 }
 
 Test(end_to_end_numeric_predicates, test_even_predicate, .init = setup_each_test, .fini = teardown_each_test) {
@@ -286,41 +286,40 @@ Test(end_to_end_numeric_predicates, test_even_predicate, .init = setup_each_test
     // ## Type Errors (must be an integer) ##
     cr_assert_str_eq(t_eval("(even? 2.0)"), "#true");
     cr_assert_str_eq(t_eval("(even? 4/2)"), "#true"); // Note: (even? 2) is #true
-    cr_assert_str_eq(t_eval("(even? -inf.0)"), "#false");
-    cr_assert_str_eq(t_eval("(even? #\\a)"), " Type error: bad type at arg 1: got char, expected integer|real|rational|complex");
+    cr_assert_str_eq(t_eval("(even? -inf.0)"), " Value error: even?: expected integer");
+    cr_assert_str_eq(t_eval("(even? #\\a)"), " Type error: even?: bad type at arg 1: got char, expected integer|real|rational|complex|bigint");
 
     // ## Arity ##
-    cr_assert_str_eq(t_eval("(even?)"), " Arity error: expected exactly 1 arg, got 0");
+    cr_assert_str_eq(t_eval("(even?)"), " Arity error: even?: expected exactly 1 arg, got 0");
 }
 
-//* This procedure is in inexact library */
-// Test(end_to_end_numeric_predicates, test_nan_predicate, .init = setup_each_test, .fini = teardown_each_test) {
-//     // ## NaN Values ##
-//     // `nan?` is true only for "Not a Number" values.
-//     cr_assert_str_eq(t_eval("(nan? +nan.0)"), "#true");
-//     cr_assert_str_eq(t_eval("(nan? -nan.0)"), "#true");
-//     // Standard operations that produce NaN
-//     cr_assert_str_eq(t_eval("(nan? (/ 0.0 0.0))"), "#true");
-//     cr_assert_str_eq(t_eval("(nan? (- +inf.0 +inf.0))"), "#true");
-//
-//     // ## Not NaN values ##
-//     // It should be false for all other numbers.
-//     cr_assert_str_eq(t_eval("(nan? 0)"), "#false");
-//     cr_assert_str_eq(t_eval("(nan? 123)"), "#false");
-//     cr_assert_str_eq(t_eval("(nan? 12.34)"), "#false");
-//     cr_assert_str_eq(t_eval("(nan? 3/4)"), "#false");
-//     cr_assert_str_eq(t_eval("(nan? +inf.0)"), "#false");
-//     cr_assert_str_eq(t_eval("(nan? -inf.0)"), "#false");
-//     cr_assert_str_eq(t_eval("(nan? 1+0i)"), "#false"); // Complex numbers with 0i are real
-//
-//     // ## Type Errors ##
-//     // R7RS specifies the argument must be a real number.
-//     cr_assert_str_eq(t_eval("(nan? 1+2i)"), " Type error: nan?: not a real number");
-//     cr_assert_str_eq(t_eval("(nan? #true)"), " Type error: nan?: not a number");
-//     cr_assert_str_eq(t_eval("(nan? 'nan)"), " Type error: nan?: not a number");
-//     cr_assert_str_eq(t_eval("(nan? \"nan\")"), " Type error: nan?: not a number");
-//
-//     // ## Arity ##
-//     cr_assert_str_eq(t_eval("(nan?)"), " Arity error: nan?: wrong number of arguments (expected 1, got 0)");
-//     cr_assert_str_eq(t_eval("(nan? +nan.0 1)"), " Arity error: nan?: wrong number of arguments (expected 1, got 2)");
-// }
+Test(end_to_end_numeric_predicates, test_nan_predicate, .init = setup_each_test, .fini = teardown_each_test) {
+    // ## NaN Values ##
+    // `nan?` is true only for "Not a Number" values.
+    cr_assert_str_eq(t_eval("(nan? +nan.0)"), "#true");
+    cr_assert_str_eq(t_eval("(nan? -nan.0)"), "#true");
+    // Standard operations that produce NaN
+    cr_assert_str_eq(t_eval("(nan? (/ 0.0 0.0))"), "#true");
+    cr_assert_str_eq(t_eval("(nan? (- +inf.0 +inf.0))"), "#true");
+
+    // ## Not NaN values ##
+    // It should be false for all other numbers.
+    cr_assert_str_eq(t_eval("(nan? 0)"), "#false");
+    cr_assert_str_eq(t_eval("(nan? 123)"), "#false");
+    cr_assert_str_eq(t_eval("(nan? 12.34)"), "#false");
+    cr_assert_str_eq(t_eval("(nan? 3/4)"), "#false");
+    cr_assert_str_eq(t_eval("(nan? +inf.0)"), "#false");
+    cr_assert_str_eq(t_eval("(nan? -inf.0)"), "#false");
+    cr_assert_str_eq(t_eval("(nan? 1+0i)"), "#false"); // Complex numbers with 0i are real
+
+    // ## Type Errors ##
+    // R7RS specifies the argument must be a real number.
+    cr_assert_str_eq(t_eval("(nan? 1+2i)"), "#false");
+    cr_assert_str_eq(t_eval("(nan? #true)"), " Type error: nan?: bad type at arg 1: got bool, expected integer|real|rational|complex|bigint");
+    cr_assert_str_eq(t_eval("(nan? 'nan)"), " Type error: nan?: bad type at arg 1: got symbol, expected integer|real|rational|complex|bigint");
+    cr_assert_str_eq(t_eval("(nan? \"nan\")"), " Type error: nan?: bad type at arg 1: got string, expected integer|real|rational|complex|bigint");
+
+    // ## Arity ##
+    cr_assert_str_eq(t_eval("(nan?)"), " Arity error: nan?: expected exactly 1 arg, got 0");
+    cr_assert_str_eq(t_eval("(nan? +nan.0 1)"), " Arity error: nan?: expected exactly 1 arg, got 2");
+}

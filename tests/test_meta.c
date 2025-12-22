@@ -8,6 +8,11 @@
 
 /* Define the global test environment variable. */
 Lex* test_env;
+/* Unused -- this is to satisfy the linker, as there is no main.c
+ * in the tests, and command-line in control_features.c need these
+ * vars */
+int g_argc;
+char** g_argv;
 
 void setup_each_test(void) {
     // setup logic
@@ -31,7 +36,7 @@ void teardown_each_test(void) {
  * and causing tests to fail when they should not.
  *
  * Yes - the tests will run slower, but tests aren't
- * supposed tobe fast,they're supposed to test if
+ * supposed to be fast,they're supposed to test if
  * the code works!
  */
 char* t_eval(const char* input) {

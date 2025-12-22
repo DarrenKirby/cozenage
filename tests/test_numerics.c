@@ -582,7 +582,7 @@ Test(end_to_end_numerics, test_even_predicate, .init = setup_each_test, .fini = 
     cr_assert_str_eq(t_eval("(even? 2/1)"), "#true");
     cr_assert_str_eq(t_eval("(even? 2+0i)"), "#true");
     cr_assert_str_eq(t_eval("(even? 3.0)"), "#false");
-    cr_assert_str_eq(t_eval("(even? 2+2i)"), "#false");
+    cr_assert_str_eq(t_eval("(even? 2+2i)"), " Value error: even?: expected integer");
 }
 
 Test(end_to_end_numerics, test_odd_predicate, .init = setup_each_test, .fini = teardown_each_test) {

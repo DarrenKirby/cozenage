@@ -17,8 +17,8 @@ Test(end_to_end_type_predicates, test_number_predicate, .init = setup_each_test,
     cr_assert_str_eq(t_eval("(number? 'a)"), "#false");
 
     // ## Arity ##
-    cr_assert_str_eq(t_eval("(number?)"), " Arity error: expected exactly 1 arg, got 0");
-    cr_assert_str_eq(t_eval("(number? 1 2)"), " Arity error: expected exactly 1 arg, got 2");
+    cr_assert_str_eq(t_eval("(number?)"), " Arity error: number?: expected exactly 1 arg, got 0");
+    cr_assert_str_eq(t_eval("(number? 1 2)"), " Arity error: number?: expected exactly 1 arg, got 2");
 }
 
 Test(end_to_end_type_predicates, test_boolean_predicate, .init = setup_each_test, .fini = teardown_each_test) {
@@ -33,7 +33,7 @@ Test(end_to_end_type_predicates, test_boolean_predicate, .init = setup_each_test
     cr_assert_str_eq(t_eval("(boolean? 'true)"), "#false");
 
     // ## Arity ##
-    cr_assert_str_eq(t_eval("(boolean?)"), " Arity error: expected exactly 1 arg, got 0");
+    cr_assert_str_eq(t_eval("(boolean?)"), " Arity error: boolean?: expected exactly 1 arg, got 0");
 }
 
 Test(end_to_end_type_predicates, test_null_predicate, .init = setup_each_test, .fini = teardown_each_test) {
@@ -48,7 +48,7 @@ Test(end_to_end_type_predicates, test_null_predicate, .init = setup_each_test, .
     cr_assert_str_eq(t_eval("(null? '(a))"), "#false");
 
     // ## Arity ##
-    cr_assert_str_eq(t_eval("(null?)"), " Arity error: expected exactly 1 arg, got 0");
+    cr_assert_str_eq(t_eval("(null?)"), " Arity error: null?: expected exactly 1 arg, got 0");
 }
 
 Test(end_to_end_type_predicates, test_pair_predicate, .init = setup_each_test, .fini = teardown_each_test) {
@@ -63,7 +63,7 @@ Test(end_to_end_type_predicates, test_pair_predicate, .init = setup_each_test, .
     cr_assert_str_eq(t_eval("(pair? #(1 2))"), "#false");
 
     // ## Arity ##
-    cr_assert_str_eq(t_eval("(pair?)"), " Arity error: expected exactly 1 arg, got 0");
+    cr_assert_str_eq(t_eval("(pair?)"), " Arity error: pair?: expected exactly 1 arg, got 0");
 }
 
 Test(end_to_end_type_predicates, test_list_predicate, .init = setup_each_test, .fini = teardown_each_test) {
@@ -82,7 +82,7 @@ Test(end_to_end_type_predicates, test_list_predicate, .init = setup_each_test, .
     //cr_assert_str_eq(t_eval("(begin (define x (list 'a 'b)) (set-cdr! (cdr x) x) (list? x))"), "#false"); // cyclic list
 
     // ## Arity ##
-    cr_assert_str_eq(t_eval("(list?)"), " Arity error: expected exactly 1 arg, got 0");
+    cr_assert_str_eq(t_eval("(list?)"), " Arity error: list?: expected exactly 1 arg, got 0");
 }
 
 Test(end_to_end_type_predicates, test_procedure_predicate, .init = setup_each_test, .fini = teardown_each_test) {
@@ -97,7 +97,7 @@ Test(end_to_end_type_predicates, test_procedure_predicate, .init = setup_each_te
     cr_assert_str_eq(t_eval("(procedure? '(lambda (x) x))"), "#false");
 
     // ## Arity ##
-    cr_assert_str_eq(t_eval("(procedure?)"), " Arity error: expected exactly 1 arg, got 0");
+    cr_assert_str_eq(t_eval("(procedure?)"), " Arity error: procedure?: expected exactly 1 arg, got 0");
 }
 
 Test(end_to_end_type_predicates, test_symbol_predicate, .init = setup_each_test, .fini = teardown_each_test) {
@@ -111,7 +111,7 @@ Test(end_to_end_type_predicates, test_symbol_predicate, .init = setup_each_test,
     cr_assert_str_eq(t_eval("(symbol? 123)"), "#false");
 
     // ## Arity ##
-    cr_assert_str_eq(t_eval("(symbol?)"), " Arity error: expected exactly 1 arg, got 0");
+    cr_assert_str_eq(t_eval("(symbol?)"), " Arity error: symbol?: expected exactly 1 arg, got 0");
 }
 
 Test(end_to_end_type_predicates, test_string_predicate, .init = setup_each_test, .fini = teardown_each_test) {
@@ -125,7 +125,7 @@ Test(end_to_end_type_predicates, test_string_predicate, .init = setup_each_test,
     cr_assert_str_eq(t_eval("(string? #\\a)"), "#false");
 
     // ## Arity ##
-    cr_assert_str_eq(t_eval("(string?)"), " Arity error: expected exactly 1 arg, got 0");
+    cr_assert_str_eq(t_eval("(string?)"), " Arity error: string?: expected exactly 1 arg, got 0");
 }
 
 Test(end_to_end_type_predicates, test_char_predicate, .init = setup_each_test, .fini = teardown_each_test) {
@@ -140,7 +140,7 @@ Test(end_to_end_type_predicates, test_char_predicate, .init = setup_each_test, .
     cr_assert_str_eq(t_eval("(char? 97)"), "#false");
 
     // ## Arity ##
-    cr_assert_str_eq(t_eval("(char?)"), " Arity error: expected exactly 1 arg, got 0");
+    cr_assert_str_eq(t_eval("(char?)"), " Arity error: char?: expected exactly 1 arg, got 0");
 }
 
 Test(end_to_end_type_predicates, test_vector_predicate, .init = setup_each_test, .fini = teardown_each_test) {
@@ -155,7 +155,7 @@ Test(end_to_end_type_predicates, test_vector_predicate, .init = setup_each_test,
     cr_assert_str_eq(t_eval("(vector? \"abc\")"), "#false");
 
     // ## Arity ##
-    cr_assert_str_eq(t_eval("(vector?)"), " Arity error: expected exactly 1 arg, got 0");
+    cr_assert_str_eq(t_eval("(vector?)"), " Arity error: vector?: expected exactly 1 arg, got 0");
 }
 
 Test(end_to_end_type_predicates, test_bytevector_predicate, .init = setup_each_test, .fini = teardown_each_test) {
@@ -170,7 +170,7 @@ Test(end_to_end_type_predicates, test_bytevector_predicate, .init = setup_each_t
     cr_assert_str_eq(t_eval("(bytevector? \"abc\")"), "#false");
 
     // ## Arity ##
-    cr_assert_str_eq(t_eval("(bytevector?)"), " Arity error: expected exactly 1 arg, got 0");
+    cr_assert_str_eq(t_eval("(bytevector?)"), " Arity error: bytevector?: expected exactly 1 arg, got 0");
 }
 
 Test(end_to_end_type_predicates, test_port_predicate, .init = setup_each_test, .fini = teardown_each_test) {
@@ -185,7 +185,7 @@ Test(end_to_end_type_predicates, test_port_predicate, .init = setup_each_test, .
     cr_assert_str_eq(t_eval("(port? #false)"), "#false");
 
     // ## Arity ##
-    cr_assert_str_eq(t_eval("(port?)"), " Arity error: expected exactly 1 arg, got 0");
+    cr_assert_str_eq(t_eval("(port?)"), " Arity error: port?: expected exactly 1 arg, got 0");
 }
 
 Test(end_to_end_type_predicates, test_eof_object_predicate, .init = setup_each_test, .fini = teardown_each_test) {
@@ -199,5 +199,5 @@ Test(end_to_end_type_predicates, test_eof_object_predicate, .init = setup_each_t
     cr_assert_str_eq(t_eval("(eof-object? '())"), "#false");
 
     // ## Arity ##
-    cr_assert_str_eq(t_eval("(eof-object?)"), " Arity error: expected exactly 1 arg, got 0");
+    cr_assert_str_eq(t_eval("(eof-object?)"), " Arity error: eof-object?: expected exactly 1 arg, got 0");
 }

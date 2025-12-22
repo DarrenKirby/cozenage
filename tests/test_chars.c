@@ -39,8 +39,8 @@ Test(end_to_end_chars, test_char_integer_conversions, .init = setup_each_test, .
     cr_assert_str_eq(t_eval("(integer->char -1)"), " Value error: integer->char: invalid code point");
     cr_assert_str_eq(t_eval("(integer->char #x110000)"), " Value error: integer->char: invalid code point");
     cr_assert_str_eq(t_eval("(integer->char #xD800)"), " Value error: integer->char: invalid code point (surrogate)");
-    cr_assert_str_eq(t_eval("(char->integer 123)"), " Type error: bad type at arg 1: got integer, expected char");
-    cr_assert_str_eq(t_eval("(integer->char 1.0)"), " Type error: bad type at arg 1: got float, expected integer");
+    cr_assert_str_eq(t_eval("(char->integer 123)"), " Type error: char->integer: bad type at arg 1: got integer, expected char");
+    cr_assert_str_eq(t_eval("(integer->char 1.0)"), " Type error: integer->char: bad type at arg 1: got float, expected integer");
 }
 
 Test(end_to_end_chars, test_char_equal, .init = setup_each_test, .fini = teardown_each_test) {
@@ -75,9 +75,9 @@ Test(end_to_end_chars, test_char_equal, .init = setup_each_test, .fini = teardow
     cr_assert_str_eq(t_eval("(char=? #\\b (car '(#\\b #\\c)))"), "#true");
 
     /* The following tests are for error conditions. */
-    cr_assert_str_eq(t_eval("(char=? #\\a 1)"), " Type error: bad type at arg 2: got integer, expected char");
-    cr_assert_str_eq(t_eval("(char=? 'a #\\a)"), " Type error: bad type at arg 1: got symbol, expected char");
-    cr_assert_str_eq(t_eval("(char=? #\\a \"a\")"), " Type error: bad type at arg 2: got string, expected char");
+    cr_assert_str_eq(t_eval("(char=? #\\a 1)"), " Type error: char=?: bad type at arg 2: got integer, expected char");
+    cr_assert_str_eq(t_eval("(char=? 'a #\\a)"), " Type error: char=?: bad type at arg 1: got symbol, expected char");
+    cr_assert_str_eq(t_eval("(char=? #\\a \"a\")"), " Type error: char=?: bad type at arg 2: got string, expected char");
 }
 
 Test(end_to_end_chars, test_char_less_than, .init = setup_each_test, .fini = teardown_each_test) {
@@ -117,9 +117,9 @@ Test(end_to_end_chars, test_char_less_than, .init = setup_each_test, .fini = tea
     cr_assert_str_eq(t_eval("(char<? (car '(#\\a #\\b)) #\\c)"), "#true");
 
     /* The following tests are for error conditions. */
-    cr_assert_str_eq(t_eval("(char<? #\\a 97)"), " Type error: bad type at arg 2: got integer, expected char");
-    cr_assert_str_eq(t_eval("(char<? #\\a #\\b 'c)"), " Type error: bad type at arg 3: got symbol, expected char");
-    cr_assert_str_eq(t_eval("(char<? \"a\" #\\b)"), " Type error: bad type at arg 1: got string, expected char");
+    cr_assert_str_eq(t_eval("(char<? #\\a 97)"), " Type error: char<?: bad type at arg 2: got integer, expected char");
+    cr_assert_str_eq(t_eval("(char<? #\\a #\\b 'c)"), " Type error: char<?: bad type at arg 3: got symbol, expected char");
+    cr_assert_str_eq(t_eval("(char<? \"a\" #\\b)"), " Type error: char<?: bad type at arg 1: got string, expected char");
 }
 
 Test(end_to_end_chars, test_char_less_than_or_equal, .init = setup_each_test, .fini = teardown_each_test) {
@@ -160,9 +160,9 @@ Test(end_to_end_chars, test_char_less_than_or_equal, .init = setup_each_test, .f
     cr_assert_str_eq(t_eval("(char<=? (car '(#\\c #\\b)) #\\c)"), "#true");
 
     /* The following tests are for error conditions.*/
-    cr_assert_str_eq(t_eval("(char<=? #\\a 98)"), " Type error: bad type at arg 2: got integer, expected char");
-    cr_assert_str_eq(t_eval("(char<=? #\\a #\\b 'b)"), " Type error: bad type at arg 3: got symbol, expected char");
-    cr_assert_str_eq(t_eval("(char<=? \"c\" #\\b)"), " Type error: bad type at arg 1: got string, expected char");
+    cr_assert_str_eq(t_eval("(char<=? #\\a 98)"), " Type error: char<=?: bad type at arg 2: got integer, expected char");
+    cr_assert_str_eq(t_eval("(char<=? #\\a #\\b 'b)"), " Type error: char<=?: bad type at arg 3: got symbol, expected char");
+    cr_assert_str_eq(t_eval("(char<=? \"c\" #\\b)"), " Type error: char<=?: bad type at arg 1: got string, expected char");
 }
 
 Test(end_to_end_chars, test_char_greater_than, .init = setup_each_test, .fini = teardown_each_test) {
@@ -201,9 +201,9 @@ Test(end_to_end_chars, test_char_greater_than, .init = setup_each_test, .fini = 
     cr_assert_str_eq(t_eval("(char>? #\\z (car '(#\\y #\\x)))"), "#true");
 
     /* The following tests are for error conditions. */
-    cr_assert_str_eq(t_eval("(char>? #\\b 97)"), " Type error: bad type at arg 2: got integer, expected char");
-    cr_assert_str_eq(t_eval("(char>? #\\c #\\b 'a)"), " Type error: bad type at arg 3: got symbol, expected char");
-    cr_assert_str_eq(t_eval("(char>? \"z\" #\\y)"), " Type error: bad type at arg 1: got string, expected char");
+    cr_assert_str_eq(t_eval("(char>? #\\b 97)"), " Type error: char>?: bad type at arg 2: got integer, expected char");
+    cr_assert_str_eq(t_eval("(char>? #\\c #\\b 'a)"), " Type error: char>?: bad type at arg 3: got symbol, expected char");
+    cr_assert_str_eq(t_eval("(char>? \"z\" #\\y)"), " Type error: char>?: bad type at arg 1: got string, expected char");
 }
 
 Test(end_to_end_chars, test_char_greater_than_or_equal, .init = setup_each_test, .fini = teardown_each_test) {
@@ -243,9 +243,9 @@ Test(end_to_end_chars, test_char_greater_than_or_equal, .init = setup_each_test,
     cr_assert_str_eq(t_eval("(char>=? #\\c (car '(#\\c #\\b)))"), "#true");
 
     /* The following tests are for error conditions. */
-    cr_assert_str_eq(t_eval("(char>=? #\\b 97)"), " Type error: bad type at arg 2: got integer, expected char");
-    cr_assert_str_eq(t_eval("(char>=? #\\c #\\b 'b)"), " Type error: bad type at arg 3: got symbol, expected char");
-    cr_assert_str_eq(t_eval("(char>=? \"b\" #\\a)"), " Type error: bad type at arg 1: got string, expected char");
+    cr_assert_str_eq(t_eval("(char>=? #\\b 97)"), " Type error: char>=?: bad type at arg 2: got integer, expected char");
+    cr_assert_str_eq(t_eval("(char>=? #\\c #\\b 'b)"), " Type error: char>=?: bad type at arg 3: got symbol, expected char");
+    cr_assert_str_eq(t_eval("(char>=? \"b\" #\\a)"), " Type error: char>=?: bad type at arg 1: got string, expected char");
 }
 
 Test(end_to_end_chars, test_extended_named_characters, .init = setup_each_test, .fini = teardown_each_test) {

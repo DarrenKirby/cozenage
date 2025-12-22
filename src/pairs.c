@@ -237,12 +237,13 @@ Cell* builtin_list_ref(const Lex* e, const Cell* a)
             "list-ref: arg 1 must be a list",
             TYPE_ERR);
     }
+    /* FIXME: this test fails when list is built by cons... */
     /* Improper list is not a list */
-    if (a->cell[0]->type == CELL_PAIR && a->cell[0]->len == -1) {
-        return make_cell_error(
-            "list-ref: arg 1 must be a proper list",
-            TYPE_ERR);
-    }
+    // if (a->cell[0]->type == CELL_PAIR && a->cell[0]->len == -1) {
+    //     return make_cell_error(
+    //         "list-ref: arg 1 must be a proper list",
+    //         TYPE_ERR);
+    // }
     if (a->cell[1]->type != CELL_INTEGER) {
         return make_cell_error(
             "list-ref: arg 2 must be an integer",
@@ -593,7 +594,7 @@ Cell* builtin_member(const Lex* e, const Cell* a)
 
     while (list != NULL && list->type == CELL_PAIR) {
         Cell* result;
-        if (predicate == NULL) {
+        if (predicate == USP_Obj) {
             /* Default to equal? */
             result = builtin_equal(e, make_sexpr_len2(list->car, (Cell*)key));
         } else {

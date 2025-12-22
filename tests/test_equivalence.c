@@ -82,9 +82,9 @@ Test(end_to_end_equivalence, test_eq_procedure, .init = setup_each_test, .fini =
     cr_assert_str_eq(t_eval("(eq? (list 'a) '(a))"), "#false");
 
     // ## Error Handling: Arity ##
-    cr_assert_str_eq(t_eval("(eq?)"), " Arity error: expected exactly 2 args, got 0");
-    cr_assert_str_eq(t_eval("(eq? 'a)"), " Arity error: expected exactly 2 args, got 1");
-    cr_assert_str_eq(t_eval("(eq? 'a 'b 'c)"), " Arity error: expected exactly 2 args, got 3");
+    cr_assert_str_eq(t_eval("(eq?)"), " Arity error: eq?: expected exactly 2 args, got 0");
+    cr_assert_str_eq(t_eval("(eq? 'a)"), " Arity error: eq?: expected exactly 2 args, got 1");
+    cr_assert_str_eq(t_eval("(eq? 'a 'b 'c)"), " Arity error: eq?: expected exactly 2 args, got 3");
 }
 
 Test(end_to_end_equivalence, test_eqv_procedure, .init = setup_each_test, .fini = teardown_each_test) {
@@ -160,9 +160,9 @@ Test(end_to_end_equivalence, test_eqv_procedure, .init = setup_each_test, .fini 
     cr_assert_str_eq(t_eval("(eqv? \"a\" #\\a)"), "#false");
 
     // ## Error Handling: Arity ##
-    cr_assert_str_eq(t_eval("(eqv?)"), " Arity error: expected exactly 2 args, got 0");
-    cr_assert_str_eq(t_eval("(eqv? 'a)"), " Arity error: expected exactly 2 args, got 1");
-    cr_assert_str_eq(t_eval("(eqv? 'a 'b 'c)"), " Arity error: expected exactly 2 args, got 3");
+    cr_assert_str_eq(t_eval("(eqv?)"), " Arity error: eqv?: expected exactly 2 args, got 0");
+    cr_assert_str_eq(t_eval("(eqv? 'a)"), " Arity error: eqv?: expected exactly 2 args, got 1");
+    cr_assert_str_eq(t_eval("(eqv? 'a 'b 'c)"), " Arity error: eqv?: expected exactly 2 args, got 3");
 }
 
 Test(end_to_end_equivalence, test_equal_procedure, .init = setup_each_test, .fini = teardown_each_test) {
@@ -250,7 +250,7 @@ Test(end_to_end_equivalence, test_equal_procedure, .init = setup_each_test, .fin
                                 "(equal? x y))"), "#true");
 
     // ## Error Handling: Arity ##
-    cr_assert_str_eq(t_eval("(equal?)"), " Arity error: expected exactly 2 args, got 0");
-    cr_assert_str_eq(t_eval("(equal? 'a)"), " Arity error: expected exactly 2 args, got 1");
-    cr_assert_str_eq(t_eval("(equal? 'a 'b 'c)"), " Arity error: expected exactly 2 args, got 3");
+    cr_assert_str_eq(t_eval("(equal?)"), " Arity error: equal?: expected exactly 2 args, got 0");
+    cr_assert_str_eq(t_eval("(equal? 'a)"), " Arity error: equal?: expected exactly 2 args, got 1");
+    cr_assert_str_eq(t_eval("(equal? 'a 'b 'c)"), " Arity error: equal?: expected exactly 2 args, got 3");
 }

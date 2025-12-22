@@ -149,8 +149,8 @@ Test(end_to_end_lists, test_filter_procedure, .init = setup_each_test, .fini = t
     cr_assert_str_eq(t_eval("(begin (define my-list '(1 2 3 4)) (filter even? my-list) my-list)"), "(1 2 3 4)");
 
     /* The following tests are for error conditions. */
-    cr_assert_str_eq(t_eval("(filter)"), " Arity error: expected exactly 2 args, got 0");
-    cr_assert_str_eq(t_eval("(filter odd?)"), " Arity error: expected exactly 2 args, got 1");
+    cr_assert_str_eq(t_eval("(filter)"), " Arity error: filter: expected exactly 2 args, got 0");
+    cr_assert_str_eq(t_eval("(filter odd?)"), " Arity error: filter: expected exactly 2 args, got 1");
     cr_assert_str_eq(t_eval("(filter 1 '(1 2 3))"), " Type error: filter: arg 1 must be a procedure");
     cr_assert_str_eq(t_eval("(filter odd? 123)"), " Type error: filter: arg 2 must be a proper list");
     cr_assert_str_eq(t_eval("(filter odd? '(1 . 2))"), " Type error: filter: arg 2 must be a proper list");
@@ -175,7 +175,7 @@ Test(end_to_end_lists, test_foldl_procedure, .init = setup_each_test, .fini = te
     cr_assert_str_eq(t_eval("(foldl + 0 '(1 2 3) '(4 5) '(6))"), "11"); /* Stops when the shortest list is exhausted */
 
     /* Test with mixed types */
-    cr_assert_str_eq(t_eval("(foldl (lambda (acc x) (if (number? x) (+ acc x) acc)) 0 '(a 1 b 2 c 3))"), " Type error: bad type at arg 1: got symbol, expected integer|real|rational|complex");
+    cr_assert_str_eq(t_eval("(foldl (lambda (acc x) (if (number? x) (+ acc x) acc)) 0 '(a 1 b 2 c 3))"), " Type error: +: bad type at arg 1: got symbol, expected integer|real|rational|complex|bigint|bigfloat");
 
     /* Edge cases */
     cr_assert_str_eq(t_eval("(foldl + 42 '())"), "42");
@@ -183,9 +183,9 @@ Test(end_to_end_lists, test_foldl_procedure, .init = setup_each_test, .fini = te
     cr_assert_str_eq(t_eval("(foldl + 0 '() '(1 2 3))"), "0"); /* Returns init immediately if any list is empty */
 
     /* The following tests are for error conditions. */
-    cr_assert_str_eq(t_eval("(foldl)"), " Arity error: expected at least 3 args, got 0");
-    cr_assert_str_eq(t_eval("(foldl +)"), " Arity error: expected at least 3 args, got 1");
-    cr_assert_str_eq(t_eval("(foldl + 0)"), " Arity error: expected at least 3 args, got 2");
+    cr_assert_str_eq(t_eval("(foldl)"), " Arity error: foldl: expected at least 3 args, got 0");
+    cr_assert_str_eq(t_eval("(foldl +)"), " Arity error: foldl: expected at least 3 args, got 1");
+    cr_assert_str_eq(t_eval("(foldl + 0)"), " Arity error: foldl: expected at least 3 args, got 2");
     cr_assert_str_eq(t_eval("(foldl 1 0 '(1 2 3))"), " Type error: foldl: arg 1 must be a procedure");
     cr_assert_str_eq(t_eval("(foldl + 0 '(a . b))"), " Type error: foldl: arg 3 must be a proper list");
     cr_assert_str_eq(t_eval("(foldl + 0 '(1 2) '(a . b))"), " Type error: foldl: arg 4 must be a proper list");
@@ -216,8 +216,8 @@ Test(end_to_end_lists, test_map_procedure, .init = setup_each_test, .fini = tear
     //cr_assert_str_eq(t_eval("(begin (define b (list 1 2 3)) (define c (map (lambda (x) x) b)) (eq? b c))"), "#false");
 
     /* The following tests are for error conditions. */
-    cr_assert_str_eq(t_eval("(map)"), " Arity error: expected at least 2 args, got 0");
-    cr_assert_str_eq(t_eval("(map +)"), " Arity error: expected at least 2 args, got 1");
+    cr_assert_str_eq(t_eval("(map)"), " Arity error: map: expected at least 2 args, got 0");
+    cr_assert_str_eq(t_eval("(map +)"), " Arity error: map: expected at least 2 args, got 1");
     cr_assert_str_eq(t_eval("(map 1 '(1 2 3))"), " Type error: map: arg 1 must be a procedure");
     cr_assert_str_eq(t_eval("(map + '(1 2) 3)"), " Type error: map: arg 3 must be a proper list");
     cr_assert_str_eq(t_eval("(map + '(1 . 2))"), " Type error: map: arg 2 must be a proper list");

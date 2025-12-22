@@ -26,12 +26,12 @@ Test(end_to_end_vectors, test_vector_length, .init = setup_each_test, .fini = te
     cr_assert_str_eq(t_eval("(vector-length (vector 1 2 3))"), "3");
 
     // ## Type Errors ##
-    cr_assert_str_eq(t_eval("(vector-length '(1 2 3))"), " Type error: bad type at arg 1: got pair, expected vector");
-    cr_assert_str_eq(t_eval("(vector-length \"abc\")"), " Type error: bad type at arg 1: got string, expected vector");
+    cr_assert_str_eq(t_eval("(vector-length '(1 2 3))"), " Type error: vector-length: bad type at arg 1: got pair, expected vector");
+    cr_assert_str_eq(t_eval("(vector-length \"abc\")"), " Type error: vector-length: bad type at arg 1: got string, expected vector");
 
     // ## Arity ##
-    cr_assert_str_eq(t_eval("(vector-length)"), " Arity error: expected exactly 1 arg, got 0");
-    cr_assert_str_eq(t_eval("(vector-length #(1) #(2))"), " Arity error: expected exactly 1 arg, got 2");
+    cr_assert_str_eq(t_eval("(vector-length)"), " Arity error: vector-length: expected exactly 1 arg, got 0");
+    cr_assert_str_eq(t_eval("(vector-length #(1) #(2))"), " Arity error: vector-length: expected exactly 1 arg, got 2");
 }
 
 Test(end_to_end_vectors, test_make_vector, .init = setup_each_test, .fini = teardown_each_test) {
@@ -50,8 +50,8 @@ Test(end_to_end_vectors, test_make_vector, .init = setup_each_test, .fini = tear
     cr_assert_str_eq(t_eval("(make-vector 'a)"), " Type error: make-vector: arg 1 must be an integer");
 
     // ## Arity ##
-    cr_assert_str_eq(t_eval("(make-vector)"), " Arity error: expected at least 1 arg, got 0");
-    cr_assert_str_eq(t_eval("(make-vector 1 2 3)"), " Arity error: expected at most 2 args, got 3");
+    cr_assert_str_eq(t_eval("(make-vector)"), " Arity error: make-vector: expected at least 1 arg, got 0");
+    cr_assert_str_eq(t_eval("(make-vector 1 2 3)"), " Arity error: make-vector: expected at most 2 args, got 3");
 }
 
 Test(end_to_end_vectors, test_vector_ref, .init = setup_each_test, .fini = teardown_each_test) {
@@ -71,8 +71,8 @@ Test(end_to_end_vectors, test_vector_ref, .init = setup_each_test, .fini = teard
     cr_assert_str_eq(t_eval("(vector-ref #(1 2) 1.0)"), " Type error: vector-ref: arg 2 must be an exact integer");
 
     // ## Arity ##
-    cr_assert_str_eq(t_eval("(vector-ref)"), " Arity error: expected exactly 2 args, got 0");
-    cr_assert_str_eq(t_eval("(vector-ref #(1))"), " Arity error: expected exactly 2 args, got 1");
+    cr_assert_str_eq(t_eval("(vector-ref)"), " Arity error: vector-ref: expected exactly 2 args, got 0");
+    cr_assert_str_eq(t_eval("(vector-ref #(1))"), " Arity error: vector-ref: expected exactly 2 args, got 1");
 }
 
 Test(end_to_end_vectors, test_vector_set, .init = setup_each_test, .fini = teardown_each_test) {
@@ -90,8 +90,8 @@ Test(end_to_end_vectors, test_vector_set, .init = setup_each_test, .fini = teard
     cr_assert_str_eq(t_eval("(vector-set! #(1 2) 'a 9)"), " Type error: vector->set!: arg must be an integer");
 
     // ## Arity ##
-    cr_assert_str_eq(t_eval("(vector-set!)"), " Arity error: expected exactly 3 args, got 0");
-    cr_assert_str_eq(t_eval("(vector-set! #(1) 0)"), " Arity error: expected exactly 3 args, got 2");
+    cr_assert_str_eq(t_eval("(vector-set!)"), " Arity error: vector-set!: expected exactly 3 args, got 0");
+    cr_assert_str_eq(t_eval("(vector-set! #(1) 0)"), " Arity error: vector-set!: expected exactly 3 args, got 2");
 }
 
 Test(end_to_end_vectors, test_vector_fill, .init = setup_each_test, .fini = teardown_each_test) {
@@ -106,8 +106,8 @@ Test(end_to_end_vectors, test_vector_fill, .init = setup_each_test, .fini = tear
     cr_assert_str_eq(t_eval("(vector-fill! '(1 2) 0)"), " Type error: vector-fill!: arg 1 must be a vector");
 
     // ## Arity ##
-    cr_assert_str_eq(t_eval("(vector-fill!)"), " Arity error: expected at least 2 args, got 0");
-    cr_assert_str_eq(t_eval("(vector-fill! #(1))"), " Arity error: expected at least 2 args, got 1");
+    cr_assert_str_eq(t_eval("(vector-fill!)"), " Arity error: vector-fill!: expected at least 2 args, got 0");
+    cr_assert_str_eq(t_eval("(vector-fill! #(1))"), " Arity error: vector-fill!: expected at least 2 args, got 1");
 }
 
 Test(end_to_end_vectors, test_vector_copy, .init = setup_each_test, .fini = teardown_each_test) {
@@ -130,7 +130,7 @@ Test(end_to_end_vectors, test_vector_copy, .init = setup_each_test, .fini = tear
                                 "v2)"), "#((b))"); // v2 reflects change because it's a shallow copy
 
     // ## Arity ##
-    cr_assert_str_eq(t_eval("(vector-copy)"), " Arity error: expected at least 1 arg, got 0");
+    cr_assert_str_eq(t_eval("(vector-copy)"), " Arity error: vector-copy: expected at least 1 arg, got 0");
 }
 
 Test(end_to_end_vectors, test_vector_append, .init = setup_each_test, .fini = teardown_each_test) {
@@ -146,7 +146,7 @@ Test(end_to_end_vectors, test_vector_append, .init = setup_each_test, .fini = te
     cr_assert_str_eq(t_eval("(vector-append #(a b))"), "#(a b)");
 
     // ## Type Errors ##
-    cr_assert_str_eq(t_eval("(vector-append #(1) '(2))"), " Type error: bad type at arg 2: got pair, expected vector");
+    cr_assert_str_eq(t_eval("(vector-append #(1) '(2))"), " Type error: vector-append: bad type at arg 2: got pair, expected vector");
 }
 
 Test(end_to_end_vectors, test_list_to_vector, .init = setup_each_test, .fini = teardown_each_test) {
@@ -159,7 +159,7 @@ Test(end_to_end_vectors, test_list_to_vector, .init = setup_each_test, .fini = t
     cr_assert_str_eq(t_eval("(list->vector 'a)"), " Type error: list->vector: arg 1 must be a list");
 
     // ## Arity ##
-    cr_assert_str_eq(t_eval("(list->vector)"), " Arity error: expected exactly 1 arg, got 0");
+    cr_assert_str_eq(t_eval("(list->vector)"), " Arity error: list->vector: expected exactly 1 arg, got 0");
 }
 
 Test(end_to_end_vectors, test_vector_to_list, .init = setup_each_test, .fini = teardown_each_test) {
@@ -171,7 +171,7 @@ Test(end_to_end_vectors, test_vector_to_list, .init = setup_each_test, .fini = t
     cr_assert_str_eq(t_eval("(vector->list '(1 2))"), " Type error: vector->list: arg 1 must be a vector");
 
     // ## Arity ##
-    cr_assert_str_eq(t_eval("(vector->list)"), " Arity error: expected at least 1 arg, got 0");
+    cr_assert_str_eq(t_eval("(vector->list)"), " Arity error: vector->list: expected at least 1 arg, got 0");
 }
 
 Test(end_to_end_vectors, test_string_to_vector, .init = setup_each_test, .fini = teardown_each_test) {
@@ -183,7 +183,7 @@ Test(end_to_end_vectors, test_string_to_vector, .init = setup_each_test, .fini =
     cr_assert_str_eq(t_eval("(string->vector 'abc)"), " Type error: string->vector: arg1 must be a string");
 
     // ## Arity ##
-    cr_assert_str_eq(t_eval("(string->vector)"), " Arity error: expected at least 1 arg, got 0");
+    cr_assert_str_eq(t_eval("(string->vector)"), " Arity error: string->vector: expected at least 1 arg, got 0");
 }
 
 Test(end_to_end_vectors, test_vector_to_string, .init = setup_each_test, .fini = teardown_each_test) {
@@ -196,5 +196,5 @@ Test(end_to_end_vectors, test_vector_to_string, .init = setup_each_test, .fini =
     cr_assert_str_eq(t_eval("(vector->string '(#\\a))"), " Type error: vector->string: arg must be a vector");
 
     // ## Arity ##
-    cr_assert_str_eq(t_eval("(vector->string)"), " Arity error: expected at least 1 arg, got 0");
+    cr_assert_str_eq(t_eval("(vector->string)"), " Arity error: vector->string: expected at least 1 arg, got 0");
 }
