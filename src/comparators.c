@@ -270,6 +270,8 @@ Cell* builtin_eqv(const Lex* e, const Cell* a)
     const Cell* x = a->cell[0];
     const Cell* y = a->cell[1];
 
+    if (x->type != y->type) return False_Obj;
+
     /* Just kick numbers over to '='*/
     // ReSharper disable once CppVariableCanBeMadeConstexpr
     const int mask = CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX|CELL_BIGINT;
@@ -277,7 +279,7 @@ Cell* builtin_eqv(const Lex* e, const Cell* a)
         return builtin_eq_op(e, make_sexpr_len2(x, y));
     }
 
-    if (x->type != y->type) return False_Obj;
+
 
     switch (x->type) {
         case CELL_BOOLEAN: return make_cell_boolean(x->boolean_v == y->boolean_v);
