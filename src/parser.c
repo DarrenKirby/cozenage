@@ -37,32 +37,6 @@
 #endif
 
 
-static long long parse_int_checked(const char* str, char* err_buf, const int base, int* ok)
-{
-    errno = 0;
-    char* end_ptr;
-    const long long val = strtoll(str, &end_ptr, base);
-
-    if (end_ptr == str) {
-        snprintf(err_buf, 128, "Invalid numeric: '%s%s%s'",
-            ANSI_RED_B, str, ANSI_RESET);
-        *ok = 0; return 0;
-    }
-    if (errno == ERANGE || val > LLONG_MAX || val < LLONG_MIN) {
-        snprintf(err_buf, 128, "Integer out of range: '%s%s%s'",
-            ANSI_RED_B, str, ANSI_RESET);
-        *ok = 0; return 0;
-    }
-    if (*end_ptr != '\0') {
-        snprintf(err_buf, 128, "Invalid trailing characters in numeric: '%s%s%s'",
-            ANSI_RED_B, str, ANSI_RESET);
-        *ok = 0; return 0;
-    }
-
-    *ok = 1;
-    return val;
-}
-
 static long double parse_float_checked(const char* str, char* err_buf, int* ok)
 {
     errno = 0;
@@ -94,6 +68,34 @@ static long double parse_float_checked(const char* str, char* err_buf, int* ok)
     *ok = 1;
     return val;
 }
+
+
+static long long parse_int_checked(const char* str, char* err_buf, const int base, int* ok)
+{
+    errno = 0;
+    char* end_ptr;
+    const long long val = strtoll(str, &end_ptr, base);
+
+    if (end_ptr == str) {
+        snprintf(err_buf, 128, "Invalid numeric: '%s%s%s'",
+            ANSI_RED_B, str, ANSI_RESET);
+        *ok = 0; return 0;
+    }
+    if (errno == ERANGE || val > LLONG_MAX || val < LLONG_MIN) {
+        snprintf(err_buf, 128, "Integer out of range: '%s%s%s'",
+            ANSI_RED_B, str, ANSI_RESET);
+        *ok = 0; return 0;
+    }
+    if (*end_ptr != '\0') {
+        snprintf(err_buf, 128, "Invalid trailing characters in numeric: '%s%s%s'",
+            ANSI_RED_B, str, ANSI_RESET);
+        *ok = 0; return 0;
+    }
+
+    *ok = 1;
+    return val;
+}
+
 
 static char* token_to_string(const Token* token)
 {
@@ -274,8 +276,9 @@ static Cell* parse_number(char* token, const int line, int len)
         //return make_cell_bigfloat(tok);
         // 9,223,372,036,854,775,807.
 
-    /* Try integer parsing if not base 10, or no decimal */
-    if (base != 10 || !strchr(tok, '.')) {
+    /* Try integer parsing if not base 10, no decimal, and not scientific notation. */
+    if (base != 10 ||
+    (!strchr(tok, '.') && !strchr(tok, 'e') && !strchr(tok, 'E'))) {
         const long long i = parse_int_checked(tok, err_buf, base, &ok);
         if (ok) {
             Cell* result = make_cell_integer(i);
@@ -290,7 +293,6 @@ static Cell* parse_number(char* token, const int line, int len)
         }
     }
 
-
     /* Otherwise, try float */
     if (base == 10) {
         const long double f = parse_float_checked(tok, err_buf, &ok);
@@ -299,7 +301,7 @@ static Cell* parse_number(char* token, const int line, int len)
             if (exact == 1) {
                 result->exact = 1;
             }
-        return result;
+            return result;
         }
     }
 
