@@ -32,7 +32,7 @@ Typical Scheme features that Cozenage does NOT have:
 
 Typical Scheme features currently in progress:
 
-- Arbitrary size and precision integers, rationals, and real numbers. Currently, only bigints are supported, and that support is limited. Thus far, only ``+``, ``-``, ``*``, ``/``, and ``abs`` have full support, but this changes every day as I wire up the numeric procedures to support them. bigfloat, then bigrat will happen after that. It is also important to understand that currently, mixing bigint with rat, real, and complex type operands will break catastrophically.   
+- Arbitrary size and precision integers, rationals, and real numbers. Currently, only bigints are supported. bigfloat, then bigrat are in progress.  
 
 ## Dependencies
 
@@ -91,3 +91,5 @@ These are the special forms/syntax constructs that are implemented in Cozenage s
 - `import`
 - `and`
 - `or`
+- `case`
+- `do`
