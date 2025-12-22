@@ -525,6 +525,8 @@ Cell* cell_copy(const Cell* v) {
         break;
     case CELL_STRING:
         copy->str = GC_strdup(v->str);
+        copy->count = v->count;
+        copy->char_count = v->char_count;
         break;
     case CELL_ERROR:
         copy->error_v = GC_strdup(v->error_v);
