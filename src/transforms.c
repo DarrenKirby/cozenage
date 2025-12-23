@@ -22,6 +22,16 @@
 #include "symbols.h"
 
 
+static int gensym_counter = 0;
+
+Cell* gensym(const char* prefix) {
+    char name[64];
+    // We use a prefix like "_" to further distinguish from user symbols
+    snprintf(name, sizeof(name), "_%s%d", prefix, gensym_counter++);
+    return make_cell_symbol(name);
+}
+
+
 static bool is_symbol(const Cell* a, const Cell* b)
 {
     return a == b ? true : false;
@@ -124,6 +134,102 @@ Cell* expand_body_expressions(const Cell* body_elements, const int start_index) 
 }
 
 
+static Cell* expand_let_star(const Cell* c) {
+    /* c is (let* ((var init) ...) body...) */
+    if (c->count < 3) return make_cell_error("let*: malformed expression", SYNTAX_ERR);
+
+    Cell* bindings = c->cell[1];
+
+    /* Base case: (let* () body...) -> (let () body...) */
+    if (bindings->count == 0) {
+        Cell* res = make_cell_sexpr();
+        cell_add(res, G_let_sym);
+        cell_add(res, make_cell_sexpr()); // Empty bindings
+        for (int i = 2; i < c->count; i++) {
+            cell_add(res, expand(c->cell[i]));
+        }
+        return res;
+    }
+
+    /* Recursive case: (let* ((v1 i1) (v2 i2) ...) body...)
+       -> (let ((v1 i1)) (let* ((v2 i2) ...) body...)) */
+
+    // 1. Take the first binding
+    Cell* first_binding = make_cell_sexpr();
+    cell_add(first_binding, bindings->cell[0]);
+
+    // 2. Collect the rest of the bindings
+    Cell* rest_bindings = make_cell_sexpr();
+    for (int i = 1; i < bindings->count; i++) {
+        cell_add(rest_bindings, bindings->cell[i]);
+    }
+
+    // 3. Build the inner let*
+    Cell* inner_let_star = make_cell_sexpr();
+    cell_add(inner_let_star, G_let_star_sym);
+    cell_add(inner_let_star, rest_bindings);
+    for (int i = 2; i < c->count; i++) {
+        cell_add(inner_let_star, c->cell[i]);
+    }
+
+    // 4. Wrap in an outer let
+    Cell* outer_let = make_cell_sexpr();
+    cell_add(outer_let, G_let_sym);
+    Cell* outer_bindings = make_cell_sexpr();
+    cell_add(outer_bindings, bindings->cell[0]);
+    cell_add(outer_let, outer_bindings);
+    cell_add(outer_let, inner_let_star);
+
+    /* Return and expand! The recursion in expand() will handle the inner let* */
+    return expand(outer_let);
+}
+
+
+static Cell* expand_named_let(const Cell* c) {
+    /* c is (let name ((var init) ...) body...) */
+    Cell* name = c->cell[1];
+    Cell* bindings = c->cell[2];
+
+    Cell* vars = make_cell_sexpr();
+    Cell* inits = make_cell_sexpr();
+
+    for (int i = 0; i < bindings->count; i++) {
+        cell_add(vars, bindings->cell[i]->cell[0]);
+        cell_add(inits, expand(bindings->cell[i]->cell[1]));
+    }
+
+    /* 1. Build the lambda: (lambda (vars...) body...) */
+    Cell* lambda = make_cell_sexpr();
+    cell_add(lambda, G_lambda_sym);
+    cell_add(lambda, vars);
+    /* Add all body expressions (starting from index 3 in the original let) */
+    for (int i = 3; i < c->count; i++) {
+        cell_add(lambda, expand(c->cell[i]));
+    }
+
+    /* 2. Build the letrec: (letrec ((name lambda)) (name inits...)) */
+    Cell* lr_binding_pair = make_cell_sexpr();
+    cell_add(lr_binding_pair, name);
+    cell_add(lr_binding_pair, lambda);
+
+    Cell* lr_bindings_list = make_cell_sexpr();
+    cell_add(lr_bindings_list, lr_binding_pair);
+
+    Cell* lr_body_call = make_cell_sexpr();
+    cell_add(lr_body_call, name);
+    for (int i = 0; i < inits->count; i++) {
+        cell_add(lr_body_call, inits->cell[i]);
+    }
+
+    Cell* letrec_expr = make_cell_sexpr();
+    cell_add(letrec_expr, G_letrec_sym);
+    cell_add(letrec_expr, lr_bindings_list);
+    cell_add(letrec_expr, lr_body_call);
+
+    return letrec_expr;
+}
+
+
 static Cell* expand_do(const Cell* c) {
     /* c is (do ((var init step) ...) (test expr) body...). */
     if (c->count < 3) return make_cell_error("Malformed do expression", SYNTAX_ERR);
@@ -197,6 +303,9 @@ static Cell* expand_case(const Cell* c) {
 
     Cell* key_expr = expand(c->cell[1]);
 
+    // Generate a unique symbol for this specific case expansion
+    Cell* tmp_sym = gensym("case");
+
     /* Create the cond block */
     Cell* cond_block = make_cell_sexpr();
     cell_add(cond_block, G_cond_sym);
@@ -215,7 +324,7 @@ static Cell* expand_case(const Cell* c) {
             /* Transform clause to (memv tmp '(datalist)). */
             Cell* memv_call = make_cell_sexpr();
             cell_add(memv_call, make_cell_symbol("memv"));
-            cell_add(memv_call, make_cell_symbol("case_tmp_")); /* The temp var name. */
+            cell_add(memv_call, tmp_sym); /* The temp var name. */
 
             /* The datalist needs to be quoted so it's treated as data. */
             Cell* quoted_data = make_cell_sexpr();
@@ -240,7 +349,7 @@ static Cell* expand_case(const Cell* c) {
 
     Cell* bindings = make_cell_sexpr();
     Cell* binding_pair = make_cell_sexpr();
-    cell_add(binding_pair, make_cell_symbol("case_tmp_"));
+    cell_add(binding_pair, tmp_sym);
     cell_add(binding_pair, key_expr);
     cell_add(bindings, binding_pair);
 
@@ -282,26 +391,54 @@ static Cell* expand_recursive(const Cell* c)
     return result;
 }
 
-
 Cell* expand(Cell* c) {
+    /* Base case: only S-expressions can be expanded */
     if (c->type != CELL_SEXPR || c->count == 0) return c;
 
     const Cell* head = c->cell[0];
 
     if (head->type == CELL_SYMBOL) {
+        /* DEFINE (Primitive-ish) */
         if (is_symbol(head, G_define_sym) && c->count > 2 && c->cell[1]->type == CELL_SEXPR) {
             return expand_define(c);
         }
+
+        /* LAMBDA (Primitive-ish) */
         if (is_symbol(head, G_lambda_sym) && c->count > 2) {
             return expand_lambda(c);
         }
+
+        /* CASE (Transform -> Let)
+           We call expand() on the result to turn that 'let' into a 'letrec' or recurse. */
         if (is_symbol(head, G_case_sym)) {
-            return expand_case(c);
+            return expand(expand_case(c));
         }
+
+        /* DO (Transform -> Named Let)
+           Recursing here ensures the Named Let becomes a letrec. */
         if (is_symbol(head, G_do_sym)) {
-            return expand_do(c);
+            return expand(expand_do(c));
+        }
+
+        /* LET* (Transform -> nested Let(s) */
+        if (is_symbol(head, G_let_star_sym)) {
+            return expand_let_star(c);
+        }
+
+        /* 5. LET */
+        if (is_symbol(head, G_let_sym)) {
+            /* Named Let -> Letrec */
+            if (c->count > 1 && c->cell[1]->type == CELL_SYMBOL) {
+                return expand(expand_named_let(c));
+            }
+            /* Standard let: Primitive. Just expand children. */
+            return expand_recursive(c);
         }
     }
 
+    /* Fallback: expand elements of the list */
     return expand_recursive(c);
 }
+
+
+

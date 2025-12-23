@@ -546,92 +546,59 @@ HandlerResult sf_import(Lex* e, Cell* a)
  * ⟨variable⟩ has ⟨body⟩ as its region. */
 HandlerResult sf_let(Lex* e, Cell* a)
 {
-    /* Standard let */
-    if (a->cell[0]->type != CELL_SYMBOL) {
-        const Cell* bindings = cell_pop(a, 0);
-        if (bindings->type != CELL_SEXPR) {
+    /* Since Named Let is now transformed away, 'a' will ALWAYS start with bindings */
+    const Cell* bindings = cell_pop(a, 0);
+    if (bindings->type != CELL_SEXPR) {
+        return (HandlerResult) { .action = ACTION_RETURN,
+            .value = make_cell_error("let: Bindings must be a list", VALUE_ERR) };
+    }
+
+    const Cell* body = a;
+
+    /* Separate variables and values from bindings. */
+    /* TODO: raise error if not all variables are unique! */
+    Cell* vars = make_cell_sexpr();
+    Cell* vals = make_cell_sexpr();
+    for (int i = 0; i < bindings->count; i++) {
+        const Cell* local_b = bindings->cell[i];
+        if (local_b->type != CELL_SEXPR) {
             Cell* err = make_cell_error(
                 "let: Bindings must be a list",
                 VALUE_ERR);
             return (HandlerResult) { .action = ACTION_RETURN, .value = err };
         }
-        const Cell* body = a;
-
-        /* Separate variables and values from bindings. */
-        /* TODO: raise error if not all variables are unique! */
-        Cell* vars = make_cell_sexpr();
-        Cell* vals = make_cell_sexpr();
-        for (int i = 0; i < bindings->count; i++) {
-            const Cell* local_b = bindings->cell[i];
-            if (local_b->type != CELL_SEXPR) {
-                Cell* err = make_cell_error(
-                    "let: Bindings must be a list",
-                    VALUE_ERR);
-                return (HandlerResult) { .action = ACTION_RETURN, .value = err };
-            }
-            if (local_b->count != 2) {
-                Cell* err = make_cell_error(
-                    "let: bindings must contain exactly 2 items",
-                    VALUE_ERR);
-                return (HandlerResult) { .action = ACTION_RETURN, .value = err };
-            }
-            if (local_b->cell[0]->type != CELL_SYMBOL) {
-                Cell* err = make_cell_error(
-                    "let: first value in binding must be a symbol",
-                    VALUE_ERR);
-                return (HandlerResult) { .action = ACTION_RETURN, .value = err };
-            }
-            cell_add(vars, local_b->cell[0]);
-            cell_add(vals, local_b->cell[1]);
+        if (local_b->count != 2) {
+            Cell* err = make_cell_error(
+                "let: bindings must contain exactly 2 items",
+                VALUE_ERR);
+            return (HandlerResult) { .action = ACTION_RETURN, .value = err };
         }
-
-        /* Create a new child environment. */
-        Lex* local_env = new_child_env(e);
-
-        /* Populate it with sym->val pairs. */
-        for (int i = 0; i < vals->count; i++) {
-            const Cell* sym = vars->cell[i];
-            const Cell* val = coz_eval(e, vals->cell[i]);
-            lex_put_local(local_env, sym, val);
+        if (local_b->cell[0]->type != CELL_SYMBOL) {
+            Cell* err = make_cell_error(
+                "let: first value in binding must be a symbol",
+                VALUE_ERR);
+            return (HandlerResult) { .action = ACTION_RETURN, .value = err };
         }
-
-        /* Evaluate the body expressions in this environment. */
-        Cell* result = nullptr;
-        for (int i = 0; i < body->count; i++) {
-            result = coz_eval(local_env, body->cell[i]);
-        }
-        return (HandlerResult) { .action = ACTION_RETURN, .value = result };
+        cell_add(vars, local_b->cell[0]);
+        cell_add(vals, local_b->cell[1]);
     }
 
-    /* Named let - de-sugar into a letrec */
-    /* Really need to handle this transformation better.  */
-    Cell* nl_name = a->cell[0];
-    const Cell* nl_vars = a->cell[1];
-    Cell* nl_body = a->cell[2];
-    /* Build the lambda formals and letrec body. */
-    Cell* lambda_formals = make_cell_sexpr();
-    Cell* lr_body = make_cell_sexpr();
-    cell_add(lr_body, nl_name);
-    /* Iterate over bindings */
-    for (int i = 0; i < nl_vars->count; i++) {
-        cell_add(lambda_formals, nl_vars->cell[i]->cell[0]);
-        cell_add(lr_body, nl_vars->cell[i]->cell[1]);
-    }
-    /* Build the lambda transformation. */
-    Cell* lambda = make_cell_sexpr();
-    cell_add(lambda, G_lambda_sym);
-    cell_add(lambda, lambda_formals);
-    cell_add(lambda, nl_body);
-    /* Build the letrec bindings. */
-    Cell* lr_bindings = make_cell_sexpr();
-    cell_add(lr_bindings, nl_name );
-    cell_add(lr_bindings, lambda);
-    /* Put it all together. */
-    Cell* letrec_expr = make_cell_sexpr();
-    cell_add(letrec_expr, make_sexpr_len1(lr_bindings));
-    cell_add(letrec_expr, lr_body);
+    /* Create a new child environment. */
+    Lex* local_env = new_child_env(e);
 
-    return sf_letrec(e, letrec_expr);
+    /* Populate it with sym->val pairs. */
+    for (int i = 0; i < vals->count; i++) {
+        const Cell* sym = vars->cell[i];
+        const Cell* val = coz_eval(e, vals->cell[i]);
+        lex_put_local(local_env, sym, val);
+    }
+
+    /* Evaluate the body expressions in this environment. */
+    Cell* result = nullptr;
+    for (int i = 0; i < body->count; i++) {
+        result = coz_eval(local_env, body->cell[i]);
+    }
+    return (HandlerResult) { .action = ACTION_RETURN, .value = result };
 }
 
 
