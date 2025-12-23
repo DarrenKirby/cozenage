@@ -26,6 +26,7 @@
 #include "lexer.h"
 #include "repl.h"
 #include "repr.h"
+#include "transforms.h"
 
 #include <stdlib.h>
 
@@ -57,6 +58,7 @@ Cell* builtin_eval(const Lex* e, const Cell* a)
     } else {
         args = a->cell[0];
     }
+
     return coz_eval((Lex*)e, args);
 }
 
@@ -269,7 +271,7 @@ Cell* builtin_string_map(const Lex* e, const Cell* a)
     cell_add(sexp_for_map, a->cell[0]);
 
     for (int i = 1; i < a->count; i++) {
-        /* Ensure we have nothing but lists in a[1:]. */
+        /* Ensure we have nothing but strings in a[1:]. */
         if (a->cell[i]->type != CELL_STRING) {
             return make_cell_error(
                 fmt_err("string-map: arg %d must be a string", i+1),

@@ -341,6 +341,7 @@ void debug_print_cell(const Cell* v)
     printf("%s\n", s);
 }
 
+
 /* Dump the environment 'symbol' -> 'value' pairs */
 void debug_print_env(const Lex* e)
 {

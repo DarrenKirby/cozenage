@@ -117,7 +117,7 @@ int run_file_script(const char *file_path, const lib_load_config load_libs)
     lex_add_builtins(e);
     /* Initialize special form lookup table. */
     init_special_forms();
-    /* Loads the CLI-specified R7RS libraries into the environment. */
+    /* Loads the CLI-specified libraries into the environment. */
     load_initial_libraries(e, load_libs);
 
     const char* input = read_file_to_string(file_path);
@@ -156,6 +156,7 @@ Cell* parse_all_expressions(Lex* e, TokenArray* ta, const bool is_repl)
         /* For transform debugging */
         // printf("Before transform: \n");
         // debug_print_cell(expression);
+
         /* Kick all S-expressions off to the transformer. */
         if (expression->type == CELL_SEXPR) {
             expression = expand(expression);
@@ -182,7 +183,8 @@ Cell* parse_all_expressions(Lex* e, TokenArray* ta, const bool is_repl)
             return result;
         }
 
-        if (is_repl && result->type != CELL_UNSPEC) {
+        // if (is_repl && result->type != CELL_UNSPEC) {
+        if (is_repl) {
             coz_print(result);
         }
 

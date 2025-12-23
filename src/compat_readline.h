@@ -50,6 +50,7 @@ void add_history(char* unused) {}
 #include <readline/tilde.h>
 #include "environment.h"
 
+
 char* scheme_procedure_generator(const char *text, int state);
 char** completion_dispatcher(const char *text, int start, int end);
 void populate_dynamic_completions(const Lex* e);

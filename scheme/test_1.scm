@@ -1,9 +1,5 @@
 ; test_simple.scm
 ;
-; Tests basic multi-expression evaluation and 'define'.
-; Your parser should read and eval each (display ...) expression
-; and the (define ...) expression.
-;
 ; --- EXPECTED OUTPUT ---
 ; Test 1.1 (Simple Math): 30
 ; Test 1.2 (Using 'define'): 50

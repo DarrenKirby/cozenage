@@ -74,6 +74,7 @@ void populate_dynamic_completions(const Lex* e)
     scheme_procedures[i] = nullptr;
 }
 
+
 char* scheme_procedure_generator(const char *text, const int state)
 {
     static int list_index, len;
@@ -95,6 +96,7 @@ char* scheme_procedure_generator(const char *text, const int state)
     /* No more matches found. */
     return nullptr;
 }
+
 
 char** completion_dispatcher(const char *text, const int start, const int end)
 {
