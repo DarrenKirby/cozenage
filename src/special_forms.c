@@ -189,6 +189,12 @@ HandlerResult sf_define(Lex* e, Cell* a)
             val->lambda->l_name = target->sym;
         }
         lex_put_global(e, target, val);
+
+        /* For lambdas, return the lambda for REPL pretty-print.
+         * For variable bindings, return the bound symbol. */
+        if (val->type == CELL_PROC) {
+            return (HandlerResult) { .action = ACTION_RETURN, .value = val };
+        }
         return (HandlerResult) { .action = ACTION_RETURN, .value = target };
     }
 
@@ -216,7 +222,7 @@ HandlerResult sf_define(Lex* e, Cell* a)
         Cell* lam = lex_make_named_lambda(fname->sym, formals, body, e);
 
         lex_put_global(e, fname, lam);
-        return (HandlerResult){ .action = ACTION_RETURN, .value = lam };
+        return (HandlerResult) { .action = ACTION_RETURN, .value = lam };
     }
 
     Cell* err = make_cell_error(
@@ -277,6 +283,7 @@ HandlerResult sf_lambda(Lex* e, Cell* a)
             }
         }
     }
+
     /* Build the lambda cell. */
     Cell* lambda = lex_make_lambda(formals, body, e);
     return (HandlerResult) { .action = ACTION_RETURN, .value = lambda };
@@ -293,8 +300,8 @@ HandlerResult sf_if(Lex* e, Cell* a)
     if (err) {
         return (HandlerResult){ .action = ACTION_RETURN, .value = err };
     }
-    Cell* test = coz_eval(e, a->cell[first]);
 
+    Cell* test = coz_eval(e, a->cell[first]);
     if (test->type == CELL_ERROR) {
         return (HandlerResult){ .action = ACTION_RETURN, .value = test };
     }
