@@ -418,6 +418,10 @@ void lex_add_builtins(const Lex* e)
     lex_add_builtin(e, "display", builtin_display);
     lex_add_builtin(e, "println", builtin_println);
     lex_add_builtin(e, "write", builtin_write);
+    lex_add_builtin(e, "call-with-input-file", builtin_call_with_input_file);
+    lex_add_builtin(e, "call-with-output-file", builtin_call_with_output_file);
+    lex_add_builtin(e, "with-input-from-file", builtin_with_input_from_file);
+    lex_add_builtin(e, "with-output-to-file", builtin_with_output_to_file);
     /* Error procedures. */
     lex_add_builtin(e, "read-error?", builtin_read_error);
     lex_add_builtin(e, "file-error?", builtin_file_error);
