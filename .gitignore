@@ -3,6 +3,9 @@ cozenage
 # Objects
 *.o
 
+# Module directory
+lib/
+
 # ======================
 # CLion
 # ======================
