@@ -34,6 +34,7 @@ Cell* builtin_error_object(const Lex* e, const Cell* a)
     return False_Obj;
 }
 
+
 Cell* builtin_raise(const Lex* e, const Cell* a)
 {
     (void)e;

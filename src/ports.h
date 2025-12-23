@@ -56,5 +56,9 @@ Cell* builtin_open_input_file(const Lex* e, const Cell* a);
 Cell* builtin_open_binary_input_file(const Lex* e, const Cell* a);
 Cell* builtin_open_output_file(const Lex* e, const Cell* a);
 Cell* builtin_open_binary_output_file(const Lex* e, const Cell* a);
+Cell* builtin_call_with_input_file(const Lex* e, const Cell* a);
+Cell* builtin_call_with_output_file(const Lex* e, const Cell* a);
+Cell* builtin_with_input_from_file(const Lex* e, const Cell* a);
+Cell* builtin_with_output_to_file(const Lex* e, const Cell* a);
 
 #endif //COZENAGE_PORTS_H

@@ -18,6 +18,7 @@
 */
 
 #include "ports.h"
+#include "eval.h"
 #include "types.h"
 #include "strings.h"
 #include "repr.h"
@@ -704,7 +705,7 @@ Cell* builtin_display(const Lex* e, const Cell* a)
 }
 
 
-/* Identical to 'display', but add the newline for convenience */
+/* Identical to 'display', but add the newline for convenience. */
 Cell* builtin_println(const Lex* e, const Cell* a)
 {
     Cell* err = CHECK_ARITY_RANGE(a, 1, 2, "println");
@@ -798,4 +799,170 @@ Cell* builtin_open_output_file(const Lex* e, const Cell* a)
 
     Cell* p = make_cell_port(filename, fp, OUTPUT_PORT, FILE_PORT);
     return p;
+}
+
+Cell* builtin_call_with_input_file(const Lex* e, const Cell* a) {
+    Cell* err = CHECK_ARITY_EXACT(a, 2, "call-with-input-file");
+    if (err) { return err; }
+
+    if (a->cell[0]->type != CELL_STRING) {
+        return make_cell_error("call-with-input-file: arg1 must be a string", TYPE_ERR);
+    }
+    const char* path = a->cell[0]->str;
+
+    if (a->cell[1]->type != CELL_PROC) {
+        return make_cell_error("call-with-input-file: arg2 must be a proc", TYPE_ERR);
+    }
+    const Cell* proc = a->cell[1];
+
+    /* Check arity of lambda. */
+    if (!proc->is_builtin) {
+        if (check_lambda_arity(proc, 1) != 1) {
+            return make_cell_error(
+                "call-with-input-file: lambda must take exactly one arg",
+                ARITY_ERR);
+        }
+    }
+
+    /* Open the port for reading */
+    FILE* fp = fopen(path, "r");
+    if (!fp) {
+        return make_cell_error(strerror(errno), FILE_ERR);
+    }
+
+    const Cell* p = make_cell_port(path, fp, INPUT_PORT, FILE_PORT);
+
+    Cell* clos = make_sexpr_len2(proc, p);
+    Cell* result = coz_eval((Lex*)e, clos);
+
+    builtin_close_port((Lex*)e, make_sexpr_len1(p));
+    return result;
+}
+
+Cell* builtin_call_with_output_file(const Lex* e, const Cell* a) {
+    Cell* err = CHECK_ARITY_EXACT(a, 2, "call-with-output-file");
+    if (err) { return err; }
+
+    if (a->cell[0]->type != CELL_STRING) {
+        return make_cell_error("call-with-output-file: arg1 must be a string", TYPE_ERR);
+    }
+    const char* path = a->cell[0]->str;
+
+    if (a->cell[1]->type != CELL_PROC) {
+        return make_cell_error("call-with-output-file: arg2 must be a proc", TYPE_ERR);
+    }
+    const Cell* proc = a->cell[1];
+
+    /* Check arity of lambda. */
+    if (!proc->is_builtin) {
+        if (check_lambda_arity(proc, 1) != 1) {
+            return make_cell_error(
+                "call-with-input-file: lambda must take exactly one arg",
+                ARITY_ERR);
+        }
+    }
+
+    /* Open the port for writing */
+    FILE* fp = fopen(path, "w");
+    if (!fp) {
+        return make_cell_error(strerror(errno), FILE_ERR);
+    }
+
+    const Cell* p = make_cell_port(path, fp, OUTPUT_PORT, FILE_PORT);
+
+    Cell* clos = make_sexpr_len2(proc, p);
+    Cell* result = coz_eval((Lex*)e, clos);
+
+    builtin_close_port((Lex*)e, make_sexpr_len1(p));
+    return result;
+}
+
+
+Cell* builtin_with_input_from_file(const Lex* e, const Cell* a) {
+    Cell* err = CHECK_ARITY_EXACT(a, 2, "with-input-from-file");
+    if (err) { return err; }
+
+    if (a->cell[0]->type != CELL_STRING) {
+        return make_cell_error("with-input-from-file: arg1 must be a string", TYPE_ERR);
+    }
+    const char* path = a->cell[0]->str;
+
+    if (a->cell[1]->type != CELL_PROC) {
+        return make_cell_error("with-input-from-file: arg2 must be a proc", TYPE_ERR);
+    }
+    const Cell* proc = a->cell[1];
+
+    /* Check arity of lambda. */
+    if (!proc->is_builtin) {
+        if (check_lambda_arity(proc, 0) != 0) {
+            return make_cell_error(
+                "call-with-input-file: lambda must not take args",
+                ARITY_ERR);
+        }
+    }
+
+    /* Save stdin port to local var. */
+    Cell* std_input_port = default_input_port;
+
+    /* Open the port for reading, and bind to default input. */
+    FILE* fp = fopen(path, "r");
+    if (!fp) {
+        return make_cell_error(strerror(errno), FILE_ERR);
+    }
+
+    default_input_port = make_cell_port(path, fp, INPUT_PORT, FILE_PORT);
+
+    /* Pass the thunk to eval. */
+    Cell* clos = make_sexpr_len1(proc);
+    Cell* result = coz_eval((Lex*)e, clos);
+
+    /* Reset original ports, and return result. */
+    builtin_close_port((Lex*)e, default_input_port);
+    default_input_port = std_input_port;
+    return result;
+}
+
+
+Cell* builtin_with_output_to_file(const Lex* e, const Cell* a) {
+    Cell* err = CHECK_ARITY_EXACT(a, 2, "with-output-to-file");
+    if (err) { return err; }
+
+    if (a->cell[0]->type != CELL_STRING) {
+        return make_cell_error("with-output-to-file: arg1 must be a string", TYPE_ERR);
+    }
+    const char* path = a->cell[0]->str;
+
+    if (a->cell[1]->type != CELL_PROC) {
+        return make_cell_error("with-output-to-file: arg2 must be a proc", TYPE_ERR);
+    }
+    const Cell* proc = a->cell[1];
+
+    /* Check arity of lambda. */
+    if (!proc->is_builtin) {
+        if (check_lambda_arity(proc, 0) != 0) {
+            return make_cell_error(
+                "call-with-input-file: lambda must not take args",
+                ARITY_ERR);
+        }
+    }
+
+    /* Save stdout port to local var. */
+    Cell* std_output_port = default_output_port;
+
+    /* Open the port for writing, and bind to default output. */
+    FILE* fp = fopen(path, "w");
+    if (!fp) {
+        return make_cell_error(strerror(errno), FILE_ERR);
+    }
+
+    default_output_port = make_cell_port(path, fp, OUTPUT_PORT, FILE_PORT);
+
+    /* Pass the thunk to eval. */
+    Cell* clos = make_sexpr_len1(proc);
+    Cell* result = coz_eval((Lex*)e, clos);
+
+    /* Reset original ports, and return result. */
+    builtin_close_port((Lex*)e, default_output_port);
+    default_output_port = std_output_port;
+    return result;
 }
