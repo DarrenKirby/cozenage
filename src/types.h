@@ -53,6 +53,7 @@ const char* cell_type_name(int t);
 const char* cell_mask_types(int mask);
 Cell* check_arg_types(const Cell* a, int mask, const char* fname);
 Cell* check_arg_arity(const Cell* a, int exact, int min, int max, const char* fname);
+int check_lambda_arity(const Cell* proc, int expected);
 void numeric_promote(Cell** lhs, Cell** rhs);
 Cell* make_sexpr_len1(const Cell* a);
 Cell* make_sexpr_len2(const Cell* a, const Cell* b);

@@ -21,6 +21,7 @@
 #include "cell.h"
 #include "numerics.h"
 #include "bignum.h"
+#include "repr.h"
 
 #include <gc.h>
 #include <stdio.h>
@@ -155,6 +156,38 @@ Cell* check_arg_arity(const Cell* a, const int exact, const int min, const int m
     }
     return nullptr; /* all good */
 }
+
+
+int check_lambda_arity(const Cell* proc, const int expected) {
+    if (proc->type != CELL_PROC) return 0;
+
+    const Cell* formals = proc->lambda->formals;
+
+    /* If formals is a symbol (variadic), it accepts anything. */
+    if (formals->type == CELL_SYMBOL) return 1;
+
+    int positional_count = 0;
+    bool is_variadic = false;
+
+    for (int i = 0; i < formals->count; i++) {
+        if (formals->cell[i]->type == CELL_SYMBOL &&
+            strcmp(formals->cell[i]->sym, ".") == 0) {
+                is_variadic = true;
+                break;
+            }
+        positional_count++;
+    }
+
+    if (is_variadic) {
+        /* (a b . c) requires at least 2 args.
+           The symbol after the dot (c) is the 'rest' list. */
+        return expected >= positional_count;
+    }
+
+    // Standard fixed-arity: count must match exactly
+    return formals->count == expected;
+}
+
 
 /*---------------------------------------------------------*
  *       Helper functions for numeric type promotion       *
