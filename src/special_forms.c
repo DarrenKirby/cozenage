@@ -1,5 +1,5 @@
 /*
- * 'special_forms.c'
+ * 'src/special_forms.c'
  * This file is part of Cozenage - https://github.com/DarrenKirby/cozenage
  * Copyright © 2025  Darren Kirby <darren@dragonbyte.ca>
  *
@@ -35,21 +35,21 @@
 #define third  2
 #define last(ptr) ((ptr)->count - 1)
 
-/* import needs to know if we're in the REPL */
+/* import needs to know if we're in the REPL. */
 extern int is_repl;
 
 
 /* A helper to check if a symbol name is a reserved syntactic keyword */
-int is_syntactic_keyword(const char* s)
+int is_syntactic_keyword(const Cell* s)
 {
-    const char* keywords[] = {
-        "define", "quote", "lambda", "if", "when", "unless",
-        "cond", "import", "set!", "let", "let*" ,"letrec",
-        "begin", "do", "case", "and", "or", nullptr
+    const Cell* keywords[] = {
+        G_define_sym, G_quote_sym, G_lambda_sym, G_if_sym, G_when_sym, G_unless_sym,
+        G_cond_sym, G_import_sym, G_set_bang_sym, G_let_star_sym, G_let_star_sym,
+        G_letrec_sym, G_begin_sym, G_do_sym, G_case_sym, G_and_sym, G_or_sym, nullptr
     };
 
     for (int i = 0; keywords[i] != NULL; i++) {
-        if (strcmp(s, keywords[i]) == 0) {
+        if (s == keywords[i]) {
             return 1;
         }
     }
@@ -74,7 +74,7 @@ Lex* build_lambda_env(const Lex* env, Cell* formals, Cell* args)
     const Cell* lf = make_list_from_sexpr(formals);
     int arg_idx = 0;
 
-    /* Iterate through positional arguments */
+    /* Iterate through positional arguments. */
     while (lf->type == CELL_PAIR) {
         if (arg_idx >= args->count) {
             fprintf(stderr, "lambda: Arity error: wrong number of args for lambda call\n");
@@ -96,7 +96,7 @@ Lex* build_lambda_env(const Lex* env, Cell* formals, Cell* args)
             return nullptr;
         }
     } else if (lf->type == CELL_SYMBOL) {
-        /* Dotted-tail: this is the 'rest' parameter */
+        /* Dotted-tail: this is the 'rest' parameter. */
         Cell* rest = make_cell_sexpr();
         for (int i = arg_idx; i < args->count; i++) {
             cell_add(rest, args->cell[i]);
@@ -111,7 +111,7 @@ Lex* build_lambda_env(const Lex* env, Cell* formals, Cell* args)
 }
 
 
-/* Just takes body statements and stuffs them in a 'begin' expression */
+/* Just takes body statements and stuffs them in a 'begin' expression. */
 Cell* sequence_sf_body(const Cell* body)
 {
     Cell* seq = make_cell_sexpr();
@@ -170,7 +170,7 @@ HandlerResult sf_define(Lex* e, Cell* a)
     Cell* target = a->cell[0];
 
     /* Disallow rebinding of keywords. */
-    if (is_syntactic_keyword(target->sym)) {
+    if (is_syntactic_keyword(target)) {
         Cell* err = make_cell_error(
             fmt_err("define: syntax keyword '%s' cannot be used as a variable", target->sym),
             VALUE_ERR);

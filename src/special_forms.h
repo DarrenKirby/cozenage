@@ -33,7 +33,7 @@ typedef struct {
     Cell* value;     /* The final value OR the next expression */
 } HandlerResult;
 
-int is_syntactic_keyword(const char* s);
+int is_syntactic_keyword(const Cell* s);
 Lex* build_lambda_env(const Lex* env, Cell* formals, Cell* args);
 Cell* sequence_sf_body(const Cell* body);
 
