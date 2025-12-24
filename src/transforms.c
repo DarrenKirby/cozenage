@@ -22,17 +22,18 @@
 #include "symbols.h"
 
 
-static int gensym_counter = 0;
+static int gen_sym_counter = 0;
 
-Cell* gensym(const char* prefix) {
+Cell* gen_sym(const char* prefix) {
     char name[64];
-    // We use a prefix like "_" to further distinguish from user symbols
-    snprintf(name, sizeof(name), "_%s%d", prefix, gensym_counter++);
+    /* Use the prefix "_" to further distinguish from user symbols. */
+    snprintf(name, sizeof(name), "_%s%d", prefix, gen_sym_counter++);
     return make_cell_symbol(name);
 }
 
 
-static bool is_symbol(const Cell* a, const Cell* b)
+/* Compare symbol identities. */
+static bool is_same_symbol(const Cell* a, const Cell* b)
 {
     return a == b ? true : false;
 }
@@ -90,7 +91,7 @@ Cell* expand_body_expressions(const Cell* body_elements, const int start_index) 
     while (i < body_elements->count) {
         Cell* current = body_elements->cell[i];
         if (current->type == CELL_SEXPR && current->count > 0 &&
-            is_symbol(current->cell[0], G_define_sym)) {
+            is_same_symbol(current->cell[0], G_define_sym)) {
             cell_add(inner_defines, current);
             i++;
             } else {
@@ -154,17 +155,17 @@ static Cell* expand_let_star(const Cell* c) {
     /* Recursive case: (let* ((v1 i1) (v2 i2) ...) body...)
        -> (let ((v1 i1)) (let* ((v2 i2) ...) body...)) */
 
-    // 1. Take the first binding
+    /* Take the first binding. */
     Cell* first_binding = make_cell_sexpr();
     cell_add(first_binding, bindings->cell[0]);
 
-    // 2. Collect the rest of the bindings
+    /* Collect the rest of the bindings. */
     Cell* rest_bindings = make_cell_sexpr();
     for (int i = 1; i < bindings->count; i++) {
         cell_add(rest_bindings, bindings->cell[i]);
     }
 
-    // 3. Build the inner let*
+    /* Build the inner let* */
     Cell* inner_let_star = make_cell_sexpr();
     cell_add(inner_let_star, G_let_star_sym);
     cell_add(inner_let_star, rest_bindings);
@@ -172,7 +173,7 @@ static Cell* expand_let_star(const Cell* c) {
         cell_add(inner_let_star, c->cell[i]);
     }
 
-    // 4. Wrap in an outer let
+    /* Wrap in an outer let. */
     Cell* outer_let = make_cell_sexpr();
     cell_add(outer_let, G_let_sym);
     Cell* outer_bindings = make_cell_sexpr();
@@ -198,7 +199,7 @@ static Cell* expand_named_let(const Cell* c) {
         cell_add(inits, expand(bindings->cell[i]->cell[1]));
     }
 
-    /* 1. Build the lambda: (lambda (vars...) body...) */
+    /* Build the lambda: (lambda (vars...) body...) */
     Cell* lambda = make_cell_sexpr();
     cell_add(lambda, G_lambda_sym);
     cell_add(lambda, vars);
@@ -207,7 +208,7 @@ static Cell* expand_named_let(const Cell* c) {
         cell_add(lambda, expand(c->cell[i]));
     }
 
-    /* 2. Build the letrec: (letrec ((name lambda)) (name inits...)) */
+    /* Build the letrec: (letrec ((name lambda)) (name inits...)) */
     Cell* lr_binding_pair = make_cell_sexpr();
     cell_add(lr_binding_pair, name);
     cell_add(lr_binding_pair, lambda);
@@ -303,10 +304,10 @@ static Cell* expand_case(const Cell* c) {
 
     Cell* key_expr = expand(c->cell[1]);
 
-    // Generate a unique symbol for this specific case expansion
-    Cell* tmp_sym = gensym("case");
+    /* Generate a unique symbol for this specific case expansion. */
+    Cell* tmp_sym = gen_sym("case");
 
-    /* Create the cond block */
+    /* Create the cond block. */
     Cell* cond_block = make_cell_sexpr();
     cell_add(cond_block, G_cond_sym);
 
@@ -318,7 +319,7 @@ static Cell* expand_case(const Cell* c) {
         Cell* cond_clause = make_cell_sexpr();
         Cell* datalist = clause->cell[0];
 
-        if (is_symbol(datalist, G_else_sym)) {
+        if (is_same_symbol(datalist, G_else_sym)) {
             cell_add(cond_clause, G_else_sym);
         } else {
             /* Transform clause to (memv tmp '(datalist)). */
@@ -335,7 +336,7 @@ static Cell* expand_case(const Cell* c) {
             cell_add(cond_clause, memv_call);
         }
 
-        /* Add the result expressions of the clause to the cond clause */
+        /* Add the result expressions of the clause to the cond clause. */
         for (int j = 1; j < clause->count; j++) {
             cell_add(cond_clause, expand(clause->cell[j]));
         }
@@ -399,34 +400,34 @@ Cell* expand(Cell* c) {
 
     if (head->type == CELL_SYMBOL) {
         /* DEFINE (Primitive-ish) */
-        if (is_symbol(head, G_define_sym) && c->count > 2 && c->cell[1]->type == CELL_SEXPR) {
+        if (is_same_symbol(head, G_define_sym) && c->count > 2 && c->cell[1]->type == CELL_SEXPR) {
             return expand_define(c);
         }
 
         /* LAMBDA (Primitive-ish) */
-        if (is_symbol(head, G_lambda_sym) && c->count > 2) {
+        if (is_same_symbol(head, G_lambda_sym) && c->count > 2) {
             return expand_lambda(c);
         }
 
         /* CASE (Transform -> Let)
            We call expand() on the result to turn that 'let' into a 'letrec' or recurse. */
-        if (is_symbol(head, G_case_sym)) {
+        if (is_same_symbol(head, G_case_sym)) {
             return expand(expand_case(c));
         }
 
         /* DO (Transform -> Named Let)
            Recursing here ensures the Named Let becomes a letrec. */
-        if (is_symbol(head, G_do_sym)) {
+        if (is_same_symbol(head, G_do_sym)) {
             return expand(expand_do(c));
         }
 
         /* LET* (Transform -> nested Let(s) */
-        if (is_symbol(head, G_let_star_sym)) {
+        if (is_same_symbol(head, G_let_star_sym)) {
             return expand_let_star(c);
         }
 
         /* 5. LET */
-        if (is_symbol(head, G_let_sym)) {
+        if (is_same_symbol(head, G_let_sym)) {
             /* Named Let -> Letrec */
             if (c->count > 1 && c->cell[1]->type == CELL_SYMBOL) {
                 return expand(expand_named_let(c));
@@ -436,9 +437,6 @@ Cell* expand(Cell* c) {
         }
     }
 
-    /* Fallback: expand elements of the list */
+    /* Fallback: expand elements of the list. */
     return expand_recursive(c);
 }
-
-
-
