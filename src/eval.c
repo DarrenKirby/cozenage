@@ -75,15 +75,6 @@ Cell* coz_eval(Lex* env, Cell* expr)
             return expr;
                           }
 
-        /* Multiple return values - just return for now.
-         * Need to decide what, if anything,to do with these.  */
-
-        /* TODO: prolly just get rid of this and return multiple
-         * values in a pair/list. */
-        if (expr->type == CELL_MRV) {
-            return expr;
-        }
-
         /* Symbols: look them up in the environment. */
         if (expr->type & CELL_SYMBOL) {
 

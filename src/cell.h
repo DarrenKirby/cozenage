@@ -77,15 +77,14 @@ typedef enum  : uint32_t {
     CELL_ERROR      = 1 << 15,  /* error */
     CELL_SEXPR      = 1 << 16,  /* an array of values */
     CELL_TCS        = 1 << 17,  /* Tail Call Sentinel object */
-    CELL_MRV        = 1 << 18,  /* Multiple Return Value sentinel object */
-    CELL_TRAMPOLINE = 1 << 19,  /* Trampoline object - returned from
+    CELL_TRAMPOLINE = 1 << 18,  /* Trampoline object - returned from
                                    first-class procedures to signal a
                                    tail-call */
-    CELL_UNSPEC     = 1 << 20,   /* Unspecified object */
+    CELL_UNSPEC     = 1 << 19,   /* Unspecified object */
     /* bigint/rat/float */
-    CELL_BIGINT     = 1 << 21,   /* Arbitrary size/precision integer */
-    CELL_BIGRAT     = 1 << 22,   /* Arbitrary size/precision rational */
-    CELL_BIGFLOAT   = 1 << 23,   /* Arbitrary size/precision float */
+    CELL_BIGINT     = 1 << 20,   /* Arbitrary size/precision integer */
+    CELL_BIGRAT     = 1 << 21,   /* Arbitrary size/precision rational */
+    CELL_BIGFLOAT   = 1 << 22,   /* Arbitrary size/precision float */
 } Cell_t;
 
 /* Bytevector types. */

@@ -290,14 +290,6 @@ static void cell_to_string_worker(const Cell* v,
             sb_append_str(sb,"!EOF");
             break;
 
-        case CELL_MRV:
-            for (int i = 0; i < v->count; i++)
-            {
-                sb_append_str(sb, cell_to_string(v->cell[i], MODE_REPL));
-                sb_append_char(sb, ' ');
-            }
-            break;
-
         case CELL_SEXPR:
         case CELL_TRAMPOLINE:
             repr_sequence(v, nullptr, '(', ')', sb, mode);

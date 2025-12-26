@@ -21,7 +21,6 @@
 #include "cell.h"
 #include "numerics.h"
 #include "bignum.h"
-#include "repr.h"
 
 #include <gc.h>
 #include <stdio.h>
@@ -68,7 +67,6 @@ const char* cell_type_name(const int t)
         case CELL_CHAR:        return "char";
         case CELL_BYTEVECTOR:  return "byte vector";
         case CELL_EOF:         return "eof";
-        case CELL_MRV:         return "multiple return value";
         case CELL_BIGINT:      return "bigint";
         case CELL_BIGFLOAT:    return "bigfloat";
         default:               return "unknown";
@@ -99,7 +97,6 @@ const char* cell_mask_types(const int mask)
     if (mask & CELL_CHAR)        strcat(buf, "char|");
     if (mask & CELL_BYTEVECTOR)  strcat(buf, "byte vector|");
     if (mask & CELL_EOF)         strcat(buf, "eof|");
-    if (mask & CELL_MRV)         strcat(buf, "multiple return value|");
     if (mask & CELL_BIGINT)      strcat(buf, "bigint|");
     if (mask & CELL_BIGFLOAT)    strcat(buf, "bigfloat|");
 

@@ -22,6 +22,7 @@
 #include "environment.h"
 #include "comparators.h"
 #include "bignum.h"
+#include "pairs.h"
 
 #include <math.h>
 #include <complex.h>
@@ -840,7 +841,7 @@ static unsigned long long integer_sqrt(const unsigned long long k)
 }
 
 /* (exact-integer-sqrt k)
- * Returns two values s and r such that k = s² + r. */
+ * Returns two values (in a list) s and r such that k = s² + r. */
 Cell* builtin_exact_integer_sqrt(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -864,10 +865,9 @@ Cell* builtin_exact_integer_sqrt(const Lex* e, const Cell* a)
     const unsigned long long s = integer_sqrt(k);
     const unsigned long long r = k - s * s;
 
-    Cell* result = make_cell_mrv();
-    cell_add(result, make_cell_integer((long long)s));
-    cell_add(result, make_cell_integer((long long)r));
-    return result;
+    return builtin_list(e, make_sexpr_len2(
+        make_cell_integer((long long)s),
+        make_cell_integer((long long)r)));
 }
 
 Cell* builtin_exact(const Lex* e, const Cell* a)

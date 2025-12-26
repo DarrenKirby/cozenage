@@ -378,20 +378,6 @@ Cell* make_cell_port(const char* path, FILE* fh, const int io_t, const int strea
 }
 
 
-Cell* make_cell_mrv(void)
-{
-    Cell* v = GC_MALLOC(sizeof(Cell));
-    if (!v) {
-        fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
-        exit(EXIT_FAILURE);
-    }
-    v->type = CELL_MRV;
-    v->count = 0;
-    v->cell = nullptr;
-    return v;
-}
-
-
 Cell* make_cell_bigint(const char* s, const Cell* a,  const uint8_t base)
 {
     Cell* v = GC_MALLOC(sizeof(Cell));

@@ -20,6 +20,7 @@
 
 #include "types.h"
 #include "numerics.h"
+#include "pairs.h"
 
 #include <stdlib.h>
 #include <math.h>
@@ -430,10 +431,9 @@ static Cell* math_floor_div(const Lex* e, const Cell* a)
         r = r + n2;
     }
 
-    Cell* result = make_cell_mrv();
-    cell_add(result, make_cell_integer(q));
-    cell_add(result, make_cell_integer(r));
-    return result;
+    return builtin_list(e, make_sexpr_len2(
+        make_cell_integer(q),
+        make_cell_integer(r)));
 }
 
 /* (truncate/ n1 n2 ) */
@@ -456,10 +456,9 @@ static Cell* math_truncate_div(const Lex* e, const Cell* a)
     const long long q = n1 / n2; /* C's integer division truncates. */
     const long long r = n1 % n2; /* C's modulo is consistent with its division. */
 
-    Cell* result = make_cell_mrv();
-    cell_add(result, make_cell_integer(q));
-    cell_add(result, make_cell_integer(r));
-    return result;
+    return builtin_list(e, make_sexpr_len2(
+        make_cell_integer(q),
+        make_cell_integer(r)));
 }
 
 /* 'real-part' -> CELL_REAL|CELL_RATIONAL|CELL_INTEGER - returns the real part of a
