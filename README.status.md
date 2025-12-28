@@ -178,12 +178,12 @@ This document tracks the implementation status of procedures in the Cozenage int
 |   ✅    | `string-append`          |
 |   ✅    | `string-copy`            |
 |   ✅    | `string-copy!`           |
-|   ❌    | `string-fill!`           |
+|   ✅    | `string-fill!`           |
 |   ✅    | `string-for-each`        |
 |   ✅    | `string-length`          |
 |   ✅    | `string-map`             |
 |   ✅    | `string-ref`             |
-|   ❌    | `string-set!`            |
+|   ✅    | `string-set!`            |
 |   ✅    | `string<=?`              |
 |   ✅    | `string<?`               |
 |   ✅    | `string=?`               |
