@@ -1,5 +1,5 @@
 /*
- * 'comparators.c'
+ * 'src/comparators.c'
  * This file is part of Cozenage - https://github.com/DarrenKirby/cozenage
  * Copyright © 2025  Darren Kirby <darren@dragonbyte.ca>
  *
@@ -28,6 +28,7 @@
  *     Comparison operators     *
  * -----------------------------*/
 
+
 /* Helper for '=' which recursively compares complex numbers */
 static int complex_eq_op(const Lex* e, const Cell* lhs, const Cell* rhs)
 {
@@ -40,6 +41,7 @@ static int complex_eq_op(const Lex* e, const Cell* lhs, const Cell* rhs)
     const int eq = real_result->boolean_v && imag_result->boolean_v;
     return eq;
 }
+
 
 /* '=' -> CELL_BOOLEAN - returns true if all arguments are equal. */
 Cell* builtin_eq_op(const Lex* e, const Cell* a)
@@ -80,6 +82,7 @@ Cell* builtin_eq_op(const Lex* e, const Cell* a)
     return True_Obj;
 }
 
+
 /* '>' -> CELL_BOOLEAN - returns true if each argument is greater than the one that follows. */
 Cell* builtin_gt_op(const Lex* e, const Cell* a)
 {
@@ -118,6 +121,7 @@ Cell* builtin_gt_op(const Lex* e, const Cell* a)
     }
     return True_Obj;
 }
+
 
 /* '<' -> CELL_BOOLEAN - returns true if each argument is less than the one that follows. */
 Cell* builtin_lt_op(const Lex* e, const Cell* a)
@@ -158,6 +162,7 @@ Cell* builtin_lt_op(const Lex* e, const Cell* a)
     return True_Obj;
 }
 
+
 /* '>=' -> CELL_BOOLEAN - */
 Cell* builtin_gte_op(const Lex* e, const Cell* a)
 {
@@ -196,6 +201,7 @@ Cell* builtin_gte_op(const Lex* e, const Cell* a)
     }
     return True_Obj;
 }
+
 
 /* '<=' -> CELL_BOOLEAN - */
 Cell* builtin_lte_op(const Lex* e, const Cell* a)
@@ -236,9 +242,11 @@ Cell* builtin_lte_op(const Lex* e, const Cell* a)
     return True_Obj;
 }
 
+
 /* ------------------------------------------*
 *    Equality and equivalence comparators    *
 * -------------------------------------------*/
+
 
 /* 'eq?' -> CELL_BOOLEAN - Tests whether its two arguments are the exact same object
  * (pointer equality). Typically used for symbols and other non-numeric atoms.
@@ -256,6 +264,7 @@ Cell* builtin_eq(const Lex* e, const Cell* a)
     /* Strict pointer equality */
     return make_cell_boolean(x == y);
 }
+
 
 /* 'eqv?' -> CELL_BOOLEAN - Like 'eq?', but also considers numbers and characters
  * with the same value as equivalent. (eqv? 2 2) is true, even if those 2s are
@@ -279,8 +288,6 @@ Cell* builtin_eqv(const Lex* e, const Cell* a)
         return builtin_eq_op(e, make_sexpr_len2(x, y));
     }
 
-
-
     switch (x->type) {
         case CELL_BOOLEAN: return make_cell_boolean(x->boolean_v == y->boolean_v);
         case CELL_CHAR: return make_cell_boolean(x->char_v == y->char_v);
@@ -289,23 +296,71 @@ Cell* builtin_eqv(const Lex* e, const Cell* a)
     }
 }
 
-/* Helper for equal? */
+
+/* Helpers for equal? */
+static Cell* val_equal(const Lex* e, Cell* x, Cell* y);
+
+
+static Cell* check_if_lists_are_equal_recursive(const Lex* e, Cell* x, Cell* y, Cell* visited) {
+    /* Base Cases */
+    if (x == y) return True_Obj;
+    if (x->type != y->type) return False_Obj;
+    if (x->type != CELL_PAIR) {
+        /* We've reached the end of the list structure (could be NIL or an improper tail)
+         * Use the main val_equal to handle the final tail values. */
+        return val_equal(e, x, y);
+    }
+
+    /* Cycle Detection
+     * If we've already started comparing this specific pair of pairs,
+     * assume they are equal to break the infinite recursion. */
+    const Cell* v = visited;
+    while (v->type == CELL_PAIR) {
+        const Cell* comparison = v->car;
+        if (comparison->car == x && comparison->cdr == y) return True_Obj;
+        v = v->cdr;
+    }
+
+    /* Record this visit
+     * We push the pair (x . y) onto our visited stack. */
+    Cell* current_comp = make_cell_pair(x, y);
+    Cell* new_visited = make_cell_pair(current_comp, visited);
+
+    /* Recurse: CAR must be equal, then CDR must be equal. */
+    if (val_equal(e, x->car, y->car) == False_Obj) {
+        return False_Obj;
+    }
+
+    return check_if_lists_are_equal_recursive(e, x->cdr, y->cdr, new_visited);
+}
+
+
+static Cell* check_if_lists_are_equal(const Lex* e, Cell* x, Cell* y) {
+    return check_if_lists_are_equal_recursive(e, x, y, make_cell_nil());
+}
+
+
 static Cell* val_equal(const Lex* e, Cell* x, Cell* y)
 {
-    if (x->type != y->type) { return False_Obj; }
-    /* Just kick numbers over to '='*/
+    /* Just kick numbers over to '='. */
     // ReSharper disable once CppVariableCanBeMadeConstexpr
     const int mask = CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX|CELL_BIGINT;
     if (x->type & mask) {
+        /* 2 != 2.0, but 2 = 2/1. */
+        if (x->exact != y->exact) {
+            return False_Obj;
+        }
         return builtin_eq_op(e, make_sexpr_len2(x, y));
     }
-    if (x->type != y->type) return False_Obj;
+
+    /* Do the type test AFTER dispatching numeric types to = */
+    if (x->type != y->type) { return False_Obj; }
 
     switch (x->type) {
         case CELL_BOOLEAN: return make_cell_boolean(x->boolean_v == y->boolean_v);
         case CELL_CHAR: return make_cell_boolean(x->char_v == y->char_v);
-        case CELL_SYMBOL:  return make_cell_boolean(strcmp(x->sym, y->sym) == 0);
-        case CELL_STRING:  return make_cell_boolean(strcmp(x->str, y->str) == 0);
+        case CELL_SYMBOL: return make_cell_boolean(strcmp(x->sym, y->sym) == 0);
+        case CELL_STRING: return make_cell_boolean(strcmp(x->str, y->str) == 0);
         case CELL_NIL: return make_cell_boolean(y->type == CELL_NIL);
         case CELL_BYTEVECTOR:
             if (x->bv->type != y->bv->type || x->count != y->count) {
@@ -318,12 +373,9 @@ static Cell* val_equal(const Lex* e, Cell* x, Cell* y)
             }
             return True_Obj;
         case CELL_PAIR:
+            return check_if_lists_are_equal(e, x, y);
         case CELL_SEXPR:
         case CELL_VECTOR:
-            if (x->type == CELL_PAIR) {
-                x = make_sexpr_from_list(x);
-                y = make_sexpr_from_list(y);
-            }
             if (x->count != y->count) return False_Obj;
             for (int i = 0; i < x->count; i++) {
                 const Cell* eq = val_equal(e, x->cell[i], y->cell[i]);
@@ -335,6 +387,7 @@ static Cell* val_equal(const Lex* e, Cell* x, Cell* y)
             return False_Obj;
     }
 }
+
 
 /* 'equal?' -> CELL_BOOLEAN - Tests structural (deep) equality, comparing contents
  * recursively in lists, vectors, and strings. (equal? '(1 2 3) '(1 2 3)) → true,
