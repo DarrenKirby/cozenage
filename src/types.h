@@ -76,7 +76,7 @@ void complex_apply(BuiltinFn fn, const Lex* e, Cell* result, const Cell* rhs);
 long double cell_to_long_double(const Cell* c);
 Cell* make_cell_from_double(long double d);
 char* GC_strdup(const char* s);
-char* GC_strndup(const char* s, size_t n);
+char* GC_strndup(const char* s, size_t byte_len);
 int compare_named_chars(const void* key, const void* element);
 const NamedChar* find_named_char(const char* name);
 Cell* list_get_nth_cell_ptr(const Cell* list, long n);

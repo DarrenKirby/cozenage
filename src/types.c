@@ -837,23 +837,17 @@ char* GC_strdup(const char* s)
 }
 
 
-/* A version of strndup that allocates memory using the garbage collector. */
-char* GC_strndup(const char* s, const size_t n)
+char* GC_strndup(const char* s, size_t byte_len)
 {
-    /* Find the actual length of the substring, up to n. */
-    size_t len = strnlen(s, n);
-
-    /* Allocate GC-managed memory. */
-    char* new_str = GC_MALLOC_ATOMIC(len + 1);
+    /* +1 for the null terminator (for C-compatibility/printing) */
+    char* new_str = (char*)GC_MALLOC_ATOMIC(byte_len + 1);
     if (new_str == NULL) {
         fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
         exit(EXIT_FAILURE);
     }
 
-    /* Copy the content and null-terminate. */
-    memcpy(new_str, s, len);
-    new_str[len] = '\0';
-
+    memcpy(new_str, s, byte_len);
+    new_str[byte_len] = '\0'; // Always safety-terminate
     return new_str;
 }
 
