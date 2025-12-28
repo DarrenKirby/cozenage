@@ -181,6 +181,9 @@ static char* read_multiline(const char* prompt, const char* cont_prompt)
 /* REPL output. */
 void coz_print(const Cell* v)
 {
+    if (v->type == CELL_UNSPEC) {
+        return;
+    }
     fprintf(stdout, "%s\n", cell_to_string(v, MODE_REPL));
 }
 
