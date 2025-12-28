@@ -429,7 +429,7 @@ Cell* builtin_vector_append(const Lex* e, const Cell* a)
     return result;
 }
 
-/* TODO: finish this! */
+
 /* (vector-copy! to at from)
  * (vector-copy! to at from start)
  * (vector-copy! to at from start end)
@@ -442,72 +442,65 @@ Cell* builtin_vector_copy_bang(const Lex* e, const Cell* a)
     Cell* err = CHECK_ARITY_RANGE(a, 3, 5, "vector-copy!");
     if (err) return err;
 
-    /* Validate arg Types. */
+    /* Validate Argument Types */
     if (a->cell[0]->type != CELL_VECTOR)
-        return make_cell_error(
-            "vector-copy!: arg 1 must be a vector (to)",
-            TYPE_ERR);
+        return make_cell_error("vector-copy!: arg 1 must be a vector (to)", TYPE_ERR);
     if (a->cell[1]->type != CELL_INTEGER)
-        return make_cell_error(
-            "vector-copy!: arg 2 must be an integer (at)",
-            TYPE_ERR);
+        return make_cell_error("vector-copy!: arg 2 must be an integer (at)", TYPE_ERR);
     if (a->cell[2]->type != CELL_VECTOR)
-        return make_cell_error(
-            "vector-copy!: arg 3 must be a vector (from)",
-            TYPE_ERR);
+        return make_cell_error("vector-copy!: arg 3 must be a vector (from)", TYPE_ERR);
 
-    /* Get 'to' bytevector and 'at' index. */
+    /* Extract Base Information */
     const Cell* to_vec = a->cell[0];
     const int32_t to_vec_len = to_vec->count;
     const int32_t to_start_idx = (int32_t)a->cell[1]->integer_v;
 
-    /* Get 'from' bytevector and 'start'/'end' indices. */
     const Cell* from_vec = a->cell[2];
     const int32_t from_vec_len = from_vec->count;
 
+    /* Extract and Default Optional Indices */
     int32_t from_start_idx = 0;
-    int32_t from_end_idx = from_vec_len; /* Default to char length. */
+    int32_t from_end_idx = from_vec_len;
 
     if (a->count >= 4) {
         if (a->cell[3]->type != CELL_INTEGER)
-            return make_cell_error(
-                "vector-copy!: arg 4 must be an integer (start)",
-                TYPE_ERR);
+            return make_cell_error("vector-copy!: arg 4 must be an integer (start)", TYPE_ERR);
         from_start_idx = (int32_t)a->cell[3]->integer_v;
     }
     if (a->count == 5) {
         if (a->cell[4]->type != CELL_INTEGER)
-            return make_cell_error(
-                "vector-copy!: arg 5 must be an integer (end)",
-                TYPE_ERR);
+            return make_cell_error("vector-copy!: arg 5 must be an integer (end)", TYPE_ERR);
         from_end_idx = (int32_t)a->cell[4]->integer_v;
     }
 
-    /* R7RS Index Validation. */
-    if (to_start_idx < 0 || to_start_idx > to_vec_len)
-        return make_cell_error(
-            "vector-copy!: 'at' index is out of bounds for 'to' vector",
-            INDEX_ERR);
+    /* Index and Range Validation */
     if (from_start_idx < 0 || from_start_idx > from_vec_len)
-        return make_cell_error(
-            "vector-copy!: 'start' index is out of bounds for 'from' vector",
-            INDEX_ERR);
-    if (from_end_idx < 0 || from_end_idx > from_vec_len)
-        return make_cell_error(
-            "vector-copy!: 'end' index is out of bounds for 'from' vector",
-            INDEX_ERR);
-    if (from_start_idx > from_end_idx)
-        return make_cell_error(
-            "bytevector-copy!: 'start' index cannot be greater than 'end' index",
-            INDEX_ERR);
+        return make_cell_error("vector-copy!: 'start' index out of bounds", INDEX_ERR);
+    if (from_end_idx < from_start_idx || from_end_idx > from_vec_len)
+        return make_cell_error("vector-copy!: 'end' index out of bounds", INDEX_ERR);
 
-    const int32_t num_bytes = from_end_idx - from_start_idx;
-    for (int i = to_start_idx; i <= num_bytes; i++) {
-        to_vec->cell[i] = from_vec->cell[from_start_idx];
-        from_start_idx++;
+    const int32_t count = from_end_idx - from_start_idx;
+
+    if (to_start_idx < 0 || (to_start_idx + count) > to_vec_len)
+        return make_cell_error("vector-copy!: target range out of bounds", INDEX_ERR);
+
+    /* Perform the Copy with Overlap Protection */
+    /* If we are copying within the same vector and moving data "forward" (to a higher index),
+       we must copy from right-to-left to avoid overwriting the source data. */
+    if (to_vec == from_vec && to_start_idx > from_start_idx) {
+        for (int32_t i = count - 1; i >= 0; i--) {
+            to_vec->cell[to_start_idx + i] = from_vec->cell[from_start_idx + i];
+        }
+    } else {
+        /* Standard left-to-right copy for different vectors or backward moves */
+        for (int32_t i = 0; i < count; i++) {
+            to_vec->cell[to_start_idx + i] = from_vec->cell[from_start_idx + i];
+        }
     }
+
     return USP_Obj;
 }
+
 
 /* (vector-fill! vector fill)
  * (vector-fill! vector fill start)
@@ -518,44 +511,42 @@ Cell* builtin_vector_fill_bang(const Lex* e, const Cell* a)
     (void)e;
     Cell* err = CHECK_ARITY_RANGE(a, 2, 4, "vector-fill!");
     if (err) return err;
-    if (a->cell[0]->type != CELL_VECTOR) {
-        return make_cell_error(
-            "vector-fill!: arg 1 must be a vector",
-            TYPE_ERR);
-    }
-    int start = 0;
-    int end = a->cell[0]->count;
-    Cell* fill = a->cell[1];
-    if (a->count > 2) {
-        if (a->cell[2]->type != CELL_INTEGER) {
-            return make_cell_error(
-                "vector-fill!: arg 3 must be an integer",
-                TYPE_ERR);
-        }
-        start = (int)a->cell[2]->integer_v;
-        if (start < 0 || start >= a->cell[0]->count) {
-            return make_cell_error(
-                "vector-fill!: start out of range",
-                INDEX_ERR);
-        }
-        if (a->count == 4) {
-            if (a->cell[3]->type != CELL_INTEGER) {
-                return make_cell_error(
-                    "vector-fill!: arg 4 must be an integer",
-                    TYPE_ERR);
-            }
-            end = (int)a->cell[3]->integer_v;
-            if (end < 0 || end >= a->cell[0]->count || end < start) {
-                return make_cell_error(
-                    "vector-fill!: end out of range",
-                    INDEX_ERR);
-            }
-        }
+
+    Cell* vec = a->cell[0];
+    if (vec->type != CELL_VECTOR) {
+        return make_cell_error("vector-fill!: arg 1 must be a vector", TYPE_ERR);
     }
 
-    /* Args are good. Let's go! */
-    for (int i = start; i < end; i++) {
-        a->cell[0]->cell[i] = fill;
+    int32_t len = vec->count;
+    Cell* fill = a->cell[1];
+    int32_t start = 0;
+    int32_t end = len;
+
+    /* Validate Start */
+    if (a->count >= 3) {
+        if (a->cell[2]->type != CELL_INTEGER)
+            return make_cell_error("vector-fill!: start must be an integer", TYPE_ERR);
+
+        start = (int32_t)a->cell[2]->integer_v;
+        /* start can be equal to len if end is also len (empty range) */
+        if (start < 0 || start > len)
+            return make_cell_error("vector-fill!: start index out of range", INDEX_ERR);
     }
+
+    /* Validate End */
+    if (a->count == 4) {
+        if (a->cell[3]->type != CELL_INTEGER)
+            return make_cell_error("vector-fill!: end must be an integer", TYPE_ERR);
+
+        end = (int32_t)a->cell[3]->integer_v;
+        if (end < 0 || end > len || end < start)
+            return make_cell_error("vector-fill!: end index out of range", INDEX_ERR);
+    }
+
+    /* Perform the fill */
+    for (int32_t i = start; i < end; i++) {
+        vec->cell[i] = fill;
+    }
+
     return USP_Obj;
 }
