@@ -218,7 +218,7 @@ Test(end_to_end_equivalence, test_equal_procedure, .init = setup_each_test, .fin
     cr_assert_str_eq(t_eval("(equal? \"abc\" '(a b c))"), "#false");
 
     // ## Cyclic Structures (must terminate and return correct value) ##
-    // Test case 1: Two simple identical cycles
+    //Test case 1: Two simple identical cycles
     cr_assert_str_eq(t_eval("(begin "
                                 "(define x (list 'a)) "
                                 "(set-cdr! x x) "

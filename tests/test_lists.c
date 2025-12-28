@@ -213,7 +213,7 @@ Test(end_to_end_lists, test_map_procedure, .init = setup_each_test, .fini = tear
 
     /* Test that map returns a newly allocated list */
     cr_assert_str_eq(t_eval("(begin (define a (list 1 2 3)) a)"), "(1 2 3)");
-    //cr_assert_str_eq(t_eval("(begin (define b (list 1 2 3)) (define c (map (lambda (x) x) b)) (eq? b c))"), "#false");
+    cr_assert_str_eq(t_eval("(begin (define b (list 1 2 3)) (define c (map (lambda (x) x) b)) (eq? b c))"), "#false");
 
     /* The following tests are for error conditions. */
     cr_assert_str_eq(t_eval("(map)"), " Arity error: map: expected at least 2 args, got 0");

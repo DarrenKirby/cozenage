@@ -189,7 +189,7 @@ static Cell* expand_let_star(const Cell* c) {
 static Cell* expand_named_let(const Cell* c) {
     /* c is (let name ((var init) ...) body...) */
     Cell* name = c->cell[1];
-    Cell* bindings = c->cell[2];
+    const Cell* bindings = c->cell[2];
 
     Cell* vars = make_cell_sexpr();
     Cell* inits = make_cell_sexpr();
