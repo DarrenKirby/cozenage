@@ -183,7 +183,6 @@ Cell* parse_all_expressions(Lex* e, TokenArray* ta, const bool is_repl)
             return result;
         }
 
-        // if (is_repl && result->type != CELL_UNSPEC) {
         if (is_repl) {
             coz_print(result);
         }
