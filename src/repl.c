@@ -181,9 +181,6 @@ static char* read_multiline(const char* prompt, const char* cont_prompt)
 /* REPL output. */
 void coz_print(const Cell* v)
 {
-    if (v->type == CELL_UNSPEC) {
-        return;
-    }
     fprintf(stdout, "%s\n", cell_to_string(v, MODE_REPL));
 }
 
@@ -199,8 +196,9 @@ char* coz_read()
         save_history_to_file();
         exit(0);
     }
-    /* Add expression to history. */
-    if (input != nullptr) {
+
+    /* Add expression to history, if it is not empty. */
+    if (strcmp(input, "") != 0) {
         add_history(input);
     }
     return input;
