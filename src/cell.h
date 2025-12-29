@@ -232,7 +232,6 @@ Cell* make_cell_bytevector(bv_t t);
 Cell* make_cell_symbol(const char* the_symbol);
 Cell* make_cell_string(const char* the_string);
 Cell* make_cell_sexpr(void);
-Cell* make_cell_mrv(void);
 Cell* make_cell_bigint(const char* s, const Cell* a, uint8_t base);
 Cell* make_cell_bigfloat(const char* s);
 Cell* make_cell_pair(Cell* car, Cell* cdr);
@@ -240,8 +239,6 @@ Cell* make_cell_error(const char* error_string, err_t error_type);
 Cell* make_cell_port(const char* path, FILE* fh, int io_t, int stream_t);
 Cell* cell_add(Cell* v, Cell* x);
 Cell* cell_copy(const Cell* v);
-Cell* cell_pop(Cell* v, int i);
-Cell* cell_take(Cell* v, int i);
 Cell* make_cell_bytevector_u8(void);
 Cell* byte_add(Cell* bv, int64_t value);
 

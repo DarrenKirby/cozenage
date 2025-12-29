@@ -50,6 +50,7 @@ Cell* default_output_port = nullptr;
 Cell* default_error_port  = nullptr;
 
 
+/* Initialize default input, output, and error ports on startup. */
 void init_default_ports(void)
 {
     default_input_port  = make_cell_port("stdin",  stdin,  INPUT_PORT, FILE_PORT);
@@ -57,12 +58,14 @@ void init_default_ports(void)
     default_error_port  = make_cell_port("stderr", stderr, OUTPUT_PORT, FILE_PORT);
 }
 
+
 /*-------------------------------------------*
  *       Global singleton constructors       *
  *                                           *
  *  These constructors should be considered  *
  *  'private', and never directly accessed.  *
  * ------------------------------------------*/
+
 
 static Cell* make_cell_nil__(void)
 {
@@ -105,6 +108,7 @@ static Cell* make_cell_usp__(void)
 }
 
 
+/* Initialize global singletons. */
 void init_global_singletons(void)
 {
     Nil_Obj = make_cell_nil__();
@@ -115,9 +119,11 @@ void init_global_singletons(void)
     USP_Obj = make_cell_usp__();
 }
 
+
 /*------------------------------------*
  *       Cell type constructors       *
  * -----------------------------------*/
+
 
 /* Thin wrapper that returns the singleton nil object. */
 Cell* make_cell_nil(void)
@@ -146,11 +152,13 @@ Cell* make_cell_tcs(void)
     return TCS_Obj;
 }
 
+
 /* Thin wrapper that returns the singleton TCS object. */
 Cell* make_cell_usp(void)
 {
     return USP_Obj;
 }
+
 
 Cell* make_cell_real(const long double the_real)
 {
@@ -389,13 +397,15 @@ Cell* make_cell_bigint(const char* s, const Cell* a,  const uint8_t base)
     v->exact = true;
     v->bi = GC_MALLOC(sizeof(mpz_t));
     if (s) {
-        /* Set from string (from the parser) */
+        /* Set from string (from the parser). */
         const int status = mpz_init_set_str(*v->bi, s, base);
         if (status != 0) {
-            return make_cell_error("bigint construction failed!", GEN_ERR);
+            return make_cell_error(
+                "bigint construction failed!",
+                GEN_ERR);
         }
     } else {
-        /* Set from integer (type promotion) */
+        /* Set from integer (type promotion). */
         mpz_init_set_si(*v->bi, a->integer_v);
     }
     return v;
@@ -421,6 +431,7 @@ Cell* make_cell_bigfloat(const char* s)
  *    Cell accessors, destructors, and helpers    *
  * -----------------------------------------------*/
 
+
 Cell* cell_add(Cell* v, Cell* x)
 {
     v->count++;
@@ -434,45 +445,6 @@ Cell* byte_add(Cell* bv, const int64_t value)
 {
     BV_OPS[bv->bv->type].append(bv, value);
     return bv;
-}
-
-
-Cell* cell_pop(Cell* v, const int i)
-{
-    if (i < 0 || i >= v->count) return nullptr; /* defensive */
-
-    /* Grab item. */
-    Cell* x = v->cell[i];
-
-    /* Shift the memory after the item at "i" over the top. */
-    if (i < v->count - 1) {
-        memmove(&v->cell[i], &v->cell[i+1],
-                sizeof(Cell*) * (v->count - i - 1));
-    }
-
-    /* Decrease the count of items. */
-    v->count--;
-
-    /* If there are no elements left, free the array and set to NULL.
-       Do NOT call GC_REALLOC(..., 0). */
-    if (v->count == 0) {
-        v->cell = nullptr;
-    } else {
-        /* Try to shrink the allocation; keep old pointer on OOM. */
-        Cell** tmp = GC_REALLOC(v->cell, sizeof(Cell*) * v->count);
-        if (tmp) {
-            v->cell = tmp;
-        } /* else: on OOM we keep the old block (safe). */
-    }
-    return x;
-}
-
-
-/* Take an element out and delete the rest. */
-Cell* cell_take(Cell* v, const int i)
-{
-    Cell* x = cell_pop(v, i);
-    return x;
 }
 
 
@@ -513,6 +485,7 @@ Cell* cell_copy(const Cell* v) {
         copy->str = GC_strdup(v->str);
         copy->count = v->count;
         copy->char_count = v->char_count;
+        copy->ascii = v->ascii;
         break;
     case CELL_ERROR:
         copy->error_v = GC_strdup(v->error_v);
