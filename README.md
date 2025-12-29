@@ -22,6 +22,7 @@ Cozenage has:
 - A REPL with multi-line input editing, command history, and tab-autocompletion.
 - UTF-8 Unicode support.
 - eval/apply procedures for interpreting data as executable code.
+- polymorphic len, idx, rev procedures for compound types.
 
 Typical Scheme features that Cozenage does NOT have:
 
@@ -73,23 +74,30 @@ are documented on another page:
 
 ### Special forms/syntax
 
-These are the special forms/syntax constructs that are implemented in Cozenage so far:
+These are the special forms/syntax constructs that are implemented in Cozenage so far.
+
+Implemented as primitives:
 
 - `quote`
 - `define`
 - `lambda`
 - `let`
-- `let*`
 - `letrec`
 - `set!`
 - `if`
+- `begin`
+- `import`
+- `and`
+
+Implemented as transforms/expands:
+
 - `when`
 - `unless`
 - `cond`
 - `else`
-- `begin`
-- `import`
-- `and`
+- `let*`
+- `letrec*`
 - `or`
 - `case`
 - `do`
+- `Named let`
