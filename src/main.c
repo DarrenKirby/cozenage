@@ -33,6 +33,7 @@
 
 /* Initialize load_libs struct to zeros. */
 lib_load_config load_libs = {0};
+
 /* 'Global' argc and argv for use by (command-line). */
 int g_argc;
 char** g_argv;
@@ -42,7 +43,7 @@ static void show_help(void)
     printf("Usage: cozenage [option ...] [file] \n\n\
 A Scheme-derived REPL and code runner\n\n\
 Options:\n\
-    -l, --library\t preload R7RS and/or Cozenage libraries at startup\n\
+    -l, --library\t preload Cozenage libraries at startup\n\
     -h, --help\t\t display this help\n\
     -V, --version\t display version information\n\n\
 \n\
@@ -92,7 +93,7 @@ static void process_library_arg(struct lib_load *l, const char *arg)
 int main(const int argc, char** argv)
 {
     /* GC docs say this probably isn't necessary,
-     * but to do it to be portable with older versions */
+     * but to do it to be portable with older versions. */
     GC_INIT();
 
     const struct option long_opts[] = {
