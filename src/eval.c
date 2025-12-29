@@ -37,26 +37,21 @@ static Cell* get_args_from_sexpr(const Cell* v)
 
 
 /* This is only for special forms that are manually
- * implemented in special_forms.c -- do not add
- * transformed syntax here! */
+ * implemented in special_forms.c */
 special_form_handler_t SF_DISPATCH_TABLE[] = {
-    nullptr,
-    &sf_define,
-    &sf_quote,
-    &sf_lambda,
-    &sf_if,
-    &sf_when,
-    &sf_unless,
-    &sf_cond,
-    &sf_import,
-    &sf_let,
-    &sf_let_star,
-    &sf_letrec,
-    &sf_set_bang,
-    &sf_begin,
-    &sf_and,
-    &sf_or,
+    [SF_ID_DEFINE]   = &sf_define,
+    [SF_ID_QUOTE]    = &sf_quote,
+    [SF_ID_LAMBDA]   = &sf_lambda,
+    [SF_ID_IF]       = &sf_if,
+    [SF_ID_IMPORT]   = &sf_import,
+    [SF_ID_LET]      = &sf_let,
+    [SF_ID_LETREC]   = &sf_letrec,
+    [SF_ID_SET_BANG] = &sf_set_bang,
+    [SF_ID_BEGIN]    = &sf_begin,
+    [SF_ID_AND]      = &sf_and,
+    [SF_ID_DEBUG]    = &sf_with_gc_stats
 };
+
 
 static Cell* coz_apply(const Cell* proc, Cell* args, Lex** env_out, Cell** expr_out);
 
@@ -64,7 +59,7 @@ static Cell* coz_apply(const Cell* proc, Cell* args, Lex** env_out, Cell** expr_
 Cell* coz_eval(Lex* env, Cell* expr)
 {
     while (true) {
-        if (!expr) return USP_Obj;
+        if (!expr) return nullptr;
 
         /* Turf all the self-evaluating types. */
         if (expr->type & (CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX|
@@ -89,7 +84,7 @@ Cell* coz_eval(Lex* env, Cell* expr)
         }
 
         /* S-expressions:  */
-        /* Grab first element without evaluating yet */
+        /* Grab first element without evaluating yet. */
         if (expr->count == 0) {
             /* Unquoted "()" */
             return make_cell_error(
@@ -104,12 +99,14 @@ Cell* coz_eval(Lex* env, Cell* expr)
         if (first->type == CELL_SYMBOL && first->sf_id > 0) {
             const special_form_handler_t handler = SF_DISPATCH_TABLE[first->sf_id];
             const HandlerResult result = handler(env, get_args_from_sexpr(expr));
-            /* A final value. */
+            /* ACTION_RETURN final value. */
             if (result.action == ACTION_RETURN) {
                 return result.value;
             }
+
             /* ACTION_CONTINUE from a tail call. */
             expr = result.value;
+            env = result.env;
             continue;
         }
 
@@ -138,7 +135,8 @@ Cell* coz_eval(Lex* env, Cell* expr)
 
             if (args->cell[i]->type == CELL_ERROR) {
                 /* If an argument evaluation fails, return the error. */
-                return cell_take(args, i);
+                //return cell_take(args, i);
+                return args->cell[i];
             }
         }
 
