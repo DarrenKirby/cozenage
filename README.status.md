@@ -98,7 +98,7 @@ This document tracks the implementation status of procedures in the Cozenage int
 |   ✅    | `gcd`                    |
 |   ❌    | `get-output-bytevector`  |
 |   ❌    | `get-output-string`      |
-|   ✅    | `idx` - polyphorphic     |
+|   ✅    | `idx` - polymorphic      |
 |   ✅    | `inexact`                |
 |   ✅    | `inexact?`               |
 |   ✅    | `input-port-open?`       |
