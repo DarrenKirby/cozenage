@@ -107,7 +107,6 @@ static void cell_to_string_worker(const Cell* v,
                                   const print_mode_t mode)
 {
     if (v == NULL) return;
-    if (v == USP_Obj) return;
 
     switch (v->type) {
 
@@ -144,6 +143,15 @@ static void cell_to_string_worker(const Cell* v,
                 sb_append_fmt(sb, "%s%s%s", ANSI_MAGENTA, val, ANSI_RESET);
             } else {
                 sb_append_str(sb, val);
+            }
+            break;
+        }
+
+        case CELL_UNSPEC: {
+            if (mode == MODE_REPL) {
+                sb_append_fmt(sb, "%s#void%s", ANSI_MAGENTA, ANSI_RESET);
+            } else {
+                sb_append_str(sb, "");
             }
             break;
         }
@@ -315,7 +323,7 @@ static void cell_to_string_worker(const Cell* v,
 /* Generates the external representation of a Cell as a string. */
 char* cell_to_string(const Cell* cell, const print_mode_t mode)
 {
-    if (cell == NULL || cell->type == CELL_UNSPEC) return "";
+    if (cell == NULL) return "";
     string_builder_t *sb = sb_new();
     cell_to_string_worker(cell, sb, mode);
     return sb->buffer;
