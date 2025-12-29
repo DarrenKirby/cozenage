@@ -45,13 +45,16 @@ Cell* G_case_sym = nullptr;
 Cell* G_import_sym = nullptr;
 Cell* G_let_sym = nullptr;
 Cell* G_let_star_sym = nullptr;
+Cell* G_letrec_star_sym = nullptr;
 Cell* G_letrec_sym = nullptr;
 Cell* G_set_bang_sym = nullptr;
 Cell* G_begin_sym = nullptr;
 Cell* G_and_sym = nullptr;
 Cell* G_or_sym = nullptr;
 Cell* G_do_sym = nullptr;
+Cell* G_arrow_sym = nullptr;
 Cell* G_else_sym = nullptr;
+Cell* G_debug_sym = nullptr;
 
 
 /* Initialize canonical symbols and configure their special form IDs. */
@@ -68,17 +71,21 @@ void init_special_forms(void) {
     G_if_sym = make_cell_symbol("if");
     G_if_sym->sf_id = SF_ID_IF;
 
+    /* Transformed syntax */
     G_when_sym = make_cell_symbol("when");
     G_when_sym->sf_id = SF_ID_WHEN;
 
+    /* Transformed syntax */
     G_unless_sym = make_cell_symbol("unless");
     G_unless_sym->sf_id = SF_ID_UNLESS;
 
+    /* Transformed syntax */
     G_cond_sym = make_cell_symbol("cond");
     G_cond_sym->sf_id = SF_ID_COND;
 
-    /* Transformed syntax -- no sf_id */
+    /* Transformed syntax */
     G_case_sym = make_cell_symbol("case");
+    G_case_sym->sf_id = SF_ID_CASE;
 
     G_import_sym = make_cell_symbol("import");
     G_import_sym->sf_id = SF_ID_IMPORT;
@@ -86,8 +93,13 @@ void init_special_forms(void) {
     G_let_sym = make_cell_symbol("let");
     G_let_sym->sf_id = SF_ID_LET;
 
+    /* Transformed syntax */
     G_let_star_sym = make_cell_symbol("let*");
     G_let_star_sym->sf_id = SF_ID_LET_STAR;
+
+    /* Transformed syntax */
+    G_letrec_star_sym = make_cell_symbol("letrec*");
+    G_letrec_star_sym->sf_id = SF_ID_LETREC_STAR;
 
     G_letrec_sym = make_cell_symbol("letrec");
     G_letrec_sym->sf_id = SF_ID_LETREC;
@@ -101,19 +113,29 @@ void init_special_forms(void) {
     G_and_sym = make_cell_symbol("and");
     G_and_sym->sf_id = SF_ID_AND;
 
+    /* Transformed syntax */
     G_or_sym = make_cell_symbol("or");
     G_or_sym->sf_id = SF_ID_OR;
 
-    /* Transformed syntax -- no sf_id */
+    /* Transformed syntax */
     G_do_sym = make_cell_symbol("do");
+    G_do_sym->sf_id = SF_ID_DO;
+
+    /* Not actually a special form - no SF_ID */
+    G_arrow_sym = make_cell_symbol("=>");
 
     G_else_sym = make_cell_symbol("else");
     G_else_sym->sf_id = SF_ID_ELSE;
+
+    G_debug_sym = make_cell_symbol("with-gc-stats");
+    G_debug_sym->sf_id = SF_ID_DEBUG;
 }
+
 
 /*-------------------------------------------------------*
  *                  Symbol procedures                    *
  * ------------------------------------------------------*/
+
 
 Cell* builtin_symbol_equal_pred(const Lex* e, const Cell* a)
 {
@@ -131,11 +153,14 @@ Cell* builtin_symbol_equal_pred(const Lex* e, const Cell* a)
             return False_Obj;
         }
     }
-    /* If we get here, we're equal */
+    /* If we get here, we're equal. */
     return True_Obj;
 }
 
 
+/* (string->symbol string )
+ * Returns the symbol whose name is string. This procedure can create symbols with names containing special characters
+ * that would require escaping when written, but does not interpret escapes in its input. */
 Cell* builtin_string_to_symbol(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -150,6 +175,9 @@ Cell* builtin_string_to_symbol(const Lex* e, const Cell* a)
 }
 
 
+/* (symbol->string symbol)
+ * Returns the name of symbol as a string, but without adding escapes. It is an error to apply mutation procedures like
+ * string-set! to strings returned by this procedure. */
 Cell* builtin_symbol_to_string(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -164,8 +192,8 @@ Cell* builtin_symbol_to_string(const Lex* e, const Cell* a)
 }
 
 
-/* This may not belong in this file - but it's a short file,
- * and is as good a place as any to define this. */
+/* (features)
+ * Returns a list of the feature identifiers which cond-expand treats as true. It is an error to modify this list. */
 Cell* builtin_features(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -192,6 +220,7 @@ Cell* builtin_features(const Lex* e, const Cell* a)
     if (uname(&uts) == -1) {
         fprintf(stderr, "uname failed: %s\n", strerror(errno));
     }
+    /* Add OS and arch. */
     cell_add(result_l, make_cell_symbol(uts.sysname));
     cell_add(result_l, make_cell_symbol(uts.machine));
 

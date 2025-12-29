@@ -26,27 +26,31 @@
 #include <stdint.h>
 
 
-/* This is only for special forms that are manually
- * implemented in special_forms.c -- do not add
- * transformed syntax here! */
 typedef enum : int8_t {
+    /* These are the SFs that are implemented primitively. */
     SF_ID_DEFINE = 1,
     SF_ID_QUOTE,
     SF_ID_LAMBDA,
     SF_ID_IF,
-    SF_ID_WHEN,
-    SF_ID_UNLESS,
-    SF_ID_COND,
     SF_ID_IMPORT,
     SF_ID_LET,
-    SF_ID_LET_STAR,
     SF_ID_LETREC,
     SF_ID_SET_BANG,
     SF_ID_BEGIN,
     SF_ID_AND,
+    SF_ID_DEBUG,
+    /* These are the SFs implemented as transforms. */
+    SF_ID_LET_STAR = 50,
     SF_ID_OR,
-    SF_ID_ELSE
+    SF_ID_WHEN,
+    SF_ID_UNLESS,
+    SF_ID_COND,
+    SF_ID_ELSE,
+    SF_ID_CASE,
+    SF_ID_LETREC_STAR,
+    SF_ID_DO
 } SpecialFormID;
+
 
 /* Declarations of Global Symbols for Special Forms */
 extern Cell* G_define_sym;
@@ -60,21 +64,25 @@ extern Cell* G_case_sym;
 extern Cell* G_import_sym;
 extern Cell* G_let_sym;
 extern Cell* G_let_star_sym;
+extern Cell* G_letrec_star_sym;
 extern Cell* G_letrec_sym;
 extern Cell* G_set_bang_sym;
 extern Cell* G_begin_sym;
 extern Cell* G_and_sym;
 extern Cell* G_or_sym;
 extern Cell* G_do_sym;
+extern Cell* G_arrow_sym;
 extern Cell* G_else_sym;
+extern Cell* G_debug_sym;
 
-/* The global symbol table */
+
+/* The global symbol table. */
 extern ht_table* symbol_table;
 
-/* SF initialization function */
+/* SF initialization function. */
 void init_special_forms(void);
 
-/* Builtin procedures */
+/* Builtin symbol procedures. */
 Cell* builtin_string_to_symbol(const Lex* e, const Cell* a);
 Cell* builtin_symbol_to_string(const Lex* e, const Cell* a);
 Cell* builtin_symbol_equal_pred(const Lex* e, const Cell* a);
