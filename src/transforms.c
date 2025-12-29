@@ -24,7 +24,7 @@
 
 static int gen_sym_counter = 0;
 
-Cell* gen_sym(const char* prefix) {
+static Cell* gen_sym(const char* prefix) {
     char name[64];
     /* Use the prefix "_" to further distinguish from user symbols. */
     snprintf(name, sizeof(name), "_%s%d", prefix, gen_sym_counter++);
@@ -135,6 +135,182 @@ Cell* expand_body_expressions(const Cell* body_elements, const int start_index) 
 }
 
 
+/* (when ⟨test⟩ ⟨expression1⟩ ⟨expression2⟩ ... )
+ * The test is evaluated, and if it evaluates to a true value, the expressions are evaluated in
+ * order. The result of the 'when' expression is unspecified, per R7RS, but Cozenage returns the value
+ * of the last expression evaluated, or null if the test evaluates to #f. */
+static Cell* expand_when(const Cell* c) {
+    /* (when test body...) */
+    if (c->count < 3) {
+        return make_cell_error(
+            "when: missing test or body",
+            SYNTAX_ERR);
+    }
+
+    Cell* result = make_cell_sexpr();
+    cell_add(result, G_if_sym);
+    cell_add(result, expand(c->cell[1]));  /* The test. */
+
+    /* The 'then' branch: wrap body in begin/letrec. */
+    cell_add(result, expand_body_expressions(c, 2));
+
+    /* The 'else' branch: return unspecified/void. */
+    cell_add(result, USP_Obj);
+
+    return result;
+}
+
+
+/*  (unless ⟨test⟩ ⟨expression1⟩ ⟨expression2⟩ ... )
+ *  The test is evaluated, and if it evaluates to #f, the expressions are evaluated in order. The
+ *  result of the unless expression is unspecified, per R7RS, but Cozenage returns the value of the
+ *  last expression evaluated, or null if the test is truthy. */
+static Cell* expand_unless(const Cell* c) {
+    /* (unless test body...) */
+    if (c->count < 3) {
+        return make_cell_error(
+            "unless: missing test or body",
+            SYNTAX_ERR);
+    }
+
+    Cell* result = make_cell_sexpr();
+    cell_add(result, G_if_sym);
+    cell_add(result, expand(c->cell[1]));  /* The test. */
+
+    /* The 'then' branch: unless is false when the test is true. */
+    cell_add(result, USP_Obj);
+
+    /* The 'else' branch: wrap body in begin/letrec. */
+    cell_add(result, expand_body_expressions(c, 2));
+
+    return result;
+}
+
+
+/* (or ⟨test1⟩ ... )
+ * The ⟨test⟩ expressions are evaluated from left to right, and the value of the first expression
+ * that evaluates to a true value is returned. Any remaining expressions are not evaluated. If all
+ * expressions evaluate to #f or if there are no expressions, then #f is returned. */
+static Cell* expand_or(const Cell* c) {
+    /* (or) -> #f. */
+    if (c->count == 1) return False_Obj;
+
+    /* (or e1) -> e1. */
+    if (c->count == 2) return expand(c->cell[1]);
+
+    /* (or e1 e2 ...). ->
+       (let ((tmp e1)) (if tmp tmp (or e2 ...))) */
+    Cell* tmp_sym = gen_sym("or");
+
+    /* (or e2 ...). */
+    Cell* rest_or = make_cell_sexpr();
+    cell_add(rest_or, G_or_sym);
+    for (int i = 2; i < c->count; i++) {
+        cell_add(rest_or, c->cell[i]);
+    }
+
+    /* (if tmp tmp (or ...)). */
+    Cell* if_expr = make_cell_sexpr();
+    cell_add(if_expr, G_if_sym);
+    cell_add(if_expr, tmp_sym);
+    cell_add(if_expr, tmp_sym);
+    cell_add(if_expr, rest_or);
+
+    /* (let ((tmp e1)) if_expr). */
+    Cell* binding_pair = make_cell_sexpr();
+    cell_add(binding_pair, tmp_sym);
+    cell_add(binding_pair, expand(c->cell[1]));
+
+    Cell* bindings = make_cell_sexpr();
+    cell_add(bindings, binding_pair);
+
+    Cell* let_expr = make_cell_sexpr();
+    cell_add(let_expr, G_let_sym);
+    cell_add(let_expr, bindings);
+    cell_add(let_expr, if_expr);
+
+    return expand(let_expr); /* Recurse to handle the rest_or. */
+}
+
+
+/* (letrec* ⟨bindings⟩ ⟨body⟩)
+ * ⟨Bindings⟩ has the form (⟨variable1⟩ ⟨init1⟩) ...), and ⟨body⟩ is a sequence of zero or more definitions followed by
+ * one or more expressions. It is an error for a ⟨variable⟩ to appear more than once in the list of variables being
+ * bound.
+ *
+ * Semantics: The ⟨variable⟩s are bound to fresh locations, each ⟨variable⟩ is assigned in left-to-right order to the
+ * result of evaluating the corresponding ⟨init⟩, the ⟨body⟩ is evaluated in the resulting environment, and the values
+ * of the last expression in ⟨body⟩ are returned. Despite the left- to-right evaluation and assignment order, each
+ * binding of a ⟨variable⟩ has the entire letrec* expression as its region, making it possible to define mutually
+ * recursive procedures.
+ *
+ * If it is not possible to evaluate each ⟨init⟩ without assigning or referring to the value of the corresponding
+ * ⟨variable⟩ or the ⟨variable⟩ of the bindings that follow it in ⟨bindings⟩, it is an error. Another restriction is
+ * that it is an error to invoke the continuation of an ⟨init⟩ more than once. */
+static Cell* expand_letrec_star(const Cell* c) {
+    /* (letrec* ((var init) ...) body...) */
+    if (c->count < 3) return make_cell_error(
+        "letrec*: malformed expression",
+        SYNTAX_ERR);
+
+    const Cell* bindings = c->cell[1];
+
+    /* Base case: (letrec* () body...) -> (letrec () body...) */
+    /* Check this FIRST before accessing any cells! */
+    if (bindings->count == 0) {
+        Cell* res = make_cell_sexpr();
+        cell_add(res, G_letrec_sym);
+        cell_add(res, make_cell_sexpr());
+        for (int i = 2; i < c->count; i++) {
+            cell_add(res, expand(c->cell[i]));
+        }
+        return res;
+    }
+
+    /* Peeling: (letrec* ((v1 i1) (v2 i2) ...) body...)
+       becomes (letrec ((v1 i1)) (letrec* ((v2 i2) ...) body...)) */
+
+    Cell* first_pair = bindings->cell[0];
+
+    /* Build the list of rest bindings. */
+    Cell* rest_bindings = make_cell_sexpr();
+    for (int i = 1; i < bindings->count; i++) {
+        cell_add(rest_bindings, bindings->cell[i]);
+    }
+
+    /* Build the inner letrec* expression. */
+    Cell* inner_letrec_star = make_cell_sexpr();
+    cell_add(inner_letrec_star, G_letrec_star_sym);
+    cell_add(inner_letrec_star, rest_bindings);
+    for (int i = 2; i < c->count; i++) {
+        cell_add(inner_letrec_star, c->cell[i]);
+    }
+
+    /* Build the outer letrec expression:
+     * (letrec (first_pair) inner_letrec_star). */
+    Cell* outer_letrec = make_cell_sexpr();
+    cell_add(outer_letrec, G_letrec_sym);
+
+    Cell* outer_bindings_list = make_cell_sexpr();
+    cell_add(outer_bindings_list, first_pair);
+    cell_add(outer_letrec, outer_bindings_list);
+
+    cell_add(outer_letrec, inner_letrec_star);
+
+    /* Return to the expander. It will see the 'letrec', process it,
+       then see the 'inner_letrec_star' and recurse back here. */
+    return expand(outer_letrec);
+}
+
+
+/* (let* ⟨bindings⟩ ⟨body⟩) where ⟨Bindings⟩ has the form ((⟨variable1⟩ ⟨init1⟩) ...)
+ * where each ⟨init⟩ is an expression, and ⟨body⟩ is a sequence of zero or more definitions followed
+ * by a sequence of one or more expressions.
+ *
+ * The let* binding construct is similar to let, but the bindings are performed sequentially from
+ * left to right. Also, the region of a binding indicated by (⟨variable⟩ ⟨init⟩) is that part of the
+ * let* expression to the right of the binding. Thus, the second binding is done in an environment
+ * in which the first binding is visible, and so on. The ⟨variable⟩s need not be distinct. */
 static Cell* expand_let_star(const Cell* c) {
     /* c is (let* ((var init) ...) body...) */
     if (c->count < 3) return make_cell_error("let*: malformed expression", SYNTAX_ERR);
@@ -186,8 +362,122 @@ static Cell* expand_let_star(const Cell* c) {
 }
 
 
+/* (cond ⟨clause1⟩ ⟨clause2⟩ ... )
+ * where ⟨clause⟩ is (⟨test⟩ ⟨expression1⟩ ...) OR (⟨test⟩ => ⟨expression⟩)
+ * The last ⟨clause⟩ can be an “else clause”. A cond expression is evaluated by evaluating the
+ * ⟨test⟩ expressions of successive ⟨clause⟩s in order until one of them evaluates to a true value.
+ * When a ⟨test⟩ evaluates to a true value, the remaining ⟨expression⟩s in its ⟨clause⟩ are
+ * evaluated in order, and the results of the last ⟨expression⟩ in the ⟨clause⟩ are returned as the
+ * results of the entire cond expression.
+ *
+ * If the selected ⟨clause⟩ contains only the ⟨test⟩ and no ⟨expression⟩s, then the value of the
+ * ⟨test⟩ is returned as the result. If the selected ⟨clause⟩ uses the => alternate form, then the
+ * ⟨expression⟩ is evaluated. It is an error if its value is not a procedure that accepts one
+ * argument. This procedure is then called on the value of the ⟨test⟩ and the values returned by
+ * this procedure are returned by the cond expression.
+ *
+ * If all ⟨test⟩s evaluate to #f, and there is no else clause, then the result of the conditional
+ * expression is unspecified; if there is an else clause, then its ⟨expression⟩s are evaluated in
+ * order, and the values of the last one are returned.
+ */
+static Cell* expand_cond(const Cell* c) {
+    if (c->count < 2) return make_cell_error(
+        "cond: malformed",
+        SYNTAX_ERR);
+
+    /* Get the first clause: (test ...) */
+    const Cell* clause = c->cell[1];
+    Cell* test = clause->cell[0];
+
+    /* Helper: build the 'else' branch (the rest of the cond). */
+    Cell* rest_cond;
+    if (c->count > 2) {
+        rest_cond = make_cell_sexpr();
+        cell_add(rest_cond, G_cond_sym);
+        for (int i = 2; i < c->count; i++) {
+            cell_add(rest_cond, c->cell[i]);
+        }
+    } else {
+        rest_cond = USP_Obj;
+    }
+
+    /* Handle Else: (else body...). */
+    if (is_same_symbol(test, G_else_sym)) {
+        return expand_body_expressions(clause, 1);
+    }
+
+    /* Handle Arrow: (test => proc) */
+    if (clause->count == 3 && is_same_symbol(clause->cell[1], G_arrow_sym)) {
+        Cell* tmp = gen_sym("cond");
+
+        /* (let ((tmp test)) (if tmp (proc tmp) rest_cond)). */
+        Cell* let_expr = make_cell_sexpr();
+        cell_add(let_expr, G_let_sym);
+
+        Cell* bindings = make_cell_sexpr();
+        Cell* pair = make_cell_sexpr();
+        cell_add(pair, tmp);
+        cell_add(pair, expand(test));
+        cell_add(bindings, pair);
+        cell_add(let_expr, bindings);
+
+        Cell* if_expr = make_cell_sexpr();
+        cell_add(if_expr, G_if_sym);
+        cell_add(if_expr, tmp);
+
+        Cell* call = make_cell_sexpr();
+        cell_add(call, expand(clause->cell[2]));
+        cell_add(call, tmp);
+        cell_add(if_expr, call);
+        cell_add(if_expr, rest_cond);
+
+        cell_add(let_expr, if_expr);
+        return expand(let_expr);
+    }
+
+    /* Handle Test-Only: (test) */
+    if (clause->count == 1) {
+        Cell* tmp = gen_sym("cond");
+
+        /* (let ((tmp test)) (if tmp tmp rest_cond)). */
+        Cell* let_expr = make_cell_sexpr();
+        cell_add(let_expr, G_let_sym);
+
+        Cell* bindings = make_cell_sexpr();
+        Cell* pair = make_cell_sexpr();
+        cell_add(pair, tmp);
+        cell_add(pair, expand(test));
+        cell_add(bindings, pair);
+        cell_add(let_expr, bindings);
+
+        Cell* if_expr = make_cell_sexpr();
+        cell_add(if_expr, G_if_sym);
+        cell_add(if_expr, tmp);
+        cell_add(if_expr, tmp);
+        cell_add(if_expr, rest_cond);
+
+        cell_add(let_expr, if_expr);
+        return expand(let_expr);
+    }
+
+    /* Standard Clause: (test body...). */
+    Cell* if_expr = make_cell_sexpr();
+    cell_add(if_expr, G_if_sym);
+    cell_add(if_expr, expand(test));
+    cell_add(if_expr, expand_body_expressions(clause, 1));
+    cell_add(if_expr, rest_cond);
+
+    return expand(if_expr);
+}
+
+
+/* (let ⟨variable⟩ ⟨bindings⟩ ⟨body⟩)
+ * Semantics: “Named let” is a variant on the syntax of let which provides a more general looping construct than do and
+ * can also be used to express recursion. It has the same syntax and semantics as ordinary let except that ⟨variable⟩ is
+ * bound within ⟨body⟩ to a procedure whose formal arguments are the bound variables and whose body is ⟨body⟩. Thus the
+ * execution of ⟨body⟩ can be repeated by invoking the procedure named by ⟨variable⟩. */
 static Cell* expand_named_let(const Cell* c) {
-    /* c is (let name ((var init) ...) body...) */
+    /* c is (let name ((var init) ...) body...). */
     Cell* name = c->cell[1];
     const Cell* bindings = c->cell[2];
 
@@ -199,16 +489,16 @@ static Cell* expand_named_let(const Cell* c) {
         cell_add(inits, expand(bindings->cell[i]->cell[1]));
     }
 
-    /* Build the lambda: (lambda (vars...) body...) */
+    /* Build the lambda: (lambda (vars...) body...). */
     Cell* lambda = make_cell_sexpr();
     cell_add(lambda, G_lambda_sym);
     cell_add(lambda, vars);
-    /* Add all body expressions (starting from index 3 in the original let) */
+    /* Add all body expressions (starting from index 3 in the original let). */
     for (int i = 3; i < c->count; i++) {
         cell_add(lambda, expand(c->cell[i]));
     }
 
-    /* Build the letrec: (letrec ((name lambda)) (name inits...)) */
+    /* Build the letrec: (letrec ((name lambda)) (name inits...)). */
     Cell* lr_binding_pair = make_cell_sexpr();
     cell_add(lr_binding_pair, name);
     cell_add(lr_binding_pair, lambda);
@@ -231,71 +521,122 @@ static Cell* expand_named_let(const Cell* c) {
 }
 
 
+/* (do ((⟨variable1⟩ ⟨init1⟩ ⟨step1⟩) ...)
+ *     (⟨test⟩ ⟨expression⟩ ...) ⟨command⟩ ...)
+ * Syntax: All of ⟨init⟩, ⟨step⟩, ⟨test⟩, and ⟨command⟩ are expressions.
+ *
+ * Semantics: A do expression is an iteration construct. It specifies a set of variables to be bound, how they are to be
+ * initialized at the start, and how they are to be updated on each iteration. When a termination condition is met, the
+ * loop exits after evaluating the ⟨expression⟩s.
+ *
+ * A do expression is evaluated as follows: The ⟨init⟩ expressions are evaluated (in some unspecified order), the
+ * ⟨variable⟩s are bound to fresh locations, the results of the ⟨init⟩ expressions are stored in the bindings of the
+ * ⟨variable⟩s, and then the iteration phase begins.
+ *
+ * Each iteration begins by evaluating ⟨test⟩; if the result is false (see section 6.3), then the ⟨command⟩ expressions
+ * are evaluated in order for effect, the ⟨step⟩ expressions are evaluated in some unspecified order, the ⟨variable⟩s
+ * are bound to fresh locations, the results of the ⟨step⟩s are stored in the bindings of the ⟨variable⟩s, and the next
+ * iteration begins.
+ *
+ * If ⟨test⟩ evaluates to a true value, then the ⟨expression⟩s are evaluated from left to right and the values of the
+ * last ⟨expression⟩ are returned. If no ⟨expression⟩s are present, then the value of the do expression is unspecified.
+ *
+ * The region of the binding of a ⟨variable⟩ consists of the entire do expression except for the ⟨init⟩s. It is an
+ * error for a ⟨variable⟩ to appear more than once in the list of do variables.
+ *
+ * A ⟨step⟩ can be omitted, in which case the effect is the same as if (⟨variable⟩ ⟨init⟩ ⟨variable⟩) had been written
+ * instead of (⟨variable⟩ ⟨init⟩). */
 static Cell* expand_do(const Cell* c) {
-    /* c is (do ((var init step) ...) (test expr) body...). */
-    if (c->count < 3) return make_cell_error("Malformed do expression", SYNTAX_ERR);
+    if (c->count < 3) return make_cell_error(
+        "Malformed do expression",
+        SYNTAX_ERR);
 
     const Cell* bindings_input = c->cell[1];
     const Cell* test_clause = c->cell[2];
 
-    /* Build the (var init) bindings for the Named Let. */
+    /* Use ONE symbol for the loop name to ensure pointer equality. */
+    Cell* loop_name = make_cell_symbol("loop");
+
     Cell* let_bindings = make_cell_sexpr();
-    /* Build the (step1 step2 ...) list for the recursive call. */
     Cell* loop_steps = make_cell_sexpr();
-    cell_add(loop_steps, make_cell_symbol("loop")); /* The name of our named let. */
+    cell_add(loop_steps, loop_name);
 
     for (int i = 0; i < bindings_input->count; i++) {
         const Cell* b = bindings_input->cell[i];
-        /* b is (var init step). */
 
-        /* Add (var init) to let_bindings. */
         Cell* binding_pair = make_cell_sexpr();
-        cell_add(binding_pair, b->cell[0]); /* var */
-        cell_add(binding_pair, expand(b->cell[1])); /* init */
+        cell_add(binding_pair, b->cell[0]);
+        cell_add(binding_pair, expand(b->cell[1]));
         cell_add(let_bindings, binding_pair);
 
-        /* If there's a step, use it; otherwise, the var stays the same. */
         if (b->count > 2) {
-            cell_add(loop_steps, expand(b->cell[2])); /* step */
+            cell_add(loop_steps, expand(b->cell[2]));
         } else {
-            cell_add(loop_steps, b->cell[0]); /* var (stays same) */
+            cell_add(loop_steps, b->cell[0]);
         }
     }
 
-    /* Build the body of the loop. */
+    /* Build the IF logic. */
     Cell* if_expr = make_cell_sexpr();
     cell_add(if_expr, G_if_sym);
-    cell_add(if_expr, expand(test_clause->cell[0])); /* The test */
+    cell_add(if_expr, expand(test_clause->cell[0]));
 
-    /* If test is true, return the result-expr (or unspecified if empty). */
+    /* The test clause can have multiple expressions (R7RS) */
+    /* (test expr1 expr2 ...) should run all and return the last. */
     if (test_clause->count > 1) {
-        cell_add(if_expr, expand(test_clause->cell[1]));
+        Cell* test_result_body = make_cell_sexpr();
+        cell_add(test_result_body, G_begin_sym);
+
+        for (int i = 1; i < test_clause->count; i++) {
+            cell_add(test_result_body, expand(test_clause->cell[i]));
+        }
+
+        cell_add(if_expr, test_result_body);
     } else {
         cell_add(if_expr, USP_Obj);
     }
 
-    /* If test is false, run body AND then loop. */
     Cell* begin_block = make_cell_sexpr();
     cell_add(begin_block, G_begin_sym);
-    /* Add original body expressions. */
+
     for (int i = 3; i < c->count; i++) {
         cell_add(begin_block, expand(c->cell[i]));
     }
-    /* Add the recursive call: (loop step1 step2 ...). */
+
     cell_add(begin_block, loop_steps);
     cell_add(if_expr, begin_block);
 
-    /* Wrap everything in the Named Let: (let loop (bindings) if_expr). */
+    /* Wrap in Named Let. */
     Cell* named_let = make_cell_sexpr();
     cell_add(named_let, G_let_sym);
-    cell_add(named_let, make_cell_symbol("loop"));
+    cell_add(named_let, loop_name);
     cell_add(named_let, let_bindings);
     cell_add(named_let, if_expr);
 
-    return named_let;
+    /* Expand the resulting named let. */
+    return expand(named_let);
 }
 
 
+/* (case ⟨key⟩ ⟨clause 1⟩ ⟨clause 2⟩ ... )
+ * Syntax: ⟨Key⟩ can be any expression. Each ⟨clause⟩ has the form ((⟨datum1⟩ ...) ⟨expression1⟩ ⟨expression2⟩ ...),
+ * where each ⟨datum⟩ is an external representation of some object. It is an error if any of the ⟨datum⟩s are the same
+ * anywhere in the expression. Alternatively, a ⟨clause⟩ can be of the form ((⟨datum1⟩ ...) => ⟨expression⟩).
+ * The last ⟨clause⟩ can be an “else clause,” which has one of the forms (else ⟨expression1⟩ ⟨expression2⟩ ...) or
+ * (else => ⟨expression⟩).
+ *
+ * Semantics: A case expression is evaluated as follows. ⟨Key⟩ is evaluated and its result is compared against each
+ * ⟨datum⟩. If the result of evaluating ⟨key⟩ is the same (in the sense of eqv?; see section 6.1) to a ⟨datum⟩, then the
+ * expressions in the corresponding ⟨clause⟩ are evaluated in order and the results of the last expression in the
+ * ⟨clause⟩ are returned as the results of the case expression.
+ *
+ * If the result of evaluating ⟨key⟩ is different from every ⟨datum⟩, then if there is an else clause, its expressions
+ * are evaluated and the results of the last are the results of the case expression; otherwise the result of the case
+ * expression is unspecified.
+ *
+ * If the selected ⟨clause⟩ or else clause uses the => alternate form, then the ⟨expression⟩ is evaluated. It is an
+ * error if its value is not a procedure accepting one argument. This procedure is then called on the value of the ⟨key⟩
+ * and the values returned by this procedure are returned by the case expression. */
 static Cell* expand_case(const Cell* c) {
     /* c is (case key clauses...). */
     if (c->count < 3) return make_cell_error(
@@ -392,6 +733,7 @@ static Cell* expand_recursive(const Cell* c)
     return result;
 }
 
+
 Cell* expand(Cell* c) {
     /* Base case: only S-expressions can be expanded */
     if (c->type != CELL_SEXPR || c->count == 0) return c;
@@ -399,31 +741,56 @@ Cell* expand(Cell* c) {
     const Cell* head = c->cell[0];
 
     if (head->type == CELL_SYMBOL) {
-        /* DEFINE (Primitive-ish) */
+        /* 'define' - primitive - transform nested 'define's into 'let's. */
         if (is_same_symbol(head, G_define_sym) && c->count > 2 && c->cell[1]->type == CELL_SEXPR) {
             return expand_define(c);
         }
 
-        /* LAMBDA (Primitive-ish) */
+        /* 'lambda' - primitive - sequence body expressions in (begin ... ) expression. */
         if (is_same_symbol(head, G_lambda_sym) && c->count > 2) {
             return expand_lambda(c);
         }
 
-        /* CASE (Transform -> Let)
-           We call expand() on the result to turn that 'let' into a 'letrec' or recurse. */
+        /* 'cond' - derived - transform into nested 'if's. */
+        if (is_same_symbol(head, G_cond_sym)) {
+            return expand_cond(c);
+        }
+
+        /* 'case' - derived - transform into named let, then
+         * transform that 'let' into a 'letrec' or recurse. */
         if (is_same_symbol(head, G_case_sym)) {
             return expand(expand_case(c));
         }
 
-        /* DO (Transform -> Named Let)
-           Recursing here ensures the Named Let becomes a letrec. */
+        /* 'do' - derived - transform into named let, then
+           recurse so the named let becomes a letrec. */
         if (is_same_symbol(head, G_do_sym)) {
             return expand(expand_do(c));
         }
 
-        /* LET* (Transform -> nested Let(s) */
+        /* 'let*' - derived - transform into nested 'let's. */
         if (is_same_symbol(head, G_let_star_sym)) {
             return expand_let_star(c);
+        }
+
+        /* letrec* - derived - transform into nested 'letrec's. */
+        if (is_same_symbol(head, G_letrec_star_sym)) {
+            return expand_letrec_star(c);
+        }
+
+        /* 'when' - derived - transform into 'if's. */
+        if (is_same_symbol(head, G_when_sym)) {
+            return expand_when(c);
+        }
+
+        /* UNLESS (Transform -> if) */
+        if (is_same_symbol(head, G_unless_sym)) {
+            return expand_unless(c);
+        }
+
+        /* OR (Transform -> nested let(s) and if(s)) */
+        if (is_same_symbol(head, G_or_sym)) {
+            return expand_or(c);
         }
 
         /* 5. LET */
