@@ -63,13 +63,13 @@ Lex* new_child_env(const Lex* parent_env)
     e->parent = parent_env->local;
 
     Lex* w = GC_MALLOC(sizeof(Lex));
-    w->local = e; /* The new wrapper points to the new local frame */
+    w->local = e; /* The new wrapper points to the new local frame. */
     w->global = parent_env->global;
     return w;
 }
 
 
-/* Retrieve a Cell* value from an environment */
+/* Retrieve a Cell* value from an environment. */
 Cell* lex_get(const Lex* e, const Cell* k)
 {
     if (!e || !k || k->type != CELL_SYMBOL) return nullptr;
@@ -120,15 +120,14 @@ void lex_put_local(Lex* e, const Cell* k, const Cell* v)
     /* Check if symbol already exists. */
     for (int i = 0; i < e->local->count; i++) {
         if (strcmp(e->local->syms[i], k->sym) == 0) {
-            /* Free the old value and replace it with v */
-            GC_FREE(e->local->vals[i]);
+            /* Replace the old value with v. */
             e->local->vals[i] = (Cell*)v;
             return;
         }
     }
     /* Symbol not found; append new entry. */
     e->local->count++;
-    e->local->syms[e->local->count - 1] = GC_strdup(k->sym);
+    e->local->syms[e->local->count - 1] = k->sym;
     e->local->vals[e->local->count - 1] = (Cell*)v;
 }
 

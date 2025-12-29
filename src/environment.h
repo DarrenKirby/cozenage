@@ -22,25 +22,26 @@
 
 #include "hash.h"
 
+
 typedef struct Ch_Env Ch_Env;
 
 #define INITIAL_CHILD_ENV_CAPACITY 4
 
 /* Wrapper which holds the current child-env (if any), and a
- * pointer to the global env hash table */
+ * pointer to the global env hash table. */
 typedef struct Lex {
-    Ch_Env* local;     /* The current local scope */
-    ht_table* global;  /* The global hash table */
+    Ch_Env* local;     /* The current local scope. */
+    ht_table* global;  /* The global hash table. */
 } Lex;
 
 
 /* Just parallel arrays for small, short-lived child environments */
 typedef struct Ch_Env {
-    int count;              /* Number of occupied slots */
-    int capacity;           /* Allocated slots */
-    char** syms;            /* symbol names */
-    Cell** vals;            /* values */
-    Ch_Env* parent;         /* points to parent env, NULL if top-level */
+    int count;              /* Number of occupied slots. */
+    int capacity;           /* Allocated slots. */
+    char** syms;            /* symbol names. */
+    Cell** vals;            /* values. */
+    Ch_Env* parent;         /* points to parent env, NULL if top-level. */
 } Ch_Env;
 
 
