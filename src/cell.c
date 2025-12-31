@@ -427,6 +427,48 @@ Cell* make_cell_bigfloat(const char* s)
 }
 
 
+Cell* make_cell_promise(Cell* expr, Lex* env)
+{
+    /* Allocate Cell */
+    Cell* v = GC_MALLOC(sizeof(Cell));
+    if (!v) {
+        fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
+        exit(EXIT_FAILURE);
+    }
+    v->type = CELL_PROMISE;
+    /* Allocate promise struct */
+    v->promise = GC_MALLOC(sizeof(promise));
+    v->promise->expr = expr;
+    /* Optimization - if expr is atomic, just set as DONE */
+    const int mask = CELL_BOOLEAN|CELL_CHAR|CELL_INTEGER|CELL_RATIONAL|
+        CELL_REAL|CELL_COMPLEX|CELL_STRING;
+    if (expr->type & mask) {
+        v->promise->status = DONE;
+        v->promise->env = nullptr;
+    } else {
+        v->promise->status = READY;
+        v->promise->env = env;
+    }
+    return v;
+}
+
+
+Cell* make_cell_stream(Cell* head, Cell* tail_promise) {
+    /* Safety check: Ensure the tail is actually a promise. */
+    if (tail_promise->type != CELL_PROMISE) {
+        return make_cell_error(
+            "Stream tail must be a promise",
+            TYPE_ERR);
+    }
+
+    Cell* v = GC_MALLOC(sizeof(Cell));
+    v->type = CELL_STREAM;
+    v->head = head;
+    v->tail = tail_promise;
+    return v;
+}
+
+
 /*------------------------------------------------*
  *    Cell accessors, destructors, and helpers    *
  * -----------------------------------------------*/
@@ -465,32 +507,37 @@ Cell* cell_copy(const Cell* v) {
         copy->integer_v = v->integer_v;
         copy->exact = v->exact;
         break;
+
     case CELL_REAL:
         copy->real_v = v->real_v;
         copy->exact = v->exact;
         break;
+
     case CELL_BOOLEAN:
-        /* Not sure why we would ever copy a boolean Cell, but just in case
-         we will just return the global #t or #f singleton. */
-        copy = make_cell_boolean(v->boolean_v);
+        copy->boolean_v = v->boolean_v;
         break;
+
     case CELL_CHAR:
         copy->char_v = v->char_v;
         break;
+
     case CELL_SYMBOL:
         /* Symbols are interned, just grab the pointer. */
         copy = (Cell*)v;
         break;
+
     case CELL_STRING:
         copy->str = GC_strdup(v->str);
         copy->count = v->count;
         copy->char_count = v->char_count;
         copy->ascii = v->ascii;
         break;
+
     case CELL_ERROR:
         copy->error_v = GC_strdup(v->error_v);
         copy->err_t = v->err_t;
         break;
+
     case CELL_PROC:
         if (v->is_builtin) {
             copy->is_builtin = true;
@@ -505,6 +552,7 @@ Cell* cell_copy(const Cell* v) {
             copy->lambda->env = v->lambda->env;   /* DO NOT copy environments; share the pointer. */
         }
         break;
+
     case CELL_SEXPR:
     case CELL_VECTOR:
         copy->count = v->count;
@@ -517,24 +565,28 @@ Cell* cell_copy(const Cell* v) {
             copy->cell[i] = cell_copy(v->cell[i]);
         }
         break;
+
     case CELL_PAIR: {
         copy->car = cell_copy(v->car);
         copy->cdr = cell_copy(v->cdr);
         copy->len = v->len;
         break;
     }
+
     case CELL_RATIONAL: {
         copy->exact = v->exact;
         copy->num = v->num;
         copy->den = v->den;
         break;
     }
+
     case CELL_COMPLEX: {
         copy->exact = v->exact;
         copy->real = cell_copy(v->real);
         copy->imag = cell_copy(v->imag);
         break;
     }
+
     case CELL_PORT: {
         copy->is_open = v->is_open;
         copy->port = GC_MALLOC(sizeof(port));
@@ -544,10 +596,30 @@ Cell* cell_copy(const Cell* v) {
         copy->port->path = GC_strdup(v->port->path);
         break;
     }
+
+    case CELL_PROMISE: {
+        copy->promise = GC_MALLOC(sizeof(promise));
+        copy->promise->status = v->promise->status;
+        copy->promise->expr = cell_copy(v->promise->expr);
+        if (v->promise->env == nullptr) {
+            copy->promise->env = nullptr;
+        } else {
+            copy->promise->env = v->promise->env; /* DO NOT copy environments; share the pointer. */
+        }
+        break;
+    }
+
+    case CELL_STREAM: {
+        copy->head = cell_copy(v->head);
+        copy->tail = cell_copy(v->tail);
+        break;
+    }
+
     case CELL_BIGINT:
         copy->bi = GC_MALLOC(sizeof(mpz_t));
         copy->bi = v->bi;
         break;
+
     /* Return the singleton objects instead of allocating for these types. */
     case CELL_NIL:
         return make_cell_nil();
