@@ -87,9 +87,10 @@ Cell* coz_eval(Lex* env, Cell* expr)
         /* Grab first element without evaluating yet. */
         if (expr->count == 0) {
             /* Unquoted "()" */
-            return make_cell_error(
-                "bad expression: '()'",
-                SYNTAX_ERR);
+            return Nil_Obj;
+            // return make_cell_error(
+            //     "bad expression: '()'",
+            //     SYNTAX_ERR);
         }
 
         Cell* first = expr->cell[0];
@@ -98,6 +99,11 @@ Cell* coz_eval(Lex* env, Cell* expr)
          * eval_sexpr() early, so the arguments are not evaluated. */
         if (first->type == CELL_SYMBOL && first->sf_id > 0) {
             const special_form_handler_t handler = SF_DISPATCH_TABLE[first->sf_id];
+            if (!handler) {
+                return make_cell_error(
+                    fmt_err("special form: '%s' not registered (did you forget to import?)", first->sym),
+                    SYNTAX_ERR);
+            }
             const HandlerResult result = handler(env, get_args_from_sexpr(expr));
             /* ACTION_RETURN final value. */
             if (result.action == ACTION_RETURN) {
@@ -129,13 +135,12 @@ Cell* coz_eval(Lex* env, Cell* expr)
         /* Now, evaluate each argument within this new list. */
         for (int i = 0; i < args->count; i++) {
             Cell* result = coz_eval(env, args->cell[i]);
-            /* Ignore legitimate null */
+            /* Ignore legitimate null. */
             if (!result) { continue; }
             args->cell[i] = result;
 
             if (args->cell[i]->type == CELL_ERROR) {
                 /* If an argument evaluation fails, return the error. */
-                //return cell_take(args, i);
                 return args->cell[i];
             }
         }
