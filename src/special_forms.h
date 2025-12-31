@@ -38,7 +38,6 @@ typedef struct {
 
 int is_syntactic_keyword(const Cell* s);
 Lex* build_lambda_env(const Lex* env, Cell* formals, Cell* args);
-Cell* sequence_sf_body(const Cell* body);
 
 
 /* Special form primitives. */
@@ -52,6 +51,8 @@ HandlerResult sf_letrec(Lex* e, Cell* a);
 HandlerResult sf_set_bang(Lex* e, Cell* a);
 HandlerResult sf_begin(Lex* e, Cell* a);
 HandlerResult sf_and(Lex* e, Cell* a);
+HandlerResult sf_delay(Lex* e, Cell* a);
+HandlerResult sf_stream(Lex* e, Cell* a);
 HandlerResult sf_with_gc_stats(Lex* env, Cell* a);
 
 #endif //COZENAGE_SPECIAL_FORMS_H

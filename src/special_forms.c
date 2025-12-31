@@ -65,7 +65,7 @@ Lex* build_lambda_env(const Lex* env, Cell* formals, Cell* args)
         return local_env;
     }
 
-    /* Standard or dotted-tail (lambda (a b) ...) or (lambda (a . r) ...) */
+    /* Standard or dotted-tail (lambda (a b) ...) or (lambda (a . r) ...). */
     const Cell* lf = make_list_from_sexpr(formals);
     int arg_idx = 0;
 
@@ -605,7 +605,7 @@ HandlerResult sf_and(Lex* e, Cell* a) {
         if (result->type == CELL_ERROR)
             return (HandlerResult){.action = ACTION_RETURN, .value = result};
 
-        /* Short-circuit if False */
+        /* Short-circuit if False. */
         if (result->type == CELL_BOOLEAN && result->boolean_v == 0) {
             return (HandlerResult){.action = ACTION_RETURN, .value = False_Obj};
         }
