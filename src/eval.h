@@ -24,7 +24,13 @@
 #include "special_forms.h"
 
 
+/* This needs to be kept in sync with the number of
+ * primitive SFs in the SpecialFormID enum (symbols.h)
+ * +1 - don't forget the null in the zeroth spot! */
+#define SF_MAX 15
+
 typedef HandlerResult (*special_form_handler_t)(Lex*, Cell*);
+extern special_form_handler_t SF_DISPATCH_TABLE[SF_MAX];
 Cell* coz_eval(Lex* env, Cell* expr);
 Cell* coz_apply_and_get_val(const Cell* proc, Cell* args, const Lex* env);
 
