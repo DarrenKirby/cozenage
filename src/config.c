@@ -43,4 +43,7 @@ void load_initial_libraries(const Lex* e, const lib_load_config load_libs) {
     if (load_libs.random) {
         (void)load_library("random", e);
     }
+    if (load_libs.lazy) {
+        (void)load_library("lazy", e);
+    }
 }

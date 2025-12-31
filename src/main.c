@@ -38,6 +38,7 @@ lib_load_config load_libs = {0};
 int g_argc;
 char** g_argv;
 
+
 static void show_help(void)
 {
     printf("Usage: cozenage [option ...] [file] \n\n\
@@ -49,7 +50,7 @@ Options:\n\
 \n\
     '-l' and '--library' accept a required comma-delimited list of\n\
     libraries to pre-load. Accepted values are:\n\
-    'bits' 'cxr' 'file' 'math' 'random' 'system' and 'time' \n\n\
+    'bits' 'cxr' 'file' 'lazy' 'math' 'random' 'system' and 'time' \n\n\
 Report bugs to <darren@dragonbyte.ca>\n");
 }
 
@@ -79,12 +80,14 @@ static void process_library_arg(struct lib_load *l, const char *arg)
             l->bits = 1;
         } else if (strcmp(token, "random") == 0) {
             l->random = 1;
+        } else if (strcmp(token, "lazy") == 0) {
+            l->lazy = 1;
         } else {
             fprintf(stderr, "Error: Unknown library name '%s' specified.\n", token);
             fprintf(stderr, "Run with -h for a list of valid library names.\n");
             exit(EXIT_FAILURE);
         }
-        /* Get the next token */
+        /* Get the next token. */
         token = strtok(nullptr, ",");
     }
 }
@@ -135,7 +138,7 @@ int main(const int argc, char** argv)
             g_argc = argc - optind;
             g_argv = argv + optind;
         }
-        /* File-Runner Mode */
+        /* File-Runner Mode. */
         const char *file_path = argv[optind];
 
         /* Pass the file path (argv[optind]) and the load_libs struct. */
