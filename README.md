@@ -15,7 +15,7 @@ Cozenage has:
 
 - The typical menu of disjoint primitive objects: ``number``, ``string``, ``char``, ``symbol``, ``pair``, ``null``, ``vector``, ``boolean``, ``port``, and ``procedure``.
 - A selection of ``bytevector`` objects implemented using native C type arrays: ``u8``, ``s8``, ``u16``, ``s16``, ``u32``, and ``s32``.
-- Full 'numeric tower' of derived numeric types including ``integer``, ``rational``, ``real``, and ``complex`` numbers.
+- Full 'numeric tower' of derived numeric types including ``integer``, ``rational``, ``real``, and ``complex``.
 - Exact and inexact numbers.
 - Proper tail-call optimization where applicable.
 - Garbage collection.
@@ -23,13 +23,13 @@ Cozenage has:
 - UTF-8 Unicode support.
 - eval/apply procedures for interpreting data as executable code.
 - polymorphic len, idx, rev procedures for compound types.
+- Delayed evaluation and streams implemented in lazy library.
 
 Typical Scheme features that Cozenage does NOT have:
 
 - call/cc and first-class continuations. I'm not likely to ever implement this. Rather, I am more likely to implement control flow patterns typically implemented via call/cc as primitive syntax.  
 - Hygienic macros. I will likely implement this at some point, but it is low-priority.
 - Quasiquotation. Currently, only standard quotation is supported.
-- Delayed, or lazy evaluation. On the todo, but low-priority.
 
 Typical Scheme features currently in progress:
 
@@ -101,3 +101,10 @@ Implemented as transforms/expands:
 - `case`
 - `do`
 - `Named let`
+
+Implemented in 'lazy' library:
+
+- `delay`
+- `delay-force`
+- `stream`
+

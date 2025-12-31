@@ -316,12 +316,12 @@ This document tracks the implementation status of procedures in the Cozenage int
 
 ## `(base system)`
 
-|  Status  | Procedure                   |
-|:--------:|:----------------------------|
-|    ✅     | `get-pid`                   |
-|    ✅     | `get-ppid`                  |
-|    ✅     | `get-environment-variable`  |
-|    ✅     | `get-environment-variables` |
+|  Status  | Procedure       |
+|:--------:|:----------------|
+|    ✅     | `get-pid`       |
+|    ✅     | `get-ppid`      |
+|    ✅     | `get-env-var`   |
+|    ✅     | `get-env-vars`  |
 
 
 ---
@@ -338,3 +338,20 @@ This document tracks the implementation status of procedures in the Cozenage int
 
 ---
 
+## `(base lazy`
+
+| Status | Procedure          |
+|:------:|:-------------------|
+|   ✅    | `delay` - SF       |
+|   ✅    | `delay-force` - SF |
+|   ✅    | `stream` - SF      |
+|   ✅    | `force`            |
+|   ✅    | `make-promise`     |
+|   ✅    | `head`             |
+|   ✅    | `tail`             |
+|   ✅    | `at`               |
+|   ✅    | `take`             |
+|   ✅    | `drop`             |
+|   ✅    | `promise?`         |
+|   ✅    | `stream?`          |
+|   ✅    | `stream-null?`     |
