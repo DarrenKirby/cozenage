@@ -39,6 +39,7 @@ typedef enum : uint8_t  {
     VALUE_ERR,
 } err_t;
 
+
 /* enums for port types. */
 typedef enum : uint8_t  {
     INPUT_PORT,
@@ -46,15 +47,16 @@ typedef enum : uint8_t  {
     ASYNC_PORT
 } port_t;
 
+
 typedef enum : uint8_t  {
     FILE_PORT,
     STRING_PORT,
     BV_PORT
 } stream_t;
 
+
 /* Cell_t type enum. */
 typedef enum  : uint32_t {
-    /* Primitive Scheme types. */
     CELL_INTEGER    = 1 << 0,   /* integer */
     CELL_RATIONAL   = 1 << 1,   /* rational */
     CELL_REAL       = 1 << 2,   /* real */
@@ -66,26 +68,28 @@ typedef enum  : uint32_t {
     CELL_SYMBOL     = 1 << 7,   /* symbol */
 
     CELL_PAIR       = 1 << 8,   /* cons cell */
-    CELL_NIL        = 1 << 9,   /* '() empty list */
+    CELL_NIL        = 1 << 9,   /* empty list */
     CELL_VECTOR     = 1 << 10,  /* vector */
     CELL_BYTEVECTOR = 1 << 11,  /* byte vector */
 
     CELL_EOF        = 1 << 12,  /* EOF object */
     CELL_PROC       = 1 << 13,  /* procedure */
     CELL_PORT       = 1 << 14,  /* port */
-    /* Internal-use types. */
     CELL_ERROR      = 1 << 15,  /* error */
-    CELL_SEXPR      = 1 << 16,  /* an array of values */
+
+    CELL_SEXPR      = 1 << 16,  /* An array of values, used internally. */
     CELL_TCS        = 1 << 17,  /* Tail Call Sentinel object */
-    CELL_TRAMPOLINE = 1 << 18,  /* Trampoline object - returned from
-                                   first-class procedures to signal a
-                                   tail-call */
-    CELL_UNSPEC     = 1 << 19,   /* Unspecified object */
-    /* bigint/rat/float */
-    CELL_BIGINT     = 1 << 20,   /* Arbitrary size/precision integer */
-    CELL_BIGRAT     = 1 << 21,   /* Arbitrary size/precision rational */
-    CELL_BIGFLOAT   = 1 << 22,   /* Arbitrary size/precision float */
+    CELL_TRAMPOLINE = 1 << 18,  /* Return value to signal a tail-call */
+    CELL_UNSPEC     = 1 << 19,  /* Unspecified object */
+
+    CELL_BIGINT     = 1 << 20,  /* Arbitrary size/precision integer */
+    CELL_BIGRAT     = 1 << 21,  /* Arbitrary size/precision rational */
+    CELL_BIGFLOAT   = 1 << 22,  /* Arbitrary size/precision float */
+    CELL_PROMISE    = 1 << 23,  /* For delayed evaluation/streams */
+
+    CELL_STREAM     = 1 << 24,  /* A stream datatype for lazy evaluation */
 } Cell_t;
+
 
 /* Bytevector types. */
 typedef enum : uint8_t {
@@ -97,6 +101,7 @@ typedef enum : uint8_t {
     BV_S32
 } bv_t;
 
+
 /* Anonymous and named lambdas. */
 typedef struct Lambda {
     char* l_name;     /* Name of builtin and named lambda procedures. */
@@ -104,6 +109,22 @@ typedef struct Lambda {
     Cell* body;       /* S-expression for lambda. */
     Lex* env;         /* Closure environment. */
  } lambda;
+
+
+/* Delayed evaluation CELL_PROMISE */
+typedef enum : uint8_t {
+    READY,
+    LAZY,
+    RUNNING,
+    DONE
+} p_status_t;
+
+
+typedef struct Promise {
+    Cell* expr;         /* Either an unevaluated expression, or a final value. */
+    p_status_t status;  /* State flag. */
+    Lex* env;           /* Enclosing environment. */
+} promise;
 
 
  /* Ports */
@@ -114,11 +135,13 @@ typedef struct Port {
     uint8_t stream_t; /* Stream type */
 } port;
 
+
 typedef struct ByteV {
     uint16_t capacity;
     bv_t type;
     void* data;
 } byte_v;
+
 
 /* Definition of the Cell struct/tagged union. */
 typedef struct Cell {
@@ -187,6 +210,12 @@ typedef struct Cell {
             bool ascii;          /* Just ASCII or Unicode? */
         };
 
+        /* Streams */
+        struct {
+            Cell* head;        /* first member */
+            Cell* tail;        /* second member */
+        };
+
         /* Single-field types */
         Cell** cell;              /* for compound types (sexpr, vector) */
         char* error_v;            /* error string */
@@ -197,6 +226,7 @@ typedef struct Cell {
         lambda* lambda;           /* Pointer to lambda struct */
         port* port;               /* Pointer to port struct */
         byte_v* bv;               /* Pointer to bytevector struct */
+        promise* promise;         /* Pointer to promise struct */
         mpz_t* bi;                /* -> CELL_BIGINT integer */
         mpf_t* bf;                /* -> CELL_BIGFLOAT float */
     };
@@ -237,6 +267,8 @@ Cell* make_cell_bigfloat(const char* s);
 Cell* make_cell_pair(Cell* car, Cell* cdr);
 Cell* make_cell_error(const char* error_string, err_t error_type);
 Cell* make_cell_port(const char* path, FILE* fh, int io_t, int stream_t);
+Cell* make_cell_promise(Cell* expr, Lex* env);
+Cell* make_cell_stream(Cell* head, Cell* tail_promise);
 Cell* cell_add(Cell* v, Cell* x);
 Cell* cell_copy(const Cell* v);
 Cell* make_cell_bytevector_u8(void);
