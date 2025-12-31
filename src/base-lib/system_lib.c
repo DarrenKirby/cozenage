@@ -28,6 +28,9 @@
 
 extern char **environ;
 
+
+/* (get-pid)
+ * Returns the process ID of the calling process. */
 static Cell* system_get_pid(const Lex* e, const Cell* a)
 {
     (void) e; (void)a;
@@ -37,6 +40,9 @@ static Cell* system_get_pid(const Lex* e, const Cell* a)
     return make_cell_integer(getpid());
 }
 
+
+/* (get-ppid)
+ * Returns the process ID of the parent of the calling process. */
 static Cell* system_get_ppid(const Lex* e, const Cell* a)
 {
     (void) e; (void)a;
@@ -46,12 +52,13 @@ static Cell* system_get_ppid(const Lex* e, const Cell* a)
     return make_cell_integer(getppid());
 }
 
+
 static Cell* system_get_env_var(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_STRING, "get-environment-variable");
+    Cell* err = check_arg_types(a, CELL_STRING, "get-env-var");
     if (err) { return err; }
-    if ((err = CHECK_ARITY_EXACT(a, 1, "get-environment-variable"))) { return err; }
+    if ((err = CHECK_ARITY_EXACT(a, 1, "get-env-var"))) { return err; }
 
     const char *env = getenv(a->cell[0]->str);
     if (env == NULL) {
@@ -61,18 +68,19 @@ static Cell* system_get_env_var(const Lex* e, const Cell* a)
     return make_cell_string(var_string);
 }
 
+
 static Cell* system_get_env_vars(const Lex* e, const Cell* a)
 {
     (void)e; (void)a;
-    Cell* err = CHECK_ARITY_EXACT(a, 0, "get-environment-variables");
+    Cell* err = CHECK_ARITY_EXACT(a, 0, "get-env-vars");
     if (err) { return err; }
 
-    /* start with nil */
+    /* start with nil. */
     Cell* result = make_cell_nil();
     int len = 0;
 
     for (char **env = environ; *env != NULL; env++) {
-        /* Bad form to mutate env */
+        /* Bad form to mutate env. */
         char* var_string = GC_strdup(*env);
         const char *var = strtok(var_string, "=");
         const char *val = strtok(nullptr, "=");
@@ -85,10 +93,11 @@ static Cell* system_get_env_vars(const Lex* e, const Cell* a)
     return result;
 }
 
+
 void cozenage_library_init(const Lex* e)
 {
     lex_add_builtin(e, "get-pid", system_get_pid);
     lex_add_builtin(e, "get-ppid", system_get_ppid);
-    lex_add_builtin(e, "get-environment-variable", system_get_env_var);
-    lex_add_builtin(e, "get-environment-variables", system_get_env_vars);
+    lex_add_builtin(e, "get-env-var", system_get_env_var);
+    lex_add_builtin(e, "get-env-vars", system_get_env_vars);
 }
