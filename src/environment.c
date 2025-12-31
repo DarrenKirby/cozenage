@@ -383,6 +383,7 @@ void lex_add_builtins(const Lex* e)
     lex_add_builtin(e, "for-each", builtin_foreach);
     lex_add_builtin(e, "vector-for-each", builtin_vector_foreach);
     lex_add_builtin(e, "string-for-each", builtin_string_foreach);
+    lex_add_builtin(e, "load", builtin_load);
     lex_add_builtin(e, "command-line", builtin_command_line);
     lex_add_builtin(e, "exit", builtin_exit);
     /* Input/output and ports. */
@@ -426,7 +427,7 @@ void lex_add_builtins(const Lex* e)
     lex_add_builtin(e, "file-error?", builtin_file_error);
     lex_add_builtin(e, "error-object?", builtin_error_object);
     lex_add_builtin(e, "raise", builtin_raise);
-    /* Polymorphic procedures */
+    /* Polymorphic procedures. */
     lex_add_builtin(e, "len", builtin_len);
     lex_add_builtin(e, "idx", builtin_idx);
     lex_add_builtin(e, "rev", builtin_rev);

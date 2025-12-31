@@ -65,7 +65,7 @@ static char* ascii_reverse(const char* input, const size_t len) {
     char* reversed = GC_MALLOC_ATOMIC(len + 1);
     if (!reversed) return nullptr;
 
-    /* Simple swap loop */
+    /* Simple swap loop. */
     for (size_t i = 0; i < len; i++) {
         reversed[i] = input[len - 1 - i];
     }
@@ -77,7 +77,7 @@ static char* ascii_reverse(const char* input, const size_t len) {
 static char* unicode_reverse(const char* input, const int32_t byte_len) {
     UErrorCode status = U_ZERO_ERROR;
 
-    /* Convert UTF-8 to UChar (UTF-16) because ICU Break Iterators work natively on UChar */
+    /* Convert UTF-8 to UChar (UTF-16) because ICU Break Iterators work natively on UChar. */
     const int32_t uBufSize = byte_len + 1; // logical max
     UChar* uBuf = GC_MALLOC_ATOMIC(uBufSize * sizeof(UChar));
     int32_t uLen = 0;
@@ -88,33 +88,33 @@ static char* unicode_reverse(const char* input, const int32_t byte_len) {
         return nullptr;
     }
 
-    /* Create the Break Iterator (Character/Grapheme mode) */
+    /* Create the Break Iterator (Character/Grapheme mode). */
     UBreakIterator* bi = ubrk_open(UBRK_CHARACTER, nullptr, uBuf, uLen, &status);
     if (U_FAILURE(status)) {
         free(uBuf);
         return nullptr;
     }
 
-    /* Allocate Output Buffer (Same size as input + null) */
+    /* Allocate Output Buffer (Same size as input + null). */
     char* reversed = malloc(byte_len + 1);
     char* revCursor = reversed;
 
-    /* Iterate Backwards */
+    /* Iterate Backwards. */
     int32_t end = ubrk_last(bi);
     int32_t start = ubrk_previous(bi);
 
     while (start != UBRK_DONE) {
         /* We have a segment from 'start' to 'end' in the UTF-16 buffer
-           Convert just this segment back to UTF-8 and append to our result */
+           Convert just this segment back to UTF-8 and append to our result. */
         int32_t destLen = 0;
 
-        /* Convert this specific grapheme back to UTF-8 */
+        /* Convert this specific grapheme back to UTF-8. */
         u_strToUTF8(revCursor, byte_len - (int)(revCursor - reversed) + 1, &destLen,
                     uBuf + start, end - start, &status);
 
-        revCursor += destLen; /* Advance our output pointer */
+        revCursor += destLen; /* Advance our output pointer. */
 
-        /* Move pointers back */
+        /* Move pointers back. */
         end = start;
         start = ubrk_previous(bi);
     }
@@ -134,10 +134,10 @@ static Cell* string_reverse(const Cell* v)
 
     char* result;
     if (is_pure_ascii(the_string, len)) {
-        /* FAST PATH: No overhead, just swap bytes */
+        /* FAST PATH: No overhead, just swap bytes. */
         result =  ascii_reverse(the_string, len);
     } else {
-        /* SLOW PATH: Load ICU, break iterators, handle emojis/accents */
+        /* SLOW PATH: Load ICU, break iterators, handle emojis/accents. */
         result = unicode_reverse(the_string, len);
     }
     if (result == nullptr) {
@@ -213,10 +213,14 @@ Cell* builtin_len(const Lex* e, const Cell* a) {
 }
 
 
+/* Polymorphic '*-ref'.
+ * (at <seq object> i)
+ * (at <seq object> start stop)
+ * (at <seq object> start end step) */
 Cell* builtin_idx(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_RANGE(a, 2, 4, "idx");
+    Cell* err = CHECK_ARITY_RANGE(a, 2, 4, "at");
     if (err) return err;
 
     switch (a->cell[0]->type) {
@@ -236,7 +240,7 @@ Cell* builtin_idx(const Lex* e, const Cell* a)
         return builtin_string_ref(e, a);
     default:
         return make_cell_error(
-        fmt_err("idx: cannot subscript non-compound type: %s",
+        fmt_err("at: cannot subscript non-compound type: %s",
             cell_type_name(a->cell[0]->type)), TYPE_ERR);
     }
 }
