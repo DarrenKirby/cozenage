@@ -147,6 +147,16 @@ static void cell_to_string_worker(const Cell* v,
             break;
         }
 
+        case CELL_PROMISE: {
+            char* stat;
+            if (v->promise->status == 0) stat = "unevaluated";
+            else if (v->promise->status == 1) stat = "lazy";
+            else if (v->promise->status == 2) stat = "evaluated";
+            else stat = "running";
+            sb_append_fmt(sb, "<promise object:%s%s%s>", ANSI_BLUE_B, stat, ANSI_RESET);
+            break;
+        }
+
         case CELL_UNSPEC: {
             if (mode == MODE_REPL) {
                 sb_append_fmt(sb, "%s#void%s", ANSI_MAGENTA, ANSI_RESET);
@@ -236,7 +246,7 @@ static void cell_to_string_worker(const Cell* v,
                     sb_append_fmt(sb, "<builtin procedure '%s%s%s'>",
                         ANSI_GREEN_B, v->f_name, ANSI_RESET);
                 } else {
-                    sb_append_fmt(sb, "#<builtin procedure '%s'>", v->f_name);
+                    sb_append_fmt(sb, "<builtin procedure '%s'>", v->f_name);
                 }
             } else {
                 if (mode == MODE_REPL) {
@@ -281,6 +291,12 @@ static void cell_to_string_worker(const Cell* v,
             sb_append_str(sb, fbuf);
             break;
             }
+
+        case CELL_STREAM:
+            sb_append_fmt(sb, "[%s ... %s]",
+                cell_to_string(v->head, MODE_REPL),
+                cell_to_string(v->tail, MODE_REPL));
+            break;
 
         case CELL_SYMBOL:
             sb_append_fmt(sb, "%s", v->sym);
