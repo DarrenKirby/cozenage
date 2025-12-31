@@ -38,6 +38,9 @@ typedef enum : int8_t {
     SF_ID_SET_BANG,
     SF_ID_BEGIN,
     SF_ID_AND,
+    SF_ID_DELAY,
+    SF_ID_DELAY_FORCE,
+    SF_ID_STREAM,
     SF_ID_DEBUG,
     /* These are the SFs implemented as transforms. */
     SF_ID_LET_STAR = 50,
