@@ -1,5 +1,5 @@
 /*
- * 'errors.h'
+ * 'src/errors.h'
  * This file is part of Cozenage - https://github.com/DarrenKirby/cozenage
  * Copyright © 2025  Darren Kirby <darren@dragonbyte.ca>
  *
@@ -25,5 +25,6 @@
 
 Cell* builtin_error_object(const Lex* e, const Cell* a);
 Cell* builtin_raise(const Lex* e, const Cell* a);
+Cell* builtin_gc_report(const Lex* e, const Cell* a);
 
 #endif //COZENAGE_ERRORS_H
