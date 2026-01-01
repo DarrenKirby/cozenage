@@ -357,7 +357,7 @@ Cell* builtin_string_map(const Lex* e, const Cell* a)
         U8_APPEND(buffer, write_idx, total_bytes, res_chars[i], error);
 
         if (error) {
-            /* If the codepoint is invalid, we fall back to the Unicode
+            /* If the codepoint is invalid, fall back to the Unicode
                Replacement Character: U+FFFD.
                In UTF-8, this is 3 bytes: 0xEF, 0xBF, 0xBD */
             buffer[0] = (char)0xEF;
@@ -404,7 +404,7 @@ Cell* builtin_foreach(const Lex* e, const Cell* a)
         Cell* lst = a->cell[i + 1];
         if (lst->type == CELL_NIL) return USP_Obj;
 
-        /* Ensure we have a valid length for the loop. */
+        /* Ensure a valid length for the loop. */
         if (lst->len <= 0) {
             Cell* len_obj = builtin_len(e, make_sexpr_len1(lst));
             if (len_obj->type == CELL_ERROR) return len_obj;
@@ -568,13 +568,18 @@ Cell* builtin_load(const Lex* e, const Cell* a)
 }
 
 
+/* (exit)
+ * (exit bool)
+ * (exit int)
+ * Immediately terminates the running program. An optional boolean or integer value may be passed to denote the exit
+ * status. #true = exit(0), and #false = exit(1). An integer argument will be directly passed as the exit code to the
+ * system. */
 Cell* builtin_exit(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = check_arg_types(a, CELL_INTEGER|CELL_BOOLEAN, "exit");
     if (err) { return err; }
 
-    /* Save history if we're in REPL mode. */
     if (is_repl) {
         save_history_to_file();
     }
@@ -594,12 +599,18 @@ Cell* builtin_exit(const Lex* e, const Cell* a)
     exit(0); /* exit success if no arg. */
 }
 
+
+/* (command-line)
+ * Returns a list of arguments passed to the script. When called from the REPL, it will just return the empty list. Note
+ * that these are not the arguments passed to cozenage, but rather, a method for passing arguments to be used within a
+ * script or program interpreted by cozenage. Therefore, two dashes '--' must be used to separate cozenage args from
+ * script arguments. The zeroeth value of this list is always the script name. */
 Cell* builtin_command_line(const Lex* e, const Cell* a)
 {
     (void)e; (void)a;
-    /* Return list of just one empty string if using REPL. */
+    /* Return empty list if using REPL. */
     if (is_repl) {
-        return make_cell_pair(make_cell_string(""), make_cell_nil());
+        return Nil_Obj;
     }
     /* Construct the list of args. */
     Cell* args = make_cell_sexpr();

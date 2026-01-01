@@ -243,7 +243,7 @@ Cell* lazy_at(const Lex* e, const Cell* a) {
                 TYPE_ERR);
         }
 
-        /* We use the tail (which is a promise) and force it.
+        /* Use the tail (which is a promise) and force it.
          * The result of forcing the tail MUST be another stream. */
         s = lazy_force(e, make_sexpr_len1(s->tail));
 
