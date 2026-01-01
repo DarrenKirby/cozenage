@@ -427,6 +427,7 @@ void lex_add_builtins(const Lex* e)
     lex_add_builtin(e, "file-error?", builtin_file_error);
     lex_add_builtin(e, "error-object?", builtin_error_object);
     lex_add_builtin(e, "raise", builtin_raise);
+    lex_add_builtin(e, "gc-report", builtin_gc_report);
     /* Polymorphic procedures. */
     lex_add_builtin(e, "len", builtin_len);
     lex_add_builtin(e, "idx", builtin_idx);
