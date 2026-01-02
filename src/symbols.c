@@ -1,7 +1,7 @@
 /*
  * 'src/symbols.c'
  * This file is part of Cozenage - https://github.com/DarrenKirby/cozenage
- * Copyright © 2025  Darren Kirby <darren@dragonbyte.ca>
+ * Copyright © 2025 - 2026 Darren Kirby <darren@dragonbyte.ca>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -55,65 +55,78 @@ Cell* G_do_sym = nullptr;
 Cell* G_arrow_sym = nullptr;
 Cell* G_else_sym = nullptr;
 Cell* G_debug_sym = nullptr;
+Cell* G_quasiquote_sym = nullptr;
+Cell* G_unquote_sym = nullptr;
+Cell* G_unquote_splicing_sym = nullptr;
 
 
 /* Initialize canonical symbols and configure their special form IDs. */
 void init_special_forms(void) {
+    /* Primitive syntax. */
     G_define_sym = make_cell_symbol("define");
     G_define_sym->sf_id = SF_ID_DEFINE;
 
+    /* Primitive syntax. */
     G_quote_sym = make_cell_symbol("quote");
     G_quote_sym->sf_id = SF_ID_QUOTE;
 
+    /* Primitive syntax. */
     G_lambda_sym = make_cell_symbol("lambda");
     G_lambda_sym->sf_id = SF_ID_LAMBDA;
 
+    /* Primitive syntax. */
     G_if_sym = make_cell_symbol("if");
     G_if_sym->sf_id = SF_ID_IF;
 
-    /* Transformed syntax */
+    /* Transformed syntax. */
     G_when_sym = make_cell_symbol("when");
     G_when_sym->sf_id = SF_ID_WHEN;
 
-    /* Transformed syntax */
+    /* Transformed syntax. */
     G_unless_sym = make_cell_symbol("unless");
     G_unless_sym->sf_id = SF_ID_UNLESS;
 
-    /* Transformed syntax */
+    /* Transformed syntax. */
     G_cond_sym = make_cell_symbol("cond");
     G_cond_sym->sf_id = SF_ID_COND;
 
-    /* Transformed syntax */
+    /* Transformed syntax. */
     G_case_sym = make_cell_symbol("case");
     G_case_sym->sf_id = SF_ID_CASE;
 
+    /* Primitive syntax. */
     G_import_sym = make_cell_symbol("import");
     G_import_sym->sf_id = SF_ID_IMPORT;
 
+    /* Primitive syntax. */
     G_let_sym = make_cell_symbol("let");
     G_let_sym->sf_id = SF_ID_LET;
 
-    /* Transformed syntax */
+    /* Transformed syntax. */
     G_let_star_sym = make_cell_symbol("let*");
     G_let_star_sym->sf_id = SF_ID_LET_STAR;
 
-    /* Transformed syntax */
+    /* Transformed syntax. */
     G_letrec_star_sym = make_cell_symbol("letrec*");
     G_letrec_star_sym->sf_id = SF_ID_LETREC_STAR;
 
+    /* Primitive syntax. */
     G_letrec_sym = make_cell_symbol("letrec");
     G_letrec_sym->sf_id = SF_ID_LETREC;
 
+    /* Primitive syntax. */
     G_set_bang_sym = make_cell_symbol("set!");
     G_set_bang_sym->sf_id = SF_ID_SET_BANG;
 
+    /* Primitive syntax. */
     G_begin_sym = make_cell_symbol("begin");
     G_begin_sym->sf_id = SF_ID_BEGIN;
 
+    /* Primitive syntax. */
     G_and_sym = make_cell_symbol("and");
     G_and_sym->sf_id = SF_ID_AND;
 
-    /* Transformed syntax */
+    /* Transformed syntax. */
     G_or_sym = make_cell_symbol("or");
     G_or_sym->sf_id = SF_ID_OR;
 
@@ -121,14 +134,19 @@ void init_special_forms(void) {
     G_do_sym = make_cell_symbol("do");
     G_do_sym->sf_id = SF_ID_DO;
 
-    /* Not actually a special form - no SF_ID */
-    G_arrow_sym = make_cell_symbol("=>");
-
+    /* This is basically just a sentinel object. */
     G_else_sym = make_cell_symbol("else");
     G_else_sym->sf_id = SF_ID_ELSE;
 
     G_debug_sym = make_cell_symbol("with-gc-stats");
     G_debug_sym->sf_id = SF_ID_DEBUG;
+
+    /* Not actually special forms - but symbols that should
+     * be interned on startup - no SF_IDs */
+    G_arrow_sym = make_cell_symbol("=>");
+    G_quasiquote_sym = make_cell_symbol("quasiquote");
+    G_unquote_sym = make_cell_symbol("unquote");
+    G_unquote_splicing_sym = make_cell_symbol("unquote-splicing");
 }
 
 

@@ -474,7 +474,7 @@ static Cell* expand_cond(const Cell* c) {
 /* (let ⟨variable⟩ ⟨bindings⟩ ⟨body⟩)
  * Semantics: “Named let” is a variant on the syntax of let which provides a more general looping construct than do and
  * can also be used to express recursion. It has the same syntax and semantics as ordinary let except that ⟨variable⟩ is
- * bound within ⟨body⟩ to a procedure whose formal arguments are the bound variables and whose body is ⟨body⟩. Thus the
+ * bound within ⟨body⟩ to a procedure whose formal arguments are the bound variables and whose body is ⟨body⟩. Thus, the
  * execution of ⟨body⟩ can be repeated by invoking the procedure named by ⟨variable⟩. */
 static Cell* expand_named_let(const Cell* c) {
     /* c is (let name ((var init) ...) body...). */
@@ -734,6 +734,99 @@ static Cell* expand_recursive(const Cell* c)
 }
 
 
+/* Helper to handle the append logic for transform_qq(). */
+Cell* transform_qq_list_logic(const Cell* input, const int depth) {
+    Cell* out_expr = make_cell_sexpr();
+    cell_add(out_expr, make_cell_symbol("append"));
+
+    for (int i = 0; i < input->count; i++) {
+        const Cell* item = input->cell[i];
+
+        if (item->type == CELL_SEXPR &&
+            item->count > 0 &&
+            item->cell[0] == G_unquote_splicing_sym &&
+            depth == 1) {
+
+            cell_add(out_expr, item->cell[1]);
+            } else {
+                cell_add(out_expr,
+                    make_sexpr_len2(
+                        make_cell_symbol("list"),
+                        transform_qq(item, depth)));
+            }
+    }
+    return out_expr;
+}
+
+
+Cell* transform_qq(const Cell* input, const int depth) {
+    if (input->type == CELL_VECTOR) {
+        /* Create an S-expression that will call (list->vector <the_expanded_list>). */
+        const Cell* expanded_list = transform_qq_list_logic(input, depth);
+        return make_sexpr_len2(
+            make_cell_symbol("list->vector"),
+            expanded_list);
+    }
+
+    /* Atoms (non-S-expr) get quoted. */
+    if (input->type != CELL_SEXPR) {
+        return make_sexpr_len2(G_quote_sym, input);
+    }
+
+    const Cell* first = input->cell[0];
+
+    /* UNQUOTE: If depth is 1, return the expression directly to be evaluated. */
+    if (first == G_unquote_sym) {
+        if (depth == 1) return input->cell[1];
+
+        /* If depth > 1, this is inside a nested quote, so rebuild (list 'unquote ...). */
+        return make_sexpr_len3(
+            make_cell_symbol("list"),
+            make_sexpr_len2(G_quote_sym, G_unquote_sym),
+            transform_qq(input->cell[1], depth - 1)
+        );
+    }
+
+    /* NESTED QUASIQUOTE: Rebuild (list 'quasiquote ...). */
+    if (first == G_quasiquote_sym) {
+        return make_sexpr_len3(
+            make_cell_symbol("list"),
+            make_sexpr_len2(G_quote_sym, G_quasiquote_sym),
+            transform_qq(input->cell[1], depth + 1)
+        );
+    }
+
+    /* STANDARD S-EXPR: Build (append (list ...) ...). */
+    Cell* out_expr = make_cell_sexpr();
+    cell_add(out_expr, make_cell_symbol("append"));
+
+    for (int i = 0; i < input->count; i++) {
+        const Cell* item = input->cell[i];
+
+        /* Check if this specific item is an (unquote-splicing ...) S-expr. */
+        if (item->type == CELL_SEXPR &&
+            item->count > 0 &&
+            item->cell[0] == G_unquote_splicing_sym &&
+            depth == 1) {
+
+            /* Splicing: Add the inner expression
+             * directly to the append S-expr. */
+            cell_add(out_expr, item->cell[1]);
+
+            } else {
+                /* Normal: transform the item and wrap it in (list ...)
+                 * so append treats it as a single element. */
+                const Cell* transformed_item = transform_qq(item, depth);
+                cell_add(out_expr,
+                    make_sexpr_len2(
+                        make_cell_symbol("list"),
+                        transformed_item));
+            }
+    }
+    return transform_qq_list_logic(input, depth);
+}
+
+
 Cell* expand(Cell* c) {
     /* Base case: only S-expressions can be expanded */
     if (c->type != CELL_SEXPR || c->count == 0) return c;
@@ -783,19 +876,38 @@ Cell* expand(Cell* c) {
             return expand_when(c);
         }
 
-        /* UNLESS (Transform -> if) */
+        /* 'unless' - derived - transform to 'if's. */
         if (is_same_symbol(head, G_unless_sym)) {
             return expand_unless(c);
         }
 
-        /* OR (Transform -> nested let(s) and if(s)) */
+        /* 'or' - derived - transform to nested 'let's and 'if's. */
         if (is_same_symbol(head, G_or_sym)) {
             return expand_or(c);
         }
 
-        /* 5. LET */
+        /* 'quasiquote' - */
+        if (is_same_symbol(head, G_quasiquote_sym)) {
+            return transform_qq(c->cell[1], 1);
+        }
+
+        /* These symbols at top-level are syntax errors... */
+
+        if (is_same_symbol(head, G_unquote_sym)) {
+            return make_cell_error(
+                "unquote: must be contained within a 'quasiquote' expression",
+                SYNTAX_ERR);
+        }
+
+        if (is_same_symbol(head, G_unquote_splicing_sym)) {
+            return make_cell_error(
+                "unquote-splice: must be contained within a 'quasiquote' expression",
+                SYNTAX_ERR);
+        }
+
+        /* 'let' - primitive - and Named let - derived. */
         if (is_same_symbol(head, G_let_sym)) {
-            /* Named Let -> Letrec */
+            /* Named let -> letrec. */
             if (c->count > 1 && c->cell[1]->type == CELL_SYMBOL) {
                 return expand(expand_named_let(c));
             }

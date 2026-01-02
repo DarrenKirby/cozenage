@@ -77,6 +77,9 @@ extern Cell* G_do_sym;
 extern Cell* G_arrow_sym;
 extern Cell* G_else_sym;
 extern Cell* G_debug_sym;
+extern Cell* G_quasiquote_sym;
+extern Cell* G_unquote_sym;
+extern Cell* G_unquote_splicing_sym;
 
 
 /* The global symbol table. */

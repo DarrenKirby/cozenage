@@ -25,5 +25,6 @@
 
 Cell* expand_body_expressions(const Cell* body_elements, int start_index);
 Cell* expand(Cell* c);
+Cell* transform_qq(const Cell* input, int depth);
 
 #endif //COZENAGE_TRANSFORMS_H
