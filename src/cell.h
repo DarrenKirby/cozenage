@@ -1,7 +1,7 @@
 /*
  * 'src/cell.h'
  * This file is part of Cozenage - https://github.com/DarrenKirby/cozenage
- * Copyright © 2025  Darren Kirby <darren@dragonbyte.ca>
+ * Copyright © 2025 - 2026 Darren Kirby <darren@dragonbyte.ca>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,18 +27,73 @@
 #include <gmp.h>
 
 
-/* enum for error types. */
-typedef enum : uint8_t  {
-    GEN_ERR,
-    FILE_ERR,
-    READ_ERR,
-    SYNTAX_ERR,
-    ARITY_ERR,
-    TYPE_ERR,
-    INDEX_ERR,
-    VALUE_ERR,
-} err_t;
+/* Cell_t type enum. */
+typedef enum  : uint32_t {
+    CELL_INTEGER    = 1 << 0,   /* integer. */
+    CELL_RATIONAL   = 1 << 1,   /* rational. */
+    CELL_REAL       = 1 << 2,   /* real. */
+    CELL_COMPLEX    = 1 << 3,   /* complex number. */
 
+    CELL_BOOLEAN    = 1 << 4,   /* #t / #f */
+    CELL_CHAR       = 1 << 5,   /* character. */
+    CELL_STRING     = 1 << 6,   /* string. */
+    CELL_SYMBOL     = 1 << 7,   /* symbol. */
+
+    CELL_PAIR       = 1 << 8,   /* cons cell. */
+    CELL_NIL        = 1 << 9,   /* empty list. */
+    CELL_VECTOR     = 1 << 10,  /* vector. */
+    CELL_BYTEVECTOR = 1 << 11,  /* byte vector. */
+
+    CELL_EOF        = 1 << 12,  /* EOF object. */
+    CELL_PROC       = 1 << 13,  /* procedure. */
+    CELL_PORT       = 1 << 14,  /* port. */
+    CELL_ERROR      = 1 << 15,  /* error. */
+
+    CELL_SEXPR      = 1 << 16,  /* An array of values, used internally. */
+    CELL_TCS        = 1 << 17,  /* Tail Call Sentinel object. */
+    CELL_TRAMPOLINE = 1 << 18,  /* Return value to signal a tail-call. */
+    CELL_UNSPEC     = 1 << 19,  /* Unspecified object. */
+
+    CELL_BIGINT     = 1 << 20,  /* Arbitrary size/precision integer. */
+    CELL_BIGRAT     = 1 << 21,  /* Arbitrary size/precision rational. */
+    CELL_BIGFLOAT   = 1 << 22,  /* Arbitrary size/precision float. */
+    CELL_PROMISE    = 1 << 23,  /* For delayed evaluation/streams. */
+
+    CELL_STREAM     = 1 << 24,  /* A stream datatype for lazy evaluation. */
+} Cell_t;
+
+
+/* LAMBDA
+ * Anonymous and named lambda struct. */
+typedef struct Lambda {
+    char* l_name;     /* Name of builtin and named lambda procedures. */
+    Cell* formals;    /* Must be symbols. */
+    Cell* body;       /* S-expression for lambda. */
+    Lex* env;         /* Closure environment. */
+ } lambda;
+
+
+/* PROMISE - used for delayed evaluation and streams. */
+/* Delayed evaluation CELL_PROMISE. */
+typedef enum : uint8_t {
+    READY,     /* Unevaluated state. */
+    LAZY,      /* Used by delay-force to trigger trampoline evaluation. */
+    RUNNING,   /* Used to detect re-entrant promises. */
+    DONE       /* An evaluated and cached value. */
+} p_status_t;
+
+/* Promise struct. */
+typedef struct Promise {
+    Cell* expr;         /* Either an unevaluated expression, or a final value. */
+    p_status_t status;  /* State flag. */
+    Lex* env;           /* Enclosing environment. */
+} promise;
+
+
+ /* PORTS - type enums and struct.
+  * Track whether the port is for input, output, or async,
+  * and whether it operates on a file, string, or bytevector.
+  */
 
 /* enums for port types. */
 typedef enum : uint8_t  {
@@ -47,50 +102,22 @@ typedef enum : uint8_t  {
     ASYNC_PORT
 } port_t;
 
-
 typedef enum : uint8_t  {
     FILE_PORT,
     STRING_PORT,
     BV_PORT
 } stream_t;
 
-
-/* Cell_t type enum. */
-typedef enum  : uint32_t {
-    CELL_INTEGER    = 1 << 0,   /* integer */
-    CELL_RATIONAL   = 1 << 1,   /* rational */
-    CELL_REAL       = 1 << 2,   /* real */
-    CELL_COMPLEX    = 1 << 3,   /* complex number */
-
-    CELL_BOOLEAN    = 1 << 4,   /* #t / #f */
-    CELL_CHAR       = 1 << 5,   /* character */
-    CELL_STRING     = 1 << 6,   /* string */
-    CELL_SYMBOL     = 1 << 7,   /* symbol */
-
-    CELL_PAIR       = 1 << 8,   /* cons cell */
-    CELL_NIL        = 1 << 9,   /* empty list */
-    CELL_VECTOR     = 1 << 10,  /* vector */
-    CELL_BYTEVECTOR = 1 << 11,  /* byte vector */
-
-    CELL_EOF        = 1 << 12,  /* EOF object */
-    CELL_PROC       = 1 << 13,  /* procedure */
-    CELL_PORT       = 1 << 14,  /* port */
-    CELL_ERROR      = 1 << 15,  /* error */
-
-    CELL_SEXPR      = 1 << 16,  /* An array of values, used internally. */
-    CELL_TCS        = 1 << 17,  /* Tail Call Sentinel object */
-    CELL_TRAMPOLINE = 1 << 18,  /* Return value to signal a tail-call */
-    CELL_UNSPEC     = 1 << 19,  /* Unspecified object */
-
-    CELL_BIGINT     = 1 << 20,  /* Arbitrary size/precision integer */
-    CELL_BIGRAT     = 1 << 21,  /* Arbitrary size/precision rational */
-    CELL_BIGFLOAT   = 1 << 22,  /* Arbitrary size/precision float */
-    CELL_PROMISE    = 1 << 23,  /* For delayed evaluation/streams */
-
-    CELL_STREAM     = 1 << 24,  /* A stream datatype for lazy evaluation */
-} Cell_t;
+/* Bytevector struct. */
+typedef struct Port {
+    char* path;       /* File path of associated fh (or string for string port). */
+    FILE* fh;         /* The file handle. */
+    int port_t;       /* Input or output. */
+    uint8_t stream_t; /* Stream type */
+} port;
 
 
+/* BYTEVECTORS - type enums and struct. */
 /* Bytevector types. */
 typedef enum : uint8_t {
     BV_U8,
@@ -101,41 +128,7 @@ typedef enum : uint8_t {
     BV_S32
 } bv_t;
 
-
-/* Anonymous and named lambdas. */
-typedef struct Lambda {
-    char* l_name;     /* Name of builtin and named lambda procedures. */
-    Cell* formals;    /* Must be symbols. */
-    Cell* body;       /* S-expression for lambda. */
-    Lex* env;         /* Closure environment. */
- } lambda;
-
-
-/* Delayed evaluation CELL_PROMISE */
-typedef enum : uint8_t {
-    READY,
-    LAZY,
-    RUNNING,
-    DONE
-} p_status_t;
-
-
-typedef struct Promise {
-    Cell* expr;         /* Either an unevaluated expression, or a final value. */
-    p_status_t status;  /* State flag. */
-    Lex* env;           /* Enclosing environment. */
-} promise;
-
-
- /* Ports */
-typedef struct Port {
-    char* path;       /* File path of associated fh (or string for string port). */
-    FILE* fh;         /* The file handle. */
-    int port_t;       /* Input or output. */
-    uint8_t stream_t; /* Stream type */
-} port;
-
-
+/* Bytevector struct. */
 typedef struct ByteV {
     uint16_t capacity;
     bv_t type;
@@ -143,36 +136,39 @@ typedef struct ByteV {
 } byte_v;
 
 
-/* Definition of the Cell struct/tagged union. */
+/* ERROR - enum for error types. */
+typedef enum : uint8_t  {
+    GEN_ERR,    /* General, unspecified error. */
+    FILE_ERR,   /* Error opening or closing a file. */
+    READ_ERR,   /* Error reading from a port. */
+    SYNTAX_ERR, /* Syntax error - generally only called from the parser or transformer. */
+    ARITY_ERR,  /* Arity error - wrong number of args passed to procedure. */
+    TYPE_ERR,   /* Type error - wrong type of arg passed to procedure. */
+    INDEX_ERR,  /* Index error - invalid index passed for compound type. */
+    VALUE_ERR,  /* Value error - Invalid value of correct type. */
+} err_t;
+
+
+/* Definition of the Cell struct/tagged union.
+ *
+ * This object represents all Scheme values, as well as some internal types.
+ * Most Scheme values are stored directly, however, ports, lambdas, bytevectors,
+ * and promises are represented by a pointer to their external structs to keep
+ * the size at a reasonable 24 bytes. */
 typedef struct Cell {
-    Cell_t type;        /* type of data the Cell holds. */
+    Cell_t type;         /* type of data the Cell holds. */
 
+    /* Union of type-specific flags and atomic values. */
     union {
-        struct {
-            int count;   /* length of compound type. (n-bytes for strings)*/
-        };
-
-        struct {
-            int len;     /* length of proper list (-1 for improper). */
-        };
-
-        struct {
-            int err_t;    /* error type. */
-        };
-
-        struct {
-            bool exact;    /* exact/inexact flag for numerics. */
-        };
-
-        struct {
-            bool is_open;  /* port open/closed status. */
-        };
-
-        struct {
-            bool is_builtin;  /* proc object: builtin, or user-defined lambda. */
-        };
+        int count;       /* length of compound type. (n-bytes for strings)*/
+        int len;         /* length of proper list (-1 for improper). */
+        int err_t;       /* error type. */
+        bool exact;      /* exact/inexact flag for numerics. */
+        bool is_open;    /* port open/closed status. */
+        bool is_builtin; /* proc object: builtin, or user-defined lambda. */
     };
 
+    /* Union of type-specific data storage. */
     union {
         struct {
             char* f_name;      /* name of builtin and named lambda procedure. */
@@ -223,17 +219,19 @@ typedef struct Cell {
         int64_t integer_v;        /* integers */
         UChar32 char_v;           /* character literal */
         bool boolean_v;           /* boolean */
-        lambda* lambda;           /* Pointer to lambda struct */
-        port* port;               /* Pointer to port struct */
-        byte_v* bv;               /* Pointer to bytevector struct */
-        promise* promise;         /* Pointer to promise struct */
-        mpz_t* bi;                /* -> CELL_BIGINT integer */
+
+        /* Pointers to outside structs. */
+        lambda* lambda;           /* -> lambda struct */
+        port* port;               /* -> port struct */
+        byte_v* bv;               /* -> bytevector struct */
+        promise* promise;         /* -> promise struct */
+        mpz_t* bi;                /* -> GMP integer */
         mpf_t* bf;                /* -> CELL_BIGFLOAT float */
     };
 } Cell;
 
 
-/* Declare the global singletons */
+/* Declare the global singletons. */
 extern Cell* Nil_Obj;
 extern Cell* TCS_Obj;
 extern Cell* EOF_Obj;

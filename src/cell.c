@@ -1,7 +1,7 @@
 /*
  * 'src/cell.c'
  * This file is part of Cozenage - https://github.com/DarrenKirby/cozenage
- * Copyright © 2025  Darren Kirby <darren@dragonbyte.ca>
+ * Copyright © 2025 - 2026 Darren Kirby <darren@dragonbyte.ca>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,29 +28,29 @@
 #include <string.h>
 
 
-/* The global nil */
+/* The global nil. */
 Cell* Nil_Obj = nullptr;
 
-/* Global #t and #f */
+/* Global #t and #f. */
 Cell* True_Obj = nullptr;
 Cell* False_Obj = nullptr;
 
-/* Global End Of File object */
+/* Global End Of File object. */
 Cell* EOF_Obj = nullptr;
 
-/* Global tail call sentinel object */
+/* Global tail call sentinel object. */
 Cell* TCS_Obj = nullptr;
 
-/* Global unspecified object */
+/* Global unspecified object. */
 Cell* USP_Obj = nullptr;
 
-/* Default ports */
+/* Default ports. */
 Cell* default_input_port  = nullptr;
 Cell* default_output_port = nullptr;
 Cell* default_error_port  = nullptr;
 
 
-/* Initialize default input, output, and error ports on startup. */
+/* Initialize default input, output, and error ports. */
 void init_default_ports(void)
 {
     default_input_port  = make_cell_port("stdin",  stdin,  INPUT_PORT, FILE_PORT);
@@ -153,13 +153,14 @@ Cell* make_cell_tcs(void)
 }
 
 
-/* Thin wrapper that returns the singleton TCS object. */
+/* Thin wrapper that returns the singleton unspecified object. */
 Cell* make_cell_usp(void)
 {
     return USP_Obj;
 }
 
 
+/* Cell constructor for real-values numbers. */
 Cell* make_cell_real(const long double the_real)
 {
     Cell* v = GC_MALLOC_ATOMIC(sizeof(Cell));
@@ -174,6 +175,7 @@ Cell* make_cell_real(const long double the_real)
 }
 
 
+/* Cell constructor for integers < INT64_MAX. */
 Cell* make_cell_integer(const long long int the_integer)
 {
     Cell* v = GC_MALLOC_ATOMIC(sizeof(Cell));
@@ -188,6 +190,7 @@ Cell* make_cell_integer(const long long int the_integer)
 }
 
 
+/* Cell constructor for rational numbers. Optionally handles reducing to the lowest terms. */
 Cell* make_cell_rational(const long int numerator,
                          const long int denominator,
                          const bool simplify)
@@ -208,6 +211,7 @@ Cell* make_cell_rational(const long int numerator,
 }
 
 
+/* Cell constructor for complex numbers. */
 Cell* make_cell_complex(Cell* real_part, Cell *imag_part)
 {
     if (real_part->type == CELL_COMPLEX || imag_part->type == CELL_COMPLEX) {
@@ -228,6 +232,7 @@ Cell* make_cell_complex(Cell* real_part, Cell *imag_part)
 }
 
 
+/* Cell constructor for symbols. All symbols are first looked up in the intern hash. */
 Cell* make_cell_symbol(const char* the_symbol)
 {
     /* Lookup in symbol table first. */
@@ -235,7 +240,8 @@ Cell* make_cell_symbol(const char* the_symbol)
     if (v) {
         return v;
     }
-    /* Not found, so construct the cell, place in the table, then return it. */
+    /* Not found, so construct the cell,
+     * place in the table, then return it. */
     v = GC_MALLOC_ATOMIC(sizeof(Cell));
     if (!v) {
         fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
@@ -249,6 +255,8 @@ Cell* make_cell_symbol(const char* the_symbol)
 }
 
 
+/* Cell constructor for strings. Calculate and store byte length and char length, and set an ascii flag for faster
+ * operations on pure-ascii strings. */
 Cell* make_cell_string(const char* the_string)
 {
     Cell* v = GC_MALLOC_ATOMIC(sizeof(Cell));
@@ -260,12 +268,12 @@ Cell* make_cell_string(const char* the_string)
     const int32_t byte_len = (int)strlen(the_string);
     v->count = byte_len;
 
-    /* Run the SWAR check */
+    /* Run the SWAR check. */
     if (is_pure_ascii(the_string, byte_len)) {
         v->ascii = 1;
-        v->char_count = byte_len; /* For ASCII, bytes == chars */
+        v->char_count = byte_len; /* For ASCII, bytes == chars. */
     } else {
-        /* Scan string to count actual UTF-8 codepoints */
+        /* Scan string to count actual UTF-8 codepoints. */
         v->ascii = 0;
         v->char_count = string_length_utf8(the_string);
     }
@@ -276,6 +284,8 @@ Cell* make_cell_string(const char* the_string)
 }
 
 
+/* Cell constructor for S-expressions. Not a user-type, but all builtin procedures expect the args to be wrapped
+ * in one. */
 Cell* make_cell_sexpr(void)
 {
     Cell* v = GC_MALLOC(sizeof(Cell));
@@ -290,6 +300,7 @@ Cell* make_cell_sexpr(void)
 }
 
 
+/* Cell constructor for chars. */
 Cell* make_cell_char(const UChar32 the_char)
 {
     Cell* v = GC_MALLOC_ATOMIC(sizeof(Cell));
@@ -303,6 +314,7 @@ Cell* make_cell_char(const UChar32 the_char)
 }
 
 
+/* Cell constructor for pairs and lists. */
 Cell* make_cell_pair(Cell* car, Cell* cdr)
 {
     Cell* v = GC_MALLOC(sizeof(Cell));
@@ -318,6 +330,7 @@ Cell* make_cell_pair(Cell* car, Cell* cdr)
 }
 
 
+/* Cell constructor for vectors. */
 Cell* make_cell_vector(void)
 {
     Cell* v = GC_MALLOC(sizeof(Cell));
@@ -331,7 +344,7 @@ Cell* make_cell_vector(void)
     return v;
 }
 
-
+/* Cell constructor for bytevectors. */
 Cell* make_cell_bytevector(const bv_t t)
 {
     Cell* v = GC_MALLOC(sizeof(Cell));
@@ -354,6 +367,7 @@ Cell* make_cell_bytevector(const bv_t t)
 }
 
 
+/* Cell constructor for error type. */
 Cell* make_cell_error(const char* error_string, const err_t error_type)
 {
     Cell* v = GC_MALLOC(sizeof(Cell));
@@ -368,6 +382,7 @@ Cell* make_cell_error(const char* error_string, const err_t error_type)
 }
 
 
+/* Cell constructor for ports. */
 Cell* make_cell_port(const char* path, FILE* fh, const int io_t, const int stream_t)
 {
     Cell* v = GC_MALLOC(sizeof(Cell));
@@ -386,6 +401,7 @@ Cell* make_cell_port(const char* path, FILE* fh, const int io_t, const int strea
 }
 
 
+/* Cell constructor for bigints. */
 Cell* make_cell_bigint(const char* s, const Cell* a,  const uint8_t base)
 {
     Cell* v = GC_MALLOC(sizeof(Cell));
@@ -412,6 +428,7 @@ Cell* make_cell_bigint(const char* s, const Cell* a,  const uint8_t base)
 }
 
 
+/* Cell constructor for bigfloats. */
 Cell* make_cell_bigfloat(const char* s)
 {
     Cell* v = GC_MALLOC(sizeof(Cell));
@@ -427,21 +444,23 @@ Cell* make_cell_bigfloat(const char* s)
 }
 
 
+/* Cell constructor for promise type. */
 Cell* make_cell_promise(Cell* expr, Lex* env)
 {
-    /* Allocate Cell */
+    /* Allocate Cell. */
     Cell* v = GC_MALLOC(sizeof(Cell));
     if (!v) {
         fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
         exit(EXIT_FAILURE);
     }
     v->type = CELL_PROMISE;
-    /* Allocate promise struct */
+    /* Allocate promise struct. */
     v->promise = GC_MALLOC(sizeof(promise));
     v->promise->expr = expr;
-    /* Optimization - if expr is atomic, just set as DONE */
+    /* Optimization - if expr is atomic, just set as DONE. */
+    // ReSharper disable once CppVariableCanBeMadeConstexpr
     const int mask = CELL_BOOLEAN|CELL_CHAR|CELL_INTEGER|CELL_RATIONAL|
-        CELL_REAL|CELL_COMPLEX|CELL_STRING;
+                     CELL_REAL|CELL_COMPLEX|CELL_STRING;
     if (expr->type & mask) {
         v->promise->status = DONE;
         v->promise->env = nullptr;
@@ -453,6 +472,7 @@ Cell* make_cell_promise(Cell* expr, Lex* env)
 }
 
 
+/* Cell constructor for stream type. */
 Cell* make_cell_stream(Cell* head, Cell* tail_promise) {
     /* Safety check: Ensure the tail is actually a promise. */
     if (tail_promise->type != CELL_PROMISE) {
@@ -474,6 +494,7 @@ Cell* make_cell_stream(Cell* head, Cell* tail_promise) {
  * -----------------------------------------------*/
 
 
+/* Add a cell to compound type S-expr or vector. */
 Cell* cell_add(Cell* v, Cell* x)
 {
     v->count++;
@@ -483,6 +504,7 @@ Cell* cell_add(Cell* v, Cell* x)
 }
 
 
+/* Adds a byte to a bytevector object. */
 Cell* byte_add(Cell* bv, const int64_t value)
 {
     BV_OPS[bv->bv->type].append(bv, value);
@@ -549,7 +571,8 @@ Cell* cell_copy(const Cell* v) {
             copy->lambda->l_name = v->lambda->l_name ? GC_strdup(v->lambda->l_name) : nullptr;
             copy->lambda->formals = cell_copy(v->lambda->formals) ;
             copy->lambda->body = cell_copy(v->lambda->body);
-            copy->lambda->env = v->lambda->env;   /* DO NOT copy environments; share the pointer. */
+            /* DO NOT copy environments; share the pointer. */
+            copy->lambda->env = v->lambda->env;
         }
         break;
 
@@ -604,7 +627,8 @@ Cell* cell_copy(const Cell* v) {
         if (v->promise->env == nullptr) {
             copy->promise->env = nullptr;
         } else {
-            copy->promise->env = v->promise->env; /* DO NOT copy environments; share the pointer. */
+            /* DO NOT copy environments; share the pointer. */
+            copy->promise->env = v->promise->env;
         }
         break;
     }
