@@ -57,6 +57,7 @@ int check_lambda_arity(const Cell* proc, int expected);
 void numeric_promote(Cell** lhs, Cell** rhs);
 Cell* make_sexpr_len1(const Cell* a);
 Cell* make_sexpr_len2(const Cell* a, const Cell* b);
+Cell* make_sexpr_len3(const Cell* a, const Cell* b, const Cell* c);
 Cell* make_sexpr_len4(const Cell* a, const Cell* b, const Cell* c, const Cell* d);
 Cell* make_list_from_sexpr(Cell* c);
 Cell* make_sexpr_from_list(Cell* v);

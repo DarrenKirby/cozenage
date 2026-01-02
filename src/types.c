@@ -287,6 +287,19 @@ Cell* make_sexpr_len2(const Cell* a, const Cell* b)
 }
 
 
+/* Construct an S-expression with exactly three elements. */
+Cell* make_sexpr_len3(const Cell* a, const Cell* b, const Cell* c)
+{
+    Cell* v = make_cell_sexpr();
+    v->count = 3;
+    v->cell = GC_MALLOC(sizeof(Cell*) * 3);
+    v->cell[0] = cell_copy(a);
+    v->cell[1] = cell_copy(b);
+    v->cell[2] = cell_copy(c);
+    return v;
+}
+
+
 /* Construct an S-expression with exactly four elements. */
 Cell* make_sexpr_len4(const Cell* a, const Cell* b, const Cell* c, const Cell* d)
 {
@@ -976,6 +989,8 @@ int32_t string_length_utf8(const char* s)
 }
 
 
+/* validate UTF-8 byte sequences for correctness and identify invalid characters using SIMD (Single Instruction,
+ * Multiple Data) principles within a single register (SWAR). */
 bool is_pure_ascii(const char *str, size_t len) {
     const unsigned char *ptr = (const unsigned char *)str;
 
