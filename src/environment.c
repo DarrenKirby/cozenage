@@ -33,6 +33,7 @@
 #include "symbols.h"
 #include "errors.h"
 #include "polymorph.h"
+#include "repr.h"
 
 #include <gc.h>
 #include <stdio.h>
@@ -191,6 +192,12 @@ void lex_add_builtin(const Lex* e, const char* name, Cell* (*func)(const Lex*, c
     Cell* fn = lex_make_builtin(name, func);
     const Cell* k = make_cell_symbol(name);
     lex_put_global(e, k, fn);
+}
+
+Cell* builtin_print_env(const Lex* e, const Cell* a) {
+    (void)a;
+    debug_print_env((Lex*)e);
+    return USP_Obj;
 }
 
 
@@ -422,12 +429,13 @@ void lex_add_builtins(const Lex* e)
     lex_add_builtin(e, "call-with-output-file", builtin_call_with_output_file);
     lex_add_builtin(e, "with-input-from-file", builtin_with_input_from_file);
     lex_add_builtin(e, "with-output-to-file", builtin_with_output_to_file);
-    /* Error procedures. */
+    /* Error/debug procedures. */
     lex_add_builtin(e, "read-error?", builtin_read_error);
     lex_add_builtin(e, "file-error?", builtin_file_error);
     lex_add_builtin(e, "error-object?", builtin_error_object);
     lex_add_builtin(e, "raise", builtin_raise);
     lex_add_builtin(e, "gc-report", builtin_gc_report);
+    lex_add_builtin(e, "print-env", builtin_print_env);
     /* Polymorphic procedures. */
     lex_add_builtin(e, "len", builtin_len);
     lex_add_builtin(e, "idx", builtin_idx);
