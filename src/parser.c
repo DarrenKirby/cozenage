@@ -1,7 +1,7 @@
 /*
  * 'src/parser.c'
  * This file is part of Cozenage - https://github.com/DarrenKirby/cozenage
- * Copyright © 2025  Darren Kirby <darren@dragonbyte.ca>
+ * Copyright © 2025 - 2026 Darren Kirby <darren@dragonbyte.ca>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -144,7 +144,7 @@ static Cell* parse_number(char* token, const int line, int len)
      }
 
     char *tok;
-    /* Check for exact/inexact */
+    /* Check for exact/inexact. */
     if (token[0] == 'e' && token[len - 1] != 'i') {
         exact = 1; len -= 1;
         token = token + 1;
@@ -153,13 +153,13 @@ static Cell* parse_number(char* token, const int line, int len)
         token = token + 1;
     }
 
-    /* For weirdness like #i#b1011 */
+    /* For weirdness like #i#b1011. */
     if (token[0] == '#' && token[len - 1] != 'i') {
         len -= 1;
         token = token + 1;
     }
 
-    /* Check for base prefixes */
+    /* Check for base prefixes. */
     if (token[0] == 'b' && token[len - 1] != 'i') {
         base = 2; len -= 1;
         tok = token + 1;
@@ -173,21 +173,21 @@ static Cell* parse_number(char* token, const int line, int len)
         base = 16; len -= 1;
         tok = token + 1;
     } else {
-        /* No prefix, or complex */
+        /* No prefix, or complex. */
         tok = token;
     }
 
-    /* Imaginary number */
+    /* Imaginary number. */
     if (tok[len - 1] == 'i') {
         char *p = tok;
 
-        /* strip trailing 'i' */
+        /* Strip trailing 'i'. */
         p[len - 1] = '\0';
 
         Cell* r;
         Cell* i;
 
-        /* Find the last '+' or '-' (but not the leading sign) */
+        /* Find the last '+' or '-' (but not the leading sign). */
         char *sep = nullptr;
         for (char *q = p + 1; *q; q++) {
             if (*q == '+' || *q == '-') {
@@ -196,7 +196,7 @@ static Cell* parse_number(char* token, const int line, int len)
         }
 
         if (!sep) {
-            /* pure imaginary case: "12i", "-12i", "+12i", "i", "-i", "+i" */
+            /* Pure imaginary case: "12i", "-12i", "+12i", "i", "-i", "+i". */
             r = make_cell_integer(0);
 
             if (strcmp(p, "+") == 0 || strcmp(p, "") == 0) {
@@ -209,14 +209,14 @@ static Cell* parse_number(char* token, const int line, int len)
 
         } else {
             /* real ± imag case: "23+10i", "23-10i", "-23+10i", etc. */
-            const char sign = *sep;     /* save '+' or '-' */
-            *sep = '\0';                /* terminate real part */
+            const char sign = *sep;     /* save "+" or "-". */
+            *sep = '\0';                /* terminate real part. */
             char *real_str = p;
 
-            /* imaginary part starts right after sep */
+            /* Imaginary part starts right after sep. */
             const char *imag_digits = sep + 1;
 
-            /* rebuild full imag string: e.g. "+10" or "-10" */
+            /* Rebuild full imag string: e.g. "+10" or "-10". */
             char buf[64];
             snprintf(buf, sizeof(buf), "%c%s", sign, imag_digits);
 
@@ -259,7 +259,7 @@ static Cell* parse_number(char* token, const int line, int len)
                 VALUE_ERR);
         }
 
-        /* Make inexact if specified by prefix */
+        /* Make inexact if specified by prefix. */
         Cell* result = make_cell_rational(n, d, 1);
         if (exact == 0) {
             result->exact = 0;
@@ -267,14 +267,12 @@ static Cell* parse_number(char* token, const int line, int len)
         return result;
     }
 
-    /* Integers and reals */
+    /* Integers and reals. */
 
-    /* Parse as bigint/bigfloat */
+    /* Parse as bigint (and eventually bigfloat). */
     if (!fits_in_int64(tok) && !strchr(tok, '.')) {
         return make_cell_bigint(tok, nullptr, base);
     }
-        //return make_cell_bigfloat(tok);
-        // 9,223,372,036,854,775,807.
 
     /* Try integer parsing if not base 10, no decimal, and not scientific notation. */
     if (base != 10 ||
@@ -293,7 +291,7 @@ static Cell* parse_number(char* token, const int line, int len)
         }
     }
 
-    /* Otherwise, try float */
+    /* Otherwise, try float. */
     if (base == 10) {
         const long double f = parse_float_checked(tok, err_buf, &ok);
         if (ok) {
@@ -305,13 +303,13 @@ static Cell* parse_number(char* token, const int line, int len)
         }
     }
 
-    /* If parsing fails but there is a numeric-like string, return error */
+    /* If parsing fails but there is a numeric-like string, return error. */
     if (!ok) {
         fprintf(stderr, "Error in numeric on line %d:\n", line);
         return make_cell_error(err_buf, SYNTAX_ERR);
     }
 
-    /* If we get here, something's really wrong */
+    /* If here, something's really wrong. */
     return make_cell_error(fmt_err("Line %d: Unable to parse numeric token: '%s%s%s'",
         line, ANSI_RED_B, tok, ANSI_RESET), SYNTAX_ERR);
 }
@@ -326,9 +324,9 @@ static Cell* parse_string(const char* str, const int len)
         exit(EXIT_FAILURE);
     }
 
-    const int length = len - 1; /* -2 for the quote marks */
-    int lex_idx = 1;   /* Index for the raw input string 'str' */
-    int buf_idx = 0;   /* Index for the new 'internal_buffer' */
+    const int length = len - 1; /* -2 for the quote marks. */
+    int lex_idx = 1;   /* Index for the raw input string 'str'. */
+    int buf_idx = 0;   /* Index for the new 'internal_buffer'. */
 
     while (lex_idx < length) {
 
@@ -338,8 +336,8 @@ static Cell* parse_string(const char* str, const int len)
             continue;
         }
 
-        /* Backslash Found */
-        lex_idx++; /* Consume the backslash (from 'str') */
+        /* Backslash Found. */
+        lex_idx++; /* Consume the backslash (from 'str'). */
         if (lex_idx >= length) {
             /* String ended with a backslash.
                R7RS is unspecified, but a common behavior is
@@ -350,7 +348,7 @@ static Cell* parse_string(const char* str, const int len)
 
         char next_char = str[lex_idx];
 
-        /* Sub-Case: Standard Single-Char Escapes */
+        /* Sub-Case: Standard Single-Char Escapes. */
         switch (next_char) {
             case 'a': internal_buffer[buf_idx++] = '\a'; lex_idx++; continue;
             case 'b': internal_buffer[buf_idx++] = '\b'; lex_idx++; continue;
@@ -402,7 +400,7 @@ static Cell* parse_string(const char* str, const int len)
             continue;
         }
 
-        /* Sub-Case: Error or Unhandled Escape
+        /* Sub-Case: Error or Unhandled Escape.
            If we had whitespace but NO newline, it's an error. */
         if (hiw) {
             fprintf(stderr, "Error: Invalid string. "
@@ -469,7 +467,8 @@ static Cell* parse_character(char* tok, const int line, const int len)
         if (strcmp(tok, "return") == 0) return make_cell_char(0xd);
         if (strcmp(tok, "tab") == 0) return make_cell_char('\t');
 
-        /* Check mapping of implementation-specific named chars. */
+        /* Check mapping of implementation-specific named chars.
+         * Defined in src/types.c. */
         const NamedChar* named_char = find_named_char(tok);
         if (named_char) {
             return make_cell_char(named_char->codepoint);
@@ -557,7 +556,10 @@ Cell* parse_tokens(TokenArray *ta)
         default: break;
     }
 
-    /* Just handle quote and quasiquote the same for now. */
+    /* Handle quote and quasiquote.
+     * This just transforms:
+     * 'foo -> (quote foo)
+     * `foo -> (quasiquote foo) */
     if (token->type == T_QUOTE || token->type == T_QUASIQUOTE) {
         /* Grab the next token. */
         const Token* t = advance(ta);
@@ -567,17 +569,39 @@ Cell* parse_tokens(TokenArray *ta)
                         t->line, ANSI_RED_B, token_to_string(t), ANSI_RESET), SYNTAX_ERR);
         }
         Cell *qexpr = make_cell_sexpr();
-        cell_add(qexpr, make_cell_symbol("quote"));
+        /* Emit appropriate SF literal. */
+        token->type == T_QUOTE ?
+            cell_add(qexpr, make_cell_symbol("quote")) :
+            cell_add(qexpr, make_cell_symbol("quasiquote"));
+
         cell_add(qexpr, quoted);
         return qexpr;
     }
 
-    /* Vector or bytevector */
+    /* Comma and comma-at. */
+    if (token->type == T_COMMA || token->type == T_COMMA_AT) {
+        const Token* t = advance(ta);
+        Cell *expr = parse_tokens(ta);
+        if (!expr) {
+            return make_cell_error(fmt_err("Line %d: Expected expression after comma: '%s%s%s'",
+                        t->line, ANSI_RED_B, token_to_string(t), ANSI_RESET), SYNTAX_ERR);
+        }
+        Cell *qexpr = make_cell_sexpr();
+        /* Emit appropriate SF literal. */
+        token->type == T_COMMA ?
+            cell_add(qexpr, make_cell_symbol("unquote")) :
+            cell_add(qexpr, make_cell_symbol("unquote-splicing"));
+
+        cell_add(qexpr, expr);
+        return qexpr;
+    }
+
+    /* Vector or bytevector. */
     if (token->type == T_HASH) {
         token = advance(ta); /* Consume '#' */
 
         if (peek(ta)->type == T_SYMBOL) {
-            /* Bytevector */
+            /* Bytevector. */
             const char* bv_tok = token_to_string(peek(ta));
             uint8_t bv_t;
             int64_t bv_min;
@@ -678,9 +702,9 @@ Cell* parse_tokens(TokenArray *ta)
 
     /* S-expression. */
     if (token->type == T_LEFT_PAREN) {
-        token = advance(ta); /* Consume '(' */
+        token = advance(ta); /* Consume '('. */
         if (token->type == T_RIGHT_PAREN) {
-            /* Unquoted nil is an error */
+            /* Unquoted nil is an error. */
             return make_cell_error(
                 fmt_err("Line %d: Empty S-expression.", token->line),
                 SYNTAX_ERR);

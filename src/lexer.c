@@ -1,7 +1,7 @@
 /*
  * 'src/lexer.c'
  * This file is part of Cozenage - https://github.com/DarrenKirby/cozenage
- * Copyright © 2025  Darren Kirby <darren@dragonbyte.ca>
+ * Copyright © 2025 - 2026 Darren Kirby <darren@dragonbyte.ca>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,20 +40,24 @@ void init_lexer(const char* source)
     scanner.line = 1;
 }
 
+
 static bool is_digit(const char c)
 {
     return c >= '0' && c <= '9';
 }
+
 
 static bool is_whitespace(const char c)
 {
     return c == ' ' || c == '\t' || c == '\r' || c == '\n';
 }
 
+
 static bool at_end()
 {
     return *scanner.current == '\0';
 }
+
 
 static char advance()
 {
@@ -61,16 +65,19 @@ static char advance()
     return scanner.current[-1];
 }
 
+
 static char peek()
 {
     return *scanner.current;
 }
+
 
 static char peekNext()
 {
     if (at_end()) return '\0';
     return scanner.current[1];
 }
+
 
 static Token make_token(const TokenType type)
 {
@@ -82,6 +89,7 @@ static Token make_token(const TokenType type)
     return token;
 }
 
+
 static Token error_token(const char* message)
 {
     Token token;
@@ -91,6 +99,7 @@ static Token error_token(const char* message)
     token.line = scanner.line;
     return token;
 }
+
 
 static void skip_whitespace()
 {
@@ -106,22 +115,22 @@ static void skip_whitespace()
             scanner.line++;
             advance();
             break;
-        /* Line comment */
+        /* Line comment. */
         case ';':
             while (peek() != '\n' && !at_end()) advance();
             break;
-            /* Block comment */
+            /* Block comment. */
         case '#':
             if (peekNext() == '|')
             {
-                /* Consume "#|" */
+                /* Consume "#|". */
                 advance(); advance();
                 while (peek() != '|' && !at_end())
                 {
                     if (peek() == '\n') scanner.line++;
                     advance();
                 }
-                /* Consume "|#" */
+                /* Consume "|#". */
                 advance(); advance();
                 break;
             }
@@ -132,6 +141,7 @@ static void skip_whitespace()
     }
 }
 
+
 static Token string()
 {
     while (peek() != '"' && !at_end()) {
@@ -139,9 +149,9 @@ static Token string()
 
         if (c == '\\') {
             /* It's an escape character. */
-            advance(); /* Consume the backslash */
+            advance(); /* Consume the backslash. */
 
-            /* Check for EOF right after the backslash */
+            /* Check for EOF right after the backslash. */
             if (at_end()) return error_token("Unterminated string.");
 
             /* If the escaped char is a newline, count it. */
@@ -149,15 +159,15 @@ static Token string()
                 scanner.line++;
             }
 
-            /* Consume the escaped character (e.g., ", n, t, \)
+            /* Consume the escaped character.
                We don't care what it is, we just skip over it. */
             advance();
         } else if (c == '\n') {
-            /* This is a *literal* (unescaped) newline in the string */
+            /* This is a *literal* (unescaped) newline in the string. */
             scanner.line++;
             advance();
         } else {
-            /* Any other regular character */
+            /* Any other regular character. */
             advance();
         }
     }
@@ -169,6 +179,7 @@ static Token string()
     return make_token(T_STRING);
 }
 
+
 static Token number()
 {
     while (!is_whitespace(peek()) && !at_end() && peek() != ')') {
@@ -176,6 +187,7 @@ static Token number()
     }
     return make_token(T_NUMBER);
 }
+
 
 static Token boolean()
 {
@@ -185,6 +197,7 @@ static Token boolean()
     }
     return make_token(T_BOOLEAN);
 }
+
 
 static Token multi_word_identifier()
 {
@@ -197,6 +210,7 @@ static Token multi_word_identifier()
     return make_token(T_SYMBOL);
 }
 
+
 static Token symbol()
 {
     while (!is_whitespace(peek()) && peek() != ')' && peek() != '(' && !at_end()) {
@@ -204,6 +218,7 @@ static Token symbol()
     }
     return make_token(T_SYMBOL);
 }
+
 
 static Token character()
 {
@@ -213,6 +228,7 @@ static Token character()
     }
     return make_token(T_CHAR);
 }
+
 
 Token lex_token()
 {
@@ -235,16 +251,29 @@ Token lex_token()
             return make_token(T_QUOTE);
         case '`':
             return make_token(T_QUASIQUOTE);
+
         /* Either a number prefix, or symbol. */
         case '+':
         case '-': {
             /* -inf.0, +inf.0, +nan.0, and -nan.0 need special handling.
-             * lex them as symbols, and deal with in the parser */
+             * lex them as symbols, and deal with it in the parser. */
             if (peek() == 'i' && peekNext() == 'n') return symbol();
             if (peek() == 'n' && peekNext() == 'a') return symbol();
             if (is_digit(peek())) return number();
             return make_token(T_SYMBOL);
         }
+
+        /* Comma, and comma at. */
+        case ',': {
+            switch (peek()) {
+                case '@':
+                    advance();
+                    return make_token(T_COMMA_AT);
+                default:
+                    return make_token(T_COMMA);
+            }
+        }
+
         /* Multiple possibilities, depending on what follows the hash. */
         case '#': {
             switch (peek()) {
@@ -279,6 +308,7 @@ Token lex_token()
     }
 }
 
+
 static TokenArray* init_token_array()
 {
     /* Allocate space for the manager struct itself. */
@@ -301,6 +331,7 @@ static TokenArray* init_token_array()
     return ta;
 }
 
+
 static TokenArray* write_token_array(TokenArray* ta, const Token token)
 {
     /* Check if we need to reallocate. */
@@ -321,6 +352,7 @@ static TokenArray* write_token_array(TokenArray* ta, const Token token)
     return ta;
 }
 
+
 TokenArray* scan_all_tokens(const char* source)
 {
     TokenArray *t_array = init_token_array();
@@ -334,6 +366,7 @@ TokenArray* scan_all_tokens(const char* source)
 
     return t_array;
 }
+
 
 void debug_lexer(const TokenArray* ta)
 {

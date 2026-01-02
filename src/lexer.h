@@ -1,7 +1,7 @@
 /*
  * 'src/lexer.h'
  * This file is part of Cozenage - https://github.com/DarrenKirby/cozenage
- * Copyright © 2025  Darren Kirby <darren@dragonbyte.ca>
+ * Copyright © 2025 - 2026  Darren Kirby <darren@dragonbyte.ca>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,16 +34,18 @@ typedef enum {
     T_BOOLEAN,
     T_QUOTE,
     T_QUASIQUOTE,
+    T_COMMA,
+    T_COMMA_AT,
     /* Special tokens */
     T_ERROR,
     T_EOF
 } TokenType;
 
 typedef struct {
-    TokenType type;
-    const char* start;
     int length;
     int line;
+    TokenType type;
+    const char* start;
 } Token;
 
 typedef struct {
