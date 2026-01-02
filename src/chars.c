@@ -1,7 +1,7 @@
 /*
- * 'chars.c'
+ * 'src/chars.c'
  * This file is part of Cozenage - https://github.com/DarrenKirby/cozenage
- * Copyright © 2025  Darren Kirby <darren@dragonbyte.ca>
+ * Copyright © 2025 - 2026 Darren Kirby <darren@dragonbyte.ca>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,6 +29,7 @@
  *      Char constructors, selectors, and procedures     *
  * ------------------------------------------------------*/
 
+
 /* (char->integer char )
  * Given a Unicode character, char->integer returns an exact integer between 0 and #xD7FF or
  * between #xE000 and #x10FFFF which is equal to the Unicode scalar value of that character. Given
@@ -44,6 +45,7 @@ Cell* builtin_char_to_int(const Lex* e, const Cell* a)
 
     return make_cell_integer(a->cell[0]->char_v);
 }
+
 
 /* (integer->char n)
  * Given an exact integer that is the value returned by a character when char->integer is applied
@@ -70,6 +72,7 @@ Cell* builtin_int_to_char(const Lex* e, const Cell* a)
     return make_cell_char(val);
 }
 
+
 /* These procedures return #t if the results of passing their arguments to char->integer are
  * respectively equal, monotonically increasing, monotonically decreasing, monotonically
  * non-decreasing, or monotonically non-increasing. */
@@ -90,6 +93,7 @@ Cell* builtin_char_equal_pred(const Lex* e, const Cell* a)
     return builtin_eq_op(e, cell_sexpr);
 }
 
+
 /* (char<? char1 char2 char3 ... ) */
 Cell* builtin_char_lt_pred(const Lex* e, const Cell* a)
 {
@@ -105,6 +109,7 @@ Cell* builtin_char_lt_pred(const Lex* e, const Cell* a)
     const Cell* cell_sexpr = make_sexpr_from_array(a->count, cells);
     return builtin_lt_op(e, cell_sexpr);
 }
+
 
 /* (char<=? char1 char2 char3 ... )   */
 Cell* builtin_char_lte_pred(const Lex* e, const Cell* a)
@@ -122,6 +127,7 @@ Cell* builtin_char_lte_pred(const Lex* e, const Cell* a)
     return builtin_lte_op(e, cell_sexpr);
 }
 
+
 /* (char>? char1 char2 char3 ... )   */
 Cell* builtin_char_gt_pred(const Lex* e, const Cell* a)
 {
@@ -138,6 +144,7 @@ Cell* builtin_char_gt_pred(const Lex* e, const Cell* a)
     return builtin_gt_op(e, cell_sexpr);
 }
 
+
 /* (char>=? char1 char2 char3 ... )   */
 Cell* builtin_char_gte_pred(const Lex* e, const Cell* a)
 {
@@ -153,6 +160,7 @@ Cell* builtin_char_gte_pred(const Lex* e, const Cell* a)
     const Cell* cell_sexpr = make_sexpr_from_array(a->count, cells);
     return builtin_gte_op(e, cell_sexpr);
 }
+
 
 /* These procedures return #t if their arguments are alphabetic, numeric, whitespace, upper case,
  * or lower case characters, respectively, otherwise they return #f.
@@ -176,6 +184,7 @@ Cell* builtin_char_alphabetic(const Lex* e, const Cell* a)
     return make_cell_boolean(u_isalpha(a->cell[0]->char_v));
 }
 
+
 /* (char-whitespace? char) */
 Cell* builtin_char_whitespace(const Lex* e, const Cell* a)
 {
@@ -189,6 +198,7 @@ Cell* builtin_char_whitespace(const Lex* e, const Cell* a)
     }
     return make_cell_boolean(u_isspace(a->cell[0]->char_v));
 }
+
 
 /* (char-numeric? char) */
 Cell* builtin_char_numeric(const Lex* e, const Cell* a)
@@ -204,6 +214,7 @@ Cell* builtin_char_numeric(const Lex* e, const Cell* a)
     return make_cell_boolean(u_isdigit(a->cell[0]->char_v));
 }
 
+
 /* (char-upper-case? letter) */
 Cell* builtin_char_upper_case(const Lex* e, const Cell* a)
 {
@@ -213,7 +224,7 @@ Cell* builtin_char_upper_case(const Lex* e, const Cell* a)
     if (a->cell[0]->type != CELL_CHAR) {
         return make_cell_error(
             "char-upper-case?: arg 1 must be a char",
-TYPE_ERR);
+            TYPE_ERR);
     }
     return make_cell_boolean(u_isupper(a->cell[0]->char_v));
 }
@@ -231,6 +242,7 @@ Cell* builtin_char_lower_case(const Lex* e, const Cell* a) {
     }
     return make_cell_boolean(u_islower(a->cell[0]->char_v));
 }
+
 
 /* (char-upcase char)
  * The char-upcase procedure, given an argument that is the lowercase part of a Unicode casing pair,
@@ -250,6 +262,7 @@ Cell* builtin_char_upcase(const Lex* e, const Cell* a)
     return make_cell_char(u_toupper(a->cell[0]->char_v));
 }
 
+
 /* (char-downcase char)
  * The char-downcase procedure, given an argument that is the uppercase part of a Unicode casing
  * pair, returns the lowercase member of the pair, provided that both characters are supported by
@@ -267,6 +280,7 @@ Cell* builtin_char_downcase(const Lex* e, const Cell* a)
     }
     return make_cell_char(u_tolower(a->cell[0]->char_v));
 }
+
 
 /* (char-foldcase char)
  * The char-foldcase procedure applies the Unicode simple case-folding algorithm to its argument and
@@ -310,7 +324,12 @@ Cell* builtin_digit_value(const Lex* e, const Cell* a)
     return make_cell_integer(value);
 }
 
-/*  */
+
+/* These procedures are similar to char=? et al, but they treat upper case and lower case letters as the same. For
+ * example, (char-ci=? #\A #\a) returns #t. Specifically, these procedures behave as if char-foldcase were applied to
+ * their arguments before they were compared. */
+
+/* (char-ci=? char1 char2 char3 ... ) */
 Cell* builtin_char_equal_ci(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -328,7 +347,8 @@ Cell* builtin_char_equal_ci(const Lex* e, const Cell* a)
     return builtin_eq_op(e, cell_sexpr);
 }
 
-/*  */
+
+/* (char-ci<? char1 char2 char3 ... ) */
 Cell* builtin_char_lt_ci(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -346,7 +366,8 @@ Cell* builtin_char_lt_ci(const Lex* e, const Cell* a)
     return builtin_lt_op(e, cell_sexpr);
 }
 
-/*  */
+
+/* (char-ci<=? char1 char2 char3 ... ) */
 Cell* builtin_char_lte_ci(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -364,7 +385,8 @@ Cell* builtin_char_lte_ci(const Lex* e, const Cell* a)
     return builtin_lte_op(e, cell_sexpr);
 }
 
-/*  */
+
+/* (char-ci>? char1 char2 char3 ... ) */
 Cell* builtin_char_gt_ci(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -382,7 +404,8 @@ Cell* builtin_char_gt_ci(const Lex* e, const Cell* a)
     return builtin_gt_op(e, cell_sexpr);
 }
 
-/*  */
+
+/* (char-ci>=? char1 char2 char3 ... ) */
 Cell* builtin_char_gte_ci(const Lex* e, const Cell* a)
 {
     (void)e;

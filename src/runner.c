@@ -174,8 +174,10 @@ Cell* parse_all_expressions(Lex* e, TokenArray* ta, const bool is_repl)
         /* Evaluate the expression. */
         Cell* result = coz_eval(e, expression);
 
+        /* Want to try to eliminate these 'legitimate' null returns,
+         * and make sure they're replaced with USP_Obj.*/
         if (!result) {
-            printf("EVAL RETURNED NULL!!!!"); /* Want to try to eliminate these 'legitimate' null returns */
+            printf("EVAL RETURNED NULL!!!!");
             break;
         }
 

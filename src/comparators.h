@@ -1,7 +1,7 @@
 /*
  * 'src/comparators.h'
  * This file is part of Cozenage - https://github.com/DarrenKirby/cozenage
- * Copyright © 2025  Darren Kirby <darren@dragonbyte.ca>
+ * Copyright © 2025 - 2026 Darren Kirby <darren@dragonbyte.ca>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,13 +23,13 @@
 #include "cell.h"
 
 
-/* Comparison operators */
+/* Comparison operators. */
 Cell* builtin_eq_op(const Lex* e, const Cell* a);
 Cell* builtin_gt_op(const Lex* e, const Cell* a);
 Cell* builtin_lt_op(const Lex* e, const Cell* a);
 Cell* builtin_gte_op(const Lex* e, const Cell* a);
 Cell* builtin_lte_op(const Lex* e, const Cell* a);
-/* Equality and equivalence comparators */
+/* Equality and equivalence comparators. */
 Cell* builtin_equal(const Lex* e, const Cell* a);
 Cell* builtin_eqv(const Lex* e, const Cell* a);
 Cell* builtin_eq(const Lex* e, const Cell* a);

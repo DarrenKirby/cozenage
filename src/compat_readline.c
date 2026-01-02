@@ -1,7 +1,7 @@
 /*
- * 'compat_readline.c'
+ * 'src/compat_readline.c'
  * This file is part of Cozenage - https://github.com/DarrenKirby/cozenage
- * Copyright © 2025  Darren Kirby <darren@dragonbyte.ca>
+ * Copyright © 2025 - 2026 Darren Kirby <darren@dragonbyte.ca>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,6 +19,8 @@
 
 #include "compat_readline.h"
 
+/* This code is only used if Cozenage is linked against GNU Readline.
+ * libedit does not contain this functionality. */
 #ifdef USE_GNU_READLINE
 
 #include "hash.h"
@@ -41,7 +43,7 @@ void populate_dynamic_completions(const Lex* e)
 
     /* Special forms have to be added manually. */
     char* special_forms[] = { "quote", "define", "lambda", "let", "let*", "letrec", "set!", "if",
-        "when", "unless", "cond", "else", "begin", "import", "and", "or", "do", "case" };
+        "when", "unless", "cond", "else", "begin", "import", "and", "or", "do", "case", "letrec*" };
     /* Why tho, does CLion always think this is C++ code? */
     // ReSharper disable once CppVariableCanBeMadeConstexpr
     const int num_sfs = sizeof(special_forms) / sizeof(special_forms[0]);
@@ -58,17 +60,12 @@ void populate_dynamic_completions(const Lex* e)
         scheme_procedures[i] = GC_strdup(special_forms[j]);
         i++;
     }
-    /* Iterate second time to copy symbol names */
+    /* Iterate second time to copy symbol names. */
     it = ht_iterator(e->global);
     while (ht_next(&it)) {
         scheme_procedures[i] = GC_strdup(it.key);
         i++;
     }
-
-    /* For debugging */
-    // for (int k = 0; k < symbol_count + num_sfs; k++) {
-    //     printf("found sym[%d]: %s\n", k, scheme_procedures[k]);
-    // }
 
     /* The list must be NULL-terminated for the generator to know when to stop. */
     scheme_procedures[i] = nullptr;
@@ -89,7 +86,7 @@ char* scheme_procedure_generator(const char *text, const int state)
     /* Iterate through the procedure list and return the next match. */
     while ((name = scheme_procedures[list_index++])) {
         if (strncmp(name, text, len) == 0) {
-            return strdup(name); // Readline will free this for us.
+            return strdup(name);
         }
     }
 
@@ -106,25 +103,24 @@ char** completion_dispatcher(const char *text, const int start, const int end)
     bool in_string = false;
     /* Iterate through the line buffer up to the point of completion. */
     for (int i = 0; i < start; i++) {
-        /* If we find a double quote... */
+        /* If there is a double quote... */
         if (rl_line_buffer[i] == '"') {
             /* ...check if it's escaped. If it is (preceded by a '\'),
-             * we ignore it. We also check i > 0 to avoid reading before the buffer. */
+             * ignore it. Also check i > 0 to avoid reading before the buffer. */
             if (i > 0 && rl_line_buffer[i - 1] == '\\') {
                 continue;
             }
-            /* Otherwise, toggle our state. */
+            /* Otherwise, toggle the state. */
             in_string = !in_string;
         }
     }
-
-    /* Now, use the state to decide which completer to use. */
+    /* Use the state to decide which completer to use. */
     if (in_string) {
-        /* We are inside a string, so use the filename completer.
+        /* Inside a string, so use the filename completer.
          * Passing NULL as the generator uses the default filename completer. */
         return rl_completion_matches(text, rl_filename_completion_function);
     }
-    /* We are not in a string, so use our custom procedure completer. */
+    /* Not in a string, so use the custom procedure completer. */
     return rl_completion_matches(text, scheme_procedure_generator);
 }
 

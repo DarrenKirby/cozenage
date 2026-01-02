@@ -1,7 +1,7 @@
 /*
 * 'src/compat_readline.h'
  * This file is part of Cozenage - https://github.com/DarrenKirby/cozenage
- * Copyright © 2025  Darren Kirby <darren@dragonbyte.ca>
+ * Copyright © 2025 - 2026 Darren Kirby <darren@dragonbyte.ca>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@
 
 static char buffer[2048];
 
-/* Fake readline function */
+/* Fake readline function. */
 char* readline(char* prompt) {
     fputs(prompt, stdout);
     fgets(buffer, 2048, stdin);
@@ -36,17 +36,17 @@ char* readline(char* prompt) {
     return cpy;
 }
 
-/* Fake add_history function */
+/* Fake add_history function. */
 void add_history(char* unused) {}
 
 #else
 
+#ifdef USE_GNU_READLINE
+
+// ReSharper disable once CppUnusedIncludeDirective
 #include <stdio.h>
 #include <readline/readline.h>
 #include <readline/history.h>
-
-#ifdef USE_GNU_READLINE
-
 #include <readline/tilde.h>
 #include "environment.h"
 
@@ -54,6 +54,11 @@ void add_history(char* unused) {}
 char* scheme_procedure_generator(const char *text, int state);
 char** completion_dispatcher(const char *text, int start, int end);
 void populate_dynamic_completions(const Lex* e);
+
+#else
+
+#include <readline/readline.h>
+#include <readline/history.h>
 
 #endif
 

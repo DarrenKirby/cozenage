@@ -1,7 +1,7 @@
 /*
  * 'src/comparators.c'
  * This file is part of Cozenage - https://github.com/DarrenKirby/cozenage
- * Copyright © 2025  Darren Kirby <darren@dragonbyte.ca>
+ * Copyright © 2025 - 2026 Darren Kirby <darren@dragonbyte.ca>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,7 +29,7 @@
  * -----------------------------*/
 
 
-/* Helper for '=' which recursively compares complex numbers */
+/* Helper for '=' which recursively compares complex numbers. */
 static int complex_eq_op(const Lex* e, const Cell* lhs, const Cell* rhs)
 {
     const Cell* args_real = make_sexpr_len2(lhs->real, rhs->real);
@@ -43,7 +43,8 @@ static int complex_eq_op(const Lex* e, const Cell* lhs, const Cell* rhs)
 }
 
 
-/* '=' -> CELL_BOOLEAN - returns true if all arguments are equal. */
+/* (= z1 z2 z3 ...)
+ * Returns true if all arguments are equal. */
 Cell* builtin_eq_op(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -83,7 +84,8 @@ Cell* builtin_eq_op(const Lex* e, const Cell* a)
 }
 
 
-/* '>' -> CELL_BOOLEAN - returns true if each argument is greater than the one that follows. */
+/* (> x1 x2 x3 ...)
+ * Returns true if each argument is greater than the one that follows. */
 Cell* builtin_gt_op(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -123,7 +125,8 @@ Cell* builtin_gt_op(const Lex* e, const Cell* a)
 }
 
 
-/* '<' -> CELL_BOOLEAN - returns true if each argument is less than the one that follows. */
+/* (< x1 x2 x3 ...)
+ * Returns true if each argument is less than the one that follows. */
 Cell* builtin_lt_op(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -163,7 +166,8 @@ Cell* builtin_lt_op(const Lex* e, const Cell* a)
 }
 
 
-/* '>=' -> CELL_BOOLEAN - */
+/* (>= x1 x2 x3 ...)
+ * Returns true if each argument is greater than or equal to the one that follows. */
 Cell* builtin_gte_op(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -203,7 +207,8 @@ Cell* builtin_gte_op(const Lex* e, const Cell* a)
 }
 
 
-/* '<=' -> CELL_BOOLEAN - */
+/* (<= x1 x2 x3 ...)
+ * Returns true if each argument is less than or equal to the one that follows. */
 Cell* builtin_lte_op(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -261,7 +266,7 @@ Cell* builtin_eq(const Lex* e, const Cell* a)
     const Cell* x = a->cell[0];
     const Cell* y = a->cell[1];
 
-    /* Strict pointer equality */
+    /* Strict pointer equality. */
     return make_cell_boolean(x == y);
 }
 
@@ -281,7 +286,7 @@ Cell* builtin_eqv(const Lex* e, const Cell* a)
 
     if (x->type != y->type) return False_Obj;
 
-    /* Just kick numbers over to '='*/
+    /* Just kick numbers over to '='. */
     // ReSharper disable once CppVariableCanBeMadeConstexpr
     const int mask = CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX|CELL_BIGINT;
     if (x->type & mask) {
@@ -306,13 +311,13 @@ static Cell* check_if_lists_are_equal_recursive(const Lex* e, Cell* x, Cell* y, 
     if (x == y) return True_Obj;
     if (x->type != y->type) return False_Obj;
     if (x->type != CELL_PAIR) {
-        /* We've reached the end of the list structure (could be NIL or an improper tail)
+        /* If at the end of the list structure (could be NIL or an improper tail)
          * Use the main val_equal to handle the final tail values. */
         return val_equal(e, x, y);
     }
 
     /* Cycle Detection
-     * If we've already started comparing this specific pair of pairs,
+     * If this specific pair of pairs have already been compared,
      * assume they are equal to break the infinite recursion. */
     const Cell* v = visited;
     while (v->type == CELL_PAIR) {
@@ -322,7 +327,7 @@ static Cell* check_if_lists_are_equal_recursive(const Lex* e, Cell* x, Cell* y, 
     }
 
     /* Record this visit
-     * We push the pair (x . y) onto our visited stack. */
+     * Push the pair (x . y) onto the visited stack. */
     Cell* current_comp = make_cell_pair(x, y);
     Cell* new_visited = make_cell_pair(current_comp, visited);
 
