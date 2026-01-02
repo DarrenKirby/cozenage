@@ -1,7 +1,7 @@
 /*
  * 'src/main.h'
  * This file is part of Cozenage - https://github.com/DarrenKirby/cozenage
- * Copyright © 2025  Darren Kirby <darren@dragonbyte.ca>
+ * Copyright © 2025 - 2026 Darren Kirby <darren@dragonbyte.ca>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,13 +21,18 @@
 #define COZENAGE_H
 
 #define APP_NAME "Cozenage"
-#define APP_VERSION "0.9.1"
+
+/* Note: version string typically provided by CMake. */
+#ifndef APP_VERSION
+#define APP_VERSION "0.9.2"
+#endif
+
 #define PS1_PROMPT "--> \001\x1b[37;1m\002"
 #define PS2_PROMPT "...    \001\x1b[37;1m\002"
 #define HIST_FILE "~/.cozenage_history"
 
-/* ANSI colour codes */
-/* normal */
+/* ANSI colour codes. */
+/* normal. */
 #define ANSI_RED       "\x1b[31m"
 #define ANSI_GREEN     "\x1b[32m"
 #define ANSI_YELLOW    "\x1b[33m"
@@ -36,7 +41,7 @@
 #define ANSI_CYAN      "\x1b[36m"
 #define ANSI_WHITE     "\x1b[37m"
 
-/* bold */
+/* bold. */
 #define ANSI_RED_B     "\x1b[31;1m"
 #define ANSI_GREEN_B   "\x1b[32;1m"
 #define ANSI_YELLOW_B  "\x1b[33;1m"

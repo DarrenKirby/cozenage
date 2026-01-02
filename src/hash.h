@@ -1,7 +1,7 @@
 /*
  * 'hash.h'
  * This file is part of Cozenage - https://github.com/DarrenKirby/cozenage
- * Copyright © 2025  Darren Kirby <darren@dragonbyte.ca>
+ * Copyright © 2025 - 2026 Darren Kirby <darren@dragonbyte.ca>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,35 +22,36 @@
 
 #include <stdio.h>
 
-/* Forward declare Cell */
+
+/* Forward declare Cell. */
 typedef struct Cell Cell;
 
-/* Constants for hash function */
+/* Constants for hash function. */
 #define FNV_OFFSET 14695981039346656037UL
 #define FNV_PRIME 1099511628211UL
 
-/* Hash table item */
+/* Hash table item. */
 typedef struct {
-    char* key;  /* key is NULL if this slot is empty */
+    char* key;  /* key is NULL if this slot is empty. */
     Cell* value;
 } ht_item;
 
 /* Hash table structure */
 typedef struct hash_table {
-    ht_item* items;     /* items array */
-    size_t capacity;    /* size of items array */
-    size_t count;       /* number of items in hash table */
+    ht_item* items;     /* items array. */
+    size_t capacity;    /* size of items array. */
+    size_t count;       /* number of items in hash table. */
 } ht_table;
 
 /* Hash table iterator: create with ht_iterator, iterate with ht_next. */
-/* Don't need this until implementing a hash/map/dict Scheme type */
+/* Don't need this until implementing a hash/map/dict Scheme type. */
 typedef struct {
-    const char* key;  // current key
-    Cell* value;      // current value
+    const char* key;  /* Current key. */
+    Cell* value;      /* Current value. */
 
-    // Don't use these fields directly.
-    ht_table* _table;       // reference to hash table being iterated
-    size_t _index;    // current index into ht._entries
+    /* Don't use these fields directly. */
+    ht_table* _table;  /* Reference to hash table being iterated. */
+    size_t _index;     /* Current index into ht._entries. */
 } hti;
 
 ht_table* ht_create(int initial_capacity);

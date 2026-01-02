@@ -1,7 +1,7 @@
 /*
  * 'src/main.c'
  * This file is part of Cozenage - https://github.com/DarrenKirby/cozenage
- * Copyright © 2025  Darren Kirby <darren@dragonbyte.ca>
+ * Copyright © 2025 - 2026 Darren Kirby <darren@dragonbyte.ca>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,6 +29,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include <getopt.h>
+
+#define nullptr ((void*)0)
 
 
 /* Initialize load_libs struct to zeros. */

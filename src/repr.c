@@ -1,7 +1,7 @@
 /*
  * 'src/repr.c'
  * This file is part of Cozenage - https://github.com/DarrenKirby/cozenage
- * Copyright © 2025  Darren Kirby <darren@dragonbyte.ca>
+ * Copyright © 2025 - 2026 Darren Kirby <darren@dragonbyte.ca>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,7 +29,7 @@
 #include <wctype.h>
 
 
-/* Forward declaration for helpers */
+/* Forward declaration for helpers. */
 static void cell_to_string_worker(const Cell* v, string_builder_t *sb, print_mode_t mode);
 
 
@@ -346,7 +346,7 @@ char* cell_to_string(const Cell* cell, const print_mode_t mode)
 }
 
 
-/* Helper for debugging */
+/* Helper for debugging. */
 void debug_print_cell(const Cell* v)
 {
     if (v == NULL) {
@@ -358,7 +358,7 @@ void debug_print_cell(const Cell* v)
 }
 
 
-/* Dump the environment 'symbol' -> 'value' pairs */
+/* Dump the environment 'symbol' -> 'value' pairs. */
 void debug_print_env(const Lex* e)
 {
     /* Print global env hash items. */

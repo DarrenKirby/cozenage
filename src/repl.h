@@ -25,6 +25,6 @@
 
 int run_repl(lib_load_config load_libs);
 void coz_print(const Cell* v);
-void save_history_to_file();
+void save_history_to_file(void);
 
 #endif //COZENAGE_REPL_H

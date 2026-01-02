@@ -224,10 +224,14 @@ size_t ht_length(const ht_table* table)
 }
 
 /* This iterator (written by Ben Hoyt) is not needed yet, but may be useful
- * when implementing a hash/map/dict scheme type */
+ * when implementing a hash/map/dict scheme type. */
 hti ht_iterator(ht_table* table)
 {
     hti it;
+    /* Just to shut up the linter. */
+    it.key = nullptr;
+    it.value = nullptr;
+
     it._table = table;
     it._index = 0;
     return it;
