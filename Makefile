@@ -10,7 +10,7 @@
 #
 
 # --- Primary Variables ---
-CC = gcc
+CC = cc
 BINARY = cozenage
 TEST_BINARY = run_tests
 BUILD_DIR = build

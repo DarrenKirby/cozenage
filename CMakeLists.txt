@@ -2,8 +2,10 @@ cmake_minimum_required(VERSION 3.10)
 
 # here we specify that the project is C language only, so the default
 # C compiler on the system will be used
-project(cozenage C)
+project(Cozenage LANGUAGES C VERSION 0.9.2)
 set(CMAKE_C_STANDARD 23)
+
+message(STATUS "Building ${PROJECT_NAME} v${PROJECT_VERSION}")
 
 option(DEBUG_BUILD "Enable debug CFLAGS" OFF)
 
@@ -31,6 +33,16 @@ message(STATUS "Building with CFLAGS: ${CMAKE_C_FLAGS}")
 option(USE_LIBEDIT "Force using libedit instead of GNU readline" OFF)
 
 # We need the PkgConfig module to find libraries installed by package managers.
+if (APPLE)
+    find_program(PKG_CONFIG_EXECUTABLE
+            NAMES pkg-config
+            PATHS /opt/homebrew/bin /usr/local/bin
+            NO_DEFAULT_PATH
+    )
+else()
+    find_program(PKG_CONFIG_EXECUTABLE NAMES pkg-config)
+endif()
+
 find_package(PkgConfig QUIET)
 
 # This variable will hold the name of the library provider for accurate reporting.
@@ -43,9 +55,9 @@ if (USE_LIBEDIT)
     set(SEARCH_FOR_LIBEDIT TRUE)
 
 else()
-    # Default behavior: Prefer GNU readline via pkg-config.
-    if (PKG_CONFIG_FOUND)
-        # We use a prefix "PC_READLINE" to keep variables from pkg-config local.
+    if (PKG_CONFIG_FOUND AND PKG_CONFIG_EXECUTABLE)
+        message(STATUS "PKG_CONFIG_EXECUTABLE = ${PKG_CONFIG_EXECUTABLE}")
+         message(STATUS "PKG_CONFIG_PATH = $ENV{PKG_CONFIG_PATH}")
         pkg_check_modules(PC_READLINE QUIET readline)
     endif()
 
@@ -209,6 +221,8 @@ if (READLINE_PROVIDER MATCHES "GNU readline")
     target_compile_definitions(cozenage PRIVATE USE_GNU_READLINE)
 endif()
 
+
+target_compile_definitions(cozenage PUBLIC APP_VERSION="${PROJECT_VERSION}")
 
 # ==============================================================================
 # Build Loadable Modules
