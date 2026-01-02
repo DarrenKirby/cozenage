@@ -1,7 +1,7 @@
 /*
- * 'bytevectors.c'
+ * 'src/bytevectors.c'
  * This file is part of Cozenage - https://github.com/DarrenKirby/cozenage
- * Copyright © 2025  Darren Kirby <darren@dragonbyte.ca>
+ * Copyright © 2025 - 2026 Darren Kirby <darren@dragonbyte.ca>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -42,6 +42,7 @@ const bv_ops_t BV_OPS[] = {
     [BV_U32] = { get_u32, set_u32, repr_u32, append_u32, sizeof(uint32_t) },
     [BV_S32] = { get_s32, set_s32, repr_s32, append_s32, sizeof(int32_t)  },
 };
+
 
 static Cell* byte_fits(const bv_t type, const int64_t byte) {
     int64_t min;
@@ -99,7 +100,9 @@ static char* get_type_string(const bv_t type)
 
 
 /* (bytevector byte ... )
- * Returns a newly allocated bytevector containing its arguments. */
+ * (bytevector byte ... symbol)
+ * Returns a newly allocated bytevector containing its arguments. If the optional symbol arg is passed (one of 'u8, 's8,
+ * 'u16, 's16 etc...) then the bytevector will be initialized as that type. */
 Cell* builtin_bytevector(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -138,7 +141,7 @@ Cell* builtin_bytevector(const Lex* e, const Cell* a)
 
 
 /* (bytevector-length bytevector)
- * Returns the length in bytes of bytevector as an exact integer*/
+ * Returns the length in bytes of bytevector as an exact integer. */
 Cell* builtin_bytevector_length(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -182,7 +185,7 @@ Cell* builtin_bytevector_ref(const Lex* e, const Cell* a)
 
 /* (bytevector-set! bytevector k byte)
  * It is an error if k is not a valid index of the bytevector.
- * This procedure stores byte in the kth position of bytevector */
+ * This procedure stores byte in the kth position of bytevector. */
 Cell* builtin_bytevector_set_bang(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -243,7 +246,7 @@ Cell* builtin_make_bytevector(const Lex* e, const Cell* a)
             "make-bytevector: arg 1 must be non-negative",
             VALUE_ERR);
     }
-    /* Check for bv type */
+    /* Check for bv type. */
     bv_t type;
     if (a->count == 3) {
         const Cell* t_sym = a->cell[2];
@@ -279,6 +282,7 @@ Cell* builtin_make_bytevector(const Lex* e, const Cell* a)
     }
     return vec;
 }
+
 
 /* (bytevector-copy bytevector)
  * (bytevector-copy bytevector start)
@@ -316,6 +320,7 @@ Cell* builtin_bytevector_copy(const Lex* e, const Cell* a)
     return vec;
 }
 
+
 /* (bytevector-copy! to at from)
  * (bytevector-copy! to at from start)
  * (bytevector-copy! to at from start end)
@@ -328,7 +333,7 @@ Cell* builtin_bytevector_copy_bang(const Lex* e, const Cell* a)
     Cell* err = CHECK_ARITY_RANGE(a, 3, 5, "bytevector-copy!");
     if (err) return err;
 
-    /* Validate arg Types. */
+    /* Validate arg types. */
     if (a->cell[0]->type != CELL_BYTEVECTOR)
         return make_cell_error(
             "bytevector-copy!: arg 1 must be a bytevector (to)",
@@ -406,6 +411,7 @@ Cell* builtin_bytevector_copy_bang(const Lex* e, const Cell* a)
     return USP_Obj;
 }
 
+
 /* (bytevector-append bytevector ...)
 * Returns a newly allocated bytevector whose elements are
 the concatenation of the elements in the given bytevectors. */
@@ -436,6 +442,12 @@ Cell* builtin_bytevector_append(const Lex* e, const Cell* a)
     return result;
 }
 
+
+/* (utf8->string bytevector)
+ * (utf8->string bytevector start)
+ * (utf8->string bytevector start end)
+ * The utf8->string procedure decodes the bytes of a bytevector between start and end and returns the corresponding
+ * string. */
 Cell* builtin_utf8_string(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -489,6 +501,12 @@ Cell* builtin_utf8_string(const Lex* e, const Cell* a)
     return make_cell_string(the_str);
 }
 
+
+/* (string->utf8 string)
+ * (string->utf8 string start)
+ * (string->utf8 string start end)
+ *  The string->utf8 procedure encodes the characters of a string between start and end and returns the corresponding
+ *  bytevector. */
 Cell* builtin_string_utf8(const Lex* e, const Cell* a)
 {
     (void)e;

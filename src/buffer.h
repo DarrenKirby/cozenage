@@ -1,7 +1,7 @@
 /*
  * 'src/buffer.h'
  * This file is part of Cozenage - https://github.com/DarrenKirby/cozenage
- * Copyright © 2025  Darren Kirby <darren@dragonbyte.ca>
+ * Copyright © 2025 - 2026 Darren Kirby <darren@dragonbyte.ca>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,9 +24,9 @@
 
 
 typedef struct {
-    char *buffer;    /* The data buffer (allocated with GC_MALLOC) */
-    size_t length;   /* How many bytes are *currently* used */
-    size_t capacity; /* How many bytes are *allocated* */
+    char *buffer;    /* The data buffer. */
+    size_t length;   /* How many bytes are currently used. */
+    size_t capacity; /* How many bytes are allocated. */
 } string_builder_t;
 
 

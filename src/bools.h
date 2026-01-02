@@ -1,7 +1,7 @@
 /*
- * 'bools.h'
+ * 'src/bools.h'
  * This file is part of Cozenage - https://github.com/DarrenKirby/cozenage
- * Copyright © 2025  Darren Kirby <darren@dragonbyte.ca>
+ * Copyright © 2025 - 2026  Darren Kirby <darren@dragonbyte.ca>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,7 +23,7 @@
 #include "cell.h"
 
 
-/* Boolean and logical procedures */
+/* Boolean and logical procedures. */
 Cell* builtin_not(const Lex* e, const Cell* a);
 Cell* builtin_boolean(const Lex* e, const Cell* a);
 

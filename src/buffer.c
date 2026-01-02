@@ -1,7 +1,7 @@
 /*
  * 'src/buffer.c'
  * This file is part of Cozenage - https://github.com/DarrenKirby/cozenage
- * Copyright © 2025  Darren Kirby <darren@dragonbyte.ca>
+ * Copyright © 2025 - 2026 Darren Kirby <darren@dragonbyte.ca>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@
 #include <assert.h>
 
 
-/* A reasonable initial size */
+/* A reasonable initial size. */
 #define INITIAL_BUFFER_CAPACITY 256
 
 
@@ -39,7 +39,7 @@ string_builder_t* sb_new(void)
     sb->buffer = GC_MALLOC(INITIAL_BUFFER_CAPACITY);
     sb->capacity = INITIAL_BUFFER_CAPACITY;
     sb->length = 0;
-    sb->buffer[0] = '\0'; /* Always keep it null-terminated */
+    sb->buffer[0] = '\0';
     return sb;
 }
 
@@ -69,10 +69,10 @@ void sb_append_str(string_builder_t *sb, const char *s)
     size_t len = strlen(s);
     sb_ensure_capacity(sb, len);
 
-    /* Copy the data */
+    /* Copy the data. */
     memcpy(sb->buffer + sb->length, s, len);
     sb->length += len;
-    sb->buffer[sb->length] = '\0'; /* Re-terminate. */
+    sb->buffer[sb->length] = '\0';
 }
 
 
@@ -91,30 +91,29 @@ void sb_append_fmt(string_builder_t *sb, const char *fmt, ...)
 {
     va_list args;
 
-    /* Try to print into the *existing* space. */
+    /* Try to print into the existing space. */
     va_start(args, fmt);
-    /* vsnprintf returns the number of chars that *would have been* written. */
+    /* vsnprintf returns the number of chars that would have been written. */
     int n = vsnprintf(sb->buffer + sb->length,
                       sb->capacity - sb->length,
                       fmt,
                       args);
     va_end(args);
 
-    /* Check for error, so we can cast 'n' to size_t. */
     if (n < 0) {
         fprintf(stderr, "%s\n", strerror(errno));
         return;
     }
 
-    /* Check if it fit. */
+    /* Cast 'n' to size_t, check if it fit. */
     if ((size_t)n < sb->capacity - sb->length) {
         /* It fit. Just update the length. */
         sb->length += n;
     } else {
-        /* It did not fit. 'n' tells us exactly how much space we need. */
+        /* It did not fit. 'n' is exactly how much space is needed. */
         sb_ensure_capacity(sb, n);
 
-        /* Try again, now with a guaranteed-large-enough buffer. */
+        /* Try again with a guaranteed-large-enough buffer. */
         va_start(args, fmt);
         int n2 = vsnprintf(sb->buffer + sb->length,
                   sb->capacity - sb->length,
@@ -123,18 +122,12 @@ void sb_append_fmt(string_builder_t *sb, const char *fmt, ...)
         va_end(args);
 
         if (n2 < 0) {
-            /* This is a critical, unexpected failure! */
+            /* This is an unexpected failure. */
             fprintf(stderr, "CRITICAL: vsnprintf failed on second pass: %s\n",
                     strerror(errno));
             /* Just return - not sure if it's necessary to abort. */
             return;
         }
-
-        /* Sanity check (optional, but great for debugging)
-         * Should remove this when REPL printing, display, and write are
-         * thoroughly tested and 'proven' correct. */
-        assert((size_t)n2 == (size_t)n && "vsnprintf length mismatch");
-
         sb->length += n;
     }
 }

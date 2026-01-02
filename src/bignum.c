@@ -1,7 +1,7 @@
 /*
  * 'src/bignum.c'
  * This file is part of Cozenage - https://github.com/DarrenKirby/cozenage
- * Copyright © 2025  Darren Kirby <darren@dragonbyte.ca>
+ * Copyright © 2025 - 2026  Darren Kirby <darren@dragonbyte.ca>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,7 +24,7 @@
 #include <stdint.h>
 
 
-/* bigint promotion check helpers */
+/* bigint promotion check helpers. */
 bool add_will_overflow_i64(const int64_t a, const int64_t b, int64_t *out) {
     return __builtin_add_overflow(a, b, out);
 }
@@ -48,7 +48,7 @@ bool div_will_overflow_i64(const int64_t a, const int64_t b, int64_t *out) {
 }
 
 
-/* bigint demotion check helpers */
+/* bigint demotion check helpers. */
 bool mpz_fits_int64(const mpz_t z) {
     mpz_t tmp_max, tmp_min;
     mpz_init_set_si(tmp_max, 0);
