@@ -1,7 +1,7 @@
 /*
  * 'src/special_forms.c'
  * This file is part of Cozenage - https://github.com/DarrenKirby/cozenage
- * Copyright © 2025  Darren Kirby <darren@dragonbyte.ca>
+ * Copyright © 2025 - 2026 Darren Kirby <darren@dragonbyte.ca>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,6 +38,9 @@
 /* import needs to know if we're in the REPL. */
 extern int is_repl;
 
+/* Disable 'foo may be made const' linter warnings. */
+/* ReSharper disable twice CppParameterMayBeConstPtrOrRef */
+
 
 /* A helper to check if a symbol name is a reserved syntactic keyword. */
 int is_syntactic_keyword(const Cell* s)
@@ -51,7 +54,7 @@ int is_syntactic_keyword(const Cell* s)
 
 
 /* This function binds formals to argument values in a local
- * environment. It is called when needed from coz_apply() */
+ * environment. It is called when needed from coz_apply(). */
 Lex* build_lambda_env(const Lex* env, Cell* formals, Cell* args)
 {
     /* Create a new child environment. */
@@ -532,7 +535,7 @@ HandlerResult sf_set_bang(Lex* e, Cell* a)
                 target_frame->vals[i] = value_to_set;
                 /* R7RS says the return from set! is unspecified.
                  * Cozenage will return the value set, for visual
-                 * feedback that the operation was successful (REPL-only) */
+                 * feedback that the operation was successful (REPL-only). */
                 if (is_repl) {
                     fprintf(stderr, "%s\n", cell_to_string(value_to_set, MODE_REPL));
                 }
@@ -610,9 +613,39 @@ HandlerResult sf_and(Lex* e, Cell* a) {
             return (HandlerResult){.action = ACTION_RETURN, .value = False_Obj};
         }
     }
-    /* This line is technically unreachable due to the tail-call above,
-       but good for compiler completeness. */
+    /* This line is technically unreachable due to the tail-call above.*/
     return (HandlerResult){.action = ACTION_RETURN, .value = True_Obj};
+}
+
+HandlerResult sf_defmacro(Lex* e, Cell* a) {
+    if (a->count < 3) {
+        Cell* err = make_cell_error(
+            "defmacro: requires name, formals, and a body",
+            SYNTAX_ERR);
+        return return_val(err);
+    }
+
+
+    const Cell* name = a->cell[0]; /* name of the macro. */
+    Cell* formals = a->cell[1];    /* first arg */
+    Cell* body = a->cell[2];       /* remaining args */
+
+    /* Formals should be a symbol or list of symbols. */
+    if (formals->type != CELL_SYMBOL) {
+        for (int i = 0; i < formals->count; i++) {
+            if (formals->cell[i]->type != CELL_SYMBOL) {
+                Cell* err = make_cell_error(
+                    "defmacro: formals must be symbols",
+                    TYPE_ERR);
+                return return_val(err);
+            }
+        }
+    }
+
+    /* Build the lambda cell. */
+    Cell* lambda = lex_make_defmacro(name->str, formals, body, e);
+    lex_put_global(e, make_cell_symbol(name->str), lambda);
+    return return_val(lambda);
 }
 
 

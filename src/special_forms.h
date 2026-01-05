@@ -53,6 +53,7 @@ HandlerResult sf_begin(Lex* e, Cell* a);
 HandlerResult sf_and(Lex* e, Cell* a);
 HandlerResult sf_delay(Lex* e, Cell* a);
 HandlerResult sf_stream(Lex* e, Cell* a);
+HandlerResult sf_defmacro(Lex* e, Cell* a);
 HandlerResult sf_with_gc_stats(Lex* env, Cell* a);
 
 #endif //COZENAGE_SPECIAL_FORMS_H
