@@ -29,29 +29,29 @@
 
 /* Cell_t type enum. */
 typedef enum  : uint32_t {
-    CELL_INTEGER    = 1 << 0,   /* integer. */
-    CELL_RATIONAL   = 1 << 1,   /* rational. */
-    CELL_REAL       = 1 << 2,   /* real. */
-    CELL_COMPLEX    = 1 << 3,   /* complex number. */
+    CELL_INTEGER    = 1 << 0,   /* An integer value. */
+    CELL_RATIONAL   = 1 << 1,   /* A rational number. */
+    CELL_REAL       = 1 << 2,   /* A real number. */
+    CELL_COMPLEX    = 1 << 3,   /* A complex number. */
 
-    CELL_BOOLEAN    = 1 << 4,   /* #t / #f */
-    CELL_CHAR       = 1 << 5,   /* character. */
-    CELL_STRING     = 1 << 6,   /* string. */
-    CELL_SYMBOL     = 1 << 7,   /* symbol. */
+    CELL_BOOLEAN    = 1 << 4,   /* Boolean #t or #f singleton objects.*/
+    CELL_CHAR       = 1 << 5,   /* A character. */
+    CELL_STRING     = 1 << 6,   /* A string. */
+    CELL_SYMBOL     = 1 << 7,   /* A symbol. */
 
-    CELL_PAIR       = 1 << 8,   /* cons cell. */
-    CELL_NIL        = 1 << 9,   /* empty list. */
-    CELL_VECTOR     = 1 << 10,  /* vector. */
-    CELL_BYTEVECTOR = 1 << 11,  /* byte vector. */
+    CELL_PAIR       = 1 << 8,   /* A cons cell. */
+    CELL_NIL        = 1 << 9,   /* An empty list. */
+    CELL_VECTOR     = 1 << 10,  /* A vector. */
+    CELL_BYTEVECTOR = 1 << 11,  /* A byte vector. */
 
-    CELL_EOF        = 1 << 12,  /* EOF object. */
-    CELL_PROC       = 1 << 13,  /* procedure. */
-    CELL_PORT       = 1 << 14,  /* port. */
-    CELL_ERROR      = 1 << 15,  /* error. */
+    CELL_EOF        = 1 << 12,  /* The singleton EOF object. */
+    CELL_PROC       = 1 << 13,  /* A procedure object. Lambda or builtin. */
+    CELL_PORT       = 1 << 14,  /* A port object. */
+    CELL_ERROR      = 1 << 15,  /* An error object. */
 
     CELL_SEXPR      = 1 << 16,  /* An array of values, used internally. */
     CELL_TCS        = 1 << 17,  /* Tail Call Sentinel object. */
-    CELL_TRAMPOLINE = 1 << 18,  /* Return value to signal a tail-call. */
+    CELL_TRAMPOLINE = 1 << 18,  /* Return value to signal a builtin procedure tail-call. */
     CELL_UNSPEC     = 1 << 19,  /* Unspecified object. */
 
     CELL_BIGINT     = 1 << 20,  /* Arbitrary size/precision integer. */
@@ -60,6 +60,7 @@ typedef enum  : uint32_t {
     CELL_PROMISE    = 1 << 23,  /* For delayed evaluation/streams. */
 
     CELL_STREAM     = 1 << 24,  /* A stream datatype for lazy evaluation. */
+    CELL_MACRO      = 1 << 25   /* A non-hygienic 'defmacro' macro. */
 } Cell_t;
 
 
@@ -108,7 +109,7 @@ typedef enum : uint8_t  {
     BV_PORT
 } stream_t;
 
-/* Bytevector struct. */
+/* Port struct. */
 typedef struct Port {
     char* path;       /* File path of associated fh (or string for string port). */
     FILE* fh;         /* The file handle. */
@@ -221,7 +222,7 @@ typedef struct Cell {
         bool boolean_v;           /* boolean */
 
         /* Pointers to outside structs. */
-        lambda* lambda;           /* -> lambda struct */
+        lambda* lambda;           /* -> lambda/defmacro struct. */
         port* port;               /* -> port struct */
         byte_v* bv;               /* -> bytevector struct */
         promise* promise;         /* -> promise struct */

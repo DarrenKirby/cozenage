@@ -54,6 +54,7 @@ Cell* G_or_sym = nullptr;
 Cell* G_do_sym = nullptr;
 Cell* G_arrow_sym = nullptr;
 Cell* G_else_sym = nullptr;
+Cell* G_defmacro_sym = nullptr;
 Cell* G_debug_sym = nullptr;
 Cell* G_quasiquote_sym = nullptr;
 Cell* G_unquote_sym = nullptr;
@@ -125,6 +126,10 @@ void init_special_forms(void) {
     /* Primitive syntax. */
     G_and_sym = make_cell_symbol("and");
     G_and_sym->sf_id = SF_ID_AND;
+
+    /* Primitive syntax. */
+    G_defmacro_sym = make_cell_symbol("defmacro");
+    G_defmacro_sym->sf_id = SF_ID_DEFMACRO;
 
     /* Transformed syntax. */
     G_or_sym = make_cell_symbol("or");

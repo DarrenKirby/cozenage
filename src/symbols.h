@@ -41,6 +41,7 @@ typedef enum : int8_t {
     SF_ID_DELAY,
     SF_ID_DELAY_FORCE,
     SF_ID_STREAM,
+    SF_ID_DEFMACRO,
     SF_ID_DEBUG,
     /* These are the SFs implemented as transforms. */
     SF_ID_LET_STAR = 50,
@@ -76,6 +77,7 @@ extern Cell* G_or_sym;
 extern Cell* G_do_sym;
 extern Cell* G_arrow_sym;
 extern Cell* G_else_sym;
+extern Cell* G_defmacro_sym;
 extern Cell* G_debug_sym;
 extern Cell* G_quasiquote_sym;
 extern Cell* G_unquote_sym;
