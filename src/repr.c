@@ -84,9 +84,8 @@ static void repr_pair(const Cell* v, string_builder_t *sb, const print_mode_t mo
  * vector and s-expr. */
 static void repr_sequence(const Cell* v,
                           const char* prefix,
-                          // ReSharper disable once CppDFAConstantParameter
+                          /* ReSharper disable twice CppDFAConstantParameter */
                           const char open,
-                          // ReSharper disable once CppDFAConstantParameter
                           const char close,
                           string_builder_t *sb,
                           const print_mode_t mode) {
@@ -153,7 +152,7 @@ static void cell_to_string_worker(const Cell* v,
             else if (v->promise->status == 1) stat = "lazy";
             else if (v->promise->status == 2) stat = "evaluated";
             else stat = "running";
-            sb_append_fmt(sb, "<promise object:%s%s%s>", ANSI_BLUE_B, stat, ANSI_RESET);
+            sb_append_fmt(sb, "#<promise object:%s%s%s>", ANSI_BLUE_B, stat, ANSI_RESET);
             break;
         }
 
@@ -243,14 +242,14 @@ static void cell_to_string_worker(const Cell* v,
         case CELL_PROC:
             if (v->is_builtin) {
                 if (mode == MODE_REPL) {
-                    sb_append_fmt(sb, "<builtin procedure '%s%s%s'>",
+                    sb_append_fmt(sb, "#<builtin procedure '%s%s%s'>",
                         ANSI_GREEN_B, v->f_name, ANSI_RESET);
                 } else {
-                    sb_append_fmt(sb, "<builtin procedure '%s'>", v->f_name);
+                    sb_append_fmt(sb, "#<builtin procedure '%s'>", v->f_name);
                 }
             } else {
                 if (mode == MODE_REPL) {
-                    sb_append_fmt(sb, "<lambda '%s%s%s'>", ANSI_GREEN_B,
+                    sb_append_fmt(sb, "#<lambda '%s%s%s'>", ANSI_GREEN_B,
                         v->lambda->l_name ? v->lambda->l_name : "anonymous", ANSI_RESET);
                 } else {
                     sb_append_fmt(sb, "#<lambda '%s'>", v->lambda->l_name ? v->lambda->l_name : "anonymous");
@@ -265,7 +264,7 @@ static void cell_to_string_worker(const Cell* v,
             if (v->port->stream_t == BV_PORT) { stream_type = "bytevector-port"; }
 
             if (mode == MODE_REPL) {
-                sb_append_fmt(sb, "<%s%s %s-port '%s%s%s'>", v->is_open ? "open:" : "closed:",
+                sb_append_fmt(sb, "#<%s%s %s-port '%s%s%s'>", v->is_open ? "open:" : "closed:",
                     stream_type,
                     v->port->port_t == INPUT_PORT ? "input" : "output",
                     ANSI_BLUE_B, v->port->path, ANSI_RESET);
@@ -278,22 +277,33 @@ static void cell_to_string_worker(const Cell* v,
             break;
         }
 
+        /* FIXME: there are no anonymous macros */
+        case CELL_MACRO: {
+            if (mode == MODE_REPL) {
+                sb_append_fmt(sb, "#<macro '%s%s%s'>", ANSI_GREEN_B,
+                    v->lambda->l_name ? v->lambda->l_name : "anonymous", ANSI_RESET);
+            } else {
+                sb_append_fmt(sb, "#<macro '%s'>", v->lambda->l_name ? v->lambda->l_name : "anonymous");
+            }
+            break;
+        }
+
         case CELL_BIGINT: {
-            char ibuf[1024];
-            gmp_snprintf(ibuf, sizeof(ibuf), "%Zd", v->bi);
-            sb_append_str(sb, ibuf);
+            char i_buf[1024];
+            gmp_snprintf(i_buf, sizeof(i_buf), "%Zd", v->bi);
+            sb_append_str(sb, i_buf);
             break;
             }
 
         case CELL_BIGFLOAT: {
-            char fbuf[1024];
-            gmp_snprintf(fbuf, sizeof(fbuf), "%Ff", v->bi);
-            sb_append_str(sb, fbuf);
+            char f_buf[1024];
+            gmp_snprintf(f_buf, sizeof(f_buf), "%Ff", v->bi);
+            sb_append_str(sb, f_buf);
             break;
             }
 
         case CELL_STREAM:
-            sb_append_fmt(sb, "[%s ... %s]",
+            sb_append_fmt(sb, "#[%s ... %s]",
                 cell_to_string(v->head, MODE_REPL),
                 cell_to_string(v->tail, MODE_REPL));
             break;
