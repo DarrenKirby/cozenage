@@ -15,21 +15,25 @@ BINARY = cozenage
 TEST_BINARY = run_tests
 BUILD_DIR = build
 OBJ_DIR = obj
+# Install targets - prefix configurable via:
+# `make install PREFIX=/path/to/install`
+PREFIX=/usr/local
+INSTALL_BIN_DIR=$(PREFIX)/bin
+INSTALL_LIB_DIR=$(PREFIX)/lib/cozenage
 
 # Added OS detection for library extensions
 UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S),Darwin)
-    LIB_EXT = dylib
-    # Flag for modules: Allow undefined symbols (will be found in main binary)
+	LIB_EXT = dylib
 	MODULE_LDFLAGS = -Wl,-undefined,dynamic_lookup
-	# Flag for main executable: None needed on macOS
-	EXE_LDFLAGS =
+	# Add RPATH to the executable
+	EXE_LDFLAGS = -Wl,-rpath,@executable_path/../lib/cozenage/
 else
-    LIB_EXT = so
-    # Flag for modules: None needed on Linux
+	LIB_EXT = so
 	MODULE_LDFLAGS =
-	# Flag for main executable: Export symbols for modules to find
-	EXE_LDFLAGS = -Wl,--export-dynamic
+	# Export symbols AND add RPATH using $ORIGIN
+	# Note: we use \$$ to ensure the '$' reaches the shell/linker correctly
+	EXE_LDFLAGS = -Wl,--export-dynamic -Wl,-rpath,'\$$ORIGIN/../lib/cozenage'
 endif
 
 # Check for force libedit flag
@@ -167,3 +171,18 @@ lib/%.$(LIB_EXT): src/base-lib/%_lib.c
 	@echo "Building module: $@"
 	$(CC) $(CFLAGS) $(LIB_CFLAGS) $(MODULE_LDFLAGS) $< -o $@
 
+
+# --- install rules
+install: all
+	@mkdir -v -p $(INSTALL_BIN_DIR)
+	@mkdir -v -p $(INSTALL_LIB_DIR)
+	@install -v -m 755 $(BINARY) $(INSTALL_BIN_DIR)
+	@for m in lib/*.$(LIB_EXT); do \
+    	install -v -m 755 $$m $(INSTALL_LIB_DIR)/$$(basename $$m); \
+    done
+	@echo "-- Installed $(BINARY) to $(INSTALL_BIN_DIR)"
+	@echo "-- Installed modules to $(INSTALL_LIB_DIR)"
+
+uninstall:
+	@rm -v -f $(INSTALL_BIN_DIR)/$(BINARY)
+	@rm -v -rf $(INSTALL_LIB_DIR)
