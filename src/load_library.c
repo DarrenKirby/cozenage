@@ -57,12 +57,14 @@ int internal_cozenage_load_lib(const char* libname, const Lex* env)
 
     /* dlopen() loads the library.
      * RTLD_LAZY: Resolves symbols as code from the library is executed.
-     * RTLD_NOW: Resolves all symbols at load time (good for debugging) */
+     * RTLD_NOW: Resolves all symbols at load time (good for debugging). */
     void* lib_handle = dlopen(filepath, RTLD_LAZY);
 
     if (!lib_handle) {
-        /* If it failed, try the system path */
-        snprintf(filepath, sizeof(filepath), "/usr/local/lib/cozenage/%s%s", libname, LIB_EXT);
+        /* If it failed, try the system path.
+         * The -rpath linker flag ensures that the binary will look for
+         * modules in a relative '../lib/cozenage/' directory. */
+        snprintf(filepath, sizeof(filepath), "%s%s", libname, LIB_EXT);
         lib_handle = dlopen(filepath, RTLD_LAZY);
 
         if (!lib_handle) {
@@ -92,17 +94,18 @@ int internal_cozenage_load_lib(const char* libname, const Lex* env)
      * We want the library to stay in memory for the rest of
      * the interpreter's session, otherwise all the function
      * pointers we just registered will become invalid.
-     * TODO: store the handles in a list so they can be unloaded later. */
+     * QUESTION: should we store the handles in a list so they can be unloaded later?
+     * Or just assume loaded modules stay loaded for the life of the interpreter? */
 
     return 1; /* Success. */
 }
 
 Cell* load_library(const char* libname, const Lex* env)
 {
-    /* Call the internal loader */
+    /* Call the internal loader. */
     const int success = internal_cozenage_load_lib(libname, env);
 
-    /* Return a Cozenage value */
+    /* Return a Cozenage value. */
     if (success) {
         return True_Obj;
     }
