@@ -79,7 +79,7 @@ Cell* builtin_raise(const Lex* e, const Cell* a) {
         }
 
         const uint8_t err_no = a->cell[1]->integer_v;
-        if (err_no < 0 ||  err_no > 7) {
+        if (err_no > 7) {
             return make_cell_error(
                 "raise: invalid error type value",
                 VALUE_ERR);
