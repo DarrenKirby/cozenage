@@ -186,6 +186,21 @@ Cell* lex_make_lambda(Cell* formals, Cell* body, Lex* env)
 }
 
 
+/* Populate the CELL_PROC struct of a Cell* object for a named lambda procedure. */
+Cell* lex_make_defmacro(char* name, Cell* formals, Cell* body, Lex* env)
+{
+    Cell* c = GC_MALLOC(sizeof(Cell)); /* Allocate Cell struct. */
+    c->type = CELL_MACRO;
+    c->lambda= GC_MALLOC(sizeof(lambda)); /* Allocate lambda struct. */
+    c->lambda->l_name = name;
+    c->lambda->formals = formals;
+    c->lambda->body = body;
+    c->lambda->env = env;
+    c->is_builtin = false;
+    return c;
+}
+
+
 /* Register a procedure in the global environment. */
 void lex_add_builtin(const Lex* e, const char* name, Cell* (*func)(const Lex*, const Cell*))
 {
