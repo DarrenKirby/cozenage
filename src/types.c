@@ -1,7 +1,7 @@
 /*
  * 'src/types.c'
  * This file is part of Cozenage - https://github.com/DarrenKirby/cozenage
- * Copyright © 2025  Darren Kirby <darren@dragonbyte.ca>
+ * Copyright © 2025 - 2026 Darren Kirby <darren@dragonbyte.ca>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -69,6 +69,9 @@ const char* cell_type_name(const int t)
         case CELL_EOF:         return "eof";
         case CELL_BIGINT:      return "bigint";
         case CELL_BIGFLOAT:    return "bigfloat";
+        case CELL_PROMISE:     return "promise";
+        case CELL_STREAM:      return "stream";
+        case CELL_MACRO:       return "macro";
         default:               return "unknown";
     }
 }
@@ -99,8 +102,11 @@ const char* cell_mask_types(const int mask)
     if (mask & CELL_EOF)         strcat(buf, "eof|");
     if (mask & CELL_BIGINT)      strcat(buf, "bigint|");
     if (mask & CELL_BIGFLOAT)    strcat(buf, "bigfloat|");
+    if (mask & CELL_PROMISE)     strcat(buf, "promise|");
+    if (mask & CELL_STREAM)      strcat(buf, "stream|");
+    if (mask & CELL_MACRO)       strcat(buf, "macro|");
 
-    /* remove trailing '|'. */
+    /* Remove trailing '|'. */
     const size_t len = strlen(buf);
     if (len > 0 && buf[len-1] == '|') {
         buf[len-1] = '\0';
@@ -160,6 +166,9 @@ int check_lambda_arity(const Cell* proc, const int expected) {
 
     const Cell* formals = proc->lambda->formals;
 
+    /* No arguments. */
+    if (formals->count == 0) return 0;
+
     /* If formals is a symbol (variadic), it accepts anything. */
     if (formals->type == CELL_SYMBOL) return 1;
 
@@ -181,7 +190,7 @@ int check_lambda_arity(const Cell* proc, const int expected) {
         return expected >= positional_count;
     }
 
-    // Standard fixed-arity: count must match exactly
+    /* Standard fixed-arity: count must match exactly. */
     return formals->count == expected;
 }
 
@@ -343,12 +352,12 @@ Cell* make_list_from_sexpr(Cell* c)
         }
     }
 
-    /* Handle Improper List */
+    /* Handle improper list. */
     if (dot_pos != -1) {
         /* The final cdr is the very last element in the S-expression. */
         Cell* final_cdr = make_list_from_sexpr(c->cell[c->count - 1]);
 
-        /* Build the list chain backwards from the element *before* the dot. */
+        /* Build the list chain backwards from the element before the dot. */
         Cell* list_head = final_cdr;
         for (int i = dot_pos - 1; i >= 0; i--) {
             Cell* element = make_list_from_sexpr(c->cell[i]);
@@ -357,7 +366,7 @@ Cell* make_list_from_sexpr(Cell* c)
         return list_head;
     }
 
-    /* Handle Proper List. */
+    /* Handle proper list. */
     Cell* list_head = make_cell_nil();
     const int len = c->count;
 
@@ -374,7 +383,7 @@ Cell* make_list_from_sexpr(Cell* c)
 }
 
 
-Cell* make_sexpr_from_list(Cell* v)
+Cell* make_sexpr_from_list(Cell* v, const bool recurse)
 {
     Cell* result = make_cell_sexpr();
     int count;
@@ -385,7 +394,11 @@ Cell* make_sexpr_from_list(Cell* v)
         result->cell = GC_MALLOC(sizeof(Cell*) * count);
         const Cell* p = v;
         for (int i = 0; i < count; i++) {
-            cell_add(result, p->car);
+            if (recurse && p->car->type == CELL_PAIR) {
+                cell_add(result, make_sexpr_from_list(p->car, true));
+            } else {
+                cell_add(result, p->car);
+            }
             p = p->cdr;
         }
         return result;
@@ -401,19 +414,51 @@ Cell* make_sexpr_from_list(Cell* v)
         traverser = traverser->cdr;
     }
 
-    /* Allocate space for all the `car`s from the pairs PLUS the final `cdr`. */
+    /* Allocate space for all the cars from the pairs PLUS the final `cdr`. */
     result->cell = GC_MALLOC(sizeof(Cell*) * (count + 1));
 
-    /* Copy the `car` of each pair. */
+    /* Copy the car of each pair. */
     Cell* p = v;
     for (int i = 0; i < count; i++) {
-        cell_add(result, p->car);
+        Cell* item = p->car;
+
+        if (recurse && item->type == CELL_PAIR) {
+            cell_add(result, make_sexpr_from_list(item, true));
+        } else {
+            cell_add(result, item);
+        }
         p = p->cdr;
     }
 
-    /* Add the final terminating element. */
-    cell_add(result, p);
+    /* Handling the tail of an improper list. */
+    if (v->len == -1) {
+        /* Found a dot. p is the tail. */
+        if (recurse && (p->type == CELL_PAIR || p->type == CELL_SEXPR)) {
 
+            const int old_count = result->count;
+            const int tail_count = p->type == CELL_SEXPR ? p->count : p->len;
+            const int new_total = old_count + tail_count;
+
+            result->cell = GC_REALLOC(result->cell, sizeof(Cell*) * new_total);
+
+            if (p->type == CELL_SEXPR) {
+                /* Dissolve the S-expression directly into the result. */
+                for (int i = 0; i < tail_count; i++) {
+                    result->cell[old_count + i] = p->cell[i];
+                }
+            } else {
+                /* Dissolve the pair-chain into the result. */
+                const Cell* tail_p = p;
+                for (int i = 0; i < tail_count; i++) {
+                    result->cell[old_count + i] = tail_p->car;
+                    tail_p = tail_p->cdr;
+                }
+            }
+            result->count = new_total;
+        } else {
+            cell_add(result, p);
+        }
+    }
     return result;
 }
 
@@ -607,7 +652,7 @@ bool cell_is_odd(const Cell* c)
         return false;
     }
 
-    /* Already determined c is an integer represented as a complex */
+    /* Already determined c is an integer represented as a complex. */
     if (c->type == CELL_COMPLEX) {
         c = c->real;
     }
@@ -617,8 +662,8 @@ bool cell_is_odd(const Cell* c)
         case CELL_BIGINT: return mpz_odd_p(*c->bi) == 1 ? true : false;
         case CELL_INTEGER:  val = c->integer_v; break;
         case CELL_REAL: val = (long long)c->real_v; break;
-        case CELL_RATIONAL:  val = c->num; break; /* den is 1 if it's an integer */
-        default: return false; /* Unreachable */
+        case CELL_RATIONAL:  val = c->num; break; /* Denominator is 1 if it's an integer. */
+        default: return false; /* Unreachable. */
     }
     return val % 2 != 0;
 }
@@ -632,12 +677,12 @@ bool cell_is_even(const Cell* c)
         return false;
     }
 
-    /* inf.0 neither even nor odd */
+    /* inf.0 neither even nor odd. */
     if (isinf(cell_to_long_double(c))) {
         return false;
     }
 
-    /* Already determined c is an integer represented as a complex */
+    /* Already determined c is an integer represented as a complex. */
     if (c->type == CELL_COMPLEX) {
         c = c->real;
     }
@@ -647,8 +692,8 @@ bool cell_is_even(const Cell* c)
         case CELL_BIGINT: return mpz_even_p(*c->bi) == 1 ? true : false;
         case CELL_INTEGER:  val = c->integer_v; break;
         case CELL_REAL: val = (long long)c->real_v; break;
-        case CELL_RATIONAL:  val = c->num; break; /* den is 1 if it's an integer */
-        default: return false; /* Unreachable */
+        case CELL_RATIONAL:  val = c->num; break; /* Denominator is 1 if it's an integer. */
+        default: return false; /* Unreachable. */
     }
     return val % 2 == 0;
 }
@@ -678,7 +723,7 @@ Cell* negate_numeric(const Cell* x)
 }
 
 
-/* gcd helper, iterative and safe */
+/* GCD helper. */
 static long int gcd_ll(long int a, long int b)
 {
     if (a < 0) a = -a;
@@ -692,25 +737,25 @@ static long int gcd_ll(long int a, long int b)
 }
 
 
-/* simplify rational: reduce to the lowest terms, normalize sign */
+/* Simplify rational: reduce to the lowest terms, normalize sign. */
 Cell* simplify_rational(Cell* v)
 {
     if (v->type != CELL_RATIONAL) {
-        return v; /* nothing to do */
+        return v; /* Nothing to do. */
     }
 
     const long int g = gcd_ll(v->num, v->den);
     v->num /= g;
     v->den /= g;
 
-    /* normalize sign: denominator always positive */
+    /* Normalize sign: denominator always positive. */
     if (v->den < 0) {
         v->den = -v->den;
         v->num = -v->num;
     }
 
     if (v->den == 0) {
-        /* undefined fraction, return an error */
+        /* Undefined fraction, return an error. */
         Cell* err = make_cell_error(
             "simplify_rational: denominator is zero!",
             GEN_ERR);
@@ -733,7 +778,7 @@ Cell* simplify_rational(Cell* v)
 void complex_apply(const BuiltinFn fn, const Lex* e, Cell* result, const Cell* rhs)
 {
     if (fn == builtin_add || fn == builtin_sub) {
-        /* addition/subtraction: elementwise using recursion. */
+        /* Addition/subtraction: elementwise using recursion. */
         const Cell* real_args = make_sexpr_len2(result->real, rhs->real);
         const Cell* imag_args = make_sexpr_len2(result->imag, rhs->imag);
 
@@ -821,7 +866,7 @@ long double cell_to_long_double(const Cell* c)
 }
 
 
-/* Helper to construct appropriate cell from a long double */
+/* Helper to construct appropriate cell from a long double. */
 Cell* make_cell_from_double(const long double d)
 {
     if (d == floorl(d) && d >= LLONG_MIN && d <= LLONG_MAX) {
@@ -852,7 +897,7 @@ char* GC_strdup(const char* s)
 
 char* GC_strndup(const char* s, size_t byte_len)
 {
-    /* +1 for the null terminator (for C-compatibility/printing) */
+    /* +1 for the null terminator (for C-compatibility/printing). */
     char* new_str = (char*)GC_MALLOC_ATOMIC(byte_len + 1);
     if (new_str == NULL) {
         fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
@@ -860,7 +905,7 @@ char* GC_strndup(const char* s, size_t byte_len)
     }
 
     memcpy(new_str, s, byte_len);
-    new_str[byte_len] = '\0'; // Always safety-terminate
+    new_str[byte_len] = '\0'; /* Always safety-terminate. */
     return new_str;
 }
 
@@ -935,11 +980,11 @@ int compare_named_chars(const void* key, const void* element)
 const NamedChar* find_named_char(const char* name)
 {
     return bsearch(
-        name,                                      /* The key to search for */
-        named_chars,                              /* The array to search in */
-        sizeof(named_chars) / sizeof(NamedChar),   /* Number of elements in the array */
-        sizeof(NamedChar),                       /* The size of each element */
-        compare_named_chars                            /* The comparison function */
+        name,                                      /* The key to search for. */
+        named_chars,                              /* The array to search in. */
+        sizeof(named_chars) / sizeof(NamedChar),   /* Number of elements in the array. */
+        sizeof(NamedChar),                        /* The size of each element. */
+        compare_named_chars                            /* The comparison function. */
     );
 }
 
@@ -966,7 +1011,7 @@ Cell* list_get_nth_cell_ptr(const Cell* list, const long n)
 }
 
 
-/* Helpers for dealing with strings and Unicode */
+/* Helpers for dealing with strings and Unicode. */
 
 int32_t string_length_utf8(const char* s)
 {
@@ -989,7 +1034,7 @@ int32_t string_length_utf8(const char* s)
 }
 
 
-/* validate UTF-8 byte sequences for correctness and identify invalid characters using SIMD (Single Instruction,
+/* Validate UTF-8 byte sequences for correctness and identify invalid characters using SIMD (Single Instruction,
  * Multiple Data) principles within a single register (SWAR). */
 bool is_pure_ascii(const char *str, size_t len) {
     const unsigned char *ptr = (const unsigned char *)str;
@@ -1043,7 +1088,7 @@ char* convert_to_utf8(const UChar* ustr)
         status = U_ZERO_ERROR;
         result_utf8_str = (char*)GC_malloc(sizeof(char) * (char_len + 1));
 
-        /* Actual Conversion */
+        /* Actual Conversion. */
         u_strToUTF8(result_utf8_str, char_len + 1, nullptr, ustr, -1, &status);
 
         if (U_FAILURE(status)) {
@@ -1065,7 +1110,7 @@ UChar* convert_to_utf16(const char* str)
 
     /* The pre-flight call sets an error code that we expect. */
     if (status == U_BUFFER_OVERFLOW_ERROR) {
-        status = U_ZERO_ERROR; // Reset status for the next call
+        status = U_ZERO_ERROR; /* Reset status for the next call. */
         my_utf16_str = (UChar*)GC_malloc(sizeof(UChar) * (uchar_len + 1));
         if (!my_utf16_str) { return nullptr; }
 
