@@ -1,7 +1,7 @@
 /*
  * 'src/base-lib/math_lib.c'
  * This file is part of Cozenage - https://github.com/DarrenKirby/cozenage
- * Copyright © 2025  Darren Kirby <darren@dragonbyte.ca>
+ * Copyright © 2025 - 2026 Darren Kirby <darren@dragonbyte.ca>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,7 +27,7 @@
 
 
 #if defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__NetBSD__) || defined(__DragonFly__)
-/* *BSD does not provide l versions in complex.h; provide fallback ccosl / csinl / ctanl */
+/* *BSD does not provide l versions in complex.h; provide fallback ccosl / csinl / ctanl. */
 static inline long double complex ccosl(long double complex z) {
     long double x = creall(z);
     long double y = cimagl(z);
@@ -46,7 +46,8 @@ static inline long double complex ctanl(long double complex z) {
 #endif
 
 
-/* Returns the cosine of arg (arg is in radians). */
+/* (cos z)
+ * Returns the cosine of arg (arg is in radians). */
 static Cell* math_cos(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -68,7 +69,9 @@ static Cell* math_cos(const Lex* e, const Cell* a)
     return result;
 }
 
-/* Returns the arccosine of arg, in radians */
+
+/* (acos z)
+ * Returns the arccosine of arg, in radians. */
 static Cell* math_acos(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -90,7 +93,9 @@ static Cell* math_acos(const Lex* e, const Cell* a)
     return result;
 }
 
-/* Returns the sine of arg (arg is in radians) */
+
+/* (sin z)
+ * Returns the sine of arg (arg is in radians). */
 static Cell* math_sin(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -112,7 +117,9 @@ static Cell* math_sin(const Lex* e, const Cell* a)
     return result;
 }
 
-/* Returns the arcsine of arg, in radians */
+
+/* (asin z)
+ * Returns the arcsine of arg, in radians. */
 static Cell* math_asin(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -134,7 +141,9 @@ static Cell* math_asin(const Lex* e, const Cell* a)
     return result;
 }
 
-/* Returns the tangent of arg (arg is in radians) */
+
+/* (tan z)
+ * Returns the tangent of arg (arg is in radians). */
 static Cell* math_tan(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -156,7 +165,10 @@ static Cell* math_tan(const Lex* e, const Cell* a)
     return result;
 }
 
-/* With one arg: Returns the arctangent of arg as a numeric value between -PI/2 and PI/2 radians
+
+/* (atan z)
+ * (atan y x)
+ * With one arg: Returns the arctangent of arg as a numeric value between -PI/2 and PI/2 radians
  * With two args: Returns the angle theta from the conversion of rectangular coordinates (x, y)
  * to polar coordinates (r, theta) */
 static Cell* math_atan(const Lex* e, const Cell* a)
@@ -181,10 +193,10 @@ static Cell* math_atan(const Lex* e, const Cell* a)
         Cell* result = make_cell_from_double(atanl(n));
         return result;
     }
-    /* two args */
+    /* Two args. */
     if (a->cell[0]->type == CELL_COMPLEX) {
         return make_cell_error(
-            "atan: invalid complex arg. Use 'make-polar' from (scheme complex)",
+            "atan: invalid complex arg. Use 'make-polar'",
             TYPE_ERR);
     }
 
@@ -194,7 +206,9 @@ static Cell* math_atan(const Lex* e, const Cell* a)
     return result;
 }
 
-/* Returns the value of E raised to arg power */
+
+/* (exp z)
+ * Returns the value of E raised to arg power. */
 static Cell* math_exp(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -216,8 +230,11 @@ static Cell* math_exp(const Lex* e, const Cell* a)
     return result;
 }
 
-/* With one arg: Returns the natural logarithm of arg
- * With two args (n, b): Returns log n base b */
+
+/* (log z)
+ * (log z1 z2)
+ * With one arg: Returns the natural logarithm of arg.
+ * With two args (n, b): Returns log n base b. */
 static Cell* math_log(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -240,7 +257,7 @@ static Cell* math_log(const Lex* e, const Cell* a)
         Cell* result = make_cell_from_double(logl(n));
         return result;
     }
-    /* Two args - will not work with complex */
+    /* Two args - will not work with complex. */
     if (a->cell[0]->type == CELL_COMPLEX) {
         return make_cell_error(
             "Specifying log base not valid with complex",
@@ -253,7 +270,9 @@ static Cell* math_log(const Lex* e, const Cell* a)
     return result;
 }
 
-/* Equivalent to (log n 2) */
+
+/* (log2 z)
+ * Equivalent to (log n 2). */
 static Cell* math_log2(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -266,7 +285,9 @@ static Cell* math_log2(const Lex* e, const Cell* a)
     return result;
 }
 
-/* Equivalent to (log n 10) */
+
+/* (log10 z)
+ * Equivalent to (log n 10). */
 static Cell* math_log10(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -279,7 +300,10 @@ static Cell* math_log10(const Lex* e, const Cell* a)
     return result;
 }
 
-/* Returns the cube root of arg */
+
+/* (cbrt z)
+ * Returns the cube root of arg.
+ * */
 static Cell* math_cbrt(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -291,6 +315,7 @@ static Cell* math_cbrt(const Lex* e, const Cell* a)
     Cell* result = make_cell_from_double(cbrtl(n));
     return result;
 }
+
 
 /* Helper for the core GCD algorithm (Euclidean) for two integers. */
 static long long gcd_helper(long long x, long long y)
@@ -305,6 +330,7 @@ static long long gcd_helper(long long x, long long y)
     return y;
 }
 
+
 /* Helper for the core LCM logic (using the overflow-safe formula). */
 static long long lcm_helper(long long x, long long y)
 {
@@ -314,6 +340,9 @@ static long long lcm_helper(long long x, long long y)
     return x / gcd_helper(x, y) * y;
 }
 
+
+/* (gcd n1 ... )
+ * Return the greatest common divisor of the arguments. The result is always non-negative. */
 static Cell* math_gcd(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -321,7 +350,7 @@ static Cell* math_gcd(const Lex* e, const Cell* a)
     if (err) return err;
 
     if (a->count == 0) {
-        return make_cell_integer(0); /* Identity for GCD */
+        return make_cell_integer(0); /* Identity for GCD. */
     }
 
     bool bigint_seen = false;
@@ -345,9 +374,12 @@ static Cell* math_gcd(const Lex* e, const Cell* a)
         result = gcd_helper(result, a->cell[i]->integer_v);
     }
 
-    return make_cell_integer(llabs(result)); /* Final result must be non-negative */
+    return make_cell_integer(llabs(result)); /* Final result must be non-negative. */
 }
 
+
+/* (lcm x1 ... )
+ * Return the least common multiple of the arguments. The result is always non-negative. */
 static Cell* math_lcm(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -355,7 +387,7 @@ static Cell* math_lcm(const Lex* e, const Cell* a)
     if (err) { return err; }
 
     if (a->count == 0) {
-        return make_cell_integer(1); /* Identity for LCM */
+        return make_cell_integer(1); /* Identity for LCM. */
     }
 
     bool bigint_seen = false;
@@ -379,8 +411,18 @@ static Cell* math_lcm(const Lex* e, const Cell* a)
         result = lcm_helper(result, a->cell[i]->integer_v);
     }
 
-    return make_cell_integer(llabs(result)); /* Final result must be non-negative */
+    return make_cell_integer(llabs(result)); /* Final result must be non-negative. */
 }
+
+/* These procedures implement number-theoretic (integer) division. It is an error if n2 is zero. The procedures ending
+ * in / return two integers; the other procedures return an integer. All the procedures compute a quotient nq and
+ * remainder nr such that n1 = n2nq + nr. For each of the division operators, there are three procedures defined as
+ * follows:
+ *
+ * (⟨operator⟩/ n1 n2) => nq, nr
+ * (⟨operator⟩-quotient n1 n2) => nq
+ * (⟨operator⟩-remainder n1 n2) => nr
+ */
 
 /* (floor-quotient n1 n2) */
 static Cell* math_floor_quotient(const Lex* e, const Cell* a)
@@ -402,6 +444,7 @@ static Cell* math_floor_quotient(const Lex* e, const Cell* a)
 
     return make_cell_integer(q);
 }
+
 
 /* (floor/ n1 n2 ) */
 static Cell* math_floor_div(const Lex* e, const Cell* a)
@@ -436,6 +479,7 @@ static Cell* math_floor_div(const Lex* e, const Cell* a)
         make_cell_integer(r)));
 }
 
+
 /* (truncate/ n1 n2 ) */
 static Cell* math_truncate_div(const Lex* e, const Cell* a)
 {
@@ -461,8 +505,9 @@ static Cell* math_truncate_div(const Lex* e, const Cell* a)
         make_cell_integer(r)));
 }
 
-/* 'real-part' -> CELL_REAL|CELL_RATIONAL|CELL_INTEGER - returns the real part of a
- * complex number */
+
+/* (real-part z)
+ * returns the real part of a complex number. */
 static Cell* math_real_part(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -478,14 +523,15 @@ static Cell* math_real_part(const Lex* e, const Cell* a)
     if (sub->type == CELL_COMPLEX) {
         return sub->real;
     }
-    /* If we didn't return early, we have the wrong arg type */
+    /* If we didn't return early, we have the wrong arg type. */
     return check_arg_types(make_sexpr_len1(sub),
         CELL_COMPLEX|CELL_REAL|CELL_RATIONAL|CELL_INTEGER|CELL_BIGINT,
         "real-part");
 }
 
-/* 'imag-part' -> CELL_REAL|CELL_RATIONAL|CELL_INTEGER - returns the imaginary part of a
- * complex number */
+
+/* (imag-part z)
+ * returns the imaginary part of a complex number. */
 static Cell* math_imag_part(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "imag-part");
@@ -500,13 +546,15 @@ static Cell* math_imag_part(const Lex* e, const Cell* a) {
     if (sub->type == CELL_COMPLEX) {
         return sub->imag;
     }
-    /* If we didn't return early, we have the wrong arg type */
+    /* If we didn't return early, we have the wrong arg type. */
     return check_arg_types(make_sexpr_len1(sub),
         CELL_COMPLEX|CELL_REAL|CELL_RATIONAL|CELL_INTEGER|CELL_BIGINT,
         "imag-part");
 }
 
-/* 'make-rectangular' -> CELL_COMPLEX- convert a complex number to rectangular form */
+
+/* (make-rectangular x1 x2 )
+ * Convert a complex number to rectangular form. */
 static Cell* math_make_rectangular(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -518,7 +566,9 @@ static Cell* math_make_rectangular(const Lex* e, const Cell* a)
     return make_cell_complex(a->cell[0], a->cell[1]);
 }
 
-/* 'angle' -> CELL_REAL- calculate angle 'θ' of complex number */
+
+/* (angle z)
+ * Calculate angle 'θ' of complex number. */
 static Cell* math_angle(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -539,7 +589,9 @@ static Cell* math_angle(const Lex* e, const Cell* a)
     }
 }
 
-/* 'make-polar' -> CELL_COMPLEX- convert a complex number to polar form */
+
+/* (make-polar x3 x4)
+ * Convert a complex number to polar form. */
 static Cell* math_make_polar(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -561,6 +613,7 @@ static Cell* math_make_polar(const Lex* e, const Cell* a)
 }
 
 
+/* Register the procedures in the global environment. */
 void cozenage_library_init(const Lex* e)
 {
     lex_add_builtin(e, "cos", math_cos);
@@ -586,7 +639,7 @@ void cozenage_library_init(const Lex* e)
     lex_add_builtin(e, "imag-part", math_imag_part);
     lex_add_builtin(e,"make-rectangular", math_make_rectangular);
     /* 'magnitude' is identical to 'abs' for real/complex numbers -
-     * so we just make an alias */
+     * so we just make an alias. */
     lex_add_builtin(e,"magnitude", builtin_abs);
     lex_add_builtin(e,"angle", math_angle);
     lex_add_builtin(e,"make-polar", math_make_polar);

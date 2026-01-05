@@ -122,7 +122,7 @@ static Cell* random_shuffle(const Lex* e, const Cell* a)
     bool list = false;
     if (a->cell[0]->type == CELL_PAIR) {
         list = true;
-        arr = make_sexpr_from_list(a->cell[0]);
+        arr = make_sexpr_from_list(a->cell[0], false);
     } else {
         arr = a->cell[0];
     }
@@ -165,7 +165,7 @@ static Cell* random_choice(const Lex* e, const Cell* a)
 
     Cell* arr;
     if (a->cell[0]->type == CELL_PAIR) {
-        arr = make_sexpr_from_list(a->cell[0]);
+        arr = make_sexpr_from_list(a->cell[0], false);
     } else {
         arr = a->cell[0];
     }
@@ -197,7 +197,7 @@ static Cell* random_choices(const Lex* e, const Cell* a)
     bool list = false;
     if (a->cell[0]->type == CELL_PAIR) {
         list = true;
-        arr = make_sexpr_from_list(a->cell[0]);
+        arr = make_sexpr_from_list(a->cell[0], false);
     } else {
         arr = a->cell[0];
     }
