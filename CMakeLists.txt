@@ -275,14 +275,18 @@ foreach(LIB_SOURCE ${LIB_SOURCES})
         message(STATUS "Linking ${LIB_TARGET_NAME} module against OpenSSL.")
         target_link_libraries(${LIB_TARGET_NAME} PRIVATE
                 OpenSSL::SSL
-                #OpenSSL::Crypto
         )
     endif()
 
     # Add export-dynamic flag on Linux/BSD
     if(UNIX AND NOT APPLE)
-        message(STATUS "Adding -Wl,--export-dynamic to main executable for plugin support.")
+        message(STATUS "Adding flags for Linux/BSD plugin support.")
+        # --export-dynamic (same as -rdynamic) makes main symbols visible to modules
         target_link_options(cozenage PRIVATE -Wl,--export-dynamic)
+
+        # Add the relative RPATH for Linux/BSD
+        # We use $ORIGIN (escaped) to mean "the directory where this binary lives"
+        target_link_options(cozenage PRIVATE "-Wl,-rpath,\$ORIGIN/../lib/cozenage")
     endif()
 
     # Add platform-specific linker flags for modules
@@ -290,7 +294,7 @@ foreach(LIB_SOURCE ${LIB_SOURCES})
         # Tell macOS linker to allow undefined symbols...
         message(STATUS "Building module ${LIB_TARGET_NAME} with -Wl,-undefined,dynamic_lookup")
         set_target_properties(${LIB_TARGET_NAME} PROPERTIES
-                LINK_FLAGS "-Wl,-undefined,dynamic_lookup"
+                LINK_FLAGS "-Wl,-undefined,dynamic_lookup,-rpath,@executable_path/../lib/cozenage/"
         )
     endif()
 endforeach()
