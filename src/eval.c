@@ -49,6 +49,7 @@ special_form_handler_t SF_DISPATCH_TABLE[] = {
     [SF_ID_SET_BANG] = &sf_set_bang,
     [SF_ID_BEGIN]    = &sf_begin,
     [SF_ID_AND]      = &sf_and,
+    [SF_ID_DEFMACRO] = &sf_defmacro,
     [SF_ID_DEBUG]    = &sf_with_gc_stats
 };
 
@@ -116,12 +117,23 @@ Cell* coz_eval(Lex* env, Cell* expr)
             continue;
         }
 
-        /* It's not a special form, so it's a procedure call. */
+        /* It's not a special form , so it's a procedure call or macro. */
         /* First, evaluate the procedure itself. */
         Cell* f = coz_eval(env, first);
         if (f->type == CELL_ERROR) {
             return f;
         }
+
+        if (f->type == CELL_MACRO) {
+            /* Transform the macro. */
+            Cell* raw_args = get_args_from_sexpr(expr);
+            Cell* result = coz_apply_and_get_val(f, raw_args, env);
+            /* Tail-call evaluate the result of the transformation. */
+            Cell* s = make_sexpr_from_list(result, true);
+            expr = s;
+            continue;
+        }
+
         if (f->type != CELL_PROC) {
             return make_cell_error(
                 fmt_err("bad identifier: '%s'. Expression must start with a procedure",
@@ -147,16 +159,18 @@ Cell* coz_eval(Lex* env, Cell* expr)
 
         Cell* result = coz_apply(f, args, &env, &expr);
         if (!result) return nullptr;
+        /* CELL_TRAMPOLINE is a tail-call from a builtin procedure. */
         if (result->type == CELL_TRAMPOLINE) {
             expr = result;
             continue;
         }
+
         if (result != TCS_Obj) {
             /* f was a primitive C function, it returned a final value. */
             return result;
         }
-        /* If here ... f was a Scheme lambda, and apply() updated
-         * our expr and env. Allow the control flow to begin another
+        /* If here ... f was a lambda, and apply() updated
+         * expr and env. Allow the control flow to begin another
          * loop, performing the tail call. */
     }
 }
