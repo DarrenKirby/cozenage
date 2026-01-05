@@ -74,7 +74,8 @@ Cell* builtin_eq_op(const Lex* e, const Cell* a)
             case CELL_BIGINT:
                 if (mpz_cmp(*lhs->bi, *rhs->bi) == 0) { the_same = 1; }
                 break;
-            default: ; /* this will never run as the types are pre-checked, but without the linter complains */
+            default: ; /* This will never run as the types are pre-checked,
+                          but without the linter complains */
         }
         if (!the_same) {
             return False_Obj;
@@ -253,8 +254,9 @@ Cell* builtin_lte_op(const Lex* e, const Cell* a)
 * -------------------------------------------*/
 
 
-/* 'eq?' -> CELL_BOOLEAN - Tests whether its two arguments are the exact same object
- * (pointer equality). Typically used for symbols and other non-numeric atoms.
+/* (eq? obj1 obj2)
+ * Tests whether its two arguments are the exact same object (pointer equality).
+ * Typically used for symbols and other non-numeric atoms.
  * May not give meaningful results for numbers or characters, since distinct but
  * equal values aren’t guaranteed to be the same object. */
 Cell* builtin_eq(const Lex* e, const Cell* a)
@@ -271,7 +273,8 @@ Cell* builtin_eq(const Lex* e, const Cell* a)
 }
 
 
-/* 'eqv?' -> CELL_BOOLEAN - Like 'eq?', but also considers numbers and characters
+/* (eqv? obj1 obj2)
+ * Like 'eq?', but also considers numbers and characters
  * with the same value as equivalent. (eqv? 2 2) is true, even if those 2s are
  * not the same object. Use when: you want a general-purpose equality predicate
  * that works for numbers, characters, and symbols, but you don’t need deep
@@ -297,7 +300,7 @@ Cell* builtin_eqv(const Lex* e, const Cell* a)
         case CELL_BOOLEAN: return make_cell_boolean(x->boolean_v == y->boolean_v);
         case CELL_CHAR: return make_cell_boolean(x->char_v == y->char_v);
         case CELL_NIL: return make_cell_boolean(y->type == CELL_NIL);
-        default: return make_cell_boolean(x == y); /* fall back to identity */
+        default: return make_cell_boolean(x == y); /* Fall back to identity. */
     }
 }
 
@@ -307,7 +310,7 @@ static Cell* val_equal(const Lex* e, Cell* x, Cell* y);
 
 
 static Cell* check_if_lists_are_equal_recursive(const Lex* e, Cell* x, Cell* y, Cell* visited) {
-    /* Base Cases */
+    /* Base Cases. */
     if (x == y) return True_Obj;
     if (x->type != y->type) return False_Obj;
     if (x->type != CELL_PAIR) {
@@ -316,7 +319,7 @@ static Cell* check_if_lists_are_equal_recursive(const Lex* e, Cell* x, Cell* y, 
         return val_equal(e, x, y);
     }
 
-    /* Cycle Detection
+    /* Cycle Detection.
      * If this specific pair of pairs have already been compared,
      * assume they are equal to break the infinite recursion. */
     const Cell* v = visited;
@@ -326,7 +329,7 @@ static Cell* check_if_lists_are_equal_recursive(const Lex* e, Cell* x, Cell* y, 
         v = v->cdr;
     }
 
-    /* Record this visit
+    /* Record this visit.
      * Push the pair (x . y) onto the visited stack. */
     Cell* current_comp = make_cell_pair(x, y);
     Cell* new_visited = make_cell_pair(current_comp, visited);

@@ -41,7 +41,7 @@ bool mul_will_overflow_i64(const int64_t a, const int64_t b, int64_t *out) {
 
 
 bool div_will_overflow_i64(const int64_t a, const int64_t b, int64_t *out) {
-    if (b == 0) { /* error: division by zero */ return true; }
+    if (b == 0) { /* error: division by zero. */ return true; }
     if (a == INT64_MIN && b == -1) return true;
     *out = a / b;
     return false;
@@ -71,7 +71,7 @@ int64_t mpz_get_i64_checked(const mpz_t z) {
 }
 
 
-/* bigint arithmetic procedures */
+/* bigint arithmetic procedures. */
 Cell* bigint_add(Cell* a, const Cell* b)
 {
     mpz_add(*a->bi, *a->bi, *b->bi);

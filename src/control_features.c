@@ -50,11 +50,11 @@ Cell* builtin_eval(const Lex* e, const Cell* a)
     Cell* args;
     /* Convert list to s-expr if we are handed a quote. */
     if (a->cell[0]->type == CELL_PAIR) {
-        args = make_sexpr_from_list(a->cell[0]);
+        args = make_sexpr_from_list(a->cell[0], false);
         for (int i = 0; i < args->count; i++ ) {
             if (args->cell[i]->type == CELL_PAIR && args->cell[i]->len != -1) {
                 Cell* tmp = args->cell[i];
-                args->cell[i] = make_sexpr_from_list(tmp);
+                args->cell[i] = make_sexpr_from_list(tmp, false);
             }
         }
         /* Otherwise just send straight to eval. */

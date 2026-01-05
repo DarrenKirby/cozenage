@@ -25,29 +25,49 @@
 
 
 /* Helpers */
+
+static Cell* sexp_cdr(const Cell* s) {
+    Cell* result = make_cell_sexpr();
+    for (int i = 1; i < s->count; i++) {
+        cell_add(result, s->cell[i]);
+    }
+    return result;
+}
+
+
 inline Cell* car__(const Cell* list)
 {
-    if (!(list->type & CELL_PAIR)) {
+    // ReSharper disable once CppVariableCanBeMadeConstexpr
+    const int mask = CELL_PAIR|CELL_SEXPR;
+    if (!(list->type & mask)) {
         return make_cell_error(
         fmt_err("car: got %s, expected %s",
              cell_type_name(list->type),
              cell_mask_types(CELL_PAIR)),
             TYPE_ERR);
     }
-    return list->car;
+    if (list->type == CELL_PAIR) {
+        return list->car;
+    }
+    return list->cell[0];
 }
 
 
 inline Cell* cdr__(const Cell* list)
 {
-    if (!(list->type & CELL_PAIR)) {
+    // ReSharper disable once CppVariableCanBeMadeConstexpr
+    const int mask = CELL_PAIR|CELL_SEXPR;
+    if (!(list->type & mask)) {
         return make_cell_error(
         fmt_err("car: got %s, expected %s",
              cell_type_name(list->type),
              cell_mask_types(CELL_PAIR)),
             TYPE_ERR);
     }
-    return list->cdr;
+    if (list->type == CELL_PAIR) {
+        return list->cdr;
+    }
+    return sexp_cdr((Cell*)list);
 }
 
 
@@ -902,7 +922,7 @@ Cell* builtin_foldl(const Lex* e, const Cell* a)
         }
 
         Cell* tmp_result;
-        Cell* arg_sexpr = make_sexpr_from_list(arg_list);
+        Cell* arg_sexpr = make_sexpr_from_list(arg_list, false);
         /* If the procedure is a builtin - grab a pointer to it and call it directly
          * otherwise - it is a lambda and needs to be evaluated and applied to the args. */
         if (proc->is_builtin) {
