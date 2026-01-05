@@ -95,7 +95,6 @@ This document tracks the implementation status of procedures in the Cozenage int
 |   ✅    | `flush-output-port`      |
 |   ✅    | `for-each`               |
 |   ✅    | `foldl`                  |
-|   ✅    | `gcd`                    |
 |   ❌    | `get-output-bytevector`  |
 |   ❌    | `get-output-string`      |
 |   ✅    | `idx` - polymorphic      |
@@ -105,7 +104,6 @@ This document tracks the implementation status of procedures in the Cozenage int
 |   ✅    | `input-port?`            |
 |   ✅    | `integer->char`          |
 |   ✅    | `integer?`               |
-|   ✅    | `lcm`                    |
 |   ✅    | `len` - polymorphic      |
 |   ✅    | `length`                 |
 |   ✅    | `list`                   |
@@ -232,33 +230,35 @@ This document tracks the implementation status of procedures in the Cozenage int
 
 ## `(base math)`
 
-| Status | Procedure            |
-|:------:|:---------------------|
-|   ✅    | `angle`              |
-|   ✅    | `imag-part`          |
-|   ✅    | `magnitude`          |
-|   ✅    | `make-polar`         |
-|   ✅    | `make-rectangular`   |
-|   ✅    | `real-part`          |
-|   ✅    | `acos`               |
-|   ✅    | `asin`               |
-|   ✅    | `atan`               |
-|   ✅    | `cos`                |
-|   ✅    | `exp`                |
-|   ✅    | `finite?`            |
-|   ✅    | `infinite?`          |
-|   ✅    | `log`                |
-|   ✅    | `nan?`               |
-|   ✅    | `sin`                |
-|   ✅    | `tan`                |
-|   ✅    | `floor/`             |
-|   ✅    | `truncate/`          |
-|   ✅    | `truncate-quotient`  |
-|   ✅    | `truncate-remainder` |
-|   ✅    | `rationalize`        |
-|   ✅    | `exact-integer-sqrt` |
-|   ✅    | `floor-quotient`     |
-|   ✅    | `floor-remainder`    |
+| Status | Procedure               |
+|:------:|:------------------------|
+|   ✅    | `angle`                 |
+|   ✅    | `imag-part`             |
+|   ✅    | `magnitude`             |
+|   ✅    | `make-polar`            |
+|   ✅    | `make-rectangular`      |
+|   ✅    | `real-part`             |
+|   ✅    | `acos`                  |
+|   ✅    | `asin`                  |
+|   ✅    | `atan`                  |
+|   ✅    | `cos`                   |
+|   ✅    | `exp`                   |
+|   ✅    | `finite?`               |
+|   ✅    | `infinite?`             |
+|   ✅    | `log`                   |
+|   ✅    | `nan?`                  |
+|   ✅    | `sin`                   |
+|   ✅    | `tan`                   |
+|   ✅    | `floor/`                |
+|   ✅    | `truncate/`             |
+|   ✅    | `truncate-quotient`     |
+|   ✅    | `truncate-remainder`    |
+|   ✅    | `rationalize`           |
+|   ✅    | `exact-integer-sqrt`    |
+|   ✅    | `floor-quotient`        |
+|   ✅    | `floor-remainder`       |
+|   ✅    | `gcd`                   |
+|   ✅    | `lcm`                   |
 
 ---
 
