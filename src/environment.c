@@ -317,6 +317,7 @@ void lex_add_builtins(const Lex* e)
     lex_add_builtin(e, "list-copy", builtin_list_copy);
     lex_add_builtin(e, "filter", builtin_filter);
     lex_add_builtin(e, "foldl", builtin_foldl);
+    lex_add_builtin(e, "foldr", builtin_foldr);
     lex_add_builtin(e, "zip", builtin_zip);
     /* Vector procedures. */
     lex_add_builtin(e, "vector", builtin_vector);

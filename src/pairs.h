@@ -53,6 +53,7 @@ Cell* builtin_assoc(const Lex* e, const Cell* a);
 Cell* builtin_list_copy(const Lex* e, const Cell* a);
 Cell* builtin_filter(const Lex* e, const Cell* a);
 Cell* builtin_foldl(const Lex* e, const Cell* a);
+Cell* builtin_foldr(const Lex* e, const Cell* a);
 Cell* builtin_zip(const Lex* e, const Cell* a);
 
 #endif //COZENAGE_PAIRS_H
