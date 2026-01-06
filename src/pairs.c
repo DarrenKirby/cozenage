@@ -907,29 +907,91 @@ Cell* builtin_foldl(const Lex* e, const Cell* a)
     Cell* init = a->cell[1];
 
     for (int i = 0; i < shortest_len; i++) {
-        /* Build a list of the i-th arguments. */
-        Cell* arg_list = make_cell_nil();
-        /* cons the initial/accumulator. */
-        arg_list = make_cell_pair(init, arg_list);
-        /* Grab vals starting from the last list, so that after the
-         * 'reversed' list is constructed, order is correct. */
-        for (int j = num_lists + 1; j >= 2; j--) {
+        Cell* arg_list = make_cell_sexpr();
+        /* Add the acc arg. */
+        cell_add(arg_list, init);
+        for (int j = 2; j < 2 + num_lists; j++) {
+            /* Add the i-th element of the list argument(s). */
             const Cell* current_list = a->cell[j];
             Cell* nth_item = list_get_nth_cell_ptr(current_list, i);
-            arg_list = make_cell_pair(nth_item, arg_list);
-            /* len is the number of lists plus the accumulator. */
-            arg_list->len = num_lists + 1;
+            cell_add(arg_list, nth_item);
         }
 
         Cell* tmp_result;
-        Cell* arg_sexpr = make_sexpr_from_list(arg_list, false);
         /* If the procedure is a builtin - grab a pointer to it and call it directly
          * otherwise - it is a lambda and needs to be evaluated and applied to the args. */
         if (proc->is_builtin) {
             Cell* (*func)(const Lex *, const Cell *) = proc->builtin;
-            tmp_result = func(e, arg_sexpr);
+            tmp_result = func(e, arg_list);
         } else {
-            tmp_result = coz_apply_and_get_val(proc, arg_sexpr, (Lex*)e);
+            tmp_result = coz_apply_and_get_val(proc, arg_list, (Lex*)e);
+        }
+        if (tmp_result->type == CELL_ERROR) {
+            /* Propagate any evaluation errors. */
+            return tmp_result;
+        }
+        /* assign the result to the accumulator. */
+        init = tmp_result;
+    }
+    /* Return the accumulator after all list args are evaluated. */
+    return init;
+}
+
+
+Cell* builtin_foldr(const Lex* e, const Cell* a)
+{
+    (void)e;
+    Cell* err = CHECK_ARITY_MIN(a, 3, "foldr");
+    if (err) return err;
+    if (a->cell[0]->type != CELL_PROC) {
+        return make_cell_error(
+            "foldr: arg 1 must be a procedure",
+            TYPE_ERR);
+    }
+
+    int shortest_list_length = INT32_MAX;
+    for (int i = 2; i < a->count; i++) {
+        /* If any of the list args is empty, return the accumulator. */
+        if (a->cell[i]->type == CELL_NIL) {
+            return a->cell[1];
+        }
+
+        if (a->cell[i]->type != CELL_PAIR || a->cell[i]->len == -1) {
+            return make_cell_error(
+                fmt_err("foldr: arg %d must be a proper list", i+1),
+                TYPE_ERR);
+        }
+        if (a->cell[i]->len < shortest_list_length) {
+            shortest_list_length = a->cell[i]->len;
+        }
+    }
+
+    const int shortest_len = shortest_list_length;
+    const int num_lists = a->count - 2;
+    const Cell* proc = a->cell[0];
+    Cell* init = a->cell[1];
+
+    /* Grab elements from the end of the lists */
+    for (int i = shortest_len - 1; i >= 0; i--) {
+        Cell* arg_list = make_cell_sexpr();
+        for (int j = 2; j < 2 + num_lists; j++) {
+            /* Add the i-th element of the list argument(s). */
+            const Cell* current_list = a->cell[j];
+            Cell* nth_item = list_get_nth_cell_ptr(current_list, i);
+            cell_add(arg_list, nth_item);
+        }
+        /* Add the acc arg LAST for foldr. */
+        cell_add(arg_list, init);
+
+        debug_print_cell(arg_list);
+        Cell* tmp_result;
+        /* If the procedure is a builtin - grab a pointer to it and call it directly
+         * otherwise - it is a lambda and needs to be evaluated and applied to the args. */
+        if (proc->is_builtin) {
+            Cell* (*func)(const Lex *, const Cell *) = proc->builtin;
+            tmp_result = func(e, arg_list);
+        } else {
+            tmp_result = coz_apply_and_get_val(proc, arg_list, (Lex*)e);
         }
         if (tmp_result->type == CELL_ERROR) {
             /* Propagate any evaluation errors. */
