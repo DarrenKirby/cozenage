@@ -19,17 +19,18 @@ Cozenage has:
 - Exact and inexact numbers.
 - Proper tail-call optimization where applicable.
 - Garbage collection.
-- A REPL with multi-line input editing, command history, and tab-autocompletion.
+- A REPL with multi-line input editing, persistent command history, and tab-autocompletion.
 - UTF-8 Unicode support.
 - eval/apply procedures for interpreting data as executable code.
+- Lisp-style ``defmacro`` non-hygienic macros.
 - polymorphic len, idx, rev procedures for compound types.
 - Delayed evaluation and streams implemented in lazy library.
 
 Typical Scheme features that Cozenage does NOT have:
 
 - call/cc and first-class continuations. I'm not likely to ever implement this. Rather, I am more likely to implement control flow patterns typically implemented via call/cc as primitive syntax.  
-- Hygienic macros. I will likely implement this at some point, but it is low-priority.
-- Quasiquotation. Currently, only standard quotation is supported.
+- Hygienic macros. I will likely implement this at some point, but it is low-priority (and very difficult!)
+- User-defined library loading (on the TODO list).
 
 Typical Scheme features currently in progress:
 
@@ -88,6 +89,7 @@ Implemented as primitives:
 - `begin`
 - `import`
 - `and`
+- `defmacro`
 
 Implemented as transforms/expands:
 
@@ -101,6 +103,9 @@ Implemented as transforms/expands:
 - `case`
 - `do`
 - `Named let`
+- `quasiquote`
+- `unquote`
+- `unquote-splicing`
 
 Implemented in 'lazy' library:
 

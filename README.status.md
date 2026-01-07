@@ -95,6 +95,7 @@ This document tracks the implementation status of procedures in the Cozenage int
 |   ✅    | `flush-output-port`      |
 |   ✅    | `for-each`               |
 |   ✅    | `foldl`                  |
+|   ✅    | `foldr`                  |
 |   ❌    | `get-output-bytevector`  |
 |   ❌    | `get-output-string`      |
 |   ✅    | `idx` - polymorphic      |
