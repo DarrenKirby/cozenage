@@ -3,11 +3,16 @@
 #
 # Targets:
 #   make / make all      - Builds the project using CMake (default).
+#   make DEBUG=1         - builds unoptimized binary and modules with debug symbols.
+#   make USE_LIBEDIT=1   - force linking against libedit instead of GNU readline.
 #   make nocmake         - Builds the project manually without CMake.
 #   make test            - Builds the test runner.
-#   make clean           - Removes all built artifacts.
+#   make clean           - Removes all build artifacts, including the build/ directory.
 #   make rebuild         - Cleans and rebuilds using the default (CMake) method.
-#
+#   make install         - installs the binary to ${PREFIX}/bin/cozenage
+#                           and the modules to $(PREFIX)/lib/cozenage/
+#                           Override default using: $ make install PREFIX=/my/custom/path
+#   make uninstall       - deletes the binary and module directory.
 
 # --- Primary Variables ---
 CC = cc
@@ -103,7 +108,7 @@ endif
 TEST_LIBS = -lcriterion $(BASE_LIBS)
 
 # --- Phony Targets (Commands) ---
-.PHONY: all cmake_build nocmake test clean rebuild
+.PHONY: all cmake_build nocmake test clean rebuild install uninstall
 
 # The default target when 'make' is run
 all: cmake_build
@@ -173,7 +178,11 @@ lib/%.$(LIB_EXT): src/base-lib/%_lib.c
 
 
 # --- install rules
-install: all
+install:
+	@if [ ! -f $(BINARY) ]; then \
+		echo "ERROR: $(BINARY) not found. Please run 'make' before 'make install'."; \
+		exit 1; \
+	fi
 	@mkdir -v -p $(INSTALL_BIN_DIR)
 	@mkdir -v -p $(INSTALL_LIB_DIR)
 	@install -v -m 755 $(BINARY) $(INSTALL_BIN_DIR)
