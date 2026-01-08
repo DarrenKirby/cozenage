@@ -1,7 +1,7 @@
 /*
  * 'src/pairs.h'
  * This file is part of Cozenage - https://github.com/DarrenKirby/cozenage
- * Copyright © 2025  Darren Kirby <darren@dragonbyte.ca>
+ * Copyright © 2025 - 2026 Darren Kirby <darren@dragonbyte.ca>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -55,5 +55,6 @@ Cell* builtin_filter(const Lex* e, const Cell* a);
 Cell* builtin_foldl(const Lex* e, const Cell* a);
 Cell* builtin_foldr(const Lex* e, const Cell* a);
 Cell* builtin_zip(const Lex* e, const Cell* a);
+Cell* builtin_count(const Lex* e, const Cell* a);
 
 #endif //COZENAGE_PAIRS_H

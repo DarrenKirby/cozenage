@@ -1,7 +1,7 @@
 /*
  * 'src/environment.c'
  * This file is part of Cozenage - https://github.com/DarrenKirby/cozenage
- * Copyright © 2025  Darren Kirby <darren@dragonbyte.ca>
+ * Copyright © 2025 - 2026 Darren Kirby <darren@dragonbyte.ca>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -70,7 +70,7 @@ Lex* new_child_env(const Lex* parent_env)
 }
 
 
-/* Retrieve a Cell* value from an environment. */
+/* Retrieve a Cell value from an environment. */
 Cell* lex_get(const Lex* e, const Cell* k)
 {
     if (!e || !k || k->type != CELL_SYMBOL) return nullptr;
@@ -319,6 +319,7 @@ void lex_add_builtins(const Lex* e)
     lex_add_builtin(e, "foldl", builtin_foldl);
     lex_add_builtin(e, "foldr", builtin_foldr);
     lex_add_builtin(e, "zip", builtin_zip);
+    lex_add_builtin(e, "count", builtin_count);
     /* Vector procedures. */
     lex_add_builtin(e, "vector", builtin_vector);
     lex_add_builtin(e, "vector-length", builtin_vector_length);

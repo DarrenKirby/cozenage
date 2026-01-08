@@ -1,7 +1,7 @@
 /*
  * 'src/pairs.c'
  * This file is part of Cozenage - https://github.com/DarrenKirby/cozenage
- * Copyright © 2025  Darren Kirby <darren@dragonbyte.ca>
+ * Copyright © 2025 - 2026 Darren Kirby <darren@dragonbyte.ca>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -1047,4 +1047,31 @@ Cell* builtin_zip(const Lex* e, const Cell* a)
     }
     outer_list->len = num_lists;
     return builtin_list_reverse(e, make_sexpr_len1(outer_list));
+}
+
+
+/* (count obj list)
+ * Returns the number of occurrences of obj in list.
+ * Uses equal? for the comparison. */
+Cell* builtin_count(const Lex* e, const Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 2, "count");
+    if (err) return err;
+    if (a->cell[1]->type != CELL_PAIR || a->cell[0]->len == -1) {
+        return make_cell_error("count: arg 2 must be a list", TYPE_ERR);
+    }
+    /* The haystack. */
+    const Cell* l = a->cell[1];
+    /* The needle */
+    const Cell* s = a->cell[0];
+    int64_t count = 0;
+    while (l != Nil_Obj) {
+        //debug_print_cell(l->car);
+        /* (if (equal? s (car l)) */
+        if (builtin_equal(e, make_sexpr_len2(s, l->car))->boolean_v) {
+            count++;
+        }
+        l = l->cdr;
+    }
+    return make_cell_integer(count);
 }
