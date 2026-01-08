@@ -320,6 +320,7 @@ void lex_add_builtins(const Lex* e)
     lex_add_builtin(e, "foldr", builtin_foldr);
     lex_add_builtin(e, "zip", builtin_zip);
     lex_add_builtin(e, "count", builtin_count);
+    lex_add_builtin(e, "count-equal", builtin_count_equal);
     /* Vector procedures. */
     lex_add_builtin(e, "vector", builtin_vector);
     lex_add_builtin(e, "vector-length", builtin_vector_length);
