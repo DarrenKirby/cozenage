@@ -69,6 +69,8 @@ This document tracks the implementation status of procedures in the Cozenage int
 |   ✅    | `command-line`           |
 |   ✅    | `complex?`               |
 |   ✅    | `cons`                   |
+|   ✅    | `count`                  |
+|   ✅    | `count-equal`            |
 |   ✅    | `current-error-port`     |
 |   ✅    | `current-input-port`     |
 |   ✅    | `current-output-port`    |
