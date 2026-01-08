@@ -1,5 +1,5 @@
 How to Build and Install Cozenage
-=======================
+=================================
 
 Get the Source
 --------------
@@ -12,8 +12,6 @@ use git to download the source tree:
     $ git clone https://github.com/DarrenKirby/cozenage.git
 
 Cozenage provides a unified Makefile which uses either CMake or GNU-make for the build process.
-There is no install target for now, but I will add one upon the stable release. For now, just run
-the binary from the source tree.
 
 Install dependencies
 --------------------
@@ -76,6 +74,24 @@ Cozenage comes with an (incomplete) set of end-to-end tests. To build this suite
 
 The tests require the `Criterion framework <https://criterion.readthedocs.io/en/master/>`_
 to build and run.
+
+System installation
+-------------------
+
+To install the cozenage binary and library modules to the system, run:
+
+.. code-block:: bash
+
+    $ make install
+
+This will install ``cozenage`` to /usr/local/bin, and the modules to
+/usr/local/lib/cozenage by default. To change this default, add the `PREFIX` variable to
+the command:
+
+.. code-block:: bash
+
+    $ make install PREFIX=/my/custom/path
+
 
 Cleaning and rebuilding the source tree
 ---------------------------------------
