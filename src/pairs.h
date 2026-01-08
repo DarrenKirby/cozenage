@@ -56,5 +56,6 @@ Cell* builtin_foldl(const Lex* e, const Cell* a);
 Cell* builtin_foldr(const Lex* e, const Cell* a);
 Cell* builtin_zip(const Lex* e, const Cell* a);
 Cell* builtin_count(const Lex* e, const Cell* a);
+Cell* builtin_count_equal(const Lex* e, const Cell* a);
 
 #endif //COZENAGE_PAIRS_H

@@ -983,7 +983,6 @@ Cell* builtin_foldr(const Lex* e, const Cell* a)
         /* Add the acc arg LAST for foldr. */
         cell_add(arg_list, init);
 
-        debug_print_cell(arg_list);
         Cell* tmp_result;
         /* If the procedure is a builtin - grab a pointer to it and call it directly
          * otherwise - it is a lambda and needs to be evaluated and applied to the args. */
@@ -1008,8 +1007,10 @@ Cell* builtin_foldr(const Lex* e, const Cell* a)
 Cell* builtin_zip(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_MIN(a, 2, "zip");
-    if (err) return err;
+    /* no args case. */
+    if (a->count == 0) {
+        return Nil_Obj;
+    }
 
     int shortest_list_length = INT32_MAX;
     for (int i = 0; i < a->count; i++) {
@@ -1050,24 +1051,75 @@ Cell* builtin_zip(const Lex* e, const Cell* a)
 }
 
 
-/* (count obj list)
- * Returns the number of occurrences of obj in list.
- * Uses equal? for the comparison. */
+/* (count pred list)
+ * Returns the count of objects in list for which pred returns true. */
 Cell* builtin_count(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2, "count");
     if (err) return err;
+    if (a->cell[0]->type != CELL_PROC) {
+        return make_cell_error(
+            "count: arg 1 must be a predicate procedure",
+            TYPE_ERR);
+    }
     if (a->cell[1]->type != CELL_PAIR || a->cell[0]->len == -1) {
-        return make_cell_error("count: arg 2 must be a list", TYPE_ERR);
+        return make_cell_error(
+            "count: arg 2 must be a list",
+            TYPE_ERR);
+    }
+    /* The arg list. */
+    const Cell* l = a->cell[1];
+    /* The predicate. */
+    const Cell* p = a->cell[0];
+    int64_t count = 0;
+    while (l != Nil_Obj) {
+        Cell* tmp_result;
+        /* If the procedure is a builtin - grab a pointer to it and call it directly
+         * otherwise - it is a lambda and needs to be evaluated and applied to the args. */
+        if (p->is_builtin) {
+            Cell* (*func)(const Lex *, const Cell *) = p->builtin;
+            tmp_result = func(e, make_sexpr_len1(l->car));
+        } else {
+            tmp_result = coz_apply_and_get_val(p, make_sexpr_len1(l->car), (Lex*)e);
+        }
+        if (tmp_result->type == CELL_ERROR) {
+            /* Propagate any evaluation errors. */
+            return tmp_result;
+        }
+        /* Ensure the proc returned a boolean. */
+        if (tmp_result->type != CELL_BOOLEAN) {
+            return make_cell_error(
+                "count: arg one must be a predicate procedure",
+                TYPE_ERR);
+        }
+        /* If the result is #t, bump the counter. */
+        if (tmp_result->boolean_v == 1) {
+            count++;
+        }
+        /* Adjust pointer to next value in the list. */
+        l = l->cdr;
+    }
+    return make_cell_integer(count);
+}
+
+
+/* (count-equal obj list)
+ * Returns the number of occurrences of obj in list.
+ * Uses equal? for the comparison. */
+Cell* builtin_count_equal(const Lex* e, const Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 2, "count-equal");
+    if (err) return err;
+    if (a->cell[1]->type != CELL_PAIR || a->cell[0]->len == -1) {
+        return make_cell_error("count-equal: arg 2 must be a list", TYPE_ERR);
     }
     /* The haystack. */
     const Cell* l = a->cell[1];
-    /* The needle */
+    /* The needle. */
     const Cell* s = a->cell[0];
     int64_t count = 0;
     while (l != Nil_Obj) {
-        //debug_print_cell(l->car);
-        /* (if (equal? s (car l)) */
+        /* (if (equal? s (car l)). */
         if (builtin_equal(e, make_sexpr_len2(s, l->car))->boolean_v) {
             count++;
         }
