@@ -50,9 +50,9 @@ int internal_cozenage_load_lib(const char* libname, const Lex* env)
 
     /* Library Search Path Logic
      * This is a very simple search path.
-     * It looks in "./lib/" first, then "/usr/local/lib/cozenage/" */
+     * It looks in "./lib/" first, then tries a relative PATH "../lib/cozenage/" */
 
-    /* Try ./lib/ */
+    /* Try ./lib/ This is for running 'cozenage' from the build directory. */
     snprintf(filepath, sizeof(filepath), "./lib/%s%s", libname, LIB_EXT);
 
     /* dlopen() loads the library.
