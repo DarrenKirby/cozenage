@@ -161,26 +161,44 @@ Test(end_to_end_lists, test_foldl_procedure, .init = setup_each_test, .fini = te
     cr_assert_str_eq(t_eval("(foldl + 0 '(1 2 3 4 5))"), "15");
     cr_assert_str_eq(t_eval("(foldl * 1 '(2 3 4 5))"), "120");
     /* Use a non-commutative operation to verify left-to-right order */
-    cr_assert_str_eq(t_eval("(foldl - 10 '(1 2 3))"), "-8");
+    cr_assert_str_eq(t_eval("(foldl - 10 '(1 2 3))"), "4");
     /* A classic use case: reversing a list */
-    cr_assert_str_eq(t_eval("(foldl (lambda (acc elem) (cons acc elem)) '() '(a b c d))"), "(d c b a)");
+    cr_assert_str_eq(t_eval("(foldl (lambda (acc elem) (cons acc elem)) '() '(a b c d))"), "((((() . a) . b) . c) . d)");
 
     /* Test with different initial values */
     cr_assert_str_eq(t_eval("(foldl + 100 '(1 2 3))"), "106");
-    cr_assert_str_eq(t_eval("(foldl cons '(z) '(a b c))"), "(c b a z)");
+    cr_assert_str_eq(t_eval("(foldl cons '(z) '(a b c))"), "((((z) . a) . b) . c)");
 
     /* Test foldl with multiple lists */
     cr_assert_str_eq(t_eval("(foldl + 0 '(1 2 3) '(10 20 30))"), "66"); /* (+ (+ (+ 0 1 10) 2 20) 3 30) */
-    cr_assert_str_eq(t_eval("(foldl list '() '(a b c) '(1 2 3))"), "(c 3 (b 2 (a 1 ())))");
+    cr_assert_str_eq(t_eval("(foldl list '() '(a b c) '(1 2 3))"), "(((() a 1) b 2) c 3)");
     cr_assert_str_eq(t_eval("(foldl + 0 '(1 2 3) '(4 5) '(6))"), "11"); /* Stops when the shortest list is exhausted */
 
     /* Test with mixed types */
-    cr_assert_str_eq(t_eval("(foldl (lambda (acc x) (if (number? x) (+ acc x) acc)) 0 '(a 1 b 2 c 3))"), " Type error: +: bad type at arg 1: got symbol, expected integer|real|rational|complex|bigint|bigfloat");
+    cr_assert_str_eq(t_eval("(foldl (lambda (acc x) (if (number? x) (+ acc x) acc)) 0 '(a 1 b 2 c 3))"), "6");
 
     /* Edge cases */
     cr_assert_str_eq(t_eval("(foldl + 42 '())"), "42");
     cr_assert_str_eq(t_eval("(foldl + 0 '(10))"), "10");
     cr_assert_str_eq(t_eval("(foldl + 0 '() '(1 2 3))"), "0"); /* Returns init immediately if any list is empty */
+
+    /* Structural test (reversal via cons) */
+    cr_assert_str_eq(t_eval("(foldl (lambda (acc x) (cons x acc)) '() '(1 2 3 4))"),
+                 "(4 3 2 1)");
+
+    /* Accumulator position test */
+    cr_assert_str_eq(t_eval("(foldl (lambda (acc x) (list acc x)) 'start '(a b c))"),
+                     "(((start a) b) c)");
+
+    /* Two-list fold (arity + ordering) */
+    cr_assert_str_eq(t_eval("(foldl (lambda (acc x y) (cons (list x y) acc)) '() '(1 2 3) '(a b c))"),
+                             "((3 c) (2 b) (1 a))");
+
+    /* Numeric multi-list fold */
+    cr_assert_str_eq(t_eval("(foldl (lambda (acc x y) (+ acc x y)) 0 '(1 2 3) '(10 20 30))"), "66");
+
+    /* Empty list short-circuit */
+    cr_assert_str_eq(t_eval("(foldl (lambda (acc x) 'should-not-run) 'ok '())"), "ok");
 
     /* The following tests are for error conditions. */
     cr_assert_str_eq(t_eval("(foldl)"), " Arity error: foldl: expected at least 3 args, got 0");
@@ -189,6 +207,34 @@ Test(end_to_end_lists, test_foldl_procedure, .init = setup_each_test, .fini = te
     cr_assert_str_eq(t_eval("(foldl 1 0 '(1 2 3))"), " Type error: foldl: arg 1 must be a procedure");
     cr_assert_str_eq(t_eval("(foldl + 0 '(a . b))"), " Type error: foldl: arg 3 must be a proper list");
     cr_assert_str_eq(t_eval("(foldl + 0 '(1 2) '(a . b))"), " Type error: foldl: arg 4 must be a proper list");
+}
+
+Test(end_to_end_lists, test_foldr_procedure, .init = setup_each_test, .fini = teardown_each_test) {
+    /* Canonical list reconstruction */
+    cr_assert_str_eq(t_eval("(foldr cons '() '(1 2 3 4))"), "(1 2 3 4)");
+
+    /* Expression shape test */
+    cr_assert_str_eq(t_eval("(foldr (lambda (x acc) (list x acc)) 'z '(a b c))"), "(a (b (c z)))");
+
+    /* Two-list fold (structure preservation) */
+    cr_assert_str_eq(t_eval("(foldr (lambda (x y acc) (cons (list x y) acc)) '() '(1 2 3) '(a b c))"), "((1 a) (2 b) (3 c))");
+
+    /* Non-commutative operator test (the important one) */
+    cr_assert_str_eq(t_eval("(foldr - 0 '(1 2 3))"), "2");
+
+    /* Empty list base case */
+    cr_assert_str_eq(t_eval("(foldr (lambda (x acc) 'should-not-run) 'ok '())"), "ok");
+
+    /* Short-circuiting / right-association behavior */
+    cr_assert_str_eq(t_eval("(foldr (lambda (x acc) (if (eq? x 'stop) 'hit acc)) 'miss '(a b stop c d))"), "hit");
+
+    /* The following tests are for error conditions. */
+    cr_assert_str_eq(t_eval("(foldr)"), " Arity error: foldr: expected at least 3 args, got 0");
+    cr_assert_str_eq(t_eval("(foldr +)"), " Arity error: foldr: expected at least 3 args, got 1");
+    cr_assert_str_eq(t_eval("(foldr + 0)"), " Arity error: foldr: expected at least 3 args, got 2");
+    cr_assert_str_eq(t_eval("(foldr 1 0 '(1 2 3))"), " Type error: foldr: arg 1 must be a procedure");
+    cr_assert_str_eq(t_eval("(foldr + 0 '(a . b))"), " Type error: foldr: arg 3 must be a proper list");
+    cr_assert_str_eq(t_eval("(foldr + 0 '(1 2) '(a . b))"), " Type error: foldr: arg 4 must be a proper list");
 }
 
 Test(end_to_end_lists, test_map_procedure, .init = setup_each_test, .fini = teardown_each_test) {
@@ -222,4 +268,51 @@ Test(end_to_end_lists, test_map_procedure, .init = setup_each_test, .fini = tear
     cr_assert_str_eq(t_eval("(map + '(1 2) 3)"), " Type error: map: arg 3 must be a proper list");
     cr_assert_str_eq(t_eval("(map + '(1 . 2))"), " Type error: map: arg 2 must be a proper list");
     cr_assert_str_eq(t_eval("(map + '(1 2) '(3 . 4))"), " Type error: map: arg 3 must be a proper list");
+}
+
+Test(end_to_end_lists, test_zip_procedure, .init = setup_each_test, .fini = teardown_each_test) {
+    /* --- zip: basic behavior --- */
+
+    /* Three lists, mixed types */
+    cr_assert_str_eq(t_eval("(zip '(1 a \"a\") '(2 b \"b\") '(3 c \"c\"))"),
+      "((1 2 3) (a b c) (\"a\" \"b\" \"c\"))");
+
+    /* Stops at shortest list */
+    cr_assert_str_eq(t_eval("(zip '(1 a \"a\" 2 3 4) '(2 b \"b\" 5 6 7) '(3 c \"c\"))"),
+      "((1 2 3) (a b c) (\"a\" \"b\" \"c\"))");
+
+    /* Two lists */
+    cr_assert_str_eq(t_eval("(zip '(1 2 3) '(a b c))"), "((1 a) (2 b) (3 c))");
+
+    /* --- zip: edge cases --- */
+
+    /* Single list */
+    cr_assert_str_eq(t_eval("(zip '(1 2 3))"), "((1) (2) (3))");
+
+    /* No arguments */
+    cr_assert_str_eq(t_eval("(zip)"), "()");
+
+    /* Empty list anywhere yields empty result */
+    cr_assert_str_eq(t_eval("(zip '(1 2 3) '() '(a b c))"), "()");
+
+    cr_assert_str_eq(t_eval("(zip '() '() '())"), "()");
+
+    /* --- zip: numeric sanity --- */
+
+    /* All lists same length */
+    cr_assert_str_eq(t_eval("(zip '(1 2) '(3 4) '(5 6))"), "((1 3 5) (2 4 6))");
+
+    /* Unequal lengths, two lists */
+    cr_assert_str_eq(t_eval("(zip '(1 2 3 4) '(a b))"), "((1 a) (2 b))");
+
+    /* --- zip: structure preservation --- */
+
+    /* Nested lists preserved (no flattening) */
+    cr_assert_str_eq(t_eval("(zip '((1) (2)) '((a) (b)))"), "(((1) (a)) ((2) (b)))");
+
+    /* --- zip: interaction with fold --- */
+
+    /* Works cleanly with foldl */
+    cr_assert_str_eq(t_eval("(foldl (lambda (acc x) (cons x acc)) '() (zip '(1 2) '(a b)))"),
+      "((2 b)) ((1 a))");
 }
