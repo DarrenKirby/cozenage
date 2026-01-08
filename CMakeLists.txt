@@ -289,12 +289,15 @@ foreach(LIB_SOURCE ${LIB_SOURCES})
         target_link_options(cozenage PRIVATE "-Wl,-rpath,\$ORIGIN/../lib/cozenage")
     endif()
 
-    # Add platform-specific linker flags for modules
+    # macOS specific configuration
     if(APPLE)
-        # Tell macOS linker to allow undefined symbols...
+        # 1. Apply RPATH to the MAIN EXECUTABLE so it knows where to look
+        target_link_options(cozenage PRIVATE "-Wl,-rpath,@executable_path/../lib/cozenage/")
+
+        # 2. Apply dynamic_lookup to the MODULES so they can find symbols in the main binary
         message(STATUS "Building module ${LIB_TARGET_NAME} with -Wl,-undefined,dynamic_lookup")
         set_target_properties(${LIB_TARGET_NAME} PROPERTIES
-                LINK_FLAGS "-Wl,-undefined,dynamic_lookup,-rpath,@executable_path/../lib/cozenage/"
+                LINK_FLAGS "-Wl,-undefined,dynamic_lookup"
         )
     endif()
 endforeach()
