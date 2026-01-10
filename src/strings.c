@@ -1341,6 +1341,11 @@ Cell* builtin_string_gte_ci(const Lex* e, const Cell* a) {
     return True_Obj;
 }
 
+
+/* (string-split string delim)
+ * Returns a list of strings where each value is substrings of 'string'
+ * split by occurrences of "delim". The delimiter is passed as a string
+ * rather than a char to allow for multi-char delimiters. */
 Cell* builtin_string_split(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING, "string-split");
@@ -1350,6 +1355,12 @@ Cell* builtin_string_split(const Lex* e, const Cell* a) {
 
     char* sep;
     if (a->count == 2) {
+        /* Sanity check. */
+        if (a->cell[0]->char_count < a->cell[1]->char_count) {
+            return make_cell_error(
+                "string-split: delimiter longer than string to split!\n"
+                          "Did you reverse the argument order?", VALUE_ERR);
+        }
         sep = a->cell[1]->str;
     } else {
         sep = " ";
