@@ -135,7 +135,9 @@ Cell* make_cell_nil(void)
 /* Thin wrapper that returns the singleton #t or #f object. */
 Cell* make_cell_boolean(const int the_boolean)
 {
-    return the_boolean ? True_Obj : False_Obj;
+    if (the_boolean == 1) return True_Obj;
+    if (the_boolean == 0) return False_Obj;
+    return make_cell_error("bool constructor: bad bool value!", TYPE_ERR);
 }
 
 
@@ -536,8 +538,7 @@ Cell* cell_copy(const Cell* v) {
         break;
 
     case CELL_BOOLEAN:
-        copy->boolean_v = v->boolean_v;
-        break;
+        return v->boolean_v == 1 ? True_Obj : False_Obj;
 
     case CELL_CHAR:
         copy->char_v = v->char_v;
