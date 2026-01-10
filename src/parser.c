@@ -424,9 +424,9 @@ static Cell* parse_string(const char* str, const int len)
 static Cell* parse_boolean(const char* tok, const int line)
 {
     if (strcmp(tok, "t") == 0 ||
-        strcmp(tok, "true") == 0) return make_cell_boolean(1);
+        strcmp(tok, "true") == 0) return True_Obj;
     if (strcmp(tok, "f") == 0 ||
-        strcmp(tok, "false") == 0) return make_cell_boolean(0);
+        strcmp(tok, "false") == 0) return False_Obj;
     /* Otherwise an error. */
     return make_cell_error(fmt_err("Line %d: Unable to parse token: '%s#%s%s'",
                     line, ANSI_RED_B, tok, ANSI_RESET), SYNTAX_ERR);
