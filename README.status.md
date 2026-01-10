@@ -90,6 +90,7 @@ This document tracks the implementation status of procedures in the Cozenage int
 |   ✅    | `exact?`                 |
 |   ✅    | `expt`                   |
 |   ✅    | `exit`                   |
+|   ✅    | `false?`                 |
 |   ✅    | `features`               |
 |   ✅    | `file-error?`            |
 |   ✅    | `filter`                 |
@@ -204,6 +205,7 @@ This document tracks the implementation status of procedures in the Cozenage int
 |   ✅    | `symbol->string`         |
 |   ✅    | `symbol=?`               |
 |   ✅    | `symbol?`                |
+|   ✅    | `true?`                  |
 |   ✅    | `truncate`               |
 |   ✅    | `u8-ready?`              |
 |   ✅    | `utf8->string`           |
