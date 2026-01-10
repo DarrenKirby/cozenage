@@ -290,6 +290,8 @@ void lex_add_builtins(const Lex* e)
     /* Boolean and logical procedures. */
     lex_add_builtin(e, "not", builtin_not);
     lex_add_builtin(e, "boolean=?", builtin_boolean);
+    lex_add_builtin(e, "false?", builtin_false_pred);
+    lex_add_builtin(e, "true?", builtin_true_pred);
     /* Pair/list procedures. */
     lex_add_builtin(e, "cons", builtin_cons);
     lex_add_builtin(e, "car", builtin_car);
