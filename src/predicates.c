@@ -1,7 +1,7 @@
 /*
  * 'src/predicates.c'
  * This file is part of Cozenage - https://github.com/DarrenKirby/cozenage
- * Copyright © 2025  Darren Kirby <darren@dragonbyte.ca>
+ * Copyright © 2025 -2026 Darren Kirby <darren@dragonbyte.ca>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -43,6 +43,7 @@ Cell* builtin_number_pred(const Lex* e, const Cell* a)
     return False_Obj;
 }
 
+
 /* (boolean? obj)
 * The boolean? predicate returns #t if obj is either #t or #f and returns #f otherwise. */
 Cell* builtin_boolean_pred(const Lex* e, const Cell* a)
@@ -52,6 +53,7 @@ Cell* builtin_boolean_pred(const Lex* e, const Cell* a)
     if (err) return err;
     return make_cell_boolean(a->cell[0]->type == CELL_BOOLEAN);
 }
+
 
 /* (null? obj)
  * Returns #t if obj is the empty list, otherwise returns #f. */
@@ -63,6 +65,7 @@ Cell* builtin_null_pred(const Lex* e, const Cell* a)
     return make_cell_boolean(a->cell[0]->type == CELL_NIL);
 }
 
+
 /* (pair? obj)
  * The pair? predicate returns #t if obj is a pair, and otherwise returns #f*/
 Cell *builtin_pair_pred(const Lex *e, const Cell *a)
@@ -72,6 +75,7 @@ Cell *builtin_pair_pred(const Lex *e, const Cell *a)
     if (err) return err;
     return make_cell_boolean(a->cell[0]->type == CELL_PAIR);
 }
+
 
 /* (list? obj)
 * Returns #t if obj is a list. Otherwise, it returns #f. By definition, all lists have finite length
@@ -101,6 +105,7 @@ Cell* builtin_list_pred(const Lex* e, const Cell* a)
     return p->type == CELL_NIL ? True_Obj : False_Obj;
 }
 
+
 /* 'procedure?' -> CELL_BOOLEAN - return #t if obj is a procedure, else #f */
 Cell* builtin_proc_pred(const Lex* e, const Cell* a)
 {
@@ -109,6 +114,7 @@ Cell* builtin_proc_pred(const Lex* e, const Cell* a)
     if (err) return err;
     return make_cell_boolean(a->cell[0]->type == CELL_PROC);
 }
+
 
 /* 'symbol?' -> CELL_BOOLEAN - return #t if obj is a symbol, else #f */
 Cell* builtin_sym_pred(const Lex* e, const Cell* a)
@@ -119,6 +125,7 @@ Cell* builtin_sym_pred(const Lex* e, const Cell* a)
     return make_cell_boolean(a->cell[0]->type == CELL_SYMBOL);
 }
 
+
 /* 'string?' -> CELL_BOOLEAN - return #t if obj is a string, else #f */
 Cell* builtin_string_pred(const Lex* e, const Cell* a)
 {
@@ -127,6 +134,7 @@ Cell* builtin_string_pred(const Lex* e, const Cell* a)
     if (err) return err;
     return make_cell_boolean(a->cell[0]->type == CELL_STRING);
 }
+
 
 /* 'char?' -> CELL_BOOLEAN - return #t if obj is a char, else #f */
 Cell* builtin_char_pred(const Lex* e, const Cell* a)
@@ -137,6 +145,7 @@ Cell* builtin_char_pred(const Lex* e, const Cell* a)
     return make_cell_boolean(a->cell[0]->type == CELL_CHAR);
 }
 
+
 /* 'vector?' -> CELL_BOOLEAN - return #t if obj is a vector, else #f */
 Cell* builtin_vector_pred(const Lex* e, const Cell* a)
 {
@@ -145,6 +154,7 @@ Cell* builtin_vector_pred(const Lex* e, const Cell* a)
     if (err) return err;
     return make_cell_boolean(a->cell[0]->type == CELL_VECTOR);
 }
+
 
 /* (bytevector? obj)
  * Returns #t if obj is a bytevector. Otherwise, #f is returned. */
@@ -156,6 +166,7 @@ Cell* builtin_bytevector_pred(const Lex* e, const Cell* a)
     return make_cell_boolean(a->cell[0]->type == CELL_BYTEVECTOR);
 }
 
+
 /* 'port?' -> CELL_BOOLEAN - return #t if obj is a port, else #f */
 Cell* builtin_port_pred(const Lex* e, const Cell* a)
 {
@@ -164,6 +175,7 @@ Cell* builtin_port_pred(const Lex* e, const Cell* a)
     if (err) return err;
     return make_cell_boolean(a->cell[0]->type == CELL_PORT);
 }
+
 
 /* 'eof-object?' -> CELL_BOOLEAN - return #t if obj is an eof, else #f */
 Cell* builtin_eof_pred(const Lex* e, const Cell* a)
@@ -174,9 +186,11 @@ Cell* builtin_eof_pred(const Lex* e, const Cell* a)
     return make_cell_boolean(a->cell[0]->type == CELL_EOF);
 }
 
+
 /* ---------------------------------------*
  *      Numeric identity procedures       *
  * ---------------------------------------*/
+
 
 /* 'exact?' -> CELL_BOOLEAN -  */
 Cell* builtin_exact_pred(const Lex* e, const Cell* a)
@@ -193,6 +207,7 @@ Cell* builtin_exact_pred(const Lex* e, const Cell* a)
     }
     return make_cell_boolean(z->exact);
 }
+
 
 /* 'inexact?' -> CELL_BOOLEAN -  */
 Cell* builtin_inexact_pred(const Lex* e, const Cell* a)
@@ -215,6 +230,7 @@ Cell* builtin_inexact_pred(const Lex* e, const Cell* a)
     return True_Obj;
 }
 
+
 /* 'complex?' -> CELL_BOOLEAN - R7RS compliant */
 Cell* builtin_complex(const Lex* e, const Cell* a)
 {
@@ -230,6 +246,7 @@ Cell* builtin_complex(const Lex* e, const Cell* a)
     }
     return False_Obj;
 }
+
 
 /* 'real?' -> CELL_BOOLEAN - R7RS compliant */
 Cell* builtin_real(const Lex* e, const Cell* a)
@@ -252,6 +269,7 @@ Cell* builtin_real(const Lex* e, const Cell* a)
             return False_Obj;
     }
 }
+
 
 /* 'rational?' -> CELL_BOOLEAN - R7RS compliant */
 Cell* builtin_rational(const Lex* e, const Cell* a)
@@ -287,6 +305,7 @@ Cell* builtin_rational(const Lex* e, const Cell* a)
     return False_Obj;
 }
 
+
 /* 'integer?' -> CELL_BOOLEAN - R7RS compliant */
 Cell* builtin_integer(const Lex* e, const Cell* a)
 {
@@ -295,6 +314,7 @@ Cell* builtin_integer(const Lex* e, const Cell* a)
     if (err) return err;
     return make_cell_boolean(cell_is_integer(a->cell[0]));
 }
+
 
 /* 'exact-integer?' -> CELL_BOOLEAN - R7RS compliant */
 Cell* builtin_exact_integer(const Lex* e, const Cell* a)
@@ -308,6 +328,7 @@ Cell* builtin_exact_integer(const Lex* e, const Cell* a)
     return make_cell_boolean(cell_is_integer(arg) && arg->exact);
 }
 
+
 Cell* builtin_bigint(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -319,6 +340,7 @@ Cell* builtin_bigint(const Lex* e, const Cell* a)
     }
     return False_Obj;
 }
+
 
 Cell* builtin_bigrat(const Lex* e, const Cell* a)
 {
@@ -332,6 +354,7 @@ Cell* builtin_bigrat(const Lex* e, const Cell* a)
     return False_Obj;
 }
 
+
 Cell* builtin_bigfloat(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -343,6 +366,7 @@ Cell* builtin_bigfloat(const Lex* e, const Cell* a)
     }
     return False_Obj;
 }
+
 
 /* ---------------------------------------*
  *       Numeric predicate procedures     *
@@ -369,6 +393,7 @@ Cell* builtin_zero(const Lex* e, const Cell* a)
     return make_cell_boolean(is_zero);
 }
 
+
 /* 'positive?' -> CELL_BOOLEAN - returns #t if arg is > 0 else #f */
 Cell* builtin_positive(const Lex* e, const Cell* a)
 {
@@ -390,6 +415,7 @@ Cell* builtin_positive(const Lex* e, const Cell* a)
 
     return make_cell_boolean(cell_is_positive(val));
 }
+
 
 /* 'negative?' -> CELL_BOOLEAN - returns #t if arg is < 0 else #f */
 Cell* builtin_negative(const Lex* e, const Cell* a)
@@ -413,6 +439,7 @@ Cell* builtin_negative(const Lex* e, const Cell* a)
     return make_cell_boolean(cell_is_negative(val));
 }
 
+
 /* 'odd?' -> CELL_BOOLEAN - returns #t if arg is an odd integer else #f */
 Cell* builtin_odd(const Lex* e, const Cell* a)
 {
@@ -432,6 +459,7 @@ Cell* builtin_odd(const Lex* e, const Cell* a)
     return make_cell_boolean(cell_is_odd(a->cell[0]));
 }
 
+
 /* 'even?' -> CELL_BOOLEAN - returns #t if arg is an even integer else #f */
 Cell* builtin_even(const Lex* e, const Cell* a)
 {
@@ -449,4 +477,34 @@ Cell* builtin_even(const Lex* e, const Cell* a)
     }
 
     return make_cell_boolean(cell_is_even(a->cell[0]));
+}
+
+
+/* Note that these next two procedures check for the literal
+ * boolean #true and #false objects, not just a check for 'truthiness'. */
+
+
+/* (false? obj)
+ * Returns true if obj is literal #false, else returns false. */
+Cell* builtin_false_pred(const Lex* e, const Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "false?");
+    if (err) { return err; }
+    if (a->cell[0] == False_Obj) {
+        return True_Obj;
+    }
+    return False_Obj;
+}
+
+
+/* (true? obj)
+ * Returns true if obj is literal #true, else returns false. */
+Cell* builtin_true_pred(const Lex* e, const Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "true?");
+    if (err) { return err; }
+    if (a->cell[0] == True_Obj) {
+        return True_Obj;
+    }
+    return False_Obj;
 }

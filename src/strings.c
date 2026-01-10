@@ -1359,7 +1359,8 @@ Cell* builtin_string_split(const Lex* e, const Cell* a) {
         if (a->cell[0]->char_count < a->cell[1]->char_count) {
             return make_cell_error(
                 "string-split: delimiter longer than string to split!\n"
-                          "Did you reverse the argument order?", VALUE_ERR);
+                          "               Did you reverse the argument order?",
+                          VALUE_ERR);
         }
         sep = a->cell[1]->str;
     } else {

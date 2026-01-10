@@ -53,5 +53,8 @@ Cell* builtin_positive(const Lex* e, const Cell* a);
 Cell* builtin_negative(const Lex* e, const Cell* a);
 Cell* builtin_odd(const Lex* e, const Cell* a);
 Cell* builtin_even(const Lex* e, const Cell* a);
+/* Boolean object predicates. */
+Cell* builtin_false_pred(const Lex* e, const Cell* a);
+Cell* builtin_true_pred(const Lex* e, const Cell* a);
 
 #endif //COZENAGE_PREDICATES_H
