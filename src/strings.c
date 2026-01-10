@@ -1361,6 +1361,9 @@ Cell* builtin_string_split(const Lex* e, const Cell* a) {
 
     while ((token = strsep(&src, sep)) != NULL) {
         Cell* s = make_cell_string(token);
+        if (strcmp(s->str, "") == 0) {
+            continue;
+        }
         cell_add(result, s);
     }
 
