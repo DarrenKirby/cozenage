@@ -21,6 +21,10 @@
 #define COZENAGE_COMPAT_READLINE_H
 
 
+// ReSharper disable twice CppUnusedIncludeDirective
+#include <stdio.h> /* This is required for GNU readline. */
+
+
 #ifdef _WIN32
 #include <string.h>
 
@@ -43,8 +47,6 @@ void add_history(char* unused) {}
 
 #ifdef USE_GNU_READLINE
 
-// ReSharper disable once CppUnusedIncludeDirective
-#include <stdio.h>
 #include <readline/readline.h>
 #include <readline/history.h>
 #include <readline/tilde.h>
