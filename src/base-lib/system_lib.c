@@ -85,19 +85,22 @@ static Cell* system_get_env_vars(const Lex* e, const Cell* a)
 
     /* Start with nil. */
     Cell* result = make_cell_nil();
-    int len = 0;
+    int len = 1;
 
     for (char **env = environ; *env != NULL; env++) {
-        /* Bad form to mutate env. */
+        /* Make a copy so we don't mutate env. */
         char* var_string = GC_strdup(*env);
+
         const char *var = strtok(var_string, "=");
         if (var == NULL) {
             break;
         }
+
         const char *val = strtok(nullptr, "=");
         if (val == NULL) {
             break;
         }
+
         Cell* vr = make_cell_string(var);
         Cell* vl = make_cell_string(val);
         result = make_cell_pair(make_cell_pair(vr, vl), result);
@@ -164,6 +167,9 @@ Cell* system_get_username(const Lex* e, const Cell* a) {
     return False_Obj;
 }
 
+
+/* BSD expects int*, glibc expects gid_t*.
+ * We give BSD what it wants without lying about storage. */
 static int portable_getgrouplist(const char *user, gid_t basegid,
                       gid_t *groups, int *ngroups) {
 #ifdef __linux__
@@ -172,7 +178,7 @@ static int portable_getgrouplist(const char *user, gid_t basegid,
 #else
     /* BSD-style API */
     int *igroups = GC_malloc(sizeof(int) * (*ngroups));
-    int ret = getgrouplist(user,
+    const int ret = getgrouplist(user,
                            (int)basegid,
                            igroups,
                            ngroups);
@@ -201,31 +207,18 @@ Cell* system_get_groups(const Lex* e, const Cell* a) {
     const uid_t uid = geteuid();
     const struct passwd *pw = getpwuid(uid);
     if (!pw) {
-        return make_cell_nil(); /* or signal error */
+        return make_cell_nil(); /* Should this be #false ??? OS_ERROR? */
     }
 
-    /*
-     * BSD expects int*, glibc expects gid_t*.
-     * We give BSD what it wants without lying about storage.
-     */
-    //const int *igroups = GC_malloc(sizeof(int) * ngroups);
-
     const int ret = portable_getgrouplist(pw->pw_name, pw->pw_gid, groups, &ngroups);
-
     if (ret == -1) {
-        /* Nothing really to do here, as we use NGROUPS_MAX to set ngroups
-         * for the call.
+        /* Nothing really to do here, as we use NGROUPS_MAX to set ngroups for the call.
          * BSD truncation: ngroups is "how many were stored"
          * glibc: ngroups is "required size" */
     }
 
-    // /* Convert safely. */
-    // for (int i = 0; i < ngroups; i++) {
-    //     groups[i] = (gid_t)igroups[i];
-    // }
-
     Cell* result = make_cell_nil();
-    int len = 0;
+    int len = 1;
 
     for (int j = 0; j < ngroups; j++) {
         Cell* vr = make_cell_integer(groups[j]);
@@ -237,7 +230,8 @@ Cell* system_get_groups(const Lex* e, const Cell* a) {
             vl = make_cell_string("");
         }
         result = make_cell_pair(make_cell_pair(vr, vl), result);
-        result->len = len++;
+        result->len = len;
+        len++;
     }
     return result;
 }
