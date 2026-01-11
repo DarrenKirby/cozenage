@@ -149,7 +149,7 @@ Cell* system_get_egid(const Lex* e, const Cell* a) {
 
 /* (get-username)
  * Returns the username associated with the uid of the running process,
- * or #false if it cannoot be obtained. */
+ * or #false if it cannot be obtained. */
 Cell* system_get_username(const Lex* e, const Cell* a) {
     (void)e; (void)a;
     Cell* err = CHECK_ARITY_EXACT(a, 0, "get_username");
@@ -164,23 +164,50 @@ Cell* system_get_username(const Lex* e, const Cell* a) {
     return False_Obj;
 }
 
+
+/* (get-groups)
+ * Returns an alist of (gid . "groupname") pairs for all groups
+ * associated with the current process' euid. */
 Cell* system_get_groups(const Lex* e, const Cell* a) {
     (void)e; (void)a;
     Cell* err = CHECK_ARITY_EXACT(a, 0, "get-groups");
     if (err) { return err; }
 
-    int ngroups = 15; /* Reasonable default. */
+    long max = sysconf(_SC_NGROUPS_MAX);
+    if (max < 0) max = 32;
+
+    int ngroups = (int)max;
     gid_t *groups = GC_malloc(sizeof(gid_t) * ngroups);
+
     const uid_t uid = geteuid();
     const struct passwd *pw = getpwuid(uid);
-
-    if (getgrouplist(pw->pw_name, pw->pw_gid, groups, &ngroups) == -1) {
-        /* Reallocate and call again if ngroups too small. */
-        groups = GC_realloc(groups, sizeof(gid_t) * ngroups);
-        getgrouplist(pw->pw_name, pw->pw_gid, groups, &ngroups);
+    if (!pw) {
+        return make_cell_nil(); /* or signal error */
     }
 
-    /* Start with nil. */
+    /*
+     * BSD expects int*, glibc expects gid_t*.
+     * We give BSD what it wants without lying about storage.
+     */
+    int *igroups = GC_malloc(sizeof(int) * ngroups);
+
+    const int ret = getgrouplist(pw->pw_name,
+                           (int)pw->pw_gid,
+                           igroups,
+                           &ngroups);
+
+    if (ret == -1) {
+        /* Nothing really to do here, as we use NGROUPS_MAX to set ngroups
+         * for the call.
+         * BSD truncation: ngroups is "how many were stored"
+         * glibc: ngroups is "required size" */
+    }
+
+    /* Convert safely. */
+    for (int i = 0; i < ngroups; i++) {
+        groups[i] = (gid_t)igroups[i];
+    }
+
     Cell* result = make_cell_nil();
     int len = 0;
 
@@ -188,14 +215,13 @@ Cell* system_get_groups(const Lex* e, const Cell* a) {
         Cell* vr = make_cell_integer(groups[j]);
         Cell* vl;
         const struct group *gr = getgrgid(groups[j]);
-        if (gr != NULL) {
+        if (gr) {
             vl = make_cell_string(gr->gr_name);
         } else {
             vl = make_cell_string("");
         }
         result = make_cell_pair(make_cell_pair(vr, vl), result);
-        result->len = len;
-        len++;
+        result->len = len++;
     }
     return result;
 }
