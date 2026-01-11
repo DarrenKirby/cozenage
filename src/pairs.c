@@ -1012,6 +1012,8 @@ Cell* builtin_foldr(const Lex* e, const Cell* a)
 }
 
 
+/* (zip list1 list2 ... )
+ * Returns a list of lists where each sublist contains the ith element of each list arg. */
 Cell* builtin_zip(const Lex* e, const Cell* a)
 {
     (void)e;
