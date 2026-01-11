@@ -164,6 +164,25 @@ Cell* system_get_username(const Lex* e, const Cell* a) {
     return False_Obj;
 }
 
+static int portable_getgrouplist(const char *user, gid_t basegid,
+                      gid_t *groups, int *ngroups) {
+#ifdef __linux__
+    /* glibc-style API */
+    return getgrouplist(user, basegid, groups, ngroups);
+#else
+    /* BSD-style API */
+    int *igroups = GC_malloc(sizeof(int) * (*ngroups));
+    int ret = getgrouplist(user,
+                           (int)basegid,
+                           igroups,
+                           ngroups);
+    for (int i = 0; i < *ngroups; i++) {
+        groups[i] = (gid_t)igroups[i];
+    }
+    return ret;
+#endif
+}
+
 
 /* (get-groups)
  * Returns an alist of (gid . "groupname") pairs for all groups
@@ -189,12 +208,9 @@ Cell* system_get_groups(const Lex* e, const Cell* a) {
      * BSD expects int*, glibc expects gid_t*.
      * We give BSD what it wants without lying about storage.
      */
-    int *igroups = GC_malloc(sizeof(int) * ngroups);
+    //const int *igroups = GC_malloc(sizeof(int) * ngroups);
 
-    const int ret = getgrouplist(pw->pw_name,
-                           (int)pw->pw_gid,
-                           igroups,
-                           &ngroups);
+    const int ret = portable_getgrouplist(pw->pw_name, pw->pw_gid, groups, &ngroups);
 
     if (ret == -1) {
         /* Nothing really to do here, as we use NGROUPS_MAX to set ngroups
@@ -203,10 +219,10 @@ Cell* system_get_groups(const Lex* e, const Cell* a) {
          * glibc: ngroups is "required size" */
     }
 
-    /* Convert safely. */
-    for (int i = 0; i < ngroups; i++) {
-        groups[i] = (gid_t)igroups[i];
-    }
+    // /* Convert safely. */
+    // for (int i = 0; i < ngroups; i++) {
+    //     groups[i] = (gid_t)igroups[i];
+    // }
 
     Cell* result = make_cell_nil();
     int len = 0;
