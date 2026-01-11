@@ -321,12 +321,18 @@ This document tracks the implementation status of procedures in the Cozenage int
 
 ## `(base system)`
 
-|  Status  | Procedure       |
-|:--------:|:----------------|
-|    ✅     | `get-pid`       |
-|    ✅     | `get-ppid`      |
-|    ✅     | `get-env-var`   |
-|    ✅     | `get-env-vars`  |
+|   Status   | Procedure       |
+|:----------:|:----------------|
+|     ✅      | `get-pid`       |
+|     ✅      | `get-ppid`      |
+|     ✅      | `get-env-var`   |
+|     ✅      | `get-env-vars`  |
+|     ✅      | `get-uid`       |
+|     ✅      | `get-gid`       |
+|     ✅      | `get-euid`      |
+|     ✅      | `get-egid`      |
+|     ✅      | `get-username`  |
+|     ✅      | `get-groups`    |
 
 
 ---
