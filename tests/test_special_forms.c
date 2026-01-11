@@ -131,7 +131,7 @@ Test(end_to_end_sf, test_internal_defines, .init = setup_each_test, .fini = tear
 
 Test(end_to_end_sf, test_gc_stress, .init = setup_each_test, .fini = teardown_each_test) {
     GC_gcollect(); // Force a collection before we start
-    size_t heap_before = GC_get_heap_size();
+    const size_t heap_before = GC_get_heap_size();
 
     // 1 Million iterations of a do-loop transform
     const char* result = t_eval(
@@ -139,7 +139,7 @@ Test(end_to_end_sf, test_gc_stress, .init = setup_each_test, .fini = teardown_ea
         "    ((>= i 1000000) \"Done\"))");
 
     GC_gcollect(); // Force a collection after we finish
-    size_t heap_after = GC_get_heap_size();
+    const size_t heap_after = GC_get_heap_size();
 
     printf("\n[GC Stats] Heap Before: %zu bytes\n", heap_before);
     printf("[GC Stats] Heap After:  %zu bytes\n", heap_after);

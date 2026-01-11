@@ -314,5 +314,5 @@ Test(end_to_end_lists, test_zip_procedure, .init = setup_each_test, .fini = tear
 
     /* Works cleanly with foldl */
     cr_assert_str_eq(t_eval("(foldl (lambda (acc x) (cons x acc)) '() (zip '(1 2) '(a b)))"),
-      "((2 b)) ((1 a))");
+      "((2 b) (1 a))");
 }
