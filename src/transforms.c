@@ -315,7 +315,7 @@ static Cell* expand_let_star(const Cell* c) {
     /* c is (let* ((var init) ...) body...) */
     if (c->count < 3) return make_cell_error("let*: malformed expression", SYNTAX_ERR);
 
-    Cell* bindings = c->cell[1];
+    const Cell* bindings = c->cell[1];
 
     /* Base case: (let* () body...) -> (let () body...) */
     if (bindings->count == 0) {

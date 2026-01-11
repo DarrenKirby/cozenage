@@ -27,6 +27,9 @@
 #include "../predicates.h"
 
 
+/* Disable 'foo may be made const' linter warnings. */
+/* ReSharper disable twice CppParameterMayBeConstPtrOrRef */
+
 /* 'delay', 'delay-force', and 'stream' (ie: cons-stream) are implemented as special forms. */
 
 /* (delay ⟨expression⟩)

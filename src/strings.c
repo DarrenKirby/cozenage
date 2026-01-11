@@ -83,7 +83,7 @@ static int string_compare(const Cell* a, const Cell* b) {
 }
 
 
-void integer_to_binary_string(int64_t val, char* buf, size_t size) {
+void integer_to_binary_string(const int64_t val, char* buf, const size_t size) {
     if (val == 0) { strcpy(buf, "0"); return; }
     char temp[66];
     int i = 0;
@@ -453,7 +453,7 @@ Cell* builtin_string_list(const Lex* e, const Cell* a)
     Cell* err = CHECK_ARITY_RANGE(a, 1, 3, "string->list");
     if (err) return err;
 
-    Cell* s_cell = a->cell[0];
+    const Cell* s_cell = a->cell[0];
     if (s_cell->type != CELL_STRING)
         return make_cell_error(
             "string->list: arg 1 must be a string",
@@ -608,7 +608,7 @@ Cell* builtin_substring(const Lex* e, const Cell* a)
     Cell* err = CHECK_ARITY_EXACT(a, 3, "substring");
     if (err) return err;
 
-    Cell* s_cell = a->cell[0];
+    const Cell* s_cell = a->cell[0];
     if (s_cell->type != CELL_STRING)
         return make_cell_error(
             "substring: arg 1 must be a string",
@@ -749,7 +749,7 @@ Cell* builtin_string_copy(const Lex* e, const Cell* a)
     Cell* err = CHECK_ARITY_RANGE(a, 1, 3, "string-copy");
     if (err) return err;
 
-    Cell* s_cell = a->cell[0];
+    const Cell* s_cell = a->cell[0];
     if (s_cell->type != CELL_STRING)
         return make_cell_error(
             "string-copy: arg 1 must be a string",

@@ -512,12 +512,12 @@ Cell* builtin_vector_fill_bang(const Lex* e, const Cell* a)
     Cell* err = CHECK_ARITY_RANGE(a, 2, 4, "vector-fill!");
     if (err) return err;
 
-    Cell* vec = a->cell[0];
+    const Cell* vec = a->cell[0];
     if (vec->type != CELL_VECTOR) {
         return make_cell_error("vector-fill!: arg 1 must be a vector", TYPE_ERR);
     }
 
-    int32_t len = vec->count;
+    const int32_t len = vec->count;
     Cell* fill = a->cell[1];
     int32_t start = 0;
     int32_t end = len;

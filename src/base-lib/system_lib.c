@@ -170,7 +170,7 @@ Cell* system_get_username(const Lex* e, const Cell* a) {
 
 /* BSD expects int*, glibc expects gid_t*.
  * We give BSD what it wants without lying about storage. */
-static int portable_getgrouplist(const char *user, gid_t basegid,
+static int portable_getgrouplist(const char *user, const gid_t basegid,
                       gid_t *groups, int *ngroups) {
 #ifdef __linux__
     /* glibc-style API */

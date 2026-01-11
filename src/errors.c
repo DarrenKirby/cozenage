@@ -107,7 +107,7 @@ void gc_print_report(void)
     const size_t unmapped_bytes   = GC_get_unmapped_bytes();
     const size_t bytes_since_gc   = GC_get_bytes_since_gc();
     const size_t total_bytes      = GC_get_total_bytes();
-    unsigned long gc_count  = GC_get_gc_no();
+    const unsigned long gc_count  = GC_get_gc_no();
 
     const size_t used_bytes = heap_size - free_bytes;
 

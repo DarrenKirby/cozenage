@@ -281,7 +281,7 @@ Cell* builtin_list_ref(const Lex* e, const Cell* a)
     Cell* err = CHECK_ARITY_EXACT(a, 2, "list-ref");
     if (err) return err;
 
-    Cell* list = a->cell[0];
+    const Cell* list = a->cell[0];
     if (list->type != CELL_PAIR) {
         return make_cell_error(
             "list-ref: arg 1 must be a pair",
