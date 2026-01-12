@@ -31,6 +31,7 @@
 #include <sys/syslimits.h>
 #else
 #include <limits.h>
+<sys/sysmacros.h>
 #endif
 
 #define TIME_SIZE sizeof("1970-01-01 00:00:00.000000000 UTC")
@@ -93,7 +94,7 @@ static char *filetype(const mode_t st_mode) {
     }
 }
 
-
+#ifndef __linux__
 static char *format_time(const struct timespec *ts) {
     struct tm bdt;
     static char str[TIME_SIZE + 10];
@@ -109,6 +110,7 @@ static char *format_time(const struct timespec *ts) {
     );
     return str;
 }
+#endif
 
 #define FP_SPECIAL 1
 /* Include set-user-ID, set-group-ID, and sticky
@@ -436,15 +438,15 @@ static Cell* file_stat(const Lex* e, const Cell* a) {
 #else
     result = make_cell_pair(make_cell_pair(
         make_cell_symbol("st_ctime"),
-        make_cell_string(format_time(&buf.st_ctime))), result);
+        make_cell_string(ctime(&buf.st_ctime))), result);
     result->len = 1;
     result = make_cell_pair(make_cell_pair(
         make_cell_symbol("st_mtime"),
-        make_cell_string(format_time(&buf.st_mtime))), result);
+        make_cell_string(ctime(&buf.st_mtime))), result);
     result->len = 2;
     result = make_cell_pair(make_cell_pair(
         make_cell_symbol("st_atime"),
-        make_cell_string(format_time(&buf.st_atime))), result);
+        make_cell_string(ctime(&buf.st_atime))), result);
     result->len = 3;
     list_len = 4;
 #endif
@@ -473,8 +475,8 @@ static Cell* file_stat(const Lex* e, const Cell* a) {
     make_cell_integer((long long)buf.st_ino)), result);
     result->len = ++list_len;
 
-    Cell* min = make_cell_integer(minor(buf.st_ino));
-    Cell* maj = make_cell_integer(major(buf.st_ino));
+    Cell* min = make_cell_integer(minor(buf.st_dev));
+    Cell* maj = make_cell_integer(major(buf.st_dev));
 
     result = make_cell_pair(make_cell_pair(
         make_cell_symbol("st_dev"),
