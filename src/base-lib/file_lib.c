@@ -31,10 +31,10 @@
 #include <sys/syslimits.h>
 #else
 #include <limits.h>
-<sys/sysmacros.h>
+#include <sys/sysmacros.h>
 #endif
 
-#define TIME_SIZE sizeof("1970-01-01 00:00:00.000000000 UTC")
+#define TIME_SIZE 64
 
 
 /*-------------------------------------------------------*
@@ -94,23 +94,21 @@ static char *filetype(const mode_t st_mode) {
     }
 }
 
-#ifndef __linux__
 static char *format_time(const struct timespec *ts) {
     struct tm bdt;
-    static char str[TIME_SIZE + 10];
+    static char str[TIME_SIZE];
 
     if (localtime_r(&ts->tv_sec, &bdt) == NULL) {
         return "unknown";
     }
 
-    snprintf(str, TIME_SIZE + 4, "%i-%02i-%02i %02i:%02i:%02i.%09li %s",
+    snprintf(str, TIME_SIZE, "%i-%02i-%02i %02i:%02i:%02i.%09li %s",
         bdt.tm_year + 1900, bdt.tm_mon + 1, bdt.tm_mday,
         bdt.tm_hour, bdt.tm_min, bdt.tm_sec,
         ts->tv_nsec, bdt.tm_zone
     );
     return str;
 }
-#endif
 
 #define FP_SPECIAL 1
 /* Include set-user-ID, set-group-ID, and sticky
@@ -438,15 +436,15 @@ static Cell* file_stat(const Lex* e, const Cell* a) {
 #else
     result = make_cell_pair(make_cell_pair(
         make_cell_symbol("st_ctime"),
-        make_cell_string(ctime(&buf.st_ctime))), result);
+        make_cell_string(format_time(&buf.st_ctim))), result);
     result->len = 1;
     result = make_cell_pair(make_cell_pair(
         make_cell_symbol("st_mtime"),
-        make_cell_string(ctime(&buf.st_mtime))), result);
+        make_cell_string(format_time(&buf.st_mtim))), result);
     result->len = 2;
     result = make_cell_pair(make_cell_pair(
         make_cell_symbol("st_atime"),
-        make_cell_string(ctime(&buf.st_atime))), result);
+        make_cell_string(format_time(&buf.st_atim))), result);
     result->len = 3;
     list_len = 4;
 #endif
