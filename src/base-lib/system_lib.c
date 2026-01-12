@@ -27,6 +27,9 @@
 #include <pwd.h>
 #include <grp.h>
 #include <gc/gc.h>
+#include <errno.h>
+#include <sys/utsname.h>
+#include <sys/stat.h>
 
 
 extern char **environ;
@@ -118,7 +121,7 @@ static Cell* system_get_env_vars(const Lex* e, const Cell* a)
  * The procedures return the user id, group id,
  * effective user id, and effective group id of the
  * running process, respectively. */
-Cell* system_get_uid(const Lex* e, const Cell* a) {
+static Cell* system_get_uid(const Lex* e, const Cell* a) {
     (void)e; (void)a;
     Cell* err = CHECK_ARITY_EXACT(a, 0, "get-uid");
     if (err) { return err; }
@@ -126,7 +129,7 @@ Cell* system_get_uid(const Lex* e, const Cell* a) {
 }
 
 
-Cell* system_get_gid(const Lex* e, const Cell* a) {
+static Cell* system_get_gid(const Lex* e, const Cell* a) {
     (void)e; (void)a;
     Cell* err = CHECK_ARITY_EXACT(a, 0, "get-gid");
     if (err) { return err; }
@@ -134,7 +137,7 @@ Cell* system_get_gid(const Lex* e, const Cell* a) {
 }
 
 
-Cell* system_get_euid(const Lex* e, const Cell* a) {
+static Cell* system_get_euid(const Lex* e, const Cell* a) {
     (void)e; (void)a;
     Cell* err = CHECK_ARITY_EXACT(a, 0, "get-euid");
     if (err) { return err; }
@@ -142,7 +145,7 @@ Cell* system_get_euid(const Lex* e, const Cell* a) {
 }
 
 
-Cell* system_get_egid(const Lex* e, const Cell* a) {
+static Cell* system_get_egid(const Lex* e, const Cell* a) {
     (void)e; (void)a;
     Cell* err = CHECK_ARITY_EXACT(a, 0, "get-egid");
     if (err) { return err; }
@@ -153,7 +156,7 @@ Cell* system_get_egid(const Lex* e, const Cell* a) {
 /* (get-username)
  * Returns the username associated with the uid of the running process,
  * or #false if it cannot be obtained. */
-Cell* system_get_username(const Lex* e, const Cell* a) {
+static Cell* system_get_username(const Lex* e, const Cell* a) {
     (void)e; (void)a;
     Cell* err = CHECK_ARITY_EXACT(a, 0, "get_username");
     if (err) { return err; }
@@ -193,7 +196,7 @@ static int portable_getgrouplist(const char *user, const gid_t basegid,
 /* (get-groups)
  * Returns an alist of (gid . "groupname") pairs for all groups
  * associated with the current process' euid. */
-Cell* system_get_groups(const Lex* e, const Cell* a) {
+static Cell* system_get_groups(const Lex* e, const Cell* a) {
     (void)e; (void)a;
     Cell* err = CHECK_ARITY_EXACT(a, 0, "get-groups");
     if (err) { return err; }
@@ -207,12 +210,14 @@ Cell* system_get_groups(const Lex* e, const Cell* a) {
     const uid_t uid = geteuid();
     const struct passwd *pw = getpwuid(uid);
     if (!pw) {
-        return make_cell_nil(); /* Should this be #false ??? OS_ERROR? */
+        return make_cell_error(
+            "get-groups: getpwuid() call failed",
+            OS_ERR);
     }
 
     const int ret = portable_getgrouplist(pw->pw_name, pw->pw_gid, groups, &ngroups);
     if (ret == -1) {
-        /* Nothing really to do here, as we use NGROUPS_MAX to set ngroups for the call.
+        /* Nothing really to do here, as NGROUPS_MAX was used to set ngroups for the call.
          * BSD truncation: ngroups is "how many were stored"
          * glibc: ngroups is "required size" */
     }
@@ -237,6 +242,112 @@ Cell* system_get_groups(const Lex* e, const Cell* a) {
 }
 
 
+/* (get-cwd)
+ * Returns the current working directory of the process
+ * as a string. */
+static Cell* system_get_cwd(const Lex* e, const Cell* a) {
+    (void)e; (void)a;
+    Cell* err = CHECK_ARITY_EXACT(a, 0, "get-cwd");
+    if (err) { return err; }
+
+    char pwd[PATH_MAX + 1];
+    errno = 0;
+
+    if (getcwd(pwd, sizeof(pwd)) == NULL) {
+        return make_cell_error(
+            fmt_err("get-cwd: getcwd() call failed: %s", strerror(errno)),
+            OS_ERR);
+    }
+    return make_cell_string(pwd);
+}
+
+
+/* (chdir string)
+ * Changes the CWD of the process to the path
+ * represented by string. */
+static Cell* system_chdir(const Lex* e, const Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "chdir");
+    if (err) { return err; }
+    if (a->cell[0]->type != CELL_STRING) {
+        return make_cell_error(
+            "chdir: path argument must be a string",
+            TYPE_ERR);
+    }
+
+    char* path = a->cell[0]->str;
+    /* TODO: tilde expand */
+    if (chdir(path) == -1) {
+        return make_cell_error(
+            fmt_err("chdir: %s: %s", path, strerror(errno)),
+            OS_ERR);
+    }
+    return True_Obj;
+}
+
+
+static Cell* system_uname(const Lex* e, const Cell* a) {
+    (void)e; (void)a;
+    Cell* err = CHECK_ARITY_EXACT(a, 0, "uname");
+    if (err) { return err; }
+
+    struct utsname uts;
+    if (uname(&uts) == -1) {
+        return make_cell_error(
+            fmt_err("uname: %s", strerror(errno)),
+            OS_ERR);
+    }
+    Cell* result = make_cell_nil();
+    result = make_cell_pair(make_cell_string(uts.machine), result);
+    result->len = 1;
+    result = make_cell_pair(make_cell_string(uts.version), result);
+    result->len = 2;
+    result = make_cell_pair(make_cell_string(uts.release), result);
+    result->len = 3;
+    result = make_cell_pair(make_cell_string(uts.nodename), result);
+    result->len = 4;
+    result = make_cell_pair(make_cell_string(uts.sysname), result);
+    result->len = 5;
+
+    return result;
+}
+
+
+/* (chmod path mode)
+ * Changes the mode bits, specified by integer (represented in octal) arg 'mode',
+ * of the file path represented by 'path', passed as a string. */
+static Cell* system_chmod(const Lex* e, const Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 2, "chmod");
+    if (err) { return err; }
+    if (a->cell[0]->type != CELL_STRING) {
+        return make_cell_error(
+            "chmod: path argument must be a string",
+            TYPE_ERR);
+    }
+    if (a->cell[1]->type != CELL_INTEGER) {
+        return make_cell_error(
+            "chmod: mode argument must be an (octal) integer",
+            TYPE_ERR);
+    }
+    if (chmod(a->cell[0]->str, (mode_t)a->cell[1]->integer_v) != 0) {
+        make_cell_error(
+            fmt_err("chmod: %s", strerror(errno)),
+            OS_ERR);
+    }
+    return True_Obj;
+}
+
+/* TODO:
+ * lchmod - in file lib?
+ * chown - in file lib?
+ * lchown - in file lib?
+ * system equiv
+ * popen/subprocess equiv
+ * more?
+ */
+
+
 void cozenage_library_init(const Lex* e)
 {
     lex_add_builtin(e, "get-pid", system_get_pid);
@@ -249,4 +360,12 @@ void cozenage_library_init(const Lex* e)
     lex_add_builtin(e, "get-egid", system_get_egid);
     lex_add_builtin(e, "get-username", system_get_username);
     lex_add_builtin(e, "get-groups", system_get_groups);
+    /* May already be loaded from file lib, so check the global
+     * environment before re-exporting the function. */
+    if (!ht_get(e->global, "get-cwd")) {
+        lex_add_builtin(e, "get-cwd", system_get_cwd);
+    }
+    lex_add_builtin(e, "chdir", system_chdir);
+    lex_add_builtin(e, "uname", system_uname);
+    lex_add_builtin(e, "chmod!", system_chmod);
 }

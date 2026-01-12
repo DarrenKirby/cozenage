@@ -1,7 +1,7 @@
 /*
  * 'src/base-lib/file_lib.c'
  * This file is part of Cozenage - https://github.com/DarrenKirby/cozenage
- * Copyright © 2025  Darren Kirby <darren@dragonbyte.ca>
+ * Copyright © 2025 - 2026 Darren Kirby <darren@dragonbyte.ca>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,11 +25,16 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <sys/types.h>
+#include <time.h>
 #ifdef __APPLE__
 #include <sys/syslimits.h>
 #else
 #include <limits.h>
 #endif
+
+#define TIME_SIZE sizeof("1970-01-01 00:00:00.000000000 UTC")
+
 
 /*-------------------------------------------------------*
  *         Local helpers for file/dir procedures         *
@@ -46,6 +51,7 @@ typedef enum : uint8_t {
     F_UK,     /* Unknown file type. */
     F_ERR     /* stat call error. */
 } f_type;
+
 
 static f_type f_get_type(const char* file)
 {
@@ -66,11 +72,78 @@ static f_type f_get_type(const char* file)
 }
 
 
+static char *filetype(const mode_t st_mode) {
+    switch (st_mode & S_IFMT) {
+        case S_IFBLK:
+            return "block device";
+        case S_IFCHR:
+            return "character device";
+        case S_IFDIR:
+            return "directory";
+        case S_IFIFO:
+            return "FIFO/pipe";
+        case S_IFLNK:
+            return "symlink";
+        case S_IFREG:
+            return "regular file";
+        case S_IFSOCK:
+            return "socket";
+        default:
+            return "unknown";
+    }
+}
+
+
+static char *format_time(const struct timespec *ts) {
+    struct tm bdt;
+    static char str[TIME_SIZE + 10];
+
+    if (localtime_r(&ts->tv_sec, &bdt) == NULL) {
+        return "unknown";
+    }
+
+    snprintf(str, TIME_SIZE + 4, "%i-%02i-%02i %02i:%02i:%02i.%09li %s",
+        bdt.tm_year + 1900, bdt.tm_mon + 1, bdt.tm_mday,
+        bdt.tm_hour, bdt.tm_min, bdt.tm_sec,
+        ts->tv_nsec, bdt.tm_zone
+    );
+    return str;
+}
+
+#define FP_SPECIAL 1
+/* Include set-user-ID, set-group-ID, and sticky
+bit information in returned string */
+
+#define PERM_STR_SIZE sizeof("rwxrwxrwx")
+
+/* Return 'ls -l' style string for file permissions mask, This is from
+ * 'The Linux Programming Interface' */
+static char *file_perm_str(const mode_t perm) {
+    static char str[PERM_STR_SIZE];
+    // ReSharper disable once CppVariableCanBeMadeConstexpr
+    const int flags = 1;
+    snprintf(str, PERM_STR_SIZE, "%c%c%c%c%c%c%c%c%c",
+    (perm & S_IRUSR) ? 'r' : '-', (perm & S_IWUSR) ? 'w' : '-',
+    (perm & S_IXUSR) ?
+    (((perm & S_ISUID) && (flags & FP_SPECIAL)) ? 's' : 'x') :
+    (((perm & S_ISUID) && (flags & FP_SPECIAL)) ? 'S' : '-'),
+    (perm & S_IRGRP) ? 'r' : '-', (perm & S_IWGRP) ? 'w' : '-',
+    (perm & S_IXGRP) ?
+    (((perm & S_ISGID) && (flags & FP_SPECIAL)) ? 's' : 'x') :
+    (((perm & S_ISGID) && (flags & FP_SPECIAL)) ? 'S' : '-'),
+    (perm & S_IROTH) ? 'r' : '-', (perm & S_IWOTH) ? 'w' : '-',
+    (perm & S_IXOTH) ?
+    (((perm & S_ISVTX) && (flags & FP_SPECIAL)) ? 't' : 'x') :
+    (((perm & S_ISVTX) && (flags & FP_SPECIAL)) ? 'T' : '-'));
+    return str;
+}
+
 /*-------------------------------------------------------*
  *        File type and other file/dir predicates        *
  * ------------------------------------------------------*/
 
-static Cell* reg_file_pred(const Lex* e, const Cell* a)
+
+static Cell* file_reg_file_pred(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING, "reg-file?");
@@ -91,7 +164,8 @@ static Cell* reg_file_pred(const Lex* e, const Cell* a)
     return False_Obj;
 }
 
-static Cell* directory_pred(const Lex* e, const Cell* a)
+
+static Cell* file_directory_pred(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING, "directory?");
@@ -112,7 +186,8 @@ static Cell* directory_pred(const Lex* e, const Cell* a)
     return False_Obj;
 }
 
-static Cell* symlink_pred(const Lex* e, const Cell* a)
+
+static Cell* file_symlink_pred(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING, "symlink?");
@@ -133,7 +208,8 @@ static Cell* symlink_pred(const Lex* e, const Cell* a)
     return False_Obj;
 }
 
-static Cell* char_device_pred(const Lex* e, const Cell* a)
+
+static Cell* file_char_device_pred(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING, "char-device?");
@@ -154,7 +230,8 @@ static Cell* char_device_pred(const Lex* e, const Cell* a)
     return False_Obj;
 }
 
-static Cell* block_device_pred(const Lex* e, const Cell* a)
+
+static Cell* file_block_device_pred(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING, "blk-device?");
@@ -175,7 +252,8 @@ static Cell* block_device_pred(const Lex* e, const Cell* a)
     return False_Obj;
 }
 
-static Cell* pipe_pred(const Lex* e, const Cell* a)
+
+static Cell* file_pipe_pred(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING, "fifo?");
@@ -196,7 +274,8 @@ static Cell* pipe_pred(const Lex* e, const Cell* a)
     return False_Obj;
 }
 
-static Cell* socket_pred(const Lex* e, const Cell* a)
+
+static Cell* file_socket_pred(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING, "socket?");
@@ -217,8 +296,9 @@ static Cell* socket_pred(const Lex* e, const Cell* a)
     return False_Obj;
 }
 
+
 /* 'file-exists?' -> CELL_BOOLEAN - file exists predicate */
-static Cell* file_exists_pred(const Lex* e, const Cell* a)
+static Cell* file_file_exists_pred(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING, "file-exists?");
@@ -232,11 +312,13 @@ static Cell* file_exists_pred(const Lex* e, const Cell* a)
     return False_Obj;
 }
 
+
 /*-------------------------------------------------------*
  *            Basic file operation procedures            *
  * ------------------------------------------------------*/
 
-static Cell* get_cwd(const Lex* e, const Cell* a)
+
+static Cell* file_get_cwd(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 0, "getcwd");
@@ -244,6 +326,7 @@ static Cell* get_cwd(const Lex* e, const Cell* a)
 
     char buf[PATH_MAX];
     if (getcwd(buf, PATH_MAX) == nullptr) {
+        /* TODO: get rid of the snprintf calls - use fmt_error */
         snprintf(buf, sizeof(buf), "getcwd: %s", strerror(errno));
         return make_cell_error(buf, FILE_ERR);
     }
@@ -251,7 +334,8 @@ static Cell* get_cwd(const Lex* e, const Cell* a)
     return result;
 }
 
-static Cell* rmdir__(const Lex* e, const Cell* a)
+
+static Cell* file_rmdir__(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "rmdir");
@@ -269,8 +353,9 @@ static Cell* rmdir__(const Lex* e, const Cell* a)
     return True_Obj;
 }
 
+
 /* TODO - mkdir -p style mkdir procedure */
-static Cell* mkdir__(const Lex* e, const Cell* a)
+static Cell* file_mkdir__(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING, "mkdir");
@@ -287,8 +372,9 @@ static Cell* mkdir__(const Lex* e, const Cell* a)
     return True_Obj;
 }
 
+
 /* 'delete-file -> CELL_BOOLEAN - delete a file, and return a bool confirming outcome. */
-static Cell* unlink_file(const Lex* e, const Cell* a)
+static Cell* file_unlink_file(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING, "unlink?");
@@ -303,19 +389,143 @@ static Cell* unlink_file(const Lex* e, const Cell* a)
     return True_Obj;
 }
 
+
+/*-------------------------------------------------------*
+ *                  file stat procedures                 *
+ * ------------------------------------------------------*/
+
+
+static Cell* file_stat(const Lex* e, const Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "stat");
+    if (err) { return err; }
+    if (a->cell[0]->type != CELL_STRING) {
+        return make_cell_error(
+            "stat: file path must be passed as a string",
+            TYPE_ERR);
+    }
+
+    struct stat buf;
+    if (stat(a->cell[0]->str, &buf) == -1) {
+        make_cell_error(
+            fmt_err("stat: %s", strerror(errno)),
+            OS_ERR);
+    }
+
+    Cell* result = make_cell_nil();
+    int list_len;
+
+#ifndef __linux__  /* Linux stat struct doesn't include this */
+    result = make_cell_pair(make_cell_pair(
+        make_cell_symbol("st_birthtimespec"),
+        make_cell_string(format_time(&buf.st_birthtimespec))), result);
+    result->len = 1;
+    result = make_cell_pair(make_cell_pair(
+        make_cell_symbol("st_ctimespec"),
+        make_cell_string(format_time(&buf.st_ctimespec))), result);
+    result->len = 2;
+    result = make_cell_pair(make_cell_pair(
+        make_cell_symbol("st_mtimespec"),
+        make_cell_string(format_time(&buf.st_mtimespec))), result);
+    result->len = 3;
+    result = make_cell_pair(make_cell_pair(
+        make_cell_symbol("st_atimespec"),
+        make_cell_string(format_time(&buf.st_atimespec))), result);
+    result->len = 4;
+    list_len = 5;
+#else
+    result = make_cell_pair(make_cell_pair(
+        make_cell_symbol("st_ctime"),
+        make_cell_string(format_time(&buf.st_ctime))), result);
+    result->len = 1;
+    result = make_cell_pair(make_cell_pair(
+        make_cell_symbol("st_mtime"),
+        make_cell_string(format_time(&buf.st_mtime))), result);
+    result->len = 2;
+    result = make_cell_pair(make_cell_pair(
+        make_cell_symbol("st_atime"),
+        make_cell_string(format_time(&buf.st_atime))), result);
+    result->len = 3;
+    list_len = 4;
+#endif
+    result = make_cell_pair(make_cell_pair(
+    make_cell_symbol("st_gid"),
+    make_cell_integer(buf.st_gid)), result);
+    result->len = list_len;
+
+    result = make_cell_pair(make_cell_pair(
+    make_cell_symbol("st_uid"),
+    make_cell_integer(buf.st_uid)), result);
+    result->len = ++list_len;
+
+    result = make_cell_pair(make_cell_pair(
+        make_cell_symbol("st_mode"),
+        make_cell_string(file_perm_str(buf.st_mode))), result);
+    result->len = ++list_len;
+
+    result = make_cell_pair(make_cell_pair(
+    make_cell_symbol("st_nlink"),
+    make_cell_integer(buf.st_nlink)), result);
+    result->len = ++list_len;
+
+    result = make_cell_pair(make_cell_pair(
+    make_cell_symbol("st_ino"),
+    make_cell_integer((long long)buf.st_ino)), result);
+    result->len = ++list_len;
+
+    Cell* min = make_cell_integer(minor(buf.st_ino));
+    Cell* maj = make_cell_integer(major(buf.st_ino));
+
+    result = make_cell_pair(make_cell_pair(
+        make_cell_symbol("st_dev"),
+        make_cell_pair(min, maj)), result);
+    result->len = ++list_len;
+
+    result = make_cell_pair(make_cell_pair(
+    make_cell_symbol("st_blksize"),
+    make_cell_integer(buf.st_blksize)), result);
+    result->len = ++list_len;
+
+    result = make_cell_pair(make_cell_pair(
+    make_cell_symbol("st_blocks"),
+    make_cell_integer(buf.st_blocks)), result);
+    result->len = ++list_len;
+
+    result = make_cell_pair(make_cell_pair(
+    make_cell_symbol("st_size"),
+    make_cell_integer(buf.st_size)), result);
+    result->len = ++list_len;
+
+    result = make_cell_pair(make_cell_pair(
+    make_cell_symbol("type"),
+    make_cell_string(filetype(buf.st_mode))), result);
+    result->len = ++list_len;
+
+    return result;
+}
+
+/* TODO: lstat */
+/* TODO: put chmod, chown et al here? */
+
+
 /* Register the procedures in the environment. */
 void cozenage_library_init(const Lex* e)
 {
-    lex_add_builtin(e, "reg-file?", reg_file_pred);
-    lex_add_builtin(e, "directory?", directory_pred);
-    lex_add_builtin(e, "symlink?", symlink_pred);
-    lex_add_builtin(e, "char-device?", char_device_pred);
-    lex_add_builtin(e, "block-device?", block_device_pred);
-    lex_add_builtin(e, "fifo?", pipe_pred);
-    lex_add_builtin(e, "socket?", socket_pred);
-    lex_add_builtin(e, "file-exists?", file_exists_pred);
-    lex_add_builtin(e, "getcwd", get_cwd);
-    lex_add_builtin(e, "rmdir", rmdir__); /* The odd name here is because of clash with rmdir C function */
-    lex_add_builtin(e, "mkdir", mkdir__); /* ibid */
-    lex_add_builtin(e, "unlink!", unlink_file);
+    lex_add_builtin(e, "reg-file?", file_reg_file_pred);
+    lex_add_builtin(e, "directory?", file_directory_pred);
+    lex_add_builtin(e, "symlink?", file_symlink_pred);
+    lex_add_builtin(e, "char-device?", file_char_device_pred);
+    lex_add_builtin(e, "block-device?", file_block_device_pred);
+    lex_add_builtin(e, "fifo?", file_pipe_pred);
+    lex_add_builtin(e, "socket?", file_socket_pred);
+    lex_add_builtin(e, "file-exists?", file_file_exists_pred);
+    /* May already be loaded from system lib. */
+    if (!ht_get(e->global, "get-cwd")) {
+        lex_add_builtin(e, "get-cwd", file_get_cwd);
+    }
+    /* The odd names here are because of the clashes with C library function names. */
+    lex_add_builtin(e, "rmdir", file_rmdir__);
+    lex_add_builtin(e, "mkdir", file_mkdir__);
+    lex_add_builtin(e, "unlink!", file_unlink_file);
+    lex_add_builtin(e, "stat", file_stat);
 }
