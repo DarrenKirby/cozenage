@@ -14,7 +14,7 @@ the time. That said, anyone experienced with Scheme will find Cozenage quite fam
 Cozenage has:
 
 - The typical menu of disjoint primitive objects: ``number``, ``string``, ``char``, ``symbol``, ``pair``, ``null``, ``vector``, ``boolean``, ``port``, and ``procedure``.
-- A selection of ``bytevector`` objects implemented using native C type arrays: ``u8``, ``s8``, ``u16``, ``s16``, ``u32``, and ``s32``.
+- A selection of ``bytevector`` objects implemented using native C type arrays: ``u8``, ``s8``, ``u16``, ``s16``, ``u32``, ``s32``, ``u64``, and ``s64``.
 - Full 'numeric tower' of derived numeric types including ``integer``, ``rational``, ``real``, and ``complex``.
 - Exact and inexact numbers.
 - Proper tail-call optimization where applicable.
@@ -24,7 +24,7 @@ Cozenage has:
 - eval/apply procedures for interpreting data as executable code.
 - Lisp-style ``defmacro`` non-hygienic macros.
 - polymorphic len, idx, rev procedures for compound types.
-- Delayed evaluation and streams implemented in lazy library.
+- Delayed evaluation and streams implemented in the ``lazy`` library.
 
 Typical Scheme features that Cozenage does NOT have:
 
@@ -34,7 +34,7 @@ Typical Scheme features that Cozenage does NOT have:
 
 Typical Scheme features currently in progress:
 
-- Arbitrary size and precision integers, rationals, and real numbers. Currently, only bigints are supported. bigfloat, then bigrat are in progress.  
+- Arbitrary size and precision rationals and real numbers. Currently, only bigints are supported. bigfloat, then bigrat are in progress.  
 
 ## Dependencies
 
@@ -51,7 +51,7 @@ The build system(s) specify the C23 standard, so the build might fail on older c
 
 If you have cmake, run `make`.
 
-If you do not have cmake, run `make nocmake`.
+If you do not have cmake, or do not want to use it, run `make nocmake`.
 
 There is also a bit more in depth guide as part of the [Cozenage documentation](https://darrenkirby.github.io/cozenage/howto/installation.html)
 
@@ -60,11 +60,11 @@ There is also a bit more in depth guide as part of the [Cozenage documentation](
 To interpret a Scheme file (typically with an .scm or .ss extension, although Cozenage will attempt
 to run any file argument as Scheme code) just add the file name after any options:
 
-    $ ./cozenage -l write,file my_program.scm
+    $ ./cozenage -l system,file my_program.scm
 
 To run the REPL just run the program with no arguments:
 
-    $ ./cozenage -l write,file
+    $ ./cozenage -l system,file
 
 ## Status of built-in procedures and special forms
 
@@ -107,7 +107,7 @@ Implemented as transforms/expands:
 - `unquote`
 - `unquote-splicing`
 
-Implemented in 'lazy' library:
+Implemented as primitives in the ``lazy`` library:
 
 - `delay`
 - `delay-force`
