@@ -407,7 +407,7 @@ static Cell* file_stat(const Lex* e, const Cell* a) {
 
     struct stat buf;
     if (stat(a->cell[0]->str, &buf) == -1) {
-        make_cell_error(
+        return make_cell_error(
             fmt_err("stat: %s", strerror(errno)),
             OS_ERR);
     }
