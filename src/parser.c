@@ -618,6 +618,10 @@ Cell* parse_tokens(TokenArray *ta)
                 bv_t = BV_U32;
                 bv_min = 0;
                 bv_max = UINT32_MAX;
+            } else if (strcmp(bv_tok, "u64") == 0) {
+                bv_t = BV_U64;
+                bv_min = 0;
+                bv_max = UINT64_MAX;
             } else if (strcmp(bv_tok, "s8") == 0) {
                 bv_t = BV_S8;
                 bv_min = INT8_MIN;
@@ -630,6 +634,10 @@ Cell* parse_tokens(TokenArray *ta)
                 bv_t = BV_S32;
                 bv_min = INT32_MIN;
                 bv_max = INT32_MAX;
+            } else if (strcmp(bv_tok, "s64") == 0) {
+                bv_t = BV_S64;
+                bv_min = INT64_MIN;
+                bv_max = INT64_MAX;
             } else {
                 return make_cell_error(
                     fmt_err("Line %d: Bad bytevector label: %s", token->line, bv_tok),

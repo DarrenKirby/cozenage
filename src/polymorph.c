@@ -55,6 +55,9 @@ static Cell* bytevector_reverse(const Cell* v)
         case BV_S16: REVERSE_CASE(int16_t);  break;
         case BV_U32: REVERSE_CASE(uint32_t); break;
         case BV_S32: REVERSE_CASE(int32_t);  break;
+        case BV_U64: REVERSE_CASE(uint64_t); break;
+        case BV_S64: REVERSE_CASE(int64_t);  break;
+        default: return make_cell_error("No f32 or f64 bv yet", TYPE_ERR);
     }
     return result;
 }

@@ -126,7 +126,11 @@ typedef enum : uint8_t {
     BV_U16,
     BV_S16,
     BV_U32,
-    BV_S32
+    BV_S32,
+    BV_U64,
+    BV_S64,
+    BV_F32, /* Not implemented yet. */
+    BV_F64  /* Not implemented yet. */
 } bv_t;
 
 /* Bytevector struct. */

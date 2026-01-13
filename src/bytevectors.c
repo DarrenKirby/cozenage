@@ -32,6 +32,10 @@ DEFINE_BV_TYPE(u16, uint16_t, "%u")
 DEFINE_BV_TYPE(s16, int16_t,  "%d")
 DEFINE_BV_TYPE(u32, uint32_t, "%u")
 DEFINE_BV_TYPE(s32, int32_t,  "%d")
+DEFINE_BV_TYPE(u64, uint64_t, "%u")
+DEFINE_BV_TYPE(s64, int64_t,  "%d")
+
+#define INVALID 255
 
 
 const bv_ops_t BV_OPS[] = {
@@ -41,23 +45,35 @@ const bv_ops_t BV_OPS[] = {
     [BV_S16] = { get_s16, set_s16, repr_s16, append_s16, sizeof(int16_t)  },
     [BV_U32] = { get_u32, set_u32, repr_u32, append_u32, sizeof(uint32_t) },
     [BV_S32] = { get_s32, set_s32, repr_s32, append_s32, sizeof(int32_t)  },
+    [BV_U64] = { get_u64, set_u64, repr_u64, append_u64, sizeof(uint64_t) },
+    [BV_S64] = { get_s64, set_s64, repr_s64, append_s64, sizeof(int64_t)  },
 };
 
 
 static Cell* byte_fits(const bv_t type, const int64_t byte) {
+    /* Quick exit for u64, as UINT64_MAX does not fit in int64_t. */
+    if (type == BV_U64) {
+        if (byte < 0) {
+            return make_cell_error(
+                fmt_err("byte value %ll invalid for u64 bytevector", byte),
+                VALUE_ERR);
+        }
+        return True_Obj;
+    }
     int64_t min;
     int64_t max;
     char* t_s;
     switch (type) {
-    case BV_U8: { min = 0; max = UINT8_MAX; t_s = "u8"; break; }
-    case BV_S8: { min = INT8_MIN; max = INT8_MAX; t_s = "s8"; break;  }
-    case BV_U16: { min = 0; max = UINT16_MAX; t_s = "u16"; break; }
-    case BV_S16: { min = INT16_MIN; max = INT16_MAX; t_s = "s16"; break;  }
-    case BV_U32: { min = 0; max = UINT32_MAX; t_s = "u32"; break;}
-    case BV_S32: { min = INT32_MIN; max = INT32_MAX; t_s = "s32"; break; }
-    default: { min = 0; max = UINT8_MAX; t_s = "u8"; break; }
+        case BV_U8: { min = 0; max = UINT8_MAX; t_s = "u8"; break; }
+        case BV_S8: { min = INT8_MIN; max = INT8_MAX; t_s = "s8"; break;  }
+        case BV_U16: { min = 0; max = UINT16_MAX; t_s = "u16"; break; }
+        case BV_S16: { min = INT16_MIN; max = INT16_MAX; t_s = "s16"; break;  }
+        case BV_U32: { min = 0; max = UINT32_MAX; t_s = "u32"; break;}
+        case BV_S32: { min = INT32_MIN; max = INT32_MAX; t_s = "s32"; break; }
+        case BV_S64: { min = INT64_MIN; max = INT64_MAX; t_s = "s64"; break; }
+        default: { min = 0; max = UINT8_MAX; t_s = "u8"; break; }
     }
-
+    
     if (byte < min || byte > max) {
         return make_cell_error(
             fmt_err("byte value %" PRId64 " invalid for %s bytevector", byte, t_s),
@@ -65,6 +81,7 @@ static Cell* byte_fits(const bv_t type, const int64_t byte) {
     }
     return True_Obj;
 }
+
 
 static bv_t get_type(const Cell* t_sym)
 {
@@ -75,9 +92,12 @@ static bv_t get_type(const Cell* t_sym)
     else if (t_sym == make_cell_symbol("s16")) { type = BV_S16; }
     else if (t_sym == make_cell_symbol("u32")) { type = BV_U32; }
     else if (t_sym == make_cell_symbol("s32")) { type = BV_S32; }
-    else { type = 255; }
+    else if (t_sym == make_cell_symbol("u64")) { type = BV_U64; }
+    else if (t_sym == make_cell_symbol("s64")) { type = BV_S64; }
+    else { type = INVALID; }
     return type;
 }
+
 
 static char* get_type_string(const bv_t type)
 {
@@ -89,10 +109,13 @@ static char* get_type_string(const bv_t type)
         case BV_S16: {t_string = "s16"; break; }
         case BV_U32: {t_string = "u32"; break; }
         case BV_S32: {t_string = "s32"; break; }
+        case BV_U64: {t_string = "u64"; break; }
+        case BV_S64: {t_string = "s64"; break; }
         default: { t_string = "unknown"; break; }
     }
     return t_string;
 }
+
 
 /*------------------------------------------------------------*
  *     Byte vector constructors, selectors, and procedures    *
@@ -102,7 +125,7 @@ static char* get_type_string(const bv_t type)
 /* (bytevector byte ... )
  * (bytevector byte ... symbol)
  * Returns a newly allocated bytevector containing its arguments. If the optional symbol arg is passed (one of 'u8, 's8,
- * 'u16, 's16 etc...) then the bytevector will be initialized as that type. */
+ * 'u16, 's16 etc...) then the bytevector will be initialized as that type. Default is u8. */
 Cell* builtin_bytevector(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -115,9 +138,11 @@ Cell* builtin_bytevector(const Lex* e, const Cell* a)
     if (a->cell[num_bytes - 1]->type == CELL_SYMBOL)
     {
         type = get_type(a->cell[num_bytes - 1]);
-        if (type == 255) {
-            /* u8 by default. */
-            type = BV_U8;
+        if (type == INVALID) {
+            return make_cell_error(
+                fmt_err("bytevector: invalid bytevector type: %s",
+                    a->cell[num_bytes - 1]->sym),
+                TYPE_ERR);
         }
         /* If it's a legit bytevector type arg,
          * don't add it to the bytevector */
@@ -256,9 +281,9 @@ Cell* builtin_make_bytevector(const Lex* e, const Cell* a)
                 TYPE_ERR);
         }
         type = get_type(t_sym);
-        if (type == 255) {
+        if (type == INVALID) {
             return make_cell_error(
-                "arg 3 must be one of 'u8, 's8, 'u16, 's16, 'u32, or 's32 ",
+                "arg 3 must be one of 'u8, 's8, 'u16, 's16, 'u32, 's32', 'u64', or 's64' ",
                 VALUE_ERR);
         }
     } else {
