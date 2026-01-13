@@ -113,7 +113,7 @@ typedef enum : uint8_t  {
 typedef struct Port {
     char* path;       /* File path of associated fh (or string for string port). */
     FILE* fh;         /* The file handle. */
-    int port_t;       /* Input or output. */
+    uint8_t port_t;   /* Input or output. */
     uint8_t stream_t; /* Stream type */
 } port;
 
