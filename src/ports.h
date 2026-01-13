@@ -1,7 +1,7 @@
 /*
  * 'src/ports.h'
  * This file is part of Cozenage - https://github.com/DarrenKirby/cozenage
- * Copyright © 2025  Darren Kirby <darren@dragonbyte.ca>
+ * Copyright © 2025 - 2026 Darren Kirby <darren@dragonbyte.ca>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,6 +22,7 @@
 
 #include "cell.h"
 
+
 /* Input/output and ports */
 Cell* builtin_current_input_port(const Lex* e, const Cell* a);
 Cell* builtin_current_output_port(const Lex* e, const Cell* a);
@@ -36,9 +37,11 @@ Cell* builtin_close_port(const Lex* e, const Cell* a);
 Cell* builtin_read_line(const Lex* e, const Cell* a);
 Cell* builtin_read_lines(const Lex* e, const Cell* a);
 Cell* builtin_read_char(const Lex* e, const Cell* a);
+Cell* builtin_read_u8(const Lex* e, const Cell* a);
 Cell* builtin_read_string(const Lex* e, const Cell* a);
 Cell* builtin_peek_char(const Lex* e, const Cell* a);
 Cell* builtin_char_ready(const Lex* e, const Cell* a);
+Cell* builtin_peek_u8(const Lex* e, const Cell* a);
 Cell* builtin_u8_ready(const Lex* e, const Cell* a);
 Cell* builtin_write_char(const Lex* e, const Cell* a);
 Cell* builtin_write_string(const Lex* e, const Cell* a);
@@ -52,10 +55,10 @@ Cell* builtin_flush_output_port(const Lex* e, const Cell* a);
 Cell* builtin_display(const Lex* e, const Cell* a);
 Cell* builtin_println(const Lex* e, const Cell* a);
 Cell* builtin_write(const Lex* e, const Cell* a);
+Cell* builtin_writeln(const Lex* e, const Cell* a);
 Cell* builtin_open_input_file(const Lex* e, const Cell* a);
-Cell* builtin_open_binary_input_file(const Lex* e, const Cell* a);
 Cell* builtin_open_output_file(const Lex* e, const Cell* a);
-Cell* builtin_open_binary_output_file(const Lex* e, const Cell* a);
+Cell* builtin_open_and_trunc_output_file(const Lex* e, const Cell* a);
 Cell* builtin_call_with_input_file(const Lex* e, const Cell* a);
 Cell* builtin_call_with_output_file(const Lex* e, const Cell* a);
 Cell* builtin_with_input_from_file(const Lex* e, const Cell* a);
