@@ -23,6 +23,7 @@
 #include "strings.h"
 #include "repr.h"
 #include "vectors.h"
+#include "bytevectors.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -220,10 +221,10 @@ Cell* builtin_read_lines(const Lex* e, const Cell* a)
             FILE_ERR);
 
     Cell* result = make_cell_vector();
-    size_t n = 2048; /*  FIXME: what is this magic number? Get actual file size! */
-    char *line = GC_MALLOC_ATOMIC(n);
+    size_t linecap = 0;
+    char *line = nullptr;
     ssize_t len;
-    while ((len = getline(&line, &n, port->port->fh)) > 0) {
+    while ((len = getline(&line, &linecap, port->port->fh)) > 0) {
         if (len <= 0) { break; }
         /* Remove newline if present. */
         if (line[len-1] == '\n') line[len-1] = '\0';
@@ -231,6 +232,9 @@ Cell* builtin_read_lines(const Lex* e, const Cell* a)
         Cell* s = make_cell_string(line);
         cell_add(result, s);
     }
+
+    /* getline() malloc'ed the buffer; we didn't use the GC. */
+    free(line);
     return builtin_vector_to_list(e, make_sexpr_len1(result));
 }
 
@@ -382,6 +386,181 @@ Cell* builtin_read_u8(const Lex* e, const Cell* a) {
         return make_cell_eof();
     }
     return make_cell_integer(byte);
+}
+
+
+/* (read-bytevector k)
+ * (read-bytevector k port)
+ * Reads the next k bytes, or as many as are available before the end of file, from the binary input port into a newly
+ * allocated bytevector in left-to-right order and returns the bytevector. If no bytes are available before the end of
+ * file, an end-of-file object is returned. */
+Cell* builtin_read_bytevector(const Lex* e, const Cell* a)
+{
+    (void)e;
+    Cell* err = CHECK_ARITY_RANGE(a, 1, 2, "read-bytevector");
+    if (err) return err;
+
+    if (a->cell[0]->type != CELL_INTEGER) {
+        return make_cell_error(
+            "read-bytevector: arg 1 must be exact positive integer",
+            TYPE_ERR);
+    }
+    const int bytes_to_read = (int)a->cell[0]->integer_v;
+    if (bytes_to_read <= 0) {
+        return make_cell_error(
+           "read-bytevector: arg 1 must be exact positive integer",
+           TYPE_ERR);
+    }
+    Cell* port;
+    if (a->count == 1) {
+        port = builtin_current_input_port(e, a);
+    } else {
+        /* TODO: make sure it is an input port! */
+        if (a->cell[1]->type != CELL_PORT) {
+            return make_cell_error(
+                "read-bytevector: arg 2 must be a port",
+                TYPE_ERR);
+        }
+        port = a->cell[1];
+    }
+
+    /* Check if there are any bytes to read. */
+    Cell* test = builtin_peek_u8(e, make_sexpr_len1(port));
+    if (test->type == CELL_EOF) { return test; }
+
+    /* There are bytes. Read them until bytes_read == bytes_to_read,
+     * or EOF, whichever comes first. */
+    // ReSharper disable once CppVariableCanBeMadeConstexpr
+    Cell* bv = make_cell_bytevector(BV_U8);
+
+    for (int i = 0; i < bytes_to_read; i++) {
+        const int byte = getc(port->port->fh);
+        if (byte == EOF) {
+            if (ferror(port->port->fh)) {
+                /* Use strerror for the message. */
+                return make_cell_error(
+                    fmt_err("read-u8: %s", strerror(errno)),
+                    FILE_ERR);
+            }
+            /* If not an error, it's a legitimate EOF. Return the bytevector. */
+            return bv;
+        }
+        /* Add the byte to the bytevector. */
+        BV_OPS[BV_U8].append(bv, byte);
+    }
+    /* Read bytes_to_read bytes with no EOF; return the bytevector. */
+    return bv;
+}
+
+
+Cell* builtin_read_bytevector_bang(const Lex* e, const Cell* a)
+{
+    (void)e;
+    Cell* err = CHECK_ARITY_RANGE(a, 1, 4, "read-bytevector!");
+    if (err) return err;
+
+    /* Ensure arg1 is a u8 bytevector. */
+    if (a->cell[0]->type != CELL_BYTEVECTOR) {
+        return make_cell_error(
+            "read-bytevector!: arg1 must be a u8 bytevector",
+            TYPE_ERR);
+    }
+    Cell* bv = a->cell[0];
+    if (bv->bv->type != BV_U8) {
+        return make_cell_error(
+            "read-bytevector!: arg1 must be a u8 bytevector",
+            TYPE_ERR);
+    }
+
+    /* Ensure arg2 is an open input port, if supplied. */
+    Cell* port;
+    if (a->count == 1) {
+        port = builtin_current_input_port(e, a);
+    } else {
+        if (a->cell[1]->type != CELL_PORT) {
+            return make_cell_error(
+                "read-bytevector!: arg2 must be a port",
+                TYPE_ERR);
+        }
+        port = a->cell[1];
+        if (port->port->port_t != INPUT_PORT || port->is_open != 1) {
+            return make_cell_error(
+                "read-bytevector!: port is not open for input",
+                VALUE_ERR);
+        }
+    }
+
+    /* Sanity check start/end args if supplied. */
+    int start = 0;
+    int end = bv->count;
+
+    if (a->count > 2) {
+        if (a->cell[2]->type != CELL_INTEGER) {
+            return make_cell_error(
+                "read-bytevector!: arg3 must be an integer",
+                TYPE_ERR);
+        }
+        start = (int)a->cell[2]->integer_v;
+        if (start < 0) {
+            return make_cell_error(
+                "read-bytevector!: arg3 must be an exact, positive integer",
+                VALUE_ERR);
+        }
+        if (a->count > 3) {
+            if (a->cell[3]->type != CELL_INTEGER) {
+                return make_cell_error(
+                    "read-bytevector!: arg4 must be an integer",
+                    TYPE_ERR);
+            }
+            end = (int)a->cell[3]->integer_v;
+            if (end < 0) {
+                return make_cell_error(
+                    "read-bytevector!: arg4 must be an exact, positive integer",
+                    VALUE_ERR);
+            }
+        }
+    }
+
+    if (end > bv->count) {
+        return make_cell_error(
+            "read-bytevector!: 'end' exceeds bytevector length",
+            VALUE_ERR);
+    }
+
+    const int bytes_to_read = end - start;
+    if (bytes_to_read > bv->count) {
+        return make_cell_error(
+            fmt_err("read-bytevector!: bytevector not large enough to store %d bytes", bytes_to_read),
+            VALUE_ERR);
+    }
+
+    if (bytes_to_read == 0) return make_cell_integer(0);
+
+    /* R7RS: Return EOF object if port is already at EOF */
+    const int c = getc(port->port->fh);
+    if (c == EOF) {
+        if (ferror(port->port->fh)) {
+            return make_cell_error(
+                fmt_err("read-bytevector!: %s", strerror(errno)),
+                FILE_ERR);
+        }
+        return make_cell_eof();
+    }
+    ungetc(c, port->port->fh);
+
+    /* Cast void* to uint8_t* to allow correct pointer arithmetic */
+    uint8_t* buffer_ptr = bv->bv->data;
+
+    /* Read directly into the offset address. */
+    const size_t n = fread(buffer_ptr + start, 1, (size_t)bytes_to_read, port->port->fh);
+
+    if (n < (size_t)bytes_to_read && ferror(port->port->fh)) {
+        return make_cell_error(
+            fmt_err("read-bytevector!: %s", strerror(errno)),
+            FILE_ERR);
+    }
+
+    return make_cell_integer((int)n);
 }
 
 
@@ -686,13 +865,12 @@ Cell* builtin_write_bytevector(const Lex* e, const Cell* a)
         num_bytes = end - start;
     }
 
-    /* FIXME: This has not been updated to work with new bytevectors. */
     for (int i = start; i < num_bytes; i++) {
-        const int byte = (int)bv->cell[i]->integer_v;
+        const int byte = (int)BV_OPS[bv->bv->type].get(bv, i);
         if (putc(byte, port->port->fh) == EOF) {
-            char buf[256];
-            snprintf(buf, sizeof(buf), "write-bytevector failed: %s", strerror(errno));
-            return make_cell_error(strerror(errno), FILE_ERR);
+            return make_cell_error(fmt_err(
+                "write-bytevector: %s", strerror(errno)),
+                FILE_ERR);
         }
     }
     return USP_Obj;

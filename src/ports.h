@@ -39,6 +39,8 @@ Cell* builtin_read_lines(const Lex* e, const Cell* a);
 Cell* builtin_read_char(const Lex* e, const Cell* a);
 Cell* builtin_read_u8(const Lex* e, const Cell* a);
 Cell* builtin_read_string(const Lex* e, const Cell* a);
+Cell* builtin_read_bytevector(const Lex* e, const Cell* a);
+Cell* builtin_read_bytevector_bang(const Lex* e, const Cell* a);
 Cell* builtin_peek_char(const Lex* e, const Cell* a);
 Cell* builtin_char_ready(const Lex* e, const Cell* a);
 Cell* builtin_peek_u8(const Lex* e, const Cell* a);
