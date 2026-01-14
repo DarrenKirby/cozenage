@@ -1,7 +1,7 @@
 /*
  * 'bytevectors.h'
  * This file is part of Cozenage - https://github.com/DarrenKirby/cozenage
- * Copyright © 2025  Darren Kirby <darren@dragonbyte.ca>
+ * Copyright © 2025 - 2026 Darren Kirby <darren@dragonbyte.ca>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,6 +34,7 @@ typedef struct bv_ops_t {
     size_t elem_size;
 } bv_ops_t;
 
+
 extern const bv_ops_t BV_OPS[];
 
 /* This big ugly-ass macro makes a constructor, getter, setter, and repr for
@@ -61,6 +62,7 @@ if (i != bv->count - 1) sb_append_char(sb, ' ');                            \
 }                                                                           \
 sb_append_char(sb, ')');                                                    \
 }
+
 
 /* Bytevector constructors, selectors,and procedures */
 Cell* builtin_bytevector(const Lex* e, const Cell* a);

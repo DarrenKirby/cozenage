@@ -536,7 +536,7 @@ Cell* builtin_read_bytevector_bang(const Lex* e, const Cell* a)
 
     if (bytes_to_read == 0) return make_cell_integer(0);
 
-    /* R7RS: Return EOF object if port is already at EOF */
+    /* R7RS: Return EOF object if port is already at EOF. */
     const int c = getc(port->port->fh);
     if (c == EOF) {
         if (ferror(port->port->fh)) {
@@ -548,7 +548,7 @@ Cell* builtin_read_bytevector_bang(const Lex* e, const Cell* a)
     }
     ungetc(c, port->port->fh);
 
-    /* Cast void* to uint8_t* to allow correct pointer arithmetic */
+    /* Cast void* to uint8_t* to allow correct pointer arithmetic. */
     uint8_t* buffer_ptr = bv->bv->data;
 
     /* Read directly into the offset address. */
