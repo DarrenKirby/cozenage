@@ -31,6 +31,24 @@
 #include <sys/utsname.h>
 #include <sys/stat.h>
 
+/* These includes and defines are all for uptime. */
+#ifdef  __Linux__
+#include <sys/sysinfo.h>
+#else
+#include <sys/sysctl.h>
+#endif
+
+#if defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__NetBSD__) || defined(__DragonFly__)
+#include <sys/types.h>
+#include <sys/param.h>
+#include <vm/vm_param.h>
+#endif
+
+#define ONE_DAY     86400
+#define ONE_HOUR    3600
+#define ONE_MINUTE  60
+#define LOADS_SCALE 65536.0
+
 
 extern char **environ;
 
@@ -338,6 +356,119 @@ static Cell* system_chmod(const Lex* e, const Cell* a) {
     return True_Obj;
 }
 
+
+/* (uptime)
+ * Returns information about the system's uptime and load average. The information is returned in a list of length 3.
+ * The first item is an integer representing uptime in seconds. The second item is a human-readable uptime string of
+ * the form "up 31 days 16:37". The third item is itself a three item list of floats which represent the 1, 5, and 15-
+ * minute load average figures in that order. */
+Cell* system_uptime(const Lex* e, const Cell* a) {
+    (void)e; (void)a;
+    Cell* err = CHECK_ARITY_EXACT(a, 0, "uptime");
+    if (err) { return err; }
+
+    uint32_t days, hours, minutes;
+    uint32_t uptime_in_days, uptime_in_hours;
+    uint64_t uptime_in_seconds;
+    float av1, av2, av3;
+#ifdef __linux__
+    /* Get uptime Linux */
+    struct sysinfo s_info;
+    if (sysinfo(&s_info) == -1) {
+        return make_cell_error(
+            fmt_err("uptime: sysinfo read failed: %s", strerror(errno)),
+            OS_ERR);
+    }
+
+    uptime_in_seconds = s_info.uptime;
+
+    /* Get load average Linux */
+    av1 = s_info.loads[0] / LOADS_SCALE;
+    av2 = s_info.loads[1] / LOADS_SCALE;
+    av3 = s_info.loads[2] / LOADS_SCALE;
+#else
+    /* Get uptime OS X / *BSD */
+    struct timeval boot_time;
+    size_t len = sizeof(boot_time);
+    int mib[2] = { CTL_KERN, KERN_BOOTTIME };
+
+    if (sysctl(mib, 2, &boot_time, &len, NULL, 0) < 0 ) {
+        return make_cell_error(
+            "uptime: failed to get uptime from OS",
+            OS_ERR);
+    }
+
+    const time_t boot_sec = boot_time.tv_sec;
+    const time_t current_sec = time(nullptr);
+    uptime_in_seconds = (long)difftime(current_sec, boot_sec);
+
+    /* Get load average *BSD */
+#if defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__NetBSD__) || defined(__DragonFly__)
+    double loadavg[3];
+    if (getloadavg(loadavg, nitems(loadavg)) == -1) {
+        return make_cell_error(
+            "uptime: failed to get load average from OS",
+            OS_ERR);
+    }
+    av1 = loadavg[0];
+    av2 = loadavg[1];
+    av3 = loadavg[2];
+
+    /* Get load average OS X */
+#else
+    struct loadavg loads;
+    size_t load_len = sizeof(loads);
+    int mib2[2] = { CTL_VM, VM_LOADAVG };
+
+    if (sysctl(mib2, 2, &loads, &load_len, NULL, 0) < 0) {
+        return make_cell_error(
+            "uptime: failed to get load average from OS",
+            OS_ERR);
+    }
+
+    av1 = (float)loads.ldavg[0] / (float)loads.fscale;
+    av2 = (float)loads.ldavg[1] / (float)loads.fscale;
+    av3 = (float)loads.ldavg[2] / (float)loads.fscale;
+#endif
+#endif
+
+    /* Factor seconds into larger units */
+    days = uptime_in_seconds / ONE_DAY;
+    uptime_in_days = uptime_in_seconds - (days * ONE_DAY);
+    hours = uptime_in_days / ONE_HOUR;
+    uptime_in_hours = uptime_in_days - hours * ONE_HOUR;
+    minutes = uptime_in_hours / ONE_MINUTE;
+
+    /* Format human-readable string. */
+    char s_buffer[256];
+    snprintf(s_buffer, sizeof(s_buffer), "up %d day%s %02d:%02d",
+        days, (days != 1) ? "s" : "", hours, minutes);
+    Cell* up_s = make_cell_string(s_buffer);
+
+    /* Raw seconds. */
+    Cell* ip_i = make_cell_integer((long long)uptime_in_seconds);
+
+    /* Load scale. */
+    Cell* ls_1 = make_cell_real(av1);
+    Cell* ls_2 = make_cell_real(av2);
+    Cell* ls_3 = make_cell_real(av3);
+
+    /* Organize results into list. */
+    Cell* result = make_cell_nil();
+
+    Cell* load_list = make_cell_nil();
+    load_list = make_cell_pair(ls_3, load_list);
+    load_list = make_cell_pair(ls_2, load_list);
+    load_list = make_cell_pair(ls_1, load_list);
+
+    result = make_cell_pair(load_list, result);
+    result = make_cell_pair(up_s, result);
+    result = make_cell_pair(ip_i, result);
+
+    return result;
+}
+
+
 /* TODO:
  * lchmod - in file lib?
  * chown - in file lib?
@@ -368,4 +499,5 @@ void cozenage_library_init(const Lex* e)
     lex_add_builtin(e, "chdir", system_chdir);
     lex_add_builtin(e, "uname", system_uname);
     lex_add_builtin(e, "chmod!", system_chmod);
+    lex_add_builtin(e, "uptime", system_uptime);
 }
