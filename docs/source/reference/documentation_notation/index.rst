@@ -104,8 +104,8 @@ Other notations
 ``#(``
     This introduces a vector constant. Vector constants are terminated by ``)``.
 
-``#u8(`` ``#s8(`` ``#u16(`` ``#s16(`` ``#u32(`` ``#s32(``
-    These introduces a bytevector constant. Bytevector constants are terminated by ``)``.
+``#u8(`` ``#s8(`` ``#u16(`` ``#s16(`` ``#u32(`` ``#s32(`` ``#u64(`` ``#s64(``
+    These introduce a bytevector constant. Bytevector constants are terminated by ``)``.
 
 ``#e`` ``#i`` ``#b`` ``#o`` ``#d`` ``#x``
     These are used in the notation for numbers.
@@ -151,13 +151,13 @@ The argument types, return values, and domain(s) of each procedure are specified
 * `y`, `y1`, `yj` - a real number
 * `z`, `z1`, `zj` - a complex number
 
-The names start and end are used as indexes into strings, vectors, and bytevectors. Their use implies the following:
+The names `start` and `end` are used as indexes into strings, vectors, and bytevectors. Their use implies the following:
 
 * It is an error if `start` is greater than `end`.
 * It is an error if `end` is greater than the length of the string, vector, or bytevector.
 * If `start` is omitted, it is assumed to be zero.
 * If `end` is omitted, it assumed to be the length of the string, vector, or bytevector.
-* The index `start` is always inclusive and the index `end` is always exclusive. As an example, consider a string.
+* The index `start` is always inclusive and the index `end` is always exclusive. As an example, consider a string:
   If `start` and `end` are the same, an empty substring is referred to, and if `start` is zero and `end` is the length of
   string, then the entire string is referred to.
 
