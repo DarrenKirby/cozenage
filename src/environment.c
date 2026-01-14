@@ -477,6 +477,8 @@ void lex_add_builtins(const Lex* e)
     lex_add_builtin(e, "read-char", builtin_read_char);
     lex_add_builtin(e, "read-u8", builtin_read_u8);
     lex_add_builtin(e, "read-string", builtin_read_string);
+    lex_add_builtin(e, "read-bytevector", builtin_read_bytevector);
+    lex_add_builtin(e, "read-bytevector!", builtin_read_bytevector_bang);
     lex_add_builtin(e, "peek-char", builtin_peek_char);
     lex_add_builtin(e, "peek-u8", builtin_peek_u8);
     lex_add_builtin(e, "char-ready?", builtin_char_ready);
