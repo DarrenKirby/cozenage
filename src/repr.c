@@ -28,6 +28,11 @@
 #include <string.h>
 #include <wctype.h>
 
+/* Only Linux needs this include. */
+#ifdef __linux__
+#include <ctype.h>
+#endif
+
 
 /* Forward declaration for helpers. */
 static void cell_to_string_worker(const Cell* v, string_builder_t *sb, print_mode_t mode);
