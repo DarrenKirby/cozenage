@@ -169,8 +169,8 @@ Cell* builtin_symbol_equal_pred(const Lex* e, const Cell* a)
     if (err) return err;
 
     for (int i = 0; i < a->count - 1; i++) {
-        const char* lhs = a->cell[i]->sym;
-        const char* rhs = a->cell[i+1]->sym;
+        const Cell* lhs = a->cell[i];
+        const Cell* rhs = a->cell[i+1];
 
         if (lhs != rhs)  {
             return False_Obj;
