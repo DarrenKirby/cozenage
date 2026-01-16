@@ -32,7 +32,7 @@
 #include <sys/stat.h>
 
 /* These includes and defines are all for uptime. */
-#ifdef  __Linux__
+#ifdef  __linux__
 #include <sys/sysinfo.h>
 #else
 #include <sys/sysctl.h>
