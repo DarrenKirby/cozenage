@@ -235,12 +235,11 @@ Test(end_to_end_equivalence, test_equal_procedure, .init = setup_each_test, .fin
                                 "(equal? x y))"), "#false");
 
     // Test case 3: One cyclic, one not
-    // FIXME: this should pass
-    // cr_assert_str_eq(t_eval("(begin "
-    //                             "(define x (list 'a)) "
-    //                             "(set-cdr! x x) "
-    //                             "(define y (list 'a)) "
-    //                             "(equal? x y))"), "#false");
+    cr_assert_str_eq(t_eval("(begin "
+                                "(define x (list 'a)) "
+                                "(set-cdr! x x) "
+                                "(define y (list 'a)) "
+                                "(equal? x y))"), "#false");
 
     // Test case 4: Complex shared structure
     cr_assert_str_eq(t_eval("(begin "

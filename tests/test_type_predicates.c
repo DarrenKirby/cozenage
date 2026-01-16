@@ -71,7 +71,6 @@ Test(end_to_end_type_predicates, test_list_predicate, .init = setup_each_test, .
     // ## Proper Lists ##
     cr_assert_str_eq(t_eval("(list? '())"), "#true");
     cr_assert_str_eq(t_eval("(list? '(1 2 3))"), "#true");
-    // FIXME: this should pass
     cr_assert_str_eq(t_eval("(list? (cons 1 (cons 2 '())))"), "#true");
 
     // ## Not proper lists ##

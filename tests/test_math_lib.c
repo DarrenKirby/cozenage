@@ -17,17 +17,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-// #include "test_meta.h"
-// #include <criterion/criterion.h>
-//
-//
-// TestSuite(end_to_end_math_lib);
-//
-// Test(end_to_end_math_lib, test_cos, .init = setup_each_test, .fini = teardown_each_test) {
-//     cr_assert_str_eq(t_eval_math_lib("(cos 1.0)"), "0.54030230586814");
-//     cr_assert_str_eq(t_eval_math_lib("(cos 0.2)"), "0.980066577841242");
-//     cr_assert_str_eq(t_eval_math_lib("(cos 0)"), "1");
-//     cr_assert_str_eq(t_eval_math_lib("(cos 90)"), "-0.44807361612917");
-//     cr_assert_str_eq(t_eval_math_lib("(cos 180)"), "-0.598460069057858");
-//     cr_assert_str_eq(t_eval_math_lib("(cos 270)"), "0.984381950632505");
-// }
+#include "test_meta.h"
+#include <criterion/criterion.h>
+
+
+TestSuite(end_to_end_math_lib);
+
+Test(end_to_end_math_lib, test_cos, .init = setup_each_test, .fini = teardown_each_test) {
+    cr_assert_str_eq(t_eval_lib("math","(cos 1.0)"), "0.54030230586814");
+    cr_assert_str_eq(t_eval_lib("math","(cos 0.2)"), "0.980066577841242");
+    cr_assert_str_eq(t_eval_lib("math","(cos 0)"), "1");
+    cr_assert_str_eq(t_eval_lib("math","(cos 90)"), "-0.44807361612917");
+    cr_assert_str_eq(t_eval_lib("math","(cos 180)"), "-0.598460069057858");
+    cr_assert_str_eq(t_eval_lib("math","(cos 270)"), "0.984381950632505");
+}

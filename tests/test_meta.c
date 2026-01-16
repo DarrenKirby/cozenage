@@ -18,13 +18,6 @@ int g_argc;
 char** g_argv;
 
 void setup_each_test(void) {
-    // setup logic
-    // symbol_table = ht_create(128);
-    // init_default_ports();
-    // init_global_singletons();
-    // test_env = lex_initialize_global_env();
-    // lex_add_builtins(test_env);
-    // init_special_forms();
     setlocale(LC_ALL, "");
 }
 
@@ -61,7 +54,7 @@ char* t_eval(const char* input) {
     return cell_to_string(result, MODE_WRITE);
 }
 
-char* t_eval_math_lib(const char* input) {
+char* t_eval_lib(const char* libname, const char* input) {
     if (!engine_prepped) {
         GC_INIT(); // Only call this ONCE per process
         symbol_table = ht_create(128);
@@ -75,10 +68,10 @@ char* t_eval_math_lib(const char* input) {
     test_env = lex_initialize_global_env();
     lex_add_builtins(test_env);
 
-    /* Load the math lib */
-    const Cell* ll = load_library("math", test_env);
+    /* Load the lib */
+    const Cell* ll = load_library(libname, test_env);
     if (ll == False_Obj) {
-        printf("Failed to load math library!!!!\n");
+        printf("Failed to load %s library!!!!\n", libname);
         return "";
     }
 
