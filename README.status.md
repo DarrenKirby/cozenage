@@ -159,8 +159,8 @@ This document tracks the implementation status of procedures in the Cozenage int
 |   ✅    | `raise`                      |
 |   ✅    | `rational?`                  |
 |   ❌    | `read`                       |
-|   ❌    | `read-bytevector`            |
-|   ❌    | `read-bytevector!`           |
+|   ✅    | `read-bytevector`            |
+|   ✅    | `read-bytevector!`           |
 |   ✅    | `read-char`                  |
 |   ✅    | `read-error?`                |
 |   ✅    | `read-line`                  |
