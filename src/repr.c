@@ -214,7 +214,7 @@ static void cell_to_string_worker(const Cell* v,
             } else {
                 /* `write` and `REPL` print the quoted/escaped string. */
                 sb_append_char(sb, '"');
-                const int len = (int)strlen(v->str);
+                const int len = v->count;
                 for (int i = 0; i < len; i++) {
                     const wchar_t wc = (unsigned char)v->str[i];
                     switch (wc) {
@@ -225,15 +225,20 @@ static void cell_to_string_worker(const Cell* v,
                         case '\a': sb_append_str(sb, "\\a"); break;
                         case '\r': sb_append_str(sb, "\\r"); break;
                         case '\0': sb_append_str(sb, "\\0"); break;
-                        default:
-                            /* Check if it's a printable character. */
-                            if (iswprint(wc)) {
-                                sb_append_char(sb, (char)wc);
+                        default: {
+                            /* * If the byte has the high bit set (c >= 0x80), it's part of a
+                             * UTF-8 multibyte sequence. We should trust the terminal and
+                             * append it directly rather than escaping it.
+                             */
+                            const unsigned char uc = (unsigned char)v->str[i];
+                            if (uc >= 0x80 || isprint(uc)) {
+                                sb_append_char(sb, (char)uc);
                             } else {
-                                /* Print non-printable chars as hex escapes. */
-                                sb_append_fmt(sb, "\\x%02x;", (unsigned char)wc);
+                                /* Print truly non-printable control chars as hex escapes. */
+                                sb_append_fmt(sb, "\\x%02x;", uc);
                             }
                         }
+                    }
                 }
                 sb_append_char(sb, '"');
             }
