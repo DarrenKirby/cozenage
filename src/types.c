@@ -34,6 +34,11 @@
 #include <limits.h>
 #include <unicode/ustring.h>
 
+/* Not all systems provide this macro. */
+#ifndef CMPLXL
+#define CMPLXL(a,b) ((long double _Complex)((a) + (b) * I))
+#endif
+
 
 const char* fmt_err(const char *fmt, ...)
 {
