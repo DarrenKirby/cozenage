@@ -1,7 +1,7 @@
 /*
- * 'bits_lib.c'
+ * 'src/base-lib/bits_lib.c'
  * This file is part of Cozenage - https://github.com/DarrenKirby/cozenage
- * Copyright © 2025  Darren Kirby <darren@dragonbyte.ca>
+ * Copyright © 2025 - 2026 Darren Kirby <darren@dragonbyte.ca>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,6 +23,20 @@
 #include <stdlib.h>
 #include <string.h>
 #include <gc/gc.h>
+
+/* This is not defined on some systems. */
+#ifndef strlcat
+static inline size_t strlcat(char *dst, const char *src, size_t size)
+{
+    size_t dlen = strnlen(dst, size);
+    size_t slen = strlen(src);
+    if (dlen == size) return size + slen;
+    if (slen > size - dlen - 1) slen = size - dlen - 1;
+    memcpy(dst + dlen, src, slen);
+    dst[dlen + slen] = '\0';
+    return dlen + strlen(src);
+}
+#endif
 
 
 /* Forward declaration */
