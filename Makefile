@@ -70,10 +70,6 @@ TEST_SOURCES = $(foreach dir,$(TEST_SOURCE_DIRS),$(wildcard $(dir)/*.c))
 # Objects for main binary now *only* come from CORE_SOURCES
 CORE_OBJECTS = $(patsubst %.c,$(OBJ_DIR)/%.o,$(CORE_SOURCES))
 
-# New variable for all the loadable module files
-# e.g., lib/math.so, lib/file.so
-LIB_MODULES  = $(patsubst src/base-lib/%_lib.c,lib/%.$(LIB_EXT),$(LIB_SOURCES))
-
 # Test sources now correctly use CORE_SOURCES
 APP_SOURCES_FOR_TEST = $(filter-out src/main.c, $(CORE_SOURCES))
 ALL_SOURCES_FOR_TEST = $(APP_SOURCES_FOR_TEST) $(TEST_SOURCES)
@@ -90,6 +86,18 @@ ICU_LIBS = $(shell pkg-config --libs icu-uc)
 # Detect gmp flags and libs
 GMP_CFLAGS = $(shell pkg-config --cflags gmp)
 GMP_LIBS = $(shell pkg-config --libs gmp)
+
+# Detect openssl lib, and omit random.so compilation if not present
+SSL_LIBS := $(shell pkg-config --libs openssl 2>/dev/null)
+ifeq ($(strip $(SSL_LIBS)),)
+LIB_SOURCES := $(filter-out src/base-lib/random.c, $(LIB_SOURCES))
+else
+MODULE_LDFLAGS += $(SSL_LIBS)
+endif
+
+# New variable for all the loadable module files
+# e.g., lib/math.so, lib/file.so
+LIB_MODULES  = $(patsubst src/base-lib/%_lib.c,lib/%.$(LIB_EXT),$(LIB_SOURCES))
 
 # Specific flag sets for different builds
 CFLAGS_DEFAULT = -Wall -Wextra -Werror -Wdeprecated-declarations -O2 -std=gnu2x $(ICU_CFLAGS) $(GMP_CFLAGS)
