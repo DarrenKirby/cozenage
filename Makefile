@@ -88,11 +88,11 @@ GMP_CFLAGS = $(shell pkg-config --cflags gmp)
 GMP_LIBS = $(shell pkg-config --libs gmp)
 
 # Detect openssl lib, and omit random.so compilation if not present
-SSL_LIBS := $(shell pkg-config --libs openssl 2>/dev/null)
-ifeq ($(strip $(SSL_LIBS)),)
-LIB_SOURCES := $(filter-out src/base-lib/random.c, $(LIB_SOURCES))
+ifeq ($(shell pkg-config --exists openssl && echo yes),yes)
+    SSL_LIBS := $(shell pkg-config --libs openssl)
+    MODULE_LDFLAGS += $(SSL_LIBS)
 else
-MODULE_LDFLAGS += $(SSL_LIBS)
+    LIB_SOURCES := $(filter-out src/base-lib/random.c, $(LIB_SOURCES))
 endif
 
 # New variable for all the loadable module files
