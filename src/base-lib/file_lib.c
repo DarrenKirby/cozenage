@@ -125,18 +125,19 @@ static char *file_perm_str(const mode_t perm) {
     snprintf(str, PERM_STR_SIZE, "%c%c%c%c%c%c%c%c%c",
     (perm & S_IRUSR) ? 'r' : '-', (perm & S_IWUSR) ? 'w' : '-',
     (perm & S_IXUSR) ?
-    (((perm & S_ISUID) && (flags & FP_SPECIAL)) ? 's' : 'x') :
-    (((perm & S_ISUID) && (flags & FP_SPECIAL)) ? 'S' : '-'),
+    (((perm & S_ISUID) & (flags & FP_SPECIAL)) ? 's' : 'x') :
+    (((perm & S_ISUID) & (flags & FP_SPECIAL)) ? 'S' : '-'),
     (perm & S_IRGRP) ? 'r' : '-', (perm & S_IWGRP) ? 'w' : '-',
     (perm & S_IXGRP) ?
-    (((perm & S_ISGID) && (flags & FP_SPECIAL)) ? 's' : 'x') :
-    (((perm & S_ISGID) && (flags & FP_SPECIAL)) ? 'S' : '-'),
+    (((perm & S_ISGID) & (flags & FP_SPECIAL)) ? 's' : 'x') :
+    (((perm & S_ISGID) & (flags & FP_SPECIAL)) ? 'S' : '-'),
     (perm & S_IROTH) ? 'r' : '-', (perm & S_IWOTH) ? 'w' : '-',
     (perm & S_IXOTH) ?
-    (((perm & S_ISVTX) && (flags & FP_SPECIAL)) ? 't' : 'x') :
-    (((perm & S_ISVTX) && (flags & FP_SPECIAL)) ? 'T' : '-'));
+    (((perm & S_ISVTX) & (flags & FP_SPECIAL)) ? 't' : 'x') :
+    (((perm & S_ISVTX) & (flags & FP_SPECIAL)) ? 'T' : '-'));
     return str;
 }
+
 
 /*-------------------------------------------------------*
  *        File type and other file/dir predicates        *
@@ -335,7 +336,7 @@ static Cell* file_get_cwd(const Lex* e, const Cell* a)
 }
 
 
-static Cell* file_rmdir__(const Lex* e, const Cell* a)
+static Cell* file_rmdir(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "rmdir");
@@ -355,7 +356,7 @@ static Cell* file_rmdir__(const Lex* e, const Cell* a)
 
 
 /* TODO - mkdir -p style mkdir procedure */
-static Cell* file_mkdir__(const Lex* e, const Cell* a)
+static Cell* file_mkdir(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING, "mkdir");
@@ -415,7 +416,7 @@ static Cell* file_stat(const Lex* e, const Cell* a) {
     Cell* result = make_cell_nil();
     int list_len;
 
-#ifndef __linux__  /* Linux stat struct doesn't include this */
+#ifndef __linux__  /* Linux stat struct doesn't include birth time. */
     result = make_cell_pair(make_cell_pair(
         make_cell_symbol("st_birthtimespec"),
         make_cell_string(format_time(&buf.st_birthtimespec))), result);
@@ -523,9 +524,8 @@ void cozenage_library_init(const Lex* e)
     if (!ht_get(e->global, "get-cwd")) {
         lex_add_builtin(e, "get-cwd", file_get_cwd);
     }
-    /* The odd names here are because of the clashes with C library function names. */
-    lex_add_builtin(e, "rmdir", file_rmdir__);
-    lex_add_builtin(e, "mkdir", file_mkdir__);
+    lex_add_builtin(e, "rmdir", file_rmdir);
+    lex_add_builtin(e, "mkdir", file_mkdir);
     lex_add_builtin(e, "unlink!", file_unlink_file);
     lex_add_builtin(e, "stat", file_stat);
 }
