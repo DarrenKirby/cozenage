@@ -64,7 +64,7 @@ ALL_SOURCE_DIRS  = $(CORE_SOURCE_DIRS) $(LIB_SOURCE_DIRS) $(TEST_SOURCE_DIRS)
 
 # Discover sources from their specific directories
 CORE_SOURCES = $(foreach dir,$(CORE_SOURCE_DIRS),$(wildcard $(dir)/*.c))
-LIB_SOURCES  = $(foreach dir,$(LIB_SOURCE_DIRS),$(wildcard $(dir)/*.c))
+LIB_SOURCES := $(foreach dir,$(LIB_SOURCE_DIRS),$(wildcard $(dir)/*.c))
 TEST_SOURCES = $(foreach dir,$(TEST_SOURCE_DIRS),$(wildcard $(dir)/*.c))
 
 # Objects for main binary now *only* come from CORE_SOURCES
@@ -88,16 +88,15 @@ GMP_CFLAGS = $(shell pkg-config --cflags gmp)
 GMP_LIBS = $(shell pkg-config --libs gmp)
 
 # Detect openssl lib, and omit random.so compilation if not present
-ifeq ($(shell pkg-config --exists openssl && echo yes),yes)
-    SSL_LIBS := $(shell pkg-config --libs openssl)
-    MODULE_LDFLAGS += $(SSL_LIBS)
-else
-    LIB_SOURCES := $(filter-out src/base-lib/random.c, $(LIB_SOURCES))
-endif
-
-# New variable for all the loadable module files
-# e.g., lib/math.so, lib/file.so
 LIB_MODULES := $(patsubst src/base-lib/%_lib.c,lib/%.$(LIB_EXT),$(LIB_SOURCES))
+
+ifeq ($(shell pkg-config --exists openssl && echo yes),yes)
+	SSL_LIBS := $(shell pkg-config --libs openssl)
+	MODULE_LDFLAGS += $(SSL_LIBS)
+else
+	LIB_MODULES := $(filter-out lib/random.$(LIB_EXT),$(LIB_MODULES))
+	@echo "!!! OpenSSL library not found: omitting build of random.$(LIB_EXT)"
+endif
 
 # Specific flag sets for different builds
 CFLAGS_DEFAULT = -Wall -Wextra -Werror -Wdeprecated-declarations -O2 -std=gnu2x $(ICU_CFLAGS) $(GMP_CFLAGS)
