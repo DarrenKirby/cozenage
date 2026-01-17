@@ -283,11 +283,12 @@ Cell* builtin_read_string(const Lex* e, const Cell* a)
         unsigned short j = 0;
 
         /* Read a byte. */
-        buffer[buf_idx] = (char)getc(port->port->fh);
-        if (buffer[buf_idx] == EOF) {
+        const int c = getc(port->port->fh);
+        if (c == EOF) {
             buffer[buf_idx] = '\0';
             break;
         }
+        buffer[buf_idx] = (char)c;
 
         /* Check how many more bytes need to be read for character. */
         if ((buffer[buf_idx] & mask[0]) == mask[0]) i++;
