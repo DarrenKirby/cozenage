@@ -97,7 +97,7 @@ endif
 
 # New variable for all the loadable module files
 # e.g., lib/math.so, lib/file.so
-LIB_MODULES  = $(patsubst src/base-lib/%_lib.c,lib/%.$(LIB_EXT),$(LIB_SOURCES))
+LIB_MODULES := $(patsubst src/base-lib/%_lib.c,lib/%.$(LIB_EXT),$(LIB_SOURCES))
 
 # Specific flag sets for different builds
 CFLAGS_DEFAULT = -Wall -Wextra -Werror -Wdeprecated-declarations -O2 -std=gnu2x $(ICU_CFLAGS) $(GMP_CFLAGS)
