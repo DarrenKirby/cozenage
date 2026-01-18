@@ -95,7 +95,6 @@ ifeq ($(shell pkg-config --exists openssl && echo yes),yes)
 	MODULE_LDFLAGS += $(SSL_LIBS)
 else
 	LIB_MODULES := $(filter-out lib/random.$(LIB_EXT),$(LIB_MODULES))
-	@echo "!!! OpenSSL library not found: omitting build of random.$(LIB_EXT)"
 endif
 
 # Specific flag sets for different builds
