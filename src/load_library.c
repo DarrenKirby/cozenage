@@ -28,9 +28,9 @@
 
 /* Define the library file extension based on the OS */
 #ifdef __APPLE__
-    #define LIB_EXT ".dylib"
+    #define LIB_EXT "dylib"
 #else
-    #define LIB_EXT ".so"
+    #define LIB_EXT "so"
 #endif
 
 /* Define the function signature we expect to find */
@@ -45,34 +45,46 @@ typedef void (*CznLibInitFunc)(const Lex*);
  */
 int internal_cozenage_load_lib(const char* libname, const Lex* env)
 {
-    char filepath[1024];
+    char filepath[PATH_MAX];
+    void* lib_handle = NULL;
     CznLibInitFunc init_func;
 
+    const char* env_path = getenv("COZENAGE_LIB_PATH");
+    if (!env_path) {
+        env_path = "";
+    }
+
     /* Library Search Path Logic
-     * This is a very simple search path.
-     * It looks in "./lib/" first, then tries a relative PATH "../lib/cozenage/" */
+     * It looks in "./lib/" first, then tries a relative PATH "../lib/cozenage/".
+     * It then checks if the COZENAGE_LIB_PATH ENV VAR has been set.
+     * If none of these resolve, it will look in /usr/lib and /usr/lib64/
+     * for regular/multilib Linux systems, and in /usr/local/lib/ for macOS and *BSD. */
 
-    /* Try ./lib/ This is for running 'cozenage' from the build directory. */
-    snprintf(filepath, sizeof(filepath), "./lib/%s%s", libname, LIB_EXT);
+    const char* search_paths[] = {
+        "./lib",
+        "../lib/cozenage",
+        env_path,
+        "/usr/lib/cozenage",
+#ifdef __linux__
+        "/usr/lib64/cozenage",
+#endif
+        "/usr/local/lib/cozenage",
+        nullptr
+    };
 
-    /* dlopen() loads the library.
-     * RTLD_LAZY: Resolves symbols as code from the library is executed.
-     * RTLD_NOW: Resolves all symbols at load time (good for debugging). */
-    void* lib_handle = dlopen(filepath, RTLD_LAZY);
+    /* Iterate paths and try to load. */
+    for (int i = 0; search_paths[i] != NULL; ++i) {
+        if (search_paths[i][0] == '\0') continue;
+        snprintf(filepath, sizeof(filepath), "%s/%s.%s", search_paths[i], libname, LIB_EXT);
+        lib_handle = dlopen(filepath, RTLD_LAZY);
+        if (lib_handle) break;
+    }
 
     if (!lib_handle) {
-        /* If it failed, try the system path.
-         * The -rpath linker flag ensures that the binary will look for
-         * modules in a relative '../lib/cozenage/' directory. */
-        snprintf(filepath, sizeof(filepath), "%s%s", libname, LIB_EXT);
-        lib_handle = dlopen(filepath, RTLD_LAZY);
-
-        if (!lib_handle) {
-            /* Both failed. Report the error.
-             * dlerror() returns a human-readable message. */
-            fprintf(stderr, "Error loading library '%s': %s\n", libname, dlerror());
-            return 0;
-        }
+        /* Both failed. Report the error.
+         * dlerror() returns a human-readable message. */
+        fprintf(stderr, "Error loading library '%s': %s\n", libname, dlerror());
+        return 0;
     }
 
     /* We have a valid handle. Now, find the init function.
