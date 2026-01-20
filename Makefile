@@ -107,6 +107,7 @@ CFLAGS_TEST = -Wall -Wextra -g -O0 -std=gnu2x $(ICU_CFLAGS) $(GMP_CFLAGS) -fsani
 # Added -ldl (for dlopen) to all BASE_LIBS definitions
 ifeq ($(shell pkg-config --exists readline && echo yes),yes)
     BASE_LIBS = -lreadline -lm -lgc $(ICU_LIBS) -ldl $(EXE_LDFLAGS) $(GMP_LIBS)
+	CFLAGS_DEFAULT += -DUSE_GNU_READLINE=1
 else ifeq ($(shell pkg-config --exists edit && echo yes),yes)
     BASE_LIBS = -ledit -lm -lgc $(ICU_LIBS) -ldl $(EXE_LDFLAGS) $(GMP_LIBS)
 else
