@@ -22,9 +22,10 @@ BUILD_DIR = build
 OBJ_DIR = obj
 # Install targets - prefix configurable via:
 # `make install PREFIX=/path/to/install`
-PREFIX=/usr/local
-INSTALL_BIN_DIR=$(PREFIX)/bin
-INSTALL_LIB_DIR=$(PREFIX)/lib/cozenage
+PREFIX ?= /usr/local
+DESTDIR ?=
+INSTALL_BIN_DIR=$(DESTDIR)$(PREFIX)/bin
+INSTALL_LIB_DIR=$(DESTDIR)$(PREFIX)/lib/cozenage
 
 # Added OS detection for library extensions
 UNAME_S := $(shell uname -s)
