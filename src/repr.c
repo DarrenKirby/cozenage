@@ -35,11 +35,11 @@
 
 
 /* Forward declaration for helpers. */
-static void cell_to_string_worker(const Cell* v, string_builder_t *sb, print_mode_t mode);
+static void cell_to_string_worker(const Cell* v, str_buf_t *sb, print_mode_t mode);
 
 
 /* Formats reals to have a trailing '.0' for visual feedback to distinguish from an int. */
-static void repr_long_double(const long double x, string_builder_t *sb)
+static void repr_long_double(const long double x, str_buf_t *sb)
 {
     char buf[128];
     snprintf(buf, sizeof buf, "%.15Lg", x);
@@ -56,7 +56,7 @@ static void repr_long_double(const long double x, string_builder_t *sb)
 
 
 /* Generate external representation of proper lists and dotted pairs. */
-static void repr_pair(const Cell* v, string_builder_t *sb, const print_mode_t mode)
+static void repr_pair(const Cell* v, str_buf_t *sb, const print_mode_t mode)
 {
     sb_append_char(sb, '(');
     const Cell* cur = v;
@@ -92,7 +92,7 @@ static void repr_sequence(const Cell* v,
                           /* ReSharper disable twice CppDFAConstantParameter */
                           const char open,
                           const char close,
-                          string_builder_t *sb,
+                          str_buf_t *sb,
                           const print_mode_t mode) {
 
     if (prefix) sb_append_fmt(sb, "%s", prefix);
@@ -107,7 +107,7 @@ static void repr_sequence(const Cell* v,
 
 /* Generate external representations of all Cozenage/Scheme types. */
 static void cell_to_string_worker(const Cell* v,
-                                  string_builder_t *sb,
+                                  str_buf_t *sb,
                                   const print_mode_t mode)
 {
     if (v == NULL) return;
@@ -231,7 +231,7 @@ static void cell_to_string_worker(const Cell* v,
                         case '\r': sb_append_str(sb, "\\r"); break;
                         case '\0': sb_append_str(sb, "\\0"); break;
                         default: {
-                            /* * If the byte has the high bit set (c >= 0x80), it's part of a
+                            /* If the byte has the high bit set (c >= 0x80), it's part of a
                              * UTF-8 multibyte sequence. We should trust the terminal and
                              * append it directly rather than escaping it.
                              */
@@ -269,31 +269,32 @@ static void cell_to_string_worker(const Cell* v,
 
         case CELL_PORT: {
             char *stream_type = "\0";
-            if (v->port->stream_t == FILE_PORT) { stream_type = "file-port"; }
-            if (v->port->stream_t == STRING_PORT) { stream_type = "string-port"; }
-            if (v->port->stream_t == BV_PORT) { stream_type = "bytevector-port"; }
+            if (v->port->backend_t == BK_FILE_TEXT || v->port->backend_t == BK_FILE_BINARY)
+                { stream_type = "file-port"; }
+            if (v->port->backend_t == BK_STRING) { stream_type = "string-port"; }
+            if (v->port->backend_t == BK_BYTEVECTOR) { stream_type = "bytevector-port"; }
 
+            /* TODO: add representation for string and bv ports. */
             if (mode == MODE_REPL) {
                 sb_append_fmt(sb, "#<%s%s %s-port '%s%s%s'>", v->is_open ? "open:" : "closed:",
                     stream_type,
-                    v->port->port_t == INPUT_PORT ? "input" : "output",
+                    v->port->stream_t == INPUT_STREAM ? "input" : "output",
                     ANSI_BLUE_B, v->port->path, ANSI_RESET);
             } else {
                 sb_append_fmt(sb, "#<%s%s %s-port '%s'>", v->is_open ? "open:" : "closed:",
                     stream_type,
-                    v->port->port_t == INPUT_PORT ? "input" : "output",
+                    v->port->stream_t == INPUT_STREAM ? "input" : "output",
                     v->port->path);
             }
             break;
         }
 
-        /* FIXME: there are no anonymous macros */
         case CELL_MACRO: {
             if (mode == MODE_REPL) {
                 sb_append_fmt(sb, "#<macro '%s%s%s'>", ANSI_GREEN_B,
-                    v->lambda->l_name ? v->lambda->l_name : "anonymous", ANSI_RESET);
+                    v->lambda->l_name, ANSI_RESET);
             } else {
-                sb_append_fmt(sb, "#<macro '%s'>", v->lambda->l_name ? v->lambda->l_name : "anonymous");
+                sb_append_fmt(sb, "#<macro '%s'>", v->lambda->l_name);
             }
             break;
         }
@@ -360,7 +361,7 @@ static void cell_to_string_worker(const Cell* v,
 char* cell_to_string(const Cell* cell, const print_mode_t mode)
 {
     if (cell == NULL) return "";
-    string_builder_t *sb = sb_new();
+    str_buf_t *sb = sb_new();
     cell_to_string_worker(cell, sb, mode);
     return sb->buffer;
 }
