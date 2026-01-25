@@ -22,6 +22,7 @@
 #include "symbols.h"
 #include "hash.h"
 #include "bytevectors.h"
+#include "ports.h"
 
 #include <gc/gc.h>
 #include <stdlib.h>
@@ -53,9 +54,9 @@ Cell* default_error_port  = nullptr;
 /* Initialize default input, output, and error ports. */
 void init_default_ports(void)
 {
-    default_input_port  = make_cell_port("stdin",  stdin,  INPUT_PORT, FILE_PORT);
-    default_output_port = make_cell_port("stdout", stdout, OUTPUT_PORT, FILE_PORT);
-    default_error_port  = make_cell_port("stderr", stderr, OUTPUT_PORT, FILE_PORT);
+    default_input_port  = make_cell_port("stdin",  stdin,  INPUT_STREAM, BK_FILE_TEXT);
+    default_output_port = make_cell_port("stdout", stdout, OUTPUT_STREAM, BK_FILE_TEXT);
+    default_error_port  = make_cell_port("stderr", stderr, OUTPUT_STREAM, BK_FILE_TEXT);
 }
 
 
@@ -384,8 +385,8 @@ Cell* make_cell_error(const char* error_string, const err_t error_type)
 }
 
 
-/* Cell constructor for ports. */
-Cell* make_cell_port(const char* path, FILE* fh, const int io_t, const int stream_t)
+/* Cell constructor for FILE ports. */
+Cell* make_cell_port(const char* path, FILE* fh, const stream_t stream, const backend_t backend)
 {
     Cell* v = GC_MALLOC(sizeof(Cell));
     if (!v) {
@@ -394,11 +395,43 @@ Cell* make_cell_port(const char* path, FILE* fh, const int io_t, const int strea
     }
     v->is_open = true;
     v->type = CELL_PORT;
-    v->port = GC_MALLOC(sizeof(port));
+    v->port = GC_MALLOC(sizeof(port_d));
+    v->port->stream_t = stream;
     v->port->path = GC_strdup(path);
-    v->port->port_t = io_t;
-    v->port->stream_t = stream_t;
+    v->port->backend_t = backend;
     v->port->fh = fh;
+    if (backend == BK_FILE_TEXT) {
+        v->port->vtable = &FileVTable;
+    } else {
+        v->port->vtable = &ByteVTableFile;
+    }
+    v->port->index = 0;
+    return v;
+}
+
+
+/* Cell constructor for STRING and BYTEVECTOR ports. */
+Cell* make_cell_data_port(const stream_t stream, const backend_t backend)
+{
+    Cell* v = GC_MALLOC(sizeof(Cell));
+    if (!v) {
+        fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
+        exit(EXIT_FAILURE);
+    }
+    v->is_open = true;
+    v->type = CELL_PORT;
+    v->port = GC_MALLOC(sizeof(port_d));
+    v->port->stream_t = stream;
+    v->port->path = nullptr;
+    v->port->backend_t = backend;
+    if (backend == BK_STRING) {
+        v->port->vtable = &StringVTable;
+    } else {
+        v->port->vtable = &ByteVTableByte;
+    }
+    /* Initialize the data store. */
+    v->port->data = sb_new();
+    v->port->index = 0;
     return v;
 }
 
@@ -612,9 +645,10 @@ Cell* cell_copy(const Cell* v) {
     }
 
     case CELL_PORT: {
+        /* FIXME: change fields to copy based on type. */
         copy->is_open = v->is_open;
-        copy->port = GC_MALLOC(sizeof(port));
-        copy->port->port_t = v->port->port_t;
+        copy->port = GC_MALLOC(sizeof(port_d));
+        copy->port->backend_t = v->port->backend_t;
         copy->port->stream_t = v->port->stream_t;
         copy->port->fh = v->port->fh;
         copy->port->path = GC_strdup(v->port->path);
