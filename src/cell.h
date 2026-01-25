@@ -21,6 +21,7 @@
 #define COZENAGE_CELL_H
 
 #include "environment.h"
+#include "buffer.h"
 
 #include <stdio.h>
 #include <unicode/umachine.h>
@@ -28,7 +29,7 @@
 
 
 /* Cell_t type enum. */
-typedef enum  : uint32_t {
+typedef enum Cell_t : uint32_t {
     CELL_INTEGER    = 1 << 0,   /* An integer value. */
     CELL_RATIONAL   = 1 << 1,   /* A rational number. */
     CELL_REAL       = 1 << 2,   /* A real number. */
@@ -76,7 +77,7 @@ typedef struct Lambda {
 
 /* PROMISE - used for delayed evaluation and streams. */
 /* Delayed evaluation CELL_PROMISE. */
-typedef enum : uint8_t {
+typedef enum P_Status_t : uint8_t {
     READY,     /* Unevaluated state. */
     LAZY,      /* Used by delay-force to trigger trampoline evaluation. */
     RUNNING,   /* Used to detect re-entrant promises. */
@@ -91,36 +92,9 @@ typedef struct Promise {
 } promise;
 
 
- /* PORTS - type enums and struct.
-  * Track whether the port is for input, output, or async,
-  * and whether it operates on a file, string, or bytevector.
-  */
-
-/* enums for port types. */
-typedef enum : uint8_t  {
-    INPUT_PORT,
-    OUTPUT_PORT,
-    ASYNC_PORT
-} port_t;
-
-typedef enum : uint8_t  {
-    FILE_PORT,
-    STRING_PORT,
-    BV_PORT
-} stream_t;
-
-/* Port struct. */
-typedef struct Port {
-    char* path;       /* File path of associated fh (or string for string port). */
-    FILE* fh;         /* The file handle. */
-    uint8_t port_t;   /* Input or output. */
-    uint8_t stream_t; /* Stream type */
-} port;
-
-
 /* BYTEVECTORS - type enums and struct. */
 /* Bytevector types. */
-typedef enum : uint8_t {
+typedef enum BV_t : uint8_t {
     BV_U8,
     BV_S8,
     BV_U16,
@@ -141,8 +115,50 @@ typedef struct ByteV {
 } byte_v;
 
 
+ /* PORTS - type enums and struct.
+  * Track whether the port is for input, output, or async,
+  * and whether it operates on a file, string, or bytevector.
+  */
+
+/* enums for port types. */
+typedef enum Stream_t : uint8_t  {
+    INPUT_STREAM,
+    OUTPUT_STREAM,
+    ASYNC_STREAM
+} stream_t;
+
+typedef enum Backend_t : uint8_t  {
+    BK_FILE_TEXT,
+    BK_FILE_BINARY,
+    BK_STRING,
+    BK_BYTEVECTOR
+} backend_t;
+
+typedef struct {
+    int (*get_s)(const Cell* port, int* err);
+    int (*put_s)(int c, const Cell* port, int* err);
+    int (*get_m)(int n, void* buf, const Cell* port, int* err);
+    int (*put_m)(const void* buf, const Cell* port, int* err);
+    int (*peek)(const Cell* port, int* err);
+    void (*close)(Cell *port);
+} PortInterface;
+
+/* Port data struct. */
+typedef struct Port_d {
+    char* path;       /* File path of associated fh. Set to null for data ports. */
+    union {
+        FILE* fh;         /* The associated file handle for a file port. */
+        str_buf_t* data;  /* The data store for string and bv ports. */
+    };
+    const PortInterface *vtable;
+    uint8_t backend_t;   /* The backing store (text file/bin file/string/bytevector). */
+    uint8_t stream_t;    /* Stream type (input/output/async) */
+    uint32_t index;
+} port_d;
+
+
 /* ERROR - enum for error types. */
-typedef enum : uint8_t  {
+typedef enum Err_t : uint8_t  {
     GEN_ERR,    /* General, unspecified error. */
     FILE_ERR,   /* Error opening or closing a file. */
     READ_ERR,   /* Error reading from a port. */
@@ -228,7 +244,7 @@ typedef struct Cell {
 
         /* Pointers to outside structs. */
         lambda* lambda;           /* -> lambda/defmacro struct. */
-        port* port;               /* -> port struct */
+        port_d* port;             /* -> port struct */
         byte_v* bv;               /* -> bytevector struct */
         promise* promise;         /* -> promise struct */
         mpz_t* bi;                /* -> GMP integer */
@@ -270,7 +286,8 @@ Cell* make_cell_bigint(const char* s, const Cell* a, uint8_t base);
 Cell* make_cell_bigfloat(const char* s);
 Cell* make_cell_pair(Cell* car, Cell* cdr);
 Cell* make_cell_error(const char* error_string, err_t error_type);
-Cell* make_cell_port(const char* path, FILE* fh, int io_t, int stream_t);
+Cell* make_cell_port(const char* path, FILE* fh, stream_t stream, backend_t backend);
+Cell* make_cell_data_port(stream_t stream, backend_t backend);
 Cell* make_cell_promise(Cell* expr, Lex* env);
 Cell* make_cell_stream(Cell* head, Cell* tail_promise);
 Cell* cell_add(Cell* v, Cell* x);
