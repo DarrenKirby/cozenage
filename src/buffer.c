@@ -30,10 +30,10 @@
 #define INITIAL_BUFFER_CAPACITY 256
 
 
-string_builder_t* sb_new(void)
+str_buf_t* sb_new(void)
 {
     /* Allocate the struct itself with the GC. */
-    string_builder_t *sb = GC_MALLOC(sizeof(string_builder_t));
+    str_buf_t *sb = GC_MALLOC(sizeof(str_buf_t));
 
     /* Allocate the initial buffer with the GC. */
     sb->buffer = GC_MALLOC(INITIAL_BUFFER_CAPACITY);
@@ -45,7 +45,7 @@ string_builder_t* sb_new(void)
 
 
 /* Ensure the buffer can hold *at least* `additional_needed` more bytes. */
-static void sb_ensure_capacity(string_builder_t *sb, const size_t additional_needed)
+static void sb_ensure_capacity(str_buf_t *sb, const size_t additional_needed)
 {
     /* +1 for the null terminator. */
     const size_t needed_capacity = sb->length + additional_needed + 1;
@@ -64,7 +64,7 @@ static void sb_ensure_capacity(string_builder_t *sb, const size_t additional_nee
 
 
 /* Append a single string. */
-void sb_append_str(string_builder_t *sb, const char *s)
+void sb_append_str(str_buf_t *sb, const char *s)
 {
     size_t len = strlen(s);
     sb_ensure_capacity(sb, len);
@@ -77,7 +77,7 @@ void sb_append_str(string_builder_t *sb, const char *s)
 
 
 /* Append a single char. */
-void sb_append_char(string_builder_t *sb, const char c)
+void sb_append_char(str_buf_t *sb, const char c)
 {
     sb_ensure_capacity(sb, 1);
     sb->buffer[sb->length] = c;
@@ -87,7 +87,7 @@ void sb_append_char(string_builder_t *sb, const char c)
 
 
 /* Append formatted data, like printf. */
-void sb_append_fmt(string_builder_t *sb, const char *fmt, ...)
+void sb_append_fmt(str_buf_t *sb, const char *fmt, ...)
 {
     va_list args;
 
