@@ -23,6 +23,13 @@
 #include "cell.h"
 
 
+/* */
+extern const PortInterface FileVTable;
+extern const PortInterface StringVTable;
+extern const PortInterface ByteVTableFile;
+extern const PortInterface ByteVTableByte;
+
+
 /* Input/output and ports */
 Cell* builtin_current_input_port(const Lex* e, const Cell* a);
 Cell* builtin_current_output_port(const Lex* e, const Cell* a);
@@ -60,6 +67,8 @@ Cell* builtin_write(const Lex* e, const Cell* a);
 Cell* builtin_writeln(const Lex* e, const Cell* a);
 Cell* builtin_open_input_file(const Lex* e, const Cell* a);
 Cell* builtin_open_output_file(const Lex* e, const Cell* a);
+Cell* builtin_open_bin_input_file(const Lex* e, const Cell* a);
+Cell* builtin_open_bin_output_file(const Lex* e, const Cell* a);
 Cell* builtin_open_and_trunc_output_file(const Lex* e, const Cell* a);
 Cell* builtin_call_with_input_file(const Lex* e, const Cell* a);
 Cell* builtin_call_with_output_file(const Lex* e, const Cell* a);
