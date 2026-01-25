@@ -29,7 +29,7 @@
 typedef struct bv_ops_t {
     int64_t (*get)(const Cell*, int index);
     void (*set)(Cell*, int index, int64_t value);
-    void (*repr)(const Cell*, string_builder_t*);
+    void (*repr)(const Cell*, str_buf_t*);
     void (*append)(Cell*, int64_t value);
     size_t elem_size;
 } bv_ops_t;
@@ -54,7 +54,7 @@ bv->bv->data = GC_REALLOC(bv->bv->data, bv->bv->capacity * sizeof(ctype));  \
 }                                                                           \
 ((ctype*)bv->bv->data)[bv->count++] = (ctype)val;                           \
 }                                                                           \
-static void repr_##suffix(const Cell* bv, string_builder_t *sb) {           \
+static void repr_##suffix(const Cell* bv, str_buf_t *sb) {           \
 sb_append_fmt(sb, "#%s(", #suffix);                                         \
 for (int i = 0; i < bv->count; i++) {                                       \
 sb_append_fmt(sb, fmt, ((ctype*)bv->bv->data)[i]);                          \
