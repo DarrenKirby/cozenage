@@ -494,9 +494,9 @@ void lex_add_builtins(const Lex* e)
     lex_add_builtin(e, "flush-output-port", builtin_flush_output_port);
     lex_add_builtin(e, "open-input-file", builtin_open_input_file);
     lex_add_builtin(e, "open-output-file", builtin_open_output_file);
-    /* Unix makes no binary/text distinction - so the next two procedures are aliases. */
-    lex_add_builtin(e, "open-binary-input-file", builtin_open_input_file);
-    lex_add_builtin(e, "open-binary-output-file", builtin_open_output_file);
+    /* Unix makes no binary/text distinction - but Scheme does. */
+    lex_add_builtin(e, "open-binary-input-file", builtin_open_bin_input_file);
+    lex_add_builtin(e, "open-binary-output-file", builtin_open_bin_output_file);
     lex_add_builtin(e, "open-and-trunc-output-file", builtin_open_and_trunc_output_file);
     lex_add_builtin(e, "display", builtin_display);
     lex_add_builtin(e, "println", builtin_println);
