@@ -56,8 +56,8 @@ typedef enum Cell_t : uint32_t {
     CELL_UNSPEC     = 1 << 19,  /* Unspecified object. */
 
     CELL_BIGINT     = 1 << 20,  /* Arbitrary size/precision integer. */
-    CELL_BIGRAT     = 1 << 21,  /* Arbitrary size/precision rational. */
-    CELL_BIGFLOAT   = 1 << 22,  /* Arbitrary size/precision float. */
+    CELL_BIGRAT     = 1 << 21,  /* TODO: Arbitrary size/precision rational. */
+    CELL_BIGFLOAT   = 1 << 22,  /* TODO: Arbitrary size/precision float. */
     CELL_PROMISE    = 1 << 23,  /* For delayed evaluation/streams. */
 
     CELL_STREAM     = 1 << 24,  /* A stream datatype for lazy evaluation. */

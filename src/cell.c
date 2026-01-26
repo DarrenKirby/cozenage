@@ -138,7 +138,11 @@ Cell* make_cell_boolean(const int the_boolean)
 {
     if (the_boolean == 1) return True_Obj;
     if (the_boolean == 0) return False_Obj;
-    return make_cell_error("bool constructor: bad bool value!", TYPE_ERR);
+    /* This would only be triggered from C code, so
+     * raise an error and print diagnostic message. */
+    fprintf(stderr, "Bad value passed to boolean constructor: make_cell_boolean()\n");
+    fprintf(stderr, "Just return TrueObj or FalseObj\n");
+    exit(EXIT_FAILURE);
 }
 
 
@@ -347,6 +351,7 @@ Cell* make_cell_vector(void)
     return v;
 }
 
+
 /* Cell constructor for bytevectors. */
 Cell* make_cell_bytevector(const bv_t t)
 {
@@ -385,7 +390,7 @@ Cell* make_cell_error(const char* error_string, const err_t error_type)
 }
 
 
-/* Cell constructor for FILE ports. */
+/* Cell constructor for FILE-backed ports. */
 Cell* make_cell_port(const char* path, FILE* fh, const stream_t stream, const backend_t backend)
 {
     Cell* v = GC_MALLOC(sizeof(Cell));
@@ -410,7 +415,7 @@ Cell* make_cell_port(const char* path, FILE* fh, const stream_t stream, const ba
 }
 
 
-/* Cell constructor for STRING and BYTEVECTOR ports. */
+/* Cell constructor for STRING and BYTEVECTOR memory-backed ports. */
 Cell* make_cell_data_port(const stream_t stream, const backend_t backend)
 {
     Cell* v = GC_MALLOC(sizeof(Cell));
@@ -547,7 +552,9 @@ Cell* byte_add(Cell* bv, const int64_t value)
 }
 
 
-/* Recursively deep-copy all components of a Cell. */
+/* Recursively deep-copy all components of a Cell. Not every Cell type
+ * is represented here, as not all Cell types would credibly need to
+ * be copied. Deep-copying is expensive, and should be avoided if possible. */
 Cell* cell_copy(const Cell* v) {
     if (!v) return nullptr;
 
