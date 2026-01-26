@@ -17,6 +17,18 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+
+/* This is a somewhat generic self-resizing buffer that can hold chars or
+ * uint8_t bytes. It was originally written for the repr, but is also used to
+ * initialize and dynamically resize the backing stores for both string
+ * and bytevector memory-backed ports.
+ *
+ * It defines three methods to add data to the buffer. sb_append_char() allows
+ * for appending single chars or bytes. sb_append_str() allows for appending
+ * an array of chars or bytes. sb_append_fmt() is only useful for text data,
+ * it allows for appending formatted data a la sprintf(). */
+
+
 #include "buffer.h"
 
 #include <string.h>
@@ -29,7 +41,7 @@
 /* A reasonable initial size. */
 #define INITIAL_BUFFER_CAPACITY 256
 
-
+/* The constructor function to initialize a new buffer. */
 str_buf_t* sb_new(void)
 {
     /* Allocate the struct itself with the GC. */
@@ -44,7 +56,8 @@ str_buf_t* sb_new(void)
 }
 
 
-/* Ensure the buffer can hold *at least* `additional_needed` more bytes. */
+/* The 'private' buffer reallocator. This function is called early in each of the append
+ * procedures, and it ensures the buffer can hold *at least* `additional_needed` more bytes. */
 static void sb_ensure_capacity(str_buf_t *sb, const size_t additional_needed)
 {
     /* +1 for the null terminator. */
@@ -63,6 +76,16 @@ static void sb_ensure_capacity(str_buf_t *sb, const size_t additional_needed)
 }
 
 
+/* Append a single char. */
+void sb_append_char(str_buf_t *sb, const char c)
+{
+    sb_ensure_capacity(sb, 1);
+    sb->buffer[sb->length] = c;
+    sb->length++;
+    sb->buffer[sb->length] = '\0';
+}
+
+
 /* Append a single string. */
 void sb_append_str(str_buf_t *sb, const char *s)
 {
@@ -76,17 +99,7 @@ void sb_append_str(str_buf_t *sb, const char *s)
 }
 
 
-/* Append a single char. */
-void sb_append_char(str_buf_t *sb, const char c)
-{
-    sb_ensure_capacity(sb, 1);
-    sb->buffer[sb->length] = c;
-    sb->length++;
-    sb->buffer[sb->length] = '\0';
-}
-
-
-/* Append formatted data, like printf. */
+/* Append formatted data, like sprintf. */
 void sb_append_fmt(str_buf_t *sb, const char *fmt, ...)
 {
     va_list args;
