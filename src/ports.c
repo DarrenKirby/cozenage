@@ -38,6 +38,19 @@
 #define R_OK 0
 
 
+/* TODO: many (most?) of these read/write procedures do not exhaustively check
+ * for the correct port type and flags. They almost certainly should. */
+
+
+/* These next 24 static functions are the actual handlers for the builtin
+ * generic I/O procedures. They are specific to whether the operation is
+ * on text or binary data, and whether the backing store is a file, string,
+ * or bytevector. */
+
+/*
+ * Next 6: textual file-backed functions.
+ *
+ */
 static int file_gets(const Cell* p, int* err) {
     const wint_t wc = fgetwc(p->port->fh);
     if (wc == WEOF) {
@@ -52,6 +65,7 @@ static int file_gets(const Cell* p, int* err) {
     return wc;
 }
 
+
 static int file_puts(const int c, const Cell* p, int* err) {
     if (fputwc(c, p->port->fh) == WEOF) {
         *err = errno;
@@ -59,6 +73,7 @@ static int file_puts(const int c, const Cell* p, int* err) {
     }
     return R_OK;
 }
+
 
 static int file_getm(const int chars_to_read, void* buf, const Cell* p, int* err) {
     char *dest = buf;
@@ -105,6 +120,7 @@ static int file_getm(const int chars_to_read, void* buf, const Cell* p, int* err
     return chars_read;
 }
 
+
 static int file_putm(const void* buf, const Cell* p, int* err) {
     if (fputs(buf, p->port->fh) == EOF) {
         *err = errno;
@@ -112,6 +128,7 @@ static int file_putm(const void* buf, const Cell* p, int* err) {
     }
     return R_OK;
 }
+
 
 static int file_peek(const Cell* p, int* err) {
     const wint_t wc = fgetwc(p->port->fh);
@@ -141,6 +158,11 @@ static void file_close(Cell* p) {
     }
 }
 
+
+/*
+ * Next 6: textual string-backed functions.
+ *
+ */
 static int string_gets(const Cell* p, int* err) {
     *err = 0;
     if (p->port->data->length == p->port->index) {
@@ -152,11 +174,13 @@ static int string_gets(const Cell* p, int* err) {
     return ch;
 }
 
+
 static int string_puts(const int c, const Cell* p, int* err) {
     *err = 0;
     sb_append_char(p->port->data, (char)c);
     return R_OK;
 }
+
 
 static int string_getm(const int chars_to_read, void* buf, const Cell* p, int* err) {
     *err = 0;
@@ -165,6 +189,7 @@ static int string_getm(const int chars_to_read, void* buf, const Cell* p, int* e
     return R_OK;
 }
 
+
 static int string_putm(const void* buf, const Cell* p, int* err) {
     *err = 0;
     const char* src = (char*)buf;
@@ -172,15 +197,22 @@ static int string_putm(const void* buf, const Cell* p, int* err) {
     return R_OK;
 }
 
+
 static int string_peek(const Cell* p, int* err) {
     *err = 0;
     return p->port->data->buffer[p->port->index];
 }
 
+
 static void string_close(Cell* p) {
     if (p->is_open) p->is_open = 0;
 }
 
+
+/*
+ * Next 6: binary file-backed functions.
+ *
+ */
 static int byte_gets_file(const Cell* p, int* err) {
     const int byte = getc(p->port->fh);
     if (byte == EOF) {
@@ -195,6 +227,7 @@ static int byte_gets_file(const Cell* p, int* err) {
     return byte;
 }
 
+
 static int byte_puts_file(const int c, const Cell* p, int* err) {
     if (putc(c, p->port->fh) == EOF) {
         *err = errno;
@@ -202,6 +235,7 @@ static int byte_puts_file(const int c, const Cell* p, int* err) {
     }
     return R_OK;
 }
+
 
 static int byte_getm_file(const int bytes_to_read, void* buf, const Cell* p, int* err) {
     uint8_t* dest = buf;
@@ -222,12 +256,14 @@ static int byte_getm_file(const int bytes_to_read, void* buf, const Cell* p, int
     return R_OK;
 }
 
+
 static int byte_putm_file(const void* buf, const Cell* p, int* err) {
     *err = 0;
     const char* src = (char*)buf;
     sb_append_str(p->port->data, src);
     return R_OK;
 }
+
 
 static int byte_peek_file(const Cell* p, int* err) {
     const int byte = getc(p->port->fh);
@@ -249,6 +285,7 @@ static int byte_peek_file(const Cell* p, int* err) {
     return byte;
 }
 
+
 static void byte_close_file(Cell* p) {
     if (p->is_open) {
         fflush(p->port->fh);
@@ -257,6 +294,11 @@ static void byte_close_file(Cell* p) {
     }
 }
 
+
+/*
+ * Next 6: binary bytevector-backed functions.
+ *
+ */
 static int byte_gets_byte(const Cell* p, int* err) {
     *err = 0;
     if (p->port->data->length == p->port->index) {
@@ -297,6 +339,11 @@ static void byte_close_byte(Cell* p) {
     if (p->is_open) p->is_open = 0;
 }
 
+
+/* The PortInterface VTables map generic operations to
+ * specific functions for the builtin I/O procedures. */
+
+/* A textual port with file backing store. */
 const PortInterface FileVTable = {
     .get_s = file_gets,
     .put_s = file_puts,
@@ -306,6 +353,7 @@ const PortInterface FileVTable = {
     .close = file_close
 };
 
+/* A textual port with in-memory backing store. */
 const PortInterface StringVTable = {
     .get_s = string_gets,
     .put_s = string_puts,
@@ -315,6 +363,7 @@ const PortInterface StringVTable = {
     .close = string_close
 };
 
+/* A binary port with file backing store. */
 const PortInterface ByteVTableFile = {
     .get_s = byte_gets_file,
     .put_s = byte_puts_file,
@@ -324,6 +373,7 @@ const PortInterface ByteVTableFile = {
     .close = byte_close_file
 };
 
+/* A binary port with in-memory backing store. */
 const PortInterface ByteVTableByte = {
     .get_s = byte_gets_byte,
     .put_s = byte_puts_byte,
@@ -334,7 +384,7 @@ const PortInterface ByteVTableByte = {
 };
 
 /*-------------------------------------------------------*
- *                Input/output and ports                 *
+ *       Input/output and port builtin procedures        *
  * ------------------------------------------------------*/
 
 
