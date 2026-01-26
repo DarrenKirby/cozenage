@@ -25,7 +25,7 @@
 #include "symbols.h"
 
 
-/* Helper to extract procedure args from s-expr */
+/* Helper to extract procedure args from s-expr. */
 static Cell* get_args_from_sexpr(const Cell* v)
 {
     Cell* args = make_cell_sexpr();
@@ -62,14 +62,14 @@ Cell* coz_eval(Lex* env, Cell* expr)
     while (true) {
         if (!expr) return nullptr;
 
-        /* Turf all the self-evaluating types. */
+        /* Quick exit for all the self-evaluating types. */
         if (expr->type & (CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX|
                           CELL_BOOLEAN|CELL_CHAR|CELL_STRING|CELL_PAIR|
                           CELL_VECTOR|CELL_BYTEVECTOR|CELL_NIL|CELL_EOF|
                           CELL_PROC|CELL_PORT|CELL_ERROR|CELL_UNSPEC|
                           CELL_BIGINT|CELL_BIGFLOAT)) {
             return expr;
-                          }
+        }
 
         /* Symbols: look them up in the environment. */
         if (expr->type & CELL_SYMBOL) {
@@ -88,10 +88,10 @@ Cell* coz_eval(Lex* env, Cell* expr)
         /* Grab first element without evaluating yet. */
         if (expr->count == 0) {
             /* Unquoted "()" */
-            return Nil_Obj;
-            // return make_cell_error(
-            //     "bad expression: '()'",
-            //     SYNTAX_ERR);
+            //return Nil_Obj;
+            return make_cell_error(
+                "bad expression: '()'",
+                SYNTAX_ERR);
         }
 
         Cell* first = expr->cell[0];
@@ -117,7 +117,7 @@ Cell* coz_eval(Lex* env, Cell* expr)
             continue;
         }
 
-        /* It's not a special form , so it's a procedure call or macro. */
+        /* It's not a special form, so it's a procedure call or macro. */
         /* First, evaluate the procedure itself. */
         Cell* f = coz_eval(env, first);
         if (f->type == CELL_ERROR) {
@@ -134,6 +134,7 @@ Cell* coz_eval(Lex* env, Cell* expr)
             continue;
         }
 
+        /* Here, if first position is not a procedure, it is an error. */
         if (f->type != CELL_PROC) {
             return make_cell_error(
                 fmt_err("bad identifier: '%s'. Expression must start with a procedure",
@@ -144,7 +145,7 @@ Cell* coz_eval(Lex* env, Cell* expr)
         /* Create a new list containing the unevaluated arguments. */
         Cell* args = get_args_from_sexpr(expr);
 
-        /* Now, evaluate each argument within this new list. */
+        /* Evaluate each argument within this new list. */
         for (int i = 0; i < args->count; i++) {
             Cell* result = coz_eval(env, args->cell[i]);
             /* Ignore legitimate null. */
