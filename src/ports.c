@@ -928,7 +928,7 @@ Cell* builtin_peek_char(const Lex* e, const Cell* a)
 
 
     int err_r;
-    const wint_t wc = port->port->vtable->peek(port, &err_r);
+    const int wc = port->port->vtable->peek(port, &err_r);
 
     if (wc == R_EOF) {
         return EOF_Obj;
