@@ -51,7 +51,8 @@
  * Next 6: textual file-backed functions.
  *
  */
-static int file_gets(const Cell* p, int* err) {
+static int file_gets(const Cell* p, int* err)
+{
     const wint_t wc = fgetwc(p->port->fh);
     if (wc == WEOF) {
         /* Regular EOF. */
@@ -66,7 +67,8 @@ static int file_gets(const Cell* p, int* err) {
 }
 
 
-static int file_puts(const int c, const Cell* p, int* err) {
+static int file_puts(const int c, const Cell* p, int* err)
+{
     if (fputwc(c, p->port->fh) == WEOF) {
         *err = errno;
         return R_ERR;
@@ -75,7 +77,8 @@ static int file_puts(const int c, const Cell* p, int* err) {
 }
 
 
-static int file_getm(const int chars_to_read, void* buf, const Cell* p, int* err) {
+static int file_getm(const int chars_to_read, void* buf, const Cell* p, int* err)
+{
     char *dest = buf;
     int buf_idx = 0;
     int chars_read = 0;
@@ -121,7 +124,8 @@ static int file_getm(const int chars_to_read, void* buf, const Cell* p, int* err
 }
 
 
-static int file_putm(const void* buf, const Cell* p, int* err) {
+static int file_putm(const void* buf, const Cell* p, int* err)
+{
     if (fputs(buf, p->port->fh) == EOF) {
         *err = errno;
         return R_ERR;
@@ -130,7 +134,8 @@ static int file_putm(const void* buf, const Cell* p, int* err) {
 }
 
 
-static int file_peek(const Cell* p, int* err) {
+static int file_peek(const Cell* p, int* err)
+{
     const wint_t wc = fgetwc(p->port->fh);
     if (wc == WEOF) {
         /* Regular EOF. */
@@ -150,7 +155,8 @@ static int file_peek(const Cell* p, int* err) {
     return wc;
 }
 
-static void file_close(Cell* p) {
+static void file_close(Cell* p)
+{
     if (p->is_open) {
         fflush(p->port->fh);
         fclose(p->port->fh);
@@ -163,7 +169,8 @@ static void file_close(Cell* p) {
  * Next 6: textual string-backed functions.
  *
  */
-static int string_gets(const Cell* p, int* err) {
+static int string_gets(const Cell* p, int* err)
+{
     *err = 0;
     if (p->port->data->length == p->port->index) {
         return R_EOF;
@@ -175,14 +182,16 @@ static int string_gets(const Cell* p, int* err) {
 }
 
 
-static int string_puts(const int c, const Cell* p, int* err) {
+static int string_puts(const int c, const Cell* p, int* err)
+{
     *err = 0;
     sb_append_char(p->port->data, (char)c);
     return R_OK;
 }
 
 
-static int string_getm(const int chars_to_read, void* buf, const Cell* p, int* err) {
+static int string_getm(const int chars_to_read, void* buf, const Cell* p, int* err)
+{
     *err = 0;
     char* dest = buf;
     memcpy(dest, &p->port->data->buffer[p->port->index], chars_to_read);
@@ -190,7 +199,8 @@ static int string_getm(const int chars_to_read, void* buf, const Cell* p, int* e
 }
 
 
-static int string_putm(const void* buf, const Cell* p, int* err) {
+static int string_putm(const void* buf, const Cell* p, int* err)
+{
     *err = 0;
     const char* src = (char*)buf;
     sb_append_str(p->port->data, src);
@@ -198,13 +208,15 @@ static int string_putm(const void* buf, const Cell* p, int* err) {
 }
 
 
-static int string_peek(const Cell* p, int* err) {
+static int string_peek(const Cell* p, int* err)
+{
     *err = 0;
     return p->port->data->buffer[p->port->index];
 }
 
 
-static void string_close(Cell* p) {
+static void string_close(Cell* p)
+{
     if (p->is_open) p->is_open = 0;
 }
 
@@ -213,7 +225,8 @@ static void string_close(Cell* p) {
  * Next 6: binary file-backed functions.
  *
  */
-static int byte_gets_file(const Cell* p, int* err) {
+static int byte_gets_file(const Cell* p, int* err)
+{
     const int byte = getc(p->port->fh);
     if (byte == EOF) {
         if (ferror(p->port->fh)) {
@@ -228,7 +241,8 @@ static int byte_gets_file(const Cell* p, int* err) {
 }
 
 
-static int byte_puts_file(const int c, const Cell* p, int* err) {
+static int byte_puts_file(const int c, const Cell* p, int* err)
+{
     if (putc(c, p->port->fh) == EOF) {
         *err = errno;
         return READ_ERR;
@@ -237,7 +251,8 @@ static int byte_puts_file(const int c, const Cell* p, int* err) {
 }
 
 
-static int byte_getm_file(const int bytes_to_read, void* buf, const Cell* p, int* err) {
+static int byte_getm_file(const int bytes_to_read, void* buf, const Cell* p, int* err)
+{
     uint8_t* dest = buf;
     for (int i = 0; i < bytes_to_read; i++) {
         const int byte = getc(p->port->fh);
@@ -257,7 +272,8 @@ static int byte_getm_file(const int bytes_to_read, void* buf, const Cell* p, int
 }
 
 
-static int byte_putm_file(const void* buf, const Cell* p, int* err) {
+static int byte_putm_file(const void* buf, const Cell* p, int* err)
+{
     *err = 0;
     const char* src = (char*)buf;
     sb_append_str(p->port->data, src);
@@ -265,7 +281,8 @@ static int byte_putm_file(const void* buf, const Cell* p, int* err) {
 }
 
 
-static int byte_peek_file(const Cell* p, int* err) {
+static int byte_peek_file(const Cell* p, int* err)
+{
     const int byte = getc(p->port->fh);
 
     if (byte == EOF) {
@@ -286,7 +303,8 @@ static int byte_peek_file(const Cell* p, int* err) {
 }
 
 
-static void byte_close_file(Cell* p) {
+static void byte_close_file(Cell* p)
+{
     if (p->is_open) {
         fflush(p->port->fh);
         fclose(p->port->fh);
@@ -299,7 +317,8 @@ static void byte_close_file(Cell* p) {
  * Next 6: binary bytevector-backed functions.
  *
  */
-static int byte_gets_byte(const Cell* p, int* err) {
+static int byte_gets_byte(const Cell* p, int* err)
+{
     *err = 0;
     if (p->port->data->length == p->port->index) {
         return R_EOF;
@@ -310,32 +329,41 @@ static int byte_gets_byte(const Cell* p, int* err) {
     return ch;
 }
 
-static int byte_puts_byte(const int c, const Cell* p, int* err) {
+
+static int byte_puts_byte(const int c, const Cell* p, int* err)
+{
     *err = 0;
     sb_append_char(p->port->data, (char)c);
     return R_OK;
 }
 
-static int byte_getm_byte(const int chars_to_read, void* buf, const Cell* p, int* err) {
+
+static int byte_getm_byte(const int chars_to_read, void* buf, const Cell* p, int* err)
+{
     *err = 0;
     char* dest = buf;
     memcpy(dest, &p->port->data->buffer[p->port->index], chars_to_read);
     return R_OK;
 }
 
-static int byte_putm_byte(const void* buf, const Cell* p, int* err) {
+
+static int byte_putm_byte(const void* buf, const Cell* p, int* err)
+{
     *err = 0;
     const char* src = (char*)buf;
     sb_append_str(p->port->data, src);
     return R_OK;
 }
 
-static int byte_peek_byte(const Cell* p, int* err) {
+
+static int byte_peek_byte(const Cell* p, int* err)
+{
     *err = 0;
     return p->port->data->buffer[p->port->index];
 }
 
-static void byte_close_byte(Cell* p) {
+static void byte_close_byte(Cell* p)
+{
     if (p->is_open) p->is_open = 0;
 }
 
@@ -921,11 +949,17 @@ Cell* builtin_peek_char(const Lex* e, const Cell* a)
         port = a->cell[0];
     }
 
-    if (port->is_open == 0 || port->port->stream_t != INPUT_STREAM)
+    /* Ensure port is sane. */
+    if (port->is_open == 0 || port->port->stream_t != INPUT_STREAM) {
         return make_cell_error(
             "peek-char: port is not open for input",
             FILE_ERR);
-
+    }
+    if (port->port->backend_t == BK_BYTEVECTOR || port->port->backend_t == BK_FILE_BINARY) {
+        return make_cell_error(
+            "peek-char: port must be a textual file port or string port",
+            FILE_ERR);
+    }
 
     int err_r;
     const int wc = port->port->vtable->peek(port, &err_r);
@@ -938,7 +972,6 @@ Cell* builtin_peek_char(const Lex* e, const Cell* a)
             fmt_err("peek-char: %s", strerror(err_r)),
             READ_ERR);
     }
-
     return make_cell_char(wc);
 }
 
@@ -962,31 +995,31 @@ Cell* builtin_peek_u8(const Lex* e, const Cell* a)
         port = a->cell[0];
     }
 
-    if (port->is_open == 0 || port->port->stream_t != INPUT_STREAM)
+    /* Ensure port is sane. */
+    if (port->is_open == 0 || port->port->stream_t != INPUT_STREAM) {
         return make_cell_error(
             "peek-u8: port is not open for input",
             FILE_ERR);
-
-    FILE* fh = port->port->fh;
-    const int byte = getc(fh);
-
-    if (byte == EOF) {
-        if (ferror(fh)) {
-            return make_cell_error(
-                fmt_err("peek-u8: %s", strerror(errno)),
-                FILE_ERR);
-        }
-        return make_cell_eof();
     }
-
-    /* Push the byte back into the stream buffer. */
-    if (ungetc(byte, fh) == EOF) {
+    if (port->port->backend_t == BK_STRING || port->port->backend_t == BK_FILE_TEXT) {
         return make_cell_error(
-            "peek-u8: internal pushback error",
+            "peek-u8: port must be a binary file port or bytevector port",
             FILE_ERR);
     }
 
-    return make_cell_integer(byte);
+    int err_r;
+    const int wc = port->port->vtable->peek(port, &err_r);
+
+    if (wc == R_EOF) {
+        return EOF_Obj;
+    }
+    if (wc == R_ERR) {
+        return make_cell_error(
+            fmt_err("peek-u8: %s", strerror(err_r)),
+            READ_ERR);
+    }
+
+    return make_cell_integer(wc);
 }
 
 
@@ -1003,6 +1036,8 @@ Cell* builtin_write_char(const Lex* e, const Cell* a)
             "write-char: arg1 must be a char",
             TYPE_ERR);
     }
+    const int the_char = a->cell[0]->char_v;
+
     if (a->count == 2) {
         if (a->cell[1]->type != CELL_PORT) {
             return make_cell_error(
@@ -1010,6 +1045,7 @@ Cell* builtin_write_char(const Lex* e, const Cell* a)
                 TYPE_ERR);
         }
     }
+
     Cell* port;
     if (a->count == 1) {
         port = builtin_current_output_port(e, a);
@@ -1017,11 +1053,28 @@ Cell* builtin_write_char(const Lex* e, const Cell* a)
         port = a->cell[1];
     }
 
-    if (fputwc(a->cell[0]->char_v, port->port->fh) == WEOF) {
+    /* Ensure port is sane. */
+    if (port->is_open == 0 || port->port->stream_t != OUTPUT_STREAM) {
         return make_cell_error(
-            fmt_err("write-char: %s", strerror(errno)),
+            "write-char: port is not open for output",
             FILE_ERR);
     }
+    if (port->port->backend_t == BK_BYTEVECTOR || port->port->backend_t == BK_FILE_BINARY) {
+        return make_cell_error(
+            "write-char: port must be a text file port or string port",
+            FILE_ERR);
+    }
+
+    /* Write the char. */
+    int* err_r = nullptr;
+    const int rv = port->port->vtable->put_s(the_char, port, err_r);
+
+    if (rv == R_ERR) {
+        return make_cell_error(
+            fmt_err("write-char: %s", strerror(*err_r)),
+            FILE_ERR);
+    }
+    /* No meaningful return value. */
     return USP_Obj;
 }
 
@@ -1111,7 +1164,9 @@ Cell* builtin_write_u8(const Lex* e, const Cell* a)
         return make_cell_error(
             "write-u8: argument must be an octet (0-255)",
             TYPE_ERR);
-        }
+    }
+
+    const int byte = (int)a->cell[0]->integer_v;
 
     if (a->count == 2) {
         if (a->cell[1]->type != CELL_PORT) {
@@ -1128,15 +1183,28 @@ Cell* builtin_write_u8(const Lex* e, const Cell* a)
         port = a->cell[1];
     }
 
-    const int byte = (int)a->cell[0]->integer_v;
-
-    /* For a single byte, putc does the same thing as
-     * fwrite(&byte, 1, 1, fh) but more efficiently. */
-    if (putc(byte, port->port->fh) == EOF) {
+    /* Ensure port is sane. */
+    if (port->is_open == 0 || port->port->stream_t != OUTPUT_STREAM) {
         return make_cell_error(
-            fmt_err("write-u8: %s", strerror(errno)),
+            "write-u8: port must be an open output port",
             FILE_ERR);
     }
+    if (port->port->backend_t == BK_STRING || port->port->backend_t == BK_FILE_TEXT) {
+        return make_cell_error(
+            "write-u8: port must be a binary file port or bytevector port",
+            FILE_ERR);
+    }
+
+    /* Write the byte. */
+    int* err_r = nullptr;
+    const int rv = port->port->vtable->put_s(byte, port, err_r);
+
+    if (rv == R_ERR) {
+        return make_cell_error(
+            fmt_err("newline: %s", strerror(*err_r)),
+            FILE_ERR);
+    }
+    /* No meaningful return value. */
     return USP_Obj;
 }
 
@@ -1226,12 +1294,35 @@ Cell* builtin_newline(const Lex* e, const Cell* a)
         port = builtin_current_output_port(e, a);
     } else {
         port = a->cell[0];
+        if (port->type != CELL_PORT) {
+            return make_cell_error(
+                "newline: arg must be a port",
+                FILE_ERR);
+        }
     }
-    if (fputs("\n", port->port->fh) == EOF) {
+
+    /* Ensure it is an open text port. */
+    if (port->is_open == 0 || port->port->stream_t != OUTPUT_STREAM) {
         return make_cell_error(
-            fmt_err("newline: %s", strerror(errno)),
+            "newline: port must be an open output port",
             FILE_ERR);
     }
+    if (port->port->backend_t == BK_BYTEVECTOR || port->port->backend_t == BK_FILE_BINARY) {
+        return make_cell_error(
+            "newline: port must be text file port or string port",
+            FILE_ERR);
+    }
+
+    /* Write the newline. */
+    int* err_r = nullptr;
+    const int rv = port->port->vtable->put_s('\n', port, err_r);
+
+    if (rv == R_ERR) {
+        return make_cell_error(
+            fmt_err("newline: %s", strerror(*err_r)),
+            FILE_ERR);
+    }
+
     /* No meaningful return value. */
     return USP_Obj;
 }
@@ -1308,6 +1399,19 @@ Cell* builtin_flush_output_port(const Lex* e, const Cell* a)
         port = a->cell[0];
     }
 
+    /* Ensure port is an open output port. */
+    if (port->is_open == 0 || port->port->stream_t != OUTPUT_STREAM) {
+        return make_cell_error(
+            "flush-output-port: port must be an open output port",
+            FILE_ERR);
+    }
+
+    /* String and bytevector ports are just no-ops. */
+    if (port->port->backend_t == BK_BYTEVECTOR || port->port->backend_t == BK_STRING) {
+        return USP_Obj;
+    }
+
+    /* Call fflush() on file ports. */
     int es;
     if ((es = fflush(port->port->fh)) != 0) {
         return make_cell_error(strerror(es), FILE_ERR);
@@ -1390,6 +1494,25 @@ Cell* builtin_char_ready(const Lex* e, const Cell* a)
         port = a->cell[0];
     }
 
+    /* Ensure port is a valid input port with either text file
+     * or string backing stores. */
+    if (port->port->stream_t != INPUT_STREAM || port->is_open == 0) {
+        return make_cell_error(
+            "char-ready?: port must be an open input port",
+            FILE_ERR);
+    }
+    /* String ports are always ready. */
+    if (port->port->backend_t == BK_STRING) {
+        return True_Obj;
+    }
+    /* Error if passed a binary port. */
+    if (port->port->stream_t == BK_BYTEVECTOR || port->port->stream_t == BK_FILE_BINARY) {
+        return make_cell_error(
+            "char-ready?: port must be a textual file port or string port",
+            FILE_ERR);
+    }
+
+    /* Nothing left but an open text input port. */
     const int result = is_stream_ready(port->port->fh);
     if (result == -1) {
         return make_cell_error(
@@ -1418,6 +1541,24 @@ Cell* builtin_u8_ready(const Lex* e, const Cell* a)
         err = check_arg_types(a, CELL_PORT, "u8-ready?");
         if (err) return err;
         port = a->cell[0];
+    }
+
+    /* Ensure port is a valid input port with either binary file
+     * or bytevector backing stores. */
+    if (port->port->stream_t != INPUT_STREAM || port->is_open == 0) {
+        return make_cell_error(
+            "u8-ready?: port must be an open input port",
+            FILE_ERR);
+    }
+    /* Bytevector ports are always ready. */
+    if (port->port->backend_t == BK_BYTEVECTOR) {
+        return True_Obj;
+    }
+    /* Error if passed a text port. */
+    if (port->port->stream_t == BK_STRING || port->port->stream_t == BK_FILE_TEXT) {
+        return make_cell_error(
+            "u8-ready?: port must be a binary file port or bytevector port",
+            FILE_ERR);
     }
 
     const int result = is_stream_ready(port->port->fh);
