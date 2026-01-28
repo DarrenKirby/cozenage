@@ -1314,12 +1314,12 @@ Cell* builtin_newline(const Lex* e, const Cell* a)
     }
 
     /* Write the newline. */
-    int* err_r = nullptr;
-    const int rv = port->port->vtable->put_s('\n', port, err_r);
+    int err_r = 0;
+    const int rv = port->port->vtable->put_s('\n', port, &err_r);
 
     if (rv == R_ERR) {
         return make_cell_error(
-            fmt_err("newline: %s", strerror(*err_r)),
+            fmt_err("newline: %s", strerror(err_r)),
             FILE_ERR);
     }
 
