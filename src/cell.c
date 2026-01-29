@@ -54,9 +54,9 @@ Cell* default_error_port  = nullptr;
 /* Initialize default input, output, and error ports. */
 void init_default_ports(void)
 {
-    default_input_port  = make_cell_port("stdin",  stdin,  INPUT_STREAM, BK_FILE_TEXT);
-    default_output_port = make_cell_port("stdout", stdout, OUTPUT_STREAM, BK_FILE_TEXT);
-    default_error_port  = make_cell_port("stderr", stderr, OUTPUT_STREAM, BK_FILE_TEXT);
+    default_input_port  = make_cell_file_port("stdin",  stdin,  INPUT_STREAM, BK_FILE_TEXT);
+    default_output_port = make_cell_file_port("stdout", stdout, OUTPUT_STREAM, BK_FILE_TEXT);
+    default_error_port  = make_cell_file_port("stderr", stderr, OUTPUT_STREAM, BK_FILE_TEXT);
 }
 
 
@@ -390,8 +390,8 @@ Cell* make_cell_error(const char* error_string, const err_t error_type)
 }
 
 
-/* Cell constructor for FILE-backed ports. */
-Cell* make_cell_port(const char* path, FILE* fh, const stream_t stream, const backend_t backend)
+/* Cell constructor for text or binary FILE-backed ports. */
+Cell* make_cell_file_port(const char* path, FILE* fh, const stream_t stream, const backend_t backend)
 {
     Cell* v = GC_MALLOC(sizeof(Cell));
     if (!v) {
@@ -405,18 +405,14 @@ Cell* make_cell_port(const char* path, FILE* fh, const stream_t stream, const ba
     v->port->path = GC_strdup(path);
     v->port->backend_t = backend;
     v->port->fh = fh;
-    if (backend == BK_FILE_TEXT) {
-        v->port->vtable = &FileVTable;
-    } else {
-        v->port->vtable = &ByteVTableFile;
-    }
+    v->port->vtable = &FileVTable;
     v->port->index = 0;
     return v;
 }
 
 
 /* Cell constructor for STRING and BYTEVECTOR memory-backed ports. */
-Cell* make_cell_data_port(const stream_t stream, const backend_t backend)
+Cell* make_cell_memory_port(const stream_t stream, const backend_t backend)
 {
     Cell* v = GC_MALLOC(sizeof(Cell));
     if (!v) {
@@ -429,11 +425,7 @@ Cell* make_cell_data_port(const stream_t stream, const backend_t backend)
     v->port->stream_t = stream;
     v->port->path = nullptr;
     v->port->backend_t = backend;
-    if (backend == BK_STRING) {
-        v->port->vtable = &StringVTable;
-    } else {
-        v->port->vtable = &ByteVTableByte;
-    }
+    v->port->vtable = &MemoryVTable;
     /* Initialize the data store. */
     v->port->data = sb_new();
     v->port->index = 0;

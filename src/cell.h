@@ -134,12 +134,11 @@ typedef enum Backend_t : uint8_t  {
     BK_BYTEVECTOR
 } backend_t;
 
-typedef struct {
-    int (*get_s)(const Cell* port, int* err);
-    int (*put_s)(int c, const Cell* port, int* err);
-    int (*get_m)(int n, void* buf, const Cell* port, int* err);
-    int (*put_m)(const void* buf, const Cell* port, int* err);
-    int (*peek)(const Cell* port, int* err);
+typedef struct PortInterface {
+    int32_t (*write)(const void* buf, size_t len, const Cell* port, int* err);
+    int32_t (*read)(void* buf, size_t len, const Cell* port, int* err);
+    long (*tell)(const Cell* port, int* err);
+    int (*seek)(const Cell* port, long offset, int* err);
     void (*close)(Cell *port);
 } PortInterface;
 
@@ -286,8 +285,8 @@ Cell* make_cell_bigint(const char* s, const Cell* a, uint8_t base);
 Cell* make_cell_bigfloat(const char* s);
 Cell* make_cell_pair(Cell* car, Cell* cdr);
 Cell* make_cell_error(const char* error_string, err_t error_type);
-Cell* make_cell_port(const char* path, FILE* fh, stream_t stream, backend_t backend);
-Cell* make_cell_data_port(stream_t stream, backend_t backend);
+Cell* make_cell_file_port(const char* path, FILE* fh, stream_t stream, backend_t backend);
+Cell* make_cell_memory_port(stream_t stream, backend_t backend);
 Cell* make_cell_promise(Cell* expr, Lex* env);
 Cell* make_cell_stream(Cell* head, Cell* tail_promise);
 Cell* cell_add(Cell* v, Cell* x);
