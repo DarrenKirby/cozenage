@@ -35,6 +35,7 @@
 #define R_EOF (-1)
 #define R_ERR (-2)
 #define R_OK 0
+#define UTF8_MAX_LEN 4
 
 
 /* TODO: many (most?) of these read/write procedures do not exhaustively check
@@ -911,8 +912,8 @@ Cell* builtin_write_char(const Lex* e, const Cell* a)
     }
 
     /* Check if char is multibyte. */
-    uint8_t char_buf;
-    const int len = utf8_encode(the_char, &char_buf);
+    uint8_t char_buf[UTF8_MAX_LEN];
+    const int len = utf8_encode(the_char, char_buf);
 
     /* Write the char. */
     int err_r = 0;
