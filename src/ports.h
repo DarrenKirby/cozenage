@@ -25,9 +25,7 @@
 
 /* */
 extern const PortInterface FileVTable;
-extern const PortInterface StringVTable;
-extern const PortInterface ByteVTableFile;
-extern const PortInterface ByteVTableByte;
+extern const PortInterface MemoryVTable;
 
 
 /* Input/output and ports */

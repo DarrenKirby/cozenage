@@ -29,7 +29,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-#include <wchar.h>
 #include <gc/gc.h>
 #include <sys/select.h>
 
@@ -42,121 +41,113 @@
  * for the correct port type and flags. They almost certainly should. */
 
 
-/* These next 24 static functions are the actual handlers for the builtin
- * generic I/O procedures. They are specific to whether the operation is
- * on text or binary data, and whether the backing store is a file, string,
- * or bytevector. */
+/* Helpers for read-char and peek-char to deal with multibyte characters. */
 
-/*
- * Next 6: textual file-backed functions.
- *
- */
-static int file_gets(const Cell* p, int* err)
-{
-    const wint_t wc = fgetwc(p->port->fh);
-    if (wc == WEOF) {
-        /* Regular EOF. */
-        if (feof(p->port->fh)) {
-            return R_EOF;
-        }
-        /* Error from fgetwc(). */
-        *err = errno;
-        return R_ERR;
+/* Encodes a Unicode code point into a byte array. Returns number of bytes (1-4). */
+static int utf8_encode(UChar32 c, uint8_t* out_buf) {
+    if (c <= 0x7F) {
+        out_buf[0] = (uint8_t)c;
+        return 1;
     }
-    return wc;
+    if (c <= 0x7FF) {
+        out_buf[0] = (uint8_t)((c >> 6) | 0xC0);
+        out_buf[1] = (uint8_t)((c & 0x3F) | 0x80);
+        return 2;
+    }
+    if (c <= 0xFFFF) {
+        out_buf[0] = (uint8_t)((c >> 12) | 0xE0);
+        out_buf[1] = (uint8_t)(((c >> 6) & 0x3F) | 0x80);
+        out_buf[2] = (uint8_t)((c & 0x3F) | 0x80);
+        return 3;
+    }
+    out_buf[0] = (uint8_t)((c >> 18) | 0xF0);
+    out_buf[1] = (uint8_t)(((c >> 12) & 0x3F) | 0x80);
+    out_buf[2] = (uint8_t)(((c >> 6) & 0x3F) | 0x80);
+    out_buf[3] = (uint8_t)((c & 0x3F) | 0x80);
+    return 4;
 }
 
+/* Helper to determine UTF-8 sequence length from the first byte */
+static int utf8_len(const uint8_t first_byte) {
+    if ((first_byte & 0x80) == 0)    return 1;
+    if ((first_byte & 0xE0) == 0xC0) return 2;
+    if ((first_byte & 0xF0) == 0xE0) return 3;
+    if ((first_byte & 0xF8) == 0xF0) return 4;
+    return -1; /* Invalid UTF-8 start byte. */
+}
 
-static int file_puts(const int c, const Cell* p, int* err)
-{
-    if (fputwc(c, p->port->fh) == WEOF) {
-        *err = errno;
-        return R_ERR;
+/* The actual character reader */
+static int32_t port_read_char(const Cell* p, UChar32* out_char, int* err) {
+    uint8_t buf[4];
+
+    /* Read the first byte. */
+    const int status = p->port->vtable->read(buf, 1, p, err);
+    if (status <= 0) return status; // R_EOF or R_ERR
+
+    const int len = utf8_len(buf[0]);
+    if (len == 1) {
+        *out_char = (UChar32)buf[0];
+        return R_OK;
+    }
+
+    /* Read the remaining bytes (len - 1) */
+    if (p->port->vtable->read(buf + 1, len - 1, p, err) != (len - 1)) {
+        return R_ERR; /* Truncated multi-byte character */
+    }
+
+    /* Reconstruct UChar3.2 */
+    if (len == 2) {
+        *out_char = ((buf[0] & 0x1F) << 6) | (buf[1] & 0x3F);
+    } else if (len == 3) {
+        *out_char = ((buf[0] & 0x0F) << 12) | ((buf[1] & 0x3F) << 6) | (buf[2] & 0x3F);
+    } else if (len == 4) {
+        *out_char = ((buf[0] & 0x07) << 18) | ((buf[1] & 0x3F) << 12) | ((buf[2] & 0x3F) << 6) | (buf[3] & 0x3F);
     }
     return R_OK;
 }
 
 
-static int file_getm(const int chars_to_read, void* buf, const Cell* p, int* err)
-{
-    char *dest = buf;
-    int buf_idx = 0;
-    int chars_read = 0;
+/* These next 10 static functions are the actual handlers for the builtin
+ * generic I/O procedures. They are specific to whether the backing store
+ * is a file or memory.*/
 
-    while (chars_read < chars_to_read) {
-        static unsigned short mask[] = {192, 224, 240};
-        unsigned short i = 0;
-        unsigned short j = 0;
-
-        /* Read a byte. */
-        const int c = getc(p->port->fh);
-        if (c == EOF) {
-            if (feof(p->port->fh)) {
-                dest[buf_idx] = '\0';
-                break;
-            }
-            /* An actual error from getc. */
-            *err = errno;
-            return R_ERR;
-        }
-        dest[buf_idx] = (char)c;
-
-        /* Check how many more bytes need to be read for character. */
-        if ((dest[buf_idx] & mask[0]) == mask[0]) i++;
-        if ((dest[buf_idx] & mask[1]) == mask[1]) i++;
-        if ((dest[buf_idx] & mask[2]) == mask[2]) i++;
-        /* Increment buffer pointer for the next read. */
-        buf_idx++;
-
-        /* Read subsequent character bytes. */
-        while (j < i) {
-            j++;
-            dest[buf_idx] = (char)getc(p->port->fh);
-            buf_idx++;
-        }
-        chars_read++;
-    }
-
-    if (chars_read == 0) {
-        return R_EOF;
-    }
-    return chars_read;
-}
-
-
-static int file_putm(const void* buf, const Cell* p, int* err)
-{
-    if (fputs(buf, p->port->fh) == EOF) {
+static int32_t file_write(const void* buf, const size_t len, const Cell* p, int* err) {
+    const size_t ret = fwrite(buf, 1, len, p->port->fh);
+    if (ret != len) {
         *err = errno;
         return R_ERR;
     }
-    return R_OK;
+    return (int)ret;
 }
 
-
-static int file_peek(const Cell* p, int* err)
-{
-    const wint_t wc = fgetwc(p->port->fh);
-    if (wc == WEOF) {
-        /* Regular EOF. */
+static int32_t file_read(void* buf, const size_t len, const Cell* p, int* err) {
+    const size_t ret = fread(buf, 1, len, p->port->fh);
+    if (ret != len) {
         if (feof(p->port->fh)) {
             return R_EOF;
         }
-        /* Error from fgetwc(). */
         *err = errno;
         return R_ERR;
     }
-    /* Push back the char. */
-    const wint_t pb_c = ungetwc(wc, p->port->fh);
-    if (pb_c == WEOF) {
-        *err = errno;
-        return READ_ERR;
-    }
-    return wc;
+    return (int)ret;
 }
 
-static void file_close(Cell* p)
-{
+static long file_tell(const Cell* p, int* err) {
+    const long ret = ftell(p->port->fh);
+    if (ret < 0) {
+        *err = errno;
+        return R_ERR;
+    }
+    return ret;
+}
+
+static int file_seek(const Cell* p, const long offset, int* err) {
+    if (fseek(p->port->fh, offset, SEEK_SET) == 0) return R_OK;
+    *err = errno;
+    return R_ERR;
+}
+
+static void file_close(Cell* p) {
     if (p->is_open) {
         fflush(p->port->fh);
         fclose(p->port->fh);
@@ -164,206 +155,48 @@ static void file_close(Cell* p)
     }
 }
 
-
-/*
- * Next 6: textual string-backed functions.
- *
- */
-static int string_gets(const Cell* p, int* err)
-{
+static int32_t memory_write(const void* buf, const size_t len, const Cell* p, int* err) {
     *err = 0;
-    if (p->port->data->length == p->port->index) {
-        return R_EOF;
-    }
-
-    const int ch = (unsigned char)p->port->data->buffer[p->port->index];
-    p->port->index++;
-    return ch;
+    sb_append_str(p->port->data, buf);
+    p->port->index += len;
+    return (int)len;
 }
 
-
-static int string_puts(const int c, const Cell* p, int* err)
-{
+static int32_t memory_read(void* buf, const size_t len, const Cell* p, int* err) {
     *err = 0;
-    sb_append_char(p->port->data, (char)c);
-    return R_OK;
-}
-
-
-static int string_getm(const int chars_to_read, void* buf, const Cell* p, int* err)
-{
-    *err = 0;
+    /* Use void* buf as char* buf */
     char* dest = buf;
-    memcpy(dest, &p->port->data->buffer[p->port->index], chars_to_read);
-    return R_OK;
-}
-
-
-static int string_putm(const void* buf, const Cell* p, int* err)
-{
-    *err = 0;
-    const char* src = (char*)buf;
-    sb_append_str(p->port->data, src);
-    return R_OK;
-}
-
-
-static int string_peek(const Cell* p, int* err)
-{
-    *err = 0;
-    return p->port->data->buffer[p->port->index];
-}
-
-
-static void string_close(Cell* p)
-{
-    if (p->is_open) p->is_open = 0;
-}
-
-
-/*
- * Next 6: binary file-backed functions.
- *
- */
-static int byte_gets_file(const Cell* p, int* err)
-{
-    const int byte = getc(p->port->fh);
-    if (byte == EOF) {
-        if (ferror(p->port->fh)) {
-            /* Save errno. */
-            *err = errno;
-            return R_ERR;
-        }
-        /* If not an error, it's a legitimate EOF. */
-        return R_EOF;
-    }
-    return byte;
-}
-
-
-static int byte_puts_file(const int c, const Cell* p, int* err)
-{
-    if (putc(c, p->port->fh) == EOF) {
-        *err = errno;
-        return READ_ERR;
-    }
-    return R_OK;
-}
-
-
-static int byte_getm_file(const int bytes_to_read, void* buf, const Cell* p, int* err)
-{
-    uint8_t* dest = buf;
-    for (int i = 0; i < bytes_to_read; i++) {
-        const int byte = getc(p->port->fh);
-        if (byte == EOF) {
-            if (ferror(p->port->fh)) {
-                /* Use strerror for the message. */
-                *err = errno;
-                return R_ERR;
-            }
-            /* If not an error, it's a legitimate EOF. */
+    /* Check for EOF-type situation. */
+    size_t bytes_in_store = p->port->data->length - p->port->index;
+    if (bytes_in_store < len) {
+        /* If no bytes to read, return EOF now. */
+        if (bytes_in_store == 0) {
             return R_EOF;
         }
-        /* Add the byte to the bytevector. */
-        dest[i] = byte;
+        /* Otherwise, return what we can, and update index to the end of the buffer. */
+        memcpy(dest, p->port->data->buffer + p->port->index, bytes_in_store);
+        p->port->index = p->port->data->length;
+        return (int)bytes_in_store;
     }
+
+    /* There is enough data in the buffer to pull the full read. */
+    memcpy(dest, p->port->data->buffer + p->port->index, len);
+    p->port->index += len;
+    return (int)len;
+}
+
+static long memory_tell(const Cell* p, int* err) {
+    *err = 0;
+    return p->port->index;
+}
+
+static int memory_seek(const Cell* p, const long offset, int* err) {
+    *err = 0;
+    p->port->index = offset;
     return R_OK;
 }
 
-
-static int byte_putm_file(const void* buf, const Cell* p, int* err)
-{
-    *err = 0;
-    const char* src = (char*)buf;
-    sb_append_str(p->port->data, src);
-    return R_OK;
-}
-
-
-static int byte_peek_file(const Cell* p, int* err)
-{
-    const int byte = getc(p->port->fh);
-
-    if (byte == EOF) {
-        if (ferror(p->port->fh)) {
-            *err = errno;
-            return R_ERR;
-        }
-        /* Legitimate EOF. */
-        return R_EOF;
-    }
-
-    /* Push the byte back into the stream buffer. */
-    if (ungetc(byte, p->port->fh) == EOF) {
-        *err = errno;
-        return READ_ERR;
-    }
-    return byte;
-}
-
-
-static void byte_close_file(Cell* p)
-{
-    if (p->is_open) {
-        fflush(p->port->fh);
-        fclose(p->port->fh);
-        p->is_open = 0;
-    }
-}
-
-
-/*
- * Next 6: binary bytevector-backed functions.
- *
- */
-static int byte_gets_byte(const Cell* p, int* err)
-{
-    *err = 0;
-    if (p->port->data->length == p->port->index) {
-        return R_EOF;
-    }
-
-    const int ch = (unsigned char)p->port->data->buffer[p->port->index];
-    p->port->index++;
-    return ch;
-}
-
-
-static int byte_puts_byte(const int c, const Cell* p, int* err)
-{
-    *err = 0;
-    sb_append_char(p->port->data, (char)c);
-    return R_OK;
-}
-
-
-static int byte_getm_byte(const int chars_to_read, void* buf, const Cell* p, int* err)
-{
-    *err = 0;
-    char* dest = buf;
-    memcpy(dest, &p->port->data->buffer[p->port->index], chars_to_read);
-    return R_OK;
-}
-
-
-static int byte_putm_byte(const void* buf, const Cell* p, int* err)
-{
-    *err = 0;
-    const char* src = (char*)buf;
-    sb_append_str(p->port->data, src);
-    return R_OK;
-}
-
-
-static int byte_peek_byte(const Cell* p, int* err)
-{
-    *err = 0;
-    return p->port->data->buffer[p->port->index];
-}
-
-static void byte_close_byte(Cell* p)
-{
+static void memory_close(Cell* p) {
     if (p->is_open) p->is_open = 0;
 }
 
@@ -371,44 +204,22 @@ static void byte_close_byte(Cell* p)
 /* The PortInterface VTables map generic operations to
  * specific functions for the builtin I/O procedures. */
 
-/* A textual port with file backing store. */
+/* A port with file backing store. */
 const PortInterface FileVTable = {
-    .get_s = file_gets,
-    .put_s = file_puts,
-    .get_m = file_getm,
-    .put_m = file_putm,
-    .peek  = file_peek,
+    .write = file_write,
+    .read = file_read,
+    .tell = file_tell,
+    .seek  = file_seek,
     .close = file_close
 };
 
-/* A textual port with in-memory backing store. */
-const PortInterface StringVTable = {
-    .get_s = string_gets,
-    .put_s = string_puts,
-    .get_m = string_getm,
-    .put_m = string_putm,
-    .peek  = string_peek,
-    .close = string_close
-};
-
-/* A binary port with file backing store. */
-const PortInterface ByteVTableFile = {
-    .get_s = byte_gets_file,
-    .put_s = byte_puts_file,
-    .get_m = byte_getm_file,
-    .put_m = byte_putm_file,
-    .peek  = byte_peek_file,
-    .close = byte_close_file
-};
-
-/* A binary port with in-memory backing store. */
-const PortInterface ByteVTableByte = {
-    .get_s = byte_gets_byte,
-    .put_s = byte_puts_byte,
-    .get_m = byte_getm_byte,
-    .put_m = byte_putm_byte,
-    .peek  = byte_peek_byte,
-    .close = byte_close_byte
+/* A port with in-memory backing store. */
+const PortInterface MemoryVTable = {
+    .write = memory_write,
+    .read = memory_read,
+    .tell = memory_tell,
+    .seek  = memory_seek,
+    .close = memory_close
 };
 
 /*-------------------------------------------------------*
@@ -511,17 +322,14 @@ Cell* builtin_close_port(const Lex* e, const Cell* a)
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "close-port");
     if (err) return err;
-    if (a->cell[0]->type != CELL_PORT) {
+    Cell* p = a->cell[0];
+    if (p->type != CELL_PORT) {
         return make_cell_error(
             "close-port: arg1 is not a port",
             TYPE_ERR);
     }
 
-    if (a->cell[0]->is_open == 1) {
-        fflush(a->cell[0]->port->fh);
-        fclose(a->cell[0]->port->fh);
-        a->cell[0]->is_open = 0;
-    }
+    p->port->vtable->close(p);
     return True_Obj;
 }
 
@@ -653,7 +461,7 @@ Cell* builtin_read_string(const Lex* e, const Cell* a)
     /* Buffer size = the chars to read by potential 4 bytes each, plus 1 for \0. */
     char* buffer = GC_MALLOC_ATOMIC(chars_to_read * 4 + 1);
     int err_r;
-    const int chars_read = port->port->vtable->get_m(chars_to_read, buffer, port, &err_r);
+    const int chars_read = port->port->vtable->read(buffer, chars_to_read, port, &err_r);
 
     if (chars_read == R_EOF) {
         return EOF_Obj;
@@ -698,8 +506,10 @@ Cell* builtin_read_char(const Lex* e, const Cell* a)
             VALUE_ERR);
     }
 
+
     int err_r;
-    const int wc = port->port->vtable->get_s(port, &err_r);
+    UChar32 out;
+    const int wc = port_read_char(port, &out, &err_r);
     if (wc == R_EOF) {
         return EOF_Obj;
     }
@@ -708,7 +518,7 @@ Cell* builtin_read_char(const Lex* e, const Cell* a)
             fmt_err("read-char: %s", strerror(err_r)),
             READ_ERR);
     }
-    return make_cell_char(wc);
+    return make_cell_char(out);
 }
 
 
@@ -736,7 +546,8 @@ Cell* builtin_read_u8(const Lex* e, const Cell* a) {
             FILE_ERR);
 
     int err_r;
-    const int byte = port->port->vtable->get_s(port, &err_r);
+    uint8_t out;
+    const int byte = port->port->vtable->read(&out, 1, port, &err_r);
 
     if (byte == R_EOF) {
         return EOF_Obj;
@@ -747,7 +558,7 @@ Cell* builtin_read_u8(const Lex* e, const Cell* a) {
             READ_ERR);
     }
 
-    return make_cell_integer(byte);
+    return make_cell_integer(out);
 }
 
 
@@ -962,17 +773,35 @@ Cell* builtin_peek_char(const Lex* e, const Cell* a)
     }
 
     int err_r;
-    const int wc = port->port->vtable->peek(port, &err_r);
+    /* Grab and save current index. */
+    const long curr_index = port->port->vtable->tell(port, &err_r);
+    if (curr_index < 0) goto error;
 
-    if (wc == R_EOF) {
+    /* Grab the char. */
+    UChar32 out;
+    const int ret = port_read_char(port, &out, &err_r);
+
+    /* Reset index, even if there is an error. */
+    int seek_err;
+    const int seek_ret = port->port->vtable->seek(port, curr_index, &seek_err);
+    if (seek_ret < 0) {
+        err_r = seek_err;
+        goto error;
+    }
+
+    /* Error on byte read. */
+    if (ret == R_ERR) goto error;
+    /* Legitimate EOF. */
+    if (ret == R_EOF) {
         return EOF_Obj;
     }
-    if (wc == R_ERR) {
-        return make_cell_error(
-            fmt_err("peek-char: %s", strerror(err_r)),
-            READ_ERR);
-    }
-    return make_cell_char(wc);
+    return make_cell_char(out);
+
+error:
+    return make_cell_error(
+        fmt_err("peek-char: %s", strerror(err_r)),
+        READ_ERR);
+
 }
 
 
@@ -1008,18 +837,34 @@ Cell* builtin_peek_u8(const Lex* e, const Cell* a)
     }
 
     int err_r;
-    const int wc = port->port->vtable->peek(port, &err_r);
+    /* Grab and save current index. */
+    const long curr_index = port->port->vtable->tell(port, &err_r);
+    if (curr_index < 0) goto error;
 
-    if (wc == R_EOF) {
+    /* Grab the byte. */
+    uint8_t byte;
+    const int ret = port->port->vtable->read(&byte, 1, port, &err_r);
+
+    /* Reset index, even if there is an error. */
+    int seek_err;
+    const int seek_ret = port->port->vtable->seek(port, curr_index, &seek_err);
+    if (seek_ret < 0) {
+        err_r = seek_err;
+        goto error;
+    }
+
+    /* Error on byte read. */
+    if (ret == R_ERR) goto error;
+    /* Legitimate EOF. */
+    if (ret == R_EOF) {
         return EOF_Obj;
     }
-    if (wc == R_ERR) {
-        return make_cell_error(
-            fmt_err("peek-u8: %s", strerror(err_r)),
-            READ_ERR);
-    }
+    return make_cell_integer(byte);
 
-    return make_cell_integer(wc);
+error:
+    return make_cell_error(
+        fmt_err("peek-u8: %s", strerror(err_r)),
+        READ_ERR);
 }
 
 
@@ -1036,7 +881,7 @@ Cell* builtin_write_char(const Lex* e, const Cell* a)
             "write-char: arg1 must be a char",
             TYPE_ERR);
     }
-    const int the_char = a->cell[0]->char_v;
+    const UChar32 the_char = a->cell[0]->char_v;
 
     if (a->count == 2) {
         if (a->cell[1]->type != CELL_PORT) {
@@ -1065,13 +910,17 @@ Cell* builtin_write_char(const Lex* e, const Cell* a)
             FILE_ERR);
     }
 
+    /* Check if char is multibyte. */
+    uint8_t char_buf;
+    const int len = utf8_encode(the_char, &char_buf);
+
     /* Write the char. */
-    int* err_r = nullptr;
-    const int rv = port->port->vtable->put_s(the_char, port, err_r);
+    int err_r = 0;
+    const int rv = port->port->vtable->write(&char_buf, len, port, &err_r);
 
     if (rv == R_ERR) {
         return make_cell_error(
-            fmt_err("write-char: %s", strerror(*err_r)),
+            fmt_err("write-char: %s", strerror(err_r)),
             FILE_ERR);
     }
     /* No meaningful return value. */
@@ -1138,7 +987,7 @@ Cell* builtin_write_string(const Lex* e, const Cell* a)
     const char* out_string = GC_strndup(in_string, num_chars);
 
     int* err_r = nullptr;
-    const int rv = port->port->vtable->put_m(out_string, port, err_r);
+    const int rv = port->port->vtable->write(out_string, strlen(out_string), port, err_r);
     if (rv == R_ERR) {
         return make_cell_error(
             fmt_err("write-string: %s", strerror(*err_r)),
@@ -1196,12 +1045,12 @@ Cell* builtin_write_u8(const Lex* e, const Cell* a)
     }
 
     /* Write the byte. */
-    int* err_r = nullptr;
-    const int rv = port->port->vtable->put_s(byte, port, err_r);
+    int err_r;
+    const int rv = port->port->vtable->write(&byte, 1, port, &err_r);
 
     if (rv == R_ERR) {
         return make_cell_error(
-            fmt_err("newline: %s", strerror(*err_r)),
+            fmt_err("newline: %s", strerror(err_r)),
             FILE_ERR);
     }
     /* No meaningful return value. */
@@ -1315,7 +1164,8 @@ Cell* builtin_newline(const Lex* e, const Cell* a)
 
     /* Write the newline. */
     int err_r = 0;
-    const int rv = port->port->vtable->put_s('\n', port, &err_r);
+    char c = '\n';
+    const int rv = port->port->vtable->write(&c, 1, port, &err_r);
 
     if (rv == R_ERR) {
         return make_cell_error(
@@ -1720,7 +1570,7 @@ Cell* builtin_open_input_file(const Lex* e, const Cell* a)
     }
 
     /* Must be a text file port. */
-    Cell* p = make_cell_port(ptr, fp, INPUT_STREAM, BK_FILE_TEXT);
+    Cell* p = make_cell_file_port(ptr, fp, INPUT_STREAM, BK_FILE_TEXT);
     return p;
 }
 
@@ -1753,7 +1603,7 @@ Cell* builtin_open_bin_input_file(const Lex* e, const Cell* a)
     }
 
     /* Must be a binary file port. */
-    Cell* p = make_cell_port(ptr, fp, INPUT_STREAM, BK_FILE_BINARY);
+    Cell* p = make_cell_file_port(ptr, fp, INPUT_STREAM, BK_FILE_BINARY);
     return p;
 }
 
@@ -1791,7 +1641,7 @@ Cell* builtin_open_output_file(const Lex* e, const Cell* a)
     }
 
     /* Must be a file port. */
-    Cell* p = make_cell_port(filename, fp, OUTPUT_STREAM, BK_FILE_TEXT);
+    Cell* p = make_cell_file_port(filename, fp, OUTPUT_STREAM, BK_FILE_TEXT);
     return p;
 }
 
@@ -1829,7 +1679,7 @@ Cell* builtin_open_bin_output_file(const Lex* e, const Cell* a)
     }
 
     /* Must be a binary file port. */
-    Cell* p = make_cell_port(filename, fp, OUTPUT_STREAM, BK_FILE_BINARY);
+    Cell* p = make_cell_file_port(filename, fp, OUTPUT_STREAM, BK_FILE_BINARY);
     return p;
 }
 
@@ -1868,7 +1718,7 @@ Cell* builtin_open_and_trunc_output_file(const Lex* e, const Cell* a)
     }
 
     /* Must be a file port. */
-    Cell* p = make_cell_port(filename, fp, OUTPUT_STREAM, BK_FILE_TEXT);
+    Cell* p = make_cell_file_port(filename, fp, OUTPUT_STREAM, BK_FILE_TEXT);
     return p;
 }
 
@@ -1927,7 +1777,7 @@ Cell* builtin_call_with_input_file(const Lex* e, const Cell* a) {
         return make_cell_error(strerror(errno), FILE_ERR);
     }
 
-    const Cell* p = make_cell_port(path, fp, INPUT_STREAM, BK_FILE_TEXT);
+    const Cell* p = make_cell_file_port(path, fp, INPUT_STREAM, BK_FILE_TEXT);
 
     Cell* clos = make_sexpr_len2(proc, p);
     Cell* result = coz_eval((Lex*)e, clos);
@@ -1974,7 +1824,7 @@ Cell* builtin_call_with_output_file(const Lex* e, const Cell* a) {
         return make_cell_error(strerror(errno), FILE_ERR);
     }
 
-    const Cell* p = make_cell_port(path, fp, OUTPUT_STREAM, BK_FILE_TEXT);
+    const Cell* p = make_cell_file_port(path, fp, OUTPUT_STREAM, BK_FILE_TEXT);
 
     Cell* clos = make_sexpr_len2(proc, p);
     Cell* result = coz_eval((Lex*)e, clos);
@@ -2025,7 +1875,7 @@ Cell* builtin_with_input_from_file(const Lex* e, const Cell* a) {
         return make_cell_error(strerror(errno), FILE_ERR);
     }
 
-    default_input_port = make_cell_port(path, fp, INPUT_STREAM, BK_FILE_TEXT);
+    default_input_port = make_cell_file_port(path, fp, INPUT_STREAM, BK_FILE_TEXT);
 
     /* Pass the thunk to eval. */
     Cell* clos = make_sexpr_len1(proc);
@@ -2079,7 +1929,7 @@ Cell* builtin_with_output_to_file(const Lex* e, const Cell* a) {
         return make_cell_error(strerror(errno), FILE_ERR);
     }
 
-    default_output_port = make_cell_port(path, fp, OUTPUT_STREAM, BK_FILE_TEXT);
+    default_output_port = make_cell_file_port(path, fp, OUTPUT_STREAM, BK_FILE_TEXT);
 
     /* Pass the thunk to eval. */
     Cell* clos = make_sexpr_len1(proc);
