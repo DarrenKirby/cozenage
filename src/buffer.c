@@ -99,6 +99,16 @@ void sb_append_str(str_buf_t *sb, const char *s)
 }
 
 
+/* Append binary data (used by generic port I/O. */
+void sb_append_data(str_buf_t *sb, const void *data, size_t len)
+{
+    sb_ensure_capacity(sb, len);
+    memcpy(sb->buffer + sb->length, data, len);
+    sb->length += len;
+    sb->buffer[sb->length] = '\0';
+}
+
+
 /* Append formatted data, like sprintf. */
 void sb_append_fmt(str_buf_t *sb, const char *fmt, ...)
 {
