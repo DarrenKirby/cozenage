@@ -17,6 +17,7 @@ Cozenage has:
 - A selection of ``bytevector`` objects implemented using native C type arrays: ``u8``, ``s8``, ``u16``, ``s16``, ``u32``, ``s32``, ``u64``, and ``s64``.
 - Full 'numeric tower' of derived numeric types including ``integer``, ``rational``, ``real``, and ``complex``.
 - Exact and inexact numbers.
+- File-backed text and binary ports, and memory-backed string and bytevector (u8) ports.
 - Proper tail-call optimization where applicable.
 - Garbage collection.
 - A REPL with multi-line input editing, persistent command history, and tab-autocompletion.
@@ -35,6 +36,15 @@ Typical Scheme features that Cozenage does NOT have:
 Typical Scheme features currently in progress:
 
 - Arbitrary size and precision rationals and real numbers. Currently, only bigints are supported. bigfloat, then bigrat are in progress.  
+
+Other major items on the TODO list:
+
+- Replace readline/libedit with in-house line editing, history, and tab-completion solution. Bracket matching.
+- Replace libgc with in-house allocator/collector. A bit beyond my ability at present.
+- 'bytevector' loadable module with full suite of functions for s8, u16, s16 et al.
+- Add 'set' and 'map' Scheme types and associated procedures. Will require syntax additions.
+- try/catch exception facility.
+- Async ports for sockets, URL ports for web data.
 
 ## Dependencies
 

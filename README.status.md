@@ -99,8 +99,8 @@ This document tracks the implementation status of procedures in the Cozenage int
 |   ✅    | `for-each`                   |
 |   ✅    | `foldl`                      |
 |   ✅    | `foldr`                      |
-|   ❌    | `get-output-bytevector`      |
-|   ❌    | `get-output-string`          |
+|   ✅    | `get-output-bytevector`      |
+|   ✅    | `get-output-string`          |
 |   ✅    | `idx` - polymorphic          |
 |   ✅    | `inexact`                    |
 |   ✅    | `inexact?`                   |
@@ -138,10 +138,10 @@ This document tracks the implementation status of procedures in the Cozenage int
 |   ✅    | `number?`                    |
 |   ✅    | `numerator`                  |
 |   ✅    | `odd?`                       |
-|   ❌    | `open-input-bytevector`      |
-|   ❌    | `open-input-string`          |
-|   ❌    | `open-output-bytevector`     |
-|   ❌    | `open-output-string`         |
+|   ✅    | `open-input-bytevector`      |
+|   ✅    | `open-input-string`          |
+|   ✅    | `open-output-bytevector`     |
+|   ✅    | `open-output-string`         |
 |   ✅    | `open-input-file`            |
 |   ✅    | `open-output-file`           |
 |   ✅    | `open-binary-input-file`     |
