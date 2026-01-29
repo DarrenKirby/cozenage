@@ -1450,29 +1450,43 @@ Cell* builtin_display(const Lex* e, const Cell* a)
     Cell* err = CHECK_ARITY_RANGE(a, 1, 2, "display");
     if (err) return err;
 
-    Cell* port;
+    Cell* p;
     if (a->count == 1) {
-        port = builtin_current_output_port(e, a);
+        p = builtin_current_output_port(e, a);
     } else {
         if (a->cell[1]->type != CELL_PORT) {
             return make_cell_error(
                 "display: arg2 must be a port",
                 TYPE_ERR);
         }
-        port = a->cell[1];
+        p = a->cell[1];
     }
+
+    if (p->port->stream_t != OUTPUT_STREAM || p->is_open == 0) {
+        return make_cell_error(
+            "display: arg2 must be an open output port",
+            FILE_ERR);
+    }
+
     const Cell* val = a->cell[0];
-    fprintf(port->port->fh, "%s", cell_to_string(val, MODE_DISPLAY));
+    const char* buf = cell_to_string(val, MODE_DISPLAY);
+    int err_r;
+    const int res = p->port->vtable->write(buf, strlen(buf), p, &err_r);
+    if (res < 0) {
+        return make_cell_error(
+            fmt_err("display: %s", strerror(err_r)),
+            FILE_ERR);
+    }
     return USP_Obj;
 }
 
 
-/* (println obj )
- * (println obj port )
+/* (displayln obj )
+ * (displayln obj port )
  * Identical to 'display', but adds a newline for convenience. */
-Cell* builtin_println(const Lex* e, const Cell* a)
+Cell* builtin_displayln(const Lex* e, const Cell* a)
 {
-    Cell* err = CHECK_ARITY_RANGE(a, 1, 2, "println");
+    Cell* err = CHECK_ARITY_RANGE(a, 1, 2, "displayln");
     if (err) return err;
 
     Cell* port;
@@ -1481,7 +1495,7 @@ Cell* builtin_println(const Lex* e, const Cell* a)
     } else {
         if (a->cell[1]->type != CELL_PORT) {
             return make_cell_error(
-                "println: arg2 must be a port",
+                "displayln: arg2 must be a port",
                 TYPE_ERR);
         }
         port = a->cell[1];

@@ -499,7 +499,7 @@ void lex_add_builtins(const Lex* e)
     lex_add_builtin(e, "open-binary-output-file", builtin_open_bin_output_file);
     lex_add_builtin(e, "open-and-trunc-output-file", builtin_open_and_trunc_output_file);
     lex_add_builtin(e, "display", builtin_display);
-    lex_add_builtin(e, "println", builtin_println);
+    lex_add_builtin(e, "println", builtin_displayln);
     lex_add_builtin(e, "write", builtin_write);
     lex_add_builtin(e, "writeln", builtin_writeln);
     lex_add_builtin(e, "call-with-input-file", builtin_call_with_input_file);
