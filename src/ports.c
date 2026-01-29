@@ -1562,8 +1562,8 @@ Cell* builtin_open_input_file(const Lex* e, const Cell* a)
             FILE_ERR);
     }
     char *actual_path = GC_MALLOC(PATH_MAX);
-    const char *ptr = realpath(filename, actual_path);
-    if (ptr == NULL) {
+    const char *path = realpath(filename, actual_path);
+    if (path == NULL) {
         fclose(fp);
         return make_cell_error(
             fmt_err("open-input-file", strerror(errno)),
@@ -1571,8 +1571,7 @@ Cell* builtin_open_input_file(const Lex* e, const Cell* a)
     }
 
     /* Must be a text file port. */
-    Cell* p = make_cell_file_port(ptr, fp, INPUT_STREAM, BK_FILE_TEXT);
-    return p;
+    return make_cell_file_port(path, fp, INPUT_STREAM, BK_FILE_TEXT);
 }
 
 
@@ -1595,8 +1594,8 @@ Cell* builtin_open_bin_input_file(const Lex* e, const Cell* a)
             FILE_ERR);
     }
     char *actual_path = GC_MALLOC(PATH_MAX);
-    const char *ptr = realpath(filename, actual_path);
-    if (ptr == NULL) {
+    const char *path = realpath(filename, actual_path);
+    if (path == NULL) {
         fclose(fp);
         return make_cell_error(
             fmt_err("open-bin-input-file", strerror(errno)),
@@ -1604,8 +1603,7 @@ Cell* builtin_open_bin_input_file(const Lex* e, const Cell* a)
     }
 
     /* Must be a binary file port. */
-    Cell* p = make_cell_file_port(ptr, fp, INPUT_STREAM, BK_FILE_BINARY);
-    return p;
+    return make_cell_file_port(path, fp, INPUT_STREAM, BK_FILE_BINARY);
 }
 
 
@@ -1642,8 +1640,7 @@ Cell* builtin_open_output_file(const Lex* e, const Cell* a)
     }
 
     /* Must be a file port. */
-    Cell* p = make_cell_file_port(filename, fp, OUTPUT_STREAM, BK_FILE_TEXT);
-    return p;
+    return make_cell_file_port(filename, fp, OUTPUT_STREAM, BK_FILE_TEXT);
 }
 
 
@@ -1680,8 +1677,7 @@ Cell* builtin_open_bin_output_file(const Lex* e, const Cell* a)
     }
 
     /* Must be a binary file port. */
-    Cell* p = make_cell_file_port(filename, fp, OUTPUT_STREAM, BK_FILE_BINARY);
-    return p;
+    return make_cell_file_port(filename, fp, OUTPUT_STREAM, BK_FILE_BINARY);
 }
 
 
@@ -1719,8 +1715,7 @@ Cell* builtin_open_and_trunc_output_file(const Lex* e, const Cell* a)
     }
 
     /* Must be a file port. */
-    Cell* p = make_cell_file_port(filename, fp, OUTPUT_STREAM, BK_FILE_TEXT);
-    return p;
+    return make_cell_file_port(filename, fp, OUTPUT_STREAM, BK_FILE_TEXT);
 }
 
 // Cell* builtin_open_output_string(const Lex* e, const Cell* a) {
