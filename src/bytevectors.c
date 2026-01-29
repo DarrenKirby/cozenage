@@ -149,7 +149,7 @@ Cell* builtin_bytevector(const Lex* e, const Cell* a)
         num_bytes--;
     }
 
-    Cell* bv = make_cell_bytevector(type);
+    Cell* bv = make_cell_bytevector(type, num_bytes);
     for (int i = 0; i < num_bytes; i++) {
         if (a->cell[i]->type != CELL_INTEGER) {
             return make_cell_error(
@@ -301,7 +301,7 @@ Cell* builtin_make_bytevector(const Lex* e, const Cell* a)
     } else {
         fill = 0;
     }
-    Cell *vec = make_cell_bytevector(type);
+    Cell *vec = make_cell_bytevector(type, n);
     for (int i = 0; i < n; i++) {
         byte_add(vec, fill);
     }
@@ -337,7 +337,7 @@ Cell* builtin_bytevector_copy(const Lex* e, const Cell* a)
         end = (int)a->cell[2]->integer_v;
     }
 
-    Cell* vec = make_cell_bytevector(type);
+    Cell* vec = make_cell_bytevector(type, end - start);
     for (int i = start; i < end; i++) {
         const int64_t byte = BV_OPS[type].get(bv, i);
         byte_add(vec, byte);
@@ -447,11 +447,11 @@ Cell* builtin_bytevector_append(const Lex* e, const Cell* a)
     if (err) return err;
 
     if (a->count == 0) {
-        return make_cell_bytevector(BV_U8);
+        return make_cell_bytevector(BV_U8, 1);
     }
 
     const bv_t type = a->cell[0]->bv->type;
-    Cell* result = make_cell_bytevector(type);
+    Cell* result = make_cell_bytevector(type, 8);
     for (int i = 0; i < a->count; i++) {
         const Cell* bv = a->cell[i];
         if (bv->bv->type != type) {
@@ -573,7 +573,7 @@ Cell* builtin_string_utf8(const Lex* e, const Cell* a)
     }
 
     const char* the_s = a->cell[0]->str;
-    Cell* bv = make_cell_bytevector(BV_U8);
+    Cell* bv = make_cell_bytevector(BV_U8, end - start);
     for (size_t i = start; i < end; i++)
     {
         const uint8_t the_char = (int)the_s[i];

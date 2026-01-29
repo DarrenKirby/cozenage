@@ -47,7 +47,7 @@ static Cell* bytevector_reverse(const Cell* v)
     (void)v;
     const bv_t type = v->bv->type;
     const int32_t len = v->count;
-    Cell* result = make_cell_bytevector(type);
+    Cell* result = make_cell_bytevector(type, len);
     switch (type) {
         case BV_U8:  REVERSE_CASE(uint8_t);  break;
         case BV_S8:  REVERSE_CASE(int8_t);   break;

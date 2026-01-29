@@ -643,7 +643,7 @@ Cell* parse_tokens(TokenArray *ta)
                     fmt_err("Line %d: Bad bytevector label: %s", token->line, bv_tok),
                     SYNTAX_ERR);
             }
-            Cell* bv = make_cell_bytevector(bv_t);
+            Cell* bv = make_cell_bytevector(bv_t, 8);
             token = advance(ta); /* consume 'u8'. */
 
             if (peek(ta)->type != T_LEFT_PAREN) {
