@@ -121,6 +121,7 @@ static int32_t file_write(const void* buf, const size_t len, const Cell* p, int*
     return (int)ret;
 }
 
+
 static int32_t file_read(void* buf, const size_t len, const Cell* p, int* err) {
     const size_t ret = fread(buf, 1, len, p->port->fh);
     if (ret != len) {
@@ -133,6 +134,7 @@ static int32_t file_read(void* buf, const size_t len, const Cell* p, int* err) {
     return (int)ret;
 }
 
+
 static long file_tell(const Cell* p, int* err) {
     const long ret = ftell(p->port->fh);
     if (ret < 0) {
@@ -142,11 +144,13 @@ static long file_tell(const Cell* p, int* err) {
     return ret;
 }
 
+
 static int file_seek(const Cell* p, const long offset, int* err) {
     if (fseek(p->port->fh, offset, SEEK_SET) == 0) return R_OK;
     *err = errno;
     return R_ERR;
 }
+
 
 static void file_close(Cell* p) {
     if (p->is_open) {
@@ -156,12 +160,14 @@ static void file_close(Cell* p) {
     }
 }
 
+
 static int32_t memory_write(const void* buf, const size_t len, const Cell* p, int* err) {
     *err = 0;
-    sb_append_str(p->port->data, buf);
+    sb_append_data(p->port->data, buf, len);
     p->port->index += len;
     return (int)len;
 }
+
 
 static int32_t memory_read(void* buf, const size_t len, const Cell* p, int* err) {
     *err = 0;
@@ -186,16 +192,19 @@ static int32_t memory_read(void* buf, const size_t len, const Cell* p, int* err)
     return (int)len;
 }
 
+
 static long memory_tell(const Cell* p, int* err) {
     *err = 0;
     return p->port->index;
 }
+
 
 static int memory_seek(const Cell* p, const long offset, int* err) {
     *err = 0;
     p->port->index = offset;
     return R_OK;
 }
+
 
 static void memory_close(Cell* p) {
     if (p->is_open) p->is_open = 0;
@@ -553,7 +562,7 @@ Cell* builtin_read_u8(const Lex* e, const Cell* a) {
     if (byte == R_EOF) {
         return EOF_Obj;
     }
-    if (err_r == R_ERR) {
+    if (byte == R_ERR) {
         return make_cell_error(
             fmt_err("read-u8: %s", strerror(err_r)),
             READ_ERR);
@@ -609,7 +618,7 @@ Cell* builtin_read_bytevector(const Lex* e, const Cell* a)
     /* There are bytes. Read them until bytes_read == bytes_to_read,
      * or EOF, whichever comes first. */
     // ReSharper disable once CppVariableCanBeMadeConstexpr
-    Cell* bv = make_cell_bytevector(BV_U8);
+    Cell* bv = make_cell_bytevector(BV_U8, bytes_to_read);
 
     for (int i = 0; i < bytes_to_read; i++) {
         const int byte = getc(port->port->fh);
@@ -987,11 +996,11 @@ Cell* builtin_write_string(const Lex* e, const Cell* a)
     }
     const char* out_string = GC_strndup(in_string, num_chars);
 
-    int* err_r = nullptr;
-    const int rv = port->port->vtable->write(out_string, strlen(out_string), port, err_r);
+    int err_r;
+    const int rv = port->port->vtable->write(out_string, strlen(out_string), port, &err_r);
     if (rv == R_ERR) {
         return make_cell_error(
-            fmt_err("write-string: %s", strerror(*err_r)),
+            fmt_err("write-string: %s", strerror(err_r)),
             FILE_ERR);
     }
     /* No meaningful return value. */
@@ -1016,7 +1025,9 @@ Cell* builtin_write_u8(const Lex* e, const Cell* a)
             TYPE_ERR);
     }
 
-    const int byte = (int)a->cell[0]->integer_v;
+    /* write expects an array, so put the byte in an array of size 1. */
+    uint8_t byte[1];
+    byte[0] = (uint8_t)a->cell[0]->integer_v;
 
     if (a->count == 2) {
         if (a->cell[1]->type != CELL_PORT) {
@@ -1718,20 +1729,129 @@ Cell* builtin_open_and_trunc_output_file(const Lex* e, const Cell* a)
     return make_cell_file_port(filename, fp, OUTPUT_STREAM, BK_FILE_TEXT);
 }
 
-// Cell* builtin_open_output_string(const Lex* e, const Cell* a) {
-//     (void)e;
-//     Cell* err = CHECK_ARITY_EXACT(a, 0, "open-output-string");
-//     if (err) { return err; }
-//
-//     Cell* p = make_cell_data_port(STRING_PORT, OUTPUT_PORT);
-//
-//
-// }
-//
-//
-// Cell* builtin_open_output_bytevector(const Lex* e, const Cell* a) {
-//
-// }
+
+/* (open-output-string)
+ * Returns a textual output port that will accumulate characters for retrieval by get-output-string. */
+Cell* builtin_open_output_string(const Lex* e, const Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 0, "open-output-string");
+    if (err) { return err; }
+
+    return make_cell_memory_port(OUTPUT_STREAM, BK_STRING);
+}
+
+
+/* (open-input-string string)
+ * Takes a string and returns a textual input port that delivers characters from the string. If the string is modified,
+ * the effect is unspecified. */
+Cell* builtin_open_input_string(const Lex* e, const Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "open-output-string");
+    if (err) { return err; }
+
+    if (a->cell[0]->type != CELL_STRING) {
+        make_cell_error(
+            "open-input-string: arg must be a string",
+            TYPE_ERR);
+    }
+
+    Cell* p = make_cell_memory_port(INPUT_STREAM, BK_STRING);
+    /* Bypass Vtable to write the string to the buffer. */
+    const char* str = a->cell[0]->str;
+    int err_r;
+    const int ret = memory_write(str, strlen(str), p, &err_r);
+    if (ret < 0) {
+        return make_cell_error(
+            fmt_err("open-input-string", strerror(errno)),
+            FILE_ERR);
+    }
+    /* The memory_write call advances the index, so reset it to 0. */
+    p->port->index = 0;
+    return p;
+}
+
+
+/* (get_output_string)
+ * It is an error if port was not created with open-output-string. Returns a string consisting of the characters that
+ * have been output to the port so far in the order they were output. If the result string is modified, the effect is
+ * unspecified. */
+Cell* builtin_get_output_string(const Lex* e, const Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "get-output-string");
+    if (err) { return err; }
+
+    if (a->cell[0]->type != CELL_PORT) {
+        return make_cell_error("get-output-string: arg must be a port", TYPE_ERR);
+    }
+
+    Cell* p = a->cell[0];
+    if (p->port->stream_t == INPUT_STREAM || p->port->backend_t != BK_STRING) {
+        return make_cell_error(
+            "get-output-string: arg must be an output string port",
+            TYPE_ERR);
+    }
+    return make_cell_string(p->port->data->buffer);
+}
+
+
+/* (open-output-bytevector)
+ * Returns a binary output port that will accumulate characters for retrieval by get-output-bytevector. */
+Cell* builtin_open_output_bytevector(const Lex* e, const Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 0, "open-output-bytevector");
+    if (err) { return err; }
+
+    return make_cell_memory_port(OUTPUT_STREAM, BK_BYTEVECTOR);
+}
+
+Cell* builtin_open_input_bytevector(const Lex* e, const Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "open-input-bytevector");
+    if (err) { return err; }
+
+    if (a->cell[0]->type != CELL_BYTEVECTOR || a->cell[0]->bv->type != BV_U8) {
+        make_cell_error(
+            "open-input-bytevector: arg must be a u8 bytevector",
+            TYPE_ERR);
+    }
+
+    Cell* p = make_cell_memory_port(INPUT_STREAM, BK_BYTEVECTOR);
+    /* Bypass Vtable to write the bv to the buffer. */
+    const char* bv = a->cell[0]->bv->data;
+    int err_r;
+    const int ret = memory_write(bv, a->cell[0]->count, p, &err_r);
+    if (ret < 0) {
+        return make_cell_error(
+            fmt_err("open-input-bytevector", strerror(errno)),
+            FILE_ERR);
+    }
+    /* The memory_write call advances the index, so reset it to 0. */
+    p->port->index = 0;
+    return p;
+}
+
+Cell* builtin_get_output_bytevector(const Lex* e, const Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "get-output-bytevector");
+    if (err) { return err; }
+
+    if (a->cell[0]->type != CELL_PORT) {
+        return make_cell_error("get-output-bytevector: arg must be a port", TYPE_ERR);
+    }
+
+    const Cell* p = a->cell[0];
+    if (p->port->stream_t == INPUT_STREAM || p->port->backend_t != BK_BYTEVECTOR) {
+        return make_cell_error(
+            "get-output-bytevector: arg must be an output bytevector port",
+            TYPE_ERR);
+    }
+
+    size_t data_len = p->port->data->length;
+    Cell* bv = make_cell_bytevector(BV_U8, data_len);
+    memcpy(bv->bv->data, p->port->data->buffer, data_len);
+    bv->count = (int)data_len;
+    return bv;
+}
 
 /* TODO: implement (call-with-port port proc) */
 
