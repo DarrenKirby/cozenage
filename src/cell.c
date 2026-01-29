@@ -353,7 +353,7 @@ Cell* make_cell_vector(void)
 
 
 /* Cell constructor for bytevectors. */
-Cell* make_cell_bytevector(const bv_t t)
+Cell* make_cell_bytevector(const bv_t t, const size_t initial_size)
 {
     Cell* v = GC_MALLOC(sizeof(Cell));
     if (!v) {
@@ -365,7 +365,7 @@ Cell* make_cell_bytevector(const bv_t t)
     v->bv = GC_MALLOC(sizeof(byte_v));
 
     v->bv->type = t;
-    v->bv->capacity = 8;
+    v->bv->capacity = initial_size == 0 ? 8 : initial_size;
     v->count = 0;
 
     const size_t elem_size = BV_OPS[t].elem_size;

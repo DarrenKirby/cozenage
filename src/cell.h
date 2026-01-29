@@ -152,7 +152,7 @@ typedef struct Port_d {
     const PortInterface *vtable;
     uint8_t backend_t;   /* The backing store (text file/bin file/string/bytevector). */
     uint8_t stream_t;    /* Stream type (input/output/async) */
-    uint32_t index;
+    uint32_t index;      /* read/write pointer. */
 } port_d;
 
 
@@ -277,7 +277,7 @@ Cell* make_cell_rational(long int numerator, long int denominator, bool simplify
 Cell* make_cell_complex(Cell* real_part, Cell *imag_part);
 Cell* make_cell_char(UChar32 the_char);
 Cell* make_cell_vector(void);
-Cell* make_cell_bytevector(bv_t t);
+Cell* make_cell_bytevector(bv_t t, size_t initial_size);
 Cell* make_cell_symbol(const char* the_symbol);
 Cell* make_cell_string(const char* the_string);
 Cell* make_cell_sexpr(void);
