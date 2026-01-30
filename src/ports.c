@@ -78,12 +78,12 @@ static int utf8_len(const uint8_t first_byte) {
 }
 
 /* The actual character reader */
-static int32_t port_read_char(const Cell* p, UChar32* out_char, int* err) {
+static ssize_t port_read_char(const Cell* p, UChar32* out_char, int* err) {
     uint8_t buf[4];
 
     /* Read the first byte. */
-    const int status = p->port->vtable->read(buf, 1, p, err);
-    if (status <= 0) return status; // R_EOF or R_ERR
+    const ssize_t status = p->port->vtable->read(buf, 1, p, err);
+    if (status <= 0) return status; /* R_EOF or R_ERR */
 
     const int len = utf8_len(buf[0]);
     if (len == 1) {
@@ -112,7 +112,7 @@ static int32_t port_read_char(const Cell* p, UChar32* out_char, int* err) {
  * generic I/O procedures. They are specific to whether the backing store
  * is a file or memory.*/
 
-static int32_t file_write(const void* buf, const size_t len, const Cell* p, int* err) {
+static ssize_t file_write(const void* buf, const size_t len, const Cell* p, int* err) {
     const size_t ret = fwrite(buf, 1, len, p->port->fh);
     if (ret != len) {
         *err = errno;
@@ -122,7 +122,7 @@ static int32_t file_write(const void* buf, const size_t len, const Cell* p, int*
 }
 
 
-static int32_t file_read(void* buf, const size_t len, const Cell* p, int* err) {
+static ssize_t file_read(void* buf, const size_t len, const Cell* p, int* err) {
     const size_t ret = fread(buf, 1, len, p->port->fh);
     if (ret != len) {
         if (feof(p->port->fh)) {
@@ -152,6 +152,20 @@ static int file_seek(const Cell* p, const long offset, int* err) {
 }
 
 
+static ssize_t file_getdelim(char **lineptr, size_t *n, const int delim, const Cell *port, int* err) {
+    const ssize_t ret = getdelim(lineptr, n, delim, port->port->fh);
+    if (ret < 0) {
+        if (feof(port->port->fh)) {
+            return R_EOF;
+        }
+        /* An actual error. */
+        *err = errno;
+        return R_ERR;
+    }
+    return ret;
+}
+
+
 static void file_close(Cell* p) {
     if (p->is_open) {
         fflush(p->port->fh);
@@ -161,7 +175,7 @@ static void file_close(Cell* p) {
 }
 
 
-static int32_t memory_write(const void* buf, const size_t len, const Cell* p, int* err) {
+static ssize_t memory_write(const void* buf, const size_t len, const Cell* p, int* err) {
     *err = 0;
     sb_append_data(p->port->data, buf, len);
     p->port->index += len;
@@ -169,7 +183,7 @@ static int32_t memory_write(const void* buf, const size_t len, const Cell* p, in
 }
 
 
-static int32_t memory_read(void* buf, const size_t len, const Cell* p, int* err) {
+static ssize_t memory_read(void* buf, const size_t len, const Cell* p, int* err) {
     *err = 0;
     /* Use void* buf as char* buf */
     char* dest = buf;
@@ -206,6 +220,37 @@ static int memory_seek(const Cell* p, const long offset, int* err) {
 }
 
 
+static ssize_t memory_getdelim(char **lineptr, size_t *n, const int delim, const Cell* p, int *err) {
+    if (p->port->index >= p->port->data->length)
+        return R_EOF;  /* EOF */
+
+    const size_t start = p->port->index;
+    size_t i = start;
+
+    while (i < p->port->data->length && p->port->data->buffer[i] != (char)delim)
+        i++;
+
+    size_t len = i - start;
+    if (i < p->port->data->length) len++; /* include delimiter */
+
+    if (*lineptr == NULL || *n < len + 1) {
+        char *tmp = realloc(*lineptr, len + 1);
+        if (!tmp) {
+            *err = errno;
+            return R_ERR;
+        }
+        *lineptr = tmp;
+        *n = len + 1;
+    }
+
+    memcpy(*lineptr, p->port->data->buffer + start, len);
+    (*lineptr)[len] = '\0';
+
+    p->port->index += len;
+    return (ssize_t)len;
+}
+
+
 static void memory_close(Cell* p) {
     if (p->is_open) p->is_open = 0;
 }
@@ -219,7 +264,8 @@ const PortInterface FileVTable = {
     .write = file_write,
     .read = file_read,
     .tell = file_tell,
-    .seek  = file_seek,
+    .seek = file_seek,
+    .getdelim = file_getdelim,
     .close = file_close
 };
 
@@ -229,6 +275,7 @@ const PortInterface MemoryVTable = {
     .read = memory_read,
     .tell = memory_tell,
     .seek  = memory_seek,
+    .getdelim = memory_getdelim,
     .close = memory_close
 };
 
@@ -286,6 +333,36 @@ Cell* builtin_output_port_pred(const Lex* e, const Cell* a)
     Cell* err = CHECK_ARITY_EXACT(a, 1, "output-port?");
     if (err) return err;
     if (a->cell[0]->type != CELL_PORT || a->cell[0]->port->stream_t != OUTPUT_STREAM) {
+        return False_Obj;
+    }
+    return True_Obj;
+}
+
+
+/* (textual-port? port)
+ * Returns #t if the port argument is a textual port, else #f. */
+Cell* builtin_text_port_pred(const Lex* e, const Cell* a)
+{
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "text-port?");
+    if (err) return err;
+    if (a->cell[0]->type != CELL_PORT || a->cell[0]->port->backend_t == BK_BYTEVECTOR ||
+        a->cell[0]->port->backend_t == BK_FILE_BINARY) {
+        return False_Obj;
+    }
+    return True_Obj;
+}
+
+
+/* (binary-port? port)
+ * Returns #t if the port argument is a binary port, else #f. */
+Cell* builtin_binary_port_pred(const Lex* e, const Cell* a)
+{
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "output-port?");
+    if (err) return err;
+    if (a->cell[0]->type != CELL_PORT || a->cell[0]->port->backend_t == BK_STRING ||
+        a->cell[0]->port->backend_t == BK_FILE_TEXT) {
         return False_Obj;
     }
     return True_Obj;
@@ -367,26 +444,38 @@ Cell* builtin_read_line(const Lex* e, const Cell* a)
     err = check_arg_types(a, CELL_PORT, "read-line");
     if (err) return err;
 
-    Cell* port;
-    if (a->count == 0) {
-        port = builtin_current_input_port(e, a);
-    } else {
-        port = a->cell[0];
-    }
+    const Cell* port = (a->count == 0)
+        ? builtin_current_input_port(e, a)
+        : a->cell[0];
 
-    if (port->is_open == 0 || port->port->stream_t != INPUT_STREAM)
+    if (!port->is_open || port->port->stream_t != INPUT_STREAM)
         return make_cell_error(
             "read-line: port is not open for input",
             FILE_ERR);
 
     char *line = nullptr;
     size_t n = 0;
-    const ssize_t len = getline(&line, &n, port->port->fh);
-    if (len <= 0) { free(line); return make_cell_eof(); }
-    /* Remove newline if present. */
-    if (line[len-1] == '\n') line[len-1] = '\0';
+    int err_r = 0;
 
-    Cell* result = make_cell_string(line);
+    const ssize_t len = port->port->vtable->getdelim(
+        &line, &n, '\n', port, &err_r);
+
+    if (len == R_EOF) {
+        free(line);
+        return EOF_Obj;
+    }
+    if (len == R_ERR) {
+        free(line);
+        return make_cell_error(
+            fmt_err("read-line: %s", strerror(err_r)),
+            FILE_ERR);
+    }
+
+    /* Strip newline, if present */
+    if (len > 0 && line[len - 1] == '\n')
+        line[len - 1] = '\0';
+
+    Cell *result = make_cell_string(line);
     free(line);
     return result;
 }
@@ -398,38 +487,45 @@ Cell* builtin_read_line(const Lex* e, const Cell* a)
  * delimited by '\n' from the source. */
 Cell* builtin_read_lines(const Lex* e, const Cell* a)
 {
-    (void)e;
     Cell* err = CHECK_ARITY_RANGE(a, 0, 1, "read-lines");
     if (err) return err;
     err = check_arg_types(a, CELL_PORT, "read-lines");
     if (err) return err;
 
-    Cell* port;
-    if (a->count == 0) {
-        port = builtin_current_input_port(e, a);
-    } else {
-        port = a->cell[0];
-    }
+    const Cell* port = (a->count == 0)
+        ? builtin_current_input_port(e, a)
+        : a->cell[0];
 
-    if (port->is_open == 0 || port->port->stream_t != INPUT_STREAM)
+    if (!port->is_open || port->port->stream_t != INPUT_STREAM)
         return make_cell_error(
             "read-lines: port is not open for input",
             FILE_ERR);
 
-    Cell* result = make_cell_vector();
-    size_t linecap = 0;
     char *line = nullptr;
-    ssize_t len;
-    while ((len = getline(&line, &linecap, port->port->fh)) > 0) {
-        if (len <= 0) { break; }
-        /* Remove newline if present. */
-        if (line[len-1] == '\n') line[len-1] = '\0';
+    size_t n = 0;
+    int err_r = 0;
 
-        Cell* s = make_cell_string(line);
-        cell_add(result, s);
+    Cell* result = make_cell_vector();
+    for (;;) {
+        const ssize_t len = port->port->vtable->getdelim(
+            &line, &n, '\n', port, &err_r);
+
+        if (len == R_EOF)
+            break;
+
+        if (len == R_ERR) {
+            free(line);
+            return make_cell_error(
+                fmt_err("read-lines: %s", err_r),
+                FILE_ERR);
+        }
+
+        if (len > 0 && line[len - 1] == '\n')
+            line[len - 1] = '\0';
+	
+	cell_add(result, make_cell_string(line));
     }
 
-    /* getline() malloc'ed the buffer; we didn't use the GC. */
     free(line);
     return builtin_vector_to_list(e, make_sexpr_len1(result));
 }
@@ -471,7 +567,7 @@ Cell* builtin_read_string(const Lex* e, const Cell* a)
     /* Buffer size = the chars to read by potential 4 bytes each, plus 1 for \0. */
     char* buffer = GC_MALLOC_ATOMIC(chars_to_read * 4 + 1);
     int err_r;
-    const int chars_read = port->port->vtable->read(buffer, chars_to_read, port, &err_r);
+    const ssize_t chars_read = port->port->vtable->read(buffer, chars_to_read, port, &err_r);
 
     if (chars_read == R_EOF) {
         return EOF_Obj;
@@ -519,7 +615,7 @@ Cell* builtin_read_char(const Lex* e, const Cell* a)
 
     int err_r;
     UChar32 out;
-    const int wc = port_read_char(port, &out, &err_r);
+    const ssize_t wc = port_read_char(port, &out, &err_r);
     if (wc == R_EOF) {
         return EOF_Obj;
     }
@@ -557,7 +653,7 @@ Cell* builtin_read_u8(const Lex* e, const Cell* a) {
 
     int err_r;
     uint8_t out;
-    const int byte = port->port->vtable->read(&out, 1, port, &err_r);
+    const ssize_t byte = port->port->vtable->read(&out, 1, port, &err_r);
 
     if (byte == R_EOF) {
         return EOF_Obj;
@@ -789,7 +885,7 @@ Cell* builtin_peek_char(const Lex* e, const Cell* a)
 
     /* Grab the char. */
     UChar32 out;
-    const int ret = port_read_char(port, &out, &err_r);
+    const ssize_t ret = port_read_char(port, &out, &err_r);
 
     /* Reset index, even if there is an error. */
     int seek_err;
@@ -853,7 +949,7 @@ Cell* builtin_peek_u8(const Lex* e, const Cell* a)
 
     /* Grab the byte. */
     uint8_t byte;
-    const int ret = port->port->vtable->read(&byte, 1, port, &err_r);
+    const ssize_t ret = port->port->vtable->read(&byte, 1, port, &err_r);
 
     /* Reset index, even if there is an error. */
     int seek_err;
@@ -926,7 +1022,7 @@ Cell* builtin_write_char(const Lex* e, const Cell* a)
 
     /* Write the char. */
     int err_r = 0;
-    const int rv = port->port->vtable->write(&char_buf, len, port, &err_r);
+    const ssize_t rv = port->port->vtable->write(&char_buf, len, port, &err_r);
 
     if (rv == R_ERR) {
         return make_cell_error(
@@ -997,7 +1093,7 @@ Cell* builtin_write_string(const Lex* e, const Cell* a)
     const char* out_string = GC_strndup(in_string, num_chars);
 
     int err_r;
-    const int rv = port->port->vtable->write(out_string, strlen(out_string), port, &err_r);
+    const ssize_t rv = port->port->vtable->write(out_string, strlen(out_string), port, &err_r);
     if (rv == R_ERR) {
         return make_cell_error(
             fmt_err("write-string: %s", strerror(err_r)),
@@ -1058,7 +1154,7 @@ Cell* builtin_write_u8(const Lex* e, const Cell* a)
 
     /* Write the byte. */
     int err_r;
-    const int rv = port->port->vtable->write(&byte, 1, port, &err_r);
+    const ssize_t rv = port->port->vtable->write(&byte, 1, port, &err_r);
 
     if (rv == R_ERR) {
         return make_cell_error(
@@ -1176,8 +1272,8 @@ Cell* builtin_newline(const Lex* e, const Cell* a)
 
     /* Write the newline. */
     int err_r = 0;
-    char c = '\n';
-    const int rv = port->port->vtable->write(&c, 1, port, &err_r);
+    char c = 0x0A;
+    const ssize_t rv = port->port->vtable->write(&c, 1, port, &err_r);
 
     if (rv == R_ERR) {
         return make_cell_error(
@@ -1471,7 +1567,7 @@ Cell* builtin_display(const Lex* e, const Cell* a)
     const Cell* val = a->cell[0];
     const char* buf = cell_to_string(val, MODE_DISPLAY);
     int err_r;
-    const int res = p->port->vtable->write(buf, strlen(buf), p, &err_r);
+    const ssize_t res = p->port->vtable->write(buf, strlen(buf), p, &err_r);
     if (res < 0) {
         return make_cell_error(
             fmt_err("display: %s", strerror(err_r)),
@@ -1489,19 +1585,35 @@ Cell* builtin_displayln(const Lex* e, const Cell* a)
     Cell* err = CHECK_ARITY_RANGE(a, 1, 2, "displayln");
     if (err) return err;
 
-    Cell* port;
+    Cell* p;
     if (a->count == 1) {
-        port = builtin_current_output_port(e, a);
+        p = builtin_current_output_port(e, a);
     } else {
         if (a->cell[1]->type != CELL_PORT) {
             return make_cell_error(
                 "displayln: arg2 must be a port",
                 TYPE_ERR);
         }
-        port = a->cell[1];
+        p = a->cell[1];
     }
+
+    if (p->port->stream_t != OUTPUT_STREAM || p->is_open == 0) {
+        return make_cell_error(
+            "display: arg2 must be an open output port",
+            FILE_ERR);
+    }
+
     const Cell* val = a->cell[0];
-    fprintf(port->port->fh, "%s\n", cell_to_string(val, MODE_DISPLAY));
+    char* buf = cell_to_string(val, MODE_DISPLAY);
+    buf[strlen(buf)] = '\n';
+    int err_r;
+    const ssize_t res = p->port->vtable->write(buf, strlen(buf), p, &err_r);
+    if (res < 0) {
+        return make_cell_error(
+            fmt_err("display: %s", strerror(err_r)),
+            FILE_ERR);
+    }
+
     return USP_Obj;
 }
 
@@ -1525,19 +1637,34 @@ Cell* builtin_write(const Lex* e, const Cell* a)
     Cell* err = CHECK_ARITY_RANGE(a, 1, 2, "write");
     if (err) return err;
 
-    Cell* port;
+    Cell* p;
     if (a->count == 1) {
-        port = builtin_current_output_port(e, a);
+        p = builtin_current_output_port(e, a);
     } else {
         if (a->cell[1]->type != CELL_PORT) {
             return make_cell_error(
                 "write: arg1 must be a port",
                 TYPE_ERR);
         }
-        port = a->cell[1];
+        p = a->cell[1];
     }
+
+    if (p->port->stream_t != OUTPUT_STREAM || p->is_open == 0) {
+        return make_cell_error(
+            "display: arg2 must be an open output port",
+            FILE_ERR);
+    }
+
     const Cell* val = a->cell[0];
-    fprintf(port->port->fh, "%s", cell_to_string(val, MODE_WRITE));
+    const char* buf = cell_to_string(val, MODE_WRITE);
+    int err_r;
+    const ssize_t res = p->port->vtable->write(buf, strlen(buf), p, &err_r);
+    if (res < 0) {
+        return make_cell_error(
+            fmt_err("display: %s", strerror(err_r)),
+            FILE_ERR);
+    }
+
     return USP_Obj;
 }
 
@@ -1550,20 +1677,35 @@ Cell* builtin_writeln(const Lex* e, const Cell* a)
     Cell* err = CHECK_ARITY_RANGE(a, 1, 2, "writeln");
     if (err) return err;
 
-    Cell* port;
+    Cell* p;
     if (a->count == 1) {
-        port = builtin_current_output_port(e, a);
+        p = builtin_current_output_port(e, a);
     } else {
-        /* TODO: ensure it is an output text port. */
         if (a->cell[1]->type != CELL_PORT) {
             return make_cell_error(
                 "writeln: must be a port",
                 TYPE_ERR);
         }
-        port = a->cell[1];
+        p = a->cell[1];
     }
+
+    if (p->port->stream_t != OUTPUT_STREAM || p->is_open == 0) {
+        return make_cell_error(
+            "display: arg2 must be an open output port",
+            FILE_ERR);
+    }
+
     const Cell* val = a->cell[0];
-    fprintf(port->port->fh, "%s\n", cell_to_string(val, MODE_WRITE));
+    char* buf = cell_to_string(val, MODE_WRITE);
+    buf[strlen(buf)] = '\n';
+    int err_r;
+    const ssize_t res = p->port->vtable->write(buf, strlen(buf), p, &err_r);
+    if (res < 0) {
+        return make_cell_error(
+            fmt_err("display: %s", strerror(err_r)),
+            FILE_ERR);
+    }
+
     return USP_Obj;
 }
 
@@ -1773,7 +1915,7 @@ Cell* builtin_open_input_string(const Lex* e, const Cell* a) {
     /* Bypass Vtable to write the string to the buffer. */
     const char* str = a->cell[0]->str;
     int err_r;
-    const int ret = memory_write(str, strlen(str), p, &err_r);
+    const ssize_t ret = memory_write(str, strlen(str), p, &err_r);
     if (ret < 0) {
         return make_cell_error(
             fmt_err("open-input-string", strerror(errno)),
@@ -1833,7 +1975,7 @@ Cell* builtin_open_input_bytevector(const Lex* e, const Cell* a) {
     /* Bypass Vtable to write the bv to the buffer. */
     const char* bv = a->cell[0]->bv->data;
     int err_r;
-    const int ret = memory_write(bv, a->cell[0]->count, p, &err_r);
+    const ssize_t ret = memory_write(bv, a->cell[0]->count, p, &err_r);
     if (ret < 0) {
         return make_cell_error(
             fmt_err("open-input-bytevector", strerror(errno)),
