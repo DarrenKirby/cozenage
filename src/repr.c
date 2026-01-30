@@ -268,13 +268,13 @@ static void cell_to_string_worker(const Cell* v,
             break;
 
         case CELL_PORT: {
-            char *stream_type = "\0";
-            if (v->port->backend_t == BK_FILE_TEXT || v->port->backend_t == BK_FILE_BINARY)
-                { stream_type = "file-port"; }
+            char *stream_type = nullptr;;
+            if (v->port->backend_t == BK_FILE_TEXT) { stream_type = "text-file-port"; }
+            if (v->port->backend_t == BK_FILE_BINARY) { stream_type = "binary-file-port"; }
             if (v->port->backend_t == BK_STRING) { stream_type = "string-port"; }
             if (v->port->backend_t == BK_BYTEVECTOR) { stream_type = "bytevector-port"; }
+            if (!stream_type)  { stream_type = "unknown-stream-type!!!"; }
 
-            /* TODO: add representation for string and bv ports. */
             if (mode == MODE_REPL) {
                 sb_append_fmt(sb, "#<%s%s %s-port '%s%s%s'>", v->is_open ? "open:" : "closed:",
                     stream_type,
