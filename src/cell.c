@@ -423,7 +423,7 @@ Cell* make_cell_memory_port(const stream_t stream, const backend_t backend)
     v->type = CELL_PORT;
     v->port = GC_MALLOC(sizeof(port_d));
     v->port->stream_t = stream;
-    v->port->path = nullptr;
+    v->port->path = "memory-backed";
     v->port->backend_t = backend;
     v->port->vtable = &MemoryVTable;
     /* Initialize the data store. */

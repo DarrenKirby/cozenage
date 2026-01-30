@@ -135,10 +135,12 @@ typedef enum Backend_t : uint8_t  {
 } backend_t;
 
 typedef struct PortInterface {
-    int32_t (*write)(const void* buf, size_t len, const Cell* port, int* err);
-    int32_t (*read)(void* buf, size_t len, const Cell* port, int* err);
+    ssize_t (*write)(const void* buf, size_t len, const Cell* port, int* err);
+    ssize_t (*read)(void* buf, size_t len, const Cell* port, int* err);
     long (*tell)(const Cell* port, int* err);
     int (*seek)(const Cell* port, long offset, int* err);
+    ssize_t (*getdelim)(char **lineptr, size_t *n,
+                        int delim, const Cell *port, int *err);
     void (*close)(Cell *port);
 } PortInterface;
 
