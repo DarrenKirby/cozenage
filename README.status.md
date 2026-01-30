@@ -23,6 +23,7 @@ This document tracks the implementation status of procedures in the Cozenage int
 |   ✅    | `assoc`                      |
 |   ✅    | `assq`                       |
 |   ✅    | `assv`                       |
+|   ✅    | `binary-port?`               |
 |   ✅    | `boolean=?`                  |
 |   ✅    | `boolean?`                   |
 |   ✅    | `bytevector`                 |
@@ -77,6 +78,7 @@ This document tracks the implementation status of procedures in the Cozenage int
 |   ✅    | `denominator`                |
 |   ✅    | `digit-value`                |
 |   ✅    | `display`                    |
+|   ✅    | `displayln`                  |
 |   ✅    | `eof-object`                 |
 |   ✅    | `eof-object?`                |
 |   ✅    | `eq?`                        |
@@ -208,6 +210,7 @@ This document tracks the implementation status of procedures in the Cozenage int
 |   ✅    | `symbol->string`             |
 |   ✅    | `symbol=?`                   |
 |   ✅    | `symbol?`                    |
+|   ✅    | `textual-port?`              |
 |   ✅    | `true?`                      |
 |   ✅    | `truncate`                   |
 |   ✅    | `u8-ready?`                  |
