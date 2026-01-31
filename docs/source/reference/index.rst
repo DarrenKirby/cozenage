@@ -12,7 +12,7 @@ text more personalized for Cozenage itself.
    :maxdepth: 2
    :caption: Contents:
 
-   running_cozenage/index
+   ../howto/running
    documentation_notation/index
    syntax_and_special_forms/index
    primitive_datatypes/index
