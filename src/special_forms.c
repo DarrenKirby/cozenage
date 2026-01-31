@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 
 #include "special_forms.h"
 #include "eval.h"
@@ -244,7 +244,7 @@ HandlerResult sf_quote(Lex* e, Cell* a)
     }
 
     /* Extract the expression that was quoted. */
-    Cell* qexpr = a->cell[0]; //cell_take(a, 0);
+    Cell* qexpr = a->cell[0];
 
     Cell* result = make_list_from_sexpr(qexpr);
     return return_val(result);

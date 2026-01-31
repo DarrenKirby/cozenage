@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 
 #include "vectors.h"
 #include "types.h"
@@ -46,6 +46,7 @@ Cell* builtin_vector(const Lex* e, const Cell* a)
     return vec;
 }
 
+
 /* (vector-length vector )
 * Returns the number of elements in vector as an exact integer. */
 Cell* builtin_vector_length(const Lex* e, const Cell* a)
@@ -58,6 +59,7 @@ Cell* builtin_vector_length(const Lex* e, const Cell* a)
 
     return make_cell_integer(a->cell[0]->count);
 }
+
 
 /* (vector-ref vector k)
  * The vector-ref procedure returns the object and index k in vector */
@@ -85,6 +87,7 @@ Cell* builtin_vector_ref(const Lex* e, const Cell* a)
     }
     return a->cell[0]->cell[i];
 }
+
 
 /* (make-vector k)
  * (make-vector k fill)
@@ -123,6 +126,7 @@ Cell* builtin_make_vector(const Lex* e, const Cell* a)
     return vec;
 }
 
+
 /* (list->vector list)
  * The list->vector procedure returns a newly created vector initialized to the elements of the list
  * 'list'. Order is preserved. */
@@ -154,6 +158,7 @@ Cell* builtin_list_to_vector(const Lex* e, const Cell* a)
     }
     return vec;
 }
+
 
 /* (vector->list vector)
  * (vector->list vector start)
@@ -216,6 +221,7 @@ Cell* builtin_vector_to_list(const Lex* e, const Cell* a)
     return result;
 }
 
+
 /* (vector-copy vector)
  * (vector-copy vector start)
  * (vector-copy vector start end)
@@ -247,6 +253,7 @@ Cell* builtin_vector_copy(const Lex* e, const Cell* a)
     }
     return vec;
 }
+
 
 /* (vector->string vector)
  * (vector->string vector start)
@@ -297,6 +304,7 @@ Cell* builtin_vector_to_string(const Lex* e, const Cell* a)
     the_string[j] = '\0';
     return make_cell_string(the_string);
 }
+
 
 /* (string->vector string)
  * (string->vector string start )
@@ -364,6 +372,7 @@ Cell* builtin_string_to_vector(const Lex* e, const Cell* a)
     return vec;
 }
 
+
 /* (vector-set! vector k obj)
  * It is an error if k is not a valid index of vector. This procedure stores obj in the kth position
  * of vector */
@@ -396,6 +405,7 @@ Cell* builtin_vector_set_bang(const Lex* e, const Cell* a)
     vec->cell[idx] = obj;
     return Nil_Obj;
 }
+
 
 /* (vector-append vector ... )
  * Returns a newly allocated vector whose elements are the concatenation of the elements of the
@@ -442,7 +452,6 @@ Cell* builtin_vector_copy_bang(const Lex* e, const Cell* a)
     Cell* err = CHECK_ARITY_RANGE(a, 3, 5, "vector-copy!");
     if (err) return err;
 
-    /* Validate Argument Types */
     if (a->cell[0]->type != CELL_VECTOR)
         return make_cell_error("vector-copy!: arg 1 must be a vector (to)", TYPE_ERR);
     if (a->cell[1]->type != CELL_INTEGER)
@@ -450,7 +459,6 @@ Cell* builtin_vector_copy_bang(const Lex* e, const Cell* a)
     if (a->cell[2]->type != CELL_VECTOR)
         return make_cell_error("vector-copy!: arg 3 must be a vector (from)", TYPE_ERR);
 
-    /* Extract Base Information */
     const Cell* to_vec = a->cell[0];
     const int32_t to_vec_len = to_vec->count;
     const int32_t to_start_idx = (int32_t)a->cell[1]->integer_v;
@@ -458,34 +466,43 @@ Cell* builtin_vector_copy_bang(const Lex* e, const Cell* a)
     const Cell* from_vec = a->cell[2];
     const int32_t from_vec_len = from_vec->count;
 
-    /* Extract and Default Optional Indices */
     int32_t from_start_idx = 0;
     int32_t from_end_idx = from_vec_len;
 
     if (a->count >= 4) {
         if (a->cell[3]->type != CELL_INTEGER)
-            return make_cell_error("vector-copy!: arg 4 must be an integer (start)", TYPE_ERR);
+            return make_cell_error(
+                "vector-copy!: arg 4 must be an integer (start)",
+                TYPE_ERR);
         from_start_idx = (int32_t)a->cell[3]->integer_v;
     }
     if (a->count == 5) {
         if (a->cell[4]->type != CELL_INTEGER)
-            return make_cell_error("vector-copy!: arg 5 must be an integer (end)", TYPE_ERR);
+            return make_cell_error(
+                "vector-copy!: arg 5 must be an integer (end)",
+                TYPE_ERR);
         from_end_idx = (int32_t)a->cell[4]->integer_v;
     }
 
-    /* Index and Range Validation */
+    /* Index and range validation. */
     if (from_start_idx < 0 || from_start_idx > from_vec_len)
-        return make_cell_error("vector-copy!: 'start' index out of bounds", INDEX_ERR);
+        return make_cell_error(
+            "vector-copy!: 'start' index out of bounds",
+            INDEX_ERR);
     if (from_end_idx < from_start_idx || from_end_idx > from_vec_len)
-        return make_cell_error("vector-copy!: 'end' index out of bounds", INDEX_ERR);
+        return make_cell_error(
+            "vector-copy!: 'end' index out of bounds",
+            INDEX_ERR);
 
     const int32_t count = from_end_idx - from_start_idx;
 
     if (to_start_idx < 0 || (to_start_idx + count) > to_vec_len)
-        return make_cell_error("vector-copy!: target range out of bounds", INDEX_ERR);
+        return make_cell_error(
+            "vector-copy!: target range out of bounds",
+            INDEX_ERR);
 
-    /* Perform the Copy with Overlap Protection */
-    /* If we are copying within the same vector and moving data "forward" (to a higher index),
+    /* Perform the copy with overlap protection. */
+    /* If copying within the same vector and moving data "forward" (to a higher index),
        we must copy from right-to-left to avoid overwriting the source data. */
     if (to_vec == from_vec && to_start_idx > from_start_idx) {
         for (int32_t i = count - 1; i >= 0; i--) {
@@ -514,7 +531,9 @@ Cell* builtin_vector_fill_bang(const Lex* e, const Cell* a)
 
     const Cell* vec = a->cell[0];
     if (vec->type != CELL_VECTOR) {
-        return make_cell_error("vector-fill!: arg 1 must be a vector", TYPE_ERR);
+        return make_cell_error(
+            "vector-fill!: arg 1 must be a vector",
+            TYPE_ERR);
     }
 
     const int32_t len = vec->count;
@@ -522,28 +541,36 @@ Cell* builtin_vector_fill_bang(const Lex* e, const Cell* a)
     int32_t start = 0;
     int32_t end = len;
 
-    /* Validate Start */
+    /* Validate start. */
     if (a->count >= 3) {
         if (a->cell[2]->type != CELL_INTEGER)
-            return make_cell_error("vector-fill!: start must be an integer", TYPE_ERR);
+            return make_cell_error(
+                "vector-fill!: start must be an integer",
+                TYPE_ERR);
 
         start = (int32_t)a->cell[2]->integer_v;
         /* start can be equal to len if end is also len (empty range) */
         if (start < 0 || start > len)
-            return make_cell_error("vector-fill!: start index out of range", INDEX_ERR);
+            return make_cell_error(
+                "vector-fill!: start index out of range",
+                INDEX_ERR);
     }
 
-    /* Validate End */
+    /* Validate end. */
     if (a->count == 4) {
         if (a->cell[3]->type != CELL_INTEGER)
-            return make_cell_error("vector-fill!: end must be an integer", TYPE_ERR);
+            return make_cell_error(
+                "vector-fill!: end must be an integer",
+                TYPE_ERR);
 
         end = (int32_t)a->cell[3]->integer_v;
         if (end < 0 || end > len || end < start)
-            return make_cell_error("vector-fill!: end index out of range", INDEX_ERR);
+            return make_cell_error(
+                "vector-fill!: end index out of range",
+                INDEX_ERR);
     }
 
-    /* Perform the fill */
+    /* Perform the fill. */
     for (int32_t i = start; i < end; i++) {
         vec->cell[i] = fill;
     }

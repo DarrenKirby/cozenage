@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 
 #include "compat_readline.h"
 #include "main.h"
@@ -140,14 +140,14 @@ int main(const int argc, char** argv)
             g_argc = argc - optind;
             g_argv = argv + optind;
         }
-        /* File-Runner Mode. */
+        /* File-Runner mode. */
         const char *file_path = argv[optind];
 
         /* Pass the file path (argv[optind]) and the load_libs struct. */
         return run_file_script(file_path, load_libs);
     }
 
-    /* REPL Mode (no non-option arguments were provided). */
+    /* REPL mode (no non-option arguments were provided). */
     run_repl(load_libs);
     return EXIT_SUCCESS;
 }
