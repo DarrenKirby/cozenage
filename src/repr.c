@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 
 #include "repr.h"
 #include "parser.h"
@@ -33,6 +33,8 @@
 #include <ctype.h>
 #endif
 
+
+/* TODO: does not handle circular objects/datum labels for MODE_REPL/MODE_WRITE */
 
 /* Forward declaration for helpers. */
 static void cell_to_string_worker(const Cell* v, str_buf_t *sb, print_mode_t mode);
