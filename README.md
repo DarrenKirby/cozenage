@@ -2,49 +2,133 @@
 
 *Getting close to being ready for prime time*
 
-## About
+**Cozenage** is a Scheme-derived, Lisp-like programming language written in C, designed primarily as an educational project and exploratory implementation. It provides a small, expressive core language and is extended through a growing standard library and dynamically loadable modules.
 
-``Cozenage`` is a Scheme-derived, LISP-like language which provides a modest core of built-in
-procedures and is extended by a growing standard library of additional functionality implemented 
-as 'hot-pluggable' dynamic modules. While Cozenage agrees with the formal R5RS/R7RS standards 
-inasmuch as possible, it is not intended to be fully-compliant, and deviates from the standards in 
-many non-trivial ways. These differences, and a justifications for them, will be documented as I find
-the time. That said, anyone experienced with Scheme will find Cozenage quite familiar.
+While Cozenage borrows heavily from Scheme—particularly R5RS and R7RS—it is **not intended to be fully standard-compliant**. Where possible, Cozenage follows Scheme semantics and conventions, but it intentionally deviates from the standards in a number of non-trivial ways. These deviations are the result of pragmatic design choices, implementation constraints, or deliberate simplifications, and are documented where relevant.
 
-Cozenage has:
+Anyone with experience in Scheme or other Lisp dialects should find Cozenage immediately familiar.
 
-- The typical menu of disjoint primitive objects: ``number``, ``string``, ``char``, ``symbol``, ``pair``, ``null``, ``vector``, ``boolean``, ``port``, and ``procedure``.
-- A selection of ``bytevector`` objects implemented using native C type arrays: ``u8``, ``s8``, ``u16``, ``s16``, ``u32``, ``s32``, ``u64``, and ``s64``.
-- Full 'numeric tower' of derived numeric types including ``integer``, ``rational``, ``real``, and ``complex``.
-- Exact and inexact numbers.
-- File-backed text and binary ports, and memory-backed string and bytevector (u8) ports.
-- Proper tail-call optimization where applicable.
-- Garbage collection.
-- A REPL with multi-line input editing, persistent command history, and tab-autocompletion.
-- UTF-8 Unicode support.
-- eval/apply procedures for interpreting data as executable code.
-- Lisp-style ``defmacro`` non-hygienic macros.
-- polymorphic len, idx, rev procedures for compound types.
-- Delayed evaluation and streams implemented in the ``lazy`` library.
+---
 
-Typical Scheme features that Cozenage does NOT have:
+## Design goals
 
-- call/cc and first-class continuations. I'm not likely to ever implement this. Rather, I am more likely to implement control flow patterns typically implemented via call/cc as primitive syntax.  
-- Hygienic macros. I will likely implement this at some point, but it is low-priority (and very difficult!)
-- User-defined library loading (on the TODO list).
+- **Clarity over completeness**  
+  Prefer understandable, inspectable implementations over strict standards compliance.
 
-Typical Scheme features currently in progress:
+- **A small, coherent core**  
+  Keep the core language modest and expressive, with additional functionality layered on via libraries and modules.
 
-- Arbitrary size and precision rationals and real numbers. Currently, only bigints are supported. bigfloat, then bigrat are in progress.  
+- **Exploration and learning**  
+  Cozenage exists as a vehicle for learning about language implementation, interpreter design, and runtime systems.
 
-Other major items on the TODO list:
+- **Practical Lisp semantics**  
+  Favor straightforward, predictable behavior over obscure or highly abstract features.
 
-- Replace readline/libedit with in-house line editing, history, and tab-completion solution. Bracket matching.
-- Replace libgc with in-house allocator/collector. A bit beyond my ability at present.
-- 'bytevector' loadable module with full suite of functions for s8, u16, s16 et al.
-- Add 'set' and 'map' Scheme types and associated procedures. Will require syntax additions.
-- try/catch exception facility.
-- Async ports for sockets, URL ports for web data.
+---
+
+## Language features
+
+### Core object types
+
+Cozenage provides the usual set of disjoint primitive objects common to Scheme-like languages:
+
+- number
+- string
+- character
+- symbol
+- pair
+- null
+- vector
+- boolean
+- port
+- procedure
+
+### Numeric system
+
+- Full numeric tower:
+    - integer
+    - rational
+    - real
+    - complex
+- Exact and inexact numbers
+- Native big integer support
+- Work in progress: arbitrary-precision rationals and reals
+
+### Bytevectors
+
+Native bytevector types backed by C arrays:
+
+- u8, s8
+- u16, s16
+- u32, s32
+- u64, s64
+
+### Ports and I/O
+
+- File-backed text and binary ports
+- Memory-backed string and bytevector (u8) ports
+- UTF-8 Unicode support
+
+### Evaluation model
+
+- Proper tail-call optimization
+- `eval` / `apply`
+- Lisp-style `defmacro` non-hygienic macros
+- Delayed evaluation and streams (via the `lazy` library)
+
+### Runtime and tooling
+
+- Garbage collection (Boehm GC)
+- Interactive REPL with:
+    - multi-line editing
+    - persistent history
+    - tab completion
+
+### Polymorphic procedures
+
+Several common procedures are polymorphic across compound types, including:
+
+- `len`
+- `idx`
+- `rev`
+
+---
+
+## Intentional omissions
+
+- **First-class continuations (`call/cc`)**  
+  These are unlikely to be implemented. Control-flow patterns typically expressed using continuations may instead be 
+  provided as primitive syntax or built-in forms.
+
+- **Hygienic macros**  
+  While desirable, hygienic macros are complex and currently low priority. Cozenage instead provides Lisp-style, non-hygienic macros.
+
+---
+
+## Features in progress
+
+- Arbitrary-precision rationals and reals  
+  (big integers are already supported)
+
+---
+
+## Planned and future work
+
+- Custom line editor (replace readline/libedit)
+- Custom allocator / garbage collector
+- Expanded bytevector library
+- Native `set` and `map` types
+- Exception handling (`try` / `catch`)
+- Asynchronous ports (sockets)
+- URL-backed ports
+- User-defined library loading, both 'Scheme' libraries, and libraries written in C (ie: FFI).
+
+---
+
+## Philosophy
+
+Cozenage is best understood as **a Scheme-inspired Lisp**, prioritizing internal consistency, approachability, and educational value over exhaustive standards compliance.
+
 
 ## Dependencies
 
