@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 
 #include "strings.h"
 #include "types.h"
@@ -37,18 +37,19 @@
 
 /* Returns the byte offset for the k-th character in a string. */
 static int32_t get_utf8_byte_offset(const Cell* s, const int32_t char_idx) {
-    if (s->ascii) return char_idx; /* Fast Path: 1 char = 1 byte */
+    if (s->ascii) return char_idx;
 
     int32_t byte_offset;
     const uint8_t* ptr = (const uint8_t*)s->str;
 
+    /* Micro-optimization: search from front or back depending on k location. */
     if (char_idx <= s->char_count / 2) {
-        /* Forward Search. */
+        /* Forward search. */
         byte_offset = 0;
         /* Move byte_offset from 0, forward char_idx times, not exceeding s->count. */
         U8_FWD_N(ptr, byte_offset, s->count, char_idx);
     } else {
-        /* Backward Search. */
+        /* Backward search. */
         byte_offset = s->count;
         /* Move byte_offset from s->count, backward (total - idx) times, not going before 0. */
         U8_BACK_N(ptr, 0, byte_offset, (s->char_count - char_idx));
@@ -72,7 +73,7 @@ static int32_t encode_utf8(const uint32_t cp, uint8_t* out) {
     /* U8_APPEND(buffer, index, capacity, codepoint, error_flag). */
     U8_APPEND(out, i, 4, cp, is_err);
 
-    /* If the codepoint is invalid, we fall back to the Unicode
+    /* If the codepoint is invalid, fall back to the Unicode
      * Replacement Character: U+FFFD.
      * In UTF-8, this is 3 bytes: 0xEF, 0xBF, 0xBD. */
     if (is_err) {
@@ -96,7 +97,8 @@ static int string_compare(const Cell* a, const Cell* b) {
 }
 
 
-void integer_to_binary_string(const int64_t val, char* buf, const size_t size) {
+/* Helper for radix 2 number->string call. */
+static void integer_to_binary_string(const int64_t val, char* buf) {
     if (val == 0) { strcpy(buf, "0"); return; }
     char temp[66];
     int i = 0;
@@ -109,8 +111,25 @@ void integer_to_binary_string(const int64_t val, char* buf, const size_t size) {
 
     /* Reverse into buf. */
     int j = 0;
-    while (i > 0 && (size_t)j < size - 1) buf[j++] = temp[--i];
+    while (i > 0 && (size_t)j < 128 - 1) buf[j++] = temp[--i];
     buf[j] = '\0';
+}
+
+
+/* Helper for radix 8 and 16 number->string call. */
+static void integer_to_oct_or_hex_string(const int64_t val, char* buf, const uint8_t radix) {
+    const bool neg = val < 0;
+    const unsigned long long mag = neg ? -(unsigned long long)val
+                                 : (unsigned long long)val;
+
+    const char *fmt = (radix == 8) ? "%llo" : "%llx";
+    snprintf(buf, sizeof(buf), fmt, mag);
+
+    if (neg) {
+        char tmp[sizeof(buf)];
+        snprintf(tmp, sizeof(tmp), "-%s", buf);
+        strncpy(buf, tmp, 128);
+    }
 }
 
 
@@ -128,7 +147,7 @@ Cell* builtin_string(const Lex* e, const Cell* a)
     if (err) return err;
 
     const int32_t char_count = a->count;
-    /* Allocate the Cell first so we can fill metadata directly. */
+    /* Bypass the string constructor and fill metadata directly. */
     Cell* v = GC_MALLOC_ATOMIC(sizeof(Cell));
 
     /* Worst-case allocation: 4 bytes per codepoint + null terminator. */
@@ -147,8 +166,8 @@ Cell* builtin_string(const Lex* e, const Cell* a)
 
     buffer[byte_idx] = '\0';
 
-    /* The buffer is allocated for the worst case, so now we know
-     * the length we reallocate for the exact size. */
+    /* The buffer is allocated for the worst case
+     * Reallocate the exact size. */
     buffer = GC_REALLOC(buffer, byte_idx + 1);
 
     /* Set metadata directly. */
@@ -185,19 +204,17 @@ Cell* builtin_string_eq_pred(const Lex* e, const Cell* a)
     Cell* err = check_arg_types(a, CELL_STRING, "string=?");
     if (err) return err;
 
-    /* Arity check: 0 or 1 args is technically true in R7RS,
-       but most impls require at least 2 for a useful comparison. */
+    /* 0 or 1 args is technically true in R7RS */
     if (a->count < 2) return True_Obj;
 
     for (int i = 0; i < a->count - 1; i++) {
         const Cell* lhs = a->cell[i];
         const Cell* rhs = a->cell[i+1];
 
-        /* Pointer identity (Fastest). */
+        /* Pointer identity. */
         if (lhs == rhs) continue;
 
-        /* Byte length check (Fast)
-           Eliminates the need for strlen(). */
+        /* Byte length check */
         if (lhs->count != rhs->count) {
             return False_Obj;
         }
@@ -264,8 +281,8 @@ Cell* builtin_string_gt_pred(const Lex* e, const Cell* a)
     for (int i = 0; i < a->count - 1; i++) {
         const Cell* lhs = a->cell[i];
         const Cell* rhs = a->cell[i+1];
-
-        if (lhs == rhs) return False_Obj; /* A string is not less than itself. */
+        /* A string is not less than itself. */
+        if (lhs == rhs) return False_Obj;
 
         if (string_compare(lhs, rhs) <= 0) {
             return False_Obj;
@@ -365,19 +382,18 @@ Cell* builtin_string_ref(const Lex* e, const Cell* a)
 
     const int32_t char_idx = (int32_t)a->cell[1]->integer_v;
 
-    /* O(1) Bounds Validation using Metadata. */
     if (char_idx < 0 || char_idx >= s_cell->char_count) {
         return make_cell_error(
             "string-ref: index out of range",
             INDEX_ERR);
     }
 
-    /* FAST PATH: ASCII. */
+    /* ASCII. */
     if (s_cell->ascii) {
         return make_cell_char(s_cell->str[char_idx]);
     }
 
-    /* SLOW PATH: UTF-8 */
+    /* UTF-8 */
     /* Find the byte offset of the desired character. */
     const int32_t byte_offset = get_utf8_byte_offset(s_cell, char_idx);
 
@@ -427,7 +443,7 @@ Cell* builtin_make_string(const Lex* e, const Cell* a)
     /* Default to space (U+0020) if no char provided. */
     const uint32_t fill_cp = (a->count == 2) ? (uint32_t)a->cell[1]->char_v : 0x0020;
 
-    /* Allocate the Cell and the Buffer. */
+    /* Allocate the Cell and the buffer. */
     Cell* v = GC_MALLOC_ATOMIC(sizeof(Cell));
     char* buffer;
     int32_t total_bytes;
@@ -480,16 +496,20 @@ Cell* builtin_string_list(const Lex* e, const Cell* a)
             TYPE_ERR);
 
     const int32_t str_len = s_cell->char_count;
-    /* Early return for zero-length string. Technically, if
-     * indices were passed this should error, but whatevs. */
+    /* Early return for zero-length string. If
+     * indices were passed this should error. */
     if (str_len == 0) {
-        return make_cell_nil();
+        if (a->count == 1) {
+            return make_cell_nil();
+        }
+        return make_cell_error(
+            "string->list: zero-length string has no valid indices",
+            VALUE_ERR);
     }
 
     int32_t start = 0;
     int32_t end = str_len;
 
-    /* Extract and Validate Indices. */
     if (a->count >= 2) {
         if (a->cell[1]->type != CELL_INTEGER)
             return make_cell_error(
@@ -523,10 +543,10 @@ Cell* builtin_string_list(const Lex* e, const Cell* a)
         uint32_t cp;
 
         if (s_cell->ascii) {
-            /* ASCII Fast Path: Direct access. */
+            /* ASCII: direct access. */
             cp = (uint32_t)(unsigned char)s_cell->str[byte_index++];
         } else {
-            /* UTF-8 Path: Use ICU to get codepoint. */
+            /* UTF-8: use ICU to get codepoint. */
             UChar32 c;
             U8_NEXT(s_cell->str, byte_index, s_cell->count, c);
             cp = (uint32_t)c;
@@ -564,7 +584,7 @@ Cell* builtin_list_string(const Lex* e, const Cell* a)
             "list->string: arg must be a list",
             TYPE_ERR);
 
-    /* First pass: Validate types and calculate required memory. */
+    /* Validate types and calculate required memory. */
     int32_t total_bytes = 0;
     int32_t char_count = 0;
     int is_ascii = 1;
@@ -584,7 +604,7 @@ Cell* builtin_list_string(const Lex* e, const Cell* a)
         curr = curr->cdr;
     }
 
-    /* Allocate and Second pass: Encode directly. */
+    /* Allocate and encode directly. */
     char* buffer = GC_MALLOC_ATOMIC(total_bytes + 1);
     int32_t byte_idx = 0;
     curr = l;
@@ -633,13 +653,13 @@ Cell* builtin_substring(const Lex* e, const Cell* a)
     const int32_t start = (int32_t)a->cell[1]->integer_v;
     const int32_t end   = (int32_t)a->cell[2]->integer_v;
 
-    /* Bounds Validation. */
+    /* Bounds validation. */
     if (start < 0 || end > s_cell->char_count || start > end)
         return make_cell_error(
             "substring: index out of range",
             INDEX_ERR);
 
-    /* Find Byte Offsets. */
+    /* Find byte offsets. */
     int32_t start_byte = 0;
     int32_t end_byte = 0;
 
@@ -655,12 +675,12 @@ Cell* builtin_substring(const Lex* e, const Cell* a)
     }
     int32_t byte_len = end_byte - start_byte;
 
-    /* Create the New String. */
+    /* Create the new string. */
     char* buffer = GC_MALLOC_ATOMIC(byte_len + 1);
     memcpy(buffer, s_cell->str + start_byte, byte_len);
     buffer[byte_len] = '\0';
 
-    /* Construct Cell and Populate Metadata. */
+    /* Construct Cell and populate metadata. */
     Cell* v = GC_MALLOC_ATOMIC(sizeof(Cell));
     v->type = CELL_STRING;
     v->str = buffer;
@@ -668,8 +688,7 @@ Cell* builtin_substring(const Lex* e, const Cell* a)
     v->char_count = end - start;
     v->ascii = s_cell->ascii;
 
-    /* Note: If the parent wasn't ASCII, the substring MIGHT be ASCII,
-       so we re-scan with is_pure_ascii(). */
+    /* If the parent wasn't ASCII, the substring MIGHT be ASCII */
     if (!v->ascii) {
         v->ascii = is_pure_ascii(v->str, v->count);
     }
@@ -704,19 +723,19 @@ Cell* builtin_string_set_bang(const Lex* e, const Cell* a)
     const int32_t char_idx = (int32_t)a->cell[1]->integer_v;
     const uint32_t new_cp = (uint32_t)a->cell[2]->char_v;
 
-    /* Bounds Validation. */
+    /* Bounds validation. */
     if (char_idx < 0 || char_idx >= s_cell->char_count)
         return make_cell_error(
             "string-set!: index out of range",
             INDEX_ERR);
 
-    /* FAST PATH: ASCII to ASCII. */
+    /* ASCII to ASCII. */
     if (s_cell->ascii && new_cp < 128) {
         s_cell->str[char_idx] = (char)new_cp;
         return USP_Obj;
     }
 
-    /* SLOW PATH: UTF-8 Mutation. */
+    /* UTF-8 Mutation. */
     int32_t old_char_offset = get_utf8_byte_offset(s_cell, char_idx);
 
     /* Determine old char byte length. */
@@ -733,7 +752,7 @@ Cell* builtin_string_set_bang(const Lex* e, const Cell* a)
         /* Same size? Just overwrite in place. */
         memcpy(s_cell->str + old_char_offset, new_encoded, new_char_len);
     } else {
-        /* Different size? We must reallocate and shift. */
+        /* Different size? Reallocate and shift. */
         const int32_t new_total_bytes = s_cell->count - old_char_len + new_char_len;
         char* new_buf = GC_MALLOC_ATOMIC(new_total_bytes + 1);
 
@@ -751,13 +770,11 @@ Cell* builtin_string_set_bang(const Lex* e, const Cell* a)
         s_cell->count = new_total_bytes;
     }
 
-    /* Update Metadata. */
+    /* Update metadata. */
     if (new_cp >= 128) {
         s_cell->ascii = 0;
     }
-    /* If the string was UTF-8, and we inserted an ASCII char,
-       we could re-scan to see if it's now pure ASCII, but usually,
-       it's better to just leave it as 0 for performance. */
+    /* Could be ASCII now, but just leave it 0. */
     return USP_Obj;
 }
 
@@ -778,7 +795,7 @@ Cell* builtin_string_copy(const Lex* e, const Cell* a)
             "string-copy: arg 1 must be a string",
             TYPE_ERR);
 
-    /* Extract and Default Indices. */
+    /* Extract and default indices. */
     int32_t start = 0;
     int32_t end = s_cell->char_count;
 
@@ -803,7 +820,7 @@ Cell* builtin_string_copy(const Lex* e, const Cell* a)
             "string-copy: index out of range",
             INDEX_ERR);
 
-    /* Handle Full Copy Shortcut */
+    /* Handle full copy shortcut */
     /* If the user wants the whole string, just do a clean byte-copy and clone metadata. */
     if (start == 0 && end == s_cell->char_count) {
         char* new_str = GC_strndup(s_cell->str, s_cell->count);
@@ -816,7 +833,7 @@ Cell* builtin_string_copy(const Lex* e, const Cell* a)
         return v;
     }
 
-    /* Substring Path (calculate byte offsets). */
+    /* Substring path (calculate byte offsets). */
     const int32_t byte_start = get_utf8_byte_offset(s_cell, start);
     const int32_t byte_end = get_utf8_byte_offset(s_cell, end);
     int32_t byte_len = byte_end - byte_start;
@@ -858,7 +875,6 @@ Cell* builtin_string_copy_bang(const Lex* e, const Cell* a)
     Cell* err = CHECK_ARITY_RANGE(a, 3, 5, "string-copy!");
     if (err) return err;
 
-    /* 1. Extract Cells and Basic Info. */
     Cell* to_cell = a->cell[0];
     const Cell* from_cell = a->cell[2];
     if (to_cell->type != CELL_STRING || from_cell->type != CELL_STRING)
@@ -886,14 +902,14 @@ Cell* builtin_string_copy_bang(const Lex* e, const Cell* a)
             "string-copy!: target string too small",
             VALUE_ERR);
 
-    /* FAST PATH: ASCII to ASCII */
+    /* ASCII to ASCII */
     if (to_cell->ascii && from_cell->ascii) {
         /* No resizing needed, just a memmove (to handle overlap correctly). */
         memmove(to_cell->str + to_at, from_cell->str + f_start, num_chars);
         return to_cell;
     }
 
-    /* SLOW PATH: UTF-8 Reconstruction. */
+    /* UTF-8 Reconstruction. */
     int32_t to_prefix_bytes = get_utf8_byte_offset(to_cell, to_at);
     const int32_t to_suffix_start = get_utf8_byte_offset(to_cell, to_at + num_chars);
     int32_t to_suffix_bytes = to_cell->count - to_suffix_start;
@@ -917,7 +933,7 @@ Cell* builtin_string_copy_bang(const Lex* e, const Cell* a)
     memcpy(new_str + to_prefix_bytes + bytes_to_copy, to_cell->str + to_suffix_start, to_suffix_bytes);
     new_str[total_bytes] = '\0';
 
-    /* Update Metadata. */
+    /* Update metadata. */
     to_cell->str = new_str;
     to_cell->count = total_bytes;
     if (!from_cell->ascii) to_cell->ascii = 0;
@@ -945,7 +961,6 @@ Cell* builtin_string_fill_bang(const Lex* e, const Cell* a) {
     int32_t start = 0;
     int32_t end = s->char_count;
 
-    /* Handle Optional Indices (Using the logic we fixed for vector-fill!). */
     if (a->count >= 3) {
         start = (int32_t)a->cell[2]->integer_v;
         if (start < 0 || start > s->char_count) return make_cell_error(
@@ -959,20 +974,20 @@ Cell* builtin_string_fill_bang(const Lex* e, const Cell* a) {
             INDEX_ERR);
     }
 
-    /* Determine Fill Character Properties. */
+    /* Determine fill character properties. */
     uint8_t encoded[4];
     const int32_t char_len = encode_utf8(fill_char, encoded);
     int32_t num_chars_to_fill = end - start;
 
-    /* FAST PATH: ASCII fill on ASCII string. */
+    /* ASCII fill on ASCII string. */
     if (s->ascii && fill_char < 128) {
         memset(s->str + start, (char)fill_char, num_chars_to_fill);
         return USP_Obj;
     }
 
-    /* SLOW PATH: UTF-8 Reconstruction */
-    /* Since the byte-length of the fill char might differ from the existing chars,
-       it's often safest/cleanest to build a new buffer. */
+    /* UTF-8 Reconstruction */
+    /* byte-length of the fill char might differ from the existing chars,
+       it's safest/cleanest to build a new buffer. */
 
     int32_t prefix_bytes = get_utf8_byte_offset(s, start);
     const int32_t suffix_start_offset = get_utf8_byte_offset(s, end);
@@ -996,7 +1011,7 @@ Cell* builtin_string_fill_bang(const Lex* e, const Cell* a) {
     memcpy(p, s->str + suffix_start_offset, suffix_bytes);
     new_str[new_total_bytes] = '\0';
 
-    /* Update Metadata. */
+    /* Update metadata. */
     s->str = new_str;
     s->count = new_total_bytes;
     if (fill_char >= 128) s->ascii = 0;
@@ -1005,6 +1020,15 @@ Cell* builtin_string_fill_bang(const Lex* e, const Cell* a) {
 }
 
 
+/* (string->number string )
+ * (string->number string radix )
+ * Returns a number of the maximally precise representation expressed by the given string. It is an error if radix is
+ * not 2, 8, 10, or 16.
+ *
+ * If supplied, radix is a default radix that will be overridden if an explicit radix prefix is present in string
+ * (e.g. "#o177"). If radix is not supplied, then the default radix is 10. If string is not a syntactically valid
+ * notation for a number, or would result in a number that the implementation cannot represent, then string->number
+ * returns #f. An error is never signaled due to the content of string. */
 Cell* builtin_string_number(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -1017,12 +1041,12 @@ Cell* builtin_string_number(const Lex* e, const Cell* a)
             "string->number: arg 1 must be a string",
             TYPE_ERR);
 
-    /* Validate Radix. */
+    /* Validate radix. */
     int radix = 10;
     if (a->count == 2) {
         if (a->cell[1]->type != CELL_INTEGER)
             return make_cell_error(
-                "string->number: radix must be integer",
+                "string->number: radix must be an integer",
                 TYPE_ERR);
         radix = (int)a->cell[1]->integer_v;
         if (radix != 2 && radix != 8 && radix != 10 && radix != 16)
@@ -1031,15 +1055,15 @@ Cell* builtin_string_number(const Lex* e, const Cell* a)
                 VALUE_ERR);
     }
 
-    /* empty string => #false. */
+    /* Empty string => #false. */
     if (s_cell->char_count == 0) {
         return False_Obj;
     }
 
-    /* Sanity Check: Numbers must be ASCII. */
+    /* Sanity check: numbers must be ASCII. */
     if (!s_cell->ascii) return False_Obj;
 
-    /* Prepare Parsing Buffer. */
+    /* Prepare parsing buffer. */
     /* Add space for the radix prefix (e.g., "#x") and null terminator. */
     size_t buf_size = s_cell->count + 4;
     char* parse_buf = GC_MALLOC_ATOMIC(buf_size);
@@ -1055,13 +1079,13 @@ Cell* builtin_string_number(const Lex* e, const Cell* a)
         snprintf(parse_buf, buf_size, "%s%s", prefix, s_cell->str);
     }
 
-    /* Use internal Lexer/Parser */
+    /* Use internal lexer/parser */
     TokenArray* ta = scan_all_tokens(parse_buf);
     if (!ta) return False_Obj;
 
     Cell* result = parse_tokens(ta);
 
-    /* Validation of Result. */
+    /* Validation of result. */
     if (result->type == CELL_ERROR) return False_Obj;
 
     // ReSharper disable once CppVariableCanBeMadeConstexpr
@@ -1072,6 +1096,24 @@ Cell* builtin_string_number(const Lex* e, const Cell* a)
 }
 
 
+/* (number->string z)
+ * (number->string z radix)
+ * It is an error if radix is not one of 2, 8, 10, or 16.
+ *
+ * The procedure number->string takes a number and a radix and returns as a string an external representation of the
+ * given number in the given radix such that
+ *
+ * (let ((number number) (radix radix))
+ *     (eqv? number
+ *           (string->number (number->string number
+ *       radix)
+ *       radix)))
+ *
+ * is true. It is an error if no possible result makes this expression true. If omitted, radix defaults to 10.
+ * If z is inexact, the radix is 10, and the above expression can be satisfied by a result that contains a decimal
+ * point, then the result contains a decimal point and is expressed using the minimum number of digits (exclusive of
+ * exponent and trailing zeroes) needed to make the above expression true; otherwise the format of the result is
+ * unspecified. The result returned by number->string never contains an explicit radix prefix. */
 Cell* builtin_number_string(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -1103,27 +1145,23 @@ Cell* builtin_number_string(const Lex* e, const Cell* a)
     char buf[128]; /* Large enough for a 64-bit binary string. */
     const char* result_str;
 
-    /* Handle Integers with Radix. */
+    /* Handle integers with radix. */
     if (num->type == CELL_INTEGER && radix != 10) {
         if (radix == 2) {
-            integer_to_binary_string(num->integer_v, buf, sizeof(buf));
+            integer_to_binary_string(num->integer_v, buf);
         } else {
-            /* Use %lo for octal, %lx for hex.
-               Cast to unsigned long to match the format specifiers. */
-            const char* fmt = (radix == 8) ? "%lo" : "%lx";
-            snprintf(buf, sizeof(buf), fmt, (unsigned long)num->integer_v);
+            integer_to_oct_or_hex_string(num->integer_v, buf, radix);
         }
         result_str = buf;
     } else {
         result_str = cell_to_string(num, MODE_DISPLAY);
     }
 
-    /* Since numbers are always ASCII, we can optimize the constructor. */
     return make_cell_string(result_str);
 }
 
 
-/* These procedures apply the Unicode full string uppercasing, lowercasing, and case-folding
+/* These next three procedures apply the Unicode full string uppercasing, lowercasing, and case-folding
  * algorithms to their arguments and return the result. In certain cases, the result differs in
  * length from the argument. If the result is equal to the argument in the sense of string=?, the
  * argument may be returned. */
@@ -1249,19 +1287,12 @@ Cell* builtin_string_equal_ci(const Lex* e, const Cell* a)
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING, "string-ci=?");
     if (err) return err;
-    err = CHECK_ARITY_MIN(a, 1, "string-ci=?");
-    if (err) return err;
 
     for (int i = 0; i < a->count - 1; i++) {
         const char* lhs = a->cell[i]->str;
         const char* rhs = a->cell[i+1]->str;
 
-        /* quick exit before conversion: if the len is not the same,
-         * the strings are not the same. */
-        if (strlen(lhs) != strlen(rhs)) {
-            return False_Obj;
-        }
-        /* convert to UTF-16 */
+        /* Convert to UTF-16. */
         const UChar* U_lhs = convert_to_utf16(lhs);
         const UChar* U_rhs = convert_to_utf16(rhs);
         UErrorCode status = U_ZERO_ERROR;
@@ -1270,7 +1301,7 @@ Cell* builtin_string_equal_ci(const Lex* e, const Cell* a)
             return False_Obj;
         }
     }
-    /* If we get here, we're equal */
+    /* If here, it's equal. */
     return True_Obj;
 }
 
@@ -1280,14 +1311,12 @@ Cell* builtin_string_lt_ci(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING, "string-ci<?");
     if (err) return err;
-    err = CHECK_ARITY_MIN(a, 1, "string-ci<?");
-    if (err) return err;
 
     for (int i = 0; i < a->count - 1; i++) {
         const char* lhs = a->cell[i]->str;
         const char* rhs = a->cell[i+1]->str;
 
-        /* convert to UTF-16 */
+        /* Convert to UTF-16. */
         const UChar* U_lhs = convert_to_utf16(lhs);
         const UChar* U_rhs = convert_to_utf16(rhs);
         UErrorCode status = U_ZERO_ERROR;
@@ -1296,7 +1325,7 @@ Cell* builtin_string_lt_ci(const Lex* e, const Cell* a) {
             return False_Obj;
         }
     }
-    /* If we get here, s1 < s2 < sn ... */
+    /* If here, s1 < s2 < sn ... */
     return True_Obj;
 }
 
@@ -1306,14 +1335,12 @@ Cell* builtin_string_lte_ci(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING, "string-ci<=?");
     if (err) return err;
-    err = CHECK_ARITY_MIN(a, 1, "string-ci<=?");
-    if (err) return err;
 
     for (int i = 0; i < a->count - 1; i++) {
         const char* lhs = a->cell[i]->str;
         const char* rhs = a->cell[i+1]->str;
 
-        /* convert to UTF-16 */
+        /* Convert to UTF-16. */
         const UChar* U_lhs = convert_to_utf16(lhs);
         const UChar* U_rhs = convert_to_utf16(rhs);
         UErrorCode status = U_ZERO_ERROR;
@@ -1322,7 +1349,7 @@ Cell* builtin_string_lte_ci(const Lex* e, const Cell* a) {
             return False_Obj;
         }
     }
-    /* If we get here, s1 <= s2 <= sn ... */
+    /* If here, s1 <= s2 <= sn ... */
     return True_Obj;
 }
 
@@ -1332,14 +1359,12 @@ Cell* builtin_string_gt_ci(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING, "string-ci>?");
     if (err) return err;
-    err = CHECK_ARITY_MIN(a, 1, "string-ci>?");
-    if (err) return err;
 
     for (int i = 0; i < a->count - 1; i++) {
         const char* lhs = a->cell[i]->str;
         const char* rhs = a->cell[i+1]->str;
 
-        /* convert to UTF-16 */
+        /* Convert to UTF-16. */
         const UChar* U_lhs = convert_to_utf16(lhs);
         const UChar* U_rhs = convert_to_utf16(rhs);
         UErrorCode status = U_ZERO_ERROR;
@@ -1348,7 +1373,7 @@ Cell* builtin_string_gt_ci(const Lex* e, const Cell* a) {
             return False_Obj;
         }
     }
-    /* If we get here, s1 > s2 > sn ... */
+    /* If here, s1 > s2 > sn ... */
     return True_Obj;
 }
 
@@ -1358,23 +1383,21 @@ Cell* builtin_string_gte_ci(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING, "string-ci>=?");
     if (err) return err;
-    err = CHECK_ARITY_MIN(a, 1, "string-ci>=?");
-    if (err) return err;
 
     for (int i = 0; i < a->count - 1; i++) {
         const char* lhs = a->cell[i]->str;
         const char* rhs = a->cell[i+1]->str;
 
-        /* convert to UTF-16 */
+        /* Convert to UTF-16. */
         const UChar* U_lhs = convert_to_utf16(lhs);
         const UChar* U_rhs = convert_to_utf16(rhs);
         UErrorCode status = U_ZERO_ERROR;
         if (u_strCaseCompare(U_lhs, -1, U_rhs, -1,
-            U_FOLD_CASE_DEFAULT, &status) >= 0)  {
+            U_FOLD_CASE_DEFAULT, &status) < 0)  {
             return False_Obj;
         }
     }
-    /* If we get here, s1 >= s2 >= sn ... */
+    /* If here, s1 >= s2 >= sn ... */
     return True_Obj;
 }
 
