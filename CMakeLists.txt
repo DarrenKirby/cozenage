@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.10)
 
 # here we specify that the project is C language only, so the default
 # C compiler on the system will be used
-project(Cozenage LANGUAGES C VERSION 0.9.2)
+project(Cozenage LANGUAGES C VERSION 0.10.0)
 set(CMAKE_C_STANDARD 23)
 
 message(STATUS "Building ${PROJECT_NAME} v${PROJECT_VERSION}")
