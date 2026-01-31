@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 
 #include "ports.h"
 #include "eval.h"
@@ -23,8 +23,9 @@
 #include "strings.h"
 #include "repr.h"
 #include "vectors.h"
-#include "bytevectors.h"
 #include "buffer.h"
+#include "lexer.h"
+#include "parser.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -38,14 +39,10 @@
 #define UTF8_MAX_LEN 4
 
 
-/* TODO: many (most?) of these read/write procedures do not exhaustively check
- * for the correct port type and flags. They almost certainly should. */
-
-
 /* Helpers for read-char and peek-char to deal with multibyte characters. */
 
 /* Encodes a Unicode code point into a byte array. Returns number of bytes (1-4). */
-static int utf8_encode(UChar32 c, uint8_t* out_buf) {
+static int utf8_encode(const UChar32 c, uint8_t* out_buf) {
     if (c <= 0x7F) {
         out_buf[0] = (uint8_t)c;
         return 1;
@@ -68,7 +65,7 @@ static int utf8_encode(UChar32 c, uint8_t* out_buf) {
     return 4;
 }
 
-/* Helper to determine UTF-8 sequence length from the first byte */
+/* Helper to determine UTF-8 sequence length from the first byte. */
 static int utf8_len(const uint8_t first_byte) {
     if ((first_byte & 0x80) == 0)    return 1;
     if ((first_byte & 0xE0) == 0xC0) return 2;
@@ -77,13 +74,13 @@ static int utf8_len(const uint8_t first_byte) {
     return -1; /* Invalid UTF-8 start byte. */
 }
 
-/* The actual character reader */
+/* The actual character reader. */
 static ssize_t port_read_char(const Cell* p, UChar32* out_char, int* err) {
     uint8_t buf[4];
 
     /* Read the first byte. */
     const ssize_t status = p->port->vtable->read(buf, 1, p, err);
-    if (status <= 0) return status; /* R_EOF or R_ERR */
+    if (status <= 0) return status; /* R_EOF or R_ERR. */
 
     const int len = utf8_len(buf[0]);
     if (len == 1) {
@@ -91,9 +88,9 @@ static ssize_t port_read_char(const Cell* p, UChar32* out_char, int* err) {
         return R_OK;
     }
 
-    /* Read the remaining bytes (len - 1) */
+    /* Read the remaining bytes (len - 1). */
     if (p->port->vtable->read(buf + 1, len - 1, p, err) != (len - 1)) {
-        return R_ERR; /* Truncated multi-byte character */
+        return R_ERR; /* Truncated multi-byte character. */
     }
 
     /* Reconstruct UChar3.2 */
@@ -108,7 +105,7 @@ static ssize_t port_read_char(const Cell* p, UChar32* out_char, int* err) {
 }
 
 
-/* These next 10 static functions are the actual handlers for the builtin
+/* These next 12 static functions are the actual handlers for the builtin
  * generic I/O procedures. They are specific to whether the backing store
  * is a file or memory.*/
 
@@ -124,6 +121,15 @@ static ssize_t file_write(const void* buf, const size_t len, const Cell* p, int*
 
 static ssize_t file_read(void* buf, const size_t len, const Cell* p, int* err) {
     const size_t ret = fread(buf, 1, len, p->port->fh);
+
+    /* There were bytes to read, but not as many as asked for. */
+    if (ret > 0) {
+        if (ret < len) {
+            return (long)ret;
+        }
+    }
+
+    /* Check for EOFor error. */
     if (ret != len) {
         if (feof(p->port->fh)) {
             return R_EOF;
@@ -131,6 +137,8 @@ static ssize_t file_read(void* buf, const size_t len, const Cell* p, int* err) {
         *err = errno;
         return R_ERR;
     }
+
+    /* All bytes asked for were read. */
     return (int)ret;
 }
 
@@ -185,16 +193,17 @@ static ssize_t memory_write(const void* buf, const size_t len, const Cell* p, in
 
 static ssize_t memory_read(void* buf, const size_t len, const Cell* p, int* err) {
     *err = 0;
-    /* Use void* buf as char* buf */
+    /* Use void* buf as char* buf. */
     char* dest = buf;
     /* Check for EOF-type situation. */
     size_t bytes_in_store = p->port->data->length - p->port->index;
+
     if (bytes_in_store < len) {
         /* If no bytes to read, return EOF now. */
         if (bytes_in_store == 0) {
             return R_EOF;
         }
-        /* Otherwise, return what we can, and update index to the end of the buffer. */
+        /* Otherwise, return what is left, and update index to the end of the buffer. */
         memcpy(dest, p->port->data->buffer + p->port->index, bytes_in_store);
         p->port->index = p->port->data->length;
         return (int)bytes_in_store;
@@ -222,7 +231,7 @@ static int memory_seek(const Cell* p, const long offset, int* err) {
 
 static ssize_t memory_getdelim(char **lineptr, size_t *n, const int delim, const Cell* p, int *err) {
     if (p->port->index >= p->port->data->length)
-        return R_EOF;  /* EOF */
+        return R_EOF;
 
     const size_t start = p->port->index;
     size_t i = start;
@@ -231,7 +240,7 @@ static ssize_t memory_getdelim(char **lineptr, size_t *n, const int delim, const
         i++;
 
     size_t len = i - start;
-    if (i < p->port->data->length) len++; /* include delimiter */
+    if (i < p->port->data->length) len++; /* Include delimiter. */
 
     if (*lineptr == NULL || *n < len + 1) {
         char *tmp = realloc(*lineptr, len + 1);
@@ -261,22 +270,22 @@ static void memory_close(Cell* p) {
 
 /* A port with file backing store. */
 const PortInterface FileVTable = {
-    .write = file_write,
-    .read = file_read,
-    .tell = file_tell,
-    .seek = file_seek,
+    .write    = file_write,
+    .read     = file_read,
+    .tell     = file_tell,
+    .seek     = file_seek,
     .getdelim = file_getdelim,
-    .close = file_close
+    .close    = file_close
 };
 
 /* A port with in-memory backing store. */
 const PortInterface MemoryVTable = {
-    .write = memory_write,
-    .read = memory_read,
-    .tell = memory_tell,
-    .seek  = memory_seek,
+    .write    = memory_write,
+    .read     = memory_read,
+    .tell     = memory_tell,
+    .seek     = memory_seek,
     .getdelim = memory_getdelim,
-    .close = memory_close
+    .close    = memory_close
 };
 
 /*-------------------------------------------------------*
@@ -471,7 +480,7 @@ Cell* builtin_read_line(const Lex* e, const Cell* a)
             FILE_ERR);
     }
 
-    /* Strip newline, if present */
+    /* Strip newline, if present. */
     if (len > 0 && line[len - 1] == '\n')
         line[len - 1] = '\0';
 
@@ -492,7 +501,7 @@ Cell* builtin_read_lines(const Lex* e, const Cell* a)
     err = check_arg_types(a, CELL_PORT, "read-lines");
     if (err) return err;
 
-    const Cell* port = (a->count == 0)
+    const Cell* port = a->count == 0
         ? builtin_current_input_port(e, a)
         : a->cell[0];
 
@@ -528,6 +537,59 @@ Cell* builtin_read_lines(const Lex* e, const Cell* a)
 
     free(line);
     return builtin_vector_to_list(e, make_sexpr_len1(result));
+}
+
+
+Cell* builtin_read(const Lex* e, const Cell* a) {
+    Cell* err = CHECK_ARITY_RANGE(a, 0, 1, "read-lines");
+    if (err) return err;
+    err = check_arg_types(a, CELL_PORT, "read-lines");
+    if (err) return err;
+
+    const Cell* port = a->count == 0
+        ? builtin_current_input_port(e, a)
+        : a->cell[0];
+
+    if (!port->is_open || port->port->stream_t != INPUT_STREAM)
+        return make_cell_error(
+            "read-lines: port is not open for input",
+            FILE_ERR);
+
+    /* Initialize buffer. */
+    str_buf_t* buf = sb_new();
+
+    /* Read lines until we get a complete datum. */
+    for (;;) {
+        size_t n = 0;
+        int err_r = 0;
+        char* t_buf = nullptr;
+        const ssize_t len = port->port->vtable->getdelim(
+            &t_buf, &n, '\n', port, &err_r);
+        sb_append_str(buf, t_buf);
+
+        if (len == R_EOF)
+            return EOF_Obj;
+
+        if (len == R_ERR) {
+            return make_cell_error(
+                fmt_err("read: %s", err_r),
+                FILE_ERR);
+        }
+
+        TokenArray* ta = scan_all_tokens(buf->buffer);
+        Cell* result = parse_tokens(ta);
+
+        if (!result) continue; /* Not enough data for a datum. */
+        if (result->type == CELL_ERROR) {
+            /* Syntax error: bad parser input. */
+            if (result->err_t == SYNTAX_ERR) continue;
+            /* Otherwise, legitimate error. */
+            return result;
+        }
+
+        /* We have a complete datum. */
+        return result;
+    }
 }
 
 
@@ -594,12 +656,9 @@ Cell* builtin_read_char(const Lex* e, const Cell* a)
     err = check_arg_types(a, CELL_PORT,"read-char");
     if (err) return err;
 
-    Cell* port;
-    if (a->count == 0) {
-        port = builtin_current_input_port(e, a);
-    } else {
-        port = a->cell[0];
-    }
+    const Cell* port = a->count == 0
+        ? builtin_current_input_port(e, a)
+        : a->cell[0];
 
     if (port->is_open == 0 || port->port->stream_t != INPUT_STREAM)
         return make_cell_error(
@@ -639,12 +698,9 @@ Cell* builtin_read_u8(const Lex* e, const Cell* a) {
     err = check_arg_types(a, CELL_PORT,"read-u8");
     if (err) return err;
 
-    Cell* port;
-    if (a->count == 0) {
-        port = builtin_current_input_port(e, a);
-    } else {
-        port = a->cell[0];
-    }
+    const Cell* port = a->count == 0
+        ? builtin_current_input_port(e, a)
+        : a->cell[0];
 
     if (port->is_open == 0 || port->port->stream_t != INPUT_STREAM)
         return make_cell_error(
@@ -707,35 +763,41 @@ Cell* builtin_read_bytevector(const Lex* e, const Cell* a)
                 FILE_ERR);
     }
 
-    /* Check if there are any bytes to read. */
-    Cell* test = builtin_peek_u8(e, make_sexpr_len1(port));
-    if (test->type == CELL_EOF) { return test; }
-
-    /* There are bytes. Read them until bytes_read == bytes_to_read,
-     * or EOF, whichever comes first. */
     // ReSharper disable once CppVariableCanBeMadeConstexpr
     Cell* bv = make_cell_bytevector(BV_U8, bytes_to_read);
 
-    for (int i = 0; i < bytes_to_read; i++) {
-        const int byte = getc(port->port->fh);
-        if (byte == EOF) {
-            if (ferror(port->port->fh)) {
-                /* Use strerror for the message. */
-                return make_cell_error(
-                    fmt_err("read-u8: %s", strerror(errno)),
-                    FILE_ERR);
-            }
-            /* If not an error, it's a legitimate EOF. Return the bytevector. */
-            return bv;
-        }
-        /* Add the byte to the bytevector. */
-        BV_OPS[BV_U8].append(bv, byte);
+    uint8_t* buffer = GC_MALLOC_ATOMIC(bytes_to_read * sizeof(uint8_t));
+    int err_r;
+    const ssize_t bytes_read = port->port->vtable->read(buffer, bytes_to_read, port, &err_r);
+
+    printf("bytes read: %ld\n", bytes_read);
+
+    if (bytes_read == R_EOF) {
+        return EOF_Obj;
     }
-    /* Read bytes_to_read bytes with no EOF; return the bytevector. */
+
+    if (bytes_read == R_ERR) {
+        return make_cell_error(
+            fmt_err("read-string: %s", strerror(err_r)),
+            OS_ERR);
+    }
+
+    /* May have been EOF, so bytes_read may be < bytes_to_read. */
+    memcpy(bv->bv->data, buffer, bytes_read);
+    bv->count = (int)bytes_read;
+
     return bv;
 }
 
 
+/* (read-bytevector! bytevector)
+ * (read-bytevector! bytevector port)
+ * (read-bytevector! bytevector port start)
+ * (read-bytevector! bytevector port start end)
+ * Reads the next end − start bytes, or as many as are available before the end of file, from the binary input port into
+ * bytevector in left-to-right order beginning at the start position. If end is not supplied, reads until the end of
+ * bytevector has been reached. If start is not supplied, reads beginning at position 0. Returns the number of bytes
+ * read. If no bytes are available, an end-of-file object is returned. */
 Cell* builtin_read_bytevector_bang(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -748,14 +810,14 @@ Cell* builtin_read_bytevector_bang(const Lex* e, const Cell* a)
             "read-bytevector!: arg1 must be a u8 bytevector",
             TYPE_ERR);
     }
-    Cell* bv = a->cell[0];
+    const Cell* bv = a->cell[0];
     if (bv->bv->type != BV_U8) {
         return make_cell_error(
             "read-bytevector!: arg1 must be a u8 bytevector",
             TYPE_ERR);
     }
 
-    /* Ensure arg2 is an open input port, if supplied. */
+    /* Ensure arg2 is a port, if supplied. */
     Cell* port;
     if (a->count == 1) {
         port = builtin_current_input_port(e, a);
@@ -766,11 +828,19 @@ Cell* builtin_read_bytevector_bang(const Lex* e, const Cell* a)
                 TYPE_ERR);
         }
         port = a->cell[1];
-        if (port->port->stream_t != INPUT_STREAM || port->is_open != 1) {
-            return make_cell_error(
-                "read-bytevector!: port is not open for input",
-                VALUE_ERR);
-        }
+    }
+
+    /* Ensure port is open for input. */
+    if (port->port->stream_t != INPUT_STREAM || port->is_open != 1) {
+        return make_cell_error(
+            "read-bytevector!: port is not open for input",
+            VALUE_ERR);
+    }
+    /* Also ensure it is binary. */
+    if (port->port->backend_t == BK_FILE_TEXT || port->port->backend_t == BK_STRING) {
+        return make_cell_error(
+            "read-bytevector!: port is not binary",
+            FILE_ERR);
     }
 
     /* Sanity check start/end args if supplied. */
@@ -819,31 +889,24 @@ Cell* builtin_read_bytevector_bang(const Lex* e, const Cell* a)
 
     if (bytes_to_read == 0) return make_cell_integer(0);
 
-    /* R7RS: Return EOF object if port is already at EOF. */
-    const int c = getc(port->port->fh);
-    if (c == EOF) {
-        if (ferror(port->port->fh)) {
-            return make_cell_error(
-                fmt_err("read-bytevector!: %s", strerror(errno)),
-                FILE_ERR);
-        }
-        return make_cell_eof();
-    }
-    ungetc(c, port->port->fh);
-
     /* Cast void* to uint8_t* to allow correct pointer arithmetic. */
     uint8_t* buffer_ptr = bv->bv->data;
 
     /* Read directly into the offset address. */
-    const size_t n = fread(buffer_ptr + start, 1, (size_t)bytes_to_read, port->port->fh);
+    int err_r;
+    const ssize_t bytes_read = port->port->vtable->read(buffer_ptr + start, bytes_to_read, port, &err_r);
 
-    if (n < (size_t)bytes_to_read && ferror(port->port->fh)) {
+    if (bytes_read == R_EOF) {
+        return EOF_Obj;
+    }
+
+    if (bytes_read == R_ERR) {
         return make_cell_error(
-            fmt_err("read-bytevector!: %s", strerror(errno)),
+            fmt_err("read-string: %s", strerror(err_r)),
             FILE_ERR);
     }
 
-    return make_cell_integer((int)n);
+    return make_cell_integer(bytes_read);
 }
 
 
@@ -859,12 +922,9 @@ Cell* builtin_peek_char(const Lex* e, const Cell* a)
     err = check_arg_types(a, CELL_PORT, "peek-char");
     if (err) return err;
 
-    Cell* port;
-    if (a->count == 0) {
-        port = builtin_current_input_port(e, a);
-    } else {
-        port = a->cell[0];
-    }
+    const Cell* port = a->count == 0
+        ? builtin_current_input_port(e, a)
+        : a->cell[0];
 
     /* Ensure port is sane. */
     if (port->is_open == 0 || port->port->stream_t != INPUT_STREAM) {
@@ -923,12 +983,11 @@ Cell* builtin_peek_u8(const Lex* e, const Cell* a)
     err = check_arg_types(a, CELL_PORT,"peek-u8");
     if (err) return err;
 
-    Cell* port;
-    if (a->count == 0) {
-        port = builtin_current_input_port(e, a);
-    } else {
-        port = a->cell[0];
-    }
+    const Cell* port = a->count == 0
+        ? builtin_current_input_port(e, a)
+        : a->cell[0];
+
+    debug_print_cell(port);
 
     /* Ensure port is sane. */
     if (port->is_open == 0 || port->port->stream_t != INPUT_STREAM) {
@@ -997,12 +1056,9 @@ Cell* builtin_write_char(const Lex* e, const Cell* a)
         }
     }
 
-    Cell* port;
-    if (a->count == 1) {
-        port = builtin_current_output_port(e, a);
-    } else {
-        port = a->cell[1];
-    }
+    const Cell* port = a->count == 0
+        ? builtin_current_input_port(e, a)
+        : a->cell[0];
 
     /* Ensure port is sane. */
     if (port->is_open == 0 || port->port->stream_t != OUTPUT_STREAM) {
@@ -1077,12 +1133,9 @@ Cell* builtin_write_string(const Lex* e, const Cell* a)
         }
     }
 
-    Cell* port;
-    if (a->count == 1) {
-        port = builtin_current_output_port(e, a);
-    } else {
-        port = a->cell[1];
-    }
+    const Cell* port = a->count == 0
+        ? builtin_current_input_port(e, a)
+        : a->cell[0];
 
     const char* in_string = &a->cell[0]->str[start];
     if (!end) {
@@ -1133,12 +1186,9 @@ Cell* builtin_write_u8(const Lex* e, const Cell* a)
         }
     }
 
-    Cell* port;
-    if (a->count == 1) {
-        port = builtin_current_output_port(e, a);
-    } else {
-        port = a->cell[1];
-    }
+    const Cell* port = a->count == 0
+        ? builtin_current_input_port(e, a)
+        : a->cell[0];
 
     /* Ensure port is sane. */
     if (port->is_open == 0 || port->port->stream_t != OUTPUT_STREAM) {
@@ -1211,11 +1261,20 @@ Cell* builtin_write_bytevector(const Lex* e, const Cell* a)
         }
     }
 
-    Cell* port;
-    if (a->count == 1) {
-        port = builtin_current_output_port(e, a);
-    } else {
-        port = a->cell[1];
+    const Cell* port = a->count == 0
+        ? builtin_current_input_port(e, a)
+        : a->cell[0];
+
+    if (port->is_open == 0 || port->port->stream_t != OUTPUT_STREAM) {
+        return make_cell_error(
+            "write-bytevector: port must be an open output port",
+            FILE_ERR);
+    }
+
+    if (port->port->backend_t == BK_STRING || port->port->backend_t == BK_FILE_TEXT) {
+        return make_cell_error(
+            "write-bytevector: port must be a binary file  or bytevector port",
+            FILE_ERR);
     }
 
     const Cell* bv = a->cell[0];
@@ -1225,14 +1284,17 @@ Cell* builtin_write_bytevector(const Lex* e, const Cell* a)
         num_bytes = end - start;
     }
 
-    for (int i = start; i < num_bytes; i++) {
-        const int byte = (int)BV_OPS[bv->bv->type].get(bv, i);
-        if (putc(byte, port->port->fh) == EOF) {
-            return make_cell_error(fmt_err(
-                "write-bytevector: %s", strerror(errno)),
-                FILE_ERR);
-        }
+    uint8_t bytes[num_bytes];
+    memcpy(bytes, bv->bv->data + start, num_bytes);
+
+    int err_r;
+    const ssize_t ret = port->port->vtable->write(bytes, num_bytes, port, &err_r);
+    if (ret == R_ERR) {
+        return make_cell_error(
+            fmt_err("write-bytevector: %s", strerror(err_r)),
+            FILE_ERR);
     }
+
     return USP_Obj;
 }
 
@@ -1426,7 +1488,7 @@ static int is_stream_ready(FILE *fp)
         return -1;
     }
 
-    /* result will be 1 if data is ready, 0 otherwise.
+    /* Result will be 1 if data is ready, 0 otherwise.
      * FD_ISSET is technically the most correct check. */
     return result > 0 && FD_ISSET(fd, &readfds);
 }
@@ -1631,7 +1693,6 @@ Cell* builtin_displayln(const Lex* e, const Cell* a)
  *
  * Implementations may support extended syntax to represent record types or other types that do not have datum
  * representations. The write procedure returns an unspecified value. */
-/* TODO: does not handle circular objects/datum labels */
 Cell* builtin_write(const Lex* e, const Cell* a)
 {
     Cell* err = CHECK_ARITY_RANGE(a, 1, 2, "write");
@@ -1960,6 +2021,7 @@ Cell* builtin_open_output_bytevector(const Lex* e, const Cell* a) {
     return make_cell_memory_port(OUTPUT_STREAM, BK_BYTEVECTOR);
 }
 
+
 Cell* builtin_open_input_bytevector(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "open-input-bytevector");
@@ -1985,6 +2047,7 @@ Cell* builtin_open_input_bytevector(const Lex* e, const Cell* a) {
     p->port->index = 0;
     return p;
 }
+
 
 Cell* builtin_get_output_bytevector(const Lex* e, const Cell* a) {
     (void)e;
