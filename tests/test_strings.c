@@ -491,8 +491,8 @@ Test(end_to_end_strings, test_number_to_string, .init = setup_each_test, .fini =
     /* 3. Optional Radix: Hexadecimal (16) */
     cr_assert_str_eq(t_eval("(number->string 255 16)"), "\"ff\"");
 
-    /* FIXME: this one returns ""fffffffffffffff0" presently */
-    //cr_assert_str_eq(t_eval("(number->string -16 16)"), "\"-10\"");
+    /* Hex with negative value. */
+    cr_assert_str_eq(t_eval("(number->string -16 16)"), "\"-10\"");
 
     /* 4. Optional Radix: Binary (2) */
     cr_assert_str_eq(t_eval("(number->string 10 2)"), "\"1010\"");
@@ -522,8 +522,7 @@ Test(end_to_end_strings, test_string_downcase, .init = setup_each_test, .fini = 
     cr_assert_str_eq(t_eval("(string-downcase \"Λ\")"), "\"λ\"");
 
     /* 4. Contextual Sigma (The R7RS "Final Sigma" test) */
-    /* FIXME: If ICU/your logic is working correctly, a Sigma at the end of a word
-       should become ς, otherwise σ. */
+    /* a Sigma at the end of a word should become ς, otherwise σ. */
     cr_assert_str_eq(t_eval("(string-downcase \"Σ\")"), "\"σ\"");
     cr_assert_str_eq(t_eval("(string-downcase \"ΣΣ\")"), "\"σς\"");
 
@@ -596,43 +595,42 @@ Test(end_to_end_strings, test_string_foldcase, .init = setup_each_test, .fini = 
     cr_assert_str_eq(t_eval("(begin (define s \"Straße\") (if (string=? (string-foldcase s) \"strasse\") #true #false))"), "#true");
 }
 
-/* FIXME: some of these fail when they should not. */
-//
-// Test(end_to_end_strings, test_string_ci_equality, .init = setup_each_test, .fini = teardown_each_test) {
-//     /* 1. string-ci=? Basic ASCII */
-//     cr_assert_str_eq(t_eval("(string-ci=? \"Apple\" \"apple\" \"APPLE\")"), "#true");
-//     cr_assert_str_eq(t_eval("(string-ci=? \"a\" \"b\")"), "#false");
-//
-//     /* 2. string-ci=? UTF-8 Greek (Sigma variations) */
-//     /* Final sigma (ς) and medial sigma (σ) must be equal to uppercase (Σ) */
-//     cr_assert_str_eq(t_eval("(string-ci=? \"Σ\" \"σ\" \"ς\")"), "#true");
-//
-//     /* 3. string-ci=? German Eszett */
-//     /* "ß" should be equal to "ss" in a fold-case comparison */
-//     cr_assert_str_eq(t_eval("(string-ci=? \"Straße\" \"STRASSE\")"), "#true");
-//
-//     /* 4. string-ci=? Arity 0 and 1 */
-//     cr_assert_str_eq(t_eval("(string-ci=?)"), "#true");
-//     cr_assert_str_eq(t_eval("(string-ci=? \"any\")"), "#true");
-// }
-//
-//
-// Test(end_to_end_strings, test_string_ci_ordering, .init = setup_each_test, .fini = teardown_each_test) {
-//     /* 5. string-ci<? and string-ci<=? */
-//     cr_assert_str_eq(t_eval("(string-ci<? \"apple\" \"Banana\")"), "#true");
-//     cr_assert_str_eq(t_eval("(string-ci<=? \"apple\" \"APPLE\")"), "#true");
-//     cr_assert_str_eq(t_eval("(string-ci<? \"A\" \"b\" \"C\")"), "#true");
-//
-//     /* 6. string-ci>? and string-ci>=? */
-//     cr_assert_str_eq(t_eval("(string-ci>? \"Zebra\" \"apple\")"), "#true");
-//     cr_assert_str_eq(t_eval("(string-ci>=? \"banana\" \"Banana\")"), "#true");
-//     cr_assert_str_eq(t_eval("(string-ci>? \"z\" \"Y\" \"x\")"), "#true");
-//
-//     /* 7. UTF-8 Ordering (Codepoint based after folding) */
-//     /* 'α' (alpha) is less than 'Ω' (omega) even with mixed case */
-//     cr_assert_str_eq(t_eval("(string-ci<? \"α\" \"Ω\")"), "#true");
-//
-//     /* 8. Prefix rules in CI */
-//     cr_assert_str_eq(t_eval("(string-ci<? \"App\" \"apple\")"), "#true");
-// }
+
+Test(end_to_end_strings, test_string_ci_equality, .init = setup_each_test, .fini = teardown_each_test) {
+     /* 1. string-ci=? Basic ASCII */
+     cr_assert_str_eq(t_eval("(string-ci=? \"Apple\" \"apple\" \"APPLE\")"), "#true");
+     cr_assert_str_eq(t_eval("(string-ci=? \"a\" \"b\")"), "#false");
+
+     /* 2. string-ci=? UTF-8 Greek (Sigma variations) */
+     /* Final sigma (ς) and medial sigma (σ) must be equal to uppercase (Σ) */
+     cr_assert_str_eq(t_eval("(string-ci=? \"Σ\" \"σ\" \"ς\")"), "#true");
+
+     /* 3. string-ci=? German Eszett */
+     /* "ß" should be equal to "ss" in a fold-case comparison */
+     cr_assert_str_eq(t_eval("(string-ci=? \"Straße\" \"STRASSE\")"), "#true");
+
+     /* 4. string-ci=? Arity 0 and 1 */
+     cr_assert_str_eq(t_eval("(string-ci=?)"), "#true");
+     cr_assert_str_eq(t_eval("(string-ci=? \"any\")"), "#true");
+}
+
+
+Test(end_to_end_strings, test_string_ci_ordering, .init = setup_each_test, .fini = teardown_each_test) {
+    /* 5. string-ci<? and string-ci<=? */
+    cr_assert_str_eq(t_eval("(string-ci<? \"apple\" \"Banana\")"), "#true");
+    cr_assert_str_eq(t_eval("(string-ci<=? \"apple\" \"APPLE\")"), "#true");
+    cr_assert_str_eq(t_eval("(string-ci<? \"A\" \"b\" \"C\")"), "#true");
+
+    /* 6. string-ci>? and string-ci>=? */
+    cr_assert_str_eq(t_eval("(string-ci>? \"Zebra\" \"apple\")"), "#true");
+    cr_assert_str_eq(t_eval("(string-ci>=? \"banana\" \"Banana\")"), "#true");
+    cr_assert_str_eq(t_eval("(string-ci>? \"z\" \"Y\" \"x\")"), "#true");
+
+    /* 7. UTF-8 Ordering (Codepoint based after folding) */
+    /* 'α' (alpha) is less than 'Ω' (omega) even with mixed case */
+    cr_assert_str_eq(t_eval("(string-ci<? \"α\" \"Ω\")"), "#true");
+
+    /* 8. Prefix rules in CI */
+    cr_assert_str_eq(t_eval("(string-ci<? \"App\" \"apple\")"), "#true");
+}
 
