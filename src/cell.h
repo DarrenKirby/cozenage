@@ -15,7 +15,17 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
+
+
+/* This file defines the Cell structure/tagged union which is used to
+ * represent all 'Cozenage values' internally and externally. It also
+ * defines associated structs for Cell values that require additional
+ * fields such as lambdas, bytevectors, ports, and bigints. It defines
+ * various type enums which are used by the Cell and other derived structs,
+ * and it exports declarations for global singleton objects and the Cell
+ * constructor functions which are defined in cell.c
+ */
 
 #ifndef COZENAGE_CELL_H
 #define COZENAGE_CELL_H
@@ -146,23 +156,24 @@ typedef struct PortInterface {
 
 /* Port data struct. */
 typedef struct Port_d {
-    char* path;       /* File path of associated fh. Set to null for data ports. */
+    char* path;           /* File path of associated fh. Set to null for data ports. */
     union {
         FILE* fh;         /* The associated file handle for a file port. */
         str_buf_t* data;  /* The data store for string and bv ports. */
     };
     const PortInterface *vtable;
-    uint8_t backend_t;   /* The backing store (text file/bin file/string/bytevector). */
-    uint8_t stream_t;    /* Stream type (input/output/async) */
-    uint32_t index;      /* read/write pointer. */
+    uint8_t backend_t;    /* The backing store (text file/bin file/string/bytevector). */
+    uint8_t stream_t;     /* Stream type (input/output/async) */
+    uint32_t index;       /* read/write pointer. */
 } port_d;
 
 
 /* ERROR - enum for error types. */
 typedef enum Err_t : uint8_t  {
     GEN_ERR,    /* General, unspecified error. */
-    FILE_ERR,   /* Error opening or closing a file. */
+    FILE_ERR,   /* Error opening or closing a file or memory-backed port. */
     READ_ERR,   /* Error reading from a port. */
+    WRITE_ERR,  /* Error writing to a port. */
     SYNTAX_ERR, /* Syntax error - generally only called from the parser or transformer. */
     ARITY_ERR,  /* Arity error - wrong number of args passed to procedure. */
     TYPE_ERR,   /* Type error - wrong type of arg passed to procedure. */

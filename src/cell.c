@@ -15,7 +15,13 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
+
+/* This file defines functions which construct and initialize global
+ * singleton objects (nil, #true, #false, !EOF etc.), the default
+ * ports, and the Cell constructors for all the Cell types. It also
+ * defines a function for internal use that deep-copies a Cell object.
+ */
 
 #include "cell.h"
 #include "types.h"
@@ -405,6 +411,7 @@ Cell* make_cell_file_port(const char* path, FILE* fh, const stream_t stream, con
     v->port->path = GC_strdup(path);
     v->port->backend_t = backend;
     v->port->fh = fh;
+    v->port->vtable = GC_MALLOC(sizeof(PortInterface));
     v->port->vtable = &FileVTable;
     v->port->index = 0;
     return v;
@@ -425,6 +432,7 @@ Cell* make_cell_memory_port(const stream_t stream, const backend_t backend)
     v->port->stream_t = stream;
     v->port->path = "memory-backed";
     v->port->backend_t = backend;
+    v->port->vtable = GC_MALLOC(sizeof(PortInterface));
     v->port->vtable = &MemoryVTable;
     /* Initialize the data store. */
     v->port->data = sb_new();
@@ -644,13 +652,18 @@ Cell* cell_copy(const Cell* v) {
     }
 
     case CELL_PORT: {
-        /* FIXME: change fields to copy based on type. */
         copy->is_open = v->is_open;
         copy->port = GC_MALLOC(sizeof(port_d));
         copy->port->backend_t = v->port->backend_t;
         copy->port->stream_t = v->port->stream_t;
-        copy->port->fh = v->port->fh;
         copy->port->path = GC_strdup(v->port->path);
+        copy->port->vtable = v->port->vtable;
+        copy->port->index = v->port->index;
+        if (v->port->backend_t == BK_FILE_BINARY || v->port->backend_t == BK_FILE_TEXT) {
+            copy->port->fh = v->port->fh;
+        } else {
+            copy->port->data = v->port->data;
+        }
         break;
     }
 
