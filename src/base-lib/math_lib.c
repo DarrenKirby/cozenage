@@ -15,14 +15,13 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 
 
 #include "types.h"
 #include "numerics.h"
 #include "pairs.h"
 
-#include <stdlib.h>
 #include <math.h>
 
 
@@ -317,103 +316,6 @@ static Cell* math_cbrt(const Lex* e, const Cell* a)
 }
 
 
-/* Helper for the core GCD algorithm (Euclidean) for two integers. */
-static long long gcd_helper(long long x, long long y)
-{
-    x = llabs(x);
-    y = llabs(y);
-    while (x != 0) {
-        const long long tmp = x;
-        x = y % x;
-        y = tmp;
-    }
-    return y;
-}
-
-
-/* Helper for the core LCM logic (using the overflow-safe formula). */
-static long long lcm_helper(long long x, long long y)
-{
-    if (x == 0 || y == 0) return 0;
-    x = llabs(x);
-    y = llabs(y);
-    return x / gcd_helper(x, y) * y;
-}
-
-
-/* (gcd n1 ... )
- * Return the greatest common divisor of the arguments. The result is always non-negative. */
-static Cell* math_gcd(const Lex* e, const Cell* a)
-{
-    (void)e;
-    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_BIGINT, "gcd");
-    if (err) return err;
-
-    if (a->count == 0) {
-        return make_cell_integer(0); /* Identity for GCD. */
-    }
-
-    bool bigint_seen = false;
-    for (int i = 0; i < a->count; i++) {
-        if (a->cell[i]->type == CELL_BIGINT) {
-            bigint_seen = true;
-        }
-    }
-
-    if (bigint_seen) {
-        Cell* result = cell_copy(a->cell[0]);
-        for (int i = 1; i < a->count; i++) {
-            numeric_promote(&result, &a->cell[i]);
-            mpz_gcd(*result->bi, *result->bi, *a->cell[i]->bi);
-        }
-        return result;
-    }
-
-    long long result = a->cell[0]->integer_v;
-    for (int i = 1; i < a->count; i++) {
-        result = gcd_helper(result, a->cell[i]->integer_v);
-    }
-
-    return make_cell_integer(llabs(result)); /* Final result must be non-negative. */
-}
-
-
-/* (lcm x1 ... )
- * Return the least common multiple of the arguments. The result is always non-negative. */
-static Cell* math_lcm(const Lex* e, const Cell* a)
-{
-    (void)e;
-    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_BIGINT, "lcm");
-    if (err) { return err; }
-
-    if (a->count == 0) {
-        return make_cell_integer(1); /* Identity for LCM. */
-    }
-
-    bool bigint_seen = false;
-    for (int i = 0; i < a->count; i++) {
-        if (a->cell[i]->type == CELL_BIGINT) {
-            bigint_seen = true;
-        }
-    }
-
-    if (bigint_seen) {
-        Cell* result = cell_copy(a->cell[0]);
-        for (int i = 1; i < a->count; i++) {
-            numeric_promote(&result, &a->cell[i]);
-            mpz_lcm(*result->bi, *result->bi, *a->cell[i]->bi);
-        }
-        return result;
-    }
-
-    long long result = a->cell[0]->integer_v;
-    for (int i = 1; i < a->count; i++) {
-        result = lcm_helper(result, a->cell[i]->integer_v);
-    }
-
-    return make_cell_integer(llabs(result)); /* Final result must be non-negative. */
-}
-
 /* These procedures implement number-theoretic (integer) division. It is an error if n2 is zero. The procedures ending
  * in / return two integers; the other procedures return an integer. All the procedures compute a quotient nq and
  * remainder nr such that n1 = n2nq + nr. For each of the division operators, there are three procedures defined as
@@ -633,11 +535,9 @@ void cozenage_library_init(const Lex* e)
     lex_add_builtin(e, "floor/", math_floor_div);
     lex_add_builtin(e, "floor-quotient", math_floor_quotient);
     lex_add_builtin(e, "floor-remainder", builtin_modulo);
-    lex_add_builtin(e, "lcm", math_lcm);
-    lex_add_builtin(e, "gcd", math_gcd);
     lex_add_builtin(e, "real-part", math_real_part);
     lex_add_builtin(e, "imag-part", math_imag_part);
-    lex_add_builtin(e,"make-rectangular", math_make_rectangular);
+    lex_add_builtin(e, "make-rectangular", math_make_rectangular);
     /* 'magnitude' is identical to 'abs' for real/complex numbers -
      * so we just make an alias. */
     lex_add_builtin(e,"magnitude", builtin_abs);

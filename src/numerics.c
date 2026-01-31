@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 
 #include "numerics.h"
 #include "types.h"
@@ -392,6 +392,7 @@ static Cell* expt_complex_op(const BuiltinFn op, const Lex* e, const Cell* z1, c
     return result;
 }
 
+
 /* (expt z1 z2)
  * Returns its first arg calculated to the power of its second arg. */
 Cell* builtin_expt(const Lex* e, const Cell* a)
@@ -477,6 +478,7 @@ Cell* builtin_expt(const Lex* e, const Cell* a)
         GEN_ERR);
 }
 
+
 /* (modulo n1 n2)
  * Returns the remainder of dividing the first argument
  * by the second, with the result having the same sign as the divisor.*/
@@ -507,6 +509,7 @@ Cell* builtin_modulo(const Lex* e, const Cell* a)
     return make_cell_integer(r);
 }
 
+
 /* (quotient n1 n2)
  * Returns the integer result of dividing
  * the first argument by the second, discarding any remainder.*/
@@ -535,6 +538,7 @@ Cell* builtin_quotient(const Lex* e, const Cell* a)
 
     return make_cell_integer(a->cell[0]->integer_v / a->cell[1]->integer_v);
 }
+
 
 /* (remainder n1 n2)
  * Returns the remainder of dividing the first argument
@@ -599,6 +603,7 @@ Cell* builtin_max(const Lex* e, const Cell* a)
     }
     return cell_copy(largest_so_far);
 }
+
 
 /* (min x1 x2 ...)
  * Return the smallest value in numeric args */
@@ -1069,4 +1074,102 @@ Cell* builtin_nan(const Lex* e, const Cell* a)
 
     const long double n = cell_to_long_double(arg);
     return make_cell_boolean(isnan(n));
+}
+
+
+/* Helper for the core GCD algorithm (Euclidean) for two integers. */
+static long long gcd_helper(long long x, long long y)
+{
+    x = llabs(x);
+    y = llabs(y);
+    while (x != 0) {
+        const long long tmp = x;
+        x = y % x;
+        y = tmp;
+    }
+    return y;
+}
+
+
+/* Helper for the core LCM logic (using the overflow-safe formula). */
+static long long lcm_helper(long long x, long long y)
+{
+    if (x == 0 || y == 0) return 0;
+    x = llabs(x);
+    y = llabs(y);
+    return x / gcd_helper(x, y) * y;
+}
+
+
+/* (gcd n1 ... )
+ * Return the greatest common divisor of the arguments. The result is always non-negative. */
+Cell* builtin_gcd(const Lex* e, const Cell* a)
+{
+    (void)e;
+    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_BIGINT, "gcd");
+    if (err) return err;
+
+    if (a->count == 0) {
+        return make_cell_integer(0); /* Identity for GCD. */
+    }
+
+    bool bigint_seen = false;
+    for (int i = 0; i < a->count; i++) {
+        if (a->cell[i]->type == CELL_BIGINT) {
+            bigint_seen = true;
+        }
+    }
+
+    if (bigint_seen) {
+        Cell* result = cell_copy(a->cell[0]);
+        for (int i = 1; i < a->count; i++) {
+            numeric_promote(&result, &a->cell[i]);
+            mpz_gcd(*result->bi, *result->bi, *a->cell[i]->bi);
+        }
+        return result;
+    }
+
+    long long result = a->cell[0]->integer_v;
+    for (int i = 1; i < a->count; i++) {
+        result = gcd_helper(result, a->cell[i]->integer_v);
+    }
+
+    return make_cell_integer(llabs(result)); /* Final result must be non-negative. */
+}
+
+
+/* (lcm x1 ... )
+ * Return the least common multiple of the arguments. The result is always non-negative. */
+Cell* builtin_lcm(const Lex* e, const Cell* a)
+{
+    (void)e;
+    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_BIGINT, "lcm");
+    if (err) { return err; }
+
+    if (a->count == 0) {
+        return make_cell_integer(1); /* Identity for LCM. */
+    }
+
+    bool bigint_seen = false;
+    for (int i = 0; i < a->count; i++) {
+        if (a->cell[i]->type == CELL_BIGINT) {
+            bigint_seen = true;
+        }
+    }
+
+    if (bigint_seen) {
+        Cell* result = cell_copy(a->cell[0]);
+        for (int i = 1; i < a->count; i++) {
+            numeric_promote(&result, &a->cell[i]);
+            mpz_lcm(*result->bi, *result->bi, *a->cell[i]->bi);
+        }
+        return result;
+    }
+
+    long long result = a->cell[0]->integer_v;
+    for (int i = 1; i < a->count; i++) {
+        result = lcm_helper(result, a->cell[i]->integer_v);
+    }
+
+    return make_cell_integer(llabs(result)); /* Final result must be non-negative. */
 }

@@ -1,7 +1,7 @@
 /*
  * 'src/repl.c'
  * This file is part of Cozenage - https://github.com/DarrenKirby/cozenage
- * Copyright © 2025  Darren Kirby <darren@dragonbyte.ca>
+ * Copyright © 2025 Darren Kirby <darren@dragonbyte.ca>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 
 #include "repl.h"
 #include "compat_readline.h"
@@ -87,6 +87,7 @@ void save_history_to_file()
     const char *hf = tilde_expand(HIST_FILE);
     write_history(hf);
 }
+
 
 /* Count parens to decide if we have a full expression,
  * or need to wait for more input. */

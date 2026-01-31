@@ -1,7 +1,7 @@
 /*
  * 'src/numerics.h'
  * This file is part of Cozenage - https://github.com/DarrenKirby/cozenage
- * Copyright © 2025  Darren Kirby <darren@dragonbyte.ca>
+ * Copyright © 2025 - 2026 Darren Kirby <darren@dragonbyte.ca>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 
 #ifndef COZENAGE_NUMERICS_H
 #define COZENAGE_NUMERICS_H
@@ -51,5 +51,7 @@ Cell* builtin_inexact(const Lex* e, const Cell* a);
 Cell* builtin_infinite(const Lex* e, const Cell* a);
 Cell* builtin_finite(const Lex* e, const Cell* a);
 Cell* builtin_nan(const Lex* e, const Cell* a);
+Cell* builtin_lcm(const Lex* e, const Cell* a);
+Cell* builtin_gcd(const Lex* e, const Cell* a);
 
 #endif //COZENAGE_NUMERICS_H

@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 
 #include "bools.h"
 #include "types.h"
@@ -24,6 +24,7 @@
 /* ---------------------------------------*
  *     Boolean and logical procedures     *
  * ---------------------------------------*/
+
 
 /* (not obj )
  * The not procedure returns #t if obj is false, and returns #f otherwise. */
@@ -48,7 +49,7 @@ Cell* builtin_boolean(const Lex* e, const Cell* a)
     if (a->count == 0) {
         return True_Obj;
     }
-    /* If not all args are CELL_BOOLEAN, return #f. */
+    /* Return #f if not all args are CELL_BOOLEAN. */
     if (check_arg_types(a, CELL_BOOLEAN, "boolean=?")) {
         return False_Obj;
     }

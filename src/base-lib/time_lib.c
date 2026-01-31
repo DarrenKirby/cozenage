@@ -1,7 +1,7 @@
 /*
  * 'src/base-lib/time_lib.c'
  * This file is part of Cozenage - https://github.com/DarrenKirby/cozenage
- * Copyright © 2025  Darren Kirby <darren@dragonbyte.ca>
+ * Copyright © 2025 Darren Kirby <darren@dragonbyte.ca>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 
 #include "types.h"
 #include "cell.h"
@@ -52,6 +52,7 @@ static Cell* builtin_current_second(const Lex* e, const Cell* a)
     return make_cell_real(tai_time);
 }
 
+
 /* (current-jiffy)
  * Returns the number of jiffies as an exact integer that have elapsed since an arbitrary,
  * implementation-defined epoch. A jiffy is an implementation-defined fraction of a second which is
@@ -74,6 +75,7 @@ static Cell* builtin_current_jiffy(const Lex* e, const Cell* a)
     return make_cell_integer(jiffies);
 }
 
+
 /* (jiffies-per-second)
  * Returns an exact integer representing the number of jiffies per SI second. This value is an
  * implementation-specified constant. Cozenage uses 1 billion, ie: nanoseconds. */
@@ -82,6 +84,7 @@ static Cell* builtin_jiffies_per_second(const Lex* e, const Cell* a)
     (void)e; (void)a;
     return make_cell_integer(1000000000);
 }
+
 
 /* (current-dt-utc [fmt string])
  * Can be called with zero or one argument. If an argument is provided, it must be a string which is
@@ -113,6 +116,7 @@ static Cell* builtin_current_datetime_utc(const Lex* e, const Cell* a)
     return make_cell_string(buf);
 }
 
+
 /* (current-dt-local [fmt string])
  * Can be called with zero or one argument. If an argument is provided, it must be a string which is
  * a format specification as per the C library function strftime(3). With no argument, the format
@@ -143,6 +147,7 @@ static Cell* builtin_current_datetime_local(const Lex* e, const Cell* a)
     }
     return make_cell_string(buf);
 }
+
 
 void cozenage_library_init(const Lex* e)
 {

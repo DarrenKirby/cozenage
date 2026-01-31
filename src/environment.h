@@ -1,7 +1,7 @@
 /*
  * 'src/environment.h'
  * This file is part of Cozenage - https://github.com/DarrenKirby/cozenage
- * Copyright © 2025  Darren Kirby <darren@dragonbyte.ca>
+ * Copyright © 2025 Darren Kirby <darren@dragonbyte.ca>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 
 #ifndef COZENAGE_ENVIRONMENT_H
 #define COZENAGE_ENVIRONMENT_H
@@ -35,7 +35,7 @@ typedef struct Lex {
 } Lex;
 
 
-/* Just parallel arrays for small, short-lived child environments */
+/* Just parallel arrays for small, short-lived child environments. */
 typedef struct Ch_Env {
     int count;              /* Number of occupied slots. */
     int capacity;           /* Allocated slots. */
@@ -45,18 +45,18 @@ typedef struct Ch_Env {
 } Ch_Env;
 
 
-/* Environment management */
+/* Environment management. */
 Lex* lex_initialize_global_env(void);
 Lex* new_child_env(const Lex* parent_env);
 
 
-/* Environment operations */
+/* Environment operations. */
 Cell* lex_get(const Lex* e, const Cell* k);
 void lex_put_local(Lex* e, const Cell* k, const Cell* v);
 void lex_put_global(const Lex* e, const Cell* k, Cell* v);
 
 
-/* Builtin helpers */
+/* Builtin helpers. */
 Cell* lex_make_builtin(const char* name, Cell* (*func)(const Lex*, const Cell*));
 Cell* lex_make_named_lambda(char* name, Cell* formals, Cell* body, Lex* env);
 Cell* lex_make_lambda(Cell* formals, Cell* body, Lex* env);

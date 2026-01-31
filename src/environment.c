@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 
 #include "environment.h"
 #include "numerics.h"
@@ -277,6 +277,8 @@ void lex_add_builtins(const Lex* e)
     lex_add_builtin(e, "exact-integer-sqrt", builtin_exact_integer_sqrt);
     lex_add_builtin(e, "exact", builtin_exact);
     lex_add_builtin(e, "inexact", builtin_inexact);
+    lex_add_builtin(e, "lcm", builtin_lcm);
+    lex_add_builtin(e, "gcd", builtin_gcd);
     /*
      * Type identity predicate procedures.
      *

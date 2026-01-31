@@ -15,7 +15,11 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
+
+/* This file defines the bigint operators, and helper functions for
+ * promotion and demotion.
+ */
 
 #include "bignum.h"
 #include "cell.h"
@@ -41,7 +45,7 @@ bool mul_will_overflow_i64(const int64_t a, const int64_t b, int64_t *out) {
 
 
 bool div_will_overflow_i64(const int64_t a, const int64_t b, int64_t *out) {
-    if (b == 0) { /* error: division by zero. */ return true; }
+    if (b == 0) { return true; } /* division by zero. */
     if (a == INT64_MIN && b == -1) return true;
     *out = a / b;
     return false;

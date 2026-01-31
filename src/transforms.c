@@ -1,7 +1,7 @@
 /*
  * 'src/transforms.c'
  * This file is part of Cozenage - https://github.com/DarrenKirby/cozenage
- * Copyright © 2025  Darren Kirby <darren@dragonbyte.ca>
+ * Copyright © 2025 Darren Kirby <darren@dragonbyte.ca>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,7 +15,15 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
+
+/* This file defines internal functions which implement the transforms
+ * of derived syntax forms to primitive forms. It also implements other
+ * 'housekeeping' tasks like transforming inner-defines into lambda bodies,
+ * and wraps multiple body expressions into explicit (begin ...) expressions.
+ *
+ * The code in this file is run directly between the parser and evaluator.
+ */
 
 #include "transforms.h"
 #include "cell.h"

@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 
 #ifndef COZENAGE_PORTS_H
 #define COZENAGE_PORTS_H
@@ -28,7 +28,7 @@ extern const PortInterface FileVTable;
 extern const PortInterface MemoryVTable;
 
 
-/* Input/output and ports */
+/* Input/output and ports. */
 Cell* builtin_current_input_port(const Lex* e, const Cell* a);
 Cell* builtin_current_output_port(const Lex* e, const Cell* a);
 Cell* builtin_current_error_port(const Lex* e, const Cell* a);

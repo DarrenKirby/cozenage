@@ -1,7 +1,7 @@
 /*
  * 'src/eval.c'
  * This file is part of Cozenage - https://github.com/DarrenKirby/cozenage
- * Copyright © 2025  Darren Kirby <darren@dragonbyte.ca>
+ * Copyright © 2025 - 2026 Darren Kirby <darren@dragonbyte.ca>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,7 +15,23 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
+
+/* This file defines the main internal-interpreter eval and apply functions.
+ * eval first direct-returns all self-evaluating types except for symbols
+ * which get looked up in the global environment first. It then dispatches out
+ * S-expressions with special forms in the first position.
+ *
+ * After that, the S-expression is assumed to be a procedure call. The procedure
+ * is evaluated, then the arguments are copied and evaluated, and the procedure,
+ * arguments, and environment are sent to apply. Builtin procedures will
+ * directly return a result, but user-defined lambda procedures will construct
+ * the lambda environment, and be sent back to eval as a tail call.
+ *
+ * The file also defines an apply_and_get_val function which will directly
+ * return a value instead of tail-calling. This allows for it to be used to
+ * evaluate a result from other C-functions internally.
+ */
 
 #include "eval.h"
 #include "special_forms.h"
@@ -88,7 +104,6 @@ Cell* coz_eval(Lex* env, Cell* expr)
         /* Grab first element without evaluating yet. */
         if (expr->count == 0) {
             /* Unquoted "()" */
-            //return Nil_Obj;
             return make_cell_error(
                 "bad expression: '()'",
                 SYNTAX_ERR);

@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 
 #include "types.h"
 #include "cell.h"
@@ -93,6 +93,7 @@ static char *filetype(const mode_t st_mode) {
             return "unknown";
     }
 }
+
 
 static char *format_time(const struct timespec *ts) {
     struct tm bdt;

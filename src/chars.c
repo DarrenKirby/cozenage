@@ -15,7 +15,11 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
+
+/* This file contains definitions for all the 'char' type builtin
+ * procedures, as well as various helper functions that they use
+ */
 
 #include "chars.h"
 #include "types.h"

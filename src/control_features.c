@@ -1,7 +1,7 @@
 /*
  * 'src/control_features.c'
  * This file is part of Cozenage - https://github.com/DarrenKirby/cozenage
- * Copyright © 2025  Darren Kirby <darren@dragonbyte.ca>
+ * Copyright © 2025 Darren Kirby <darren@dragonbyte.ca>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 
 #include "control_features.h"
 #include "types.h"
@@ -41,7 +41,11 @@ extern char **g_argv;
  *    Control features and list iteration procedures     *
  * ------------------------------------------------------*/
 
-
+/* (eval expr)
+ * This procedure evaluates the supplied expression in the current
+ * global environment. At some point I will decide on the best way
+ * to specify a custom environment, and use an optional second argument
+ * to pass said environment, but for now it is unary. */
 Cell* builtin_eval(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -546,6 +550,10 @@ Cell* builtin_string_foreach(const Lex* e, const Cell* a)
 }
 
 
+/* (load filename)
+ * An implementation-dependent operation is used to transform filename into the name of an existing file containing
+ * Scheme source code. The load procedure reads expressions and definitions from the file and evaluates them
+ * sequentially in the environment specified by environment-specifier. */
 Cell* builtin_load(const Lex* e, const Cell* a)
 {
     Cell* err = CHECK_ARITY_EXACT(a, 1, "load");

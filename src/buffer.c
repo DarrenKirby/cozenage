@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 
 
 /* This is a somewhat generic self-resizing buffer that can hold chars or
@@ -26,7 +26,8 @@
  * It defines three methods to add data to the buffer. sb_append_char() allows
  * for appending single chars or bytes. sb_append_str() allows for appending
  * an array of chars or bytes. sb_append_fmt() is only useful for text data,
- * it allows for appending formatted data a la sprintf(). */
+ * it allows for appending formatted data a la sprintf().
+ */
 
 
 #include "buffer.h"
@@ -76,7 +77,7 @@ static void sb_ensure_capacity(str_buf_t *sb, const size_t additional_needed)
 }
 
 
-/* Append a single char. */
+/* Append a char. */
 void sb_append_char(str_buf_t *sb, const char c)
 {
     sb_ensure_capacity(sb, 1);
@@ -86,7 +87,7 @@ void sb_append_char(str_buf_t *sb, const char c)
 }
 
 
-/* Append a single string. */
+/* Append a string. */
 void sb_append_str(str_buf_t *sb, const char *s)
 {
     size_t len = strlen(s);
@@ -99,7 +100,7 @@ void sb_append_str(str_buf_t *sb, const char *s)
 }
 
 
-/* Append binary data (used by generic port I/O. */
+/* Append binary data (used by generic port I/O). */
 void sb_append_data(str_buf_t *sb, const void *data, size_t len)
 {
     sb_ensure_capacity(sb, len);
@@ -146,9 +147,9 @@ void sb_append_fmt(str_buf_t *sb, const char *fmt, ...)
 
         if (n2 < 0) {
             /* This is an unexpected failure. */
-            fprintf(stderr, "CRITICAL: vsnprintf failed on second pass: %s\n",
+            fprintf(stderr, "!!! vsnprintf failed on second pass: %s\n",
                     strerror(errno));
-            /* Just return - not sure if it's necessary to abort. */
+            /* Just return - allow user to decide whether to abort. */
             return;
         }
         sb->length += n;

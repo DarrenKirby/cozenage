@@ -15,14 +15,19 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
+
+/* This file contains definitions for functions that create a custom
+ * dynamic completion array composed of Cozenage special forms and
+ * procedures for use by the tab-autocompleter. If the curser is currently
+ * inside a quote, then the default file completer is used. Otherwise,
+ * the procedure/SF completer is used. This code is only built if Cozenage
+ * is linked against GNU Readline. Libedit does not have this functionality.
+ */
 
 #include "compat_readline.h"
 
-/* This code is only used if Cozenage is linked against GNU Readline.
- * libedit does not contain this functionality. */
 #ifdef USE_GNU_READLINE
-
 #include "hash.h"
 
 #include <string.h>
@@ -43,7 +48,8 @@ void populate_dynamic_completions(const Lex* e)
 
     /* Special forms have to be added manually. */
     char* special_forms[] = { "quote", "define", "lambda", "let", "let*", "letrec", "set!", "if",
-        "when", "unless", "cond", "else", "begin", "import", "and", "or", "do", "case", "letrec*" };
+        "when", "unless", "cond", "else", "begin", "import", "and", "or", "do", "case", "letrec*",
+        "defmacro", "quasiquote", "unquote", "unquote-splicing", "with_gc_stats"};
     /* Why tho, does CLion always think this is C++ code? */
     // ReSharper disable once CppVariableCanBeMadeConstexpr
     const int num_sfs = sizeof(special_forms) / sizeof(special_forms[0]);

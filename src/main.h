@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 
 #ifndef COZENAGE_H
 #define COZENAGE_H
@@ -24,7 +24,7 @@
 
 /* Note: version string typically provided by CMake. */
 #ifndef APP_VERSION
-#define APP_VERSION "0.9.2"
+#define APP_VERSION "0.10.0"
 #endif
 
 #define PS1_PROMPT "--> \001\x1b[37;1m\002"

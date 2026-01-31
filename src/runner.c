@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 
 #include "runner.h"
 #include "symbols.h"
@@ -65,7 +65,7 @@ char* read_file_to_string(const char* filename)
         return nullptr;
     }
 
-    /* Determine file size */
+    /* Determine file size. */
     fseek(file, 0, SEEK_END);
     const int64_t file_size = ftell(file);
     fseek(file, 0, SEEK_SET);
@@ -76,7 +76,7 @@ char* read_file_to_string(const char* filename)
         return nullptr;
     }
 
-    /* Allocate memory for the string (+1 for null terminator) */
+    /* Allocate memory for the string (+1 for null terminator). */
     char* buffer = GC_MALLOC_ATOMIC(file_size + 1);
     if (buffer == NULL) {
         perror("Error allocating memory");
@@ -84,7 +84,7 @@ char* read_file_to_string(const char* filename)
         return nullptr;
     }
 
-    /* Read file content into the buffer */
+    /* Read file content into the buffer. */
     const size_t bytes_read = fread(buffer, 1, file_size, file);
     if (bytes_read != (size_t)file_size) {
         perror("Error reading file");
@@ -92,7 +92,7 @@ char* read_file_to_string(const char* filename)
         return nullptr;
     }
 
-    /* Null-terminate the string */
+    /* Null-terminate the string. */
     buffer[file_size] = '\0';
 
     fclose(file);
@@ -153,18 +153,10 @@ Cell* parse_all_expressions(Lex* e, TokenArray* ta, const bool is_repl)
             break;
         }
 
-        /* For transform debugging */
-        // printf("Before transform: \n");
-        // debug_print_cell(expression);
-
         /* Kick all S-expressions off to the transformer. */
         if (expression->type == CELL_SEXPR) {
             expression = expand(expression);
         }
-
-        /* For transform debugging */
-        // printf("After transform: \n");
-        // debug_print_cell(expression);
 
         /* Raise error if generated in parsing or transforming. */
         if (expression->type == CELL_ERROR) {
@@ -175,7 +167,7 @@ Cell* parse_all_expressions(Lex* e, TokenArray* ta, const bool is_repl)
         Cell* result = coz_eval(e, expression);
 
         /* Want to try to eliminate these 'legitimate' null returns,
-         * and make sure they're replaced with USP_Obj.*/
+         * and make sure they're replaced with USP_Obj. */
         if (!result) {
             printf("EVAL RETURNED NULL!!!!");
             break;
@@ -193,10 +185,10 @@ Cell* parse_all_expressions(Lex* e, TokenArray* ta, const bool is_repl)
         ta->position++;
     }
     /* No more expressions... */
-    /* return null to get new REPL prompt */
+    /* return null to get new REPL prompt. */
     if (is_repl) {
         return nullptr;
     }
-    /* Return success exit status to file runner */
+    /* Return success exit status to file runner. */
     return make_cell_integer(0);
 }

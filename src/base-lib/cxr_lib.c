@@ -1,7 +1,7 @@
 /*
  * 'src/base-lib/cxr_lib.c'
  * This file is part of Cozenage - https://github.com/DarrenKirby/cozenage
- * Copyright © 2025  Darren Kirby <darren@dragonbyte.ca>
+ * Copyright © 2025 Darren Kirby <darren@dragonbyte.ca>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,8 +15,18 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 
+/*
+ * The (base cxr) library exports twenty-four procedures which are the compositions
+ * of from three to four car and cdr operations. For example caddar could be defined by:
+ *
+ *  (define caddar
+ *     (lambda (x) (car (cdr (cdr (car x))))))
+ *
+ * The procedures car and cdr themselves and the four two-level compositions are included
+ * in the code interpreter.
+ */
 
 #include "types.h"
 #include "pairs.h"
@@ -31,6 +41,7 @@ static Cell* builtin_caaar(const Lex* e, const Cell* a)
     return car__(car__(car__(a->cell[0])));
 }
 
+
 static Cell* builtin_caaaar(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -39,6 +50,7 @@ static Cell* builtin_caaaar(const Lex* e, const Cell* a)
 
     return car__(car__(car__(car__(a->cell[0]))));
 }
+
 
 static Cell* builtin_caaddr(const Lex* e, const Cell* a)
 {
@@ -49,6 +61,7 @@ static Cell* builtin_caaddr(const Lex* e, const Cell* a)
     return car__(car__(cdr__(cdr__(a->cell[0]))));
 }
 
+
 static Cell* builtin_cadaar(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -57,6 +70,7 @@ static Cell* builtin_cadaar(const Lex* e, const Cell* a)
 
     return car__(cdr__(car__(car__(a->cell[0]))));
 }
+
 
 static Cell* builtin_cadar(const Lex* e, const Cell* a)
 {
@@ -67,6 +81,7 @@ static Cell* builtin_cadar(const Lex* e, const Cell* a)
     return car__(cdr__(car__(a->cell[0])));
 }
 
+
 static Cell* builtin_cadddr(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -75,6 +90,7 @@ static Cell* builtin_cadddr(const Lex* e, const Cell* a)
 
     return car__(cdr__(cdr__(cdr__(a->cell[0]))));
 }
+
 
 static Cell* builtin_cdaaar(const Lex* e, const Cell* a)
 {
@@ -85,6 +101,7 @@ static Cell* builtin_cdaaar(const Lex* e, const Cell* a)
     return cdr__(car__(car__(car__(a->cell[0]))));
 }
 
+
 static Cell* builtin_cdaar(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -93,6 +110,7 @@ static Cell* builtin_cdaar(const Lex* e, const Cell* a)
 
     return cdr__(car__(car__(a->cell[0])));
 }
+
 
 static Cell* builtin_cdaddr(const Lex* e, const Cell* a)
 {
@@ -103,6 +121,7 @@ static Cell* builtin_cdaddr(const Lex* e, const Cell* a)
     return cdr__(car__(cdr__(cdr__(a->cell[0]))));
 }
 
+
 static Cell* builtin_cddaar(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -111,6 +130,7 @@ static Cell* builtin_cddaar(const Lex* e, const Cell* a)
 
     return cdr__(cdr__(car__(car__(a->cell[0]))));
 }
+
 
 static Cell* builtin_cddar(const Lex* e, const Cell* a)
 {
@@ -121,6 +141,7 @@ static Cell* builtin_cddar(const Lex* e, const Cell* a)
     return cdr__(cdr__(car__(a->cell[0])));
 }
 
+
 static Cell* builtin_cddddr(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -129,6 +150,7 @@ static Cell* builtin_cddddr(const Lex* e, const Cell* a)
 
     return cdr__(cdr__(cdr__(cdr__(a->cell[0]))));
 }
+
 
 static Cell* builtin_caaadr(const Lex* e, const Cell* a)
 {
@@ -139,6 +161,7 @@ static Cell* builtin_caaadr(const Lex* e, const Cell* a)
     return car__(car__(car__(cdr__(a->cell[0]))));
 }
 
+
 static Cell* builtin_caadar(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -147,6 +170,7 @@ static Cell* builtin_caadar(const Lex* e, const Cell* a)
 
     return car__(car__(cdr__(car__(a->cell[0]))));
 }
+
 
 static Cell* builtin_caadr(const Lex* e, const Cell* a)
 {
@@ -157,6 +181,7 @@ static Cell* builtin_caadr(const Lex* e, const Cell* a)
     return car__(car__(cdr__(a->cell[0])));
 }
 
+
 static Cell* builtin_cadadr(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -165,6 +190,7 @@ static Cell* builtin_cadadr(const Lex* e, const Cell* a)
 
     return car__(cdr__(car__(cdr__(a->cell[0]))));
 }
+
 
 static Cell* builtin_caddar(const Lex* e, const Cell* a)
 {
@@ -175,6 +201,7 @@ static Cell* builtin_caddar(const Lex* e, const Cell* a)
     return car__(cdr__(cdr__(car__(a->cell[0]))));
 }
 
+
 static Cell* builtin_caddr(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -183,6 +210,7 @@ static Cell* builtin_caddr(const Lex* e, const Cell* a)
 
     return car__(cdr__(cdr__(a->cell[0])));
 }
+
 
 static Cell* builtin_cdaadr(const Lex* e, const Cell* a)
 {
@@ -193,6 +221,7 @@ static Cell* builtin_cdaadr(const Lex* e, const Cell* a)
     return cdr__(car__(car__(cdr__(a->cell[0]))));
 }
 
+
 static Cell* builtin_cdadar(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -201,6 +230,7 @@ static Cell* builtin_cdadar(const Lex* e, const Cell* a)
 
     return cdr__(car__(cdr__(car__(a->cell[0]))));
 }
+
 
 static Cell* builtin_cdadr(const Lex* e, const Cell* a)
 {
@@ -211,6 +241,7 @@ static Cell* builtin_cdadr(const Lex* e, const Cell* a)
     return cdr__(car__(cdr__(a->cell[0])));
 }
 
+
 static Cell* builtin_cddadr(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -219,6 +250,7 @@ static Cell* builtin_cddadr(const Lex* e, const Cell* a)
 
     return cdr__(cdr__(car__(cdr__(a->cell[0]))));
 }
+
 
 static Cell* builtin_cdddar(const Lex* e, const Cell* a)
 {
@@ -229,6 +261,7 @@ static Cell* builtin_cdddar(const Lex* e, const Cell* a)
     return cdr__(cdr__(cdr__(car__(a->cell[0]))));
 }
 
+
 static Cell* builtin_cdddr(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -237,6 +270,7 @@ static Cell* builtin_cdddr(const Lex* e, const Cell* a)
 
     return cdr__(cdr__(cdr__(a->cell[0])));
 }
+
 
 void cozenage_library_init(const Lex* e) {
     lex_add_builtin(e, "caaaar", builtin_caaaar);

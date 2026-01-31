@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 
 #include "pairs.h"
 #include "eval.h"
@@ -584,8 +584,7 @@ Cell* builtin_list_set(const Lex* e, const Cell* a)
 /* (memq obj list)
  * Return the first sublist of list whose car is obj, where the sublists of list are the non-empty
  * lists returned by (list-tail list k) for k less than the length of list. If obj does not occur in
- * list, then #f (not the empty list) is returned. Uses eq? to compare obj with the elements of list
- */
+ * list, then #f (not the empty list) is returned. Uses eq? to compare obj with the elements of list. */
 Cell* builtin_memq(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -608,8 +607,7 @@ Cell* builtin_memq(const Lex* e, const Cell* a)
 /* (memv obj list)
  * Return the first sublist of list whose car is obj, where the sublists of list are the non-empty
  * lists returned by (list-tail list k) for k less than the length of list. If obj does not occur in
- * list, then #f (not the empty list) is returned. Uses eqv? to compare obj with the elements of list
- */
+ * list, then #f (not the empty list) is returned. Uses eqv? to compare obj with the elements of list. */
 Cell* builtin_memv(const Lex* e, const Cell* a)
 {
     Cell* err = CHECK_ARITY_EXACT(a, 2, "memv");
@@ -618,7 +616,7 @@ Cell* builtin_memv(const Lex* e, const Cell* a)
     const Cell* key = a->cell[0];
     Cell* list = a->cell[1];
 
-    /* Iterate until we hit the end of the list (Empty/False_Obj). */
+    /* Iterate until we hit the end of the list. */
     while (list != NULL && list->type == CELL_PAIR) {
         /* Prepare args for eqv? : (key element). */
         Cell* eqv_args = make_cell_sexpr();
@@ -643,7 +641,7 @@ Cell* builtin_memv(const Lex* e, const Cell* a)
  * Return the first sublist of list whose car is obj, where the sublists of list are the non-empty
  * lists returned by (list-tail list k) for k less than the length of list. If obj does not occur in
  * list, then #f (not the empty list) is returned. Uses equal? to compare obj with the elements of
- * list unless an optional third arg, a comparison procedure, is provided */
+ * list unless an optional third arg, a comparison procedure, is provided. */
 Cell* builtin_member(const Lex* e, const Cell* a)
 {
     Cell* err = CHECK_ARITY_RANGE(a, 2, 3, "member");
@@ -808,13 +806,13 @@ Cell* builtin_list_copy(const Lex* e, const Cell* a)
     const Cell* old_list = a->cell[0];
     Cell* new_list_head = make_cell_pair(old_list->car, nullptr);
 
-    /* Runner pointers for iteration */
+    /* Runner pointers for iteration. */
     Cell* new_p = new_list_head;
     const Cell* old_p = old_list;
     while (old_p->cdr->type != CELL_NIL && old_p->cdr->type == CELL_PAIR) {
-        /* Advance the old pointer */
+        /* Advance the old pointer. */
         old_p = old_p->cdr;
-        /* Create a new cell and link it */
+        /* Create a new cell and link it. */
         new_p->cdr = make_cell_pair(old_p->car, nullptr);
         /* Advance the new pointer */
         new_p = new_p->cdr;
@@ -823,9 +821,10 @@ Cell* builtin_list_copy(const Lex* e, const Cell* a)
     /* Now, handle the final cdr.
      * This correctly handles both proper and improper lists. */
     new_p->cdr = old_p->cdr;
-    /* Return the original head pointer */
+    /* Return the original head pointer. */
     return new_list_head;
 }
+
 
 /* ----------------------------------------------------------*
  *                 List iteration procedures                 *
@@ -842,7 +841,7 @@ Cell* builtin_filter(const Lex* e, const Cell* a)
             "filter: arg 1 must be a procedure",
             TYPE_ERR);
     }
-    /* Empty list arg :: empty list result */
+    /* Empty list arg :: empty list result. */
     if (a->cell[1]->type == CELL_NIL) {
         return make_cell_nil();
     }
@@ -979,7 +978,7 @@ Cell* builtin_foldr(const Lex* e, const Cell* a)
     const Cell* proc = a->cell[0];
     Cell* init = a->cell[1];
 
-    /* Grab elements from the end of the lists */
+    /* Grab elements from the end of the lists. */
     for (int i = shortest_len - 1; i >= 0; i--) {
         Cell* arg_list = make_cell_sexpr();
         for (int j = 2; j < 2 + num_lists; j++) {

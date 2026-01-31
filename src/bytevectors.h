@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 
 #ifndef COZENAGE_BYTEVECTORS_H
 #define COZENAGE_BYTEVECTORS_H
@@ -54,7 +54,7 @@ bv->bv->data = GC_REALLOC(bv->bv->data, bv->bv->capacity * sizeof(ctype));  \
 }                                                                           \
 ((ctype*)bv->bv->data)[bv->count++] = (ctype)val;                           \
 }                                                                           \
-static void repr_##suffix(const Cell* bv, str_buf_t *sb) {           \
+static void repr_##suffix(const Cell* bv, str_buf_t *sb) {                  \
 sb_append_fmt(sb, "#%s(", #suffix);                                         \
 for (int i = 0; i < bv->count; i++) {                                       \
 sb_append_fmt(sb, fmt, ((ctype*)bv->bv->data)[i]);                          \

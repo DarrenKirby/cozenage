@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 
 #include "types.h"
 #include "cell.h"
@@ -96,6 +96,7 @@ static char* format_twos_complement(const long long val)
     return bitstring;
 }
 
+
 /*------------------------------------------------------------*
  *            (cozenage bits) library procedures              *
  * -----------------------------------------------------------*/
@@ -125,6 +126,7 @@ static Cell* bits_right_shift(const Lex* e, const Cell* a)
     return result;
 }
 
+
 static Cell* bits_left_shift(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -149,6 +151,7 @@ static Cell* bits_left_shift(const Lex* e, const Cell* a)
     }
     return result;
 }
+
 
 static Cell* bits_bitwise_and(const Lex* e, const Cell* a)
 {
@@ -180,6 +183,7 @@ static Cell* bits_bitwise_and(const Lex* e, const Cell* a)
     return result;
 }
 
+
 static Cell* bits_bitwise_or(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -209,6 +213,7 @@ static Cell* bits_bitwise_or(const Lex* e, const Cell* a)
     }
     return result;
 }
+
 
 static Cell* bits_bitwise_xor(const Lex* e, const Cell* a)
 {
@@ -240,6 +245,7 @@ static Cell* bits_bitwise_xor(const Lex* e, const Cell* a)
     return result;
 }
 
+
 static Cell* bits_bitwise_not(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -264,6 +270,7 @@ static Cell* bits_bitwise_not(const Lex* e, const Cell* a)
     return result;
 }
 
+
 static Cell* bits_add(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -278,6 +285,7 @@ static Cell* bits_add(const Lex* e, const Cell* a)
     const Cell* result = make_cell_integer(arg1->integer_v + arg2->integer_v);
     return bits_int_to_bitstring(e, make_sexpr_len1(result));
 }
+
 
 static Cell* bits_sub(const Lex* e, const Cell* a)
 {
@@ -294,6 +302,7 @@ static Cell* bits_sub(const Lex* e, const Cell* a)
     return bits_int_to_bitstring(e, make_sexpr_len1(result));
 }
 
+
 static Cell* bits_mul(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -308,6 +317,7 @@ static Cell* bits_mul(const Lex* e, const Cell* a)
     const Cell* result = make_cell_integer(arg1->integer_v * arg2->integer_v);
     return bits_int_to_bitstring(e, make_sexpr_len1(result));
 }
+
 
 static Cell* bits_div(const Lex* e, const Cell* a)
 {
@@ -328,6 +338,7 @@ static Cell* bits_div(const Lex* e, const Cell* a)
     return bits_int_to_bitstring(e, make_sexpr_len1(result));
 }
 
+
 static Cell* bits_int_to_bitstring(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -344,6 +355,7 @@ static Cell* bits_int_to_bitstring(const Lex* e, const Cell* a)
     free(str);
     return result;
 }
+
 
 static Cell* bits_bitstring_to_int(const Lex* e, const Cell* a)
 {
@@ -378,6 +390,7 @@ static Cell* bits_bitstring_to_int(const Lex* e, const Cell* a)
 
     return make_cell_integer(negative_part + positive_part);
 }
+
 
 void cozenage_library_init(const Lex* e) {
     lex_add_builtin(e, ">>", bits_right_shift);

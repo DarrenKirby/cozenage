@@ -15,7 +15,15 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
+
+/* This file does not implement any builtin procedures, rather, it implements
+ * a library of helper functions related to Cozenage types and procedures.
+ * For example, it implements procedure arity and type checkers, numeric
+ * promotion functions, helpers for building S-expr Cells of various lengths,
+ * internal type converters, and finally, it implements the binary search
+ * lookup table for mapping #\sigma style helpers to actual #\σ char literals.
+ */
 
 #include "types.h"
 #include "cell.h"

@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 
 #include "environment.h"
 #include "cell.h"
@@ -26,14 +26,14 @@
 #include <dlfcn.h>
 
 
-/* Define the library file extension based on the OS */
+/* Define the library file extension based on the OS. */
 #ifdef __APPLE__
     #define LIB_EXT "dylib"
 #else
     #define LIB_EXT "so"
 #endif
 
-/* Define the function signature we expect to find */
+/* Define the function signature we expect to find. */
 typedef void (*CznLibInitFunc)(const Lex*);
 
 /*
@@ -54,7 +54,7 @@ int internal_cozenage_load_lib(const char* libname, const Lex* env)
         env_path = "";
     }
 
-    /* Library Search Path Logic
+    /* Library Search Path Logic.
      * It looks in "./lib/" first, then tries a relative PATH "../lib/cozenage/".
      * It then checks if the COZENAGE_LIB_PATH ENV VAR has been set.
      * If none of these resolve, it will look in /usr/lib and /usr/lib64/

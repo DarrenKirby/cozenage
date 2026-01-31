@@ -617,6 +617,41 @@ HandlerResult sf_and(Lex* e, Cell* a) {
     return (HandlerResult){.action = ACTION_RETURN, .value = True_Obj};
 }
 
+
+/* (defmacro name ⟨formals⟩ ⟨body⟩
+ * Defines ⟨name⟩ as a macro. ⟨Formals⟩ is a symbol or a list of symbols that
+ * name the macro’s arguments. ⟨Body⟩ is an expression that is evaluated at
+ * macro-expansion time with the macro arguments bound to the unevaluated
+ * subforms of the macro call.
+ *
+ * The value produced by evaluating ⟨body⟩ must be a syntactic form, which is
+ * substituted into the program in place of the macro invocation. Quasiquote,
+ * unquote, and unquote-splicing are typically used to construct this form,
+ * but are not required.
+ *
+ * Macros defined by defmacro are non-hygienic: identifiers introduced by the
+ * macro expansion may capture or be captured by bindings at the macro use site.
+ *
+ * It is an error if ⟨name⟩ is not a symbol, or if ⟨formals⟩ is neither a symbol
+ * nor a list of symbols.
+ *
+ *   ;; The nested-test macro
+ *   (defmacro nested-test (x)
+ *     `(list ,x (list ,x)))
+ *
+ *   ;; The kond macro (a simplified 'cond' implementation)
+ *   (defmacro kond (test then else)
+ *     `(if ,test
+ *          ,then
+ *          ,else))
+ *
+ *   ;; Executing the tests
+ *   (nested-test 5)
+ *   ;; Output: (5 (5))
+ *
+ *   (kond (= 1 1) 'yes 'no)
+ *   ;; Output: yes
+ */
 HandlerResult sf_defmacro(Lex* e, Cell* a) {
     if (a->count < 3) {
         Cell* err = make_cell_error(
@@ -649,7 +684,8 @@ HandlerResult sf_defmacro(Lex* e, Cell* a) {
 }
 
 
-/* A helper debug procedure that checks GC allocation/deallocation.
+/* (with-gc-stats ⟨expression1⟩)
+ * A helper debug procedure that checks GC allocation/deallocation.
  * Implemented as a special form so the arg doesn't get evaluated before
  * the first collect/get_heap_size calls. */
 HandlerResult sf_with_gc_stats(Lex* env, Cell* a) {

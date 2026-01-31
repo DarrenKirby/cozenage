@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 
 #ifndef COZENAGE_PAIRS_H
 #define COZENAGE_PAIRS_H
@@ -23,10 +23,10 @@
 #include "cell.h"
 
 
-/* Helpers - not static because cxr lib uses them */
+/* Helpers - not static because cxr lib uses them. */
 Cell* car__(const Cell* list);
 Cell* cdr__(const Cell* list);
-/* pair/list constructors, selectors, and procedures */
+/* pair/list constructors, selectors, and procedures. */
 Cell* builtin_cons(const Lex* e, const Cell* a);
 Cell* builtin_car(const Lex* e, const Cell* a);
 Cell* builtin_cdr(const Lex* e, const Cell* a);

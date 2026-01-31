@@ -1,7 +1,7 @@
 /*
  * 'src/control_features.h'
  * This file is part of Cozenage - https://github.com/DarrenKirby/cozenage
- * Copyright © 2025  Darren Kirby <darren@dragonbyte.ca>
+ * Copyright © 2025 Darren Kirby <darren@dragonbyte.ca>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 
 #ifndef COZENAGE_CONTROL_FEATURES_H
 #define COZENAGE_CONTROL_FEATURES_H
@@ -23,7 +23,7 @@
 #include "cell.h"
 
 
-/* Control features  */
+/* Control features. */
 Cell* builtin_eval(const Lex* e, const Cell* a);
 Cell* builtin_apply(const Lex* e, const Cell* a);
 Cell* builtin_map(const Lex* e, const Cell* a);

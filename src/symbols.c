@@ -15,7 +15,14 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
+
+/* This file defines a handful of builtin procedures that operate directly
+ * on symbols, and also defines the 'features' procedure as it doesn't really
+ * fit into a better category, and it needed to go somewhere. It also
+ * initializes the global symbol table, and defines global symbols for
+ * all the special forms, whether implemented primitive or as transforms.
+ */
 
 #include "symbols.h"
 #include "cell.h"

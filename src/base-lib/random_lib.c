@@ -1,7 +1,7 @@
 /*
  * 'src/base-lib/random.c'
  * This file is part of Cozenage - https://github.com/DarrenKirby/cozenage
- * Copyright © 2025  Darren Kirby <darren@dragonbyte.ca>
+ * Copyright © 2025 Darren Kirby <darren@dragonbyte.ca>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 
 #include "types.h"
 #include "cell.h"
@@ -155,6 +155,7 @@ static Cell* random_shuffle(const Lex* e, const Cell* a)
     return sexp;
 }
 
+
 static Cell* random_choice(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -178,6 +179,7 @@ static Cell* random_choice(const Lex* e, const Cell* a)
 
     return c_arr[rand_uint(arr_size)];
 }
+
 
 static Cell* random_choices(const Lex* e, const Cell* a)
 {
@@ -225,6 +227,7 @@ static Cell* random_choices(const Lex* e, const Cell* a)
     result_arr->type = CELL_VECTOR;
     return result_arr;
 }
+
 
 void cozenage_library_init(const Lex* e)
 {

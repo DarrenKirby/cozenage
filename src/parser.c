@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 
 #include "main.h"
 #include "parser.h"
@@ -31,7 +31,7 @@
 #include <limits.h>
 #include <unicode/uchar.h>
 
-/* Linux needs this include, macOS and FreeBSD do not */
+/* Linux needs this include, macOS and FreeBSD do not. */
 #ifdef __linux__
 #include <ctype.h>
 #endif
@@ -53,12 +53,12 @@ static long double parse_float_checked(const char* str, char* err_buf, int* ok)
             ANSI_RED_B, str, ANSI_RESET);
         *ok = 0; return 0;
     }
-    /* early exit for nan.0, +inf.0, -inf.0 */
+    /* early exit for nan.0, +inf.0, -inf.0. */
     if (*end_ptr == '.') {
         *ok = 1;
         return val;
     }
-    /* Raises syntax error for things like "1234HELLO" */
+    /* Raises syntax error for things like "1234HELLO". */
     if (*end_ptr != '\0') {
         snprintf(err_buf, 128, "Invalid trailing characters in numeric: '%s%s%s'",
             ANSI_RED_B, str, ANSI_RESET);
@@ -99,21 +99,22 @@ static long long parse_int_checked(const char* str, char* err_buf, const int bas
 
 static char* token_to_string(const Token* token)
 {
-    /* Allocate memory for the new string (+1 for the null terminator) */
+    /* Allocate memory for the new string (+1 for the null terminator). */
     char* str = GC_MALLOC(token->length + 1);
     if (str == NULL) {
         fprintf(stderr, "Memory allocation failed in token_to_string.\n");
         exit(EXIT_FAILURE);
     }
 
-    /* Copy the token's characters into the new string */
+    /* Copy the token's characters into the new string. */
     memcpy(str, token->start, token->length);
 
-    /* Add the null terminator */
+    /* Add the null terminator. */
     str[token->length] = '\0';
 
     return str;
 }
+
 
 bool fits_in_int64(const char *s) {
     const int neg = s[0] == '-';
@@ -130,15 +131,16 @@ bool fits_in_int64(const char *s) {
     return strcmp(p, limit) <= 0;
 }
 
+
 static Cell* parse_number(char* token, const int line, int len)
 {
-    int base = 10;   /* Default to base 10 */
-    int exact = -1;  /* Default to unspecified */
-    int ok = 0;      /* error flag */
+    int base = 10;   /* Default to base 10. */
+    int exact = -1;  /* Default to unspecified. */
+    int ok = 0;      /* error flag. */
     char err_buf[128] = {0};
 
     /* This oddball needs to get dispatched before
-     * it hits the next if/else block */
+     * it hits the next if/else block. */
      if (strcmp("inf.0", token) == 0) {
          return make_cell_real(parse_float_checked(token, err_buf, &ok));
      }
@@ -314,6 +316,7 @@ static Cell* parse_number(char* token, const int line, int len)
         line, ANSI_RED_B, tok, ANSI_RESET), SYNTAX_ERR);
 }
 
+
 static Cell* parse_string(const char* str, const int len)
 {
     /* Allocate a new buffer. The final string will be
@@ -421,6 +424,7 @@ static Cell* parse_string(const char* str, const int len)
     return make_cell_string(internal_buffer);
 }
 
+
 static Cell* parse_boolean(const char* tok, const int line)
 {
     if (strcmp(tok, "t") == 0 ||
@@ -431,6 +435,7 @@ static Cell* parse_boolean(const char* tok, const int line)
     return make_cell_error(fmt_err("Line %d: Unable to parse token: '%s#%s%s'",
                     line, ANSI_RED_B, tok, ANSI_RESET), SYNTAX_ERR);
 }
+
 
 static Cell* parse_symbol(char* tok, const int line, const int len)
 {
@@ -446,6 +451,7 @@ static Cell* parse_symbol(char* tok, const int line, const int len)
     }
     return make_cell_symbol(tok);
 }
+
 
 static Cell* parse_character(char* tok, const int line, const int len)
 {
@@ -512,17 +518,20 @@ static Cell* parse_character(char* tok, const int line, const int len)
     return make_cell_char(code_point);
 }
 
+
 static Token *peek(const TokenArray *p)
 {
     if (p->position < p->count) return &p->tokens[p->position];
     return nullptr;
 }
 
+
 static Token *advance(TokenArray *p)
 {
     if (p->position < p->count) return &p->tokens[p->position++];
     return nullptr;
 }
+
 
 Cell* parse_tokens(TokenArray *ta) {
     /* First check that the expression is balanced. */
