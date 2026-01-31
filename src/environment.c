@@ -478,6 +478,7 @@ void lex_add_builtins(const Lex* e)
     lex_add_builtin(e, "close-output-port", builtin_close_port);
     lex_add_builtin(e, "read-line", builtin_read_line);
     lex_add_builtin(e, "read-lines", builtin_read_lines);
+    lex_add_builtin(e, "read", builtin_read);
     lex_add_builtin(e, "read-char", builtin_read_char);
     lex_add_builtin(e, "read-u8", builtin_read_u8);
     lex_add_builtin(e, "read-string", builtin_read_string);
