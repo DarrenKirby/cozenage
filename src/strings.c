@@ -123,10 +123,10 @@ static void integer_to_oct_or_hex_string(const int64_t val, char* buf, const uin
                                  : (unsigned long long)val;
 
     const char *fmt = (radix == 8) ? "%llo" : "%llx";
-    snprintf(buf, sizeof(buf), fmt, mag);
+    snprintf(buf, 128, fmt, mag);
 
     if (neg) {
-        char tmp[sizeof(buf)];
+        char tmp[128];
         snprintf(tmp, sizeof(tmp), "-%s", buf);
         strncpy(buf, tmp, 128);
     }
