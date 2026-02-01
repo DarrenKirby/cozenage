@@ -175,17 +175,12 @@ Cell* coz_eval(Lex* env, Cell* expr)
 
         Cell* result = coz_apply(f, args, &env, &expr);
         if (!result) return nullptr;
-        /* CELL_TRAMPOLINE is a tail-call from a builtin procedure. */
-        if (result->type == CELL_TRAMPOLINE) {
-            expr = result;
-            continue;
-        }
 
         if (result != TCS_Obj) {
-            /* f was a primitive C function, it returned a final value. */
+            /* f was a primitive C function that returned a final value. */
             return result;
         }
-        /* If here ... f was a lambda, and apply() updated
+        /* If here ...it was a TCS, and apply() updated
          * expr and env. Allow the control flow to begin another
          * loop, performing the tail call. */
     }
@@ -196,8 +191,20 @@ Cell* coz_eval(Lex* env, Cell* expr)
 static Cell* coz_apply(const Cell* proc, Cell* args, Lex** env_out, Cell** expr_out)
 {
     if (proc->is_builtin) {
-        return proc->builtin(*env_out, args); /* Return final value */
+        /* Run the builtin. */
+        Cell* result = proc->builtin(*env_out, args);
+
+        /* If the builtin returned TCS_Obj (only 'apply' does this thus far),
+         * it means that 'result' is an expression that needs to be tail-called... */
+        if (result->type == CELL_TCS) {
+            result->type = CELL_SEXPR;
+            *expr_out = result;
+            return TCS_Obj;
+        }
+        /* Otherwise, it's a final result. */
+        return result;
     }
+
     /* It's a Scheme lambda, return TCO. */
     Lex* le = build_lambda_env(proc->lambda->env, proc->lambda->formals, args);
     if (le == nullptr) {
