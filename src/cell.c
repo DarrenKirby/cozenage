@@ -693,11 +693,11 @@ Cell* cell_copy(const Cell* v) {
 
     /* Return the singleton objects instead of allocating for these types. */
     case CELL_NIL:
-        return make_cell_nil();
+        return Nil_Obj;
     case CELL_TCS:
-        return make_cell_tcs();
+        return TCS_Obj;
     case CELL_UNSPEC:
-        return make_cell_usp();
+        return USP_Obj;
 
     default:
         fprintf(stderr, "cell_copy: unknown type %d\n", v->type);
