@@ -10,22 +10,6 @@ Anyone with experience in Scheme or other Lisp dialects should find Cozenage imm
 
 ---
 
-## Design goals
-
-- **Clarity over completeness**  
-  Prefer understandable, inspectable implementations over strict standards compliance.
-
-- **A small, coherent core**  
-  Keep the core language modest and expressive, with additional functionality layered on via libraries and modules.
-
-- **Exploration and learning**  
-  Cozenage exists as a vehicle for learning about language implementation, interpreter design, and runtime systems.
-
-- **Practical Lisp semantics**  
-  Favor straightforward, predictable behavior over obscure or highly abstract features.
-
----
-
 ## Language features
 
 ### Core object types
@@ -129,6 +113,21 @@ Several common procedures are polymorphic across compound types, including:
 
 Cozenage is best understood as **a Scheme-inspired Lisp**, prioritizing internal consistency, approachability, and educational value over exhaustive standards compliance.
 
+### Design goals
+
+- **Clarity over completeness**  
+  Prefer understandable, inspectable implementations over strict standards compliance.
+
+- **A small, coherent core**  
+  Keep the core language modest, with additional functionality layered on via libraries and modules.
+
+- **Exploration and learning**  
+  Cozenage exists as a vehicle for learning about language implementation, interpreter design, and runtime systems.
+
+- **Practical Lisp semantics**  
+  Favor straightforward, predictable behavior over obscure or highly abstract features.
+
+---
 
 ## Dependencies
 
