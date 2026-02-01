@@ -645,7 +645,6 @@ HandlerResult sf_and(Lex* e, Cell* a) {
  *          ,then
  *          ,else))
  *
- *   ;; Executing the tests
  *   (nested-test 5)
  *   ;; Output: (5 (5))
  *
