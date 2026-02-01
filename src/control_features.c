@@ -104,8 +104,8 @@ Cell* builtin_apply(const Lex* e, const Cell* a)
         current_item = current_item->cdr;
     }
     /* Give the s-expr a gentle kiss on the forehead,
-     * and make it a CELL_TRAMPOLINE... */
-    final_sexpr->type = CELL_TRAMPOLINE;
+     * and make it a CELL_TCS... */
+    final_sexpr->type = CELL_TCS;
     return final_sexpr;
 }
 
@@ -137,6 +137,12 @@ Cell* builtin_map(const Lex* e, const Cell* a)
 
     for (int i = 0; i < num_lists; i++) {
         Cell* lst = a->cell[i + 1];
+
+        /* Dirty kludge to get some macros to work. */
+        if (lst->type == CELL_SEXPR) {
+            lst = make_list_from_sexpr(lst);
+        }
+
         if (lst->type == CELL_NIL) return make_cell_nil();
         if (lst->type != CELL_PAIR) {
             return make_cell_error(
