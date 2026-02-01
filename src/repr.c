@@ -338,7 +338,7 @@ static void cell_to_string_worker(const Cell* v,
             break;
 
         case CELL_SEXPR:
-        case CELL_TRAMPOLINE:
+        case CELL_TCS:
             repr_sequence(v, nullptr, '(', ')', sb, mode);
             break;
 
