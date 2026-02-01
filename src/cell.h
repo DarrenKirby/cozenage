@@ -62,15 +62,14 @@ typedef enum Cell_t : uint32_t {
 
     CELL_SEXPR      = 1 << 16,  /* An array of values, used internally. */
     CELL_TCS        = 1 << 17,  /* Tail Call Sentinel object. */
-    //CELL_TRAMPOLINE = 1 << 18,  /* Return value to signal a builtin procedure tail-call. */
     CELL_UNSPEC     = 1 << 18,  /* Unspecified object. */
-
     CELL_BIGINT     = 1 << 19,  /* Arbitrary size/precision integer. */
+
     CELL_BIGRAT     = 1 << 20,  /* TODO: Arbitrary size/precision rational. */
     CELL_BIGFLOAT   = 1 << 21,  /* TODO: Arbitrary size/precision float. */
     CELL_PROMISE    = 1 << 22,  /* For delayed evaluation/streams. */
-
     CELL_STREAM     = 1 << 23,  /* A stream datatype for lazy evaluation. */
+    
     CELL_MACRO      = 1 << 24   /* A non-hygienic 'defmacro' macro. */
 } Cell_t;
 
