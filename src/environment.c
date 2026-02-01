@@ -186,7 +186,7 @@ Cell* lex_make_lambda(Cell* formals, Cell* body, Lex* env)
 }
 
 
-/* Populate the CELL_PROC struct of a Cell* object for a named lambda procedure. */
+/* Populate the CELL_PROC struct of a Cell* object for a defmacro procedure. */
 Cell* lex_make_defmacro(char* name, Cell* formals, Cell* body, Lex* env)
 {
     Cell* c = GC_MALLOC(sizeof(Cell)); /* Allocate Cell struct. */
