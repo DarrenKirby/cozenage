@@ -873,13 +873,15 @@ long double cell_to_long_double(const Cell* c)
         case CELL_REAL:
             return c->real_v;
         default:
-            /* This case should ideally not be reached if inputs are valid numbers. */
+            /* This case should not be reached if inputs are valid numbers. */
             return 0.0L;
     }
 }
 
 
-/* Helper to construct appropriate cell from a long double. */
+/* Helper to construct appropriate cell from a long double.
+ * This function trampled correct exact/inexact flags, so
+ * I've removed all calls to it. May remove entirely. */
 Cell* make_cell_from_double(const long double d)
 {
     if (d == floorl(d) && d >= LLONG_MIN && d <= LLONG_MAX) {

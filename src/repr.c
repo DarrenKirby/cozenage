@@ -17,6 +17,33 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/* This file defines functions used by the printer. There are also three
+ * printing modes defined. MODE_DISPLAY prints objects in their 'outside'
+ * representation. That is, strings are unquoted and unescaped, chars are
+ * printed as 'S' rather than #\S, and so on. MODE_WRITE prints objects
+ * in their 'inside' Cozenage representation, so strings are quoted, and
+ * chars are printed with the hash-slash prefix. These two modes implement
+ * the difference between the 'display' and 'write' I/O procedures. There
+ * is also a third MODE_REPL, which is identical to MODE_WRITE except it
+ * adds some ANSI colour codes to some objects so they look 'prettier' in
+ * the REPL.
+ *
+ * Most objects have no difference in representation in terms of these modes.
+ *
+ * The workhorse of the printer is the cell_to_string_worker function,
+ * which generates output based on Cell type. Many simple objects are handled
+ * directly, whilst other more complicated representations are dispatched
+ * out to helper functions. cell_to_string is the general wrapper function
+ * that is directly called from elsewhere in the codebase. This function
+ * returns the representation as a char array. The memory buffer defined
+ * in src/buffer.c is used to build complicated representations piecemeal.
+ *
+ * There are also two debugging functions defined in this file. debug_print_cell
+ * is a thin-wrapper around cell_to_string which includes an explicit printf
+ * call on the char array. debug_print_env simply dumps all the name -> object
+ * mappings in the global environment one per line
+ */
+
 #include "repr.h"
 #include "parser.h"
 #include "buffer.h"
@@ -27,6 +54,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <wctype.h>
+#include <math.h>
 
 /* Only Linux needs this include. */
 #ifdef __linux__
@@ -133,11 +161,15 @@ static void cell_to_string_worker(const Cell* v,
 
             const long double im = cell_to_long_double(v->imag);
             if (im < 0) {
-                /* Already negative. */
                 cell_to_string_worker(v->imag, sb, mode);
             } else {
                 sb_append_char(sb, '+');
-                cell_to_string_worker(v->imag, sb, mode);
+                /* If it was -0.0, ensure the worker prints "0.0" not "-0.0" */
+                if (im == 0.0L) {
+                    sb_append_str(sb, "0.0");
+                } else {
+                    cell_to_string_worker(v->imag, sb, mode);
+                }
             }
             sb_append_char(sb, 'i');
             break;
@@ -159,7 +191,11 @@ static void cell_to_string_worker(const Cell* v,
             else if (v->promise->status == 1) stat = "lazy";
             else if (v->promise->status == 2) stat = "evaluated";
             else stat = "running";
-            sb_append_fmt(sb, "#<promise object:%s%s%s>", ANSI_BLUE_B, stat, ANSI_RESET);
+            if (mode == MODE_REPL) {
+                sb_append_fmt(sb, "#<promise object:%s%s%s>", ANSI_BLUE_B, stat, ANSI_RESET);
+            } else {
+                sb_append_fmt(sb, "#<promise object:%s>", stat);
+            }
             break;
         }
 
@@ -175,14 +211,14 @@ static void cell_to_string_worker(const Cell* v,
         case CELL_ERROR: {
             char *err_str;
             switch (v->err_t) {
-                case FILE_ERR: { err_str = "File error:"; break; }
-                case READ_ERR: { err_str = "Read error:"; break; }
+                case FILE_ERR:   { err_str = "File error:"; break; }
+                case READ_ERR:   { err_str = "Read error:"; break; }
                 case SYNTAX_ERR: { err_str = "Syntax error:"; break; }
-                case ARITY_ERR: { err_str = "Arity error:"; break; }
-                case TYPE_ERR: { err_str = "Type error:"; break; }
-                case INDEX_ERR: { err_str = "Index error:"; break; }
-                case VALUE_ERR: { err_str = "Value error:"; break; }
-                default: { err_str = "Error: "; break; }
+                case ARITY_ERR:  { err_str = "Arity error:"; break; }
+                case TYPE_ERR:   { err_str = "Type error:"; break; }
+                case INDEX_ERR:  { err_str = "Index error:"; break; }
+                case VALUE_ERR:  { err_str = "Value error:"; break; }
+                default:         { err_str = "Error: "; break; }
             }
 
             if (mode == MODE_REPL) {
@@ -270,21 +306,21 @@ static void cell_to_string_worker(const Cell* v,
             break;
 
         case CELL_PORT: {
-            char *stream_type = nullptr;;
-            if (v->port->backend_t == BK_FILE_TEXT) { stream_type = "text-file-port"; }
-            if (v->port->backend_t == BK_FILE_BINARY) { stream_type = "binary-file-port"; }
-            if (v->port->backend_t == BK_STRING) { stream_type = "string-port"; }
-            if (v->port->backend_t == BK_BYTEVECTOR) { stream_type = "bytevector-port"; }
-            if (!stream_type)  { stream_type = "unknown-stream-type!!!"; }
+            char *backend_type = nullptr;;
+            if (v->port->backend_t == BK_FILE_TEXT)   { backend_type = "text-file-port"; }
+            if (v->port->backend_t == BK_FILE_BINARY) { backend_type = "binary-file-port"; }
+            if (v->port->backend_t == BK_STRING)      { backend_type = "string-port"; }
+            if (v->port->backend_t == BK_BYTEVECTOR)  { backend_type = "bytevector-port"; }
+            if (!backend_type) { backend_type = "unknown-stream-type!!!"; }
 
             if (mode == MODE_REPL) {
                 sb_append_fmt(sb, "#<%s%s %s-port '%s%s%s'>", v->is_open ? "open:" : "closed:",
-                    stream_type,
+                    backend_type,
                     v->port->stream_t == INPUT_STREAM ? "input" : "output",
                     ANSI_BLUE_B, v->port->path, ANSI_RESET);
             } else {
                 sb_append_fmt(sb, "#<%s%s %s-port '%s'>", v->is_open ? "open:" : "closed:",
-                    stream_type,
+                    backend_type,
                     v->port->stream_t == INPUT_STREAM ? "input" : "output",
                     v->port->path);
             }

@@ -247,3 +247,4 @@ Cell* coz_apply_and_get_val(const Cell* proc, Cell* args, const Lex* env)
     Cell* body_expr = proc->lambda->body;
     return coz_eval(lambda_env, body_expr);
 }
+
