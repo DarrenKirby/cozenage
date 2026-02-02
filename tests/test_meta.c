@@ -6,6 +6,8 @@
 #include "../src/repr.h"
 #include "../src/symbols.h"
 #include "../src/transforms.h"
+
+#include <assert.h>
 #include <locale.h>
 #include <gc/gc.h>
 
@@ -54,7 +56,7 @@ char* t_eval(const char* input) {
     return cell_to_string(result, MODE_WRITE);
 }
 
-char* t_eval_lib(const char* libname, const char* input) {
+long double t_eval_math_lib(const char* input) {
     if (!engine_prepped) {
         GC_INIT(); // Only call this ONCE per process
         symbol_table = ht_create(128);
@@ -69,16 +71,18 @@ char* t_eval_lib(const char* libname, const char* input) {
     lex_add_builtins(test_env);
 
     /* Load the lib */
-    const Cell* ll = load_library(libname, test_env);
+    const Cell* ll = load_library("math", test_env);
     if (ll == False_Obj) {
-        printf("Failed to load %s library!!!!\n", libname);
-        return "";
+        printf("Failed to load %s library!!!!\n", "math");
+        return -1;
     }
 
     TokenArray* ta = scan_all_tokens(input);
     Cell* parsed = parse_tokens(ta);
-    Cell* expr = expand(parsed);
-    const Cell *result = coz_eval(test_env, expr);
+    //Cell* expr = expand(parsed);
 
-    return cell_to_string(result, MODE_WRITE);
+    Cell* result = coz_eval(test_env, parsed);
+    //assert(result->type == CELL_REAL);
+
+    return result->real_v;
 }
