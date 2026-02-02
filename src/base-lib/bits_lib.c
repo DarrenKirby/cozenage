@@ -24,20 +24,6 @@
 #include <string.h>
 #include <gc/gc.h>
 
-/* This is not defined on some systems. */
-#ifndef strlcat
-static inline size_t strlcat(char *dst, const char *src, size_t size)
-{
-    size_t dlen = strnlen(dst, size);
-    size_t slen = strlen(src);
-    if (dlen == size) return size + slen;
-    if (slen > size - dlen - 1) slen = size - dlen - 1;
-    memcpy(dst + dlen, src, slen);
-    dst[dlen + slen] = '\0';
-    return dlen + strlen(src);
-}
-#endif
-
 
 /* Forward declaration */
 static Cell* bits_bitstring_to_int(const Lex* e, const Cell* a);
