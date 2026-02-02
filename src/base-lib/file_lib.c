@@ -27,9 +27,8 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <time.h>
-#ifdef __APPLE__
-#include <sys/syslimits.h>
-#else
+
+#ifndef __APPLE__
 #include <limits.h>
 #include <sys/sysmacros.h>
 #endif
@@ -111,6 +110,7 @@ static char *format_time(const struct timespec *ts) {
     return str;
 }
 
+
 #define FP_SPECIAL 1
 /* Include set-user-ID, set-group-ID, and sticky
 bit information in returned string */
@@ -155,8 +155,8 @@ static Cell* file_reg_file_pred(const Lex* e, const Cell* a)
     const char* filename = a->cell[0]->str;
     const int8_t ft = f_get_type(filename);
     if (ft == F_ERR) {
-        return make_cell_error(strerror(errno),
-            FILE_ERR);
+        return make_cell_error(fmt_err("reg-file?: %s", strerror(errno)),
+            OS_ERR);
     }
 
     if (ft == F_REG)
@@ -177,8 +177,8 @@ static Cell* file_directory_pred(const Lex* e, const Cell* a)
     const char* filename = a->cell[0]->str;
     const int8_t ft = f_get_type(filename);
     if (ft == F_ERR) {
-        return make_cell_error(strerror(errno),
-            FILE_ERR);
+        return make_cell_error(fmt_err("directory?: %s", strerror(errno)),
+            OS_ERR);
     }
 
     if (ft == F_DIR)
@@ -199,8 +199,8 @@ static Cell* file_symlink_pred(const Lex* e, const Cell* a)
     const char* filename = a->cell[0]->str;
     const int8_t ft = f_get_type(filename);
     if (ft == F_ERR) {
-        return make_cell_error(strerror(errno),
-            FILE_ERR);
+        return make_cell_error(fmt_err("symlink?: %s", strerror(errno)),
+            OS_ERR);
     }
 
     if (ft == F_LNK)
@@ -221,8 +221,8 @@ static Cell* file_char_device_pred(const Lex* e, const Cell* a)
     const char* filename = a->cell[0]->str;
     const int8_t ft = f_get_type(filename);
     if (ft == F_ERR) {
-        return make_cell_error(strerror(errno),
-            FILE_ERR);
+        return make_cell_error(fmt_err("char-device?: %s", strerror(errno)),
+            OS_ERR);
     }
 
     if (ft == F_CHR)
@@ -236,15 +236,15 @@ static Cell* file_char_device_pred(const Lex* e, const Cell* a)
 static Cell* file_block_device_pred(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_STRING, "blk-device?");
+    Cell* err = check_arg_types(a, CELL_STRING, "block-device?");
     if (err) { return err; }
-    if ((err = CHECK_ARITY_EXACT(a, 1, "blk-pred?"))) { return err; }
+    if ((err = CHECK_ARITY_EXACT(a, 1, "block-device?"))) { return err; }
 
     const char* filename = a->cell[0]->str;
     const int8_t ft = f_get_type(filename);
     if (ft == F_ERR) {
-        return make_cell_error(strerror(errno),
-            FILE_ERR);
+        return make_cell_error(fmt_err("block-device?: %s", strerror(errno)),
+            OS_ERR);
     }
 
     if (ft == F_BLK)
@@ -265,8 +265,8 @@ static Cell* file_pipe_pred(const Lex* e, const Cell* a)
     const char* filename = a->cell[0]->str;
     const int8_t ft = f_get_type(filename);
     if (ft == F_ERR) {
-        return make_cell_error(strerror(errno),
-            FILE_ERR);
+        return make_cell_error(fmt_err("fifo?: %s", strerror(errno)),
+            OS_ERR);
     }
 
     if (ft == F_FIFO)
@@ -287,8 +287,8 @@ static Cell* file_socket_pred(const Lex* e, const Cell* a)
     const char* filename = a->cell[0]->str;
     const int8_t ft = f_get_type(filename);
     if (ft == F_ERR) {
-        return make_cell_error(strerror(errno),
-            FILE_ERR);
+        return make_cell_error(fmt_err("socket?: %s", strerror(errno)),
+            OS_ERR);
     }
 
     if (ft == F_SOCK)
@@ -299,7 +299,7 @@ static Cell* file_socket_pred(const Lex* e, const Cell* a)
 }
 
 
-/* 'file-exists?' -> CELL_BOOLEAN - file exists predicate */
+/*  */
 static Cell* file_file_exists_pred(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -320,37 +320,20 @@ static Cell* file_file_exists_pred(const Lex* e, const Cell* a)
  * ------------------------------------------------------*/
 
 
-static Cell* file_get_cwd(const Lex* e, const Cell* a)
-{
-    (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 0, "getcwd");
-    if (err) { return err; }
-
-    char buf[PATH_MAX];
-    if (getcwd(buf, PATH_MAX) == nullptr) {
-        /* TODO: get rid of the snprintf calls - use fmt_error */
-        snprintf(buf, sizeof(buf), "getcwd: %s", strerror(errno));
-        return make_cell_error(buf, FILE_ERR);
-    }
-    Cell* result = make_cell_string(buf);
-    return result;
-}
-
-
 static Cell* file_rmdir(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 1, "rmdir");
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "rmdir!");
     if (err) { return err; }
-    err = check_arg_types(a, CELL_STRING, "rmdir");
+    err = check_arg_types(a, CELL_STRING, "rmdir!");
     if (err) { return err; }
 
     const char* path = a->cell[0]->str;
 
     if (rmdir(path) < 0) {
-        char buf[256];
-        snprintf(buf, sizeof(buf), "rmdir: %s", strerror(errno));
-        return make_cell_error(buf, FILE_ERR);
+        return make_cell_error(
+            fmt_err("rmdir!: %s", strerror(errno)),
+            OS_ERR);
     }
     return True_Obj;
 }
@@ -367,26 +350,27 @@ static Cell* file_mkdir(const Lex* e, const Cell* a)
 
     const char* path = a->cell[0]->str;
     if (mkdir(path, 0755) < 0) {
-        char buf[256];
-        snprintf(buf, sizeof(buf), "mkdir: %s", strerror(errno));
-        return make_cell_error(buf, FILE_ERR);
+        return make_cell_error(
+            fmt_err("mkdir: %s", strerror(errno)),
+            OS_ERR);
     }
     return True_Obj;
 }
 
 
-/* 'delete-file -> CELL_BOOLEAN - delete a file, and return a bool confirming outcome. */
+
 static Cell* file_unlink_file(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_STRING, "unlink?");
+    Cell* err = check_arg_types(a, CELL_STRING, "unlink!");
     if (err) { return err; }
-    if ((err = CHECK_ARITY_EXACT(a, 1, "unlink"))) { return err; }
+    if ((err = CHECK_ARITY_EXACT(a, 1, "unlink!"))) { return err; }
 
     const char* filename = a->cell[0]->str;
     if (unlink(filename) != 0) {
-        Cell* f_err = make_cell_error(strerror(errno), FILE_ERR);
-        return f_err;
+        return make_cell_error(
+            fmt_err("unlink!: %s", strerror(errno)),
+            OS_ERR);
     }
     return True_Obj;
 }
@@ -396,7 +380,8 @@ static Cell* file_unlink_file(const Lex* e, const Cell* a)
  *                  file stat procedures                 *
  * ------------------------------------------------------*/
 
-
+/* TODO: change this to return machine-readable time values
+ * rather than human-readable. */
 static Cell* file_stat(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "stat");
@@ -506,8 +491,23 @@ static Cell* file_stat(const Lex* e, const Cell* a) {
     return result;
 }
 
-/* TODO: lstat */
-/* TODO: put chmod, chown et al here? */
+/* TODO:
+ * lstat
+ * file-size
+ * file-mtime / file-atime / file-ctime
+ * file-readable? / file-writable? / file-executable?
+ * readlink
+ * realpath
+ * list-directory
+ * rename!
+ * copy-file
+ * touch!
+ * link! / symlink!
+ * file-type
+ * glob
+ * path-absolute? / path-relative?
+ * basename / dirname
+ */
 
 
 /* Register the procedures in the environment. */
@@ -521,11 +521,7 @@ void cozenage_library_init(const Lex* e)
     lex_add_builtin(e, "fifo?", file_pipe_pred);
     lex_add_builtin(e, "socket?", file_socket_pred);
     lex_add_builtin(e, "file-exists?", file_file_exists_pred);
-    /* May already be loaded from system lib. */
-    if (!ht_get(e->global, "get-cwd")) {
-        lex_add_builtin(e, "get-cwd", file_get_cwd);
-    }
-    lex_add_builtin(e, "rmdir", file_rmdir);
+    lex_add_builtin(e, "rmdir!", file_rmdir);
     lex_add_builtin(e, "mkdir", file_mkdir);
     lex_add_builtin(e, "unlink!", file_unlink_file);
     lex_add_builtin(e, "stat", file_stat);
