@@ -141,11 +141,6 @@ Cell* builtin_sub(const Lex* e, const Cell* a)
                 break;
             case CELL_BIGINT:
                 result = bigint_sub(result, rhs);
-                /* Check if we can demote back to int64_t. */
-                if (mpz_fits_int64(*result->bi)) {
-                    const int64_t v = mpz_get_i64_checked(*result->bi);
-                    result = make_cell_integer(v);
-                }
             default:
                 ;
         }
@@ -310,11 +305,6 @@ Cell* builtin_div(const Lex* e, const Cell* a)
             break;
         case CELL_BIGINT:
             result = bigint_div(result, rhs);
-            /* Check if we can demote back to int64_t. */
-            if (mpz_fits_int64(*result->bi)) {
-                const int64_t v = mpz_get_i64_checked(*result->bi);
-                result = make_cell_integer(v);
-            }
             break;
         default:
             ;
@@ -378,20 +368,6 @@ Cell* builtin_abs(const Lex* e, const Cell* a)
     return make_cell_real(magnitude);
 }
 
-/* Helper to bridge expt with complex_apply. */
-static Cell* expt_complex_op(const BuiltinFn op, const Lex* e, const Cell* z1, const Cell* z2)
-{
-    /* Copy z1 to serve as the 'result' parameter that complex_apply will modify. */
-    Cell* result = cell_copy(z1);
-
-    /* Promote the types to be compatible, and pass a pointer to a
-     * temporary Cell* for rhs so numeric_promote can modify it. */
-    Cell* rhs_copy = cell_copy(z2);
-    numeric_promote(&result, &rhs_copy);
-    complex_apply(op, e, result, rhs_copy);
-    return result;
-}
-
 
 /* (expt z1 z2)
  * Returns its first arg calculated to the power of its second arg. */
@@ -414,6 +390,12 @@ Cell* builtin_expt(const Lex* e, const Cell* a)
                 "expt: bigint base must have integer exponent",
                 VALUE_ERR);
         }
+
+        if (exp->integer_v > INT_MAX) {
+            return make_cell_error(
+                fmt_err("expt: bigint exponent must be less than %d", INT_MAX),
+                VALUE_ERR);
+        }
         return bigint_expt((Cell*)base, (int)exp->integer_v);
     }
 
@@ -425,7 +407,12 @@ Cell* builtin_expt(const Lex* e, const Cell* a)
     if (cell_is_real(base) && !cell_is_negative(base)) {
         const long double b = cell_to_long_double(base);
         const long double x = cell_to_long_double(exp);
-        return make_cell_from_double(powl(b, x));
+
+        /* Return an exact rational for negative exponent. */
+        if (x < 0) {
+            return make_cell_rational(1, (long)powl(b, fabsl(x)), true);
+        }
+        return make_cell_real(powl(b, x));
     }
 
     /* Base is a negative real number. */
@@ -433,49 +420,41 @@ Cell* builtin_expt(const Lex* e, const Cell* a)
         if (cell_is_integer(exp)) {
             const long double b = cell_to_long_double(base);
             const long double x = cell_to_long_double(exp);
-            return make_cell_from_double(powl(b, x));
+            return make_cell_real(powl(b, x));
         }
         const long double x = cell_to_long_double(base);
         const long double y = cell_to_long_double(exp);
         const long double magnitude = powl(fabsl(x), y);
         const long double angle = y * M_PI;
 
-        Cell* real_part = make_cell_from_double(magnitude * cosl(angle));
-        Cell* imag_part = make_cell_from_double(magnitude * sinl(angle));
+        Cell* real_part = make_cell_real(magnitude * cosl(angle));
+        Cell* imag_part = make_cell_real(magnitude * sinl(angle));
         return make_cell_complex(real_part, imag_part);
     }
 
-    /* Base is a complex number. */
-    if (base->type == CELL_COMPLEX) {
-        if (cell_is_integer(exp)) {
-            const long long n = (long long)cell_to_long_double(exp);
-            /* Multiplicative identity. */
-            Cell* result = make_cell_integer(1);
-            const Cell* current_power = cell_copy(base);
+    /* Base is a complex number.
+     * Check for the "contagion" flag: if either is inexact, the result is inexact. */
+    const bool result_is_exact = base->exact && exp->exact;
 
-            long long abs_n = n > 0 ? n : -n;
-            while (abs_n > 0) {
-                if (abs_n & 1) { /* If exponent is odd. */
-                    result = expt_complex_op(builtin_mul, e, result, current_power);
-                }
-                current_power = expt_complex_op(builtin_mul, e, current_power, current_power);
-                abs_n >>= 1; /* Halve the exponent. */
-            }
+    /* Fallback to C's complex power function. */
+    const long double complex b_c = cell_to_c_complex(base);
+    const long double complex e_c = cell_to_c_complex(exp);
+    const long double complex res_c = cpowl(b_c, e_c);
 
-            /* Handle negative exponent: z^-n = 1 / z^n. */
-            if (n < 0) {
-                const Cell* one = make_cell_integer(1);
-                result = expt_complex_op(builtin_div, e, one, result);
-            }
-            return result;
-        }
-        return make_cell_error(
-            "expt: complex base with non-integer exponent not implemented",
-            GEN_ERR);
+    const long double re = creall(res_c);
+    const long double im = cimagl(res_c);
+
+    /* If the imaginary part is truly zero, return a REAL, otherwise COMPLEX */
+    if (im == 0.0L && !signbit(im)) {    /* Consider -0.0! */
+        Cell* res = make_cell_real(re);
+        res->exact = result_is_exact;
+        return res;
     }
-    return make_cell_error(
-        "expt: unreachable code",
-        GEN_ERR);
+    Cell* real_part = make_cell_real(re);
+    Cell* imag_part = make_cell_real(im);
+    Cell* res = make_cell_complex(real_part, imag_part);
+    res->exact = result_is_exact;
+    return res;
 }
 
 
@@ -490,16 +469,7 @@ Cell* builtin_modulo(const Lex* e, const Cell* a)
     if ((err = CHECK_ARITY_EXACT(a, 2, "modulo"))) { return err; }
 
     if (a->cell[0]->type == CELL_BIGINT) {
-        Cell* result = cell_copy(a->cell[0]);
-        if (a->cell[1]->type == CELL_INTEGER) {
-            mpz_mod_ui(*result->bi, *a->cell[0]->bi, a->cell[1]->integer_v);
-        } else {
-            mpz_mod(*result->bi, *a->cell[0]->bi, *a->cell[1]->bi);
-        }
-        if (mpz_fits_int64(*result->bi)) {
-            return make_cell_integer(mpz_get_i64_checked(*result->bi));
-        }
-        return result;
+        return bigint_mod(a->cell[0], a->cell[1]);
     }
 
     long long r = a->cell[0]->integer_v % a->cell[1]->integer_v;
@@ -516,24 +486,12 @@ Cell* builtin_modulo(const Lex* e, const Cell* a)
 Cell* builtin_quotient(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_INTEGER, "quotient");
+    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_BIGINT, "quotient");
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 2, "quotient"))) { return err; }
 
     if (a->cell[0]->type == CELL_BIGINT) {
-        Cell* result = cell_copy(a->cell[0]);
-        Cell* d;
-        if (a->cell[1]->type == CELL_INTEGER) {
-            d = make_cell_bigint(nullptr, a->cell[1], 10);
-        } else {
-            d = a->cell[0];
-        }
-        mpz_tdiv_q(*result->bi, *a->cell[0]->bi, *d->bi);
-
-        if (mpz_fits_int64(*result->bi)) {
-            return make_cell_integer(mpz_get_i64_checked(*result->bi));
-        }
-        return result;
+        return bigint_quo_rem(a->cell[0], a->cell[1], QR_QUOTIENT);
     }
 
     return make_cell_integer(a->cell[0]->integer_v / a->cell[1]->integer_v);
@@ -546,24 +504,12 @@ Cell* builtin_quotient(const Lex* e, const Cell* a)
 Cell* builtin_remainder(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_INTEGER, "remainder");
+    Cell* err = check_arg_types(a, CELL_INTEGER|CELL_BIGINT, "remainder");
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 2, "remainder"))) { return err; }
 
     if (a->cell[0]->type == CELL_BIGINT) {
-        Cell* result = cell_copy(a->cell[0]);
-        Cell* d;
-        if (a->cell[1]->type == CELL_INTEGER) {
-            d = make_cell_bigint(nullptr, a->cell[1], 10);
-        } else {
-            d = a->cell[0];
-        }
-        mpz_tdiv_r(*result->bi, *a->cell[0]->bi, *d->bi);
-
-        if (mpz_fits_int64(*result->bi)) {
-            return make_cell_integer(mpz_get_i64_checked(*result->bi));
-        }
-        return result;
+        return bigint_quo_rem(a->cell[0], a->cell[1], QR_REMAINDER);
     }
 
     return make_cell_integer(a->cell[0]->integer_v % a->cell[1]->integer_v);
@@ -576,7 +522,7 @@ Cell* builtin_max(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = check_arg_types(a,
-        CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX|CELL_BIGINT,
+        CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_BIGINT,
         "max");
     if (err) { return err; }
     if ((err = CHECK_ARITY_MIN(a, 1, "max"))) { return err; }
@@ -611,7 +557,7 @@ Cell* builtin_min(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = check_arg_types(a,
-        CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX|CELL_BIGINT,
+        CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_BIGINT,
         "min");
     if (err) { return err; }
     if ((err = CHECK_ARITY_MIN(a, 1, "min"))) { return err; }
@@ -650,14 +596,14 @@ Cell* builtin_floor(const Lex* e, const Cell* a)
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1, "floor"))) { return err; }
 
-    if (a->cell[0]->type == CELL_BIGINT) {
+    if (a->cell[0]->type == CELL_BIGINT || a->cell[0]->type == CELL_INTEGER) {
         return a->cell[0];
     }
 
     long double val = cell_to_long_double(a->cell[0]);
     val = floorl(val);
 
-    return make_cell_from_double(val);
+    return make_cell_integer((long long)val);
 }
 
 
@@ -672,7 +618,7 @@ Cell* builtin_ceiling(const Lex* e, const Cell* a)
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1, "ceiling"))) { return err; }
 
-    if (a->cell[0]->type == CELL_BIGINT) {
+    if (a->cell[0]->type == CELL_BIGINT || a->cell[0]->type == CELL_INTEGER) {
         return a->cell[0];
     }
 
@@ -694,14 +640,14 @@ Cell* builtin_round(const Lex* e, const Cell* a)
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1, "round"))) { return err; }
 
-    if (a->cell[0]->type == CELL_BIGINT) {
+    if (a->cell[0]->type == CELL_BIGINT || a->cell[0]->type == CELL_INTEGER) {
         return a->cell[0];
     }
 
     long double val = cell_to_long_double(a->cell[0]);
     val = roundl(val);
 
-    return make_cell_from_double(val);
+    return make_cell_integer((long long)val);
 }
 
 
@@ -716,14 +662,14 @@ Cell* builtin_truncate(const Lex* e, const Cell* a)
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1, "truncate"))) { return err; }
 
-    if (a->cell[0]->type == CELL_BIGINT) {
+    if (a->cell[0]->type == CELL_BIGINT || a->cell[0]->type == CELL_INTEGER) {
         return a->cell[0];
     }
 
     long double val = cell_to_long_double(a->cell[0]);
     val = truncl(val);
 
-    return make_cell_from_double(val);
+    return make_cell_integer((long long)val);
 }
 
 
@@ -858,7 +804,9 @@ Cell* builtin_sqrt(const Lex* e, const Cell* a)
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1, "sqrt"))) { return err; }
 
-    if (a->cell[0]->type == CELL_COMPLEX)
+    const Cell* v = a->cell[0];
+
+    if (v->type == CELL_COMPLEX)
     {
         const long double complex z = cell_to_c_complex(a->cell[0]);
         const long double complex z_result = csqrtl(z);
@@ -868,8 +816,30 @@ Cell* builtin_sqrt(const Lex* e, const Cell* a)
     }
 
     const long double n = cell_to_long_double(a->cell[0]);
-    Cell* result = make_cell_from_double(sqrtl(n));
-    return result;
+
+
+    /* Square root of a negative number is a complex number. */
+    if (n < 0) {
+        const long double magnitude = sqrtl(fabsl(n));
+
+        /* Real part is exact, imaginary part may be exact or inexact. */
+        Cell* re = make_cell_integer(0);
+        Cell* im = make_cell_from_double(magnitude);
+
+        Cell* res = make_cell_complex(re, im);
+        return res;
+    }
+
+    const long double n_prime = sqrtl(n);
+    /* If input was exact, try to return an exact integer root. */
+    if (v->exact) {
+        const long long root = (long long)n_prime;
+        if (root * root == n) {
+            return make_cell_integer(root);
+        }
+    }
+
+    return make_cell_real(n_prime);
 }
 
 
@@ -917,9 +887,7 @@ Cell* builtin_exact_integer_sqrt(const Lex* e, const Cell* a)
     }
 
     if (a->cell[0]->type == CELL_BIGINT) {
-        Cell* result = cell_copy(a->cell[0]);
-        mpz_sqrt(*result->bi, *result->bi);
-        return result;
+        return bigint_exact_int_sqrt(a->cell[0]);
     }
 
     const unsigned long long s = integer_sqrt(k);
