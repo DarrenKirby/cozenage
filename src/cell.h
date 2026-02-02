@@ -53,7 +53,7 @@ typedef enum Cell_t : uint32_t {
     CELL_PAIR       = 1 << 8,   /* A cons cell. */
     CELL_NIL        = 1 << 9,   /* An empty list. */
     CELL_VECTOR     = 1 << 10,  /* A vector. */
-    CELL_BYTEVECTOR = 1 << 11,  /* A byte vector. */
+    CELL_BYTEVECTOR = 1 << 11,  /* A bytevector. */
 
     CELL_EOF        = 1 << 12,  /* The singleton EOF object. */
     CELL_PROC       = 1 << 13,  /* A procedure object. Lambda or builtin. */
@@ -112,8 +112,8 @@ typedef enum BV_t : uint8_t {
     BV_S32,
     BV_U64,
     BV_S64,
-    BV_F32, /* Not implemented yet. */
-    BV_F64  /* Not implemented yet. */
+    BV_F32, /* TODO: 32-bit single precision floating-point vector. */
+    BV_F64  /* TODO: 64-bit double precision floating-point vector. */
 } bv_t;
 
 /* Bytevector struct. */
@@ -184,10 +184,10 @@ typedef enum Err_t : uint8_t  {
 
 /* Definition of the Cell struct/tagged union.
  *
- * This object represents all Scheme values, as well as some internal types.
- * Most Scheme values are stored directly, however, ports, lambdas, bytevectors,
- * and promises are represented by a pointer to their external structs to keep
- * the size at a reasonable 24 bytes. */
+ * This object represents all user-facing Cozenage types, as well as a handful of internal
+ * types. Most Cozenage values are stored directly, however, ports, lambdas, bytevectors,
+ * bigints, and promises are represented by a pointer to their external structs to keep the
+ * core size at a reasonable 24 bytes. */
 typedef struct Cell {
     Cell_t type;         /* type of data the Cell holds. */
 
@@ -216,8 +216,8 @@ typedef struct Cell {
 
         /* Rationals */
         struct {
-            long int num;     /* numerator */
-            long int den;     /* denominator */
+            long long num;     /* numerator */
+            long long den;     /* denominator */
         };
 
         /* Complex numbers */

@@ -173,7 +173,7 @@ Cell* make_cell_usp(void)
 }
 
 
-/* Cell constructor for real-values numbers. */
+/* Cell constructor for real-valued numbers. */
 Cell* make_cell_real(const long double the_real)
 {
     Cell* v = GC_MALLOC_ATOMIC(sizeof(Cell));
