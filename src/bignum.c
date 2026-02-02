@@ -53,7 +53,7 @@ bool div_will_overflow_i64(const int64_t a, const int64_t b, int64_t *out) {
 
 
 /* bigint demotion check helpers. */
-bool mpz_fits_int64(const mpz_t z) {
+static bool mpz_fits_int64(const mpz_t z) {
     mpz_t tmp_max, tmp_min;
     mpz_init_set_si(tmp_max, 0);
     mpz_set_ui(tmp_max, INT64_MAX);
@@ -69,7 +69,7 @@ bool mpz_fits_int64(const mpz_t z) {
 }
 
 
-int64_t mpz_get_i64_checked(const mpz_t z) {
+static int64_t mpz_get_i64_checked(const mpz_t z) {
     /* If mpz_fits_int64 returns true; then calling this is safe. */
     return mpz_get_si(z);
 }
@@ -86,6 +86,11 @@ Cell* bigint_add(Cell* a, const Cell* b)
 Cell* bigint_sub(Cell* a, const Cell* b)
 {
     mpz_sub(*a->bi, *a->bi, *b->bi);
+    /* Check if we can demote back to int64_t. */
+    if (mpz_fits_int64(*a->bi)) {
+        const int64_t v = mpz_get_i64_checked(*a->bi);
+        return make_cell_integer(v);
+    }
     return a;
 }
 
@@ -97,10 +102,65 @@ Cell* bigint_mul(Cell* a, const Cell* b)
 }
 
 
-Cell* bigint_div(Cell* a, const Cell* b)
-{
+Cell* bigint_div(Cell* a, const Cell* b) {
     mpz_div(*a->bi, *a->bi, *b->bi);
+    /* Check if we can demote back to int64_t. */
+    if (mpz_fits_int64(*a->bi)) {
+        const int64_t v = mpz_get_i64_checked(*a->bi);
+        return make_cell_integer(v);
+    }
     return a;
+}
+
+
+Cell* bigint_quo_rem(Cell* a, Cell* b, const qr_t op) {
+    Cell* result = cell_copy(a);
+    Cell* d;
+    if (b->type == CELL_INTEGER) {
+        d = make_cell_bigint(nullptr, b, 10);
+    } else {
+        d = b;
+    }
+    if (op == QR_QUOTIENT) {
+        mpz_tdiv_q(*result->bi, *a->bi, *d->bi);
+    } else {
+        mpz_tdiv_r(*result->bi, *a->bi, *d->bi);
+    }
+
+    if (mpz_fits_int64(*result->bi)) {
+        return make_cell_integer(mpz_get_i64_checked(*result->bi));
+    }
+    return result;
+}
+
+
+Cell* bigint_exact_int_sqrt(Cell* a) {
+    Cell* rop1 = make_cell_bigint("0", nullptr, 10);
+    Cell* rop2 = make_cell_bigint("0", nullptr, 10);
+    mpz_sqrtrem(*rop1->bi, *rop2->bi, *a->bi);
+
+    if (mpz_fits_int64(*rop1->bi)) {
+        rop1 = make_cell_integer(mpz_get_i64_checked(*rop1->bi));
+    }
+    if (mpz_fits_int64(*rop2->bi)) {
+        rop2 = make_cell_integer(mpz_get_i64_checked(*rop2->bi));
+    }
+
+    return make_list_from_sexpr(make_sexpr_len2(rop1, rop2));
+}
+
+
+Cell* bigint_mod(Cell* a, Cell* b) {
+    Cell* result = cell_copy(a);
+    if (b->type == CELL_INTEGER) {
+        mpz_mod_ui(*result->bi, *a->bi, b->integer_v);
+    } else {
+        mpz_mod(*result->bi, *a->bi, *b->bi);
+    }
+    if (mpz_fits_int64(*result->bi)) {
+        return make_cell_integer(mpz_get_i64_checked(*result->bi));
+    }
+    return result;
 }
 
 
