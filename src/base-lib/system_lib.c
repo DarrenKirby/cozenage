@@ -136,7 +136,7 @@ static Cell* system_get_env_vars(const Lex* e, const Cell* a)
  * (get-gid)
  * (get-euid)
  * (get-egid)
- * The procedures return the user id, group id,
+ * These procedures return the user id, group id,
  * effective user id, and effective group id of the
  * running process, respectively. */
 static Cell* system_get_uid(const Lex* e, const Cell* a) {
@@ -304,6 +304,9 @@ static Cell* system_chdir(const Lex* e, const Cell* a) {
 }
 
 
+/* (uname)
+ * Returns a 5-tuple (ie: a list of length five) which contains system and platform information
+ * as per the system 'uname' command. */
 static Cell* system_uname(const Lex* e, const Cell* a) {
     (void)e; (void)a;
     Cell* err = CHECK_ARITY_EXACT(a, 0, "uname");
@@ -470,12 +473,23 @@ Cell* system_uptime(const Lex* e, const Cell* a) {
 
 
 /* TODO:
- * lchmod - in file lib?
- * chown - in file lib?
- * lchown - in file lib?
- * system equiv
- * popen/subprocess equiv
- * more?
+ * system
+ * exec
+ * fork
+ * chown
+ * wait / waitpid
+ * sleep
+ * get-hostname
+ * get-home - More ergonomic than (get-env-var "HOME").
+ * get-path
+ * cpu-count
+ * clock-time / monotonic-time
+ * set-uid! / set-gid!
+ * umask
+ * is-root?
+ * signal / kill
+ * rlimit
+ * temp-file / temp-directory
  */
 
 
@@ -491,11 +505,7 @@ void cozenage_library_init(const Lex* e)
     lex_add_builtin(e, "get-egid", system_get_egid);
     lex_add_builtin(e, "get-username", system_get_username);
     lex_add_builtin(e, "get-groups", system_get_groups);
-    /* May already be loaded from file lib, so check the global
-     * environment before re-exporting the function. */
-    if (!ht_get(e->global, "get-cwd")) {
-        lex_add_builtin(e, "get-cwd", system_get_cwd);
-    }
+    lex_add_builtin(e, "get-cwd", system_get_cwd);
     lex_add_builtin(e, "chdir", system_chdir);
     lex_add_builtin(e, "uname", system_uname);
     lex_add_builtin(e, "chmod!", system_chmod);
