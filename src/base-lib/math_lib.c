@@ -17,6 +17,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/* This file defines the Cozenage 'base math' library. It is essentially a
+ * set of procedures from the R7RS 'inexact' and 'complex' libraries, plus
+ * a few 'oddball' procedures that I do not expect are used enough to
+ * deserve a spot in the core interpreter. Others, may of course disagree.
+ *
+ * TODO: Incorporate bigint support for the trunc/floor div procedures.
+ */
 
 #include "types.h"
 #include "numerics.h"
@@ -58,14 +65,13 @@ static Cell* math_cos(const Lex* e, const Cell* a)
     {
         const long double complex z = cell_to_c_complex(a->cell[0]);
         const long double complex z_result = ccosl(z);
-        Cell* real = make_cell_from_double(creall(z_result));
-        Cell* imag = make_cell_from_double(cimagl(z_result));
+        Cell* real = make_cell_real(creall(z_result));
+        Cell* imag = make_cell_real(cimagl(z_result));
         return make_cell_complex(real, imag);
     }
 
     const long double n = cell_to_long_double(a->cell[0]);
-    Cell* result = make_cell_from_double(cosl(n));
-    return result;
+    return make_cell_real(cosl(n));
 }
 
 
@@ -82,14 +88,13 @@ static Cell* math_acos(const Lex* e, const Cell* a)
     {
         const long double complex z = cell_to_c_complex(a->cell[0]);
         const long double complex z_result = cacosl(z);
-        Cell* real = make_cell_from_double(creall(z_result));
-        Cell* imag = make_cell_from_double(cimagl(z_result));
+        Cell* real = make_cell_real(creall(z_result));
+        Cell* imag = make_cell_real(cimagl(z_result));
         return make_cell_complex(real, imag);
     }
 
     const long double n = cell_to_long_double(a->cell[0]);
-    Cell* result = make_cell_from_double(acosl(n));
-    return result;
+    return make_cell_real(acosl(n));
 }
 
 
@@ -106,14 +111,13 @@ static Cell* math_sin(const Lex* e, const Cell* a)
     {
         const long double complex z = cell_to_c_complex(a->cell[0]);
         const long double complex z_result = csinl(z);
-        Cell* real = make_cell_from_double(creall(z_result));
-        Cell* imag = make_cell_from_double(cimagl(z_result));
+        Cell* real = make_cell_real(creall(z_result));
+        Cell* imag = make_cell_real(cimagl(z_result));
         return make_cell_complex(real, imag);
     }
 
     const long double n = cell_to_long_double(a->cell[0]);
-    Cell* result = make_cell_from_double(sinl(n));
-    return result;
+    return make_cell_real(sinl(n));
 }
 
 
@@ -130,14 +134,13 @@ static Cell* math_asin(const Lex* e, const Cell* a)
     {
         const long double complex z = cell_to_c_complex(a->cell[0]);
         const long double complex z_result = casinl(z);
-        Cell* real = make_cell_from_double(creall(z_result));
-        Cell* imag = make_cell_from_double(cimagl(z_result));
+        Cell* real = make_cell_real(creall(z_result));
+        Cell* imag = make_cell_real(cimagl(z_result));
         return make_cell_complex(real, imag);
     }
 
     const long double n = cell_to_long_double(a->cell[0]);
-    Cell* result = make_cell_from_double(asinl(n));
-    return result;
+    return make_cell_real(asinl(n));
 }
 
 
@@ -154,14 +157,13 @@ static Cell* math_tan(const Lex* e, const Cell* a)
     {
         const long double complex z = cell_to_c_complex(a->cell[0]);
         const long double complex z_result = ctanl(z);
-        Cell* real = make_cell_from_double(creall(z_result));
-        Cell* imag = make_cell_from_double(cimagl(z_result));
+        Cell* real = make_cell_real(creall(z_result));
+        Cell* imag = make_cell_real(cimagl(z_result));
         return make_cell_complex(real, imag);
     }
 
     const long double n = cell_to_long_double(a->cell[0]);
-    Cell* result = make_cell_from_double(tanl(n));
-    return result;
+    return make_cell_real(tanl(n));
 }
 
 
@@ -183,13 +185,13 @@ static Cell* math_atan(const Lex* e, const Cell* a)
         {
             const long double complex z = cell_to_c_complex(a->cell[0]);
             const long double complex z_result = catanl(z);
-            Cell* real = make_cell_from_double(creall(z_result));
-            Cell* imag = make_cell_from_double(cimagl(z_result));
+            Cell* real = make_cell_real(creall(z_result));
+            Cell* imag = make_cell_real(cimagl(z_result));
             return make_cell_complex(real, imag);
         }
 
         const long double n = cell_to_long_double(a->cell[0]);
-        Cell* result = make_cell_from_double(atanl(n));
+        Cell* result = make_cell_real(atanl(n));
         return result;
     }
     /* Two args. */
@@ -201,8 +203,7 @@ static Cell* math_atan(const Lex* e, const Cell* a)
 
     const long double x = cell_to_long_double(a->cell[0]);
     const long double y = cell_to_long_double(a->cell[1]);
-    Cell* result = make_cell_from_double(atan2l(y, x));
-    return result;
+    return make_cell_real(atan2l(y, x));
 }
 
 
@@ -219,14 +220,13 @@ static Cell* math_exp(const Lex* e, const Cell* a)
     {
         const long double complex z = cell_to_c_complex(a->cell[0]);
         const long double complex z_result = cexpl(z);
-        Cell* real = make_cell_from_double(creall(z_result));
-        Cell* imag = make_cell_from_double(cimagl(z_result));
+        Cell* real = make_cell_real(creall(z_result));
+        Cell* imag = make_cell_real(cimagl(z_result));
         return make_cell_complex(real, imag);
     }
 
     const long double n = cell_to_long_double(a->cell[0]);
-    Cell* result = make_cell_from_double(expl(n));
-    return result;
+    return make_cell_real(expl(n));
 }
 
 
@@ -247,13 +247,13 @@ static Cell* math_log(const Lex* e, const Cell* a)
         {
             const long double complex z = cell_to_c_complex(a->cell[0]);
             const long double complex z_result = clogl(z);
-            Cell* real = make_cell_from_double(creall(z_result));
-            Cell* imag = make_cell_from_double(cimagl(z_result));
+            Cell* real = make_cell_real(creall(z_result));
+            Cell* imag = make_cell_real(cimagl(z_result));
             return make_cell_complex(real, imag);
         }
 
         const long double n = cell_to_long_double(a->cell[0]);
-        Cell* result = make_cell_from_double(logl(n));
+        Cell* result = make_cell_real(logl(n));
         return result;
     }
     /* Two args - will not work with complex. */
@@ -265,8 +265,7 @@ static Cell* math_log(const Lex* e, const Cell* a)
 
     const long double n = cell_to_long_double(a->cell[0]);
     const long double b = cell_to_long_double(a->cell[1]);
-    Cell* result = make_cell_from_double(logl(n)/logl(b));
-    return result;
+    return make_cell_real(logl(n)/logl(b));
 }
 
 
@@ -280,8 +279,7 @@ static Cell* math_log2(const Lex* e, const Cell* a)
     if ((err = CHECK_ARITY_EXACT(a, 1, "log2"))) { return err; }
 
     const long double n = cell_to_long_double(a->cell[0]);
-    Cell* result = make_cell_from_double(log2l(n));
-    return result;
+    return make_cell_real(log2l(n));
 }
 
 
@@ -295,8 +293,7 @@ static Cell* math_log10(const Lex* e, const Cell* a)
     if ((err = CHECK_ARITY_EXACT(a, 1, "log10"))) { return err; }
 
     const long double n = cell_to_long_double(a->cell[0]);
-    Cell* result = make_cell_from_double(log10l(n));
-    return result;
+    return make_cell_real(log10l(n));
 }
 
 
@@ -311,8 +308,7 @@ static Cell* math_cbrt(const Lex* e, const Cell* a)
     if ((err = CHECK_ARITY_EXACT(a, 1, "cbrt"))) { return err; }
 
     const long double n = cell_to_long_double(a->cell[0]);
-    Cell* result = make_cell_from_double(cbrtl(n));
-    return result;
+    return make_cell_real(cbrtl(n));
 }
 
 
@@ -484,10 +480,10 @@ static Cell* math_angle(const Lex* e, const Cell* a)
         case CELL_COMPLEX: {
             const long double r = cell_to_long_double(arg->real);
             const long double i = cell_to_long_double(arg->imag);
-            return make_cell_from_double(atan2l(i, r));
+            return make_cell_real(atan2l(i, r));
         }
         default:
-            return make_cell_from_double(atan2l(0, cell_to_long_double(arg)));
+            return make_cell_real(atan2l(0, cell_to_long_double(arg)));
     }
 }
 
@@ -509,8 +505,8 @@ static Cell* math_make_polar(const Lex* e, const Cell* a)
     const long double imag_part = M * sinl(A);
 
     return make_cell_complex(
-        make_cell_from_double(real_part),
-        make_cell_from_double(imag_part)
+        make_cell_real(real_part),
+        make_cell_real(imag_part)
         );
 }
 
