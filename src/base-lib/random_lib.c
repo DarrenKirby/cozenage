@@ -1,7 +1,7 @@
 /*
  * 'src/base-lib/random.c'
  * This file is part of Cozenage - https://github.com/DarrenKirby/cozenage
- * Copyright © 2025 Darren Kirby <darren@dragonbyte.ca>
+ * Copyright © 2025 - 2026 Darren Kirby <darren@dragonbyte.ca>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -74,6 +74,13 @@ static double rand_double() {
 }
 
 
+/* (rand-int)
+ * (rand-int limit)
+ * Returns a uniformly distributed random integer in the range [0, limit).
+ * If limit is omitted, a platform-defined maximum (UINT32_MAX) is used.
+ * The result is generated using an unbiased rejection-sampling method
+ * (Lemire's algorithm), ensuring uniform distribution even when the limit
+ * does not evenly divide the underlying random number range. */
 static Cell* random_randint(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -85,6 +92,10 @@ static Cell* random_randint(const Lex* e, const Cell* a)
 }
 
 
+/* (rand-dbl)
+ * Returns a uniformly distributed random real number in the range [0.0, 1.0).
+ * The value is generated from 53 bits of randomness, matching the precision
+ * of an IEEE 754 double. */
 static Cell* random_randbl(const Lex* e, const Cell* a)
 {
     (void)e; (void)a;
@@ -92,7 +103,11 @@ static Cell* random_randbl(const Lex* e, const Cell* a)
 }
 
 
-/* Random double in [min, max). */
+/* (rand-uniform min max)
+ * Returns a uniformly distributed random real number in the range [min, max).
+ * Both min and max may be integers, rationals, or real numbers.
+ * The result is computed by scaling a random value in [0.0, 1.0) to the
+ * requested interval. */
 static Cell* random_uniform(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -108,8 +123,13 @@ static Cell* random_uniform(const Lex* e, const Cell* a)
 }
 
 
-/* Implements a 'modern' version of the
- * Fisher-Yates shuffle. */
+/* (shuffle seq)
+ * Returns a new sequence containing the elements of seq in random order.
+ * seq may be a list, vector, or quoted list expression.
+ * The original sequence is not modified.
+ * The shuffling is performed using a modern Fisher–Yates algorithm,
+ * producing an unbiased permutation. The return type matches the input
+ * sequence type (list or vector). */
 static Cell* random_shuffle(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -132,6 +152,8 @@ static Cell* random_shuffle(const Lex* e, const Cell* a)
         list = true;
     }
 
+    /* Implements a 'modern' version of the
+     * Fisher-Yates shuffle. */
     const int32_t arr_size = arr->count;
     Cell* c_arr[arr_size];
     for (int i = 0; i < arr_size; i++) {
@@ -156,6 +178,10 @@ static Cell* random_shuffle(const Lex* e, const Cell* a)
 }
 
 
+/* (rand-choice seq)
+ * Returns a single element chosen uniformly at random from seq.
+ * seq may be a list, vector, or quoted list expression.
+ * Each element has equal probability of being selected. */
 static Cell* random_choice(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -181,6 +207,12 @@ static Cell* random_choice(const Lex* e, const Cell* a)
 }
 
 
+/* (rand-choices seq k)
+ * Returns a new sequence of k elements chosen uniformly at random from seq,
+ * with replacement.
+ * seq may be a list, vector, or quoted list expression.
+ * k must be a non-negative integer.
+ * The return type matches the input sequence type (list or vector). */
 static Cell* random_choices(const Lex* e, const Cell* a)
 {
     (void)e;
