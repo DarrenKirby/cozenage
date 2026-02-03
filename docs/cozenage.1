@@ -1,0 +1,107 @@
+.TH COZENAGE 1 "February 2026" "Cozenage" "User Commands"
+.SH NAME
+cozenage \- Scheme-derived REPL and code runner
+.SH SYNOPSIS
+.B cozenage
+.RI [ option " ...] [" file ]
+.SH DESCRIPTION
+.B cozenage
+is a Scheme-derived, Lisp-like programming language written in C.
+It is designed primarily as an educational and exploratory implementation,
+providing a small, expressive core language extended through libraries and
+dynamically loadable modules.
+
+Cozenage borrows heavily from Scheme, particularly R5RS and R7RS, but is not
+fully standard-compliant. Where practical, Scheme semantics and conventions
+are followed, with deliberate deviations made for clarity, simplicity, or
+implementation constraints.
+
+Users familiar with Scheme or other Lisp dialects should find Cozenage
+immediately familiar.
+.SH OPTIONS
+.TP
+.BR \-l ", " \-\-library
+Preload Cozenage libraries at startup.
+This option requires a comma-delimited list of library names.
+Accepted values are:
+.IR bits ,
+.IR cxr ,
+.IR file ,
+.IR lazy ,
+.IR math ,
+.IR random ,
+.IR system ,
+and
+.IR time .
+.TP
+.BR \-h ", " \-\-help
+Display a short usage summary and exit.
+.TP
+.BR \-V ", " \-\-version
+Display version information and exit.
+.SH ENVIRONMENT
+.TP
+.B COZENAGE_LIB_PATH
+If set, this variable specifies a colon-delimited list of directories
+to search for dynamically loadable Cozenage modules.
+.SH USAGE
+To start an interactive REPL:
+.PP
+.nf
+.RS
+$ cozenage
+.RE
+.fi
+.PP
+To interpret a Scheme source file:
+.PP
+.nf
+.RS
+$ cozenage my_program.scm
+.RE
+.fi
+.PP
+Cozenage will attempt to run any file argument as Scheme code, regardless
+of filename extension.
+.SH FEATURES
+Cozenage provides a small but expressive core language with the following
+notable features:
+.PP
+.RS
+\(bu Proper tail-call optimization
+.br
+\(bu eval / apply evaluation model
+.br
+\(bu Lisp-style, non-hygienic macros via \fBdefmacro\fP
+.br
+\(bu Interactive REPL with multi-line editing, persistent history,
+and tab completion
+.br
+\(bu Garbage collection via the Boehm-Demers-Weiser GC
+.br
+\(bu UTF-8 Unicode support
+.RE
+.PP
+The numeric system includes integers, rationals, reals, and complex numbers,
+with native big integer support. Arbitrary-precision rationals and reals are
+a work in progress.
+.SH PHILOSOPHY
+Cozenage prioritizes internal consistency, approachability, and educational
+value over exhaustive standards compliance.
+Its design emphasizes clarity over completeness, a modest core language,
+and practical, predictable Lisp semantics.
+.SH BUGS
+Bug reports may be sent to:
+.PP
+.RS
+<darren@dragonbyte.ca>
+.RE
+.PP
+or filed on the GitHub project page:
+.PP
+.RS
+https://github.com/DarrenKirby/cozenage
+.RE
+.SH SEE ALSO
+The full Cozenage documentation and source code are available via the
+project repository.
