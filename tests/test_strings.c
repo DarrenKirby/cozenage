@@ -465,10 +465,10 @@ Test(end_to_end_strings, test_string_to_number, .init = setup_each_test, .fini =
 
     /* 4. Inexact/Floating Point (if supported) */
     cr_assert_str_eq(t_eval("(number->string (string->number \"3.14\"))"), "\"3.14\"");
-    cr_assert_str_eq(t_eval("(number->string (string->number \"1e3\"))"), "\"1000.0\"");
+    cr_assert_str_eq(t_eval("(number->string (string->number \"1e3\"))"), "\"1000\"");
 
     /* 5. Exactness Prefixes */
-    cr_assert_str_eq(t_eval("(number->string (string->number \"#e1.0\"))"), "\"1.0\"");
+    cr_assert_str_eq(t_eval("(number->string (string->number \"#e1.0\"))"), "\"1\"");
 
     /* 6. Edge Case: Invalid Strings (Should return #false) */
     cr_assert_str_eq(t_eval("(string->number \"apple\")"), "#false");

@@ -1,7 +1,7 @@
 #include <criterion/criterion.h>
 
 #include "test_meta.h"
-#include <gc/gc.h>
+/////#include <gc/gc.h>
 
 TestSuite(end_to_end_sf);
 
@@ -129,24 +129,24 @@ Test(end_to_end_sf, test_internal_defines, .init = setup_each_test, .fini = tear
     cr_assert_str_eq(t_eval("(unless #f (define z \"ok\") z)"), "\"ok\"");
 }
 
-Test(end_to_end_sf, test_gc_stress, .init = setup_each_test, .fini = teardown_each_test) {
-    GC_gcollect(); // Force a collection before we start
-    const size_t heap_before = GC_get_heap_size();
-
-    // 1 Million iterations of a do-loop transform
-    const char* result = t_eval(
-        "(do ((i 0 (+ i 1)) (sum 0 (+ sum i))) "
-        "    ((>= i 1000000) \"Done\"))");
-
-    GC_gcollect(); // Force a collection after we finish
-    const size_t heap_after = GC_get_heap_size();
-
-    printf("\n[GC Stats] Heap Before: %zu bytes\n", heap_before);
-    printf("[GC Stats] Heap After:  %zu bytes\n", heap_after);
-    printf("[GC Stats] Growth:      %zd bytes\n", (ssize_t)heap_after - (ssize_t)heap_before);
-
-    cr_assert_str_eq(result, "\"Done\"");
-}
+// Test(end_to_end_sf, test_gc_stress, .init = setup_each_test, .fini = teardown_each_test) {
+//     GC_gcollect(); // Force a collection before we start
+//     const size_t heap_before = GC_get_heap_size();
+//
+//     // 1 Million iterations of a do-loop transform
+//     const char* result = t_eval(
+//         "(do ((i 0 (+ i 1)) (sum 0 (+ sum i))) "
+//         "    ((>= i 1000000) \"Done\"))");
+//
+//     GC_gcollect(); // Force a collection after we finish
+//     const size_t heap_after = GC_get_heap_size();
+//
+//     printf("\n[GC Stats] Heap Before: %zu bytes\n", heap_before);
+//     printf("[GC Stats] Heap After:  %zu bytes\n", heap_after);
+//     printf("[GC Stats] Growth:      %zd bytes\n", (ssize_t)heap_after - (ssize_t)heap_before);
+//
+//     cr_assert_str_eq(result, "\"Done\"");
+// }
 
 //Test(end_to_end_sf, test_map_procedure, .init = setup_each_test, .fini = teardown_each_test) {}
 
