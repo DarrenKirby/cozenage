@@ -53,7 +53,7 @@ Cell* builtin_add(const Lex* e, const Cell* a)
     /* Deep-copy required as result gets mutated. */
     Cell* result = cell_copy(a->cell[0]);
 
-    for (register int i = 1; i < a->count; i++) {
+    for (int i = 1; i < a->count; i++) {
         Cell* rhs = a->cell[i];
         numeric_promote(&result, &rhs);
 
@@ -167,7 +167,7 @@ Cell* builtin_mul(const Lex* e, const Cell* a)
     /* Deep-copy required as result gets mutated. */
     Cell* result = cell_copy(a->cell[0]);
 
-    for (register int i = 1; i < a->count; i++) {
+    for (int i = 1; i < a->count; i++) {
         Cell* rhs = a->cell[i];
         numeric_promote(&result, &rhs);
 

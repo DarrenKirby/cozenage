@@ -68,19 +68,12 @@
 static void cell_to_string_worker(const Cell* v, str_buf_t *sb, print_mode_t mode);
 
 
-/* Formats reals to have a trailing '.0' for visual feedback to distinguish from an int. */
+/* Formats reals . */
 static void repr_long_double(const long double x, str_buf_t *sb)
 {
     char buf[128];
     snprintf(buf, sizeof buf, "%.15Lg", x);
 
-    /* If there's no '.' or exponent marker, force a ".0". */
-    if (!strchr(buf, '.') && !strchr(buf, 'e') && !strchr(buf, 'E')) {
-        const size_t len = strlen(buf);
-        if (len < sizeof(buf) - 3) {
-            strcat(buf, ".0");
-        }
-    }
     sb_append_str(sb, buf);
 }
 
@@ -164,13 +157,9 @@ static void cell_to_string_worker(const Cell* v,
                 cell_to_string_worker(v->imag, sb, mode);
             } else {
                 sb_append_char(sb, '+');
-                /* If it was -0.0, ensure the worker prints "0.0" not "-0.0" */
-                if (im == 0.0L) {
-                    sb_append_str(sb, "0.0");
-                } else {
-                    cell_to_string_worker(v->imag, sb, mode);
-                }
+                cell_to_string_worker(v->imag, sb, mode);
             }
+
             sb_append_char(sb, 'i');
             break;
         }
