@@ -555,9 +555,9 @@ Cell* file_file_mtime(const Lex* e, const Cell* a) {
     result = make_cell_pair(make_cell_integer(buf.st_mtimespec.tv_nsec), result);
     result = make_cell_pair(make_cell_integer(buf.st_mtimespec.tv_sec), result);
 #else
-    result = make_cell_pair(make_cell_string(format_time(&buf.st_mtime)),result);
-    result = make_cell_pair(make_cell_integer(buf.st_mtime.tv_nsec), result);
-    result = make_cell_pair(make_cell_integer(buf.st_mtime.tv_sec), result);
+    result = make_cell_pair(make_cell_string(format_time(&buf.st_mtim)),result);
+    result = make_cell_pair(make_cell_integer(buf.st_mtim.tv_nsec), result);
+    result = make_cell_pair(make_cell_integer(buf.st_mtim.tv_sec), result);
 #endif
     return result;
 }
@@ -590,9 +590,9 @@ Cell* file_file_ctime(const Lex* e, const Cell* a) {
     result = make_cell_pair(make_cell_integer(buf.st_ctimespec.tv_nsec), result);
     result = make_cell_pair(make_cell_integer(buf.st_ctimespec.tv_sec), result);
 #else
-    result = make_cell_pair(make_cell_string(format_time(&buf.st_ctime)),result);
-    result = make_cell_pair(make_cell_integer(buf.st_ctime.tv_nsec), result);
-    result = make_cell_pair(make_cell_integer(buf.st_ctime.tv_sec), result);
+    result = make_cell_pair(make_cell_string(format_time(&buf.st_ctim)),result);
+    result = make_cell_pair(make_cell_integer(buf.st_ctim.tv_nsec), result);
+    result = make_cell_pair(make_cell_integer(buf.st_ctim.tv_sec), result);
 #endif
     return result;
 }
@@ -625,9 +625,9 @@ Cell* file_file_atime(const Lex* e, const Cell* a) {
     result = make_cell_pair(make_cell_integer(buf.st_atimespec.tv_nsec), result);
     result = make_cell_pair(make_cell_integer(buf.st_atimespec.tv_sec), result);
 #else
-    result = make_cell_pair(make_cell_string(format_time(&buf.st_atime)),result);
-    result = make_cell_pair(make_cell_integer(buf.st_atime.tv_nsec), result);
-    result = make_cell_pair(make_cell_integer(buf.st_atime.tv_sec), result);
+    result = make_cell_pair(make_cell_string(format_time(&buf.st_atim)),result);
+    result = make_cell_pair(make_cell_integer(buf.st_atim.tv_nsec), result);
+    result = make_cell_pair(make_cell_integer(buf.st_atim.tv_sec), result);
 #endif
     return result;
 }
