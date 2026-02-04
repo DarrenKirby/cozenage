@@ -320,6 +320,8 @@ static Cell* file_file_exists_pred(const Lex* e, const Cell* a)
  * ------------------------------------------------------*/
 
 
+/* (rmdir! path)
+ * Removes the directory pointed to by path. The directory must be empty. */
 static Cell* file_rmdir(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -340,6 +342,8 @@ static Cell* file_rmdir(const Lex* e, const Cell* a)
 
 
 /* TODO - mkdir -p style mkdir procedure */
+/* (mkdir path)
+ * Creates the directory named by path. If path is relative, it is created in the CWD. */
 static Cell* file_mkdir(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -358,8 +362,9 @@ static Cell* file_mkdir(const Lex* e, const Cell* a)
 }
 
 
-
-static Cell* file_unlink_file(const Lex* e, const Cell* a)
+/* (unlink! path)
+ * Unlinks (and possibly deletes) the file pointed to by path. */
+static Cell* file_unlink(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING, "unlink!");
@@ -380,8 +385,18 @@ static Cell* file_unlink_file(const Lex* e, const Cell* a)
  *                  file stat procedures                 *
  * ------------------------------------------------------*/
 
+
+/* Helper to grab stat buffer for procedures which need it. */
+static int get_stat_buf(struct stat* buffer, const char* path) {
+    if (stat(path, buffer) == -1) {
+        return -1;
+    }
+    return 0;
+}
+
+
 /* TODO: change this to return machine-readable time values
- * rather than human-readable. */
+ * as well as human-readable. */
 static Cell* file_stat(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "stat");
@@ -393,9 +408,9 @@ static Cell* file_stat(const Lex* e, const Cell* a) {
     }
 
     struct stat buf;
-    if (stat(a->cell[0]->str, &buf) == -1) {
+    if (get_stat_buf(&buf, a->cell[0]->str) == -1) {
         return make_cell_error(
-            fmt_err("stat: %s", strerror(errno)),
+            fmt_err("stat: '%s': %s", a->cell[0]->str, strerror(errno)),
             OS_ERR);
     }
 
@@ -491,11 +506,207 @@ static Cell* file_stat(const Lex* e, const Cell* a) {
     return result;
 }
 
+
+/* (file-size path)
+ * Returns the size in bytes of the file pointed to by path. */
+Cell* file_file_size(const Lex* e, const Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "file-size");
+    if (err) return err;
+    err = check_arg_types(a, CELL_STRING, "file-size");
+    if (err) return err;
+
+    const char* path = a->cell[0]->str;
+    struct stat buf;
+    if (get_stat_buf(&buf, path) == -1) {
+        return make_cell_error(
+            fmt_err("file-size: '%s': %s", path, strerror(errno)),
+            OS_ERR);
+    }
+
+    return make_cell_integer(buf.st_size);
+}
+
+
+/* (file-mtime path)
+ * Returns a list of length 3 holding values which represent the last modified time of the file pointed to by 'path'.
+ * In order, the fields are:
+ * seconds (integer)
+ * nanoseconds (integer)
+ * human-readable string in the form "2026-01-31 19:12:11.387617529 PST" where PST is the local TZ. */
+Cell* file_file_mtime(const Lex* e, const Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "file-mtime");
+    if (err) return err;
+    err = check_arg_types(a, CELL_STRING, "file-mtime");
+    if (err) return err;
+
+    const char* path = a->cell[0]->str;
+    struct stat buf;
+    if (get_stat_buf(&buf, path) == -1) {
+        return make_cell_error(
+            fmt_err("file-mtime: '%s': %s", path, strerror(errno)),
+            OS_ERR);
+    }
+
+    Cell* result = make_cell_nil();
+#ifndef __linux__
+    result = make_cell_pair(make_cell_string(format_time(&buf.st_mtimespec)),result);
+    result = make_cell_pair(make_cell_integer(buf.st_mtimespec.tv_nsec), result);
+    result = make_cell_pair(make_cell_integer(buf.st_mtimespec.tv_sec), result);
+#else
+    result = make_cell_pair(make_cell_string(format_time(&buf.st_mtime)),result);
+    result = make_cell_pair(make_cell_integer(buf.st_mtime.tv_nsec), result);
+    result = make_cell_pair(make_cell_integer(buf.st_mtime.tv_sec), result);
+#endif
+    return result;
+}
+
+
+/* (file-ctime path)
+ * Returns a list of length 3 holding values which represent the last changed time of the file pointed to by 'path'.
+ * In order, the fields are:
+ * seconds (integer)
+ * nanoseconds (integer)
+ * human-readable string in the form "2026-01-31 19:12:11.387617529 PST" where PST is the local TZ. */
+Cell* file_file_ctime(const Lex* e, const Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "file-ctime");
+    if (err) return err;
+    err = check_arg_types(a, CELL_STRING, "file-ctime");
+    if (err) return err;
+
+    const char* path = a->cell[0]->str;
+    struct stat buf;
+    if (get_stat_buf(&buf, path) == -1) {
+        return make_cell_error(
+            fmt_err("file-ctime: '%s': %s", path, strerror(errno)),
+            OS_ERR);
+    }
+
+    Cell* result = make_cell_nil();
+#ifndef __linux__
+    result = make_cell_pair(make_cell_string(format_time(&buf.st_ctimespec)),result);
+    result = make_cell_pair(make_cell_integer(buf.st_ctimespec.tv_nsec), result);
+    result = make_cell_pair(make_cell_integer(buf.st_ctimespec.tv_sec), result);
+#else
+    result = make_cell_pair(make_cell_string(format_time(&buf.st_ctime)),result);
+    result = make_cell_pair(make_cell_integer(buf.st_ctime.tv_nsec), result);
+    result = make_cell_pair(make_cell_integer(buf.st_ctime.tv_sec), result);
+#endif
+    return result;
+}
+
+
+/* (file-atime path)
+ * Returns a list of length 3 holding values which represent the last access time of the file pointed to by 'path'.
+ * In order, the fields are:
+ * seconds (integer)
+ * nanoseconds (integer)
+ * human-readable string in the form "2026-01-31 19:12:11.387617529 PST" where PST is the local TZ. */
+Cell* file_file_atime(const Lex* e, const Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "file-atime");
+    if (err) return err;
+    err = check_arg_types(a, CELL_STRING, "file-atime");
+    if (err) return err;
+
+    const char* path = a->cell[0]->str;
+    struct stat buf;
+    if (get_stat_buf(&buf, path) == -1) {
+        return make_cell_error(
+            fmt_err("file-atime: '%s': %s", path, strerror(errno)),
+            OS_ERR);
+    }
+
+    Cell* result = make_cell_nil();
+#ifndef __linux__
+    result = make_cell_pair(make_cell_string(format_time(&buf.st_atimespec)),result);
+    result = make_cell_pair(make_cell_integer(buf.st_atimespec.tv_nsec), result);
+    result = make_cell_pair(make_cell_integer(buf.st_atimespec.tv_sec), result);
+#else
+    result = make_cell_pair(make_cell_string(format_time(&buf.st_atime)),result);
+    result = make_cell_pair(make_cell_integer(buf.st_atime.tv_nsec), result);
+    result = make_cell_pair(make_cell_integer(buf.st_atime.tv_sec), result);
+#endif
+    return result;
+}
+
+
+/* (file-readable? path)
+ * Returns true if the currently running process has read permissions for the file/directory pointed to by path. */
+Cell* file_file_readable(const Lex* e, const Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "file-readable?");
+    if (err) return err;
+    err = check_arg_types(a, CELL_STRING, "file-readable?");
+    if (err) return err;
+
+    const char* path = a->cell[0]->str;
+
+    if (access(path, R_OK) == -1) {
+        const int saved_errno = errno;
+        if (saved_errno == EACCES) {
+            return False_Obj;
+        }
+        return make_cell_error(
+            fmt_err("file-readable?: '%s': %s", path, strerror(saved_errno)),
+            OS_ERR);
+    }
+    return True_Obj;
+}
+
+
+/* (file-writable? path)
+ * Returns true if the currently running process has write permissions for the file/directory pointed to by path. */
+Cell* file_file_writable(const Lex* e, const Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "file-writable?");
+    if (err) return err;
+    err = check_arg_types(a, CELL_STRING, "file-writable?");
+    if (err) return err;
+
+    const char* path = a->cell[0]->str;
+
+    if (access(path, W_OK) == -1) {
+        const int saved_errno = errno;
+        if (saved_errno == EACCES) {
+            return False_Obj;
+        }
+        return make_cell_error(
+            fmt_err("file-writable?: '%s': %s", path, strerror(saved_errno)),
+            OS_ERR);
+    }
+    return True_Obj;
+}
+
+
+/* (file-executable? path)
+ * Returns true if the currently running process has execute permissions for the file/directory pointed to by path. */
+Cell* file_file_executable(const Lex* e, const Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "file-executable?");
+    if (err) return err;
+    err = check_arg_types(a, CELL_STRING, "file-executable?");
+    if (err) return err;
+
+    const char* path = a->cell[0]->str;
+
+    if (access(path, X_OK) == -1) {
+        const int saved_errno = errno;
+        if (saved_errno == EACCES) {
+            return False_Obj;
+        }
+        return make_cell_error(
+            fmt_err("file-executable?: '%s': %s", path, strerror(saved_errno)),
+            OS_ERR);
+    }
+    return True_Obj;
+}
+
+
 /* TODO:
  * lstat
- * file-size
- * file-mtime / file-atime / file-ctime
- * file-readable? / file-writable? / file-executable?
  * readlink
  * realpath
  * list-directory
@@ -523,6 +734,13 @@ void cozenage_library_init(const Lex* e)
     lex_add_builtin(e, "file-exists?", file_file_exists_pred);
     lex_add_builtin(e, "rmdir!", file_rmdir);
     lex_add_builtin(e, "mkdir", file_mkdir);
-    lex_add_builtin(e, "unlink!", file_unlink_file);
+    lex_add_builtin(e, "unlink!", file_unlink);
     lex_add_builtin(e, "stat", file_stat);
+    lex_add_builtin(e, "file-size", file_file_size);
+    lex_add_builtin(e, "file-atime", file_file_atime);
+    lex_add_builtin(e, "file-ctime", file_file_ctime);
+    lex_add_builtin(e, "file-mtime", file_file_mtime);
+    lex_add_builtin(e, "file-readable?", file_file_readable);
+    lex_add_builtin(e, "file-writeable?", file_file_writable);
+    lex_add_builtin(e, "file-executable?", file_file_executable);
 }
