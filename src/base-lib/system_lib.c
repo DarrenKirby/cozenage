@@ -135,6 +135,8 @@ static Cell* system_get_env_vars(const Lex* e, const Cell* a)
 }
 
 
+/* (get-home)
+ * Returns the home directory of the current user as a string. */
 Cell* system_get_home(const Lex* e, const Cell* a) {
     (void)e; (void)a;
     Cell* err = CHECK_ARITY_EXACT(a, 0, "get-home");
@@ -144,12 +146,15 @@ Cell* system_get_home(const Lex* e, const Cell* a) {
 }
 
 
+/* (get-path)
+ * Returns a list composed of each directory in the current user's path as a string.
+ * The list is ordered as per the shell's search ordeer. */
 Cell* system_get_path(const Lex* e, const Cell* a) {
     (void)e; (void)a;
     Cell* err = CHECK_ARITY_EXACT(a, 0, "get-uid");
     if (err) { return err; }
 
-    char* path = GC_strdup(getenv("PATH"));
+    const char* path = GC_strdup(getenv("PATH"));
     Cell* result = make_cell_vector();
 
     Cell* p = builtin_open_input_string(e, make_sexpr_len1(make_cell_string(path)));
@@ -218,6 +223,41 @@ static Cell* system_get_egid(const Lex* e, const Cell* a) {
     if (err) { return err; }
     return make_cell_integer(getegid());
 }
+
+
+/* (set-uid! n)
+ * (set-gid! n)
+ * These functions set the user id or group id of the currently running process to the uid/gid indicated by n. They
+ * return #true on success, or else return an OS error.  */
+Cell* system_set_uid(const Lex* e, const Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "set-uid!");
+    if (err) { return err; }
+    err = check_arg_types(a, CELL_INTEGER, "set-uid!");
+    if (err) { return err; }
+
+    const uid_t uid = a->cell[0]->integer_v;
+    if (setuid(uid) != 0) {
+        return make_cell_error(fmt_err("set-uid!: %s"), OS_ERR);
+    }
+    return True_Obj;
+}
+
+
+Cell* system_set_gid(const Lex* e, const Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "set-gid!");
+    if (err) { return err; }
+    err = check_arg_types(a, CELL_INTEGER, "set-gid!");
+    if (err) { return err; }
+
+    const uid_t uid = a->cell[0]->integer_v;
+    if (setuid(uid) != 0) {
+        return make_cell_error(fmt_err("set-gid!: %s"), OS_ERR);
+    }
+    return True_Obj;
+}
+
 
 
 /* (get-username)
@@ -590,16 +630,47 @@ Cell* system_get_hostname(const Lex* e, const Cell* a) {
     return make_cell_string(hostname);
 }
 
+
+/* (cpu-count)
+ * Returns the number of processors as ann integer. */
+Cell* system_get_nproc(const Lex* e, const Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 0, "cpu-count");
+    if (err) return err;
+
+    long n_cpu;
+    if ((n_cpu = sysconf(_SC_NPROCESSORS_CONF)) == -1) {
+        return make_cell_error(
+            fmt_err("cpu-count: %s", strerror(errno)),
+            OS_ERR);
+    }
+    return make_cell_integer(n_cpu);
+}
+
+
+/* (is-root?)
+ * Returns #true if the effective uid of the currently running process is 0,
+ * otherwise, returns #false. */
+Cell* system_is_root(const Lex* e, const Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 0, "is-root?");
+    if (err) return err;
+
+    const uid_t uid = getuid();
+    if (uid == 0) {
+        return True_Obj;
+    }
+    return False_Obj;
+}
+
+
 /* TODO
  * exec
  * fork
  * chown
  * wait / waitpid
- * cpu-count
  * clock-time / monotonic-time
- * set-uid! / set-gid!
  * umask
- * is-root?
  * signal / kill
  * rlimit
  * temp-file / temp-directory
@@ -628,4 +699,8 @@ void cozenage_library_init(const Lex* e)
     lex_add_builtin(e, "get-hostname", system_get_hostname);
     lex_add_builtin(e, "get-home", system_get_home);
     lex_add_builtin(e, "get-path", system_get_path);
+    lex_add_builtin(e, "cpu-count", system_get_nproc);
+    lex_add_builtin(e, "is-root?", system_is_root);
+    lex_add_builtin(e, "set-uid!", system_set_uid);
+    lex_add_builtin(e, "set-gid!", system_set_gid);
 }
