@@ -517,6 +517,7 @@ void lex_add_builtins(const Lex* e)
     lex_add_builtin(e, "open-output-bytevector", builtin_open_output_bytevector);
     lex_add_builtin(e, "open-input-bytevector", builtin_open_input_bytevector);
     lex_add_builtin(e, "get-output-bytevector", builtin_get_output_bytevector);
+    lex_add_builtin(e, "call-with-port", builtin_call_with_port);
     /*
      * Error/debug procedures.
      *
