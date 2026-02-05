@@ -2067,7 +2067,48 @@ Cell* builtin_get_output_bytevector(const Lex* e, const Cell* a) {
     return bv;
 }
 
-/* TODO: implement (call-with-port port proc) */
+
+/* (call-with-port port proc)
+ * It is an error if proc does not accept one argument. The call-with-port procedure calls proc with port as an
+ * argument. If proc returns, then the port is closed automatically and the values yielded by the proc are returned. If
+ * proc does not return, then the port must not be closed automatically unless it is possible to prove that the port
+ * will never again be used for a read or write operation. */
+Cell* builtin_call_with_port(const Lex* e, const Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 2, "call-with-port");
+    if (err) { return err; }
+    if (a->cell[0]->type != CELL_PORT) {
+        return make_cell_error(
+            "call-with-port: arg1 must be a port",
+            TYPE_ERR);
+    }
+    if (a->cell[1]->type != CELL_PROC) {
+        return make_cell_error(
+            "call-with-port: arg2 must be a procedure",
+            TYPE_ERR);
+    }
+    Cell* p = a->cell[0];
+    const Cell* proc = a->cell[1];
+
+    /* Check arity if proc is a lambda. */
+    /* FIXME: arity of builtins? */
+    if (!proc->is_builtin) {
+        if (check_lambda_arity(proc, 1) != 1) {
+            return make_cell_error(
+                "call-with-port: lambda must take only one argument",
+                VALUE_ERR);
+        }
+    }
+    Cell* args = make_sexpr_len2(proc, p);
+    Cell* result = coz_eval((Lex*)e, args);
+
+    /* Close the port is call was successful */
+    if (result->type != CELL_ERROR) {
+        p->port->vtable->close(p);
+    }
+
+    return result;
+}
 
 
 /* (call-with-input-file string proc)
