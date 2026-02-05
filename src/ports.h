@@ -22,6 +22,11 @@
 
 #include "cell.h"
 
+#define R_EOF (-1)
+#define R_ERR (-2)
+#define R_OK 0
+#define UTF8_MAX_LEN 4
+
 
 /* */
 extern const PortInterface FileVTable;

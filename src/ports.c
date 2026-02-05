@@ -33,11 +33,6 @@
 #include <gc/gc.h>
 #include <sys/select.h>
 
-#define R_EOF (-1)
-#define R_ERR (-2)
-#define R_OK 0
-#define UTF8_MAX_LEN 4
-
 
 /* Helpers for read-char and peek-char to deal with multibyte characters. */
 
@@ -1773,7 +1768,7 @@ Cell* builtin_writeln(const Lex* e, const Cell* a)
 
 /* (open-input-file string)
  * Takes a string for an existing file and returns an input port that is capable of delivering text data from the file.
- * If the file does not exist or cannot be opened, an error that satisfies file-error? is signaled. */
+ * If the file does not exist or cannot be opened, an error that satisfies file-error? is signalled. */
 Cell* builtin_open_input_file(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -1805,7 +1800,7 @@ Cell* builtin_open_input_file(const Lex* e, const Cell* a)
 
 /* (open-bin-input-file string)
  * Takes a string for an existing file and returns an input port that is capable of delivering binary data from the file. If
- * the file does not exist or cannot be opened, an error that satisfies file-error? is signaled. */
+ * the file does not exist or cannot be opened, an error that satisfies file-error? is signalled. */
 Cell* builtin_open_bin_input_file(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -1838,7 +1833,7 @@ Cell* builtin_open_bin_input_file(const Lex* e, const Cell* a)
 /* (open-output-file string )
  * Takes a string naming an output file to be opened and returns an output port that is capable of writing data to the
  * file by that name. If a file with the given name does not exist, it will be created. If the file already exists, the
- * file will be appended to. If the file cannot be opened, an error that satisfies file-error? is signaled. */
+ * file will be appended to. If the file cannot be opened, an error that satisfies file-error? is signalled. */
 Cell* builtin_open_output_file(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -1875,7 +1870,7 @@ Cell* builtin_open_output_file(const Lex* e, const Cell* a)
 /* (open-bin-output-file string )
  * Takes a string naming an output file to be opened and returns an output port that is capable of writing binary data to the
  * file by that name. If a file with the given name does not exist, it will be created. If the file already exists, the
- * file will be appended to. If the file cannot be opened, an error that satisfies file-error? is signaled. */
+ * file will be appended to. If the file cannot be opened, an error that satisfies file-error? is signalled. */
 Cell* builtin_open_bin_output_file(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -1913,7 +1908,7 @@ Cell* builtin_open_bin_output_file(const Lex* e, const Cell* a)
  * Takes a string naming an output file to be opened and returns an output port that is capable of writing data to the
  * file by that name. If a file with the given name does not exist, it will be created. If the file does exist, it will
  * be truncated to length 0, and overwritten.  If the file cannot be opened, an error that satisfies file-error? is
- * signaled. */
+ * signalled. */
 Cell* builtin_open_and_trunc_output_file(const Lex* e, const Cell* a)
 {
     (void)e;
