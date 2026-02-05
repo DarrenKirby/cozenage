@@ -33,9 +33,9 @@
 #include <sys/utsname.h>
 #include <sys/stat.h>
 
-/* These includes and defines are all for uptime. */
 #ifdef  __linux__
-#include <sys/sysinfo.h>
+#include <sys/sysinfo.h>   /* For uptime (sysinfo) */
+#include <sys/wait.h>      /* For system (waitpid) */
 #else
 #include <sys/sysctl.h>
 #endif
