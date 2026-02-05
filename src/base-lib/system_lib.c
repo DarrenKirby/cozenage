@@ -20,6 +20,8 @@
 
 #include "types.h"
 #include "cell.h"
+#include "ports.h"
+#include "vectors.h"
 
 #include <unistd.h>
 #include <stdlib.h>
@@ -51,6 +53,7 @@
 
 
 extern char **environ;
+extern bool is_repl;
 
 
 /* (get-pid)
@@ -129,6 +132,52 @@ static Cell* system_get_env_vars(const Lex* e, const Cell* a)
         len++;
     }
     return result;
+}
+
+
+Cell* system_get_home(const Lex* e, const Cell* a) {
+    (void)e; (void)a;
+    Cell* err = CHECK_ARITY_EXACT(a, 0, "get-home");
+    if (err) { return err; }
+
+    return make_cell_string(getenv("HOME"));
+}
+
+
+Cell* system_get_path(const Lex* e, const Cell* a) {
+    (void)e; (void)a;
+    Cell* err = CHECK_ARITY_EXACT(a, 0, "get-uid");
+    if (err) { return err; }
+
+    char* path = GC_strdup(getenv("PATH"));
+    Cell* result = make_cell_vector();
+
+    Cell* p = builtin_open_input_string(e, make_sexpr_len1(make_cell_string(path)));
+    char *line = nullptr;
+    size_t n = 0;
+    int err_r = 0;
+
+    for (;;) {
+        const ssize_t len = p->port->vtable->getdelim(
+            &line, &n, ':', p, &err_r);
+
+        if (len == R_EOF)
+            break;
+
+        if (len == R_ERR) {
+            free(line);
+            return make_cell_error(
+                fmt_err("get-path: %s", err_r),
+                FILE_ERR);
+        }
+
+        /* Don't need to include the colons. */
+        if (len > 0 && line[len - 1] == ':')
+            line[len - 1] = '\0';
+
+        cell_add(result, make_cell_string(line));
+    }
+    return builtin_vector_to_list(e, make_sexpr_len1(result));
 }
 
 
@@ -472,16 +521,80 @@ Cell* system_uptime(const Lex* e, const Cell* a) {
 }
 
 
-/* TODO:
- * system
+/* (system string)
+ * Forks a new process and runs the command specified by string in a new shell.
+ * Returns the exit status of the command as an integer. */
+Cell* system_system(const Lex* e, const Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "system");
+    if (err) return err;
+    err = check_arg_types(a, CELL_STRING, "system");
+    if (err) return err;
+
+    char* cmd = a->cell[0]->str;
+
+    pid_t pid;
+    int status;
+
+    /* TODO: signal handling */
+    /* FIXME: cmd output written bold in REPL. */
+    if ((pid = fork()) < 0) {
+        status = -1;
+    } else if (pid == 0) {
+        /* child */
+        execl("/bin/sh", "sh", "-c", cmd, (char *)nullptr);
+        _exit(127);     /* execl error */
+    } else {
+        /* parent */
+        while (waitpid(pid, &status, 0) < 0) {
+            if (errno != EINTR) {
+                status = -1; /* error other than EINTR from waitpid() */
+                break;
+            }
+        }
+    }
+
+    return make_cell_integer(status);
+}
+
+
+/* (sleep n)
+ * Causes the running process to sleep for n seconds. */
+Cell* system_sleep(const Lex* e, const Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "sleep");
+    if (err) return err;
+    err = check_arg_types(a, CELL_INTEGER, "sleep");
+    if (err) return err;
+
+    /* sleep does not error. It may return non-zero
+     * if the sleep is interrupted by a signal. */
+    sleep(a->cell[0]->integer_v);
+    return USP_Obj;
+}
+
+
+/* (get-hostname)
+ * Returns the hostname of the system as a string. */
+Cell* system_get_hostname(const Lex* e, const Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 0, "get-hostname");
+    if (err) return err;
+
+    char* hostname = GC_MALLOC_ATOMIC(256);
+    if (gethostname(hostname, 256) != 0) {
+        return make_cell_error(
+            fmt_err("get-hostname: %s", strerror(errno)),
+            OS_ERR);
+    }
+    return make_cell_string(hostname);
+}
+
+/* TODO
  * exec
  * fork
  * chown
  * wait / waitpid
- * sleep
- * get-hostname
- * get-home - More ergonomic than (get-env-var "HOME").
- * get-path
  * cpu-count
  * clock-time / monotonic-time
  * set-uid! / set-gid!
@@ -510,4 +623,9 @@ void cozenage_library_init(const Lex* e)
     lex_add_builtin(e, "uname", system_uname);
     lex_add_builtin(e, "chmod!", system_chmod);
     lex_add_builtin(e, "uptime", system_uptime);
+    lex_add_builtin(e, "system", system_system);
+    lex_add_builtin(e, "sleep", system_sleep);
+    lex_add_builtin(e, "get-hostname", system_get_hostname);
+    lex_add_builtin(e, "get-home", system_get_home);
+    lex_add_builtin(e, "get-path", system_get_path);
 }
