@@ -238,7 +238,9 @@ Cell* system_set_uid(const Lex* e, const Cell* a) {
 
     const uid_t uid = a->cell[0]->integer_v;
     if (setuid(uid) != 0) {
-        return make_cell_error(fmt_err("set-uid!: %s"), OS_ERR);
+        return make_cell_error(
+            fmt_err("set-uid!: %s", strerror(errno)),
+            OS_ERR);
     }
     return True_Obj;
 }
@@ -253,7 +255,9 @@ Cell* system_set_gid(const Lex* e, const Cell* a) {
 
     const uid_t uid = a->cell[0]->integer_v;
     if (setuid(uid) != 0) {
-        return make_cell_error(fmt_err("set-gid!: %s"), OS_ERR);
+        return make_cell_error(fmt_err("set-gid!: %s",
+            strerror(errno)),
+            OS_ERR);
     }
     return True_Obj;
 }
