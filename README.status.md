@@ -36,7 +36,7 @@ This document tracks the implementation status of procedures in the Cozenage int
 |   ✅    | `bytevector?`                |
 |   ✅    | `call-with-input-file`       |
 |   ✅    | `call-with-output-file`      |
-|   ❌    | `call-with-port`             |
+|   ✅    | `call-with-port`             |
 |   ✅    | `caar`                       |
 |   ✅    | `cadr`                       |
 |   ✅    | `car`                        |
@@ -311,43 +311,59 @@ This document tracks the implementation status of procedures in the Cozenage int
 
 ## `(base file)`
 
-| Status | Procedure       |
-|:------:|:----------------|
-|   ✅    | `reg-file?`     |
-|   ✅    | `directory?`    |
-|   ✅    | `symlink?`      |
-|   ✅    | `char-device?`  |
-|   ✅    | `block-device?` |
-|   ✅    | `fifo?`         |
-|   ✅    | `socket?`       |
-|   ✅    | `get-cwd`       |
-|   ✅    | `rmdir`         |
-|   ✅    | `mkdir`         |
-|   ✅    | `unlink!`       |
-|   ✅    | `file-exists?`  |
-|   ✅    | `stat`          |
+| Status | Procedure          |
+|:------:|:-------------------|
+|   ✅    | `reg-file?`        |
+|   ✅    | `directory?`       |
+|   ✅    | `symlink?`         |
+|   ✅    | `char-device?`     |
+|   ✅    | `block-device?`    |
+|   ✅    | `fifo?`            |
+|   ✅    | `socket?`          |
+|   ✅    | `rmdir!`           |
+|   ✅    | `mkdir`            |
+|   ✅    | `unlink!`          |
+|   ✅    | `file-exists?`     |
+|   ✅    | `stat`             |
+|   ✅    | `file-size`        |
+|   ✅    | `file-mtime`       |
+|   ✅    | `file-atime`       |
+|   ✅    | `file-ctime`       |
+|   ✅    | `file-readable?`   |
+|   ✅    | `file-writable?`   |
+|   ✅    | `file-executable?` |
 
 
 ---
 
 ## `(base system)`
 
-|   Status   | Procedure      |
-|:----------:|:---------------|
-|     ✅      | `get-pid`      |
-|     ✅      | `get-ppid`     |
-|     ✅      | `get-env-var`  |
-|     ✅      | `get-env-vars` |
-|     ✅      | `get-uid`      |
-|     ✅      | `get-gid`      |
-|     ✅      | `get-euid`     |
-|     ✅      | `get-egid`     |
-|     ✅      | `get-username` |
-|     ✅      | `get-groups`   |
-|     ✅      | `get-cwd`      |
-|     ✅      | `chdir`        |
-|     ✅      | `uname`        |
-|     ✅      | `chmod!`       |
+|   Status   | Procedure       |
+|:----------:|:----------------|
+|     ✅      | `get-pid`       |
+|     ✅      | `get-ppid`      |
+|     ✅      | `get-env-var`   |
+|     ✅      | `get-env-vars`  |
+|     ✅      | `get-uid`       |
+|     ✅      | `get-gid`       |
+|     ✅      | `set-uid!`      |
+|     ✅      | `set-gid!`      |
+|     ✅      | `get-euid`      |
+|     ✅      | `get-egid`      |
+|     ✅      | `get-username`  |
+|     ✅      | `get-groups`    |
+|     ✅      | `get-cwd`       |
+|     ✅      | `chdir`         |
+|     ✅      | `uname`         |
+|     ✅      | `uptime`        |
+|     ✅      | `chmod!`        |
+|     ✅      | `get-hostname`  |
+|     ✅      | `get-home`      |
+|     ✅      | `get-path`      |
+|     ✅      | `is-root?`      |
+|     ✅      | `sleep`         |
+|     ✅      | `cpu-count`     |
+|     ✅      | `system`        |
 
 ---
 
