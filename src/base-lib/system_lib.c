@@ -148,10 +148,10 @@ Cell* system_get_home(const Lex* e, const Cell* a) {
 
 /* (get-path)
  * Returns a list composed of each directory in the current user's path as a string.
- * The list is ordered as per the shell's search ordeer. */
+ * The list is ordered as per the shell's search order. */
 Cell* system_get_path(const Lex* e, const Cell* a) {
     (void)e; (void)a;
-    Cell* err = CHECK_ARITY_EXACT(a, 0, "get-uid");
+    Cell* err = CHECK_ARITY_EXACT(a, 0, "get-path");
     if (err) { return err; }
 
     const char* path = GC_strdup(getenv("PATH"));
@@ -636,7 +636,7 @@ Cell* system_get_hostname(const Lex* e, const Cell* a) {
 
 
 /* (cpu-count)
- * Returns the number of processors as ann integer. */
+ * Returns the number of processors as an integer. */
 Cell* system_get_nproc(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 0, "cpu-count");
