@@ -5,7 +5,7 @@ Overview
 --------
 
 The ``(base math)`` library contains procedures typically found in the Scheme R7RS ``inexact`` and ``complex`` libraries,
-as well as a handful of other numeric procedures toospecialized or esoteric for the core interpreter.
+as well as a handful of other numeric procedures too specialized or esoteric for the core interpreter.
 
 Inexact Procedures
 ------------------

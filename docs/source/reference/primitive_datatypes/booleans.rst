@@ -5,14 +5,17 @@ Overview
 --------
 
 The standard boolean objects for true and false are written as #t and #f. Alternatively, they can be
-written #true and #false, respectively. Unlike most Schemes, Cozenage displays true and false as
-``#true`` and ``#false`` by default in the REPL. What really matters, though, are the objects that
+written #true and #false, respectively. Unlike most Scheme implementations, Cozenage displays true and false as
+``#true`` and ``#false`` by default in the REPL, however, the short and long forms are identical and interchangeable
+in all contexts.
+
+What really matters, though, are the objects that
 the Scheme conditional expressions (if, cond, and, or, when, unless, do) treat as true or false. The
 phrase “a true value” (or sometimes just “true”) means any object treated as true by the conditional
 expressions, and the phrase “a false value” (or “false”) means any object treated as false by the
 conditional expressions.
 
-Of all the Scheme values, only #f counts as false in conditional expressions. All other Scheme
+Of all the Cozenage values, only #f counts as false in conditional expressions. All other Scheme
 values, including #t, count as true.
 
 Boolean constants evaluate to themselves, so they do not need to be quoted in programs.

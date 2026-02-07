@@ -1,15 +1,8 @@
-Cozenage and Scheme libraries
-=============================
+Cozenage loadable module libraries
+==================================
 
-The Scheme R7RS specification provides additional libraries beyond ``scheme base``, which is loaded
-into the environment by default. These libraries are factored so as to separate features which might
-not be supported by all implementations, or which might be expensive to load.
-
-The ``scheme`` library prefix is used for all standard libraries, and is reserved for use by future
-standards.
-
-Cozenage also supplies libraries beyond the R7RS-specified implementations, all of which use the
-``cozenage`` library prefix.
+Cozenage supplies libraries beyond the core implementation, all of which use the
+``base`` library prefix.
 
 The procedures exported by these various libraries are documented in this section of the Cozenage
 Reference document. They are:
@@ -38,14 +31,15 @@ Cozenage 'base' standard libraries
 - ``system`` - The ``(base system)`` library exports procedures for interfacing with the local operating system.
 - ``time`` - The ``(base time)`` library provides access to time-related values.
 
+
 .. toctree::
    :maxdepth: 1
    :caption: Contents:
 
-  bits
-  cxr
-  file
-  math
-  random
-  system
-  time
+   bits
+   cxr
+   file
+   math
+   random
+   system
+   time
