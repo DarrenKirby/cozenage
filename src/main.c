@@ -104,13 +104,12 @@ int main(const int argc, char** argv)
     const struct option long_opts[] = {
         {"help", no_argument, nullptr, 'h'},
         {"version", no_argument, nullptr, 'V'},
-        {"r5rs", no_argument, nullptr, '5'},
         {"library", required_argument, nullptr, 'l'},
         {nullptr,0,nullptr,0}
     };
 
     int opt;
-    while ((opt = getopt_long(argc, argv, "Vh5l:", long_opts, nullptr)) != -1) {
+    while ((opt = getopt_long(argc, argv, "Vhl:", long_opts, nullptr)) != -1) {
         switch(opt) {
             case 'V':
                 printf("%s%s%s version %s\n", ANSI_BLUE_B, APP_NAME, ANSI_RESET, APP_VERSION);
@@ -119,10 +118,6 @@ int main(const int argc, char** argv)
             case 'h':
                 show_help();
                 exit(EXIT_SUCCESS);
-                /* TODO: implement r5rs mode, maybe. */
-            case '5':
-                printf("--r5rs not implemented yet\n\n");
-                break;
             case 'l':
                 process_library_arg(&load_libs, optarg);
                 break;
