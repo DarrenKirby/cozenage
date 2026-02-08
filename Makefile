@@ -4,7 +4,6 @@
 # Targets:
 #   make / make all      - Builds the project using CMake (default).
 #   make DEBUG=1         - builds unoptimized binary and modules with debug symbols.
-#   make USE_LIBEDIT=1   - force linking against libedit instead of GNU readline.
 #   make nocmake         - Builds the project manually without CMake.
 #   make test            - Builds the test runner.
 #   make clean           - Removes all build artifacts, including the build/ directory.
@@ -40,11 +39,6 @@ else
 	# Export symbols AND add RPATH using $ORIGIN
 	# Note: we use \$$ to ensure the '$' reaches the shell/linker correctly
 	EXE_LDFLAGS = -Wl,--export-dynamic -Wl,-rpath,'\$$ORIGIN/../lib/cozenage'
-endif
-
-# Check for force libedit flag
-ifeq ($(origin USE_LIBEDIT), undefined)
-	USE_LIBEDIT=OFF
 endif
 
 # Check for debug build flag
@@ -125,7 +119,7 @@ all: cmake_build
 cmake_build:
 	@echo "--- Building with CMake ---"
 	@mkdir -p $(BUILD_DIR)
-	@cd $(BUILD_DIR) && cmake -DUSE_LIBEDIT=$(USE_LIBEDIT) -DDEBUG_BUILD=$(DEBUG) ..
+	@cd $(BUILD_DIR) && cmake -DDEBUG_BUILD=$(DEBUG) ..
 	@$(MAKE) -C $(BUILD_DIR)
 	@cp $(BUILD_DIR)/$(BINARY) .
 

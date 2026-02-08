@@ -30,7 +30,7 @@ message(STATUS "Building with CFLAGS: ${CMAKE_C_FLAGS}")
 # 4. It provides clear and accurate status messages about which library was found.
 # ==============================================================================
 
-option(USE_LIBEDIT "Force using libedit instead of GNU readline" OFF)
+#option(USE_LIBEDIT "Force using libedit instead of GNU readline" OFF)
 
 # We need the PkgConfig module to find libraries installed by package managers.
 if (APPLE)
@@ -45,69 +45,75 @@ endif()
 
 find_package(PkgConfig QUIET)
 
+if (PKG_CONFIG_FOUND AND PKG_CONFIG_EXECUTABLE)
+    message(STATUS "PKG_CONFIG_EXECUTABLE = ${PKG_CONFIG_EXECUTABLE}")
+     message(STATUS "PKG_CONFIG_PATH = $ENV{PKG_CONFIG_PATH}")
+    pkg_check_modules(PC_READLINE QUIET readline)
+endif()
+
 # This variable will hold the name of the library provider for accurate reporting.
-set(READLINE_PROVIDER "None")
-
-# --- Primary Logic ---
-
-if (USE_LIBEDIT)
-    message(STATUS "USE_LIBEDIT is ON. Forcing search for libedit.")
-    set(SEARCH_FOR_LIBEDIT TRUE)
-
-else()
-    if (PKG_CONFIG_FOUND AND PKG_CONFIG_EXECUTABLE)
-        message(STATUS "PKG_CONFIG_EXECUTABLE = ${PKG_CONFIG_EXECUTABLE}")
-         message(STATUS "PKG_CONFIG_PATH = $ENV{PKG_CONFIG_PATH}")
-        pkg_check_modules(PC_READLINE QUIET readline)
-    endif()
-
-    if (PC_READLINE_FOUND)
-        message(STATUS "Found GNU readline via pkg-config.")
-        set(READLINE_PROVIDER "GNU readline (via pkg-config)")
-        set(READLINE_LIBRARIES ${PC_READLINE_LIBRARIES})
-        set(READLINE_INCLUDE_DIRS ${PC_READLINE_INCLUDE_DIRS})
-        set(READLINE_DEFINITIONS ${PC_READLINE_CFLAGS_OTHER})
-    else()
-        # Fallback condition: pkg-config did not find GNU readline.
-        message(STATUS "pkg-config could not find GNU readline. Falling back to libedit.")
-        set(SEARCH_FOR_LIBEDIT TRUE)
-    endif()
-endif()
-
-# --- Fallback Search ---
-# This block only runs if USE_LIBEDIT was ON or if pkg-config failed.
-if (SEARCH_FOR_LIBEDIT)
-    find_library(LIBEDIT_LIBRARY NAMES edit)
-    find_path(LIBEDIT_INCLUDE_DIR NAMES editline/readline.h)
-
-    if (LIBEDIT_LIBRARY AND LIBEDIT_INCLUDE_DIR)
-        set(READLINE_PROVIDER "libedit")
-        set(READLINE_LIBRARIES ${LIBEDIT_LIBRARY})
-        set(READLINE_INCLUDE_DIRS ${LIBEDIT_INCLUDE_DIR})
-        # No special compile definitions for libedit
-        set(READLINE_DEFINITIONS "")
-    endif()
-endif()
-
-
-# --- Final Validation and Integration ---
-
-if (READLINE_PROVIDER STREQUAL "None")
-    message(FATAL_ERROR "Neither GNU readline nor libedit could be found. Please install one
-                        (e.g., 'brew install readline') or check your PKG_CONFIG_PATH.")
-else()
-    # Add the necessary include directories for your target.
-    include_directories(${READLINE_INCLUDE_DIRS})
-
-    # Add any compile definitions (e.g., -DHAVE_READLINE) if needed.
-    add_definitions(${READLINE_DEFINITIONS})
-
-    # Print a final, accurate summary.
-    message(STATUS "Using ${READLINE_PROVIDER} for line editing.")
-    message(STATUS "  - Includes: ${READLINE_INCLUDE_DIRS}")
-    message(STATUS "  - Library:  ${READLINE_LIBRARIES}")
-
-endif()
+#set(READLINE_PROVIDER "None")
+#
+## --- Primary Logic ---
+#
+#if (USE_LIBEDIT)
+#    message(STATUS "USE_LIBEDIT is ON. Forcing search for libedit.")
+#    set(SEARCH_FOR_LIBEDIT TRUE)
+#
+#else()
+#    if (PKG_CONFIG_FOUND AND PKG_CONFIG_EXECUTABLE)
+#        message(STATUS "PKG_CONFIG_EXECUTABLE = ${PKG_CONFIG_EXECUTABLE}")
+#         message(STATUS "PKG_CONFIG_PATH = $ENV{PKG_CONFIG_PATH}")
+#        pkg_check_modules(PC_READLINE QUIET readline)
+#    endif()
+#
+#    if (PC_READLINE_FOUND)
+#        message(STATUS "Found GNU readline via pkg-config.")
+#        set(READLINE_PROVIDER "GNU readline (via pkg-config)")
+#        set(READLINE_LIBRARIES ${PC_READLINE_LIBRARIES})
+#        set(READLINE_INCLUDE_DIRS ${PC_READLINE_INCLUDE_DIRS})
+#        set(READLINE_DEFINITIONS ${PC_READLINE_CFLAGS_OTHER})
+#    else()
+#        # Fallback condition: pkg-config did not find GNU readline.
+#        message(STATUS "pkg-config could not find GNU readline. Falling back to libedit.")
+#        set(SEARCH_FOR_LIBEDIT TRUE)
+#    endif()
+#endif()
+#
+## --- Fallback Search ---
+## This block only runs if USE_LIBEDIT was ON or if pkg-config failed.
+#if (SEARCH_FOR_LIBEDIT)
+#    find_library(LIBEDIT_LIBRARY NAMES edit)
+#    find_path(LIBEDIT_INCLUDE_DIR NAMES editline/readline.h)
+#
+#    if (LIBEDIT_LIBRARY AND LIBEDIT_INCLUDE_DIR)
+#        set(READLINE_PROVIDER "libedit")
+#        set(READLINE_LIBRARIES ${LIBEDIT_LIBRARY})
+#        set(READLINE_INCLUDE_DIRS ${LIBEDIT_INCLUDE_DIR})
+#        # No special compile definitions for libedit
+#        set(READLINE_DEFINITIONS "")
+#    endif()
+#endif()
+#
+#
+## --- Final Validation and Integration ---
+#
+#if (READLINE_PROVIDER STREQUAL "None")
+#    message(FATAL_ERROR "Neither GNU readline nor libedit could be found. Please install one
+#                        (e.g., 'brew install readline') or check your PKG_CONFIG_PATH.")
+#else()
+#    # Add the necessary include directories for your target.
+#    include_directories(${READLINE_INCLUDE_DIRS})
+#
+#    # Add any compile definitions (e.g., -DHAVE_READLINE) if needed.
+#    add_definitions(${READLINE_DEFINITIONS})
+#
+#    # Print a final, accurate summary.
+#    message(STATUS "Using ${READLINE_PROVIDER} for line editing.")
+#    message(STATUS "  - Includes: ${READLINE_INCLUDE_DIRS}")
+#    message(STATUS "  - Library:  ${READLINE_LIBRARIES}")
+#
+#endif()
 
 
 # --- Find ICU Library
@@ -203,11 +209,11 @@ target_include_directories(cozenage PRIVATE
         ${PROJECT_SOURCE_DIR}/src/base-lib
 )
 
-target_link_directories(cozenage PRIVATE ${PC_READLINE_LIBRARY_DIRS})
+#target_link_directories(cozenage PRIVATE ${PC_READLINE_LIBRARY_DIRS})
 
 # Added ${DL_LIB} to the list of linked libraries.
 target_link_libraries(cozenage PRIVATE
-        ${READLINE_LIBRARIES}
+#        ${READLINE_LIBRARIES}
         ${M_LIB}
         ${GC_LIB}
         ${DL_LIB}
@@ -216,10 +222,10 @@ target_link_libraries(cozenage PRIVATE
 )
 
 # If we found GNU readline, pass a definition to the C code.
-if (READLINE_PROVIDER MATCHES "GNU readline")
-    message(STATUS "Setting compile definition: USE_GNU_READLINE")
-    target_compile_definitions(cozenage PRIVATE USE_GNU_READLINE)
-endif()
+#if (READLINE_PROVIDER MATCHES "GNU readline")
+#    message(STATUS "Setting compile definition: USE_GNU_READLINE")
+#    target_compile_definitions(cozenage PRIVATE USE_GNU_READLINE)
+#endif()
 
 
 target_compile_definitions(cozenage PUBLIC APP_VERSION="${PROJECT_VERSION}")
