@@ -21,13 +21,11 @@
  * dynamic completion array composed of Cozenage special forms and
  * procedures for use by the tab-autocompleter. If the curser is currently
  * inside a quote, then the default file completer is used. Otherwise,
- * the procedure/SF completer is used. This code is only built if Cozenage
- * is linked against GNU Readline. Libedit does not have this functionality.
+ * the procedure/SF completer is used.
  */
 
 #include "compat_readline.h"
-
-#ifdef USE_GNU_READLINE
+#include "line_edit.h"
 #include "hash.h"
 
 #include <string.h>
@@ -130,4 +128,4 @@ char** completion_dispatcher(const char *text, const int start, const int end)
     return rl_completion_matches(text, scheme_procedure_generator);
 }
 
-#endif
+

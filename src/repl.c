@@ -18,6 +18,7 @@
  */
 
 #include "repl.h"
+#include "line_edit.h"
 #include "compat_readline.h"
 #include "main.h"
 #include "cell.h"
@@ -133,9 +134,8 @@ int paren_balance(const char *s, int *in_string)
  * balanced parenthesis heuristic.*/
 static char* read_multiline(const char* prompt, const char* cont_prompt)
 {
-#ifdef USE_GNU_READLINE
+
     rl_attempted_completion_function = completion_dispatcher;
-#endif
     size_t total_len = 0;
     int balance = 0;
     int in_string = 0;   /* track string literal state across lines. */
@@ -200,7 +200,7 @@ char* coz_read()
 
     /* Add expression to history, if it is not empty. */
     if (strcmp(input, "") != 0) {
-        add_history(input);
+        add_history_entry(input);
     }
     return input;
 }
@@ -259,12 +259,11 @@ int run_repl(const lib_load_config load_libs)
     /* Loads the CLI-specified libraries into the environment. */
     load_initial_libraries(e, load_libs);
 
-#ifdef USE_GNU_READLINE
-    /* Bind the TAB key to the completion function. */
-    rl_bind_key('\t', rl_complete);
     /* Load tab-completion candidate array from symbols in the environment. */
     populate_dynamic_completions(e);
-#endif
+    /* Set up completion */
+    //rl_attempted_completion_function = completion_dispatcher;
+
 
     /* Initialize special form lookup table */
     init_special_forms();

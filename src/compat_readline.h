@@ -20,36 +20,6 @@
 #ifndef COZENAGE_COMPAT_READLINE_H
 #define COZENAGE_COMPAT_READLINE_H
 
-
-// ReSharper disable twice CppUnusedIncludeDirective
-#include <stdio.h> /* This is required for GNU readline. */
-
-
-#ifdef _WIN32
-#include <string.h>
-
-static char buffer[2048];
-
-/* Fake readline function. */
-char* readline(char* prompt) {
-    fputs(prompt, stdout);
-    fgets(buffer, 2048, stdin);
-    char* cpy = GC_MALLOC(strlen(buffer)+1);
-    strcpy(cpy, buffer);
-    cpy[strlen(cpy)-1] = '\0';
-    return cpy;
-}
-
-/* Fake add_history function. */
-void add_history(char* unused) {}
-
-#else
-
-#ifdef USE_GNU_READLINE
-
-#include <readline/readline.h>
-#include <readline/history.h>
-#include <readline/tilde.h>
 #include "environment.h"
 
 
@@ -57,13 +27,5 @@ char* scheme_procedure_generator(const char *text, int state);
 char** completion_dispatcher(const char *text, int start, int end);
 void populate_dynamic_completions(const Lex* e);
 
-#else
-
-#include <readline/readline.h>
-#include <readline/history.h>
-
-#endif
-
-#endif
 
 #endif //COZENAGE_COMPAT_READLINE_H
