@@ -23,7 +23,7 @@
 #include "symbols.h"
 #include "repr.h"
 #include "load_library.h"
-#include "compat_readline.h"
+#include "line_edit.h"
 
 #include <string.h>
 #include <gc/gc.h>
@@ -364,13 +364,10 @@ HandlerResult sf_import(Lex* e, Cell* a)
             return (HandlerResult) { .action = ACTION_RETURN, .value = err };
         }
     }
-    /* Re-generate the completion array if we're in the REPL (and have GNU readline). */
-#ifdef USE_GNU_READLINE
+    /* Re-generate the completion array if we're in the REPL. */
     if (is_repl) {
         populate_dynamic_completions(e);
     }
-#endif
-
     return (HandlerResult) { .action = ACTION_RETURN, .value = result };
 }
 
