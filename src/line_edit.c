@@ -19,8 +19,8 @@
 
 
 #include "line_edit.h"
+#include "hash.h"
 
-//#define _GNU_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -29,14 +29,15 @@
 #include <sys/ioctl.h>
 #include <signal.h>
 #include <errno.h>
-//#include <ctype.h>
 #include <dirent.h>
 #include <sys/stat.h>
 #include <pwd.h>
-//#include <limits.h>
 #include <wchar.h>
-//#include <locale.h>
 #include <gc/gc.h>
+
+#ifdef __linux__
+#include <ctype.h>
+#endif
 
 
 /* ANSI escape codes */
@@ -68,11 +69,8 @@
 /* History settings */
 #define DEFAULT_HISTORY_SIZE 500
 
-/* Global variables for readline compatibility */
 
-rl_completion_func_t *rl_attempted_completion_function = nullptr;
-int rl_attempted_completion_over = 0;
-char* rl_line_buffer = nullptr;
+char **scheme_procedures = nullptr;
 
 /* Terminal state */
 static struct termios orig_termios;
@@ -89,6 +87,7 @@ typedef struct {
 
 static History history = {nullptr, 0, 0, 0};
 
+
 /* Line editing state */
 typedef struct {
     char* buffer;
@@ -97,17 +96,16 @@ typedef struct {
     size_t cursor;
     const char* prompt;
     size_t prompt_len;
-    char** completions;
-    size_t completion_count;
-    int completion_index;
     int last_was_tab;
 } LineState;
 
+
 /* Signal handler */
-static void sigint_handler(int sig) {
+static void sigint_handler(const int sig) {
     (void)sig;
     got_interrupt = 1;
 }
+
 
 /* Terminal management */
 static void disable_raw_mode(void) {
@@ -117,9 +115,9 @@ static void disable_raw_mode(void) {
     }
 }
 
+
 static int enable_raw_mode(void) {
     if (!isatty(STDIN_FILENO)) return -1;
-
     if (tcgetattr(STDIN_FILENO, &orig_termios) == -1) return -1;
 
     struct termios raw = orig_termios;
@@ -135,6 +133,7 @@ static int enable_raw_mode(void) {
     return 0;
 }
 
+
 /* UTF-8 handling */
 static size_t utf8_char_len(unsigned char c) {
     if ((c & 0x80) == 0) return 1;
@@ -143,6 +142,7 @@ static size_t utf8_char_len(unsigned char c) {
     if ((c & 0xF8) == 0xF0) return 4;
     return 1;
 }
+
 
 static size_t utf8_strlen(const char* str) {
     size_t len = 0;
@@ -154,12 +154,14 @@ static size_t utf8_strlen(const char* str) {
     return len;
 }
 
+
 static size_t utf8_prev_char(const char* str, size_t pos) {
     if (pos == 0) return 0;
     pos--;
     while (pos > 0 && (str[pos] & 0xC0) == 0x80) pos--;
     return pos;
 }
+
 
 static size_t utf8_next_char(const char* str, size_t pos, size_t len) {
     if (pos >= len) return len;
@@ -169,12 +171,14 @@ static size_t utf8_next_char(const char* str, size_t pos, size_t len) {
     return pos;
 }
 
+
 /* Get terminal width */
 static int get_terminal_width(void) {
     struct winsize ws;
     if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws) == -1) return 80;
     return ws.ws_col;
 }
+
 
 /* Line display functions */
 static void refresh_line(LineState* ls) {
@@ -209,6 +213,7 @@ static void refresh_line(LineState* ls) {
     fflush(stdout);
 }
 
+
 /* History functions */
 void add_history_entry(const char* line) {
     if (!line || !*line) return;
@@ -236,6 +241,7 @@ void add_history_entry(const char* line) {
     history.current = history.count;
 }
 
+
 int read_history(const char* filename) {
     FILE* fp = fopen(filename, "r");
     if (!fp) return -1;
@@ -257,6 +263,7 @@ int read_history(const char* filename) {
     return 0;
 }
 
+
 int write_history(const char* filename) {
     FILE* fp = fopen(filename, "w");
     if (!fp) return -1;
@@ -268,6 +275,7 @@ int write_history(const char* filename) {
     fclose(fp);
     return 0;
 }
+
 
 /* Tilde expansion */
 char* tilde_expand(const char* path) {
@@ -309,8 +317,9 @@ char* tilde_expand(const char* path) {
     return result;
 }
 
+
 /* Filename completion */
-char* rl_filename_completion_function(const char* text, int state) {
+static char* le_filename_generator(const char* text, int state) {
     static DIR* dir = nullptr;
     static char* dirname_buf = nullptr;
     static char* basename_buf = nullptr;
@@ -324,7 +333,7 @@ char* rl_filename_completion_function(const char* text, int state) {
         }
 
         /* Expand tilde if present */
-        char* expanded = tilde_expand(text);
+        const char* expanded = tilde_expand(text);
 
         /* Split into directory and basename */
         const char* last_slash = strrchr(expanded, '/');
@@ -366,7 +375,7 @@ char* rl_filename_completion_function(const char* text, int state) {
             /* Check if it's a directory and add trailing slash */
             struct stat st;
             if (stat(result, &st) == 0 && S_ISDIR(st.st_mode)) {
-                size_t len = strlen(result);
+                const size_t len = strlen(result);
                 char* dir_result = GC_MALLOC_ATOMIC(len + 2);
                 strcpy(dir_result, result);
                 dir_result[len] = '/';
@@ -384,8 +393,72 @@ char* rl_filename_completion_function(const char* text, int state) {
     return nullptr;
 }
 
+
+void populate_dynamic_completions(const Lex* e)
+{
+    int symbol_count = 0;
+    /* Iterate once to get number of symbols. */
+    hti it = ht_iterator(e->global);
+    while (ht_next(&it)) {
+        symbol_count++;
+    }
+
+    /* Special forms have to be added manually. */
+    char* special_forms[] = { "quote", "define", "lambda", "let", "let*", "letrec", "set!", "if",
+        "when", "unless", "cond", "else", "begin", "import", "and", "or", "do", "case", "letrec*",
+        "defmacro", "quasiquote", "unquote", "unquote-splicing", "with_gc_stats"};
+    /* Why tho, does CLion always think this is C++ code? */
+    // ReSharper disable once CppVariableCanBeMadeConstexpr
+    const int num_sfs = sizeof(special_forms) / sizeof(special_forms[0]);
+
+    /* Allocate space for 'symbol_count' pointers to strings, plus one for NULL, plus num_sfs for the SF. */
+    scheme_procedures = GC_MALLOC(sizeof(char*) * (symbol_count + 1 + num_sfs));
+    if (!scheme_procedures) {
+        perror("ENOMEM: malloc failed");
+        exit(EXIT_FAILURE);
+    }
+
+    int i = 0;
+    for (int j = 0; j < num_sfs; j++) {
+        scheme_procedures[i] = GC_strdup(special_forms[j]);
+        i++;
+    }
+    /* Iterate second time to copy symbol names. */
+    it = ht_iterator(e->global);
+    while (ht_next(&it)) {
+        scheme_procedures[i] = GC_strdup(it.key);
+        i++;
+    }
+
+    /* The list must be NULL-terminated for the generator to know when to stop. */
+    scheme_procedures[i] = nullptr;
+}
+
+
+static char* le_symbol_generator(const char *text, const int state)
+{
+    static int list_index, len;
+    char *name;
+
+    /* If this is the first call for this completion, reset the state. */
+    if (!state) {
+        list_index = 0;
+        len = (int)strlen(text);
+    }
+
+    /* Iterate through the procedure list and return the next match. */
+    while ((name = scheme_procedures[list_index++])) {
+        if (strncmp(name, text, len) == 0) {
+            return strdup(name);
+        }
+    }
+
+    /* No more matches found. */
+    return nullptr;
+}
+
 /* Completion matching */
-char** rl_completion_matches(const char* text, char* (*generator)(const char*, int)) {
+static char** le_completion_matches(const char* text, char* (*generator)(const char*, int)) {
     size_t matches_size = 16;
     char** matches = GC_MALLOC(sizeof(char*) * matches_size);
     size_t match_count = 0;
@@ -435,40 +508,66 @@ char** rl_completion_matches(const char* text, char* (*generator)(const char*, i
     return matches;
 }
 
-static bool is_word_char(char c) {
+
+static bool is_filename_char(const char c) {
+    return c != '"' && !isspace((unsigned char)c);
+}
+
+
+static bool is_symbol_char(const char c) {
     return isalnum((unsigned char)c) ||
            c == '-' || c == '_' ||
            c == '!' || c == '?' ||
            c == '*' || c == '/' ||
            c == '<' || c == '>' ||
+           c == '+' || c == '.' ||
            c == '=';
 }
 
+
 /* Extract word at cursor for completion */
-static void extract_word_at_cursor(const LineState* ls, size_t* start, size_t* end) {
+static void extract_word_at_cursor(const LineState* ls, size_t* start, size_t* end, const bool filename_mode) {
     *start = ls->cursor;
     *end   = ls->cursor;
 
-    /* Scan backward */
-    while (*start > 0 && is_word_char(ls->buffer[*start - 1])) {
-        (*start)--;
-    }
-
-    /* Scan forward */
-    while (*end < ls->length && is_word_char(ls->buffer[*end])) {
-        (*end)++;
+    if (filename_mode) {
+        while (*start > 0 && is_filename_char(ls->buffer[*start - 1])) {
+            (*start)--;
+        }
+        while (*end < ls->length && is_filename_char(ls->buffer[*end])) {
+            (*end)++;
+        }
+    } else {
+        while (*start > 0 && is_symbol_char(ls->buffer[*start - 1])) {
+            (*start)--;
+        }
+        while (*end < ls->length && is_symbol_char(ls->buffer[*end])) {
+            (*end)++;
+        }
     }
 }
 
+
+static bool cursor_is_inside_string(const LineState *ls) {
+    bool in_string = false;
+
+    for (size_t i = 0; i < ls->cursor; i++) {
+        if (ls->buffer[i] == '"' &&
+            (i == 0 || ls->buffer[i - 1] != '\\')) {
+            in_string = !in_string;
+            }
+    }
+    return in_string;
+}
+
+
 /* Handle tab completion */
 static void handle_completion(LineState* ls) {
-    if (!rl_attempted_completion_function) {
-        return;
-    }
+    bool filename_mode = cursor_is_inside_string(ls);
 
     /* Extract word at cursor */
     size_t word_start, word_end;
-    extract_word_at_cursor(ls, &word_start, &word_end);
+    extract_word_at_cursor(ls, &word_start, &word_end, filename_mode);
 
     /* Extract text to complete */
     size_t text_len = ls->cursor - word_start;
@@ -477,8 +576,12 @@ static void handle_completion(LineState* ls) {
     text[text_len] = '\0';
 
     /* Get completions */
-    rl_line_buffer = ls->buffer;
-    char** completions = rl_attempted_completion_function(text, (int)word_start, (int)ls->cursor);
+    char** completions;
+    if (filename_mode) {
+        completions = le_completion_matches(text, le_filename_generator);
+    } else {
+        completions = le_completion_matches(text, le_symbol_generator);
+    }
 
     if (!completions || !completions[0]) {
         /* No completions */
@@ -574,7 +677,7 @@ static void handle_completion(LineState* ls) {
             /* Display completions in columns */
             size_t col = 0;
             for (size_t i = 1; completions[i]; i++) {
-                size_t display_len = utf8_strlen(completions[i]);
+                const size_t display_len = utf8_strlen(completions[i]);
                 printf("%s", completions[i]);
 
                 /* Add padding */
@@ -594,13 +697,13 @@ static void handle_completion(LineState* ls) {
             refresh_line(ls);
         } else {
             /* First tab - complete common prefix */
-            char* common = completions[0];
-            size_t common_len = strlen(common);
+            const char* common = completions[0];
+            const size_t common_len = strlen(common);
 
             if (common_len > text_len) {
                 /* There's a common prefix to ad */
                 size_t add_len = common_len - text_len;
-                size_t new_len = ls->length + add_len;
+                const size_t new_len = ls->length + add_len;
 
                 if (new_len >= ls->buffer_size) {
                     ls->buffer_size = new_len + 256;
