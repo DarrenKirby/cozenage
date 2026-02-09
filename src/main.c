@@ -17,7 +17,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "compat_readline.h"
 #include "main.h"
 #include "parser.h"
 #include "config.h"
