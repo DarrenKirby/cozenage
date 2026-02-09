@@ -19,7 +19,6 @@
 
 #include "repl.h"
 #include "line_edit.h"
-#include "compat_readline.h"
 #include "main.h"
 #include "cell.h"
 #include "types.h"
@@ -134,8 +133,6 @@ int paren_balance(const char *s, int *in_string)
  * balanced parenthesis heuristic.*/
 static char* read_multiline(const char* prompt, const char* cont_prompt)
 {
-
-    rl_attempted_completion_function = completion_dispatcher;
     size_t total_len = 0;
     int balance = 0;
     int in_string = 0;   /* track string literal state across lines. */
