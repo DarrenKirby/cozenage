@@ -361,6 +361,36 @@ static Cell* file_mkdir(const Lex* e, const Cell* a)
     return True_Obj;
 }
 
+// /**
+//  * Equivalent to 'mkdir -p'
+//  */
+// int mkdir_p(const char *path) {
+//     char temp[256];
+//     char *p = NULL;
+//     size_t len;
+//
+//     snprintf(temp, sizeof(temp), "%s", path);
+//     len = strlen(temp);
+//     if (temp[len - 1] == '/') {
+//         temp[len - 1] = 0;
+//     }
+//
+//     for (p = temp + 1; *p; p++) {
+//         if (*p == '/') {
+//             *p = 0; // Temporarily truncate
+//             if (mkdir(temp, S_IRWXU) != 0 && errno != EEXIST) {
+//                 return -1;
+//             }
+//             *p = '/'; // Restore
+//         }
+//     }
+//
+//     if (mkdir(temp, S_IRWXU) != 0 && errno != EEXIST) {
+//         return -1;
+//     }
+//     return 0;
+// }
+
 
 /* (unlink! path)
  * Unlinks (and possibly deletes) the file pointed to by path. */
