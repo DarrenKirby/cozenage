@@ -22,7 +22,7 @@
 
 #include "environment.h"
 
-/* Global variable to hold the history path */
+/* Global variable to hold the history path. */
 char *cozenage_history_path;
 
 
