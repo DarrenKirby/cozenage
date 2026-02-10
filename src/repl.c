@@ -1,7 +1,7 @@
 /*
  * 'src/repl.c'
  * This file is part of Cozenage - https://github.com/DarrenKirby/cozenage
- * Copyright © 2025 Darren Kirby <darren@dragonbyte.ca>
+ * Copyright © 2025 - 2026 Darren Kirby <darren@dragonbyte.ca>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,6 +26,7 @@
 #include "symbols.h"
 #include "lexer.h"
 #include "runner.h"
+#include "config.h"
 
 #include <unistd.h>
 #include <string.h>
@@ -37,55 +38,22 @@
 int is_repl;
 extern char **scheme_procedures;
 
-static volatile sig_atomic_t got_sigint = 0;
-#ifdef __linux__
-static volatile sig_atomic_t discard_line = 0;
-#endif
-
-
-static void sigint_handler(const int sig)
-{
-    (void)sig;
-    got_sigint = 1;
-    printf("\n");
-}
-
-
-#ifdef __linux__
-/* Callback for Ctrl-G binding */
-int discard_continuation(const int count, const int key)
-{
-    (void)count; (void)key;
-    discard_line = 1;
-    rl_replace_line("", 0);  /* clear current line buffer */
-    rl_done = 1;             /* break out of readline() */
-    return 0;
-}
-#endif
-
 
 /* Read in the history. */
 static void read_history_from_file()
 {
-    const char *hf = tilde_expand(HIST_FILE);
-    if (access(hf, R_OK) == -1) {
-        /* create empty file if it does not exist */
-        FILE* f = fopen(hf, "w");
-
-        if (f == NULL) {
-            fprintf(stderr, "Error: Could not open or create history file: `%s`.\n", HIST_FILE);
-        }
-        fclose(f);
+    if (read_history(cozenage_history_path) != 0) {
+        fprintf(stderr, "Could not read history file: %s\n", cozenage_history_path);
     }
-    read_history(hf);
 }
 
 
 /* Write out the history. */
 void save_history_to_file()
 {
-    const char *hf = tilde_expand(HIST_FILE);
-    write_history(hf);
+    if (write_history(cozenage_history_path) != 0) {
+        fprintf(stderr, "Could not write history file: %s\n", cozenage_history_path);
+    }
 }
 
 
@@ -95,7 +63,7 @@ int paren_balance(const char *s, int *in_string)
 {
     int balance = 0;
     int escaped = 0;
-    int string = *in_string;  /* carry-over state from previous line. */
+    int string = *in_string;  /* Carry-over state from previous line. */
 
     for (const char *p = s; *p; p++) {
         if (string) {
@@ -104,17 +72,17 @@ int paren_balance(const char *s, int *in_string)
             } else if (*p == '\\') {
                 escaped = 1;
             } else if (*p == '"') {
-                string = 0; /* string closed. */
+                string = 0; /* String closed. */
             }
             continue;
         }
 
-        /* not in a string. */
+        /* Not in a string. */
         if (*p == '"') {
             string = 1;
             escaped = 0;
         } else if (*p == '#' && *(p+1) == '\\') {
-            /* char literal — skip this and next. */
+            /* Char literal — skip this and next. */
             p++;
             if (*p && *(p+1)) p++;
         } else if (*p == '(') {
@@ -124,7 +92,7 @@ int paren_balance(const char *s, int *in_string)
         }
     }
 
-    *in_string = string;  /* pass string-state back. */
+    *in_string = string;  /* Pass string-state back. */
     return balance;
 }
 
@@ -135,42 +103,59 @@ static char* read_multiline(const char* prompt, const char* cont_prompt)
 {
     size_t total_len = 0;
     int balance = 0;
-    int in_string = 0;   /* track string literal state across lines. */
+    int in_string = 0;   /* Track string literal state across lines. */
 
-    char *line = readline(prompt);
-    if (!line) return nullptr;
-    if (got_sigint) {
-        free(line);
-        got_sigint = 0;
-        return GC_strdup("");  /* return empty input so REPL just re-prompts. */
+    le_result r = readline(prompt);
+    /* Reset bold input. */
+    printf("%s", ANSI_RESET);
+
+    switch (r.status) {
+        case LE_EOF:
+            /* Return null for clean exit. */
+            return nullptr;
+        case LE_INTERRUPT:
+        case LE_ABORT:
+            /* Return empty string for new prompt. */
+            return GC_strdup("");
+        default:
+            ;
     }
 
-    balance += paren_balance(line, &in_string);
+    /* Should not ever be null here, but be defensive. */
+    if (!r.line)
+        return GC_strdup("");
+    balance += paren_balance(r.line, &in_string);
 
-    char *input = GC_strdup(line);
-    total_len = strlen(line);
-    free(line);
+    char *input = GC_strdup(r.line);
+    total_len = strlen(r.line);
 
     while (balance > 0 || in_string) {
-        line = readline(cont_prompt);
-        if (!line) break;
-        if (got_sigint) {
-            free(line);
-            got_sigint = 0;
-            return GC_strdup("");  /* abort multiline and reset prompt. */
+        r = readline(cont_prompt);
+        /* Reset bold input. */
+        printf("%s", ANSI_RESET);
+
+        switch (r.status) {
+            case LE_EOF:
+                /* Return null for clean exit. */
+                return nullptr;
+            case LE_INTERRUPT:
+                /* Loop again to get new line in multiline mode. */
+                continue;
+            case LE_ABORT:
+                /* Return empty string to discard multiline and get new prompt. */
+                return GC_strdup("");
+            default:
+                balance += paren_balance(r.line, &in_string);
+
+                const size_t line_len = strlen(r.line);
+                char *tmp = GC_REALLOC(input, total_len + line_len + 2);
+                if (!tmp) { fprintf(stderr, "ENOMEM: malloc failed\n"); exit(EXIT_FAILURE); }
+                input = tmp;
+                input[total_len] = '\n';
+                memcpy(input + total_len + 1, r.line, line_len + 1);
+
+                total_len += line_len + 1;
         }
-
-        balance += paren_balance(line, &in_string);
-
-        const size_t line_len = strlen(line);
-        char *tmp = GC_REALLOC(input, total_len + line_len + 2);
-        if (!tmp) { fprintf(stderr, "ENOMEM: malloc failed\n"); exit(EXIT_FAILURE); }
-        input = tmp;
-        input[total_len] = '\n';
-        memcpy(input + total_len + 1, line, line_len + 1);
-
-        total_len += line_len + 1;
-        free(line);
     }
     return input;
 }
@@ -187,16 +172,16 @@ void coz_print(const Cell* v)
 char* coz_read()
 {
     char *input = read_multiline(PS1_PROMPT, PS2_PROMPT);
-    /* reset bold input. */
-    printf("%s", ANSI_RESET);
+
     if (!input) {
         printf("\n");
+        printf("Caught Ctrl-D ... exiting.");
         save_history_to_file();
         exit(0);
     }
 
     /* Add expression to history, if it is not empty. */
-    if (strcmp(input, "") != 0) {
+    if (input[0] != '\0') {
         add_history_entry(input);
     }
     return input;
@@ -234,13 +219,8 @@ int run_repl(const lib_load_config load_libs)
 
     /* Initialize the is_repl global flag. */
     is_repl = 1;
-
-    /* Set up keybinding and signal for Ctrl-G and CTRL-C. */
-#ifdef __linux__
-    rl_bind_key('\007', discard_continuation);  /* 7 = Ctrl-G. */
-#endif
-    signal(SIGINT, sigint_handler);
-
+    /* Initialize signal handler. */
+    install_signal_handlers();
     /* Initialize symbol table with initial size of 128. */
     symbol_table = ht_create(128);
     /* Load readline history. */
@@ -255,13 +235,8 @@ int run_repl(const lib_load_config load_libs)
     lex_add_builtins(e);
     /* Loads the CLI-specified libraries into the environment. */
     load_initial_libraries(e, load_libs);
-
     /* Load tab-completion candidate array from symbols in the environment. */
     populate_dynamic_completions(e);
-    /* Set up completion */
-    //rl_attempted_completion_function = completion_dispatcher;
-
-
     /* Initialize special form lookup table */
     init_special_forms();
 
