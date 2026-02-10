@@ -20,6 +20,7 @@
 
 #include "line_edit.h"
 #include "hash.h"
+#include "main.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -72,6 +73,50 @@
 
 char **scheme_procedures = nullptr;
 
+/* This cycles through the procedures in the global environment and builds
+ * an array of strings used by the procedure completion generator. It is
+ * called at interpreter startup, and again when library modules are loaded. */
+void populate_dynamic_completions(const Lex* e)
+{
+    int symbol_count = 0;
+    /* Iterate once to get number of symbols. */
+    hti it = ht_iterator(e->global);
+    while (ht_next(&it)) {
+        symbol_count++;
+    }
+
+    /* Special forms have to be added manually. */
+    char* special_forms[] = { "quote", "define", "lambda", "let", "let*", "letrec", "set!", "if",
+        "when", "unless", "cond", "else", "begin", "import", "and", "or", "do", "case", "letrec*",
+        "defmacro", "quasiquote", "unquote", "unquote-splicing", "with_gc_stats"};
+    /* Why tho, does CLion always think this is C++ code? */
+    // ReSharper disable once CppVariableCanBeMadeConstexpr
+    const int num_sfs = sizeof(special_forms) / sizeof(special_forms[0]);
+
+    /* Allocate space for 'symbol_count' pointers to strings, plus one for NULL, plus num_sfs for the SF. */
+    scheme_procedures = GC_MALLOC(sizeof(char*) * (symbol_count + 1 + num_sfs));
+    if (!scheme_procedures) {
+        perror("ENOMEM: malloc failed");
+        exit(EXIT_FAILURE);
+    }
+
+    int i = 0;
+    for (int j = 0; j < num_sfs; j++) {
+        scheme_procedures[i] = GC_strdup(special_forms[j]);
+        i++;
+    }
+    /* Iterate second time to copy symbol names. */
+    it = ht_iterator(e->global);
+    while (ht_next(&it)) {
+        scheme_procedures[i] = GC_strdup(it.key);
+        i++;
+    }
+
+    /* The list must be NULL-terminated for the generator to know when to stop. */
+    scheme_procedures[i] = nullptr;
+}
+
+
 /* Terminal state */
 static struct termios orig_termios;
 static int raw_mode_enabled = 0;
@@ -104,6 +149,15 @@ typedef struct {
 static void sigint_handler(const int sig) {
     (void)sig;
     got_interrupt = 1;
+}
+
+
+void install_signal_handlers(void) {
+    struct sigaction sa = {0};
+    sa.sa_handler = sigint_handler;
+    sigemptyset(&sa.sa_mask);
+    sa.sa_flags = 0;
+    sigaction(SIGINT, &sa, nullptr);
 }
 
 
@@ -172,7 +226,7 @@ static size_t utf8_next_char(const char* str, size_t pos, size_t len) {
 }
 
 
-/* Get terminal width */
+/* Get terminal width. */
 static int get_terminal_width(void) {
     struct winsize ws;
     if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws) == -1) return 80;
@@ -180,31 +234,35 @@ static int get_terminal_width(void) {
 }
 
 
-/* Line display functions */
+/* This refreshes and redraws the current input line whilst cycling through
+ * history entries. */
 static void refresh_line(LineState* ls) {
-    /* Move cursor to beginning of line */
+    /* Move cursor to beginning of line. */
     printf("\r");
 
-    /* Write prompt */
+    /* Turn off bold. */
+    printf(ANSI_RESET);
+
+    /* Write prompt. */
     printf("%s", ls->prompt);
 
-    /* Write current buffer */
+    /* Write current buffer. */
     printf("%s", ls->buffer);
 
-    /* Clear to end of line */
+    /* Clear to end of line. */
     printf(CLEAR_TO_EOL);
 
-    /* Move cursor to correct position */
+    /* Move cursor to correct position. */
     const size_t display_pos = ls->prompt_len + utf8_strlen(ls->buffer);
     size_t cursor_display = ls->prompt_len;
 
-    /* Calculate cursor display position */
+    /* Calculate cursor display position. */
     char temp[ls->cursor + 1];
     memcpy(temp, ls->buffer, ls->cursor);
     temp[ls->cursor] = '\0';
     cursor_display += utf8_strlen(temp);
 
-    /* Move cursor back from end */
+    /* Move cursor back from end. */
     const size_t moves = display_pos - cursor_display;
     for (size_t i = 0; i < moves; i++) {
         printf(CURSOR_LEFT);
@@ -214,11 +272,11 @@ static void refresh_line(LineState* ls) {
 }
 
 
-/* History functions */
+/* History functions. */
 void add_history_entry(const char* line) {
     if (!line || !*line) return;
 
-    /* Don't add duplicates */
+    /* Don't add duplicates. */
     if (history.count > 0 && strcmp(history.entries[history.count - 1], line) == 0) {
         return;
     }
@@ -228,7 +286,7 @@ void add_history_entry(const char* line) {
             history.capacity = DEFAULT_HISTORY_SIZE;
             history.entries = GC_MALLOC(sizeof(char*) * history.capacity);
         } else if (history.count >= DEFAULT_HISTORY_SIZE) {
-            /* Shift everything down */
+            /* Shift everything down. */
             GC_FREE(history.entries[0]);
             memmove(history.entries, history.entries + 1,
                     (history.count - 1) * sizeof(char*));
@@ -251,7 +309,7 @@ int read_history(const char* filename) {
     ssize_t read;
 
     while ((read = getline(&line, &len, fp)) != -1) {
-        /* Remove newline */
+        /* Remove newline. */
         if (read > 0 && line[read - 1] == '\n') {
             line[read - 1] = '\0';
         }
@@ -277,7 +335,7 @@ int write_history(const char* filename) {
 }
 
 
-/* Tilde expansion */
+/* Tilde expansion. */
 char* tilde_expand(const char* path) {
     if (!path || path[0] != '~') {
         return GC_strdup(path);
@@ -298,7 +356,7 @@ char* tilde_expand(const char* path) {
         memcpy(username, path + 1, username_len);
         username[username_len] = '\0';
 
-        struct passwd* pw = getpwnam(username);
+        const struct passwd* pw = getpwnam(username);
         if (pw) {
             home = pw->pw_dir;
             rest = slash ? slash : "";
@@ -318,7 +376,7 @@ char* tilde_expand(const char* path) {
 }
 
 
-/* Filename completion */
+/* Filename completion. */
 static char* le_filename_generator(const char* text, int state) {
     static DIR* dir = nullptr;
     static char* dirname_buf = nullptr;
@@ -326,16 +384,16 @@ static char* le_filename_generator(const char* text, int state) {
     static size_t basename_len = 0;
 
     if (state == 0) {
-        /* First call - initialize */
+        /* First call - initialize. */
         if (dir) {
             closedir(dir);
             dir = nullptr;
         }
 
-        /* Expand tilde if present */
+        /* Expand tilde if present. */
         const char* expanded = tilde_expand(text);
 
-        /* Split into directory and basename */
+        /* Split into directory and basename. */
         const char* last_slash = strrchr(expanded, '/');
         if (last_slash) {
             size_t dir_len = last_slash - expanded + 1;
@@ -357,7 +415,7 @@ static char* le_filename_generator(const char* text, int state) {
         if (!dir) return nullptr;
     }
 
-    /* Find next matching entry */
+    /* Find next matching entry. */
     struct dirent* entry;
     while ((entry = readdir(dir)) != NULL) {
         /* Skip . and .. */
@@ -365,14 +423,14 @@ static char* le_filename_generator(const char* text, int state) {
             continue;
         }
 
-        /* Check if it matches the prefix */
+        /* Check if it matches the prefix. */
         if (strncmp(entry->d_name, basename_buf, basename_len) == 0) {
             /* Build full path */
             size_t result_len = strlen(dirname_buf) + strlen(entry->d_name) + 2;
             char* result = GC_MALLOC_ATOMIC(result_len);
             snprintf(result, result_len, "%s%s", dirname_buf, entry->d_name);
 
-            /* Check if it's a directory and add trailing slash */
+            /* Check if it's a directory and add trailing slash. */
             struct stat st;
             if (stat(result, &st) == 0 && S_ISDIR(st.st_mode)) {
                 const size_t len = strlen(result);
@@ -391,47 +449,6 @@ static char* le_filename_generator(const char* text, int state) {
     closedir(dir);
     dir = nullptr;
     return nullptr;
-}
-
-
-void populate_dynamic_completions(const Lex* e)
-{
-    int symbol_count = 0;
-    /* Iterate once to get number of symbols. */
-    hti it = ht_iterator(e->global);
-    while (ht_next(&it)) {
-        symbol_count++;
-    }
-
-    /* Special forms have to be added manually. */
-    char* special_forms[] = { "quote", "define", "lambda", "let", "let*", "letrec", "set!", "if",
-        "when", "unless", "cond", "else", "begin", "import", "and", "or", "do", "case", "letrec*",
-        "defmacro", "quasiquote", "unquote", "unquote-splicing", "with_gc_stats"};
-    /* Why tho, does CLion always think this is C++ code? */
-    // ReSharper disable once CppVariableCanBeMadeConstexpr
-    const int num_sfs = sizeof(special_forms) / sizeof(special_forms[0]);
-
-    /* Allocate space for 'symbol_count' pointers to strings, plus one for NULL, plus num_sfs for the SF. */
-    scheme_procedures = GC_MALLOC(sizeof(char*) * (symbol_count + 1 + num_sfs));
-    if (!scheme_procedures) {
-        perror("ENOMEM: malloc failed");
-        exit(EXIT_FAILURE);
-    }
-
-    int i = 0;
-    for (int j = 0; j < num_sfs; j++) {
-        scheme_procedures[i] = GC_strdup(special_forms[j]);
-        i++;
-    }
-    /* Iterate second time to copy symbol names. */
-    it = ht_iterator(e->global);
-    while (ht_next(&it)) {
-        scheme_procedures[i] = GC_strdup(it.key);
-        i++;
-    }
-
-    /* The list must be NULL-terminated for the generator to know when to stop. */
-    scheme_procedures[i] = nullptr;
 }
 
 
@@ -457,13 +474,14 @@ static char* le_symbol_generator(const char *text, const int state)
     return nullptr;
 }
 
-/* Completion matching */
+
+/* Completion matching. */
 static char** le_completion_matches(const char* text, char* (*generator)(const char*, int)) {
     size_t matches_size = 16;
     char** matches = GC_MALLOC(sizeof(char*) * matches_size);
     size_t match_count = 0;
 
-    /* Get all matches */
+    /* Get all matches. */
     int state = 0;
     char* match;
     while ((match = generator(text, state++)) != NULL) {
@@ -478,12 +496,12 @@ static char** le_completion_matches(const char* text, char* (*generator)(const c
         return nullptr;
     }
 
-    /* NULL terminate */
+    /* NULL terminate. */
     matches[match_count] = nullptr;
 
-    /* If more than one match, add common prefix as first element */
+    /* If more than one match, add common prefix as first element. */
     if (match_count > 1) {
-        /* Find common prefix */
+        /* Find common prefix. */
         size_t prefix_len = strlen(matches[0]);
         for (size_t i = 1; i < match_count; i++) {
             size_t j = 0;
@@ -493,7 +511,7 @@ static char** le_completion_matches(const char* text, char* (*generator)(const c
             prefix_len = j;
         }
 
-        /* Shift array and add prefix */
+        /* Shift array and add prefix. */
         char** new_matches = GC_MALLOC(sizeof(char*) * (match_count + 2));
         new_matches[0] = GC_MALLOC_ATOMIC(prefix_len + 1);
         memcpy(new_matches[0], matches[0], prefix_len);
@@ -509,11 +527,13 @@ static char** le_completion_matches(const char* text, char* (*generator)(const c
 }
 
 
+/* Used for filename completions. */
 static bool is_filename_char(const char c) {
     return c != '"' && !isspace((unsigned char)c);
 }
 
 
+/* Used for procedure completions. */
 static bool is_symbol_char(const char c) {
     return isalnum((unsigned char)c) ||
            c == '-' || c == '_' ||
@@ -525,7 +545,7 @@ static bool is_symbol_char(const char c) {
 }
 
 
-/* Extract word at cursor for completion */
+/* Extract word at cursor for completion. */
 static void extract_word_at_cursor(const LineState* ls, size_t* start, size_t* end, const bool filename_mode) {
     *start = ls->cursor;
     *end   = ls->cursor;
@@ -548,6 +568,7 @@ static void extract_word_at_cursor(const LineState* ls, size_t* start, size_t* e
 }
 
 
+/* Heuristic to decide which completion generator to use. */
 static bool cursor_is_inside_string(const LineState *ls) {
     bool in_string = false;
 
@@ -561,21 +582,21 @@ static bool cursor_is_inside_string(const LineState *ls) {
 }
 
 
-/* Handle tab completion */
+/* Handle tab completion. */
 static void handle_completion(LineState* ls) {
-    bool filename_mode = cursor_is_inside_string(ls);
+    const bool filename_mode = cursor_is_inside_string(ls);
 
-    /* Extract word at cursor */
+    /* Extract word at cursor. */
     size_t word_start, word_end;
     extract_word_at_cursor(ls, &word_start, &word_end, filename_mode);
 
-    /* Extract text to complete */
+    /* Extract text to complete. */
     size_t text_len = ls->cursor - word_start;
     char* text = GC_MALLOC_ATOMIC(text_len + 1);
     memcpy(text, ls->buffer + word_start, text_len);
     text[text_len] = '\0';
 
-    /* Get completions */
+    /* Get completions. */
     char** completions;
     if (filename_mode) {
         completions = le_completion_matches(text, le_filename_generator);
@@ -584,9 +605,9 @@ static void handle_completion(LineState* ls) {
     }
 
     if (!completions || !completions[0]) {
-        /* No completions */
+        /* No completions. */
         if (ls->last_was_tab) {
-            /* Second tab - beep or do nothing */
+            /* Second tab - beep or do nothing. */
             printf("\a");
             fflush(stdout);
         }
@@ -595,39 +616,55 @@ static void handle_completion(LineState* ls) {
     }
 
     if (completions[1] == NULL) {
-        /* Single completion */
+        /* Single completion. */
         const char* completion = completions[0];
         size_t comp_len = strlen(completion);
 
-        /* Replace word with completion */
-        size_t new_len = ls->length - text_len + comp_len;
+        /* Replace word with completion. */
+        const size_t new_len = ls->length - text_len + comp_len;
         if (new_len >= ls->buffer_size) {
             ls->buffer_size = new_len + 256;
             ls->buffer = GC_REALLOC(ls->buffer, ls->buffer_size);
         }
 
-        /* Move rest of buffer */
+        /* Move rest of buffer. */
         memmove(ls->buffer + word_start + comp_len,
                 ls->buffer + ls->cursor,
                 ls->length - ls->cursor);
 
-        /* Insert completion */
+        /* Insert completion. */
         memcpy(ls->buffer + word_start, completion, comp_len);
 
         ls->length = new_len;
         ls->cursor = word_start + comp_len;
         ls->buffer[ls->length] = '\0';
 
-        /* Add space if completing a file/command */
-        struct stat st;
-        if (stat(completion, &st) != 0 || !S_ISDIR(st.st_mode)) {
-            if (ls->length + 1 < ls->buffer_size) {
-                memmove(ls->buffer + ls->cursor + 1,
+        /* Add space if completing a command, add closing quote and space if completing a filename. */
+        const char *suffix = nullptr;
+
+        if (!filename_mode) {
+            /* Symbol / procedure completion. */
+            suffix = " ";
+        } else {
+            /* Filename completion inside string. */
+            struct stat st;
+            if (stat(completion, &st) != 0 || !S_ISDIR(st.st_mode)) {
+                suffix = "\" ";
+            }
+        }
+
+        if (suffix) {
+            const size_t suffix_len = strlen(suffix);
+
+            if (ls->length + suffix_len < ls->buffer_size) {
+                memmove(ls->buffer + ls->cursor + suffix_len,
                         ls->buffer + ls->cursor,
                         ls->length - ls->cursor);
-                ls->buffer[ls->cursor] = ' ';
-                ls->cursor++;
-                ls->length++;
+
+                memcpy(ls->buffer + ls->cursor, suffix, suffix_len);
+
+                ls->cursor += suffix_len;
+                ls->length += suffix_len;
                 ls->buffer[ls->length] = '\0';
             }
         }
@@ -635,73 +672,73 @@ static void handle_completion(LineState* ls) {
         refresh_line(ls);
         ls->last_was_tab = 0;
     } else {
-        /* Multiple completions */
+        /* Multiple completions. */
+        printf(ANSI_RESET);
         if (ls->last_was_tab) {
-            /* Second tab - show completions */
+            /* Second tab - show completions. */
+            /* Move to beginning of line and clear. */
+            printf("\r\n");
 
-            /* Move to beginning of line and clear */
-            printf("\r" CLEAR_TO_EOL);
-
-            /* Count completions */
+            /* Count completions. */
             size_t count = 0;
             while (completions[count + 1]) count++;
 
-            /* Check if too many */
+            /* Check if too many. */
             if (count > 100) {
                 printf("Display all %zu possibilities? (y or n) ", count);
                 fflush(stdout);
 
                 char response;
                 if (read(STDIN_FILENO, &response, 1) != 1 || (response != 'y' && response != 'Y')) {
-                    printf("\n");
+                    printf("\r\n");
                     refresh_line(ls);
                     ls->last_was_tab = 0;
                     return;
                 }
-                printf("\n");
+                printf("\r\n");
             }
 
-            /* Find maximum length for display */
+            /* Find maximum length for display. */
             size_t max_len = 0;
             for (size_t i = 1; completions[i]; i++) {
-                size_t len = utf8_strlen(completions[i]);
+                const size_t len = utf8_strlen(completions[i]);
                 if (len > max_len) max_len = len;
             }
 
-            /* Calculate how many columns we can fit */
-            int term_width = get_terminal_width();
-            size_t col_width = max_len + 2;  /* Add 2 for spacing */
+            /* Calculate how many columns can fit. */
+            const int term_width = get_terminal_width();
+            const size_t col_width = max_len + 2;  /* Add 2 for spacing. */
             int cols = term_width / (int)col_width;
             if (cols < 1) cols = 1;
 
-            /* Display completions in columns */
+            /* Display completions in columns. */
             size_t col = 0;
             for (size_t i = 1; completions[i]; i++) {
                 const size_t display_len = utf8_strlen(completions[i]);
                 printf("%s", completions[i]);
 
-                /* Add padding */
+                /* Add padding. */
                 for (size_t pad = display_len; pad < col_width; pad++) {
                     printf(" ");
                 }
 
                 col++;
                 if (col >= (size_t)cols) {
-                    printf("\n");
+                    printf("\r\n");
                     col = 0;
                 }
             }
-            if (col > 0) printf("\n");
+            if (col > 0) printf("\r\n");
 
-            /* Redraw the prompt and current line */
+            /* Redraw the prompt and current line. */
             refresh_line(ls);
         } else {
-            /* First tab - complete common prefix */
+            /* First tab - complete common prefix. */
             const char* common = completions[0];
             const size_t common_len = strlen(common);
 
             if (common_len > text_len) {
-                /* There's a common prefix to ad */
+                /* There's a common prefix to add. */
                 size_t add_len = common_len - text_len;
                 const size_t new_len = ls->length + add_len;
 
@@ -710,12 +747,12 @@ static void handle_completion(LineState* ls) {
                     ls->buffer = GC_REALLOC(ls->buffer, ls->buffer_size);
                 }
 
-                /* Move rest of buffer */
+                /* Move rest of buffer. */
                 memmove(ls->buffer + ls->cursor + add_len,
                         ls->buffer + ls->cursor,
                         ls->length - ls->cursor);
 
-                /* Insert additional characters */
+                /* Insert additional characters. */
                 memcpy(ls->buffer + ls->cursor, common + text_len, add_len);
 
                 ls->length = new_len;
@@ -729,114 +766,147 @@ static void handle_completion(LineState* ls) {
     }
 }
 
-/* Main readline function */
-char* readline(const char* prompt) {
+
+/* Like strlen but ignores non-printing chars and control sequences. */
+static size_t visible_width(const char *s)
+{
+    size_t w = 0;
+    int in_escape = 0;
+
+    for (; *s; s++) {
+        if (*s == '\001') {
+            in_escape = 1;
+            continue;
+        }
+        if (*s == '\002') {
+            in_escape = 0;
+            continue;
+        }
+        if (!in_escape)
+            w++;
+    }
+    return w;
+}
+
+
+/* Clears the current line on Ctrl-C and Ctrl-G. */
+static void clear_current_line(const LineState *ls) {
+    /* Move to start of line. */
+    printf("\r");
+
+    /* Turn off bold. */
+    printf(ANSI_RESET);
+
+    /* Reprint prompt. */
+    printf("%s", ls->prompt);
+
+    /* Overwrite input with spaces. */
+    for (size_t i = 0; i < ls->length; i++)
+        putchar(' ');
+
+    /* Turn off bold. */
+    printf(ANSI_RESET);
+
+    /* Move back again. */
+    printf("\r");
+    printf("%s", ls->prompt);
+    fflush(stdout);
+}
+
+
+/* Main readline function. Returns a struct le_result which holds the string and
+ * a status if a signal was caught so read_multiline can react accordingly. */
+le_result readline(const char* prompt) {
     if (!isatty(STDIN_FILENO)) {
-        /* Not a TTY - just read a line normally */
-        char* line = nullptr;
+        /* Not a TTY - just read a line normally. */
+        char *line = nullptr;
         size_t len = 0;
-        ssize_t read = getline(&line, &len, stdin);
-        if (read == -1) {
+        const ssize_t n = getline(&line, &len, stdin);
+
+        if (n == -1) {
             free(line);
-            return nullptr;
+            return (le_result){ .status = LE_EOF, .line = nullptr };
         }
-        if (read > 0 && line[read - 1] == '\n') {
-            line[read - 1] = '\0';
-        }
-        char* result = GC_strdup(line);
+
+        if (n > 0 && line[n - 1] == '\n')
+            line[n - 1] = '\0';
+
+        const le_result r = { .status = LE_LINE, .line = GC_strdup(line) };
         free(line);
-        return result;
+        return r;
     }
 
-    /* Initialize line state */
+    /* Initialize line state. */
     LineState ls = {0};
     ls.buffer_size = 256;
-    ls.buffer = malloc(ls.buffer_size);
+    ls.buffer = GC_MALLOC_ATOMIC(ls.buffer_size);
     ls.buffer[0] = '\0';
     ls.prompt = prompt ? prompt : "";
-    ls.prompt_len = strlen(ls.prompt);
+    ls.prompt_len = visible_width(ls.prompt);
     history.current = history.count;
 
-    /* Setup signal handling */
-    struct sigaction sa, old_sa;
-    sa.sa_handler = sigint_handler;
-    sigemptyset(&sa.sa_mask);
-    sa.sa_flags = 0;
-    sigaction(SIGINT, &sa, &old_sa);
-    got_interrupt = 0;
-
-    /* Enable raw mode */
+    /* Enable raw mode or fail. */
     if (enable_raw_mode() == -1) {
-        return nullptr;
+        fprintf(stderr, "fatal: unable to enable terminal raw mode\n");
+        return (le_result){ .status = LE_EOF, .line = nullptr };
     }
 
-    /* Print prompt */
+    /* Print prompt. */
     printf("%s", prompt);
     fflush(stdout);
 
-    /* Main input loop */
+    /* Main input loop. */
     while (1) {
         unsigned char c;
-        int nread = (int)read(STDIN_FILENO, &c, 1);
+        const int nread = (int)read(STDIN_FILENO, &c, 1);
 
         if (nread <= 0) {
             if (errno == EINTR && got_interrupt) {
-                /* Ctrl-C pressed */
-                printf("\r");  /* Reset to left margin */
-                printf("^C\n");
+                got_interrupt = 0;
                 disable_raw_mode();
-                sigaction(SIGINT, &old_sa, nullptr);
-                return GC_strdup("");
+                printf("\n");
+                return (le_result){ .status = LE_INTERRUPT, .line = nullptr };
             }
             continue;
         }
 
-        /* Reset tab state if not tab */
+        /* Reset tab state if not tab. */
         if (c != TAB) {
             ls.last_was_tab = 0;
         }
 
-        /* Handle special keys */
+        /* Handle special keys. */
         switch (c) {
-            case ENTER:
-                printf("\r");  /* Reset to left margin */
-                printf("\n");
-                disable_raw_mode();
-                if (ls.length > 0) {
-                    add_history_entry(ls.buffer);
-                }
-                sigaction(SIGINT, &old_sa, nullptr);
-                return ls.buffer;
-
             case CTRL_C:
-                printf("\r");  /* Reset to left margin */
-                printf("^C\n");
+                clear_current_line(&ls);
+                printf("\r");  /* No \n, just overwrite in place. */
                 disable_raw_mode();
-                sigaction(SIGINT, &old_sa, nullptr);
-                return GC_strdup("");
+                return (le_result){ .status = LE_INTERRUPT, .line = nullptr };
+
+            case CTRL_G:
+                clear_current_line(&ls);
+                printf("\r"); /* No \n, just overwrite in place. */
+                disable_raw_mode();
+                return (le_result){ .status = LE_ABORT, .line = nullptr };
 
             case CTRL_D:
                 if (ls.length == 0) {
-                    printf("\r");  /* Reset to left margin */
-                    printf("\n");
+                    printf("\r\n");
                     disable_raw_mode();
-                    sigaction(SIGINT, &old_sa, nullptr);
-                    return nullptr;
+                    return (le_result){ .status = LE_EOF, .line = nullptr };
                 }
                 break;
 
-            case CTRL_G:
-                printf("\r");  /* Reset to left margin */
-                printf("^G\n");
+            case ENTER:
+                printf("\r\n");
                 disable_raw_mode();
-                sigaction(SIGINT, &old_sa, nullptr);
-                return GC_strdup("");
+                return (le_result){ .status = LE_LINE, .line = ls.buffer };
 
             case BACKSPACE:
             case CTRL_H:
                 if (ls.cursor > 0) {
-                    size_t prev = utf8_prev_char(ls.buffer, ls.cursor);
-                    size_t char_len = ls.cursor - prev;
+                    const size_t prev = utf8_prev_char(ls.buffer, ls.cursor);
+                    const size_t char_len = ls.cursor - prev;
                     memmove(ls.buffer + prev,
                             ls.buffer + ls.cursor,
                             ls.length - ls.cursor + 1);
@@ -847,7 +917,7 @@ char* readline(const char* prompt) {
                 break;
 
             case CTRL_U:
-                /* Delete to beginning of line */
+                /* Delete to beginning of line. */
                 memmove(ls.buffer, ls.buffer + ls.cursor, ls.length - ls.cursor + 1);
                 ls.length -= ls.cursor;
                 ls.cursor = 0;
@@ -855,20 +925,20 @@ char* readline(const char* prompt) {
                 break;
 
             case CTRL_K:
-                /* Delete to end of line */
+                /* Delete to end of line. */
                 ls.buffer[ls.cursor] = '\0';
                 ls.length = ls.cursor;
                 refresh_line(&ls);
                 break;
 
             case CTRL_A:
-                /* Move to beginning */
+                /* Move to beginning. */
                 ls.cursor = 0;
                 refresh_line(&ls);
                 break;
 
             case CTRL_E:
-                /* Move to end */
+                /* Move to end. */
                 ls.cursor = ls.length;
                 refresh_line(&ls);
                 break;
@@ -878,20 +948,20 @@ char* readline(const char* prompt) {
                 break;
 
             case ESC_CODE: {
-                /* Handle escape sequences */
+                /* Handle escape sequences. */
                 unsigned char seq[3];
                 if (read(STDIN_FILENO, &seq[0], 1) != 1) break;
                 if (seq[0] != '[') break;
                 if (read(STDIN_FILENO, &seq[1], 1) != 1) break;
 
                 if (seq[1] >= '0' && seq[1] <= '9') {
-                    /* Extended escape sequence */
+                    /* Extended escape sequence. */
                     if (read(STDIN_FILENO, &seq[2], 1) != 1) break;
                     if (seq[1] == '3' && seq[2] == '~') {
-                        /* Delete key */
+                        /* Delete key. */
                         if (ls.cursor < ls.length) {
-                            size_t next = utf8_next_char(ls.buffer, ls.cursor, ls.length);
-                            size_t char_len = next - ls.cursor;
+                            const size_t next = utf8_next_char(ls.buffer, ls.cursor, ls.length);
+                            const size_t char_len = next - ls.cursor;
                             memmove(ls.buffer + ls.cursor,
                                     ls.buffer + next,
                                     ls.length - next + 1);
@@ -901,10 +971,10 @@ char* readline(const char* prompt) {
                     }
                 } else {
                     switch (seq[1]) {
-                        case 'A': /* Up arrow */
+                        case 'A': /* Up arrow. */
                             if (history.current > 0) {
                                 history.current--;
-                                size_t hist_len = strlen(history.entries[history.current]);
+                                const size_t hist_len = strlen(history.entries[history.current]);
                                 if (hist_len >= ls.buffer_size) {
                                     ls.buffer_size = hist_len + 256;
                                     ls.buffer = GC_REALLOC(ls.buffer, ls.buffer_size);
@@ -915,7 +985,7 @@ char* readline(const char* prompt) {
                             }
                             break;
 
-                        case 'B': /* Down arrow */
+                        case 'B': /* Down arrow. */
                             if (history.current < history.count) {
                                 history.current++;
                                 if (history.current == history.count) {
@@ -934,26 +1004,26 @@ char* readline(const char* prompt) {
                             }
                             break;
 
-                        case 'C': /* Right arrow */
+                        case 'C': /* Right arrow. */
                             if (ls.cursor < ls.length) {
                                 ls.cursor = utf8_next_char(ls.buffer, ls.cursor, ls.length);
                                 refresh_line(&ls);
                             }
                             break;
 
-                        case 'D': /* Left arrow */
+                        case 'D': /* Left arrow. */
                             if (ls.cursor > 0) {
                                 ls.cursor = utf8_prev_char(ls.buffer, ls.cursor);
                                 refresh_line(&ls);
                             }
                             break;
 
-                        case 'H': /* Home */
+                        case 'H': /* Home. */
                             ls.cursor = 0;
                             refresh_line(&ls);
                             break;
 
-                        case 'F': /* End */
+                        case 'F': /* End. */
                             ls.cursor = ls.length;
                             refresh_line(&ls);
                             break;
@@ -964,25 +1034,25 @@ char* readline(const char* prompt) {
             }
 
             default:
-                if (c >= 32) {  /* Printable character */
-                    /* Check if we need to handle UTF-8 */
+                if (c >= 32) {  /* Printable character. */
+                    /* Check if we need to handle UTF-8. */
                     unsigned char utf8_buf[5] = {c, 0, 0, 0, 0};
                     size_t char_len = utf8_char_len(c);
 
-                    /* Read rest of UTF-8 character if needed */
+                    /* Read rest of UTF-8 character if needed. */
                     for (size_t i = 1; i < char_len; i++) {
                         if (read(STDIN_FILENO, &utf8_buf[i], 1) != 1) {
                             break;
                         }
                     }
 
-                    /* Check buffer size */
+                    /* Check buffer size. */
                     if (ls.length + char_len >= ls.buffer_size) {
                         ls.buffer_size = ls.length + char_len + 256;
                         ls.buffer = GC_REALLOC(ls.buffer, ls.buffer_size);
                     }
 
-                    /* Insert character(s) */
+                    /* Insert character(s). */
                     if (ls.cursor < ls.length) {
                         memmove(ls.buffer + ls.cursor + char_len,
                                 ls.buffer + ls.cursor,

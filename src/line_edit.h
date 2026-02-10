@@ -24,18 +24,35 @@
 #include "environment.h"
 
 
-/* Main readline replacement */
-char* readline(const char* prompt);
+typedef enum {
+    LE_LINE,        /* Normal line read. */
+    LE_EOF,         /* Ctrl-D on empty line. */
+    LE_INTERRUPT,   /* Ctrl-C. */
+    LE_ABORT        /* Ctrl-G. */
+} le_status;
 
-/* History management */
+
+typedef struct {
+    le_status status;
+    char *line;   /* Only valid when status == LE_LINE. */
+} le_result;
+
+
+/* Main readline replacement. */
+le_result readline(const char* prompt);
+
+/* History management. */
 int read_history(const char* filename);
 int write_history(const char* filename);
 void add_history_entry(const char* line);
 
-/* Path expansion */
+/* Path expansion. */
 char* tilde_expand(const char* path);
 
-/* Completion interface */
+/* Completion interface. */
 void populate_dynamic_completions(const Lex* e);
+
+/* Signal handling. */
+void install_signal_handlers(void);
 
 #endif //COZENAGE_LINE_EDIT_H
