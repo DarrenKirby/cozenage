@@ -100,6 +100,12 @@ int main(const int argc, char** argv)
      * but to do it to be portable with older versions. */
     GC_INIT();
 
+    /* Check if history file exists. If not, create it. */
+    init_history_path();
+    if (access(cozenage_history_path, F_OK) == -1) {
+        setup_history();
+    }
+
     const struct option long_opts[] = {
         {"help", no_argument, nullptr, 'h'},
         {"version", no_argument, nullptr, 'V'},

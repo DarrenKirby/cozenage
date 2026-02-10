@@ -29,7 +29,7 @@
 
 #define PS1_PROMPT "--> \001\x1b[37;1m\002"
 #define PS2_PROMPT "...    \001\x1b[37;1m\002"
-#define HIST_FILE "~/.cozenage_history"
+
 
 /* ANSI colour codes. */
 /* normal. */
