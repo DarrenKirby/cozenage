@@ -28,6 +28,7 @@
 #include <stdlib.h>
 
 
+char *cozenage_history_path = nullptr;
 
 void load_initial_libraries(const Lex* e, const lib_load_config load_libs) {
     if (load_libs.file) {

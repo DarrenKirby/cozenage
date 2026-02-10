@@ -28,6 +28,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <getopt.h>
+#include <unistd.h>
 
 #define nullptr ((void*)0)
 
