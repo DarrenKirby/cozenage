@@ -22,6 +22,9 @@
 
 #include "environment.h"
 
+/* Global variable to hold the history path */
+char *cozenage_history_path;
+
 
 typedef struct lib_load {
     unsigned int cxr:1;
@@ -35,5 +38,7 @@ typedef struct lib_load {
 } lib_load_config;
 
 void load_initial_libraries(const Lex* e, lib_load_config load_libs);
+void init_history_path();
+void setup_history();
 
 #endif // COZENAGE_CONFIG_H
