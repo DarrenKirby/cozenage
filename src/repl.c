@@ -175,7 +175,7 @@ char* coz_read()
 
     if (!input) {
         printf("\n");
-        printf("Caught Ctrl-D ... exiting.");
+        printf("Caught Ctrl-D ... exiting.\n");
         save_history_to_file();
         exit(0);
     }
