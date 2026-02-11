@@ -33,6 +33,7 @@
 #include <sys/utsname.h>
 #include <sys/stat.h>
 
+
 #ifdef  __linux__
 #include <sys/sysinfo.h>   /* For uptime (sysinfo) */
 #include <sys/wait.h>      /* For system (waitpid) */
@@ -50,6 +51,8 @@
 #define ONE_HOUR    3600
 #define ONE_MINUTE  60
 #define LOADS_SCALE 65536.0
+/* For the human-readable string: "up 13 days 11:14". */
+#define UPTIME_BUF_SIZE 256
 
 
 extern char **environ;
@@ -536,7 +539,7 @@ Cell* system_uptime(const Lex* e, const Cell* a) {
     minutes = uptime_in_hours / ONE_MINUTE;
 
     /* Format human-readable string. */
-    char s_buffer[256];
+    char s_buffer[UPTIME_BUF_SIZE];
     snprintf(s_buffer, sizeof(s_buffer), "up %d day%s %02d:%02d",
         days, (days != 1) ? "s" : "", hours, minutes);
     Cell* up_s = make_cell_string(s_buffer);
@@ -625,8 +628,9 @@ Cell* system_get_hostname(const Lex* e, const Cell* a) {
     Cell* err = CHECK_ARITY_EXACT(a, 0, "get-hostname");
     if (err) return err;
 
-    char* hostname = GC_MALLOC_ATOMIC(256);
-    if (gethostname(hostname, 256) != 0) {
+    const long host_name_max = sysconf(_SC_HOST_NAME_MAX);
+    char hostname[host_name_max + 1];
+    if (gethostname(hostname, host_name_max + 1) != 0) {
         return make_cell_error(
             fmt_err("get-hostname: %s", strerror(errno)),
             OS_ERR);
