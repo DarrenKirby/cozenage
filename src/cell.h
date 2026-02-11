@@ -32,6 +32,7 @@
 
 #include "environment.h"
 #include "buffer.h"
+#include "hash_type.h"
 
 #include <stdio.h>
 #include <unicode/umachine.h>
@@ -70,7 +71,9 @@ typedef enum Cell_t : uint32_t {
     CELL_PROMISE    = 1 << 22,  /* For delayed evaluation/streams. */
     CELL_STREAM     = 1 << 23,  /* A stream datatype for lazy evaluation. */
     
-    CELL_MACRO      = 1 << 24   /* A non-hygienic 'defmacro' macro. */
+    CELL_MACRO      = 1 << 24,  /* A non-hygienic 'defmacro' macro. */
+    CELL_SET        = 1 << 25,  /* TODO: A set. */
+    CELL_MAP        = 1 << 26,  /* TODO: A map/dict/hash/associative array. */
 } Cell_t;
 
 
@@ -245,7 +248,7 @@ typedef struct Cell {
             Cell* tail;        /* second member */
         };
 
-        /* Single-field types */
+        /* Single-field types. */
         Cell** cell;              /* for compound types (sexpr, vector) */
         char* error_v;            /* error string */
         long double real_v;       /* reals */
@@ -260,6 +263,7 @@ typedef struct Cell {
         promise* promise;         /* -> promise struct */
         mpz_t* bi;                /* -> GMP integer */
         mpf_t* bf;                /* -> CELL_BIGFLOAT float */
+        ght_table* table;         /* -> CELL_SET or CELL_MAP ght pointer. */
     };
 } Cell;
 
@@ -301,6 +305,8 @@ Cell* make_cell_file_port(const char* path, FILE* fh, stream_t stream, backend_t
 Cell* make_cell_memory_port(stream_t stream, backend_t backend);
 Cell* make_cell_promise(Cell* expr, Lex* env);
 Cell* make_cell_stream(Cell* head, Cell* tail_promise);
+Cell* make_cell_set(const Cell* values);
+Cell* make_cell_map(const Cell* values);
 Cell* cell_add(Cell* v, Cell* x);
 Cell* cell_copy(const Cell* v);
 Cell* make_cell_bytevector_u8(void);

@@ -27,6 +27,7 @@
 #include "types.h"
 #include "symbols.h"
 #include "hash.h"
+#include "hash_type.h"
 #include "bytevectors.h"
 #include "ports.h"
 
@@ -525,6 +526,44 @@ Cell* make_cell_stream(Cell* head, Cell* tail_promise) {
     v->type = CELL_STREAM;
     v->head = head;
     v->tail = tail_promise;
+    return v;
+}
+
+
+Cell* make_cell_set(const Cell* values) {
+    Cell* v = GC_MALLOC(sizeof(Cell));
+    if (!v) {
+        fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
+        exit(EXIT_FAILURE);
+    }
+    v->type = CELL_SET;
+    ght_table* t = ght_create(8);
+
+    for (int i = 0; i < values->count; i++) {
+        /* Putting NULL as the value does not work with
+         * the hash implementation, so use #t as sentinel. */
+        ght_set(t, values->cell[i], True_Obj);
+    }
+    v->table = t;
+    v->count = (int)ght_length(t);
+    return v;
+}
+
+
+Cell* make_cell_map(const Cell* values) {
+    Cell* v = GC_MALLOC(sizeof(Cell));
+    if (!v) {
+        fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
+        exit(EXIT_FAILURE);
+    }
+    v->type = CELL_MAP;
+    ght_table* t = ght_create(8);
+    /* Already checked for evenness in the parser. */
+    for (int i = 0; i < values->count; i += 2) {
+        ght_set(t, values->cell[i], values->cell[i + 1]);
+    }
+    v->table = t;
+    v->count = (int)ght_length(t);
     return v;
 }
 
