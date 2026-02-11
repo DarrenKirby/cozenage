@@ -1,5 +1,5 @@
 /*
- * 'hash.c'
+ * 'src/hash.c'
  * This file is part of Cozenage - https://github.com/DarrenKirby/cozenage
  * Copyright © 2025 Darren Kirby <darren@dragonbyte.ca>
  *
@@ -54,6 +54,7 @@ ht_table* ht_create(const int initial_capacity)
 
     /* Allocate space for entry buckets. */
     table->items = GC_MALLOC(table->capacity * sizeof(ht_item));
+    memset(table->items, 0, table->capacity * sizeof(ht_item));
     if (table->items == NULL) {
         fprintf(stderr, "ENOMEM: malloc failed in ht_create\n");
         exit(EXIT_FAILURE);
@@ -61,12 +62,13 @@ ht_table* ht_create(const int initial_capacity)
     return table;
 }
 
-/* Completely free table items and the table itself */
+
+/* Completely free table items and the table itself. */
 void ht_destroy(ht_table* table)
 {
     /* First free allocated keys. */
     for (size_t i = 0; i < table->capacity; i++) {
-        /* Skip nulls and tombstones */
+        /* Skip nulls and tombstones. */
         if (table->items[i].key != NULL && table->items[i].key != HT_DELETED_ITEM.key) {
             GC_free(table->items[i].key);
         }
@@ -76,9 +78,10 @@ void ht_destroy(ht_table* table)
     GC_free(table);
 }
 
+
 /* Return 64-bit FNV-1a hash for key (NUL-terminated). See description:
- * https://en.wikipedia.org/wiki/Fowler–Noll–Vo_hash_function */
-static uint64_t get_hash_key(const char* key)
+ * https://en.wikipedia.org/wiki/Fowler–Noll–Vo_hash_function. */
+uint64_t hash_string_key(const char* key)
 {
     uint64_t hash = FNV_OFFSET;
     for (const char* p = key; *p; p++) {
@@ -88,11 +91,12 @@ static uint64_t get_hash_key(const char* key)
     return hash;
 }
 
-/* Given a hash table and key, return a pointer to the object or null */
+
+/* Given a hash table and key, return a pointer to the object or null. */
 Cell* ht_get(const ht_table* table, const char* key)
 {
     /* AND hash with capacity-1 to ensure it's within entries array. */
-    const uint64_t hash = get_hash_key(key);
+    const uint64_t hash = hash_string_key(key);
     size_t index = hash & (uint64_t)(table->capacity - 1);
 
     /* Loop till we find an empty entry. */
@@ -114,12 +118,13 @@ Cell* ht_get(const ht_table* table, const char* key)
     return nullptr;
 }
 
+
 /* Internal function to populate a slot with an item */
 static const char* ht_set_item(ht_item* slot, const size_t capacity,
         const char* key, Cell* value, size_t* p_length)
 {
     /* AND hash with capacity-1 to ensure it's within slot array. */
-    const uint64_t hash = get_hash_key(key);
+    const uint64_t hash = hash_string_key(key);
     size_t index = hash & (uint64_t)(capacity - 1);
 
     /* Loop till we find an empty or deleted entry. */
@@ -149,6 +154,7 @@ static const char* ht_set_item(ht_item* slot, const size_t capacity,
     return key;
 }
 
+
 /* Expand hash table to twice its current size. */
 static bool ht_resize(ht_table* table)
 {
@@ -177,6 +183,7 @@ static bool ht_resize(ht_table* table)
     return true;
 }
 
+
 const char* ht_set(ht_table* table, const char* key, Cell* value)
 {
     if (value == NULL) {
@@ -194,9 +201,10 @@ const char* ht_set(ht_table* table, const char* key, Cell* value)
                         &table->count);
 }
 
+
 void ht_delete(ht_table* table, const char* key)
 {
-    const uint64_t hash = get_hash_key(key);
+    const uint64_t hash = hash_string_key(key);
     size_t index = hash & (uint64_t)(table->capacity - 1);
 
     while (table->items[index].key != NULL) {
@@ -218,10 +226,12 @@ void ht_delete(ht_table* table, const char* key)
     }
 }
 
+
 size_t ht_length(const ht_table* table)
 {
     return table->count;
 }
+
 
 /* This iterator (written by Ben Hoyt) is not needed yet, but may be useful
  * when implementing a hash/map/dict scheme type. */
@@ -236,6 +246,7 @@ hti ht_iterator(ht_table* table)
     it._index = 0;
     return it;
 }
+
 
 bool ht_next(hti* it)
 {

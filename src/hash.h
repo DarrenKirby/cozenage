@@ -1,5 +1,5 @@
 /*
- * 'hash.h'
+ * 'src/hash.h'
  * This file is part of Cozenage - https://github.com/DarrenKirby/cozenage
  * Copyright © 2025 - 2026 Darren Kirby <darren@dragonbyte.ca>
  *
@@ -21,6 +21,7 @@
 #define COZENAGE_HASH_H
 
 #include <stdio.h>
+#include <stdint.h>
 
 
 /* Forward declare Cell. */
@@ -62,5 +63,6 @@ void ht_delete(ht_table* table, const char* key);
 size_t ht_length(const ht_table* table);
 hti ht_iterator(ht_table* table);
 bool ht_next(hti* it);
+uint64_t hash_string_key(const char* key);
 
 #endif //COZENAGE_HASH_H
