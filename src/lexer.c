@@ -182,7 +182,7 @@ static Token string()
 
 static Token number()
 {
-    while (!is_whitespace(peek()) && !at_end() && peek() != ')') {
+    while (!is_whitespace(peek()) && !at_end() && peek() != ')' && peek() != ']' && peek() != '}') {
         advance();
     }
     return make_token(T_NUMBER);
@@ -192,7 +192,7 @@ static Token number()
 static Token boolean()
 {
     scanner.start = scanner.current;
-    while (!is_whitespace(peek()) && !at_end() && peek() != ')') {
+    while (!is_whitespace(peek()) && !at_end() && peek() != ')' && peek() != ']' && peek() != '}') {
         advance();
     }
     return make_token(T_BOOLEAN);
@@ -213,7 +213,7 @@ static Token multi_word_identifier()
 
 static Token symbol()
 {
-    while (!is_whitespace(peek()) && peek() != ')' && peek() != '(' && !at_end()) {
+    while (!is_whitespace(peek()) && peek() != ')' && peek() != '(' && peek() != ']' && peek() != '}' && !at_end()) {
         advance();
     }
     return make_token(T_SYMBOL);
@@ -223,7 +223,7 @@ static Token symbol()
 static Token character()
 {
     scanner.start = scanner.current;
-    while (!is_whitespace(peek()) && peek() != ')' && peek() != '(' && !at_end()) {
+    while (!is_whitespace(peek()) && peek() != ')' && peek() != '(' && peek() != ']' && peek() != '}' && !at_end()) {
         advance();
     }
     return make_token(T_CHAR);
@@ -247,6 +247,10 @@ Token lex_token()
             return make_token(T_RIGHT_PAREN);
         case '"':
             return string();
+        case ']':
+            return make_token(T_RIGHT_BRACKET);
+        case '}':
+            return make_token(T_RIGHT_BRACE);
         case '\'':
             return make_token(T_QUOTE);
         case '`':
@@ -285,6 +289,12 @@ Token lex_token()
                 case 't':
                 case 'f':
                     return boolean();
+                case '[':
+                    advance();
+                    return make_token(T_SET_START);
+                case '{':
+                    advance();
+                    return make_token(T_MAP_START);
                 /* Exact or inexact, and numeric base literals. */
                 case 'e':
                 case 'i':

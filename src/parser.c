@@ -343,7 +343,7 @@ static Cell* parse_string(const char* str, const int len)
         lex_idx++; /* Consume the backslash (from 'str'). */
         if (lex_idx >= length) {
             /* String ended with a backslash.
-               R7RS is unspecified, but a common behavior is
+               R7RS is unspecified, but a common behaviour is
                to just add the backslash. */
             internal_buffer[buf_idx++] = '\\';
             break;
@@ -413,7 +413,7 @@ static Cell* parse_string(const char* str, const int len)
         }
 
         /* We get here if it was \ + (some other char like 'z')
-           R7RS behavior is "unspecified."
+           R7RS behaviour is "unspecified."
            A safe default: just add the character itself. */
         internal_buffer[buf_idx++] = next_char;
         lex_idx++;
@@ -594,7 +594,8 @@ Cell* parse_tokens(TokenArray *ta) {
             Cell *expr = parse_tokens(ta);
             if (!expr) {
                 return make_cell_error(fmt_err("Line %d: Expected expression after comma: '%s%s%s'",
-                            t->line, ANSI_RED_B, token_to_string(t), ANSI_RESET), SYNTAX_ERR);
+                            t->line, ANSI_RED_B, token_to_string(t), ANSI_RESET),
+                            SYNTAX_ERR);
             }
             Cell *qexpr = make_cell_sexpr();
             /* Emit appropriate SF literal. */
@@ -604,6 +605,56 @@ Cell* parse_tokens(TokenArray *ta) {
 
             cell_add(qexpr, expr);
             return qexpr;
+        }
+
+        case T_SET_START: {
+            /* Consume '#[' */
+            token = advance(ta);
+
+            Cell *sexpr = make_cell_sexpr();
+
+            while (peek(ta)->type != T_RIGHT_BRACKET) {
+                cell_add(sexpr, parse_tokens(ta));
+                advance(ta);
+            }
+
+            if (!peek(ta)) {
+                return make_cell_error(
+                    fmt_err("Line %d: Unmatched '[' in set literal: '%s%s%s'",
+                    token->line, ANSI_RED_B, token_to_string(token), ANSI_RESET),
+                    SYNTAX_ERR);
+            }
+            return make_cell_set(sexpr);
+        }
+
+        case T_MAP_START: {
+            /* Consume '#{' */
+            token = advance(ta);
+
+            Cell *sexpr = make_cell_sexpr();
+
+            int n_forms = 0;
+            while (peek(ta)->type != T_RIGHT_BRACE) {
+                cell_add(sexpr, parse_tokens(ta));
+                n_forms++;
+                advance(ta);
+            }
+
+            /* Check for even number of forms in map literal. */
+            if (n_forms % 2 != 0) {
+                return make_cell_error(
+                    fmt_err("Line %d: map literal requires even number of forms, %d provided",
+                    token->line, n_forms),
+                    SYNTAX_ERR);
+            }
+
+            if (!peek(ta)) {
+                return make_cell_error(
+                    fmt_err("Line %d: Unmatched '{' in map literal: '%s%s%s'",
+                    token->line, ANSI_RED_B, token_to_string(token), ANSI_RESET),
+                    SYNTAX_ERR);
+            }
+            return make_cell_map(sexpr);
         }
 
         /* Vector or bytevector. */
