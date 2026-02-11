@@ -50,6 +50,7 @@
 #include "main.h"
 #include "bytevectors.h"
 #include "types.h"
+#include "hash_type.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -117,16 +118,38 @@ static void repr_sequence(const Cell* v,
                           const char close,
                           str_buf_t *sb,
                           const print_mode_t mode) {
-
     if (prefix) sb_append_fmt(sb, "%s", prefix);
     sb_append_fmt(sb, "%c", open);
 
-    for (int i = 0; i < v->count; i++) {
-        cell_to_string_worker(v->cell[i], sb, mode);
-        if (i != v->count - 1) sb_append_char(sb, ' ');
+    if (v->type == CELL_SET) {
+        ghti it = ght_iterator(v->table);
+        const size_t t_len = ght_length(v->table);
+        size_t i = 0;
+        while (ght_next(&it)) {
+            cell_to_string_worker(it.key, sb, mode);
+            if (i != t_len - 1) sb_append_char(sb, ' ');
+            i++;
+        }
+    } else if (v->type == CELL_MAP) {
+        ghti it = ght_iterator(v->table);
+        const size_t t_len = ght_length(v->table);
+        size_t i = 0;
+        while (ght_next(&it)) {
+            cell_to_string_worker(it.key, sb, mode);
+            sb_append_char(sb, ' ');
+            cell_to_string_worker(it.value, sb, mode);
+            if (i != t_len - 1) sb_append_char(sb, ' ');
+            i++;
+        }
+    } else {
+        for (int i = 0; i < v->count; i++) {
+            cell_to_string_worker(v->cell[i], sb, mode);
+            if (i != v->count - 1) sb_append_char(sb, ' ');
+        }
     }
     sb_append_fmt(sb, "%c", close);
 }
+
 
 /* Generate external representations of all Cozenage/Scheme types. */
 static void cell_to_string_worker(const Cell* v,
@@ -373,6 +396,14 @@ static void cell_to_string_worker(const Cell* v,
 
         case CELL_BYTEVECTOR:
             BV_OPS[v->bv->type].repr(v, sb);
+            break;
+
+        case CELL_SET:
+            repr_sequence(v, "#", '[', ']', sb, mode);
+            break;
+
+        case CELL_MAP:
+            repr_sequence(v, "#", '{', '}', sb, mode);
             break;
 
         default:
