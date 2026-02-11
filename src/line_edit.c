@@ -70,6 +70,10 @@
 /* History settings */
 #define DEFAULT_HISTORY_SIZE 500
 
+/* The number of completion candidates to display
+ * before prompting to display them all. */
+#define COMP_DISPLAY_MAX 100
+
 
 char **scheme_procedures = nullptr;
 
@@ -117,12 +121,12 @@ void populate_dynamic_completions(const Lex* e)
 }
 
 
-/* Terminal state */
+/* Terminal state. */
 static struct termios orig_termios;
 static int raw_mode_enabled = 0;
 static volatile sig_atomic_t got_interrupt = 0;
 
-/* History management */
+/* History management. */
 typedef struct {
     char** entries;
     size_t count;
@@ -133,7 +137,7 @@ typedef struct {
 static History history = {nullptr, 0, 0, 0};
 
 
-/* Line editing state */
+/* Line editing state. */
 typedef struct {
     char* buffer;
     size_t buffer_size;
@@ -145,7 +149,7 @@ typedef struct {
 } LineState;
 
 
-/* Signal handler */
+/* Signal handler. */
 static void sigint_handler(const int sig) {
     (void)sig;
     got_interrupt = 1;
@@ -188,7 +192,7 @@ static int enable_raw_mode(void) {
 }
 
 
-/* UTF-8 handling */
+/* UTF-8 handling. */
 static size_t utf8_char_len(unsigned char c) {
     if ((c & 0x80) == 0) return 1;
     if ((c & 0xE0) == 0xC0) return 2;
@@ -546,7 +550,8 @@ static bool is_symbol_char(const char c) {
 
 
 /* Extract word at cursor for completion. */
-static void extract_word_at_cursor(const LineState* ls, size_t* start, size_t* end, const bool filename_mode) {
+static void extract_word_at_cursor(const LineState* ls, size_t* start,
+                                  size_t* end, const bool filename_mode) {
     *start = ls->cursor;
     *end   = ls->cursor;
 
@@ -639,7 +644,8 @@ static void handle_completion(LineState* ls) {
         ls->cursor = word_start + comp_len;
         ls->buffer[ls->length] = '\0';
 
-        /* Add space if completing a command, add closing quote and space if completing a filename. */
+        /* Add space if completing a symbol, add closing quote
+         * and space if completing a filename. */
         const char *suffix = nullptr;
 
         if (!filename_mode) {
@@ -684,7 +690,7 @@ static void handle_completion(LineState* ls) {
             while (completions[count + 1]) count++;
 
             /* Check if too many. */
-            if (count > 100) {
+            if (count > COMP_DISPLAY_MAX) {
                 printf("Display all %zu possibilities? (y or n) ", count);
                 fflush(stdout);
 
@@ -767,7 +773,7 @@ static void handle_completion(LineState* ls) {
 }
 
 
-/* Like strlen but ignores non-printing chars and control sequences. */
+/* Like strlen but ignores control sequences. */
 static size_t visible_width(const char *s)
 {
     size_t w = 0;

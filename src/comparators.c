@@ -75,7 +75,7 @@ Cell* builtin_eq_op(const Lex* e, const Cell* a)
                 if (mpz_cmp(*lhs->bi, *rhs->bi) == 0) { the_same = 1; }
                 break;
             default: ; /* This will never run as the types are pre-checked,
-                          but without the linter complains */
+                          but without the linter complains. */
         }
         if (!the_same) {
             return False_Obj;

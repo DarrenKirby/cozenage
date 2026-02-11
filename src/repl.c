@@ -36,7 +36,7 @@
 
 
 int is_repl;
-extern char **scheme_procedures;
+//extern char **scheme_procedures;
 
 
 /* Read in the history. */
@@ -57,8 +57,8 @@ void save_history_to_file()
 }
 
 
-/* Count parens to decide if we have a full expression,
- * or need to wait for more input. */
+/* Count parens, and determine if inside a string literal to decide
+ * if we have a full expression, or need to wait for more input. */
 int paren_balance(const char *s, int *in_string)
 {
     int balance = 0;
@@ -198,6 +198,8 @@ void repl(Lex* e)
         const char* input = coz_read();
         /* Run it through the lexer. */
         TokenArray* ta = scan_all_tokens(input);
+        /* Debug print the token array. */
+        //debug_lexer(ta);
         /* Run it through the parser and evaluate. */
         Cell* result = parse_all_expressions(e, ta, true);
         /* Print either new prompt or error. */
