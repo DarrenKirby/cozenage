@@ -542,15 +542,26 @@ void lex_add_builtins(const Lex* e)
      * Set procedures.
      *
      */
-    lex_add_builtin(e, "set-add", builtin_set_add);
-    lex_add_builtin(e, "set-remove", builtin_set_remove);
+    lex_add_builtin(e, "set", builtin_set);
+    lex_add_builtin(e, "set-copy", builtin_set_copy);
+    lex_add_builtin(e, "set-add!", builtin_set_add);
+    lex_add_builtin(e, "set-remove!", builtin_set_remove);
     lex_add_builtin(e, "set-member?", builtin_set_member);
+    lex_add_builtin(e, "set-disjoint?", builtin_set_is_disjoint);
+    lex_add_builtin(e, "set-subset?", builtin_set_is_subset);
+    lex_add_builtin(e, "set-superset?", builtin_set_is_superset);
     lex_add_builtin(e, "set-union", builtin_set_union);
     lex_add_builtin(e, "set-union!", builtin_set_union_bang);
     lex_add_builtin(e, "set-intersection", builtin_set_intersection);
     lex_add_builtin(e, "set-intersection!", builtin_set_intersection_bang);
     lex_add_builtin(e, "set-difference", builtin_set_difference);
     lex_add_builtin(e, "set-difference!", builtin_set_difference_bang);
+    lex_add_builtin(e, "set-sym-difference", builtin_set_sym_difference);
+    lex_add_builtin(e, "set-sym-difference!", builtin_set_sym_difference_bang);
+    lex_add_builtin(e, "set-map", builtin_set_map);
+    lex_add_builtin(e, "set-foreach", builtin_set_foreach);
+    lex_add_builtin(e, "list->set", builtin_list_to_set);
+    lex_add_builtin(e, "set->list", builtin_set_to_list);
     /*
      * Map procedures.
      *
