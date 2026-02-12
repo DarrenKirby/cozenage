@@ -318,7 +318,9 @@ Cell* builtin_list_ref(const Lex* e, const Cell* a)
 
         /* If we hit something that isn't a pair before count reaches 0, it's an error. */
         if (curr->type != CELL_PAIR) {
-            return make_cell_error("list-ref: index out of range or improper list", INDEX_ERR);
+            return make_cell_error(
+                "list-ref: index out of range or improper list",
+                INDEX_ERR);
         }
     }
 
@@ -709,7 +711,8 @@ Cell* builtin_assq(const Lex* e, const Cell* a)
 /* (assv obj alist )
  * Find the first pair in alist whose car field is obj, and returns that pair. If no pair in alist has obj as its car,
  * then #f is returned. Uses eqv? for the comparison. */
-Cell* builtin_assv(const Lex* e, const Cell* a) {
+Cell* builtin_assv(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2, "assv");
     if (err) return err;
@@ -798,7 +801,7 @@ Cell* builtin_list_copy(const Lex* e, const Cell* a)
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "list-copy");
     if (err) return err;
-    /* Non-pairs get returned unaltered */
+    /* Non-pairs get returned unaltered. */
     if (a->cell[0]->type != CELL_PAIR) {
         return a->cell[0];
     }
@@ -814,7 +817,7 @@ Cell* builtin_list_copy(const Lex* e, const Cell* a)
         old_p = old_p->cdr;
         /* Create a new cell and link it. */
         new_p->cdr = make_cell_pair(old_p->car, nullptr);
-        /* Advance the new pointer */
+        /* Advance the new pointer. */
         new_p = new_p->cdr;
     }
 
@@ -1038,10 +1041,9 @@ Cell* builtin_zip(const Lex* e, const Cell* a)
         }
     }
 
-    const int shortest_len = shortest_list_length;
     const int num_lists = a->count;
     Cell* outer_list = make_cell_nil();
-    for (int i = 0; i < shortest_len; i++) {
+    for (int i = 0; i < shortest_list_length; i++) {
         Cell* inner_list = make_cell_nil();
 
         /* Grab vals starting from the last list, so that after the
@@ -1062,7 +1064,8 @@ Cell* builtin_zip(const Lex* e, const Cell* a)
 
 /* (count pred list)
  * Returns the count of objects in list for which pred returns true. */
-Cell* builtin_count(const Lex* e, const Cell* a) {
+Cell* builtin_count(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2, "count");
     if (err) return err;
@@ -1076,20 +1079,19 @@ Cell* builtin_count(const Lex* e, const Cell* a) {
             "count: arg 2 must be a list",
             TYPE_ERR);
     }
-    /* The arg list. */
-    const Cell* l = a->cell[1];
-    /* The predicate. */
-    const Cell* p = a->cell[0];
+
+    const Cell* predicate = a->cell[0];
+    const Cell* arg_list = a->cell[1];
     int64_t count = 0;
-    while (l != Nil_Obj) {
+    while (arg_list != Nil_Obj) {
         Cell* tmp_result;
         /* If the procedure is a builtin - grab a pointer to it and call it directly
          * otherwise - it is a lambda and needs to be evaluated and applied to the args. */
-        if (p->is_builtin) {
-            Cell* (*func)(const Lex *, const Cell *) = p->builtin;
-            tmp_result = func(e, make_sexpr_len1(l->car));
+        if (predicate->is_builtin) {
+            Cell* (*func)(const Lex *, const Cell *) = predicate->builtin;
+            tmp_result = func(e, make_sexpr_len1(arg_list->car));
         } else {
-            tmp_result = coz_apply_and_get_val(p, make_sexpr_len1(l->car), (Lex*)e);
+            tmp_result = coz_apply_and_get_val(predicate, make_sexpr_len1(arg_list->car), (Lex*)e);
         }
         if (tmp_result->type == CELL_ERROR) {
             /* Propagate any evaluation errors. */
@@ -1106,7 +1108,7 @@ Cell* builtin_count(const Lex* e, const Cell* a) {
             count++;
         }
         /* Adjust pointer to next value in the list. */
-        l = l->cdr;
+        arg_list = arg_list->cdr;
     }
     return make_cell_integer(count);
 }
@@ -1115,24 +1117,25 @@ Cell* builtin_count(const Lex* e, const Cell* a) {
 /* (count-equal obj list)
  * Returns the number of occurrences of obj in list.
  * Uses equal? for the comparison. */
-Cell* builtin_count_equal(const Lex* e, const Cell* a) {
+Cell* builtin_count_equal(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2, "count-equal");
     if (err) return err;
     if (a->cell[1]->type != CELL_PAIR || a->cell[0]->len == -1) {
-        return make_cell_error("count-equal: arg 2 must be a list", TYPE_ERR);
+        return make_cell_error(
+            "count-equal: arg 2 must be a list",
+            TYPE_ERR);
     }
-    /* The haystack. */
-    const Cell* l = a->cell[1];
-    /* The needle. */
-    const Cell* s = a->cell[0];
+
+    const Cell* needle = a->cell[0];
+    const Cell* haystack = a->cell[1];
     int64_t count = 0;
-    while (l != Nil_Obj) {
-        /* (if (equal? s (car l)). */
-        if (builtin_equal(e, make_sexpr_len2(s, l->car))->boolean_v) {
+    while (haystack != Nil_Obj) {
+        if (builtin_equal(e, make_sexpr_len2(needle, haystack->car))->boolean_v) {
             count++;
         }
-        l = l->cdr;
+        haystack = haystack->cdr;
     }
     return make_cell_integer(count);
 }
