@@ -34,6 +34,7 @@
 #include "errors.h"
 #include "polymorph.h"
 #include "repr.h"
+#include "sets.h"
 
 #include <gc.h>
 #include <stdio.h>
@@ -295,6 +296,8 @@ void lex_add_builtins(const Lex* e)
     lex_add_builtin(e, "vector?", builtin_vector_pred);
     lex_add_builtin(e, "bytevector?", builtin_bytevector_pred);
     lex_add_builtin(e, "port?", builtin_port_pred);
+    lex_add_builtin(e, "set?", builtin_set_pred);
+    lex_add_builtin(e, "map?", builtin_map_pred);
     lex_add_builtin(e, "eof-object?", builtin_eof_pred);
     /*
      * Numeric identity predicate procedures.
@@ -535,4 +538,21 @@ void lex_add_builtins(const Lex* e)
     lex_add_builtin(e, "len", builtin_len);
     lex_add_builtin(e, "idx", builtin_idx);
     lex_add_builtin(e, "rev", builtin_rev);
+    /*
+     * Set procedures.
+     *
+     */
+    lex_add_builtin(e, "set-add", builtin_set_add);
+    lex_add_builtin(e, "set-remove", builtin_set_remove);
+    lex_add_builtin(e, "set-member?", builtin_set_member);
+    lex_add_builtin(e, "set-union", builtin_set_union);
+    lex_add_builtin(e, "set-union!", builtin_set_union_bang);
+    lex_add_builtin(e, "set-intersection", builtin_set_intersection);
+    lex_add_builtin(e, "set-intersection!", builtin_set_intersection_bang);
+    lex_add_builtin(e, "set-difference", builtin_set_difference);
+    lex_add_builtin(e, "set-difference!", builtin_set_difference_bang);
+    /*
+     * Map procedures.
+     *
+     */
 }
