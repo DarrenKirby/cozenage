@@ -208,6 +208,9 @@ Cell* builtin_len(const Lex* e, const Cell* a) {
         return builtin_bytevector_length(e, a);
     case CELL_STRING:
         return builtin_string_length(e, a);
+    case CELL_SET:
+    case CELL_MAP:
+        return make_cell_integer((long long)ght_length(a->cell[0]->table));
     default:
         return make_cell_error(
             fmt_err("len: no length for non-compound type: %s",
