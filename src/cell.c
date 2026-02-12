@@ -539,10 +539,12 @@ Cell* make_cell_set(const Cell* values) {
     v->type = CELL_SET;
     ght_table* t = ght_create(8);
 
-    for (int i = 0; i < values->count; i++) {
-        /* Putting NULL as the value does not work with
-         * the hash implementation, so use #t as sentinel. */
-        ght_set(t, values->cell[i], True_Obj);
+    if (values) {
+        for (int i = 0; i < values->count; i++) {
+            /* Putting NULL as the value does not work with
+             * the hash implementation, so use #t as sentinel. */
+            ght_set(t, values->cell[i], True_Obj);
+        }
     }
     v->table = t;
     v->count = (int)ght_length(t);
