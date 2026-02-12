@@ -129,6 +129,7 @@ This document tracks the implementation status of procedures in the Cozenage int
 |   ✅    | `make-string`                |
 |   ✅    | `make-vector`                |
 |   ✅    | `map`                        |
+|   ✅    | `map?`                       |
 |   ✅    | `max`                        |
 |   ✅    | `member`                     |
 |   ✅    | `memq`                       |
@@ -176,8 +177,18 @@ This document tracks the implementation status of procedures in the Cozenage int
 |   ✅    | `remainder`                  |
 |   ✅    | `reverse`                    |
 |   ✅    | `round`                      |
+|   ✅    | `set?`                       |
+|   ✅    | `set-add`                    |
 |   ✅    | `set-car!`                   |
 |   ✅    | `set-cdr!`                   |
+|   ✅    | `set-difference`             |
+|   ✅    | `set-difference!`            |
+|   ✅    | `set-intersection`           |
+|   ✅    | `set-intersection!`          |
+|   ✅    | `set-member?`                |
+|   ✅    | `set-remove`                 |
+|   ✅    | `set-union`                  |
+|   ✅    | `set-union!`                 |
 |   ✅    | `square`                     |
 |   ✅    | `string`                     |
 |   ✅    | `string->list`               |

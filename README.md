@@ -2,9 +2,9 @@
 
 *Getting close to being ready for prime time*
 
-**Cozenage** is a Scheme-derived, Lisp-like programming language written in C, designed primarily as an educational project and exploratory implementation. It provides a small, expressive core language and is extended through a growing standard library and dynamically loadable modules.
+**Cozenage** is a Scheme-derived, Lisp-like programming language written in C, designed primarily as an educational project and exploratory implementation. It provides a small, expressive core language and is extended through a growing standard library of dynamically loadable modules.
 
-While Cozenage borrows heavily from Scheme—particularly R5RS and R7RS—it is **not intended to be fully standard-compliant**. Where possible, Cozenage follows Scheme semantics and conventions, but it intentionally deviates from the standards in a number of non-trivial ways. These deviations are the result of pragmatic design choices, implementation constraints, or deliberate simplifications, and are documented where relevant.
+While Cozenage borrows heavily from Scheme, particularly R5RS and R7RS, it is **not intended to be fully standard-compliant**. Where possible, Cozenage follows Scheme semantics and conventions, but it intentionally deviates from the standards in a number of non-trivial ways. These deviations are the result of pragmatic design choices, implementation constraints, or deliberate simplifications, and are documented where relevant.
 
 Anyone with experience in Scheme or other Lisp dialects should find Cozenage immediately familiar.
 
@@ -26,6 +26,13 @@ Cozenage provides the usual set of disjoint primitive objects common to Scheme-l
 - boolean
 - port
 - procedure
+
+And two primitive object types not specified by R7RS:
+
+- set
+- map
+
+Both sets and maps are implemented as hash tables for fast O(1) amortized lookups.
 
 ### Numeric system
 
@@ -72,9 +79,9 @@ Native bytevector types backed by C arrays:
 
 Several common procedures are polymorphic across compound types, including:
 
-- `len`
-- `idx`
-- `rev`
+- `len` - returns the number of objects in lists, vectors, bytevectors, strings, sets, and maps. 
+- `idx` - returns the object at the supplied index for lists, vectors, bytevectors, and strings.
+- `rev` - returns a reversed copy of lists, vectors, bytevectors, and strings.
 
 ---
 
@@ -89,19 +96,11 @@ Several common procedures are polymorphic across compound types, including:
 
 ---
 
-## Features in progress
+## Features in progress, and Planned and future work
 
-- Arbitrary-precision rationals and reals  
-  (big integers are already supported)
-
----
-
-## Planned and future work
-
-- Custom line editor (replace readline/libedit)
+- Arbitrary-precision rationals and reals (big integers are already supported)
 - Custom allocator / garbage collector
 - Expanded bytevector library
-- Native `set` and `map` types
 - Exception handling (`try` / `catch`)
 - Asynchronous ports (sockets)
 - URL-backed ports
@@ -111,7 +110,8 @@ Several common procedures are polymorphic across compound types, including:
 
 ## Philosophy
 
-Cozenage is best understood as **a Scheme-inspired Lisp**, prioritizing internal consistency, approachability, and educational value over exhaustive standards compliance.
+Cozenage is best understood as **a Scheme-inspired Lisp**, prioritizing internal consistency, approachability, and
+educational value over exhaustive standards compliance.
 
 ### Design goals
 
@@ -125,16 +125,15 @@ Cozenage is best understood as **a Scheme-inspired Lisp**, prioritizing internal
   Cozenage exists as a vehicle for learning about language implementation, interpreter design, and runtime systems.
 
 - **Practical Lisp semantics**  
-  Favor straightforward, predictable behavior over obscure or highly abstract features.
+  Favour straightforward, predictable behaviour over obscure or highly abstract features.
 
 ---
 
 ## Dependencies
 
-`Cozenage` requires one of [readline](https://tiswww.cwru.edu/php/chet/readline/rltop.html) or 
-libedit for the REPL. It requires [ICU](https://github.com/unicode-org/icu) for UTF-8.
-These will almost certainly be installed already on any sort of development rig. It requires the [Boehm-Demers-Weiser Garbage Collector](https://github.com/bdwgc/bdwgc)
-which may or may not be installed already on your system. The [GNU GMP library](https://gmplib.org/) is required for the fledgling arbitrary size/precision numeric types I am currently implementing. The [GNU MPFR library](https://www.mpfr.org/) will be required soon, as I wire up bigfloats. 
+`Cozenage` requires [ICU](https://github.com/unicode-org/icu) for UTF-8 support. It requires the [Boehm-Demers-Weiser Garbage Collector](https://github.com/bdwgc/bdwgc).
+The [GNU GMP library](https://gmplib.org/) is required for the fledgling arbitrary size/precision numeric types I am currently 
+implementing. The [GNU MPFR library](https://www.mpfr.org/) will be required soon, as I wire up bigfloats. 
 
 ## Building Cozenage
 
