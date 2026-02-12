@@ -28,7 +28,8 @@
  * -------------------------------------------------*/
 
 
-/* 'number?' -> CELL_BOOLEAN - returns #t if obj is numeric, else #f  */
+/* (number? obj)
+ * Returns #t if obj is a number. Otherwise, #f is returned. */
 Cell* builtin_number_pred(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -106,7 +107,8 @@ Cell* builtin_list_pred(const Lex* e, const Cell* a)
 }
 
 
-/* 'procedure?' -> CELL_BOOLEAN - return #t if obj is a procedure, else #f */
+/* (proc? obj)
+ * Returns #t if obj is a lambda or builtin procedure. Otherwise, #f is returned. */
 Cell* builtin_proc_pred(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -116,7 +118,8 @@ Cell* builtin_proc_pred(const Lex* e, const Cell* a)
 }
 
 
-/* 'symbol?' -> CELL_BOOLEAN - return #t if obj is a symbol, else #f */
+/* (symbol? obj)
+ * Returns #t if obj is a symbol. Otherwise, #f is returned. */
 Cell* builtin_sym_pred(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -126,7 +129,8 @@ Cell* builtin_sym_pred(const Lex* e, const Cell* a)
 }
 
 
-/* 'string?' -> CELL_BOOLEAN - return #t if obj is a string, else #f */
+/* (string? obj)
+ * Returns #t if obj is a string. Otherwise, #f is returned. */
 Cell* builtin_string_pred(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -136,7 +140,8 @@ Cell* builtin_string_pred(const Lex* e, const Cell* a)
 }
 
 
-/* 'char?' -> CELL_BOOLEAN - return #t if obj is a char, else #f */
+/* (char? obj)
+ * Returns #t if obj is a char. Otherwise, #f is returned. */
 Cell* builtin_char_pred(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -146,7 +151,8 @@ Cell* builtin_char_pred(const Lex* e, const Cell* a)
 }
 
 
-/* 'vector?' -> CELL_BOOLEAN - return #t if obj is a vector, else #f */
+/* (vector? obj)
+ * Returns #t if obj is a vector. Otherwise, #f is returned. */
 Cell* builtin_vector_pred(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -167,7 +173,8 @@ Cell* builtin_bytevector_pred(const Lex* e, const Cell* a)
 }
 
 
-/* 'port?' -> CELL_BOOLEAN - return #t if obj is a port, else #f */
+/* (port? obj)
+ * Returns #t if obj is a port. Otherwise, #f is returned. */
 Cell* builtin_port_pred(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -177,7 +184,30 @@ Cell* builtin_port_pred(const Lex* e, const Cell* a)
 }
 
 
-/* 'eof-object?' -> CELL_BOOLEAN - return #t if obj is an eof, else #f */
+/* (set? obj)
+ * Returns #t if obj is a set. Otherwise, #f is returned. */
+Cell* builtin_set_pred(const Lex* e, const Cell* a)
+{
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "set?");
+    if (err) return err;
+    return make_cell_boolean(a->cell[0]->type == CELL_SET);
+}
+
+
+/* (map? obj)
+ * Returns #t if obj is a map. Otherwise, #f is returned. */
+Cell* builtin_map_pred(const Lex* e, const Cell* a)
+{
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "map?");
+    if (err) return err;
+    return make_cell_boolean(a->cell[0]->type == CELL_MAP);
+}
+
+
+/* (eof-object? obj)
+ * Returns #t if obj is the EOF! object. Otherwise, #f is returned. */
 Cell* builtin_eof_pred(const Lex* e, const Cell* a)
 {
     (void)e;
