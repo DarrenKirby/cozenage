@@ -32,6 +32,7 @@
 #include "chars.h"
 #include "symbols.h"
 #include "errors.h"
+#include "maps.h"
 #include "polymorph.h"
 #include "repr.h"
 #include "sets.h"
@@ -566,4 +567,9 @@ void lex_add_builtins(const Lex* e)
      * Map procedures.
      *
      */
+    lex_add_builtin(e, "make-map", builtin_make_map);
+    lex_add_builtin(e, "map-copy", builtin_map_copy);
+    lex_add_builtin(e, "map-add!", builtin_map_add);
+    lex_add_builtin(e, "map-remove!", builtin_map_remove);
+    lex_add_builtin(e, "map-get", builtin_map_get);
 }
