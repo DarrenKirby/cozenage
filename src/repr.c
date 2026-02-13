@@ -75,6 +75,14 @@ static void repr_long_double(const long double x, str_buf_t *sb)
     char buf[128];
     snprintf(buf, sizeof buf, "%.15Lg", x);
 
+    /* If there's no '.' or exponent marker, force a ".0". */
+    if (!strchr(buf, '.') && !strchr(buf, 'e') && !strchr(buf, 'E')) {
+        const size_t len = strlen(buf);
+        if (len < sizeof(buf) - 3) {
+            strcat(buf, ".0");
+        }
+    }
+
     sb_append_str(sb, buf);
 }
 
