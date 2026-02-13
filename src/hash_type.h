@@ -25,7 +25,7 @@
 
 
 /* Forward declare Cell. */
-typedef Cell Cell;
+typedef struct Cell Cell;
 
 /* Constants for hash function. */
 #define FNV_OFFSET 14695981039346656037UL
