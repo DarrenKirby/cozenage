@@ -25,7 +25,7 @@
 
 
 /* Forward declare Cell. */
-typedef struct Cell Cell;
+typedef Cell Cell;
 
 /* Constants for hash function. */
 #define FNV_OFFSET 14695981039346656037UL
@@ -33,15 +33,15 @@ typedef struct Cell Cell;
 
 /* Hash table item. */
 typedef struct {
-    Cell* key;     /* NULL = empty, TOMBSTONE = deleted */
-    Cell* value;   /* value is ignored for sets */
+    Cell* key;     /* NULL = empty, TOMBSTONE = deleted. */
+    Cell* value;   /* Value is ignored and slugged with #t for sets. */
 } ght_item;
 
 
 /* Hash table structure */
 typedef struct Ght_Table{
     ght_item* items;
-    size_t capacity;   /* must be power of two */
+    size_t capacity;   /* Must be power of two. */
     size_t count;
 } ght_table;
 
