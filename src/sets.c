@@ -27,6 +27,26 @@
 #include <string.h>
 
 
+/* Helper for fast copy of hash table structure. */
+Cell* copy_hash_table(const Cell* t) {
+    const uint32_t type = t->type;
+
+    const size_t cap = t->table->capacity;
+    Cell* r = GC_MALLOC(sizeof(Cell));
+    r->type = type;
+    r->table = GC_MALLOC(sizeof(ght_table));
+    r->table->count = t->table->count;
+    r->count = t->count;
+    r->table->capacity = t->table->capacity;
+    r->table->items = GC_MALLOC(sizeof(ght_item) * cap);
+
+    memcpy(r->table->items, t->table->items,
+        sizeof(ght_item) * t->table->capacity);
+
+    return r;
+}
+
+
 /* (set obj ...)
 * Returns a newly allocated set whose elements contain the given arguments.
 * It is analogous to list. Raises type error if any of the objects are not hashable. */
@@ -52,7 +72,7 @@ Cell* builtin_set(const Lex* e, const Cell* a)
 
 
 /* (set-copy set)
- * Copies the structure of set into a newly allocated set object. Note that this is not a deep-copy. The keys and values
+ * Copies the structure of set into a newly allocated set object. Note that this is not a deep-copy. The keys
  * themselves will not be copied, just the pointers to them. */
 Cell* builtin_set_copy(const Lex* e, const Cell* a)
 {
@@ -66,19 +86,7 @@ Cell* builtin_set_copy(const Lex* e, const Cell* a)
             TYPE_ERR);
     }
 
-    const size_t cap = set->table->capacity;
-    Cell* r = GC_MALLOC(sizeof(Cell));
-    r->type = CELL_SET;
-    r->table = GC_MALLOC(sizeof(ght_table));
-    r->table->count = set->table->count;
-    r->count = set->count;
-    r->table->capacity = set->table->capacity;
-    r->table->items = GC_MALLOC(sizeof(ght_item) * cap);
-
-    memcpy(r->table->items, set->table->items,
-        sizeof(ght_item) * set->table->capacity);
-
-    return r;
+    return copy_hash_table(set);
 }
 
 
@@ -161,7 +169,7 @@ Cell* builtin_set_remove(const Lex* e, const Cell* a)
 
     if (a->count == 2 && !removed) {
         return make_cell_error(
-            "set-remove!: arg 3 not member of set",
+            "set-remove!: arg 2 not member of set",
             INDEX_ERR);
     }
     if (a->count == 3 && a->cell[2]->type != CELL_SYMBOL) {

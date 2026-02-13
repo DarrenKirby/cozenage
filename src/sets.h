@@ -23,7 +23,7 @@
 
 #include "cell.h"
 
-
+Cell* copy_hash_table(const Cell* t);
 Cell* builtin_set(const Lex* e, const Cell* a);
 Cell* builtin_set_copy(const Lex* e, const Cell* a);
 Cell* builtin_set_add(const Lex* e, const Cell* a);
