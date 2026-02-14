@@ -1,7 +1,8 @@
 Primitive datatypes
 ===================
 
-Cozenage provides all the primitive Scheme datatypes as would be expected. All primitive types are disjoint, which
+Cozenage provides all the primitive Scheme datatypes as would be expected, as well as two other primitive types not
+specified by the R7RS standard. All primitive types are disjoint, which
 is to say that any Scheme object will return ``#true`` for one, and only one, of the following predicates:
 
 * ``boolean?``
@@ -16,6 +17,8 @@ is to say that any Scheme object will return ``#true`` for one, and only one, of
 * ``port?``
 * ``string?``
 * ``vector?``
+* ``set?``
+* ``map?``
 
 It is common in Scheme documentation and literature to refer to these datatypes as **objects** of the given type, and
 to use the generic term **object** to refer to an instantiation of any Scheme type. These types/objects can be
@@ -26,7 +29,7 @@ some cases, atomic types and nested compound types. For example, ``string`` is a
 only chars, and ``bytevectors`` are homogenic types that can hold only integers. On the other hand, ``pair`` and
 ``vector`` are heterogenic types which can hold any combination of atomic types and/or nested compound types.
 
-All Scheme types and objects are first-class, which means they can be passed to procedures as arguments, and returned
+All primitive types and objects are first-class, which means they can be passed to procedures as arguments, and returned
 from procedures as values.
 
 An important concept in Scheme is that of the external representation of an object as a sequence of characters. For
@@ -45,7 +48,7 @@ produce them.
 An external representation can be written in a program to obtain the corresponding object, either through the
 ``quote`` special form, or as a literal at the REPL.
 
-Mutability of Scheme Objects
+Mutability of Objects
 ----------------------------
 
 In Scheme, every object has a property of being either immutable or mutable. An immutable object's value can never be
@@ -84,3 +87,5 @@ an error.
    strings
    symbols
    vectors
+   sets
+   maps

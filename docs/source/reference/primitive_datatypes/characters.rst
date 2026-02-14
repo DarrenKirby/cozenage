@@ -4,7 +4,183 @@ Characters
 Overview
 --------
 
-Characters are objects that represent printed characters such as letters and digits.
+A `character` represents a single textual unit. Characters are written using the ``#\`` prefix:
+
+.. code-block:: scheme
+
+    #\a
+    #\A
+    #\newline
+    #\space
+
+Characters are distinct from strings. A string may contain many characters, while a character represents exactly one.
+For example:
+
+.. code-block:: scheme
+
+    --> #\a
+    #\a
+    --> "a"
+    "a"
+
+Although these may look similar, the first is a character and the second is a string containing one character.
+
+Characters are primarily used when working with textual data at a fine-grained level, such as:
+
+* Parsing input character by character
+* Implementing lexical analyzers
+* Performing character classification (alphabetic, numeric, whitespace, etc.)
+* Converting between character codes and textual representations
+
+Characters in Cozenage are stored internally as 32-bit Unicode code points (UChar32). This means each character directly
+represents a full Unicode scalar value, making character comparisons, classification, and transformation straightforward
+and unambiguous. Unlike UTF-8 strings, which are variable-length byte sequences, a character object always represents
+exactly one Unicode code point.
+
+This design allows characters such as λ, €, or Ω to behave identically to simple ASCII characters like A or ?.
+
+Example:
+
+.. code-block:: text
+
+    --> #\λ
+    #\λ
+    --> (char? #\λ)
+    #true
+
+Character comparison procedures allow you to test equality and ordering, and classification procedures determine
+properties such as whether a character is alphabetic, numeric, or whitespace.
+
+Because characters are first-class objects, they can be stored in lists, vectors, sets, or maps, passed to procedures,
+and returned as values.
+
+Understanding the distinction between characters and strings is important: characters represent atomic textual units,
+while strings represent ordered sequences of those units.
+
+Named Character Literals
+------------------------
+
+The Cozenage parser supports a set of user-friendly named Unicode character literals. These are accepted during input
+using the #\\name syntax. When printed, however, characters are displayed as their actual Unicode glyph, not their
+named form.
+
+For example:
+
+.. code-block:: text
+
+    --> #\lambda
+    #\λ
+
+This means the name is only recognized by the reader; internally and when printed, the true Unicode character is used.
+
+Below is the complete list of supported named character literals.
+
+Supported Named Character Literals
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
++-----------+---------+------------+
+| Name      | Glyph   | Code Point |
++===========+=========+============+
+| Alpha     | Α       | U+0391     |
++-----------+---------+------------+
+| Beta      | Β       | U+0392     |
++-----------+---------+------------+
+| Delta     | Δ       | U+0394     |
++-----------+---------+------------+
+| Gamma     | Γ       | U+0393     |
++-----------+---------+------------+
+| Iota      | Ι       | U+0399     |
++-----------+---------+------------+
+| Lambda    | Λ       | U+039B     |
++-----------+---------+------------+
+| Omega     | Ω       | U+03A9     |
++-----------+---------+------------+
+| Omicron   | Ο       | U+039F     |
++-----------+---------+------------+
+| Phi       | Φ       | U+03A6     |
++-----------+---------+------------+
+| Pi        | Π       | U+03A0     |
++-----------+---------+------------+
+| Psi       | Ψ       | U+03A8     |
++-----------+---------+------------+
+| Rho       | Ρ       | U+03A1     |
++-----------+---------+------------+
+| Sigma     | Σ       | U+03A3     |
++-----------+---------+------------+
+| Theta     | Θ       | U+0398     |
++-----------+---------+------------+
+| Xi        | Ξ       | U+039E     |
++-----------+---------+------------+
+| alpha     | α       | U+03B1     |
++-----------+---------+------------+
+| beta      | β       | U+03B2     |
++-----------+---------+------------+
+| chi       | χ       | U+03C7     |
++-----------+---------+------------+
+| copy      | ©       | U+00A9     |
++-----------+---------+------------+
+| curren    | ¤       | U+00A4     |
++-----------+---------+------------+
+| deg       | °       | U+00B0     |
++-----------+---------+------------+
+| delta     | δ       | U+03B4     |
++-----------+---------+------------+
+| divide    | ÷       | U+00F7     |
++-----------+---------+------------+
+| epsilon   | ε       | U+03B5     |
++-----------+---------+------------+
+| eta       | η       | U+03B7     |
++-----------+---------+------------+
+| euro      | €       | U+20AC     |
++-----------+---------+------------+
+| gamma     | γ       | U+03B3     |
++-----------+---------+------------+
+| iota      | ι       | U+03B9     |
++-----------+---------+------------+
+| iquest    | ¿       | U+00BF     |
++-----------+---------+------------+
+| kappa     | κ       | U+03BA     |
++-----------+---------+------------+
+| lambda    | λ       | U+03BB     |
++-----------+---------+------------+
+| micro     | µ       | U+00B5     |
++-----------+---------+------------+
+| mu        | μ       | U+03BC     |
++-----------+---------+------------+
+| omega     | ω       | U+03C9     |
++-----------+---------+------------+
+| para      | ¶       | U+00B6     |
++-----------+---------+------------+
+| phi       | φ       | U+03C6     |
++-----------+---------+------------+
+| pi        | π       | U+03C0     |
++-----------+---------+------------+
+| plusnm    | ±       | U+00B1     |
++-----------+---------+------------+
+| pound     | £       | U+00A3     |
++-----------+---------+------------+
+| psi       | ψ       | U+03C8     |
++-----------+---------+------------+
+| reg       | ®       | U+00AE     |
++-----------+---------+------------+
+| rho       | ρ       | U+03C1     |
++-----------+---------+------------+
+| sect      | §       | U+00A7     |
++-----------+---------+------------+
+| sigma     | σ       | U+03C3     |
++-----------+---------+------------+
+| tau       | τ       | U+03C4     |
++-----------+---------+------------+
+| theta     | θ       | U+03B8     |
++-----------+---------+------------+
+| times     | ×       | U+00D7     |
++-----------+---------+------------+
+| xi        | ξ       | U+03BE     |
++-----------+---------+------------+
+| yen       | ¥       | U+00A5     |
++-----------+---------+------------+
+| zeta      | ζ       | U+03B6     |
++-----------+---------+------------+
 
 Character Procedures
 --------------------
@@ -117,7 +293,8 @@ Character Procedures
 
 .. function:: (digit-value char)
 
-   If *char* is a numeric digit, this procedure returns its integer value (0-9). If *char* is not a digit, it returns ``#false``.
+   If *char* is a numeric digit, this procedure returns its integer value (0-9). If *char* is not a digit, it
+   returns ``#false``.
 
    :param char: The character to convert.
    :type char: char
@@ -205,7 +382,7 @@ Case-Insensitive Comparison Procedures
 
    Returns ``#true`` if all characters are the same when ignoring case.
 
-   **Representative Example:**
+   **Example:**
 
    .. code-block:: scheme
 
@@ -230,7 +407,7 @@ Case-Insensitive Comparison Procedures
 
    Returns ``#true`` if all strings are equal when ignoring case.
 
-   **Representative Example:**
+   **Example:**
 
    .. code-block:: scheme
 
@@ -244,7 +421,7 @@ Case-Insensitive Comparison Procedures
 
    Returns ``#true`` if the strings are in lexicographically increasing order, ignoring case.
 
-   **Representative Example:**
+   **Example:**
 
    .. code-block:: scheme
 

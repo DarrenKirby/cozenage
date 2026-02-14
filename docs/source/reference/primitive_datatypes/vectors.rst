@@ -4,17 +4,58 @@ Vectors
 Overview
 --------
 
-Vectors are heterogeneous structures whose elements are indexed by integers. A vector typically
-occupies less space than a list of the same length, and the average time needed to access a randomly
-chosen element is typically less for the vector than for the list.
+A `vector` is a fixed-length, indexed collection of elements. Unlike a list, which is composed of linked pairs and
+optimized for sequential access, a vector stores its elements in contiguous memory and allows direct access by numeric
+index. Vectors are written using the literal syntax #( ... ).
 
-The length of a vector is the number of elements that it contains. This number is a non-negative
-integer that is fixed when the vector is created. The valid indexes of a vector are the exact
-non-negative integers less than the length of the vector. The first element in a vector is indexed
-by zero, and the last element is indexed by one less than the length of the vector.
+.. code-block:: scheme
 
-Vectors are written using the notation ``#(obj ... )``. For example, a vector of length 3 containing
-the number zero in element 0, the list (2 2 2 2) in element 1, and the string "Anna" in element 2
-can be written as follows: ``#(0 (2 2 2 2) "Anna")``.
+    #(1 2 3 4)
+    #("a" "b" "c")
 
-Vector constants are self-evaluating, so they do not need to be quoted in programs.
+You can think of a vector as an array. Each element is stored at a specific position, starting from index 0. Accessing
+an element by index is efficient and does not require traversing the structure from the beginning, as lists do. For
+example:
+
+.. code-block:: scheme
+
+    --> (define v #(10 20 30))
+    v
+    --> (vector-ref v 1)
+    20
+
+Vectors are implemented internally using C-level arrays. This means their elements are stored contiguously in memory,
+allowing constant-time indexed access. If your program frequently accesses elements by position, modifies elements in
+place, or needs predictable performance for indexed operations, vectors are generally more efficient than lists.
+
+Lists, by contrast, are better suited for recursive processing, structural decomposition (using car and cdr), and
+situations where the collection size changes frequently. Lists grow and shrink naturally, while vectors have a fixed
+size once created. Although a new vector can be created with a different size, its length cannot be changed after
+allocation.
+
+Vectors are especially useful for:
+
+* Storing data where position matters
+* Numerical computations
+* Implementing tables or buffers
+* Situations requiring frequent indexed access
+* Performance-sensitive code
+
+Like lists, vectors can store any first-class object, including numbers, strings, procedures, and even other vectors.
+However, unlike lists, they are not constructed from pairs and cannot be processed using car and cdr.
+
+Because vectors are mutable, procedures ending in ! may modify their contents in place:
+
+.. code-block:: scheme
+
+    --> (define v #(1 2 3))
+    v
+    --> (vector-set! v 0 42)
+    --> v
+    #(42 2 3)
+
+Vectors combine the flexibility of heterogeneous storage with the performance characteristics of arrays, making them
+an important general-purpose data structure.
+
+Vector Procedures
+-----------------
