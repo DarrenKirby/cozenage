@@ -97,16 +97,8 @@ CFLAGS_DEFAULT = -Wall -Wextra -Werror -Wdeprecated-declarations -O2 -std=gnu2x 
 CFLAGS_TEST = -Wall -Wextra -g -O0 -std=gnu2x $(ICU_CFLAGS) $(GMP_CFLAGS) -fsanitize=address -fno-omit-frame-pointer
 
 # --- Libraries ---
-# Auto-detect readline or libedit
 # Added -ldl (for dlopen) to all BASE_LIBS definitions
-ifeq ($(shell pkg-config --exists readline && echo yes),yes)
-    BASE_LIBS = -lreadline -lm -lgc $(ICU_LIBS) -ldl $(EXE_LDFLAGS) $(GMP_LIBS)
-	CFLAGS_DEFAULT += -DUSE_GNU_READLINE=1
-else ifeq ($(shell pkg-config --exists edit && echo yes),yes)
-    BASE_LIBS = -ledit -lm -lgc $(ICU_LIBS) -ldl $(EXE_LDFLAGS) $(GMP_LIBS)
-else
-    BASE_LIBS = -lreadline -lm -lgc $(ICU_LIBS) -ldl $(EXE_LDFLAGS) $(GMP_LIBS)
-endif
+BASE_LIBS = -lm -lgc $(ICU_LIBS) -ldl $(EXE_LDFLAGS) $(GMP_LIBS)
 TEST_LIBS = -lcriterion $(BASE_LIBS)
 
 # --- Phony Targets (Commands) ---
