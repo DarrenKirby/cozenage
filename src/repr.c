@@ -60,6 +60,7 @@
 /* Only Linux needs this include. */
 #ifdef __linux__
 #include <ctype.h>
+#include <wchar.h>
 #endif
 
 
@@ -265,7 +266,7 @@ static void cell_to_string_worker(const Cell* v,
                     case 0x7f: sb_append_str(sb, "#\\delete");    break;
                     case '\0': sb_append_str(sb, "#\\null");      break;
 
-                    default:   sb_append_fmt(sb, "#\\%C", v->char_v); break;
+                    default:   sb_append_fmt(sb, "#\\%lc", (wint_t)v->char_v); break;
                 }
             }
             break;
