@@ -24,7 +24,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#include  <gc/gc.h>
+#include <gc/gc.h>
 
 #define GHT_TOMBSTONE ((Cell*)0x1)
 
@@ -268,7 +268,7 @@ static bool ght_resize(ght_table* table)
     if (new_capacity < table->capacity) {
         return false;  /* Overflow (capacity would be too big). */
     }
-    ght_item* new_items = GC_malloc(new_capacity * sizeof(ght_item));
+    ght_item* new_items = GC_MALLOC(new_capacity * sizeof(ght_item));
     if (new_items == NULL) {
         return false;
     }
@@ -282,7 +282,7 @@ static bool ght_resize(ght_table* table)
         }
     }
     /* Free old items array and update this table's details. */
-    GC_free(table->items);
+    GC_FREE(table->items);
     table->items = new_items;
     table->capacity = new_capacity;
     return true;
