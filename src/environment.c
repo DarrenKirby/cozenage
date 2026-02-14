@@ -545,6 +545,7 @@ void lex_add_builtins(const Lex* e)
      */
     lex_add_builtin(e, "set", builtin_set);
     lex_add_builtin(e, "set-copy", builtin_set_copy);
+    lex_add_builtin(e, "set-clear!", builtin_set_clear);
     lex_add_builtin(e, "set-add!", builtin_set_add);
     lex_add_builtin(e, "set-remove!", builtin_set_remove);
     lex_add_builtin(e, "set-member?", builtin_set_member);
@@ -569,7 +570,18 @@ void lex_add_builtins(const Lex* e)
      */
     lex_add_builtin(e, "make-map", builtin_make_map);
     lex_add_builtin(e, "map-copy", builtin_map_copy);
+    lex_add_builtin(e, "map-clear!", builtin_map_clear);
     lex_add_builtin(e, "map-add!", builtin_map_add);
     lex_add_builtin(e, "map-remove!", builtin_map_remove);
     lex_add_builtin(e, "map-get", builtin_map_get);
+    lex_add_builtin(e, "map-keys", builtin_map_keys);
+    lex_add_builtin(e, "map-values", builtin_map_values);
+    lex_add_builtin(e, "map->alist", builtin_map_to_alist);
+    lex_add_builtin(e, "alist->map", builtin_alist_to_map);
+    lex_add_builtin(e, "map-keys-map", builtin_map_keys_map);
+    lex_add_builtin(e, "map-values-map", builtin_map_values_map);
+    lex_add_builtin(e, "map-keys-foreach", builtin_map_keys_foreach);
+    lex_add_builtin(e, "map-values-foreach", builtin_map_values_foreach);
+    lex_add_builtin(e, "map-items-map", builtin_map_items_map);
+    lex_add_builtin(e, "map-items-foreach", builtin_map_items_foreach);
 }
