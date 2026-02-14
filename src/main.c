@@ -29,6 +29,7 @@
 #include <stdlib.h>
 #include <getopt.h>
 #include <unistd.h>
+#include <locale.h>
 
 #define nullptr ((void*)0)
 
@@ -100,6 +101,8 @@ int main(const int argc, char** argv)
     /* GC docs say this probably isn't necessary,
      * but to do it to be portable with older versions. */
     GC_INIT();
+
+    setlocale(LC_ALL, "");
 
     /* Check if history file exists. If not, create it. */
     init_history_path();
