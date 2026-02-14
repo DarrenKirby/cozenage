@@ -547,7 +547,6 @@ Cell* make_cell_set(const Cell* values) {
         }
     }
     v->table = t;
-    v->count = (int)ght_length(t);
     return v;
 }
 
@@ -565,7 +564,6 @@ Cell* make_cell_map(const Cell* values) {
         ght_set(t, values->cell[i], values->cell[i + 1]);
     }
     v->table = t;
-    v->count = (int)ght_length(t);
     return v;
 }
 
