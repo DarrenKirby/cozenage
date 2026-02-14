@@ -199,6 +199,8 @@ Cell* builtin_len(const Lex* e, const Cell* a) {
     Cell* err = CHECK_ARITY_EXACT(a, 1, "len");
     if (err) return err;
 
+    /* TODO: we cache lengths, except for improper lists.
+     * Get rid of these function calls. */
     switch (a->cell[0]->type) {
     case CELL_PAIR:
         return builtin_list_length(e, a);
@@ -210,7 +212,7 @@ Cell* builtin_len(const Lex* e, const Cell* a) {
         return builtin_string_length(e, a);
     case CELL_SET:
     case CELL_MAP:
-        return make_cell_integer((long long)ght_length(a->cell[0]->table));
+        return make_cell_integer((long long)a->cell[0]->table->count);
     default:
         return make_cell_error(
             fmt_err("len: no length for non-compound type: %s",
@@ -246,7 +248,7 @@ Cell* builtin_idx(const Lex* e, const Cell* a)
         return builtin_string_ref(e, a);
     default:
         return make_cell_error(
-        fmt_err("at: cannot subscript non-compound type: %s",
+        fmt_err("at: cannot subscript non-ordered type: %s",
             cell_type_name(a->cell[0]->type)), TYPE_ERR);
     }
 }
@@ -268,7 +270,7 @@ Cell* builtin_rev(const Lex* e, const Cell* a)
         return string_reverse(a->cell[0]);
     default:
         return make_cell_error(
-            fmt_err("rev: cannot reverse non-compound type: %s",
+            fmt_err("rev: cannot reverse non-ordered type: %s",
                 cell_type_name(a->cell[0]->type)),
                 TYPE_ERR);
     }
