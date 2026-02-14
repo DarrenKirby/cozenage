@@ -23,9 +23,14 @@
 
 #include "cell.h"
 
+/* Internal helpers. */
 Cell* copy_hash_table(const Cell* t);
+Cell* clear_hash_table(Cell* t);
+Cell* map_logic(const Cell* proc, const Cell* h_table, const Lex* e, bool k, bool ret_res);
+/* User-level procedures. */
 Cell* builtin_set(const Lex* e, const Cell* a);
 Cell* builtin_set_copy(const Lex* e, const Cell* a);
+Cell* builtin_set_clear(const Lex* e, const Cell* a);
 Cell* builtin_set_add(const Lex* e, const Cell* a);
 Cell* builtin_set_remove(const Lex* e, const Cell* a);
 Cell* builtin_set_member(const Lex* e, const Cell* a);

@@ -28,7 +28,8 @@
 
 
 /* Helper for fast copy of hash table structure. */
-Cell* copy_hash_table(const Cell* t) {
+Cell* copy_hash_table(const Cell* t)
+{
     const uint32_t type = t->type;
 
     const size_t cap = t->table->capacity;
@@ -36,7 +37,6 @@ Cell* copy_hash_table(const Cell* t) {
     r->type = type;
     r->table = GC_MALLOC(sizeof(ght_table));
     r->table->count = t->table->count;
-    r->count = t->count;
     r->table->capacity = t->table->capacity;
     r->table->items = GC_MALLOC(sizeof(ght_item) * cap);
 
@@ -44,6 +44,50 @@ Cell* copy_hash_table(const Cell* t) {
         sizeof(ght_item) * t->table->capacity);
 
     return r;
+}
+
+
+/* Helper for clearing hash table items. */
+Cell* clear_hash_table(Cell* t)
+{
+    t->table->count = 0;
+    t->table->capacity = 8; /* Default initial capacity. */
+    GC_FREE(t->table->items);
+    t->table->items = GC_MALLOC(sizeof(ght_item) * t->table->capacity);
+    return t;
+}
+
+
+/* Helper for map and foreach logic. 'k' is whether we are operating on keys (true) or values (false).
+ * 'ret_res' is whether we are returning results (map -> true) or not (foreach -> false). */
+Cell* map_logic(const Cell* proc, const Cell* h_table, const Lex* e, const bool k, const bool ret_res)
+{
+    Cell* result = make_cell_sexpr();
+
+    ghti it = ght_iterator(h_table->table);
+    while (ght_next(&it)) {
+        /* Apply procedure. */
+        Cell* val;
+
+        if (proc->is_builtin) {
+            val = k ? proc->builtin(e, make_sexpr_len1(it.key)) :
+                      proc->builtin(e, make_sexpr_len1(it.value));
+        } else {
+            val = k ? coz_apply_and_get_val(proc, make_sexpr_len1(it.key), e) :
+                      coz_apply_and_get_val(proc, make_sexpr_len1(it.value), e);
+        }
+
+        if (val && val->type == CELL_ERROR) return val;
+        if (ret_res) {
+            /* Ignore unspecified results. */
+            if (val == USP_Obj) continue;
+            cell_add(result, val);
+        }
+    }
+    if (ret_res) {
+        return make_list_from_sexpr(result);
+    }
+    return USP_Obj;
 }
 
 
@@ -90,6 +134,24 @@ Cell* builtin_set_copy(const Lex* e, const Cell* a)
 }
 
 
+/* (set-clear! set)
+ * Returns the same set object with all keys cleared. */
+Cell* builtin_set_clear(const Lex* e, const Cell* a)
+{
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "set-clear!");
+    if (err) return err;
+
+    Cell* set = a->cell[0];
+    if (set->type != CELL_SET) {
+        return make_cell_error(
+            "set-clear!: arg must be a set",
+            TYPE_ERR);
+    }
+    return clear_hash_table(set);
+}
+
+
 /* (set-add set obj ...)
  * Adds an arbitrary number of objects to set. obj may be any hashable type, or compound types list and vector, in which
  * case the members of list or vector objects will be added to set. Raises type error if any object, or any member of a
@@ -121,7 +183,7 @@ Cell* builtin_set_add(const Lex* e, const Cell* a)
                 ght_set(set->table, varg, True_Obj);
             }
         } else if (arg->type == CELL_PAIR) {
-            Cell* p = arg;
+            const Cell* p = arg;
             while (p->cdr) {
                 if (!cell_is_hashable(p->car)) {
                     return make_cell_error(
@@ -147,10 +209,10 @@ Cell* builtin_set_add(const Lex* e, const Cell* a)
 }
 
 
-/* (set-remove set obj)
- * (set-remove set obj sym)
+/* (set-remove! set obj)
+ * (set-remove! set obj sym)
  * Removes obj from set, and returns the mutated set. Raises an index error if object is not a member of set. If an
- * optional symbol (any symbol) is passed in fourth position, the procedure will not raise the index error, but rather
+ * optional symbol (any symbol) is passed as third arg, the procedure will not raise the index error, but rather
  * silently return. */
 Cell* builtin_set_remove(const Lex* e, const Cell* a)
 {
@@ -343,7 +405,7 @@ Cell* builtin_set_intersection(const Lex* e, const Cell* a)
 }
 
 
-/* (set-intersection set1 set2)
+/* (set-intersection! set1 set2)
  * Returns set1 mutated to the intersection of set1 and set2 (ie: set1 ∩ set2). */
 Cell* builtin_set_intersection_bang(const Lex* e, const Cell* a)
 {
@@ -390,7 +452,7 @@ Cell* builtin_set_difference(const Lex* e, const Cell* a)
 }
 
 
-/* (set-difference set1 set2)
+/* (set-difference! set1 set2)
  * Returns set1 mutated to the difference of set1 and set2 (ie: set1 - set2). */
 Cell* builtin_set_difference_bang(const Lex* e, const Cell* a)
 {
@@ -443,7 +505,7 @@ Cell* builtin_set_sym_difference(const Lex* e, const Cell* a)
 }
 
 
-/* (set-sym-difference set1 set2)
+/* (set-sym-difference! set1 set2)
  * Returns set1 mutated to the symmetric difference of set1 and set2 (ie: set1 Δ set2). */
 Cell* builtin_set_sym_difference_bang(const Lex* e, const Cell* a)
 {
@@ -466,6 +528,8 @@ Cell* builtin_set_sym_difference_bang(const Lex* e, const Cell* a)
     while (ght_next(&it)) {
         if (ght_get(sa->table, it.key)) {
             ght_delete(sa->table, it.key);
+        } else {
+            ght_set(sa->table, it.key, True_Obj);
         }
     }
     return sa;
@@ -474,7 +538,7 @@ Cell* builtin_set_sym_difference_bang(const Lex* e, const Cell* a)
 
 /* (set->map proc set)
  * Returns a list containing the results of applying proc to each key in set. The order of the procedure applications is
- * indeterminate. */
+ * indeterminate. The proc must accept exactly one arg, which will be each key from the set. */
 Cell* builtin_set_map(const Lex* e, const Cell* a)
 {
     Cell* err = CHECK_ARITY_EXACT(a, 2, "set-map");
@@ -493,31 +557,14 @@ Cell* builtin_set_map(const Lex* e, const Cell* a)
             "set-map: arg2 must be a set",
             TYPE_ERR);
     }
-
-    Cell* result = make_cell_sexpr();
-    ghti it = ght_iterator(set->table);
-    while (ght_next(&it)) {
-        /* Apply procedure. */
-        Cell* val;
-
-        if (proc->is_builtin) {
-            val = proc->builtin(e, make_sexpr_len1(it.key));
-        } else {
-            val = coz_apply_and_get_val(proc, make_sexpr_len1(it.key), (Lex*)e);
-        }
-
-        if (val && val->type == CELL_ERROR) return val;
-        /* Ignore unspecified results. */
-        if (val == USP_Obj) continue;
-        cell_add(result, val);
-    }
-    return make_list_from_sexpr(result);
+    return map_logic(proc, set, e, true, true);
 }
 
 
 /* (set-foreach proc set)
  * Applies proc to each key in set. Unlike set-map, this procedure is used for side effects. Returns #void. The order of
- * the procedure applications is indeterminate. */
+ * the procedure applications is indeterminate. The proc must accept exactly one arg, which will be each key from the
+ * set. */
 Cell* builtin_set_foreach(const Lex* e, const Cell* a)
 {
     Cell* err = CHECK_ARITY_EXACT(a, 2, "set-foreach");
@@ -536,21 +583,7 @@ Cell* builtin_set_foreach(const Lex* e, const Cell* a)
             "set-foreach: arg2 must be a set",
             TYPE_ERR);
     }
-
-    ghti it = ght_iterator(set->table);
-    while (ght_next(&it)) {
-        Cell* val;
-        if (proc->is_builtin) {
-            val = proc->builtin(e, make_sexpr_len1(it.key));
-        } else {
-            val = coz_apply_and_get_val(proc, make_sexpr_len1(it.key), (Lex*)e);
-        }
-
-        /* If the procedure returns an error, stop and propagate it. */
-        if (val && val->type == CELL_ERROR) return val;
-    }
-
-    return USP_Obj;
+    return map_logic(proc, set, e, true, false);
 }
 
 
@@ -562,7 +595,7 @@ Cell* builtin_list_to_set(const Lex* e, const Cell* a)
     Cell* err = CHECK_ARITY_EXACT(a, 1, "list->set");
     if (err) return err;
     if (a->cell[0]->type != CELL_PAIR || a->cell[0]->count == -1) {
-        make_cell_error(
+        return make_cell_error(
             "list->set: arg must be a proper list",
             TYPE_ERR);
     }
