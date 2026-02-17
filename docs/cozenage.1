@@ -8,13 +8,13 @@ cozenage \- Scheme-derived REPL and code runner
 .B cozenage
 is a Scheme-derived, Lisp-like programming language written in C.
 It is designed primarily as an educational and exploratory implementation,
-providing a small, expressive core language extended through libraries and
+providing a small core language extended through libraries of
 dynamically loadable modules.
 
 Cozenage borrows heavily from Scheme, particularly R5RS and R7RS, but is not
 fully standard-compliant. Where practical, Scheme semantics and conventions
-are followed, with deliberate deviations made for clarity, simplicity, or
-implementation constraints.
+are followed, with deliberate deviations made for clarity, simplicity,
+implementation constraints, and inclinations of the author.
 
 Users familiar with Scheme or other Lisp dialects should find Cozenage
 immediately familiar.
@@ -42,7 +42,7 @@ Display version information and exit.
 .SH ENVIRONMENT
 .TP
 .B COZENAGE_LIB_PATH
-If set, this variable specifies a colon-delimited list of directories
+If set, this variable specifies the directory
 to search for dynamically loadable Cozenage modules.
 .SH USAGE
 To start an interactive REPL:
@@ -91,16 +91,17 @@ value over exhaustive standards compliance.
 Its design emphasizes clarity over completeness, a modest core language,
 and practical, predictable Lisp semantics.
 .SH BUGS
-Bug reports may be sent to:
-.PP
-.RS
-<darren@dragonbyte.ca>
-.RE
-.PP
-or filed on the GitHub project page:
+The author strongly prefers that bug reports be filed on the issue tracker at the project's GitHub page:
 .PP
 .RS
 https://github.com/DarrenKirby/cozenage
+.RE
+.PP
+to keep them organized, centralized, categorized, and publicly accessible. However, for those
+unable, or disinclined to use the GitHub interface, bug preports can also be E-mailed to:
+.PP
+.RS
+<cozenage@dragonbyte.ca>
 .RE
 .SH SEE ALSO
 The full Cozenage documentation and source code are available via the
