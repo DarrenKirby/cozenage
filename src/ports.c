@@ -34,41 +34,6 @@
 #include <sys/select.h>
 
 
-/* Helpers for read-char and peek-char to deal with multibyte characters. */
-
-/* Encodes a Unicode code point into a byte array. Returns number of bytes (1-4). */
-static int utf8_encode(const UChar32 c, uint8_t* out_buf) {
-    if (c <= 0x7F) {
-        out_buf[0] = (uint8_t)c;
-        return 1;
-    }
-    if (c <= 0x7FF) {
-        out_buf[0] = (uint8_t)((c >> 6) | 0xC0);
-        out_buf[1] = (uint8_t)((c & 0x3F) | 0x80);
-        return 2;
-    }
-    if (c <= 0xFFFF) {
-        out_buf[0] = (uint8_t)((c >> 12) | 0xE0);
-        out_buf[1] = (uint8_t)(((c >> 6) & 0x3F) | 0x80);
-        out_buf[2] = (uint8_t)((c & 0x3F) | 0x80);
-        return 3;
-    }
-    out_buf[0] = (uint8_t)((c >> 18) | 0xF0);
-    out_buf[1] = (uint8_t)(((c >> 12) & 0x3F) | 0x80);
-    out_buf[2] = (uint8_t)(((c >> 6) & 0x3F) | 0x80);
-    out_buf[3] = (uint8_t)((c & 0x3F) | 0x80);
-    return 4;
-}
-
-/* Helper to determine UTF-8 sequence length from the first byte. */
-static int utf8_len(const uint8_t first_byte) {
-    if ((first_byte & 0x80) == 0)    return 1;
-    if ((first_byte & 0xE0) == 0xC0) return 2;
-    if ((first_byte & 0xF0) == 0xE0) return 3;
-    if ((first_byte & 0xF8) == 0xF0) return 4;
-    return -1; /* Invalid UTF-8 start byte. */
-}
-
 /* The actual character reader. */
 static ssize_t port_read_char(const Cell* p, UChar32* out_char, int* err) {
     uint8_t buf[4];
@@ -88,7 +53,7 @@ static ssize_t port_read_char(const Cell* p, UChar32* out_char, int* err) {
         return R_ERR; /* Truncated multi-byte character. */
     }
 
-    /* Reconstruct UChar3.2 */
+    /* Reconstruct UChar32 */
     if (len == 2) {
         *out_char = ((buf[0] & 0x1F) << 6) | (buf[1] & 0x3F);
     } else if (len == 3) {
