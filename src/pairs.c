@@ -165,15 +165,8 @@ Cell* builtin_cddr(const Lex* e, const Cell* a)
 Cell* builtin_list(const Lex* e, const Cell* a)
 {
     (void)e;
-    /* Start with nil. */
-    Cell* result = make_cell_nil();
-
-    const int len = a->count;
-    /* Build backwards so it comes out in the right order. */
-    for (int i = len - 1; i >= 0; i--) {
-        result = make_cell_pair(a->cell[i], result);
-        result->len = len - i;
-    }
+    Cell* result = make_list_from_sexpr((Cell*)a);
+    result->len = a->count;
     return result;
 }
 
@@ -282,9 +275,9 @@ Cell* builtin_list_ref(const Lex* e, const Cell* a)
     if (err) return err;
 
     const Cell* list = a->cell[0];
-    if (list->type != CELL_PAIR) {
+    if (list->type != CELL_PAIR || list->len == -1) {
         return make_cell_error(
-            "list-ref: arg 1 must be a pair",
+            "list-ref: arg 1 must be a list",
             TYPE_ERR);
     }
 
@@ -301,30 +294,15 @@ Cell* builtin_list_ref(const Lex* e, const Cell* a)
             INDEX_ERR);
     }
 
-    /* Fast Path: Bounds check using metadata (if available). */
+    /* Bounds check using metadata. */
     if (list->len > 0 && idx >= list->len) {
         return make_cell_error(
             "list-ref: index out of range",
             INDEX_ERR);
     }
 
-    /* Walk the list. */
-    const Cell* curr = list;
-    int32_t count = idx;
-
-    while (count > 0) {
-        curr = curr->cdr;
-        count--;
-
-        /* If we hit something that isn't a pair before count reaches 0, it's an error. */
-        if (curr->type != CELL_PAIR) {
-            return make_cell_error(
-                "list-ref: index out of range or improper list",
-                INDEX_ERR);
-        }
-    }
-
-    return curr->car;
+    /* Already validated idx and list, no need to check the return. */
+    return list_get_nth_cell_ptr(list, idx, false);
 }
 
 
@@ -417,7 +395,7 @@ Cell* builtin_list_append(const Lex* e, const Cell* a)
         }
     }
 
-    /* Finalize: Link the last argument and return */
+    /* Finalize: Link the last argument and return. */
     if (result_tail == NULL) {
         /* This happens if all arguments before the last were '(). */
         return (Cell*)last_arg;
@@ -475,7 +453,13 @@ Cell* builtin_list_tail(const Lex* e, const Cell* a)
     Cell* err = CHECK_ARITY_EXACT(a, 2, "list-tail");
     if (err) return err;
 
-    Cell* lst = a->cell[0];
+    const Cell* lst = a->cell[0];
+    if (lst->type != CELL_PAIR || lst->len == -1) {
+        return make_cell_error(
+            "list-tail: arg1 must be a list",
+            TYPE_ERR);
+    }
+
     if (a->cell[1]->type != CELL_INTEGER) {
         return make_cell_error(
             "list-tail: arg 2 must be an integer",
@@ -489,28 +473,13 @@ Cell* builtin_list_tail(const Lex* e, const Cell* a)
             VALUE_ERR);
     }
 
-    /* Fast Path: If we have a cached length, use it to fail fast. */
-    if (lst->type == CELL_PAIR && lst->len > 0 && k > lst->len) {
+    if (k > lst->len) {
         return make_cell_error(
             "list-tail: index out of range",
             INDEX_ERR);
     }
-
-    /* Traverse the list. */
-    Cell* p = lst;
-    for (int32_t i = 0; i < k; i++) {
-        if (p->type != CELL_PAIR) {
-            /* If we aren't at a pair and still need to move forward, it's an error. */
-            return make_cell_error(
-                "list-tail: index out of range",
-                INDEX_ERR);
-        }
-        p = p->cdr;
-    }
-
-    /* If k was 0, p is still the original lst (correct for any type).
-       Otherwise, p is the k-th cdr. */
-    return p;
+    /* k-1 here, as by the kth iteration we're pointing at the cdr of the pair we want. */
+    return list_get_nth_cell_ptr(lst, k - 1, true);
 }
 
 
@@ -923,7 +892,7 @@ Cell* builtin_foldl(const Lex* e, const Cell* a)
         for (int j = 2; j < 2 + num_lists; j++) {
             /* Add the i-th element of the list argument(s). */
             const Cell* current_list = a->cell[j];
-            Cell* nth_item = list_get_nth_cell_ptr(current_list, i);
+            Cell* nth_item = list_get_nth_cell_ptr(current_list, i, false);
             cell_add(arg_list, nth_item);
         }
 
@@ -940,7 +909,7 @@ Cell* builtin_foldl(const Lex* e, const Cell* a)
             /* Propagate any evaluation errors. */
             return tmp_result;
         }
-        /* assign the result to the accumulator. */
+        /* Assign the result to the accumulator. */
         init = tmp_result;
     }
     /* Return the accumulator after all list args are evaluated. */
@@ -987,7 +956,7 @@ Cell* builtin_foldr(const Lex* e, const Cell* a)
         for (int j = 2; j < 2 + num_lists; j++) {
             /* Add the i-th element of the list argument(s). */
             const Cell* current_list = a->cell[j];
-            Cell* nth_item = list_get_nth_cell_ptr(current_list, i);
+            Cell* nth_item = list_get_nth_cell_ptr(current_list, i, false);
             cell_add(arg_list, nth_item);
         }
         /* Add the acc arg LAST for foldr. */
@@ -1050,7 +1019,7 @@ Cell* builtin_zip(const Lex* e, const Cell* a)
          * 'reversed' list is constructed, order is correct. */
         for (int j = num_lists-1 ; j >= 0; j--) {
             const Cell* current_list = a->cell[j];
-            Cell* nth_item = list_get_nth_cell_ptr(current_list, i);
+            Cell* nth_item = list_get_nth_cell_ptr(current_list, i, false);
             inner_list = make_cell_pair(nth_item, inner_list);
             /* len is the number of lists. */
             inner_list->len = num_lists;
