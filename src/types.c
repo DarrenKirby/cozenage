@@ -1004,9 +1004,10 @@ const NamedChar* find_named_char(const char* name)
 }
 
 
-/* helper to get a pointer to the value in the Nth node of a list.
+/* Helper to get a pointer to either the value in the Nth node of a list,
+ * or the node itself if we are taking the tail.
  * Returns NULL if the index is out of bounds or the input is not a list. */
-Cell* list_get_nth_cell_ptr(const Cell* list, const long n)
+Cell* list_get_nth_cell_ptr(const Cell* list, const long n, const bool tail)
 {
     const Cell* current = list;
     for (long i = 0; i < n; i++) {
@@ -1021,12 +1022,136 @@ Cell* list_get_nth_cell_ptr(const Cell* list, const long n)
     if (current->type != CELL_PAIR) {
         return nullptr;
     }
-    /* The value we want is the CAR of this final pair. */
-    return current->car;
+    /* If tail=false, the value we want is the CAR of this final pair.
+     * If tail=true we want the cdr (assuming k-1 at caller). */
+    return tail? current->cdr : current->car;
 }
 
 
 /* Helpers for dealing with strings and Unicode. */
+
+/* Encodes a Unicode code point into a byte array. Returns number of bytes (1-4). */
+int utf8_encode(const UChar32 c, uint8_t* out_buf) {
+    if (c <= 0x7F) {
+        out_buf[0] = (uint8_t)c;
+        return 1;
+    }
+    if (c <= 0x7FF) {
+        out_buf[0] = (uint8_t)((c >> 6) | 0xC0);
+        out_buf[1] = (uint8_t)((c & 0x3F) | 0x80);
+        return 2;
+    }
+    if (c<=0xd7ff || (0xe000<=c && c<=0xffff)) {
+        out_buf[0] = (uint8_t)((c >> 12) | 0xE0);
+        out_buf[1] = (uint8_t)(((c >> 6) & 0x3F) | 0x80);
+        out_buf[2] = (uint8_t)((c & 0x3F) | 0x80);
+        return 3;
+    }
+    if (0xffff < c && c <= 0x10ffff) {
+        out_buf[0] = (uint8_t)((c >> 18) | 0xF0);
+        out_buf[1] = (uint8_t)(((c >> 12) & 0x3F) | 0x80);
+        out_buf[2] = (uint8_t)(((c >> 6) & 0x3F) | 0x80);
+        out_buf[3] = (uint8_t)((c & 0x3F) | 0x80);
+        return 4;
+    }
+    /* If the codepoint is invalid, fall back to the Unicode
+     * Replacement Character: U+FFFD.
+     * In UTF-8, this is 3 bytes: 0xEF, 0xBF, 0xBD. */
+    out_buf[0] = 0xEF;
+    out_buf[1] = 0xBF;
+    out_buf[2] = 0xBD;
+    return 3;
+}
+
+
+/* Helper to determine UTF-8 sequence length from the first byte. */
+int utf8_len(const uint8_t first_byte) {
+    if ((first_byte & 0x80) == 0)    return 1;
+    if ((first_byte & 0xE0) == 0xC0) return 2;
+    if ((first_byte & 0xF0) == 0xE0) return 3;
+    if ((first_byte & 0xF8) == 0xF0) return 4;
+    return -1; /* Invalid UTF-8 start byte. */
+}
+
+
+/* Extract the next (potentially) multi-byte char starting from *p. */
+uint32_t utf8_next(const uint8_t **p, const uint8_t *end)
+{
+    if (*p >= end) return 0xFFFD;
+
+    const uint8_t lead = *(*p)++;
+
+    if (lead < 0x80)
+        return lead;
+
+    int len;
+    uint32_t cp;
+
+    if ((lead & 0xE0) == 0xC0)      { len = 2; cp = lead & 0x1F; }
+    else if ((lead & 0xF0) == 0xE0) { len = 3; cp = lead & 0x0F; }
+    else if ((lead & 0xF8) == 0xF0) { len = 4; cp = lead & 0x07; }
+    else
+        return 0xFFFD;
+
+    for (int i = 1; i < len; i++) {
+        if (*p >= end) return 0xFFFD;
+
+        uint8_t cont = *(*p)++;
+        if ((cont & 0xC0) != 0x80)
+            return 0xFFFD;
+
+        cp = (cp << 6) | (cont & 0x3F);
+    }
+    return cp;
+}
+
+
+/* Move forward n codepoints and return byte offset. */
+static int32_t utf8_fwd_n(const uint8_t **p, const int32_t end, int n)
+{
+    int32_t offset = 0;
+    while (n-- > 0 && offset < end) {
+        const int char_len = utf8_len(**p);
+        offset += char_len;
+        *p += char_len;
+    }
+    return offset;
+}
+
+
+/* Move backward N codepoints and return byte offset. */
+static int32_t utf8_back_n(const uint8_t **p, const uint8_t *start, int32_t byte_offset, int n)
+{
+    while (n-- > 0 && *p > start) {
+        do {
+            --(*p);
+            --byte_offset;
+        } while (*p > start && (**p & 0xC0) == 0x80);
+    }
+    return byte_offset;
+}
+
+
+/* Returns the byte offset for the k-th character in a string. */
+int32_t get_utf8_byte_offset(const Cell* s, const int32_t char_idx)
+{
+    if (s->ascii) return char_idx;
+
+    int32_t byte_offset;
+    const uint8_t* ptr = ptr = (const uint8_t*)s->str;
+
+    /* Micro-optimization: search from front or back depending on k location. */
+    if (char_idx <= s->char_count / 2) {
+        /* Forward search. */
+        byte_offset = utf8_fwd_n(&ptr, s->char_count, char_idx);
+    } else {
+        /* Backward search. */
+        const uint8_t *ptr_end = (const uint8_t*)s->str + s->count;
+        byte_offset = utf8_back_n(&ptr_end, ptr, s->count, s->char_count - char_idx);
+    }
+    return byte_offset;
+}
+
 
 int32_t string_length_utf8(const char* s)
 {
@@ -1063,7 +1188,7 @@ bool is_pure_ascii(const char *str, size_t len) {
     }
 
     /* Process 8 bytes at a time.
-       Cast to uint64_t pointer now that we know we are aligned. */
+     * Cast to uint64_t pointer now that we know we are aligned. */
     const uint64_t *ptr64 = (const uint64_t *)ptr;
     // ReSharper disable once CppTooWideScope
     // ReSharper disable once CppVariableCanBeMadeConstexpr
@@ -1085,7 +1210,6 @@ bool is_pure_ascii(const char *str, size_t len) {
         ptr++;
         len--;
     }
-
     return true;
 }
 
