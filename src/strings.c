@@ -27,7 +27,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include <gc/gc.h>
-#include <unicode/utf8.h>
 #include <unicode/ustring.h>
 #include <unicode/uchar.h>
 #include <unicode/umachine.h>
@@ -472,7 +471,7 @@ Cell* builtin_string_list(const Lex* e, const Cell* a)
     }
 
     /* Jump to the starting byte offset. */
-    int32_t byte_index = get_utf8_byte_offset(s_cell, start);
+    const int32_t byte_index = get_utf8_byte_offset(s_cell, start);
 
     Cell* head = make_cell_nil();
     Cell* tail = nullptr;
@@ -536,8 +535,7 @@ Cell* builtin_list_string(const Lex* e, const Cell* a)
 
         const uint32_t cp = (uint32_t)curr->car->char_v;
         if (cp >= 0x80) is_ascii = 0;
-
-        total_bytes += U8_LENGTH(cp);
+        total_bytes += utf8_code_point_len(cp);
         char_count++;
         curr = curr->cdr;
     }
@@ -605,11 +603,8 @@ Cell* builtin_substring(const Lex* e, const Cell* a)
         start_byte = start;
         end_byte = end;
     } else {
-        /* Find start. */
-        U8_FWD_N(s_cell->str, start_byte, s_cell->count, start);
-        /* Find end starting from start_byte. */
-        end_byte = start_byte;
-        U8_FWD_N(s_cell->str, end_byte, s_cell->count, end - start);
+        start_byte = get_utf8_byte_offset(s_cell, start);
+        end_byte = get_utf8_byte_offset(s_cell, end);
     }
     int32_t byte_len = end_byte - start_byte;
 
@@ -677,10 +672,7 @@ Cell* builtin_string_set_bang(const Lex* e, const Cell* a)
     int32_t old_char_offset = get_utf8_byte_offset(s_cell, char_idx);
 
     /* Determine old char byte length. */
-    UChar32 dummy;
-    int32_t temp_offset = old_char_offset;
-    U8_NEXT(s_cell->str, temp_offset, s_cell->count, dummy);
-    const int32_t old_char_len = temp_offset - old_char_offset;
+    const int32_t old_char_len = utf8_len(s_cell->str[old_char_offset]);
 
     /* Determine new char byte length. */
     uint8_t new_encoded[4];
@@ -791,7 +783,6 @@ Cell* builtin_string_copy(const Lex* e, const Cell* a)
     if (!v->ascii) {
         v->ascii = is_pure_ascii(v->str, v->count);
     }
-
     return v;
 }
 

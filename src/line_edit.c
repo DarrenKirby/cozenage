@@ -21,6 +21,7 @@
 #include "line_edit.h"
 #include "hash.h"
 #include "main.h"
+#include "types.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -150,13 +151,15 @@ typedef struct {
 
 
 /* Signal handler. */
-static void sigint_handler(const int sig) {
+static void sigint_handler(const int sig)
+{
     (void)sig;
     got_interrupt = 1;
 }
 
 
-void install_signal_handlers(void) {
+void install_signal_handlers(void)
+{
     struct sigaction sa = {0};
     sa.sa_handler = sigint_handler;
     sigemptyset(&sa.sa_mask);
@@ -166,7 +169,8 @@ void install_signal_handlers(void) {
 
 
 /* Terminal management */
-static void disable_raw_mode(void) {
+static void disable_raw_mode(void)
+{
     if (raw_mode_enabled) {
         tcsetattr(STDIN_FILENO, TCSAFLUSH, &orig_termios);
         raw_mode_enabled = 0;
@@ -174,7 +178,8 @@ static void disable_raw_mode(void) {
 }
 
 
-static int enable_raw_mode(void) {
+static int enable_raw_mode(void)
+{
     if (!isatty(STDIN_FILENO)) return -1;
     if (tcgetattr(STDIN_FILENO, &orig_termios) == -1) return -1;
 
@@ -192,46 +197,9 @@ static int enable_raw_mode(void) {
 }
 
 
-/* UTF-8 handling. */
-static size_t utf8_char_len(unsigned char c) {
-    if ((c & 0x80) == 0) return 1;
-    if ((c & 0xE0) == 0xC0) return 2;
-    if ((c & 0xF0) == 0xE0) return 3;
-    if ((c & 0xF8) == 0xF0) return 4;
-    return 1;
-}
-
-
-static size_t utf8_strlen(const char* str) {
-    size_t len = 0;
-    while (*str) {
-        const size_t char_len = utf8_char_len((unsigned char)*str);
-        str += char_len;
-        len++;
-    }
-    return len;
-}
-
-
-static size_t utf8_prev_char(const char* str, size_t pos) {
-    if (pos == 0) return 0;
-    pos--;
-    while (pos > 0 && (str[pos] & 0xC0) == 0x80) pos--;
-    return pos;
-}
-
-
-static size_t utf8_next_char(const char* str, size_t pos, size_t len) {
-    if (pos >= len) return len;
-    const size_t char_len = utf8_char_len((unsigned char)str[pos]);
-    pos += char_len;
-    if (pos > len) return len;
-    return pos;
-}
-
-
 /* Get terminal width. */
-static int get_terminal_width(void) {
+static int get_terminal_width(void)
+{
     struct winsize ws;
     if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws) == -1) return 80;
     return ws.ws_col;
@@ -240,7 +208,8 @@ static int get_terminal_width(void) {
 
 /* This refreshes and redraws the current input line whilst cycling through
  * history entries. */
-static void refresh_line(LineState* ls) {
+static void refresh_line(LineState* ls)
+{
     /* Move cursor to beginning of line. */
     printf("\r");
 
@@ -277,7 +246,8 @@ static void refresh_line(LineState* ls) {
 
 
 /* History functions. */
-void add_history_entry(const char* line) {
+void add_history_entry(const char* line)
+{
     if (!line || !*line) return;
 
     /* Don't add duplicates. */
@@ -304,7 +274,8 @@ void add_history_entry(const char* line) {
 }
 
 
-int read_history(const char* filename) {
+int read_history(const char* filename)
+{
     FILE* fp = fopen(filename, "r");
     if (!fp) return -1;
 
@@ -326,7 +297,8 @@ int read_history(const char* filename) {
 }
 
 
-int write_history(const char* filename) {
+int write_history(const char* filename)
+{
     FILE* fp = fopen(filename, "w");
     if (!fp) return -1;
 
@@ -340,7 +312,8 @@ int write_history(const char* filename) {
 
 
 /* Tilde expansion. */
-char* tilde_expand(const char* path) {
+char* tilde_expand(const char* path)
+{
     if (!path || path[0] != '~') {
         return GC_strdup(path);
     }
@@ -381,7 +354,8 @@ char* tilde_expand(const char* path) {
 
 
 /* Filename completion. */
-static char* le_filename_generator(const char* text, int state) {
+static char* le_filename_generator(const char* text, const int state)
+{
     static DIR* dir = nullptr;
     static char* dirname_buf = nullptr;
     static char* basename_buf = nullptr;
@@ -480,7 +454,8 @@ static char* le_symbol_generator(const char *text, const int state)
 
 
 /* Completion matching. */
-static char** le_completion_matches(const char* text, char* (*generator)(const char*, int)) {
+static char** le_completion_matches(const char* text, char* (*generator)(const char*, int))
+{
     size_t matches_size = 16;
     char** matches = GC_MALLOC(sizeof(char*) * matches_size);
     size_t match_count = 0;
@@ -532,13 +507,15 @@ static char** le_completion_matches(const char* text, char* (*generator)(const c
 
 
 /* Used for filename completions. */
-static bool is_filename_char(const char c) {
+static bool is_filename_char(const char c)
+{
     return c != '"' && !isspace((unsigned char)c);
 }
 
 
 /* Used for procedure completions. */
-static bool is_symbol_char(const char c) {
+static bool is_symbol_char(const char c)
+{
     return isalnum((unsigned char)c) ||
            c == '-' || c == '_' ||
            c == '!' || c == '?' ||
@@ -551,7 +528,8 @@ static bool is_symbol_char(const char c) {
 
 /* Extract word at cursor for completion. */
 static void extract_word_at_cursor(const LineState* ls, size_t* start,
-                                  size_t* end, const bool filename_mode) {
+                                  size_t* end, const bool filename_mode)
+{
     *start = ls->cursor;
     *end   = ls->cursor;
 
@@ -574,7 +552,8 @@ static void extract_word_at_cursor(const LineState* ls, size_t* start,
 
 
 /* Heuristic to decide which completion generator to use. */
-static bool cursor_is_inside_string(const LineState *ls) {
+static bool cursor_is_inside_string(const LineState *ls)
+{
     bool in_string = false;
 
     for (size_t i = 0; i < ls->cursor; i++) {
@@ -588,7 +567,8 @@ static bool cursor_is_inside_string(const LineState *ls) {
 
 
 /* Handle tab completion. */
-static void handle_completion(LineState* ls) {
+static void handle_completion(LineState* ls)
+{
     const bool filename_mode = cursor_is_inside_string(ls);
 
     /* Extract word at cursor. */
@@ -796,7 +776,8 @@ static size_t visible_width(const char *s)
 
 
 /* Clears the current line on Ctrl-C and Ctrl-G. */
-static void clear_current_line(const LineState *ls) {
+static void clear_current_line(const LineState *ls)
+{
     /* Move to start of line. */
     printf("\r");
 
@@ -822,7 +803,8 @@ static void clear_current_line(const LineState *ls) {
 
 /* Main readline function. Returns a struct le_result which holds the string and
  * a status if a signal was caught so read_multiline can react accordingly. */
-le_result readline(const char* prompt) {
+le_result readline(const char* prompt)
+{
     if (!isatty(STDIN_FILENO)) {
         /* Not a TTY - just read a line normally. */
         char *line = nullptr;
@@ -998,7 +980,7 @@ le_result readline(const char* prompt) {
                                     ls.buffer[0] = '\0';
                                     ls.length = ls.cursor = 0;
                                 } else {
-                                    size_t hist_len = strlen(history.entries[history.current]);
+                                    const size_t hist_len = strlen(history.entries[history.current]);
                                     if (hist_len >= ls.buffer_size) {
                                         ls.buffer_size = hist_len + 256;
                                         ls.buffer = GC_REALLOC(ls.buffer, ls.buffer_size);
@@ -1043,7 +1025,7 @@ le_result readline(const char* prompt) {
                 if (c >= 32) {  /* Printable character. */
                     /* Check if we need to handle UTF-8. */
                     unsigned char utf8_buf[5] = {c, 0, 0, 0, 0};
-                    size_t char_len = utf8_char_len(c);
+                    size_t char_len = utf8_len(c);
 
                     /* Read rest of UTF-8 character if needed. */
                     for (size_t i = 1; i < char_len; i++) {

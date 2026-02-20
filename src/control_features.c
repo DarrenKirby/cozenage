@@ -29,7 +29,6 @@
 
 #include <stdlib.h>
 #include <gc/gc.h>
-#include <unicode/utf8.h>
 
 
 extern int is_repl;
@@ -330,9 +329,14 @@ Cell* builtin_string_map(const Lex* e, const Cell* a)
         Cell* args_sexpr = make_cell_sexpr();
 
         for (int j = 0; j < num_strings; j++) {
-            UChar32 c;
-            U8_NEXT(s_cells[j]->str, byte_offsets[j], s_cells[j]->count, c);
+            const uint8_t *ptr = (uint8_t*)s_cells[j]->str;
+            const uint8_t *end_ptr = ptr + s_cells[j]->count;
+            ptr += byte_offsets[j];
+
+            const int32_t c = (int)utf8_next(&ptr, end_ptr);
+
             cell_add(args_sexpr, make_cell_char(c));
+            byte_offsets[j] += utf8_code_point_len(c);
         }
 
         Cell* val;
@@ -351,8 +355,7 @@ Cell* builtin_string_map(const Lex* e, const Cell* a)
 
         const UChar32 res_c = val->char_v;
         res_chars[i] = res_c;
-
-        const int b_len = U8_LENGTH(res_c);
+        const int b_len = utf8_code_point_len(res_c);
         total_bytes += b_len;
         if (res_c > 0x7F) {
             is_ascii = 0;
@@ -360,28 +363,17 @@ Cell* builtin_string_map(const Lex* e, const Cell* a)
     }
 
     /* Encode the result array into the final UTF-8 string. */
-    char* buffer = GC_MALLOC_ATOMIC(total_bytes + 1);
-    int32_t write_idx = 0;
+    uint8_t* buffer = GC_MALLOC_ATOMIC(total_bytes + 1);
+    int write_idx = 0;
     for (int i = 0; i < shortest_len; i++) {
-        UBool error = 0;
-        U8_APPEND(buffer, write_idx, total_bytes, res_chars[i], error);
-
-        if (error) {
-            /* If the codepoint is invalid, fall back to the Unicode
-               Replacement Character: U+FFFD.
-               In UTF-8, this is 3 bytes: 0xEF, 0xBF, 0xBD */
-            buffer[0] = (char)0xEF;
-            buffer[1] = (char)0xBF;
-            buffer[2] = (char)0xBD;
-            total_bytes = 3;
-        }
+         write_idx += utf8_encode(res_chars[i], buffer + write_idx);
     }
     buffer[total_bytes] = '\0';
 
     /* Manual Metadata Construction. */
     Cell* v = GC_MALLOC_ATOMIC(sizeof(Cell));
     v->type = CELL_STRING;
-    v->str = buffer;
+    v->str = (char*)buffer;
     v->count = total_bytes;
     v->char_count = shortest_len;
     v->ascii = is_ascii;
@@ -537,9 +529,14 @@ Cell* builtin_string_foreach(const Lex* e, const Cell* a)
         Cell* args_sexpr = make_cell_sexpr();
 
         for (int j = 0; j < num_strings; j++) {
-            UChar32 c;
-            U8_NEXT(s_cells[j]->str, byte_offsets[j], s_cells[j]->count, c);
+            const uint8_t *ptr = (uint8_t*)s_cells[j]->str;
+            const uint8_t *end_ptr = ptr + s_cells[j]->count;
+            ptr += byte_offsets[j];
+
+            const int32_t c = (int)utf8_next(&ptr, end_ptr);
+
             cell_add(args_sexpr, make_cell_char(c));
+            byte_offsets[j] += utf8_code_point_len(c);
         }
 
         Cell* val;

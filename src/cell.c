@@ -289,7 +289,7 @@ Cell* make_cell_string(const char* the_string)
     } else {
         /* Scan string to count actual UTF-8 codepoints. */
         v->ascii = 0;
-        v->char_count = string_length_utf8(the_string);
+        v->char_count = utf8_strlen(the_string);
     }
 
     v->type = CELL_STRING;
