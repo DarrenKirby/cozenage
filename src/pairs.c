@@ -79,6 +79,32 @@ inline Cell* cdr__(const Cell* list)
 }
 
 
+static int32_t list_len(const Cell* list)
+{
+    int32_t count = 0;
+    const Cell* slow = list;
+    const Cell* fast = list;
+
+    while (list->type == CELL_PAIR) {
+        count++;
+        list = list->cdr;
+
+        /* Tortoise and Hare Cycle Detection. */
+        if (fast->type == CELL_PAIR && fast->cdr->type == CELL_PAIR) {
+            fast = fast->cdr->cdr;
+            slow = slow->cdr;
+            if (fast == slow) return -2;
+        }
+
+        if (list->type == CELL_NIL) {
+            /* Found the end! Cache the result in the head for next time. */
+            return count;
+        }
+    }
+    /* Improper list. */
+    return -1;
+}
+
 /* ----------------------------------------------------------*
  *     pair/list constructors, selectors, and procedures     *
  * ----------------------------------------------------------*/
@@ -236,33 +262,14 @@ Cell* builtin_list_length(const Lex* e, const Cell* a)
     }
 
     /* SLOW PATH: Recount and detect cycles. */
-    int32_t count = 0;
-    const Cell* slow = list;
-    const Cell* fast = list;
-
-    while (list->type == CELL_PAIR) {
-        count++;
-        list = list->cdr;
-
-        /* Tortoise and Hare Cycle Detection. */
-        if (fast->type == CELL_PAIR && fast->cdr->type == CELL_PAIR) {
-            fast = fast->cdr->cdr;
-            slow = slow->cdr;
-            if (fast == slow) return make_cell_error(
-                "length: circular list",
-                VALUE_ERR);
-        }
-
-        if (list->type == CELL_NIL) {
-            /* Found the end! Cache the result in the head for next time. */
-            a->cell[0]->len = count;
-            return make_cell_integer(count);
-        }
+    const int32_t len = list_len(list);
+    if (len == -1) {
+        return make_cell_error("list-len: imprroper list", TYPE_ERR);
     }
-
-    return make_cell_error(
-        "length: improper list",
-        TYPE_ERR);
+    if (len == -2) {
+        return make_cell_error("list-length: circular list", VALUE_ERR);
+    }
+    return make_cell_integer(len);
 }
 
 
@@ -274,8 +281,8 @@ Cell* builtin_list_ref(const Lex* e, const Cell* a)
     Cell* err = CHECK_ARITY_EXACT(a, 2, "list-ref");
     if (err) return err;
 
-    const Cell* list = a->cell[0];
-    if (list->type != CELL_PAIR || list->len == -1) {
+    Cell* list = a->cell[0];
+    if (list->type != CELL_PAIR ) {
         return make_cell_error(
             "list-ref: arg 1 must be a list",
             TYPE_ERR);
@@ -299,6 +306,14 @@ Cell* builtin_list_ref(const Lex* e, const Cell* a)
         return make_cell_error(
             "list-ref: index out of range",
             INDEX_ERR);
+    }
+
+    /* Check if we have proper/improper list. */
+    if (list->len == -1) {
+        const int32_t len = list_len(list);
+        if (len >= 0) {
+            list->len = len;
+        }
     }
 
     /* Already validated idx and list, no need to check the return. */
@@ -454,11 +469,6 @@ Cell* builtin_list_tail(const Lex* e, const Cell* a)
     if (err) return err;
 
     const Cell* lst = a->cell[0];
-    if (lst->type != CELL_PAIR || lst->len == -1) {
-        return make_cell_error(
-            "list-tail: arg1 must be a list",
-            TYPE_ERR);
-    }
 
     if (a->cell[1]->type != CELL_INTEGER) {
         return make_cell_error(
@@ -473,12 +483,22 @@ Cell* builtin_list_tail(const Lex* e, const Cell* a)
             VALUE_ERR);
     }
 
+    if (lst->type == CELL_NIL) {
+        if (k == 0) return make_cell_nil();
+    }
+
     if (k > lst->len) {
         return make_cell_error(
             "list-tail: index out of range",
             INDEX_ERR);
     }
-    /* k-1 here, as by the kth iteration we're pointing at the cdr of the pair we want. */
+
+    if (lst->type != CELL_PAIR) {
+        return make_cell_error(
+            "list-tail: arg1 must be a list",
+            TYPE_ERR);
+    }
+    /* k-1 for k > 0 here, as by the kth iteration we're pointing at the cdr of the pair we want. */
     return list_get_nth_cell_ptr(lst, k - 1, true);
 }
 

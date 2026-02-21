@@ -539,6 +539,9 @@ Cell* flatten_sexpr(const Cell* sexpr)
  * Returns NULL if the index is out of bounds or the input is not a list. */
 Cell* list_get_nth_cell_ptr(const Cell* list, const long n, const bool tail)
 {
+    if (n < 0) {
+        return tail == true ? (Cell*)list : list->car;
+    }
     const Cell* current = list;
     for (long i = 0; i < n; i++) {
         /* Make sure we are still on a pair before trying to get the cdr. */
