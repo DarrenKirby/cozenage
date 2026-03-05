@@ -416,7 +416,7 @@ Cell* builtin_expt(const Lex* e, const Cell* a)
             long long result = 1;
             bool overflowed = false;
             for (long long i = 0; i < x; i++) {
-                long long out;
+                int64_t out;
                 if (mul_will_overflow_i64(result, b, &out)) {
                     overflowed = true;
                     break;
@@ -434,34 +434,33 @@ Cell* builtin_expt(const Lex* e, const Cell* a)
             }
             return make_cell_integer(result);
 
-        } else {
-            /* Negative exponent: compute 1/|b|^|x| as an exact rational,
-             * using integer exponentiation throughout to avoid the
-             * floating-point truncation of the original (fixes bug 17). */
-            const long long abs_exp = llabs(x);
-            const long long abs_b   = llabs(b);
-            long long denom = 1;
-            bool overflowed = false;
-            for (long long i = 0; i < abs_exp; i++) {
-                long long out;
-                if (mul_will_overflow_i64(denom, abs_b, &out)) {
-                    overflowed = true;
-                    break;
-                }
-                denom = out;
-            }
-            if (overflowed) {
-                /* Denominator too large for a rational; fall back to inexact. */
-                return make_cell_real(powl((long double)b, (long double)x));
-            }
-            /* Preserve sign: (-2)^-3 = -1/8, (-2)^-2 = 1/4. */
-            const bool negative_result = (b < 0) && (abs_exp % 2 != 0);
-            return make_cell_rational(negative_result ? -1 : 1, denom, true);
         }
+        /* Negative exponent: compute 1/|b|^|x| as an exact rational,
+         * using integer exponentiation throughout to avoid the
+         * floating-point truncation of the original (fixes bug 17). */
+        const long long abs_exp = llabs(x);
+        const long long abs_b = llabs(b);
+        long long denom = 1;
+        bool overflowed = false;
+        for (long long i = 0; i < abs_exp; i++) {
+            int64_t out;
+            if (mul_will_overflow_i64(denom, abs_b, &out)) {
+                overflowed = true;
+                break;
+            }
+            denom = out;
+        }
+        if (overflowed) {
+            /* Denominator too large for a rational; fall back to inexact. */
+            return make_cell_real(powl((long double)b, (long double)x));
+        }
+        /* Preserve sign: (-2)^-3 = -1/8, (-2)^-2 = 1/4. */
+        const bool negative_result = (b < 0) && (abs_exp % 2 != 0);
+        return make_cell_rational(negative_result ? -1 : 1, denom, true);
     }
 
     /* Base is a non-negative real (CELL_REAL, CELL_RATIONAL, or CELL_INTEGER
-     * with a non-integer exponent). The exact CELL_INTEGER + CELL_INTEGER case
+     * with a noninteger exponent). The exact CELL_INTEGER + CELL_INTEGER case
      * was fully handled above, so we return inexact for all remaining cases.
      * This also replaces the original (long)powl() rational hack (bug 17). */
     if (cell_is_real(base) && !cell_is_negative(base)) {
@@ -479,20 +478,20 @@ Cell* builtin_expt(const Lex* e, const Cell* a)
             const long double x = cell_to_long_double(exp);
             return make_cell_real(powl(b, x));
         }
-        /* Non-integer exponent with negative real base: result is complex. */
-        const long double x         = cell_to_long_double(base);
-        const long double y         = cell_to_long_double(exp);
+        /* Noninteger exponent with negative real base: result is complex. */
+        const long double x = cell_to_long_double(base);
+        const long double y = cell_to_long_double(exp);
         const long double magnitude = powl(fabsl(x), y);
-        const long double angle     = y * M_PI;
+        const long double angle = y * M_PI;
         Cell* real_part = make_cell_real(magnitude * cosl(angle));
         Cell* imag_part = make_cell_real(magnitude * sinl(angle));
         return make_cell_complex(real_part, imag_part);
     }
 
     /* Base is complex. */
-    const bool result_is_exact      = base->exact && exp->exact;
-    const long double complex b_c   = cell_to_c_complex(base);
-    const long double complex e_c   = cell_to_c_complex(exp);
+    const bool result_is_exact = base->exact && exp->exact;
+    const long double complex b_c = cell_to_c_complex(base);
+    const long double complex e_c = cell_to_c_complex(exp);
     const long double complex res_c = cpowl(b_c, e_c);
     const long double re = creall(res_c);
     const long double im = cimagl(res_c);
@@ -504,100 +503,10 @@ Cell* builtin_expt(const Lex* e, const Cell* a)
     }
     Cell* real_part = make_cell_real(re);
     Cell* imag_part = make_cell_real(im);
-    Cell* res       = make_cell_complex(real_part, imag_part);
-    res->exact      = result_is_exact;
+    Cell* res = make_cell_complex(real_part, imag_part);
+    res->exact = result_is_exact;
     return res;
 }
-// Cell* builtin_expt(const Lex* e, const Cell* a)
-// {
-//     (void)e;
-//     Cell* err = check_arg_types(a,
-//         CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX|CELL_BIGINT,
-//         "expt");
-//     if (err) { return err; }
-//     if ((err = CHECK_ARITY_EXACT(a, 2, "expt"))) { return err; }
-//
-//     const Cell* base = a->cell[0];
-//     const Cell* exp = a->cell[1];
-//
-//     /* Handle bigints. */
-//     if (base->type == CELL_BIGINT) {
-//         if (exp->type != CELL_INTEGER) {
-//             return make_cell_error(
-//                 "expt: bigint base must have integer exponent",
-//                 VALUE_ERR);
-//         }
-//
-//         if (exp->integer_v > INT_MAX) {
-//             return make_cell_error(
-//                 fmt_err("expt: bigint exponent must be less than %d", INT_MAX),
-//                 VALUE_ERR);
-//         }
-//         return bigint_expt((Cell*)base, (int)exp->integer_v);
-//     }
-//
-//     /* Handle simple edge cases. */
-//     if (cell_is_real_zero(exp)) { return make_cell_integer(1); }
-//     if (cell_is_real_zero(base)) { return make_cell_integer(0); }
-//
-//     /* Base is a non-negative real number. */
-//     if (cell_is_real(base) && !cell_is_negative(base)) {
-//         const long double b = cell_to_long_double(base);
-//         const long double x = cell_to_long_double(exp);
-//
-//         /* Return an exact rational for negative exponent. */
-//         if (x < 0) {
-//             return make_cell_rational(1, (long)powl(b, fabsl(x)), true);
-//         }
-//         return make_cell_real(powl(b, x));
-//     }
-//
-//     /* Base is a negative real number. */
-//     if (cell_is_real(base)) {
-//         if (cell_is_integer(exp)) {
-//             const long double b = cell_to_long_double(base);
-//             const long double x = cell_to_long_double(exp);
-//             /* Return int if base and exp are int. */
-//             // if (cell_is_integer(base)) {
-//             //     return make_cell_integer((long long)powl(b, x));
-//             // }
-//             // /* Otherwise, return real. */
-//             return make_cell_real(powl(b, x));
-//         }
-//         const long double x = cell_to_long_double(base);
-//         const long double y = cell_to_long_double(exp);
-//         const long double magnitude = powl(fabsl(x), y);
-//         const long double angle = y * M_PI;
-//
-//         Cell* real_part = make_cell_real(magnitude * cosl(angle));
-//         Cell* imag_part = make_cell_real(magnitude * sinl(angle));
-//         return make_cell_complex(real_part, imag_part);
-//     }
-//
-//     /* Base is a complex number.
-//      * Check for the "contagion" flag: if either is inexact, the result is inexact. */
-//     const bool result_is_exact = base->exact && exp->exact;
-//
-//     /* Fallback to C's complex power function. */
-//     const long double complex b_c = cell_to_c_complex(base);
-//     const long double complex e_c = cell_to_c_complex(exp);
-//     const long double complex res_c = cpowl(b_c, e_c);
-//
-//     const long double re = creall(res_c);
-//     const long double im = cimagl(res_c);
-//
-//     /* If the imaginary part is truly zero, return a REAL, otherwise COMPLEX */
-//     if (im == 0.0L && !signbit(im)) {    /* Consider -0.0! */
-//         Cell* res = make_cell_real(re);
-//         res->exact = result_is_exact;
-//         return res;
-//     }
-//     Cell* real_part = make_cell_real(re);
-//     Cell* imag_part = make_cell_real(im);
-//     Cell* res = make_cell_complex(real_part, imag_part);
-//     res->exact = result_is_exact;
-//     return res;
-// }
 
 
 /* (modulo n1 n2)
@@ -1323,10 +1232,10 @@ Cell* builtin_lcm(const Lex* e, const Cell* a)
         /* LCM(a, b) = (a / gcd(a, b)) * b.
          * Dividing first reduces the magnitude before multiplying,
          * minimizing (but not eliminating) overflow risk. */
-        const long long g       = gcd_helper(result, b_val);
+        const long long g = gcd_helper(result, b_val);
         const long long reduced = result / g;
 
-        long long out;
+        int64_t out;
         if (mul_will_overflow_i64(reduced, b_val, &out)) {
             /* Overflow detected: promote the current LCM result to bigint,
              * complete this step with GMP, then finish remaining args
@@ -1350,36 +1259,4 @@ Cell* builtin_lcm(const Lex* e, const Cell* a)
 
     return make_cell_integer(result);
 }
-// Cell* builtin_lcm(const Lex* e, const Cell* a)
-// {
-//     (void)e;
-//     Cell* err = check_arg_types(a, CELL_INTEGER|CELL_BIGINT, "lcm");
-//     if (err) { return err; }
-//
-//     if (a->count == 0) {
-//         return make_cell_integer(1); /* Identity for LCM. */
-//     }
-//
-//     bool bigint_seen = false;
-//     for (int i = 0; i < a->count; i++) {
-//         if (a->cell[i]->type == CELL_BIGINT) {
-//             bigint_seen = true;
-//         }
-//     }
-//
-//     if (bigint_seen) {
-//         Cell* result = cell_copy(a->cell[0]);
-//         for (int i = 1; i < a->count; i++) {
-//             numeric_promote(&result, &a->cell[i]);
-//             mpz_lcm(*result->bi, *result->bi, *a->cell[i]->bi);
-//         }
-//         return result;
-//     }
-//
-//     long long result = a->cell[0]->integer_v;
-//     for (int i = 1; i < a->count; i++) {
-//         result = lcm_helper(result, a->cell[i]->integer_v);
-//     }
-//
-//     return make_cell_integer(llabs(result)); /* Final result must be non-negative. */
-// }
+
