@@ -512,7 +512,7 @@ Cell* builtin_make_list(const Lex* e, const Cell* a)
     (void)e;
     Cell* err = CHECK_ARITY_RANGE(a, 1, 2, "make-list");
     if (err) return err;
-    if (a->cell[0]->type != CELL_INTEGER && a->cell[0]->integer_v < 1) {
+    if (a->cell[0]->type != CELL_INTEGER || a->cell[0]->integer_v < 1) {
         return make_cell_error(
             "make-list: arg 1 must be a positive integer",
             VALUE_ERR);
@@ -716,7 +716,7 @@ Cell* builtin_assv(const Lex* e, const Cell* a)
     while (p->type != CELL_NIL) {
         if (p->car->type != CELL_PAIR) {
             return make_cell_error(
-                "assq: arg 2 must be an association list",
+                "assv: arg 2 must be an association list",
                 VALUE_ERR);
         }
         const Cell* p_test = builtin_eqv(e, make_sexpr_len2(p->car->car, obj));
@@ -732,7 +732,7 @@ Cell* builtin_assv(const Lex* e, const Cell* a)
 /* (assoc obj alist )
  * (assoc obj alist compare)
  * Find the first pair in alist whose car field is obj, and returns that pair. If no pair in alist has obj as its car,
- * then #f is returned. Uses eq? for the comparison, unless an optional procedure is passed as the third arg. */
+ * then #f is returned. Uses equal? for the comparison, unless an optional procedure is passed as the third arg. */
 Cell* builtin_assoc(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -1046,7 +1046,7 @@ Cell* builtin_zip(const Lex* e, const Cell* a)
         }
         outer_list = make_cell_pair(inner_list, outer_list);
     }
-    outer_list->len = num_lists;
+    outer_list->len = shortest_list_length;
     return builtin_list_reverse(e, make_sexpr_len1(outer_list));
 }
 
@@ -1063,7 +1063,7 @@ Cell* builtin_count(const Lex* e, const Cell* a)
             "count: arg 1 must be a predicate procedure",
             TYPE_ERR);
     }
-    if (a->cell[1]->type != CELL_PAIR || a->cell[0]->len == -1) {
+    if (a->cell[1]->type != CELL_PAIR || a->cell[1]->len == -1) {
         return make_cell_error(
             "count: arg 2 must be a list",
             TYPE_ERR);
@@ -1111,7 +1111,7 @@ Cell* builtin_count_equal(const Lex* e, const Cell* a)
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2, "count-equal");
     if (err) return err;
-    if (a->cell[1]->type != CELL_PAIR || a->cell[0]->len == -1) {
+    if (a->cell[1]->type != CELL_PAIR || a->cell[1]->len == -1) {
         return make_cell_error(
             "count-equal: arg 2 must be a list",
             TYPE_ERR);
