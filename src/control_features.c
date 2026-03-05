@@ -23,7 +23,6 @@
 #include "pairs.h"
 #include "runner.h"
 #include "lexer.h"
-#include "polymorph.h"
 #include "repl.h"
 #include "repr.h"
 
@@ -229,18 +228,17 @@ Cell* builtin_vector_map(const Lex* e, const Cell* a)
     }
     int shortest_vec_length = INT32_MAX;
     for (int i = 1; i < a->count; i++) {
+        if (a->cell[i]->type != CELL_VECTOR) {
+            return make_cell_error(
+                fmt_err("vector-map: arg %d must be a vector", i+1),
+                TYPE_ERR);
+        }
         /* If vector arg is empty, return empty vector. */
         if (a->cell[i]->count == 0) {
             return make_cell_vector();
         }
-
-        if (a->cell[i]->type != CELL_VECTOR) {
-            return make_cell_error(
-                fmt_err("vector-map: arg %d must be a proper list", i+1),
-                TYPE_ERR);
-        }
         if (a->cell[i]->len < shortest_vec_length) {
-            shortest_vec_length = a->cell[i]->len;
+            shortest_vec_length = a->cell[i]->count;
         }
     }
 
@@ -268,8 +266,10 @@ Cell* builtin_vector_map(const Lex* e, const Cell* a)
         } else {
             tmp_result = coz_apply_and_get_val(proc, arg_list, (Lex*)e);
         }
-        /* Deal with legitimate null value. */
+        /* Deal with legitimate null value. I think this is now unnecessary
+         * after replacing all 'legitimate' null returns with USP_Obj. */
         if (!tmp_result) continue;
+        if (tmp_result == USP_Obj) continue;
         if (tmp_result->type == CELL_ERROR) {
             /* Propagate any evaluation errors */
             return tmp_result;
@@ -406,10 +406,24 @@ Cell* builtin_foreach(const Lex* e, const Cell* a)
         Cell* lst = a->cell[i + 1];
         if (lst->type == CELL_NIL) return USP_Obj;
 
+        /* Ensure all list args are lists. */
+        if (lst->type != CELL_PAIR) {
+            return make_cell_error(
+                fmt_err("map: arg %d must be a proper list", i+2),
+                TYPE_ERR);
+        }
+
         /* Ensure a valid length for the loop. */
         if (lst->len <= 0) {
-            Cell* len_obj = builtin_len(e, make_sexpr_len1(lst));
-            if (len_obj->type == CELL_ERROR) return len_obj;
+            const Cell* len_obj = builtin_list_length(e, make_sexpr_len1(lst));
+
+            /* If this is an error, it means the list arg is improper or circular. */
+            if (len_obj->type == CELL_ERROR) {
+                return make_cell_error(
+                fmt_err("map: arg %d must be a proper list", i+2),
+                TYPE_ERR);
+            }
+
             lst->len = (int)len_obj->integer_v;
         }
         if (lst->len < shortest_len) shortest_len = lst->len;
@@ -464,7 +478,7 @@ Cell* builtin_vector_foreach(const Lex* e, const Cell* a)
                 fmt_err("vector-for-each: arg %d must be a vector", i+2),
                 TYPE_ERR);
 
-        if (v->len < shortest_len) shortest_len = v->len;
+        if (v->len < shortest_len) shortest_len = v->count;
     }
 
     if (shortest_len == 0) return USP_Obj;
@@ -582,7 +596,7 @@ Cell* builtin_load(const Lex* e, const Cell* a)
 /* (exit)
  * (exit bool)
  * (exit int)
- * Immediately terminates the running program. An optional boolean or integer value may be passed to denote the exit
+ * Terminates the running program. An optional boolean or integer value may be passed to denote the exit
  * status. #true = exit(0), and #false = exit(1). An integer argument will be directly passed as the exit code to the
  * system. */
 Cell* builtin_exit(const Lex* e, const Cell* a)
