@@ -53,14 +53,14 @@ Environment Variables
     :return: The value of the variable or #false.
     :rtype: string or boolean
 
-    Example
+    **Example**
 
     .. code-block:: scheme
 
-    --> (get-env-var "SHELL")
-    "/bin/bash"
-    --> (get-env-var "NON_EXISTENT")
-    #false
+        --> (get-env-var "SHELL")
+        "/bin/bash"
+        --> (get-env-var "NON_EXISTENT")
+        #false
 
 .. _proc:get-env-vars:
 

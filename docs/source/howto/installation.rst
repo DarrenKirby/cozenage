@@ -16,8 +16,7 @@ Cozenage provides a unified Makefile which uses either CMake or GNU-make for the
 Install dependencies
 --------------------
 
-Cozenage requires one of `GNU Readline <https://www.gnu.org/software/readline/>`_,
-or \*BSD libedit installed for the REPL. It requires `ICU <https://icu.unicode.org/>`_ for Unicode.
+Cozenage requires `ICU <https://icu.unicode.org/>`_ for Unicode.
 It requires `libgc <https://www.hboehm.info/gc/>`_ for garbage collection. It requires GNU GMP for ``bigint`` support,
 and will soon require GNU MPFR for bigfloat support.
 
@@ -39,18 +38,6 @@ by running:
 .. code-block:: bash
 
     $ make DEBUG=ON
-
-.. tip::
-
-    By default, the Cozenage build prefers Gnu Readline for its extended and configurable tab-completion
-    facilities. On Linux, GNU readline is typically the only readline installed. On BSD or macOS systems,
-    however, libedit is the default system-provided readline library, but GNU readline can also be installed
-    by the user. To force linking against libedit even if GNU readline is installed, you can pass a flag to
-    make:
-
-    .. code-block:: bash
-
-        $ make USE_LIBEDIT=ON
 
 
 GNU make build

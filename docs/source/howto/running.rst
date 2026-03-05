@@ -2,7 +2,7 @@
 How to run Cozenage
 ===================
 
-Cozenage provides both a file runner for evaluating code in external files, and a fully-featured interactive
+Cozenage provides both a file runner for evaluating code in external files and a fully-featured interactive
 :abbr:`REPL (Read-Eval-Print Loop)` which allows for experimentation and quick discovery. These two methods of running
 Cozenage will be treated in order, after a short introduction to command-line flags which affect the operation of both.
 
@@ -123,15 +123,16 @@ Running Cozenage with no file arguments will start the program in REPL mode:
 .. code-block:: bash
 
     $ cozenage
-      Cozenage version 0.8.9
-      Press <Ctrl+d> or type 'exit' to quit
+      Cozenage version 0.11.0
+      Press <Ctrl+d> or type '(exit)' to quit
 
     -->
 
 The '\-->' is the cozenage prompt, at which you can type in expressions to be immediately evaluated when you press
 enter. The REPL also provides multiline input using a simple heuristic that tracks if the parentheses are balanced.
 If there are more left parentheses than right parentheses in the current expression, pressing enter will continue on to
-the next line and print a secondary prompt: '...'.
+the next line and print a secondary prompt: '...'. The secondary prompt will also be printed if you press enter while
+inside a string literal, that is, no closing quotation mark is detected.
 
 .. code-block:: scheme
 
@@ -155,18 +156,30 @@ Note that you can type multiple expressions in a single line, and they will be e
       "Hello, World!"
     -->
 
-Whether Cozenage was built with GNU readline, or the \*BSD and macOS provided libedit, a history of expressions typed
-into the prompt will be generated, and can be accessed and cycled through using the up and down arrows. This history
-is also written to a file for persistence between runs of the REPL. Currently, the file is written to
-~/.cozenage_history, but at some point the history file name and location will become a configurable option.
 
-Libedit provides rudimentary tab-completion, but this will only work for filepaths.
+REPL History
+^^^^^^^^^^^^
 
-If built with GNU Readline, this file path tab-completion is available, but Cozenage will also provide extended tab
-completion for all defined procedures and special forms at startup. Simply type in the first few characters of the
-desired name. If there is no ambiguity, the rest of the name will be auto-completed at the prompt immediately upon
-pressing the tab key. If there are multiple possible completions, pressing the tab key a second time will display
-the options to the screen.
+The REPL maintains a buffer containing the history of entered expressions. This history can be cycled through using the
+up and down arrow keys. Currently, the size of the buffer is fixed at 500 items, but at some point this will become a
+configurable option.
+
+Upon closing Cozenage, the history will be written to a file for persistence between runs. On startup, the history is
+read from the file to populate the runtime buffer. If the ``$XDG_STATE_HOME`` environment variable is set, the history
+file will be located at ``$XDG_STATE_HOME/cozenage/history``. If this variable is not set, the history will be written
+to ``~/.local/state/cozenage/history``. This is a plain-text (UTF8) encoded file that can be inspected and edited with
+any text editor.
+
+Tab Completion
+^^^^^^^^^^^^^^
+
+Cozenage provides tab-completion for convenience. There are two kinds of completions that will be deployed depending on
+context. If inside a string literal the filename completer will be activated, using filenames from the CWD. In all other
+contexts, Cozenage provides extended tab completion for all defined procedures and special forms at startup.
+
+To use tab completion, simply type in the first few characters of the desired name. If there is no ambiguity, the rest
+of the name will be auto-completed at the prompt immediately upon pressing the tab key. If there are multiple possible
+completions, pressing the tab key a second time will display the options to the screen.
 
 .. code-block:: scheme
 
@@ -175,4 +188,27 @@ the options to the screen.
     make-bytevector make-list       make-string     make-vector
     --> (make-b[tab]ytevector
 
-To exit the REPL, type <Ctrl-D>, or simply type 'exit' at the prompt and press enter.
+
+REPL Navigation and Ctrl sequences
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The left and right arrow keys will position the cursor backwards and forwards in the text buffer by one character. As
+mentioned already, the up and down arrow keys will cycle backwards and forwards through the expression history buffer.
+``Ctrl + A`` will position the cursor at the start of the text buffer, and ``Ctrl + E`` will position the cursor at the
+end. These operations are non-destructive. That is, they will only position the cursor, leaving the contents of the
+buffer untouched. ``Ctrl + U`` will delete all text in the buffer from the cursor position to the start. Likewise,
+``Ctrl + K`` will delete all text from the cursor position to the end.
+
+While at the primary prompt (``-->``) the key combinations ``Ctrl + c`` and ``Ctrl + G`` act identically, and will
+discard the current text buffer and print a new prompt. At the secondary prompt (``...``) (ie: in multiline input) their
+behaviors are subtly different: ``Ctrl + C`` will discard ONLY the current line, to allow for corrections. Pressing
+``Ctrl + G`` will discard the entire multiline buffer, and print a new prompt.
+
+To exit Cozenage, press ``Ctrl + D`` (EOF) when the text buffer is empty (ie: Press Ctrl + C first if necessary).
+Another way to exit is to simply use the ``exit`` builtin procedure:
+
+.. code-block:: scheme
+
+    --> (exit)
+
+Either of these methods will save the command history, and perform a clean shut down.

@@ -622,8 +622,8 @@ High-Level Port Handlers
     .. code-block:: scheme
 
       --> (call-with-port (open-input-file "data.txt")
-            (lambda (p)
-              (read-line p)))
+      ...   (lambda (p)
+      ...     (read-line p)))
       "first line"
 
 .. _proc:with-input-from-file:
