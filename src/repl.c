@@ -36,7 +36,6 @@
 
 
 int is_repl;
-//extern char **scheme_procedures;
 
 
 /* Read in the history. */
