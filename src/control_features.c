@@ -79,7 +79,7 @@ Cell* builtin_apply(const Lex* e, const Cell* a)
     if (a->cell[0]->type != CELL_PROC) {
         return make_cell_error(
             "apply: arg 1 must be a procedure",
-            ARITY_ERR);
+            TYPE_ERR);
     }
     Cell* final_sexpr = make_cell_sexpr();
     /* Add the proc. */
