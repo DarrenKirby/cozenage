@@ -143,6 +143,10 @@ Cell* coz_eval(Lex* env, Cell* expr)
             /* Transform the macro. */
             Cell* raw_args = get_args_from_sexpr(expr);
             Cell* result = coz_apply_and_get_val(f, raw_args, env);
+            /* Propagate errors. */
+            if (result->type == CELL_ERROR) {
+                return result;
+            }
             /* Tail-call evaluate the result of the transformation. */
             Cell* s = make_sexpr_from_list(result, true);
             expr = s;
