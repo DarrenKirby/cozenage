@@ -145,7 +145,7 @@ one-sided conditionals where the false branch is unimportant:
 
   --> (cond ((< x 0)  "negative")
   ...       ((= x 0)  "zero")
-  ...       (else      "positive"))
+  ...       (else     "positive"))
 
   --> (case (day-of-week)
   ...   ((saturday sunday) "weekend")

@@ -1907,8 +1907,8 @@ Special Forms Documentation
       --> (nested-test 5)
       (5 (5))
 
-      --> (defmacro kond (test then else)
-      ...   `(if ,test ,then ,else))
+      --> (defmacro kond (predicate consequent alternative)
+      ...   `(if ,predicate ,consequent ,alternative))
       --> (kond (= 1 1) 'yes 'no)
       yes
 
