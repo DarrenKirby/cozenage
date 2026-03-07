@@ -2056,7 +2056,6 @@ Cell* builtin_call_with_port(const Lex* e, const Cell* a) {
     const Cell* proc = a->cell[1];
 
     /* Check arity if proc is a lambda. */
-    /* FIXME: arity of builtins? */
     if (!proc->is_builtin) {
         if (check_lambda_arity(proc, 1) != 1) {
             return make_cell_error(
