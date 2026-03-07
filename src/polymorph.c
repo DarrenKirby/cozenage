@@ -1,7 +1,7 @@
 /*
  * 'src/polymorph.c'
  * This file is part of Cozenage - https://github.com/DarrenKirby/cozenage
- * Copyright © 2025 Darren Kirby <darren@dragonbyte.ca>
+ * Copyright © 2025 - 2026 Darren Kirby <darren@dragonbyte.ca>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -99,7 +99,7 @@ static char* unicode_reverse(const char* input, const int32_t byte_len) {
     }
 
     /* Allocate Output Buffer (Same size as input + null). */
-    char* reversed = malloc(byte_len + 1);
+    char* reversed = GC_MALLOC(byte_len + 1);
     char* revCursor = reversed;
 
     /* Iterate Backwards. */
@@ -173,6 +173,39 @@ static Cell* list_idx(const Lex* e, const Cell* a)
 }
 
 
+static Cell* bytevector_idx(const Cell* a)
+{
+    const Cell* v = a->cell[0];
+    const bv_t type = v->bv->type;
+    const int64_t start = a->cell[1]->integer_v;
+    int64_t stop = v->count;
+    int64_t step = 1;
+
+    if (a->count > 2) {
+        stop = a->cell[2]->integer_v;
+    }
+    if (a->count > 3) {
+        step = a->cell[3]->integer_v;
+    }
+
+    if (start < 0 || stop > v->count || start > stop || step <= 0) {
+        return make_cell_error(
+            "idx: bytevector index out of range",
+            INDEX_ERR);
+    }
+
+    int64_t result_len = 0;
+    for (int64_t i = start; i < stop; i += step) result_len++;
+
+    Cell* result = make_cell_bytevector(type, (int32_t)result_len);
+    int64_t out_idx = 0;
+    for (int64_t i = start; i < stop; i += step) {
+        BV_OPS[type].set(result, (int32_t)out_idx++, BV_OPS[type].get(v, (int32_t)i));
+    }
+    return result;
+}
+
+
 static Cell* vector_idx(const Cell* a)
 {
     const Cell* v = a->cell[0];
@@ -199,17 +232,22 @@ Cell* builtin_len(const Lex* e, const Cell* a) {
     Cell* err = CHECK_ARITY_EXACT(a, 1, "len");
     if (err) return err;
 
-    /* TODO: we cache lengths, except for improper lists.
-     * Get rid of these function calls. */
     switch (a->cell[0]->type) {
     case CELL_PAIR:
-        return builtin_list_length(e, a);
+        if (a->cell[0]->len >= 0) return make_cell_integer(a->cell[0]->len);
+        /* Still run the check, as the length might not be cached. */
+        Cell* result = builtin_list_length(e, a);
+        if (result->type == CELL_ERROR) {
+            return make_cell_error(
+                "len: no length for improper or circular list",
+                VALUE_ERR);
+        }
+        return result;
     case CELL_VECTOR:
-        return builtin_vector_length(e, a);
     case CELL_BYTEVECTOR:
-        return builtin_bytevector_length(e, a);
+        return make_cell_integer(a->cell[0]->count);
     case CELL_STRING:
-        return builtin_string_length(e, a);
+        return make_cell_integer(a->cell[0]->char_count);
     case CELL_SET:
     case CELL_MAP:
         return make_cell_integer((long long)a->cell[0]->table->count);
@@ -222,13 +260,13 @@ Cell* builtin_len(const Lex* e, const Cell* a) {
 
 
 /* Polymorphic '*-ref'.
- * (at <seq object> i)
- * (at <seq object> start stop)
- * (at <seq object> start end step) */
+ * (idx <seq object> i)
+ * (idx <seq object> start stop)
+ * (idx <seq object> start end step) */
 Cell* builtin_idx(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_RANGE(a, 2, 4, "at");
+    Cell* err = CHECK_ARITY_RANGE(a, 2, 4, "idx");
     if (err) return err;
 
     switch (a->cell[0]->type) {
@@ -243,12 +281,15 @@ Cell* builtin_idx(const Lex* e, const Cell* a)
         }
         return vector_idx(a);
     case CELL_BYTEVECTOR:
-        return builtin_bytevector_ref(e, a);
+        if (a->count == 2) {
+            return builtin_bytevector_ref(e, a);
+        }
+        return bytevector_idx(a);
     case CELL_STRING:
         return builtin_string_ref(e, a);
     default:
         return make_cell_error(
-        fmt_err("at: cannot subscript non-ordered type: %s",
+        fmt_err("idx: cannot subscript non-ordered type: %s",
             cell_type_name(a->cell[0]->type)), TYPE_ERR);
     }
 }
