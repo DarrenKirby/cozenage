@@ -64,7 +64,8 @@ static Cell* bytevector_reverse(const Cell* v)
 
 
 /* fast-ascii and slow-Unicode reverse helpers for strings. */
-static char* ascii_reverse(const char* input, const size_t len) {
+static char* ascii_reverse(const char* input, const size_t len)
+{
     char* reversed = GC_MALLOC_ATOMIC(len + 1);
     if (!reversed) return nullptr;
 
@@ -77,7 +78,8 @@ static char* ascii_reverse(const char* input, const size_t len) {
 }
 
 
-static char* unicode_reverse(const char* input, const int32_t byte_len) {
+static char* unicode_reverse(const char* input, const int32_t byte_len)
+{
     UErrorCode status = U_ZERO_ERROR;
 
     /* Convert UTF-8 to UChar (UTF-16) because ICU Break Iterators work natively on UChar. */
@@ -198,9 +200,8 @@ static Cell* bytevector_idx(const Cell* a)
     for (int64_t i = start; i < stop; i += step) result_len++;
 
     Cell* result = make_cell_bytevector(type, (int32_t)result_len);
-    int64_t out_idx = 0;
     for (int64_t i = start; i < stop; i += step) {
-        BV_OPS[type].set(result, (int32_t)out_idx++, BV_OPS[type].get(v, (int32_t)i));
+        byte_add(result, BV_OPS[type].get(v, (int)i));
     }
     return result;
 }
@@ -227,7 +228,8 @@ static Cell* vector_idx(const Cell* a)
 }
 
 
-Cell* builtin_len(const Lex* e, const Cell* a) {
+Cell* builtin_len(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "len");
     if (err) return err;
