@@ -781,6 +781,10 @@ Cell* transform_qq(const Cell* input, const int depth) {
         return make_sexpr_len2(G_quote_sym, input);
     }
 
+    if (input->type == CELL_SEXPR && input->count == 0) {
+        return (Cell*)input;
+    }
+
     const Cell* first = input->cell[0];
 
     /* UNQUOTE: If depth is 1, return the expression directly to be evaluated. */
@@ -831,7 +835,10 @@ Cell* transform_qq(const Cell* input, const int depth) {
                         transformed_item));
             }
     }
-    return transform_qq_list_logic(input, depth);
+    /* TODO: audit this code! */
+    return out_expr;
+    //return transform_qq_list_logic(input, depth);
+    //return transform_qq_list_logic(out_expr, depth);
 }
 
 
