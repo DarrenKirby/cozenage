@@ -656,7 +656,6 @@ HandlerResult sf_defmacro(Lex* e, Cell* a) {
         return return_val(err);
     }
 
-
     const Cell* name = a->cell[0]; /* name of the macro. */
     Cell* formals = a->cell[1];    /* first arg */
     Cell* body = a->cell[2];       /* remaining args */

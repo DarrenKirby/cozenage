@@ -29,6 +29,7 @@
 #include "cell.h"
 #include "numerics.h"
 #include "bignum.h"
+#include "repr.h"
 
 #include <gc.h>
 #include <stdio.h>
@@ -398,6 +399,11 @@ Cell* make_list_from_sexpr(Cell* c)
 
 Cell* make_sexpr_from_list(Cell* v, const bool recurse)
 {
+    /* TODO: track down why sexp is getting passed to this func! */
+    // if (v->type == CELL_SEXPR) {
+    //     return v;
+    // }
+
     Cell* result = make_cell_sexpr();
     int count;
 

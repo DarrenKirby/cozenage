@@ -233,7 +233,7 @@ Cell* builtin_exact_pred(const Lex* e, const Cell* a)
     if ((err = CHECK_ARITY_EXACT(a, 1, "exact?"))) { return err; }
     const Cell* z = a->cell[0];
     if (z->type == CELL_COMPLEX) {
-        return make_cell_boolean(z->real->exact & z->imag->exact);
+        return make_cell_boolean(z->real->exact && z->imag->exact);
     }
     return make_cell_boolean(z->exact);
 }
