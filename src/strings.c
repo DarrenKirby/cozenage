@@ -201,7 +201,7 @@ Cell* builtin_string_lt_pred(const Lex* e, const Cell* a)
 Cell* builtin_string_lte_pred(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_STRING, "string<?");
+    Cell* err = check_arg_types(a, CELL_STRING, "string<=?");
     if (err) return err;
     if (a->count < 2) return True_Obj;
 
@@ -220,7 +220,7 @@ Cell* builtin_string_lte_pred(const Lex* e, const Cell* a)
 Cell* builtin_string_gt_pred(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_STRING, "string<?");
+    Cell* err = check_arg_types(a, CELL_STRING, "string>?");
     if (err) return err;
     if (a->count < 2) return True_Obj;
 
@@ -241,7 +241,7 @@ Cell* builtin_string_gt_pred(const Lex* e, const Cell* a)
 Cell* builtin_string_gte_pred(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = check_arg_types(a, CELL_STRING, "string<?");
+    Cell* err = check_arg_types(a, CELL_STRING, "string>=?");
     if (err) return err;
     if (a->count < 2) return True_Obj;
 
@@ -416,7 +416,6 @@ Cell* builtin_make_string(const Lex* e, const Cell* a)
     return v;
 }
 
-
 /* (string->list string)
  * (string->list string start )
  * (string->list string start end)
@@ -435,16 +434,6 @@ Cell* builtin_string_list(const Lex* e, const Cell* a)
             TYPE_ERR);
 
     const int32_t str_len = s_cell->char_count;
-    /* Early return for zero-length string. If
-     * indices were passed this should error. */
-    if (str_len == 0) {
-        if (a->count == 1) {
-            return make_cell_nil();
-        }
-        return make_cell_error(
-            "string->list: zero-length string has no valid indices",
-            VALUE_ERR);
-    }
 
     int32_t start = 0;
     int32_t end = str_len;
@@ -586,6 +575,12 @@ Cell* builtin_substring(const Lex* e, const Cell* a)
             "substring: arg 1 must be a string",
             TYPE_ERR);
 
+    if (a->cell[1]->type != CELL_INTEGER || a->cell[2]->type != CELL_INTEGER) {
+        return make_cell_error(
+            "substring: start/end args must be integers",
+            TYPE_ERR);
+    }
+
     const int32_t start = (int32_t)a->cell[1]->integer_v;
     const int32_t end   = (int32_t)a->cell[2]->integer_v;
 
@@ -700,10 +695,9 @@ Cell* builtin_string_set_bang(const Lex* e, const Cell* a)
         s_cell->count = new_total_bytes;
     }
 
-    /* Update metadata. */
-    if (new_cp >= 128) {
-        s_cell->ascii = false;
-    }
+    /* Re-check ASCII status. */
+    s_cell->ascii = is_pure_ascii(s_cell->str, s_cell->count);
+
     return USP_Obj;
 }
 
@@ -810,9 +804,29 @@ Cell* builtin_string_copy_bang(const Lex* e, const Cell* a)
             "string-copy!: arguments must be strings",
             TYPE_ERR);
 
+    if (a->cell[1]->type != CELL_INTEGER)
+        return make_cell_error(
+            "string-copy!: arg 2 (at) must be an integer",
+            TYPE_ERR);
     const int32_t to_at = (int32_t)a->cell[1]->integer_v;
-    const int32_t f_start = (a->count >= 4) ? (int32_t)a->cell[3]->integer_v : 0;
-    const int32_t f_end = (a->count == 5) ? (int32_t)a->cell[4]->integer_v : from_cell->char_count;
+
+    int32_t f_start = 0;
+    if (a->count >= 4) {
+        if (a->cell[3]->type != CELL_INTEGER)
+            return make_cell_error(
+                "string-copy!: arg 4 (start) must be an integer",
+                TYPE_ERR);
+        f_start = (int32_t)a->cell[3]->integer_v;
+    }
+
+    int32_t f_end = from_cell->char_count;
+    if (a->count == 5) {
+        if (a->cell[4]->type != CELL_INTEGER)
+            return make_cell_error(
+                "string-copy!: arg 5 (end) must be an integer",
+                TYPE_ERR);
+        f_end = (int32_t)a->cell[4]->integer_v;
+    }
 
     /* Validation using char_count metadata. */
     if (to_at < 0 || to_at > to_cell->char_count)
@@ -866,7 +880,7 @@ Cell* builtin_string_copy_bang(const Lex* e, const Cell* a)
     to_cell->count = total_bytes;
     if (!from_cell->ascii) to_cell->ascii = 0;
 
-    return to_cell;
+    return USP_Obj;
 }
 
 
@@ -881,10 +895,16 @@ Cell* builtin_string_fill_bang(const Lex* e, const Cell* a) {
     if (err) return err;
 
     Cell* s = a->cell[0];
-    const int32_t fill_char = a->cell[1]->char_v;
     if (s->type != CELL_STRING) return make_cell_error(
         "string-fill!: arg 1 must be string",
         TYPE_ERR);
+
+    if (a->cell[1]->type != CELL_CHAR) {
+        return make_cell_error(
+            "string-fill!: arg 2 must be a character",
+            TYPE_ERR);
+    }
+    const int32_t fill_char = a->cell[1]->char_v;
 
     int32_t start = 0;
     int32_t end = s->char_count;
@@ -1042,6 +1062,7 @@ Cell* builtin_string_number(const Lex* e, const Cell* a)
  * point, then the result contains a decimal point and is expressed using the minimum number of digits (exclusive of
  * exponent and trailing zeroes) needed to make the above expression true; otherwise the format of the result is
  * unspecified. The result returned by number->string never contains an explicit radix prefix. */
+/* TODO: handle BIGINT. */
 Cell* builtin_number_string(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -1216,6 +1237,9 @@ Cell* builtin_string_equal_ci(const Lex* e, const Cell* a)
     Cell* err = check_arg_types(a, CELL_STRING, "string-ci=?");
     if (err) return err;
 
+    /* 0 or 1 args is technically true in R7RS */
+    if (a->count < 2) return True_Obj;
+
     for (int i = 0; i < a->count - 1; i++) {
         const char* lhs = a->cell[i]->str;
         const char* rhs = a->cell[i+1]->str;
@@ -1258,7 +1282,7 @@ Cell* builtin_string_lt_ci(const Lex* e, const Cell* a) {
 }
 
 
-/* (string<=? string1 string2 string3 ... ) */
+/* (string-ci<=? string1 string2 string3 ... ) */
 Cell* builtin_string_lte_ci(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING, "string-ci<=?");
@@ -1342,30 +1366,43 @@ Cell* builtin_string_split(const Lex* e, const Cell* a) {
     if (err) return err;
 
     char* sep;
+    int sep_len;
     if (a->count == 2) {
-        /* Sanity check. */
-        if (a->cell[0]->char_count < a->cell[1]->char_count) {
-            return make_cell_error(
-                "string-split: delimiter longer than string to split!\n"
-                          "               Did you reverse the argument order?",
-                          VALUE_ERR);
-        }
         sep = a->cell[1]->str;
+        sep_len = a->cell[1]->char_count;
     } else {
         sep = " ";
+        sep_len = 1;
     }
 
-    char* src = GC_strdup(a->cell[0]->str);
+    const char* src = a->cell[0]->str;
     Cell* result = make_cell_vector();
-    char* token;
+    char* delim_pos;
 
-    while ((token = strsep(&src, sep)) != NULL) {
-        Cell* s = make_cell_string(token);
-        if (strcmp(s->str, "") == 0) {
-            continue;
-        }
-        cell_add(result, s);
+    /* Empty delim will cause infinite loop...
+     * just return the original string. */
+    if (sep_len == 0) {
+        cell_add(result, a->cell[0]);
+        return builtin_vector_to_list(e, make_sexpr_len1(result));
     }
+
+    /* Loop and add substring from start to delim_pos. */
+    while ((delim_pos = strstr(src, sep)) != NULL) {
+        const char *start_pos = src;
+        const ptrdiff_t distance = delim_pos - start_pos;
+
+        char* tok = GC_strndup(src, distance);
+        tok[distance] = '\0';
+
+        Cell* s = make_cell_string(tok);
+        cell_add(result, s);
+
+        delim_pos += sep_len;
+        src = delim_pos;
+    }
+    /* Add the final tok. */
+    Cell* s = make_cell_string(src);
+    cell_add(result, s);
 
     return builtin_vector_to_list(e, make_sexpr_len1(result));
 }
