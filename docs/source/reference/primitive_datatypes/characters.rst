@@ -185,6 +185,9 @@ Supported Named Character Literals
 Character Procedures
 --------------------
 
+Char Type Predicate Procedures
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 .. _proc:char-alphabetic?:
 
 .. function:: (char-alphabetic? char)
@@ -289,6 +292,9 @@ Character Procedures
       --> (char-lower-case? #\Z)
         #false
 
+Char to Numeric Value and Inverse Procedures
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 .. _proc:digit-value:
 
 .. function:: (digit-value char)
@@ -310,8 +316,63 @@ Character Procedures
       --> (digit-value #\a)
         #false
 
+
+.. _proc:char->integer:
+
+.. function:: (char->integer char)
+
+    Returns the Unicode scalar value of *char* as an exact integer. For Unicode
+    characters, the result is in the range ``0`` to ``#xD7FF`` or ``#xE000`` to
+    ``#x10FFFF`` inclusive.
+
+    :param char: The character to convert.
+    :type char: character
+    :return: The Unicode scalar value of *char*.
+    :rtype: integer
+
+    **Example:**
+
+    .. code-block::
+
+      --> (char->integer #\A)
+      65
+      --> (char->integer #\a)
+      97
+      --> (char->integer #\space)
+      32
+      --> (char->integer #\λ)
+      955
+
+
+.. _proc:integer->char:
+
+.. function:: (integer->char n)
+
+    Returns the character whose Unicode scalar value is *n*. Raises an error if
+    *n* is negative, greater than ``#x10FFFF``, or falls in the surrogate range
+    ``#xD800`` to ``#xDFFF``.
+
+    :param n: A Unicode scalar value.
+    :type n: integer
+    :return: The character corresponding to Unicode scalar value *n*.
+    :rtype: character
+
+    **Example:**
+
+    .. code-block::
+
+      --> (integer->char 65)
+      #\A
+      --> (integer->char 97)
+      #\a
+      --> (integer->char 32)
+      #\space
+      --> (integer->char 955)
+      #\λ
+
+
 Case Conversion Procedures
---------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. _proc:char-upcase:
 
@@ -367,74 +428,274 @@ Case Conversion Procedures
 
    **Example:**
 
-   .. code-block:: scheme
+   .. code-block::
 
       --> (char-foldcase #\A)
         #\a
       --> (char-foldcase #\ς) ; Greek final sigma
         #\σ
 
+Case-Sensitive Comparison Procedures
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. _proc:char=?:
+
+.. function:: (char=? char1 char2 ...)
+
+    Returns ``#t`` if all arguments have the same Unicode scalar value,
+    ``#f`` otherwise.
+
+    :param char1: Two or more characters to compare.
+    :type char1: character
+    :return: ``#t`` if all arguments are equal, ``#f`` otherwise.
+    :rtype: boolean
+
+    **Example:**
+
+    .. code-block:: scheme
+
+      --> (char=? #\a #\a)
+      #t
+      --> (char=? #\a #\b)
+      #f
+      --> (char=? #\a #\a #\a)
+      #t
+
+
+.. _proc:char<?:
+
+.. function:: (char<? char1 char2 ...)
+
+    Returns ``#t`` if the Unicode scalar values of the arguments are
+    monotonically increasing, ``#f`` otherwise.
+
+    :param char1: Two or more characters to compare.
+    :type char1: character
+    :return: ``#t`` if the arguments are monotonically increasing, ``#f``
+             otherwise.
+    :rtype: boolean
+
+    **Example:**
+
+    .. code-block:: scheme
+
+      --> (char<? #\a #\b)
+      #t
+      --> (char<? #\b #\a)
+      #f
+      --> (char<? #\a #\b #\c)
+      #t
+
+
+.. _proc:char<=?:
+
+.. function:: (char<=? char1 char2 ...)
+
+    Returns ``#t`` if the Unicode scalar values of the arguments are
+    monotonically non-decreasing, ``#f`` otherwise.
+
+    :param char1: Two or more characters to compare.
+    :type char1: character
+    :return: ``#t`` if the arguments are monotonically non-decreasing, ``#f``
+             otherwise.
+    :rtype: boolean
+
+    **Example:**
+
+    .. code-block:: scheme
+
+      --> (char<=? #\a #\b)
+      #t
+      --> (char<=? #\a #\a)
+      #t
+      --> (char<=? #\b #\a)
+      #f
+      --> (char<=? #\a #\a #\b)
+      #t
+
+
+.. _proc:char>?:
+
+.. function:: (char>? char1 char2 ...)
+
+    Returns ``#t`` if the Unicode scalar values of the arguments are
+    monotonically decreasing, ``#f`` otherwise.
+
+    :param char1: Two or more characters to compare.
+    :type char1: character
+    :return: ``#t`` if the arguments are monotonically decreasing, ``#f``
+             otherwise.
+    :rtype: boolean
+
+    **Example:**
+
+    .. code-block:: scheme
+
+      --> (char>? #\b #\a)
+      #t
+      --> (char>? #\a #\b)
+      #f
+      --> (char>? #\c #\b #\a)
+      #t
+
+
+.. _proc:char>=?:
+
+.. function:: (char>=? char1 char2 ...)
+
+    Returns ``#t`` if the Unicode scalar values of the arguments are
+    monotonically non-increasing, ``#f`` otherwise.
+
+    :param char1: Two or more characters to compare.
+    :type char1: character
+    :return: ``#t`` if the arguments are monotonically non-increasing, ``#f``
+             otherwise.
+    :rtype: boolean
+
+    **Example:**
+
+    .. code-block:: scheme
+
+      --> (char>=? #\b #\a)
+      #t
+      --> (char>=? #\a #\a)
+      #t
+      --> (char>=? #\a #\b)
+      #f
+      --> (char>=? #\c #\c #\b)
+      #t
+
+
 Case-Insensitive Comparison Procedures
---------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. _proc:char-ci-equal:
-.. function:: (char-ci=? char1 char2 char3 ...)
+.. _proc:char-ci=?:
 
-   Returns ``#true`` if all characters are the same when ignoring case.
+.. function:: (char-ci=? char1 char2 ...)
 
-   **Example:**
+    Returns ``#t`` if all arguments are equal under case-folding, ``#f``
+    otherwise. Equivalent to applying ``char-foldcase`` to all arguments before
+    comparing with ``char=?``.
 
-   .. code-block:: scheme
+    :param char1: Two or more characters to compare.
+    :type char1: character
+    :return: ``#t`` if all arguments are equal ignoring case, ``#f`` otherwise.
+    :rtype: boolean
+
+    **Example:**
+
+    .. code-block:: scheme
 
       --> (char-ci=? #\a #\A)
-        #true
-      --> (char-ci=? #\z #\Z #\z)
-        #true
+      #t
+      --> (char-ci=? #\a #\a #\A)
+      #t
       --> (char-ci=? #\a #\b)
-        #false
-
-.. function:: (char-ci<? char1 char2 char3 ...)
-.. function:: (char-ci<=? char1 char2 char3 ...)
-.. function:: (char-ci>? char1 char2 char3 ...)
-.. function:: (char-ci>=? char1 char2 char3 ...)
-
-   These procedures compare characters in a case-insensitive manner, returning ``#true`` if the arguments are in
-   monotonically increasing, non-decreasing, decreasing, or non-increasing order, respectively.
+      #f
 
 
-.. _proc:string-ci-equal:
-.. function:: (string-ci=? string1 string2 string3 ...)
+.. _proc:char-ci<?:
 
-   Returns ``#true`` if all strings are equal when ignoring case.
+.. function:: (char-ci<? char1 char2 ...)
 
-   **Example:**
+    Returns ``#t`` if the case-folded Unicode scalar values of the arguments
+    are monotonically increasing, ``#f`` otherwise. Equivalent to applying
+    ``char-foldcase`` to all arguments before comparing with ``char<?``.
 
-   .. code-block:: scheme
+    :param char1: Two or more characters to compare.
+    :type char1: character
+    :return: ``#t`` if the arguments are monotonically increasing ignoring
+             case, ``#f`` otherwise.
+    :rtype: boolean
 
-      --> (string-ci=? "scheme" "Scheme" "SCHEME")
-        #true
-      --> (string-ci=? "hello" "goodbye")
-        #false
+    **Example:**
 
-.. _proc:string-ci-less:
-.. function:: (string-ci<? string1 string2 string3 ...)
+    .. code-block:: scheme
 
-   Returns ``#true`` if the strings are in lexicographically increasing order, ignoring case.
+      --> (char-ci<? #\a #\B)
+      #t
+      --> (char-ci<? #\A #\b)
+      #t
+      --> (char-ci<? #\b #\A)
+      #f
 
-   **Example:**
 
-   .. code-block:: scheme
+.. _proc:char-ci<=?:
 
-      --> (string-ci<? "alpha" "Beta")
-        #true
-      --> (string-ci<? "a" "B" "c")
-        #true
-      --> (string-ci<? "zeta" "alpha")
-        #false
+.. function:: (char-ci<=? char1 char2 ...)
 
-.. function:: (string-ci<=? string1 string2 string3 ...)
-.. function:: (string-ci>? string1 string2 string3 ...)
-.. function:: (string-ci>=? string1 string2 string3 ...)
+    Returns ``#t`` if the case-folded Unicode scalar values of the arguments
+    are monotonically non-decreasing, ``#f`` otherwise. Equivalent to applying
+    ``char-foldcase`` to all arguments before comparing with ``char<=?``.
 
-   These procedures compare strings lexicographically in a case-insensitive manner, returning ``#true`` if the
-   arguments are in monotonically non-decreasing, decreasing, or non-increasing order, respectively.
+    :param char1: Two or more characters to compare.
+    :type char1: character
+    :return: ``#t`` if the arguments are monotonically non-decreasing ignoring
+             case, ``#f`` otherwise.
+    :rtype: boolean
+
+    **Example:**
+
+    .. code-block:: scheme
+
+      --> (char-ci<=? #\a #\B)
+      #t
+      --> (char-ci<=? #\A #\a)
+      #t
+      --> (char-ci<=? #\B #\a)
+      #f
+
+
+.. _proc:char-ci>?:
+
+.. function:: (char-ci>? char1 char2 ...)
+
+    Returns ``#t`` if the case-folded Unicode scalar values of the arguments
+    are monotonically decreasing, ``#f`` otherwise. Equivalent to applying
+    ``char-foldcase`` to all arguments before comparing with ``char>?``.
+
+    :param char1: Two or more characters to compare.
+    :type char1: character
+    :return: ``#t`` if the arguments are monotonically decreasing ignoring
+             case, ``#f`` otherwise.
+    :rtype: boolean
+
+    **Example:**
+
+    .. code-block:: scheme
+
+      --> (char-ci>? #\B #\a)
+      #t
+      --> (char-ci>? #\A #\b)
+      #f
+      --> (char-ci>? #\c #\B #\a)
+      #t
+
+
+.. _proc:char-ci>=?:
+
+.. function:: (char-ci>=? char1 char2 ...)
+
+    Returns ``#t`` if the case-folded Unicode scalar values of the arguments
+    are monotonically non-increasing, ``#f`` otherwise. Equivalent to applying
+    ``char-foldcase`` to all arguments before comparing with ``char>=?``.
+
+    :param char1: Two or more characters to compare.
+    :type char1: character
+    :return: ``#t`` if the arguments are monotonically non-increasing ignoring
+             case, ``#f`` otherwise.
+    :rtype: boolean
+
+    **Example:**
+
+    .. code-block:: scheme
+
+      --> (char-ci>=? #\B #\a)
+      #t
+      --> (char-ci>=? #\A #\a)
+      #t
+      --> (char-ci>=? #\a #\B)
+      #f
+      --> (char-ci>=? #\C #\b #\A)
+      #t
+

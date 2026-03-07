@@ -16,6 +16,6 @@ text more personalized for Cozenage itself.
    documentation_notation/index
    syntax_and_special_forms/index
    primitive_datatypes/index
-   extended_datatypes/index
+   universal_procedures/index
    library/index
    errors_and_exceptions/index
