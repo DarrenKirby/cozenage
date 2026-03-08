@@ -8,7 +8,7 @@ In Scheme, procedures are a fundamental, primitive data type, just like numbers,
 booleans. This concept is central to the language's power. Because procedures are data, they are
 considered first-class citizens. This means they can be treated like any other value: you can store
 them in variables, pass them as arguments to other procedures (creating "higher-order" procedures
-like map), and even return them as the result of a procedure call.
+like ``map``), and even return them as the result of a procedure call.
 
 The R7RS standard provides a rich library of hundreds of built-in procedures for tasks ranging from
 arithmetic (``+``, ``*``) to list manipulation (``car``, ``cons``). While this standard library is

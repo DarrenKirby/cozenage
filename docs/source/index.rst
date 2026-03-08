@@ -45,6 +45,11 @@ Cozenage provides the usual set of disjoint primitive objects common to Scheme-l
 - port
 - procedure
 
+It also provides two non-standard primitive types:
+
+- set
+- hash
+
 Numeric system
 ^^^^^^^^^^^^^^
 
@@ -122,7 +127,6 @@ Planned and future work
 - Custom line editor (replace readline/libedit)
 - Custom allocator / garbage collector
 - Expanded bytevector library
-- Native ``set`` and ``map`` types
 - Exception handling (``try`` / ``catch``)
 - Asynchronous ports (sockets)
 - URL-backed ports
@@ -131,7 +135,8 @@ Planned and future work
 Philosophy
 ----------
 
-Cozenage is best understood as **a Scheme-inspired Lisp**, prioritizing internal consistency, approachability, and educational value over exhaustive standards compliance.
+Cozenage is best understood as **a Scheme-inspired Lisp**, prioritizing internal consistency, approachability, and
+educational value over exhaustive standards compliance.
 
 .. attention::
 

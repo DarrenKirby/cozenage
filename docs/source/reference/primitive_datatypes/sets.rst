@@ -6,12 +6,12 @@ Overview
 
 A `set` is an unordered collection of unique elements. Unlike a list, which may contain duplicate values and whose order
 is significant, a set guarantees that each element appears at most once and that element order has no meaning. The
-literal syntax for sets is written using ``#[ ... ]``. For example:
+literal syntax for sets is written using ``#{ ... }``. For example:
 
 .. code-block:: scheme
 
-    --> #[1 2 3]
-    --> #["foo" "bar" "baz"]
+    --> #{1 2 3]
+    --> #{"foo" "bar" "baz"]
 
 In mathematics, sets are fundamental objects used to describe collections of distinct elements. Two sets are considered
 equal if they contain the same elements, regardless of order. For example, the sets {1, 2, 3} and {3, 1, 2} are
@@ -37,7 +37,7 @@ objects are those whose value can be reliably converted into a stable hash code.
 * boolean
 * char
 
-Compound types such as lists, vectors, sets, and maps are not currently hashable and therefore cannot be used as set
+Compound types such as lists, vectors, sets, and hashes are not currently hashable and therefore cannot be used as set
 elements. Attempting to insert a non-hashable object into a set will raise a type error.
 
 It is important to remember that sets are unordered. When converting a set to a list, iterating over it, or printing it,
@@ -71,7 +71,7 @@ Set Procedures
     .. code-block:: scheme
 
       --> (set 1 2 3 2)
-      #[1 2 3]
+      #{1 2 3}
 
 
 .. _proc:set-copy:
@@ -91,14 +91,14 @@ Set Procedures
 
     .. code-block:: scheme
 
-        --> (define s1 #[1 2 3 4 5])
+        --> (define s1 #{1 2 3 4 5})
         s1
         --> (define s2 (set-copy s1))
         s2
         --> (set-remove! s2 5)
-        #[4 3 1 2]
+        #{4 3 1 2}
         --> s1
-        #[4 5 3 1 2]  ; note that the two sets are independently modified
+        #{4 5 3 1 2}  ; note that the two sets are independently modified
 
 
 .. _proc:set-clear!:
@@ -121,9 +121,9 @@ Set Procedures
       --> (define s (set 1 2 3))
       s
       --> s
-      #[3 1 2]
+      #{3 1 2}
       --> (set-clear! s)
-      #[]
+      #{}
 
 
 .. _proc:set-add!:
@@ -151,9 +151,9 @@ Set Procedures
       --> (define s (set 1 2))
       s
       --> (set-add! s 3)
-      #[1 2 3]
+      #[1 2 3}
       --> (set-add! s '(4 5))
-      #[1 2 3 4 5]
+      #{1 2 3 4 5}
 
 
 .. _proc:set-remove!:
@@ -184,7 +184,7 @@ Set Procedures
       --> (define s (set 1 2 3))
       s
       --> (set-remove! s 2)
-      #[1 3]
+      #{1 3}
 
 
 .. _proc:set-member?:
@@ -204,9 +204,9 @@ Set Procedures
 
     .. code-block:: scheme
 
-      --> (set-member? #[1 2 3] 2)
+      --> (set-member? #{1 2 3} 2)
       #true
-      --> (set-member? #[1 2 3] 5)
+      --> (set-member? #{1 2 3} 5)
       #false
 
 
@@ -266,8 +266,8 @@ Set Procedures
 
     .. code-block:: scheme
 
-      --> (set-union #[1 2] #[2 3])
-      #[1 2 3]
+      --> (set-union #{1 2} #{2 3})
+      #{1 2 3}
 
 
 .. _proc:set-union!:
@@ -382,9 +382,9 @@ Set Procedures
 
     .. code-block:: scheme
 
-      --> (set-map (lambda (x) (* x 2)) #[1 2 3])
+      --> (set-map (lambda (x) (* x 2)) #{1 2 3})
       (6 2 4)
-      --> (set-map square #[2 4 6])
+      --> (set-map square #{2 4 6})
       (16 36 4)
 
 
@@ -420,7 +420,7 @@ Set Procedures
     .. code-block:: scheme
 
       --> (list->set '(1 2 2 3))
-        #[3 1 2]
+        #{3 1 2}
 
 
 .. _proc:set->list:
@@ -440,5 +440,5 @@ Set Procedures
 
     .. code-block:: scheme
 
-      --> (set->list #[1 2 3])
+      --> (set->list #{1 2 3})
       (3 1 2)

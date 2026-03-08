@@ -174,11 +174,12 @@ Tab Completion
 ^^^^^^^^^^^^^^
 
 Cozenage provides tab-completion for convenience. There are two kinds of completions that will be deployed depending on
-context. If inside a string literal the filename completer will be activated, using filenames from the CWD. In all other
+context. If inside a string literal the filename completer will be activated, using filenames relative to the CWD. In all other
 contexts, Cozenage provides extended tab completion for all defined procedures and special forms at startup.
 
 To use tab completion, simply type in the first few characters of the desired name. If there is no ambiguity, the rest
-of the name will be auto-completed at the prompt immediately upon pressing the tab key. If there are multiple possible
+of the name, or the rest of the name up until a point of ambiguity, will be auto-completed at the prompt immediately
+upon pressing the tab key. If there are multiple possible
 completions, pressing the tab key a second time will display the options to the screen.
 
 .. code-block:: scheme
