@@ -291,10 +291,10 @@ Token lex_token()
                     return boolean();
                 case '[':
                     advance();
-                    return make_token(T_SET_START);
+                    return make_token(T_HASH_START);
                 case '{':
                     advance();
-                    return make_token(T_MAP_START);
+                    return make_token(T_SET_START);
                 /* Exact or inexact, and numeric base literals. */
                 case 'e':
                 case 'i':

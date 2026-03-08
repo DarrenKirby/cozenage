@@ -139,7 +139,7 @@ static void repr_sequence(const Cell* v,
             if (i != t_len - 1) sb_append_char(sb, ' ');
             i++;
         }
-    } else if (v->type == CELL_MAP) {
+    } else if (v->type == CELL_HASH) {
         ghti it = ght_iterator(v->table);
         const size_t t_len = ght_length(v->table);
         size_t i = 0;
@@ -408,11 +408,11 @@ static void cell_to_string_worker(const Cell* v,
             break;
 
         case CELL_SET:
-            repr_sequence(v, "#", '[', ']', sb, mode);
+            repr_sequence(v, "#", '{', '}', sb, mode);
             break;
 
-        case CELL_MAP:
-            repr_sequence(v, "#", '{', '}', sb, mode);
+        case CELL_HASH:
+            repr_sequence(v, "#", '[', ']', sb, mode);
             break;
 
         default:

@@ -251,7 +251,7 @@ Cell* builtin_len(const Lex* e, const Cell* a)
     case CELL_STRING:
         return make_cell_integer(a->cell[0]->char_count);
     case CELL_SET:
-    case CELL_MAP:
+    case CELL_HASH:
         return make_cell_integer((long long)a->cell[0]->table->count);
     default:
         return make_cell_error(

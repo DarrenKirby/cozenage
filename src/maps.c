@@ -30,7 +30,7 @@ Cell* builtin_make_map(const Lex* e, const Cell* a)
     (void)e;
     if (a->count == 0) {
         /* No args: return an empty map. */
-        return make_cell_map(nullptr);
+        return make_cell_hash(nullptr);
     }
 
     if (a->count % 2 != 0) {
@@ -47,7 +47,7 @@ Cell* builtin_make_map(const Lex* e, const Cell* a)
         }
     }
     /* Confirmed args are OK, just feed right to map constructor. */
-    return make_cell_map(a);
+    return make_cell_hash(a);
 }
 
 
@@ -61,7 +61,7 @@ Cell* builtin_map_copy(const Lex* e, const Cell* a)
     if (err) return err;
 
     const Cell* map = a->cell[0];
-    if (map->type != CELL_MAP) {
+    if (map->type != CELL_HASH) {
         return make_cell_error(
             "map-copy: arg must be a map",
             TYPE_ERR);
@@ -79,7 +79,7 @@ Cell* builtin_map_clear(const Lex* e, const Cell* a)
     if (err) return err;
 
     Cell* map = a->cell[0];
-    if (map->type != CELL_MAP) {
+    if (map->type != CELL_HASH) {
         return make_cell_error(
             "map-clear!: arg must be a map",
             TYPE_ERR);
@@ -101,7 +101,7 @@ Cell* builtin_map_get(const Lex* e, const Cell* a)
     const Cell* map = a->cell[0];
     const Cell* obj = a->cell[1];
 
-    if (map->type != CELL_MAP) {
+    if (map->type != CELL_HASH) {
         return make_cell_error(
             "map-get: arg1 must be a map",
             TYPE_ERR);
@@ -135,7 +135,7 @@ Cell* builtin_map_add(const Lex* e, const Cell* a)
     if (err) return err;
 
     Cell* map = a->cell[0];
-    if (map->type != CELL_MAP) {
+    if (map->type != CELL_HASH) {
         return make_cell_error(
             "map-add!: arg1 must be a map",
             TYPE_ERR);
@@ -169,7 +169,7 @@ Cell* builtin_map_remove(const Lex* e, const Cell* a)
     if (err) return err;
 
     Cell* map = a->cell[0];
-    if (map->type != CELL_MAP) {
+    if (map->type != CELL_HASH) {
         return make_cell_error(
             "map-remove!: arg1 must be a map",
             TYPE_ERR);
@@ -204,7 +204,7 @@ Cell* builtin_map_keys(const Lex* e, const Cell* a)
     Cell* err = CHECK_ARITY_EXACT(a, 1, "map-keys");
     if (err) return err;
     const Cell* map = a->cell[0];
-    if (map->type != CELL_MAP) {
+    if (map->type != CELL_HASH) {
         return make_cell_error(
             "map-keys: arg must be a map",
             TYPE_ERR);
@@ -228,7 +228,7 @@ Cell* builtin_map_values(const Lex* e, const Cell* a)
     Cell* err = CHECK_ARITY_EXACT(a, 1, "map-values");
     if (err) return err;
     const Cell* map = a->cell[0];
-    if (map->type != CELL_MAP) {
+    if (map->type != CELL_HASH) {
         return make_cell_error(
             "map-values: arg must be a map",
             TYPE_ERR);
@@ -253,7 +253,7 @@ Cell* builtin_map_to_alist(const Lex* e, const Cell* a)
     Cell* err = CHECK_ARITY_EXACT(a, 1, "map->alist");
     if (err) return err;
     const Cell* map = a->cell[0];
-    if (map->type != CELL_MAP) {
+    if (map->type != CELL_HASH) {
         return make_cell_error(
             "map->alist: arg must be a map",
             TYPE_ERR);
@@ -287,7 +287,7 @@ Cell* builtin_alist_to_map(const Lex* e, const Cell* a)
 
     Cell* r = make_cell_sexpr();
     while (alist->cdr) {
-        /* This also enforces an even number of objects fed to make_cell_map(). */
+        /* This also enforces an even number of objects fed to make_cell_hash(). */
         if (alist->car->type != CELL_PAIR) {
             return make_cell_error(
                 "alist->map: car field of list is not a dotted pair",
@@ -297,7 +297,7 @@ Cell* builtin_alist_to_map(const Lex* e, const Cell* a)
         cell_add(r, alist->car->cdr);
         alist = alist->cdr;
     }
-    return make_cell_map(r);
+    return make_cell_hash(r);
 }
 
 
@@ -317,7 +317,7 @@ Cell* builtin_map_keys_map(const Lex* e, const Cell* a)
             "map-keys-map: arg1 must be a procedure",
             TYPE_ERR);
     }
-    if (map->type != CELL_MAP) {
+    if (map->type != CELL_HASH) {
         return make_cell_error(
             "map-keys-map: arg2 must be a map",
             TYPE_ERR);
@@ -343,7 +343,7 @@ Cell* builtin_map_keys_foreach(const Lex* e, const Cell* a)
             "map-keys-foreach: arg1 must be a procedure",
             TYPE_ERR);
     }
-    if (map->type != CELL_MAP) {
+    if (map->type != CELL_HASH) {
         return make_cell_error(
             "map-keys-foreach: arg2 must be a map",
             TYPE_ERR);
@@ -368,7 +368,7 @@ Cell* builtin_map_values_map(const Lex* e, const Cell* a)
             "map-values-map: arg1 must be a procedure",
             TYPE_ERR);
     }
-    if (map->type != CELL_MAP) {
+    if (map->type != CELL_HASH) {
         return make_cell_error(
             "map-values-map: arg2 must be a map",
             TYPE_ERR);
@@ -394,7 +394,7 @@ Cell* builtin_map_values_foreach(const Lex* e, const Cell* a)
             "map-values-foreach: arg1 must be a procedure",
             TYPE_ERR);
     }
-    if (map->type != CELL_MAP) {
+    if (map->type != CELL_HASH) {
         return make_cell_error(
             "map-values-foreach: arg2 must be a map",
             TYPE_ERR);
@@ -450,7 +450,7 @@ Cell* builtin_map_items_map(const Lex* e, const Cell* a)
             "map-items-map: arg1 must be a procedure",
             TYPE_ERR);
     }
-    if (map->type != CELL_MAP) {
+    if (map->type != CELL_HASH) {
         return make_cell_error(
             "map-items-map: arg2 must be a map",
             TYPE_ERR);
@@ -476,7 +476,7 @@ Cell* builtin_map_items_foreach(const Lex* e, const Cell* a)
             "map-items-foreach: arg1 must be a procedure",
             TYPE_ERR);
     }
-    if (map->type != CELL_MAP) {
+    if (map->type != CELL_HASH) {
         return make_cell_error(
             "map-items-foreach: arg2 must be a map",
             TYPE_ERR);

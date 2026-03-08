@@ -73,7 +73,7 @@ typedef enum Cell_t : uint32_t {
     
     CELL_MACRO      = 1 << 24,  /* A non-hygienic 'defmacro' macro. */
     CELL_SET        = 1 << 25,  /* TODO: A set. */
-    CELL_MAP        = 1 << 26,  /* TODO: A map/dict/hash/associative array. */
+    CELL_HASH        = 1 << 26,  /* TODO: A map/dict/hash/associative array. */
 } Cell_t;
 
 
@@ -263,7 +263,7 @@ typedef struct Cell {
         promise* promise;         /* -> promise struct */
         mpz_t* bi;                /* -> GMP integer */
         mpf_t* bf;                /* -> CELL_BIGFLOAT float */
-        ght_table* table;         /* -> CELL_SET or CELL_MAP ght pointer. */
+        ght_table* table;         /* -> CELL_SET or CELL_HASH ght pointer. */
     };
 } Cell;
 
@@ -306,7 +306,7 @@ Cell* make_cell_memory_port(stream_t stream, backend_t backend);
 Cell* make_cell_promise(Cell* expr, Lex* env);
 Cell* make_cell_stream(Cell* head, Cell* tail_promise);
 Cell* make_cell_set(const Cell* values);
-Cell* make_cell_map(const Cell* values);
+Cell* make_cell_hash(const Cell* values);
 Cell* cell_add(Cell* v, Cell* x);
 Cell* cell_copy(const Cell* v);
 Cell* make_cell_bytevector_u8(void);

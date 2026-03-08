@@ -608,33 +608,33 @@ Cell* parse_tokens(TokenArray *ta) {
         }
 
         case T_SET_START: {
-            /* Consume '#[' */
+            /* Consume '#{' */
             token = advance(ta);
 
             Cell *sexpr = make_cell_sexpr();
 
-            while (peek(ta)->type != T_RIGHT_BRACKET) {
+            while (peek(ta)->type != T_RIGHT_BRACE) {
                 cell_add(sexpr, parse_tokens(ta));
                 advance(ta);
             }
 
             if (!peek(ta)) {
                 return make_cell_error(
-                    fmt_err("Line %d: Unmatched '[' in set literal: '%s%s%s'",
+                    fmt_err("Line %d: Unmatched '{' in set literal: '%s%s%s'",
                     token->line, ANSI_RED_B, token_to_string(token), ANSI_RESET),
                     SYNTAX_ERR);
             }
             return make_cell_set(sexpr);
         }
 
-        case T_MAP_START: {
-            /* Consume '#{' */
+        case T_HASH_START: {
+            /* Consume '#[' */
             token = advance(ta);
 
             Cell *sexpr = make_cell_sexpr();
 
             int n_forms = 0;
-            while (peek(ta)->type != T_RIGHT_BRACE) {
+            while (peek(ta)->type != T_RIGHT_BRACKET) {
                 cell_add(sexpr, parse_tokens(ta));
                 n_forms++;
                 advance(ta);
@@ -643,18 +643,18 @@ Cell* parse_tokens(TokenArray *ta) {
             /* Check for even number of forms in map literal. */
             if (n_forms % 2 != 0) {
                 return make_cell_error(
-                    fmt_err("Line %d: map literal requires even number of forms, %d provided",
+                    fmt_err("Line %d: hash literal requires even number of forms, %d provided",
                     token->line, n_forms),
                     SYNTAX_ERR);
             }
 
             if (!peek(ta)) {
                 return make_cell_error(
-                    fmt_err("Line %d: Unmatched '{' in map literal: '%s%s%s'",
+                    fmt_err("Line %d: Unmatched '[' in hash literal: '%s%s%s'",
                     token->line, ANSI_RED_B, token_to_string(token), ANSI_RESET),
                     SYNTAX_ERR);
             }
-            return make_cell_map(sexpr);
+            return make_cell_hash(sexpr);
         }
 
         /* Vector or bytevector. */

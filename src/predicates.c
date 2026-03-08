@@ -202,7 +202,7 @@ Cell* builtin_map_pred(const Lex* e, const Cell* a)
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "map?");
     if (err) return err;
-    return make_cell_boolean(a->cell[0]->type == CELL_MAP);
+    return make_cell_boolean(a->cell[0]->type == CELL_HASH);
 }
 
 

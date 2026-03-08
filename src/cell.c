@@ -551,13 +551,13 @@ Cell* make_cell_set(const Cell* values) {
 }
 
 
-Cell* make_cell_map(const Cell* values) {
+Cell* make_cell_hash(const Cell* values) {
     Cell* v = GC_MALLOC(sizeof(Cell));
     if (!v) {
         fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
         exit(EXIT_FAILURE);
     }
-    v->type = CELL_MAP;
+    v->type = CELL_HASH;
     ght_table* t = ght_create(8);
     /* Already checked for evenness in the parser. */
     for (int i = 0; i < values->count; i += 2) {
