@@ -143,7 +143,7 @@ bool equal_cell(const Cell* a, const Cell* b)
 }
 
 
-/* This is used by the user-level map/set
+/* This is used by the user-level hash/set
  * procedures to ensure sane key values. */
 bool cell_is_hashable(const Cell* c)
 {

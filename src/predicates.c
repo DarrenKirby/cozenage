@@ -195,12 +195,12 @@ Cell* builtin_set_pred(const Lex* e, const Cell* a)
 }
 
 
-/* (map? obj)
- * Returns #t if obj is a map. Otherwise, #f is returned. */
-Cell* builtin_map_pred(const Lex* e, const Cell* a)
+/* (hash? obj)
+ * Returns #t if obj is a hash. Otherwise, #f is returned. */
+Cell* builtin_hash_pred(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 1, "map?");
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "hash?");
     if (err) return err;
     return make_cell_boolean(a->cell[0]->type == CELL_HASH);
 }

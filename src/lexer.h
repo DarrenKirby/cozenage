@@ -34,7 +34,7 @@ typedef enum {
     T_STRING,
     T_SYMBOL,
     T_BOOLEAN,
-    T_HASH_START,    /* '#[' ... signals start of map. */
+    T_HASH_START,    /* '#[' ... signals start of hash. */
     T_SET_START,     /* '#{' ... signals start of set. */
     T_QUOTE,
     T_QUASIQUOTE,

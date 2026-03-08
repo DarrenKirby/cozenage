@@ -73,7 +73,7 @@ typedef enum Cell_t : uint32_t {
     
     CELL_MACRO      = 1 << 24,  /* A non-hygienic 'defmacro' macro. */
     CELL_SET        = 1 << 25,  /* TODO: A set. */
-    CELL_HASH        = 1 << 26,  /* TODO: A map/dict/hash/associative array. */
+    CELL_HASH        = 1 << 26,  /* TODO: A hash/dict/hash/associative array. */
 } Cell_t;
 
 

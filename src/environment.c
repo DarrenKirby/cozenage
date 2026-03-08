@@ -32,7 +32,7 @@
 #include "chars.h"
 #include "symbols.h"
 #include "errors.h"
-#include "maps.h"
+#include "hashmaps.h"
 #include "polymorph.h"
 #include "repr.h"
 #include "sets.h"
@@ -298,7 +298,7 @@ void lex_add_builtins(const Lex* e)
     lex_add_builtin(e, "bytevector?", builtin_bytevector_pred);
     lex_add_builtin(e, "port?", builtin_port_pred);
     lex_add_builtin(e, "set?", builtin_set_pred);
-    lex_add_builtin(e, "map?", builtin_map_pred);
+    lex_add_builtin(e, "hash?", builtin_hash_pred);
     lex_add_builtin(e, "eof-object?", builtin_eof_pred);
     /*
      * Numeric identity predicate procedures.
@@ -565,23 +565,23 @@ void lex_add_builtins(const Lex* e)
     lex_add_builtin(e, "list->set", builtin_list_to_set);
     lex_add_builtin(e, "set->list", builtin_set_to_list);
     /*
-     * Map procedures.
+     * Hash procedures.
      *
      */
-    lex_add_builtin(e, "make-map", builtin_make_map);
-    lex_add_builtin(e, "map-copy", builtin_map_copy);
-    lex_add_builtin(e, "map-clear!", builtin_map_clear);
-    lex_add_builtin(e, "map-add!", builtin_map_add);
-    lex_add_builtin(e, "map-remove!", builtin_map_remove);
-    lex_add_builtin(e, "map-get", builtin_map_get);
-    lex_add_builtin(e, "map-keys", builtin_map_keys);
-    lex_add_builtin(e, "map-values", builtin_map_values);
-    lex_add_builtin(e, "map->alist", builtin_map_to_alist);
-    lex_add_builtin(e, "alist->map", builtin_alist_to_map);
-    lex_add_builtin(e, "map-keys-map", builtin_map_keys_map);
-    lex_add_builtin(e, "map-values-map", builtin_map_values_map);
-    lex_add_builtin(e, "map-keys-foreach", builtin_map_keys_foreach);
-    lex_add_builtin(e, "map-values-foreach", builtin_map_values_foreach);
-    lex_add_builtin(e, "map-items-map", builtin_map_items_map);
-    lex_add_builtin(e, "map-items-foreach", builtin_map_items_foreach);
+    lex_add_builtin(e, "hash", builtin_hash);
+    lex_add_builtin(e, "hash-copy", builtin_hash_copy);
+    lex_add_builtin(e, "hash-clear!", builtin_hash_clear);
+    lex_add_builtin(e, "hash-add!", builtin_hash_add);
+    lex_add_builtin(e, "hash-remove!", builtin_hash_remove);
+    lex_add_builtin(e, "hash-get", builtin_hash_get);
+    lex_add_builtin(e, "hash-keys", builtin_hash_keys);
+    lex_add_builtin(e, "hash-values", builtin_hash_values);
+    lex_add_builtin(e, "hash->alist", builtin_hash_to_alist);
+    lex_add_builtin(e, "alist->hash", builtin_alist_to_hash);
+    lex_add_builtin(e, "hash-keys-map", builtin_hash_keys_map);
+    lex_add_builtin(e, "hash-values-map", builtin_hash_values_map);
+    lex_add_builtin(e, "hash-keys-foreach", builtin_hash_keys_foreach);
+    lex_add_builtin(e, "hash-values-foreach", builtin_hash_values_foreach);
+    lex_add_builtin(e, "hash-items-map", builtin_hash_items_map);
+    lex_add_builtin(e, "hash-items-foreach", builtin_hash_items_foreach);
 }

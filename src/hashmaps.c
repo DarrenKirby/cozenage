@@ -1,5 +1,5 @@
 /*
- * 'src/maps.c'
+ * 'src/hashmaps.c'
  * This file is part of Cozenage - https://github.com/DarrenKirby/cozenage
  * Copyright © 2026 Darren Kirby <darren@dragonbyte.ca>
  *
@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "maps.h"
+#include "hashmaps.h"
 #include "sets.h"
 #include "types.h"
 #include "eval.h"
@@ -63,155 +63,155 @@ Cell* builtin_hash_copy(const Lex* e, const Cell* a)
     const Cell* hash = a->cell[0];
     if (hash->type != CELL_HASH) {
         return make_cell_error(
-            "hash-copy: arg must be a map",
+            "hash-copy: arg must be a hash",
             TYPE_ERR);
     }
     return copy_hash_table(hash);
 }
 
 
-/* (hash-clear! map)
- * Returns the same map object with all keys and values cleared. */
+/* (hash-clear! hash)
+ * Returns the same hash object with all keys and values cleared. */
 Cell* builtin_hash_clear(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 1, "map-clear!");
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "hash-clear!");
     if (err) return err;
 
-    Cell* map = a->cell[0];
-    if (map->type != CELL_HASH) {
+    Cell* hash = a->cell[0];
+    if (hash->type != CELL_HASH) {
         return make_cell_error(
-            "map-clear!: arg must be a map",
+            "hash-clear!: arg must be a hash",
             TYPE_ERR);
     }
-    return clear_hash_table(map);
+    return clear_hash_table(hash);
 }
 
 
-/* (map-get map key)
- * (map-get map key default_val)
- * Returns the value indexed by key in map, or else raises an index error. If an optional third argument is passed,
- * then that value will be returned if the key does not exist in map. */
+/* (hash-get hash key)
+ * (hash-get hash key default_val)
+ * Returns the value indexed by key in hash, or else raises an index error. If an optional third argument is passed,
+ * then that value will be returned if the key does not exist in hash. */
 Cell* builtin_hash_get(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_RANGE(a, 2, 3, "map-get");
+    Cell* err = CHECK_ARITY_RANGE(a, 2, 3, "hash-get");
     if (err) return err;
 
-    const Cell* map = a->cell[0];
+    const Cell* hash = a->cell[0];
     const Cell* obj = a->cell[1];
 
-    if (map->type != CELL_HASH) {
+    if (hash->type != CELL_HASH) {
         return make_cell_error(
-            "map-get: arg1 must be a map",
+            "hash-get: arg1 must be a hash",
             TYPE_ERR);
     }
     if (!cell_is_hashable(obj)) {
         return make_cell_error(
-            fmt_err("map-get: arg type '%s' is not a hashable",
+            fmt_err("hash-get: arg type '%s' is not a hashable",
                 cell_type_name(obj->type)),
             TYPE_ERR);
     }
 
-    Cell* val = ght_get(map->table, obj);
+    Cell* val = ght_get(hash->table, obj);
     if (!val) {
         if (a->count == 3) {
             return a->cell[2];
         }
         return make_cell_error(
-            "map-get: object not found in map",
+            "hash-get: object not found in hash",
             INDEX_ERR);
     }
     return val;
 }
 
 
-/* (map-add! map obj1 obj2)
- * Adds obj1 as key, and obj2 as value to the map specified by map. Raises type error if obj1 is not hashable. */
+/* (hash-add! hash obj1 obj2)
+ * Adds obj1 as key, and obj2 as value to the hash specified by hash. Raises type error if obj1 is not hashable. */
 Cell* builtin_hash_add(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 3, "map-add!");
+    Cell* err = CHECK_ARITY_EXACT(a, 3, "hash-add!");
     if (err) return err;
 
-    Cell* map = a->cell[0];
-    if (map->type != CELL_HASH) {
+    Cell* hash = a->cell[0];
+    if (hash->type != CELL_HASH) {
         return make_cell_error(
-            "map-add!: arg1 must be a map",
+            "hash-add!: arg1 must be a hash",
             TYPE_ERR);
     }
 
     if (!cell_is_hashable(a->cell[1])) {
         return make_cell_error(
-        fmt_err("map-add!: arg type '%s' is not hashable",
+        fmt_err("hash-add!: arg type '%s' is not hashable",
                  cell_type_name(a->cell[1]->type)),
                  TYPE_ERR);
     }
 
-    if (!ght_set(map->table, a->cell[1], a->cell[2])) {
+    if (!ght_set(hash->table, a->cell[1], a->cell[2])) {
         return make_cell_error(
-            fmt_err("map-add!: failed to add new items to map"),
+            fmt_err("hash-add!: failed to add new items to hash"),
             GEN_ERR);
     }
-    return map;
+    return hash;
 }
 
 
-/* (map-remove! map obj)
- * (map-remove! map obj sym)
- * Removes the key obj and associated value from map, and returns the mutated map. Raises an index error if object is not
- * a member of map. If an optional symbol (any symbol) is passed as third arg, the procedure will not raise the
+/* (hash-remove! hash obj)
+ * (hash-remove! hash obj sym)
+ * Removes the key obj and associated value from hash, and returns the mutated hash. Raises an index error if object is not
+ * a member of hash. If an optional symbol (any symbol) is passed as third arg, the procedure will not raise the
  * index error, but rather just silently return. */
 Cell* builtin_hash_remove(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_RANGE(a, 2, 3, "map-remove!");
+    Cell* err = CHECK_ARITY_RANGE(a, 2, 3, "hash-remove!");
     if (err) return err;
 
-    Cell* map = a->cell[0];
-    if (map->type != CELL_HASH) {
+    Cell* hash = a->cell[0];
+    if (hash->type != CELL_HASH) {
         return make_cell_error(
-            "map-remove!: arg1 must be a map",
+            "hash-remove!: arg1 must be a hash",
             TYPE_ERR);
     }
     if (!cell_is_hashable(a->cell[1])) {
         return make_cell_error(
-            "map-remove!: arg2 is not hashable (therefore will not be in map)",
+            "hash-remove!: arg2 is not hashable (therefore will not be in hash)",
             TYPE_ERR);
     }
 
-    const bool removed = ght_delete(map->table, a->cell[1]);
+    const bool removed = ght_delete(hash->table, a->cell[1]);
 
     if (a->count == 2 && !removed) {
         return make_cell_error(
-            "map-remove!: arg 2 not member of map",
+            "hash-remove!: arg 2 not member of hash",
             INDEX_ERR);
     }
     if (a->count == 3 && a->cell[2]->type != CELL_SYMBOL) {
         return make_cell_error(
-            "map-remove!: arg 3 must be a symbol",
+            "hash-remove!: arg 3 must be a symbol",
             INDEX_ERR);
     }
-    return map;
+    return hash;
 }
 
 
-/* (map-keys map)
- * Returns a list containing all keys in map. */
+/* (hash-keys hash)
+ * Returns a list containing all keys in hash. */
 Cell* builtin_hash_keys(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 1, "map-keys");
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "hash-keys");
     if (err) return err;
-    const Cell* map = a->cell[0];
-    if (map->type != CELL_HASH) {
+    const Cell* hash = a->cell[0];
+    if (hash->type != CELL_HASH) {
         return make_cell_error(
-            "map-keys: arg must be a map",
+            "hash-keys: arg must be a hash",
             TYPE_ERR);
     }
 
     Cell* r = make_cell_sexpr();
-    ghti it = ght_iterator(map->table);
+    ghti it = ght_iterator(hash->table);
     while (ght_next(&it)) {
         cell_add(r, it.key);
     }
@@ -220,22 +220,22 @@ Cell* builtin_hash_keys(const Lex* e, const Cell* a)
 }
 
 
-/* (map-values map)
- * Returns a list containing all values in map. */
+/* (hash-values hash)
+ * Returns a list containing all values in hash. */
 Cell* builtin_hash_values(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 1, "map-values");
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "hash-values");
     if (err) return err;
-    const Cell* map = a->cell[0];
-    if (map->type != CELL_HASH) {
+    const Cell* hash = a->cell[0];
+    if (hash->type != CELL_HASH) {
         return make_cell_error(
-            "map-values: arg must be a map",
+            "hash-values: arg must be a hash",
             TYPE_ERR);
     }
 
     Cell* r = make_cell_sexpr();
-    ghti it = ght_iterator(map->table);
+    ghti it = ght_iterator(hash->table);
     while (ght_next(&it)) {
         cell_add(r, it.value);
     }
@@ -244,23 +244,23 @@ Cell* builtin_hash_values(const Lex* e, const Cell* a)
 }
 
 
-/* (map->alist map)
- * Returns an alist containing all keys and values found in map, ie: it returns a list where each car field is a
+/* (hash->alist hash)
+ * Returns an alist containing all keys and values found in hash, ie: it returns a list where each car field is a
  * (key . value) dotted pair. */
 Cell* builtin_hash_to_alist(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 1, "map->alist");
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "hash->alist");
     if (err) return err;
-    const Cell* map = a->cell[0];
-    if (map->type != CELL_HASH) {
+    const Cell* hash = a->cell[0];
+    if (hash->type != CELL_HASH) {
         return make_cell_error(
-            "map->alist: arg must be a map",
+            "hash->alist: arg must be a hash",
             TYPE_ERR);
     }
 
     Cell* r = make_cell_sexpr();
-    ghti it = ght_iterator(map->table);
+    ghti it = ght_iterator(hash->table);
     while (ght_next(&it)) {
         Cell* p = make_cell_pair(it.key, it.value);
         cell_add(r, p);
@@ -270,18 +270,18 @@ Cell* builtin_hash_to_alist(const Lex* e, const Cell* a)
 }
 
 
-/* (alist->map alist)
- * Returns a newly allocated map object where all key -> value pairs are derived from association list car fields.
+/* (alist->hash alist)
+ * Returns a newly allocated hash object where all key -> value pairs are derived from association list car fields.
  * Raises type error if alist car fields are not dotted pairs. */
-Cell* builtin_alist_to_map(const Lex* e, const Cell* a)
+Cell* builtin_alist_to_hash(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 1, "alist->map");
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "alist->hash");
     if (err) return err;
     const Cell* alist = a->cell[0];
     if (alist->type != CELL_PAIR || a->cell[0]->count == -1) {
         return make_cell_error(
-            "alist->map: arg must be an association list",
+            "alist->hash: arg must be an association list",
             TYPE_ERR);
     }
 
@@ -290,7 +290,7 @@ Cell* builtin_alist_to_map(const Lex* e, const Cell* a)
         /* This also enforces an even number of objects fed to make_cell_hash(). */
         if (alist->car->type != CELL_PAIR) {
             return make_cell_error(
-                "alist->map: car field of list is not a dotted pair",
+                "alist->hash: car field of list is not a dotted pair",
                 TYPE_ERR);
         }
         cell_add(r, alist->car->car);
@@ -301,105 +301,105 @@ Cell* builtin_alist_to_map(const Lex* e, const Cell* a)
 }
 
 
-/* (map-keys-map proc map)
- * Returns a list containing the results of applying proc to each key in map. The order of the procedure applications is
- * indeterminate. The proc must accept exactly one arg, which will be each key from the map. */
+/* (hash-keys-map proc hash)
+ * Returns a list containing the results of applying proc to each key in hash. The order of the procedure applications is
+ * indeterminate. The proc must accept exactly one arg, which will be each key from the hash. */
 Cell* builtin_hash_keys_map(const Lex* e, const Cell* a)
 {
-    Cell* err = CHECK_ARITY_EXACT(a, 2, "map-keys-map");
+    Cell* err = CHECK_ARITY_EXACT(a, 2, "hash-keys-map");
     if (err) return err;
 
     const Cell* proc = a->cell[0];
-    const Cell* map = a->cell[1];
+    const Cell* hash = a->cell[1];
 
     if (proc->type != CELL_PROC) {
         return make_cell_error(
-            "map-keys-map: arg1 must be a procedure",
+            "hash-keys-map: arg1 must be a procedure",
             TYPE_ERR);
     }
-    if (map->type != CELL_HASH) {
+    if (hash->type != CELL_HASH) {
         return make_cell_error(
-            "map-keys-map: arg2 must be a map",
+            "hash-keys-map: arg2 must be a hash",
             TYPE_ERR);
     }
-    return map_logic(proc, map, e, true, true);
+    return map_logic(proc, hash, e, true, true);
 }
 
 
-/* (map-keys-foreach proc map)
- * Applies proc to each key in map. Unlike map-keys-map, this procedure is used for side effects. Returns #void. The
+/* (hash-keys-foreach proc hash)
+ * Applies proc to each key in hash. Unlike hash-keys-map, this procedure is used for side effects. Returns #void. The
  * order of the procedure applications is indeterminate. The proc must accept exactly one arg, which will be each key
- * from the map. */
+ * from the hash. */
 Cell* builtin_hash_keys_foreach(const Lex* e, const Cell* a)
 {
-    Cell* err = CHECK_ARITY_EXACT(a, 2, "map-keys-foreach");
+    Cell* err = CHECK_ARITY_EXACT(a, 2, "hash-keys-foreach");
     if (err) return err;
 
     const Cell* proc = a->cell[0];
-    const Cell* map = a->cell[1];
+    const Cell* hash = a->cell[1];
 
     if (proc->type != CELL_PROC) {
         return make_cell_error(
-            "map-keys-foreach: arg1 must be a procedure",
+            "hash-keys-foreach: arg1 must be a procedure",
             TYPE_ERR);
     }
-    if (map->type != CELL_HASH) {
+    if (hash->type != CELL_HASH) {
         return make_cell_error(
-            "map-keys-foreach: arg2 must be a map",
+            "hash-keys-foreach: arg2 must be a hash",
             TYPE_ERR);
     }
-    return map_logic(proc, map, e, true, false);
+    return map_logic(proc, hash, e, true, false);
 }
 
 
-/* (map-values-map proc map)
- * Returns a list containing the results of applying proc to each value in map. The order of the procedure applications
- * is indeterminate. The proc must accept exactly one arg, which will be each value from the map. */
+/* (hash-values-map proc hash)
+ * Returns a list containing the results of applying proc to each value in hash. The order of the procedure applications
+ * is indeterminate. The proc must accept exactly one arg, which will be each value from the hash. */
 Cell* builtin_hash_values_map(const Lex* e, const Cell* a)
 {
-    Cell* err = CHECK_ARITY_EXACT(a, 2, "map-values-map");
+    Cell* err = CHECK_ARITY_EXACT(a, 2, "hash-values-map");
     if (err) return err;
 
     const Cell* proc = a->cell[0];
-    const Cell* map = a->cell[1];
+    const Cell* hash = a->cell[1];
 
     if (proc->type != CELL_PROC) {
         return make_cell_error(
-            "map-values-map: arg1 must be a procedure",
+            "hash-values-map: arg1 must be a procedure",
             TYPE_ERR);
     }
-    if (map->type != CELL_HASH) {
+    if (hash->type != CELL_HASH) {
         return make_cell_error(
-            "map-values-map: arg2 must be a map",
+            "hash-values-map: arg2 must be a hash",
             TYPE_ERR);
     }
-    return map_logic(proc, map, e, false, true);
+    return map_logic(proc, hash, e, false, true);
 }
 
 
-/* (map-values-foreach proc map)
- * Applies proc to each value in map. Unlike map-values-map, this procedure is used for side effects. Returns #void. The
+/* (hash-values-foreach proc hash)
+ * Applies proc to each value in hash. Unlike hash-values-map, this procedure is used for side effects. Returns #void. The
  * order of the procedure applications is indeterminate. The proc must accept exactly one arg, which will be each value
- * from the map. */
+ * from the hash. */
 Cell* builtin_hash_values_foreach(const Lex* e, const Cell* a)
 {
-    Cell* err = CHECK_ARITY_EXACT(a, 2, "map-values-foreach");
+    Cell* err = CHECK_ARITY_EXACT(a, 2, "hash-values-foreach");
     if (err) return err;
 
     const Cell* proc = a->cell[0];
-    const Cell* map = a->cell[1];
+    const Cell* hash = a->cell[1];
 
     if (proc->type != CELL_PROC) {
         return make_cell_error(
-            "map-values-foreach: arg1 must be a procedure",
+            "hash-values-foreach: arg1 must be a procedure",
             TYPE_ERR);
     }
-    if (map->type != CELL_HASH) {
+    if (hash->type != CELL_HASH) {
         return make_cell_error(
-            "map-values-foreach: arg2 must be a map",
+            "hash-values-foreach: arg2 must be a hash",
             TYPE_ERR);
     }
-    return map_logic(proc, map, e, false, false);
+    return map_logic(proc, hash, e, false, false);
 }
 
 
@@ -434,52 +434,52 @@ static Cell* map_foreach(const Cell* proc, const Cell* h_table, const Lex* e, co
 }
 
 
-/* (map-items-map proc map)
- * Returns a list containing the results of applying proc to each item in map. The order of the procedure applications
- * is indeterminate. The proc must accept exactly two args, which will be each key/value pair from the map. */
+/* (hash-items-map proc hash)
+ * Returns a list containing the results of applying proc to each item in hash. The order of the procedure applications
+ * is indeterminate. The proc must accept exactly two args, which will be each key/value pair from the hash. */
 Cell* builtin_hash_items_map(const Lex* e, const Cell* a)
 {
-    Cell* err = CHECK_ARITY_EXACT(a, 2, "map-items-map");
+    Cell* err = CHECK_ARITY_EXACT(a, 2, "hash-items-map");
     if (err) return err;
 
     const Cell* proc = a->cell[0];
-    const Cell* map = a->cell[1];
+    const Cell* hash = a->cell[1];
 
     if (proc->type != CELL_PROC) {
         return make_cell_error(
-            "map-items-map: arg1 must be a procedure",
+            "hash-items-map: arg1 must be a procedure",
             TYPE_ERR);
     }
-    if (map->type != CELL_HASH) {
+    if (hash->type != CELL_HASH) {
         return make_cell_error(
-            "map-items-map: arg2 must be a map",
+            "hash-items-map: arg2 must be a hash",
             TYPE_ERR);
     }
-    return map_foreach(proc, map, e, true);
+    return map_foreach(proc, hash, e, true);
 }
 
 
-/* (map-items-foreach proc map)
- * Applies proc to each item in map. Unlike map-items-map, this procedure is used for side effects. Returns #void. The
+/* (hash-items-foreach proc hash)
+ * Applies proc to each item in hash. Unlike hash-items-map, this procedure is used for side effects. Returns #void. The
  * order of the procedure applications is indeterminate. The proc must accept exactly two args, which will be each
- * key/value pair from the map. */
+ * key/value pair from the hash. */
 Cell* builtin_hash_items_foreach(const Lex* e, const Cell* a)
 {
-    Cell* err = CHECK_ARITY_EXACT(a, 2, "map-items-foreach");
+    Cell* err = CHECK_ARITY_EXACT(a, 2, "hash-items-foreach");
     if (err) return err;
 
     const Cell* proc = a->cell[0];
-    const Cell* map = a->cell[1];
+    const Cell* hash = a->cell[1];
 
     if (proc->type != CELL_PROC) {
         return make_cell_error(
-            "map-items-foreach: arg1 must be a procedure",
+            "hash-items-foreach: arg1 must be a procedure",
             TYPE_ERR);
     }
-    if (map->type != CELL_HASH) {
+    if (hash->type != CELL_HASH) {
         return make_cell_error(
-            "map-items-foreach: arg2 must be a map",
+            "hash-items-foreach: arg2 must be a hash",
             TYPE_ERR);
     }
-    return map_foreach(proc, map, e, false);
+    return map_foreach(proc, hash, e, false);
 }

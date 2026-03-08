@@ -640,7 +640,7 @@ Cell* parse_tokens(TokenArray *ta) {
                 advance(ta);
             }
 
-            /* Check for even number of forms in map literal. */
+            /* Check for even number of forms in hash literal. */
             if (n_forms % 2 != 0) {
                 return make_cell_error(
                     fmt_err("Line %d: hash literal requires even number of forms, %d provided",

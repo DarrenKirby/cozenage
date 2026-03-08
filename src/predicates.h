@@ -37,7 +37,7 @@ Cell* builtin_vector_pred(const Lex* e, const Cell* a);
 Cell* builtin_bytevector_pred(const Lex* e, const Cell* a);
 Cell* builtin_port_pred(const Lex* e, const Cell* a);
 Cell* builtin_set_pred(const Lex* e, const Cell* a);
-Cell* builtin_map_pred(const Lex* e, const Cell* a);
+Cell* builtin_hash_pred(const Lex* e, const Cell* a);
 Cell* builtin_eof_pred(const Lex* e, const Cell* a);
 /* Numeric identity predicate procedures. */
 Cell* builtin_exact_pred(const Lex* e, const Cell* a);

@@ -1,5 +1,5 @@
 /*
- * 'src/maps.h'
+ * 'src/hashmaps.h'
  * This file is part of Cozenage - https://github.com/DarrenKirby/cozenage
  * Copyright © 2026 Darren Kirby <darren@dragonbyte.ca>
  *
@@ -18,12 +18,12 @@
  */
 
 
-#ifndef COZENAGE_MAPS_H
-#define COZENAGE_MAPS_H
+#ifndef COZENAGE_HASHMAPS_H
+#define COZENAGE_HASHMAPS_H
 
 #include "cell.h"
 
-Cell* builtin_make_hash(const Lex* e, const Cell* a);
+Cell* builtin_hash(const Lex* e, const Cell* a);
 Cell* builtin_hash_copy(const Lex* e, const Cell* a);
 Cell* builtin_hash_clear(const Lex* e, const Cell* a);
 Cell* builtin_hash_get(const Lex* e, const Cell* a);
@@ -40,4 +40,4 @@ Cell* builtin_hash_values_foreach(const Lex* e, const Cell* a);
 Cell* builtin_hash_items_map(const Lex* e, const Cell* a);
 Cell* builtin_hash_items_foreach(const Lex* e, const Cell* a);
 
-#endif //COZENAGE_MAPS_H
+#endif //COZENAGE_HASHMAPS_H
