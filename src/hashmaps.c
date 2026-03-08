@@ -23,56 +23,56 @@
 #include "eval.h"
 
 
-/* (make-map obj1 obj2 ...)
- * Returns a newly allocated map object made from key -> value pairs supplied as args. */
-Cell* builtin_make_map(const Lex* e, const Cell* a)
+/* (make-hash obj1 obj2 ...)
+ * Returns a newly allocated hash object made from key -> value pairs supplied as args. */
+Cell* builtin_hash(const Lex* e, const Cell* a)
 {
     (void)e;
     if (a->count == 0) {
-        /* No args: return an empty map. */
+        /* No args: return an empty hash. */
         return make_cell_hash(nullptr);
     }
 
     if (a->count % 2 != 0) {
         return make_cell_error(
-            "make-map: requires even number of args",
+            "hash: requires even number of args",
             VALUE_ERR);
     }
     for (int i = 0; i < a->count; i += 2) {
         if (!cell_is_hashable(a->cell[i])) {
             return make_cell_error(
-            fmt_err("make-map: arg type '%s' is not a hashable",
+            fmt_err("hash: arg type '%s' is not a hashable",
                      cell_type_name(a->cell[i]->type)),
                      TYPE_ERR);
         }
     }
-    /* Confirmed args are OK, just feed right to map constructor. */
+    /* Confirmed args are OK, just feed right to hash constructor. */
     return make_cell_hash(a);
 }
 
 
-/* (map-copy map)
- * Copies the structure of map into a newly allocated map object. Note that this is not a deep-copy. The keys and
+/* (hash-copy hash)
+ * Copies the structure of hash into a newly allocated hash object. Note that this is not a deep-copy. The keys and
  * values themselves will not be copied, just the pointers to them. */
-Cell* builtin_map_copy(const Lex* e, const Cell* a)
+Cell* builtin_hash_copy(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 1, "map-copy");
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "hash-copy");
     if (err) return err;
 
-    const Cell* map = a->cell[0];
-    if (map->type != CELL_HASH) {
+    const Cell* hash = a->cell[0];
+    if (hash->type != CELL_HASH) {
         return make_cell_error(
-            "map-copy: arg must be a map",
+            "hash-copy: arg must be a map",
             TYPE_ERR);
     }
-    return copy_hash_table(map);
+    return copy_hash_table(hash);
 }
 
 
-/* (map-clear! map)
+/* (hash-clear! map)
  * Returns the same map object with all keys and values cleared. */
-Cell* builtin_map_clear(const Lex* e, const Cell* a)
+Cell* builtin_hash_clear(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "map-clear!");
@@ -92,7 +92,7 @@ Cell* builtin_map_clear(const Lex* e, const Cell* a)
  * (map-get map key default_val)
  * Returns the value indexed by key in map, or else raises an index error. If an optional third argument is passed,
  * then that value will be returned if the key does not exist in map. */
-Cell* builtin_map_get(const Lex* e, const Cell* a)
+Cell* builtin_hash_get(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_RANGE(a, 2, 3, "map-get");
@@ -128,7 +128,7 @@ Cell* builtin_map_get(const Lex* e, const Cell* a)
 
 /* (map-add! map obj1 obj2)
  * Adds obj1 as key, and obj2 as value to the map specified by map. Raises type error if obj1 is not hashable. */
-Cell* builtin_map_add(const Lex* e, const Cell* a)
+Cell* builtin_hash_add(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 3, "map-add!");
@@ -162,7 +162,7 @@ Cell* builtin_map_add(const Lex* e, const Cell* a)
  * Removes the key obj and associated value from map, and returns the mutated map. Raises an index error if object is not
  * a member of map. If an optional symbol (any symbol) is passed as third arg, the procedure will not raise the
  * index error, but rather just silently return. */
-Cell* builtin_map_remove(const Lex* e, const Cell* a)
+Cell* builtin_hash_remove(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_RANGE(a, 2, 3, "map-remove!");
@@ -198,7 +198,7 @@ Cell* builtin_map_remove(const Lex* e, const Cell* a)
 
 /* (map-keys map)
  * Returns a list containing all keys in map. */
-Cell* builtin_map_keys(const Lex* e, const Cell* a)
+Cell* builtin_hash_keys(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "map-keys");
@@ -222,7 +222,7 @@ Cell* builtin_map_keys(const Lex* e, const Cell* a)
 
 /* (map-values map)
  * Returns a list containing all values in map. */
-Cell* builtin_map_values(const Lex* e, const Cell* a)
+Cell* builtin_hash_values(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "map-values");
@@ -247,7 +247,7 @@ Cell* builtin_map_values(const Lex* e, const Cell* a)
 /* (map->alist map)
  * Returns an alist containing all keys and values found in map, ie: it returns a list where each car field is a
  * (key . value) dotted pair. */
-Cell* builtin_map_to_alist(const Lex* e, const Cell* a)
+Cell* builtin_hash_to_alist(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "map->alist");
@@ -304,7 +304,7 @@ Cell* builtin_alist_to_map(const Lex* e, const Cell* a)
 /* (map-keys-map proc map)
  * Returns a list containing the results of applying proc to each key in map. The order of the procedure applications is
  * indeterminate. The proc must accept exactly one arg, which will be each key from the map. */
-Cell* builtin_map_keys_map(const Lex* e, const Cell* a)
+Cell* builtin_hash_keys_map(const Lex* e, const Cell* a)
 {
     Cell* err = CHECK_ARITY_EXACT(a, 2, "map-keys-map");
     if (err) return err;
@@ -330,7 +330,7 @@ Cell* builtin_map_keys_map(const Lex* e, const Cell* a)
  * Applies proc to each key in map. Unlike map-keys-map, this procedure is used for side effects. Returns #void. The
  * order of the procedure applications is indeterminate. The proc must accept exactly one arg, which will be each key
  * from the map. */
-Cell* builtin_map_keys_foreach(const Lex* e, const Cell* a)
+Cell* builtin_hash_keys_foreach(const Lex* e, const Cell* a)
 {
     Cell* err = CHECK_ARITY_EXACT(a, 2, "map-keys-foreach");
     if (err) return err;
@@ -355,7 +355,7 @@ Cell* builtin_map_keys_foreach(const Lex* e, const Cell* a)
 /* (map-values-map proc map)
  * Returns a list containing the results of applying proc to each value in map. The order of the procedure applications
  * is indeterminate. The proc must accept exactly one arg, which will be each value from the map. */
-Cell* builtin_map_values_map(const Lex* e, const Cell* a)
+Cell* builtin_hash_values_map(const Lex* e, const Cell* a)
 {
     Cell* err = CHECK_ARITY_EXACT(a, 2, "map-values-map");
     if (err) return err;
@@ -381,7 +381,7 @@ Cell* builtin_map_values_map(const Lex* e, const Cell* a)
  * Applies proc to each value in map. Unlike map-values-map, this procedure is used for side effects. Returns #void. The
  * order of the procedure applications is indeterminate. The proc must accept exactly one arg, which will be each value
  * from the map. */
-Cell* builtin_map_values_foreach(const Lex* e, const Cell* a)
+Cell* builtin_hash_values_foreach(const Lex* e, const Cell* a)
 {
     Cell* err = CHECK_ARITY_EXACT(a, 2, "map-values-foreach");
     if (err) return err;
@@ -437,7 +437,7 @@ static Cell* map_foreach(const Cell* proc, const Cell* h_table, const Lex* e, co
 /* (map-items-map proc map)
  * Returns a list containing the results of applying proc to each item in map. The order of the procedure applications
  * is indeterminate. The proc must accept exactly two args, which will be each key/value pair from the map. */
-Cell* builtin_map_items_map(const Lex* e, const Cell* a)
+Cell* builtin_hash_items_map(const Lex* e, const Cell* a)
 {
     Cell* err = CHECK_ARITY_EXACT(a, 2, "map-items-map");
     if (err) return err;
@@ -463,7 +463,7 @@ Cell* builtin_map_items_map(const Lex* e, const Cell* a)
  * Applies proc to each item in map. Unlike map-items-map, this procedure is used for side effects. Returns #void. The
  * order of the procedure applications is indeterminate. The proc must accept exactly two args, which will be each
  * key/value pair from the map. */
-Cell* builtin_map_items_foreach(const Lex* e, const Cell* a)
+Cell* builtin_hash_items_foreach(const Lex* e, const Cell* a)
 {
     Cell* err = CHECK_ARITY_EXACT(a, 2, "map-items-foreach");
     if (err) return err;
