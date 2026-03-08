@@ -212,6 +212,9 @@ List and pair procedures
 
 .. _proc:cons:
 
+cons
+^^^^
+
 .. function:: (cons obj1 obj2)
 
    Constructs a pair.
@@ -231,6 +234,9 @@ List and pair procedures
         (1 . 2)
 
 .. _proc:car:
+
+car
+^^^
 
 .. function:: (car pair)
 
@@ -253,6 +259,9 @@ List and pair procedures
 
 .. _proc:cdr:
 
+cdr
+^^^
+
 .. function:: (cdr pair)
 
    Returns the second element of the pair.
@@ -274,6 +283,9 @@ List and pair procedures
 
 .. _proc:caar:
 
+caar
+^^^^
+
 .. function:: (caar pair)
 
     Returns the car of the car of *pair*. Equivalent to ``(car (car pair))``.
@@ -292,6 +304,9 @@ List and pair procedures
 
 
 .. _proc:cadr:
+
+cadr
+^^^^
 
 .. function:: (cadr pair)
 
@@ -313,6 +328,9 @@ List and pair procedures
 
 .. _proc:cdar:
 
+cdar
+^^^^
+
 .. function:: (cdar pair)
 
     Returns the cdr of the car of *pair*. Equivalent to ``(cdr (car pair))``.
@@ -332,6 +350,9 @@ List and pair procedures
 
 .. _proc:cddr:
 
+cddr
+^^^^
+
 .. function:: (cddr pair)
 
     Returns the cdr of the cdr of *pair*. Equivalent to ``(cdr (cdr pair))``.
@@ -350,6 +371,9 @@ List and pair procedures
       (3)
 
 .. _proc:list:
+
+list
+^^^^
 
 .. function:: (list obj ...)
 
@@ -374,6 +398,9 @@ List and pair procedures
 
 
 .. _proc:set-car!:
+
+set-car!
+^^^^^^^^
 
 .. function:: (set-car! pair obj)
 
@@ -400,6 +427,9 @@ List and pair procedures
 
 .. _proc:set-cdr!:
 
+set-cdr!
+^^^^^^^^
+
 .. function:: (set-cdr! pair obj)
 
     Stores *obj* in the cdr field of *pair*, mutating it in place.
@@ -425,6 +455,9 @@ List and pair procedures
 
 .. _proc:length:
 
+length
+^^^^^^
+
 .. function:: (length list)
 
     Returns the number of elements in *list*. Raises an error if *list* is an
@@ -446,6 +479,9 @@ List and pair procedures
 
 
 .. _proc:list-ref:
+
+list-ref
+^^^^^^^^
 
 .. function:: (list-ref list k)
 
@@ -470,6 +506,9 @@ List and pair procedures
       c
 
 .. _proc:append:
+
+append
+^^^^^^
 
 .. function:: (append list ... [obj])
 
@@ -510,6 +549,9 @@ List and pair procedures
 
 .. _proc:reverse:
 
+reverse
+^^^^^^^
+
 .. function:: (reverse list)
 
     Returns a newly allocated list consisting of the elements of *list* in
@@ -533,6 +575,9 @@ List and pair procedures
 
 
 .. _proc:list-tail:
+
+list-tail
+^^^^^^^^^
 
 .. function:: (list-tail list k)
 
@@ -559,6 +604,9 @@ List and pair procedures
 
 
 .. _proc:make-list:
+
+make-list
+^^^^^^^^^
 
 .. function:: (make-list k [fill])
 
@@ -587,6 +635,9 @@ List and pair procedures
 
 .. _proc:list-set!:
 
+list-set!
+^^^^^^^^^
+
 .. function:: (list-set! list k obj)
 
     Stores *obj* in element *k* of *list*, mutating the list in place. Raises an
@@ -610,6 +661,9 @@ List and pair procedures
       (a b z d)
 
 .. _proc:memq:
+
+memq
+^^^^
 
 .. function:: (memq obj list)
 
@@ -637,6 +691,9 @@ List and pair procedures
 
 .. _proc:memv:
 
+memv
+^^^^
+
 .. function:: (memv obj list)
 
     Returns the first sublist of *list* whose car is *obj*, or ``#f`` if *obj*
@@ -661,6 +718,9 @@ List and pair procedures
 
 
 .. _proc:member:
+
+member
+^^^^^^
 
 .. function:: (member obj list [compare])
 
@@ -693,6 +753,9 @@ List and pair procedures
 
 .. _proc:assq:
 
+assq
+^^^^
+
 .. function:: (assq obj alist)
 
     Returns the first pair in association list *alist* whose car is *obj*, or
@@ -717,6 +780,9 @@ List and pair procedures
 
 
 .. _proc:assv:
+
+assv
+^^^^
 
 .. function:: (assv obj alist)
 
@@ -743,6 +809,9 @@ List and pair procedures
 
 
 .. _proc:assoc:
+
+assoc
+^^^^^
 
 .. function:: (assoc obj alist [compare])
 
@@ -775,6 +844,9 @@ List and pair procedures
 
 
 .. _proc:list-copy:
+
+list-copy
+^^^^^^^^^
 
 .. function:: (list-copy obj)
 
@@ -811,6 +883,9 @@ List and pair procedures
 
 .. _proc:map:
 
+map
+^^^
+
 .. function:: (map proc list ...)
 
     Applies *proc* element-wise to the elements of each *list* argument and
@@ -842,6 +917,9 @@ List and pair procedures
 
 .. _proc:for-each:
 
+for-each
+^^^^^^^^
+
 .. function:: (for-each proc list ...)
 
     Applies *proc* element-wise to the elements of each *list* argument, in
@@ -872,6 +950,9 @@ List and pair procedures
 
 .. _proc:filter:
 
+filter
+^^^^^^
+
 .. function:: (filter proc list)
 
     Returns a newly allocated list containing only the elements of *list* for
@@ -901,6 +982,9 @@ List and pair procedures
 
 
 .. _proc:foldl:
+
+foldl
+^^^^^
 
 .. function:: (foldl proc init list ...)
 
@@ -943,6 +1027,9 @@ List and pair procedures
 
 
 .. _proc:foldr:
+
+foldr
+^^^^^
 
 .. function:: (foldr proc init list ...)
 
@@ -987,6 +1074,9 @@ List and pair procedures
 
 .. _proc:zip:
 
+zip
+^^^
+
 .. function:: (zip list ...)
 
     Returns a list of sublists, where the *i*-th sublist contains the *i*-th
@@ -1017,6 +1107,9 @@ List and pair procedures
 
 .. _proc:count:
 
+count
+^^^^^
+
 .. function:: (count proc list)
 
     Returns the number of elements in *list* for which the predicate *proc*
@@ -1045,6 +1138,9 @@ List and pair procedures
 
 
 .. _proc:count-equal:
+
+count-equal
+^^^^^^^^^^^
 
 .. function:: (count-equal obj list)
 

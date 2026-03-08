@@ -62,6 +62,9 @@ Vector Procedures
 
 .. _proc:vector:
 
+vector
+^^^^^^
+
 .. function:: (vector obj ...)
 
     Returns a newly allocated vector whose elements are the given arguments, in
@@ -87,6 +90,9 @@ Vector Procedures
 
 .. _proc:vector-length:
 
+vector-length
+^^^^^^^^^^^^^
+
 .. function:: (vector-length vector)
 
     Returns the number of elements in *vector* as an exact integer.
@@ -107,6 +113,9 @@ Vector Procedures
 
 
 .. _proc:vector-ref:
+
+vector-ref
+^^^^^^^^^^
 
 .. function:: (vector-ref vector k)
 
@@ -131,6 +140,9 @@ Vector Procedures
 
 
 .. _proc:make-vector:
+
+make-vector
+^^^^^^^^^^^
 
 .. function:: (make-vector k [fill])
 
@@ -158,6 +170,9 @@ Vector Procedures
 
 .. _proc:list->vector:
 
+list->vector
+^^^^^^^^^^^^
+
 .. function:: (list->vector list)
 
     Returns a newly allocated vector containing the elements of *list*, in
@@ -181,6 +196,9 @@ Vector Procedures
 
 
 .. _proc:vector->list:
+
+vector->list
+^^^^^^^^^^^^
 
 .. function:: (vector->list vector [start [end]])
 
@@ -214,6 +232,9 @@ Vector Procedures
 
 .. _proc:vector-copy:
 
+vector-copy
+^^^^^^^^^^^
+
 .. function:: (vector-copy vector [start [end]])
 
     Returns a newly allocated copy of the elements of *vector* between *start*
@@ -244,6 +265,9 @@ Vector Procedures
 
 
 .. _proc:vector->string:
+
+vector->string
+^^^^^^^^^^^^^^
 
 .. function:: (vector->string vector [start [end]])
 
@@ -277,6 +301,9 @@ Vector Procedures
 
 .. _proc:string->vector:
 
+string->vector
+^^^^^^^^^^^^^^
+
 .. function:: (string->vector string [start [end]])
 
     Returns a newly allocated vector of the characters of *string* between
@@ -309,6 +336,9 @@ Vector Procedures
 
 .. _proc:vector-set!:
 
+vector-set!
+^^^^^^^^^^^
+
 .. function:: (vector-set! vector k obj)
 
     Stores *obj* at index *k* of *vector*, mutating it in place. Raises an
@@ -333,6 +363,9 @@ Vector Procedures
 
 
 .. _proc:vector-append:
+
+vector-append
+^^^^^^^^^^^^^
 
 .. function:: (vector-append vector ...)
 
@@ -361,6 +394,9 @@ Vector Procedures
 
 
 .. _proc:vector-copy!:
+
+vector-copy!
+^^^^^^^^^^^^^
 
 .. function:: (vector-copy! to at from [start [end]])
 
@@ -403,6 +439,9 @@ Vector Procedures
 
 .. _proc:vector-fill!:
 
+vector-fill!
+^^^^^^^^^^^^
+
 .. function:: (vector-fill! vector fill [start [end]])
 
     Stores *fill* in every element of *vector* between *start* (inclusive) and
@@ -438,6 +477,9 @@ Vector Procedures
 
 .. _proc:vector-map:
 
+vector-map
+^^^^^^^^^^
+
 .. function:: (vector-map proc vector ...)
 
     Applies *proc* element-wise to the elements of each *vector* argument and
@@ -468,6 +510,9 @@ Vector Procedures
 
 
 .. _proc:vector-for-each:
+
+vector-for-each
+^^^^^^^^^^^^^^^
 
 .. function:: (vector-for-each proc vector ...)
 

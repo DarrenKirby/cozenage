@@ -190,6 +190,9 @@ Char Type Predicate Procedures
 
 .. _proc:char-alphabetic?:
 
+char-alphabetic?
+****************
+
 .. function:: (char-alphabetic? char)
 
    Returns ``#true`` if *char* is an alphabetic character, and ``#false`` otherwise.
@@ -212,6 +215,9 @@ Char Type Predicate Procedures
 
 .. _proc:char-numeric?:
 
+char-numeric?
+*************
+
 .. function:: (char-numeric? char)
 
    Returns ``#true`` if *char* is a numeric digit (0-9), and ``#false`` otherwise.
@@ -231,6 +237,9 @@ Char Type Predicate Procedures
         #false
 
 .. _proc:char-whitespace?:
+
+char-whitespace?
+****************
 
 .. function:: (char-whitespace? char)
 
@@ -254,6 +263,9 @@ Char Type Predicate Procedures
 
 .. _proc:char-upper-case?:
 
+char-upper-case?
+****************
+
 .. function:: (char-upper-case? char)
 
    Returns ``#true`` if *char* is an uppercase letter, and ``#false`` otherwise.
@@ -273,6 +285,9 @@ Char Type Predicate Procedures
         #false
 
 .. _proc:char-lower-case?:
+
+char-lower-case?
+****************
 
 .. function:: (char-lower-case? char)
 
@@ -297,6 +312,9 @@ Char to Numeric Value and Inverse Procedures
 
 .. _proc:digit-value:
 
+digit-value
+***********
+
 .. function:: (digit-value char)
 
    If *char* is a numeric digit, this procedure returns its integer value (0-9). If *char* is not a digit, it
@@ -318,6 +336,9 @@ Char to Numeric Value and Inverse Procedures
 
 
 .. _proc:char->integer:
+
+char->integer
+*************
 
 .. function:: (char->integer char)
 
@@ -345,6 +366,9 @@ Char to Numeric Value and Inverse Procedures
 
 
 .. _proc:integer->char:
+
+integer->char
+*************
 
 .. function:: (integer->char n)
 
@@ -376,6 +400,9 @@ Case Conversion Procedures
 
 .. _proc:char-upcase:
 
+char-upcase
+***********
+
 .. function:: (char-upcase char)
 
    Returns the uppercase equivalent of *char*. If *char* is not a lowercase letter, it is returned unchanged.
@@ -396,6 +423,9 @@ Case Conversion Procedures
 
 .. _proc:char-downcase:
 
+char-downcase
+*************
+
 .. function:: (char-downcase char)
 
    Returns the lowercase equivalent of *char*. If *char* is not an uppercase letter, it is returned unchanged.
@@ -415,6 +445,9 @@ Case Conversion Procedures
         #\b
 
 .. _proc:char-foldcase:
+
+char-foldcase
+*************
 
 .. function:: (char-foldcase char)
 
@@ -440,6 +473,9 @@ Case-Sensitive Comparison Procedures
 
 .. _proc:char=?:
 
+char=?
+******
+
 .. function:: (char=? char1 char2 ...)
 
     Returns ``#t`` if all arguments have the same Unicode scalar value,
@@ -463,6 +499,9 @@ Case-Sensitive Comparison Procedures
 
 
 .. _proc:char<?:
+
+char<?
+******
 
 .. function:: (char<? char1 char2 ...)
 
@@ -488,6 +527,9 @@ Case-Sensitive Comparison Procedures
 
 
 .. _proc:char<=?:
+
+char<=?
+*******
 
 .. function:: (char<=? char1 char2 ...)
 
@@ -516,6 +558,9 @@ Case-Sensitive Comparison Procedures
 
 .. _proc:char>?:
 
+char>?
+******
+
 .. function:: (char>? char1 char2 ...)
 
     Returns ``#t`` if the Unicode scalar values of the arguments are
@@ -540,6 +585,9 @@ Case-Sensitive Comparison Procedures
 
 
 .. _proc:char>=?:
+
+char>=?
+*******
 
 .. function:: (char>=? char1 char2 ...)
 
@@ -571,6 +619,9 @@ Case-Insensitive Comparison Procedures
 
 .. _proc:char-ci=?:
 
+char-ci=?
+*********
+
 .. function:: (char-ci=? char1 char2 ...)
 
     Returns ``#t`` if all arguments are equal under case-folding, ``#f``
@@ -595,6 +646,9 @@ Case-Insensitive Comparison Procedures
 
 
 .. _proc:char-ci<?:
+
+char-ci<?
+*********
 
 .. function:: (char-ci<? char1 char2 ...)
 
@@ -622,6 +676,9 @@ Case-Insensitive Comparison Procedures
 
 .. _proc:char-ci<=?:
 
+char-ci<=?
+**********
+
 .. function:: (char-ci<=? char1 char2 ...)
 
     Returns ``#t`` if the case-folded Unicode scalar values of the arguments
@@ -648,6 +705,9 @@ Case-Insensitive Comparison Procedures
 
 .. _proc:char-ci>?:
 
+char-ci>?
+*********
+
 .. function:: (char-ci>? char1 char2 ...)
 
     Returns ``#t`` if the case-folded Unicode scalar values of the arguments
@@ -673,6 +733,9 @@ Case-Insensitive Comparison Procedures
 
 
 .. _proc:char-ci>=?:
+
+char-ci>=?
+**********
 
 .. function:: (char-ci>=? char1 char2 ...)
 

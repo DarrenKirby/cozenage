@@ -3,6 +3,9 @@ Special Forms Documentation
 
 .. _sf:define:
 
+define
+======
+
 .. describe:: (define variable expr)
               (define (name formals ...) body)
 
@@ -149,6 +152,9 @@ Special Forms Documentation
 
 .. _sf:lambda:
 
+lambda
+======
+
 .. describe:: (lambda formals body)
 
     Evaluates to a procedure. ``lambda`` is the fundamental procedure
@@ -282,6 +288,9 @@ Special Forms Documentation
 
 .. _sf:quote:
 
+quote
+=====
+
 .. describe:: (quote datum)
               'datum
 
@@ -352,6 +361,10 @@ Special Forms Documentation
       #\a
 
 .. _sf:if:
+
+if
+==
+
 
 .. describe:: (if test consequent)
               (if test consequent alternate)
@@ -431,6 +444,10 @@ Special Forms Documentation
 
 
 .. _sf:cond:
+
+cond
+====
+
 
 .. describe:: (cond clause ...)
 
@@ -545,6 +562,9 @@ Special Forms Documentation
 
 .. _sf:import:
 
+import
+======
+
 .. describe:: (import import-set ...)
 
     Loads one or more named libraries into the current environment, making
@@ -603,6 +623,9 @@ Special Forms Documentation
       Error: import: user-defined libraries not yet supported
 
 .. _sf:let:
+
+let and named let
+=================
 
 .. describe:: (let bindings body)
               (let name bindings body)
@@ -717,6 +740,9 @@ Special Forms Documentation
 
 .. _sf:let*:
 
+let*
+====
+
 .. describe:: (let* bindings body)
 
     Like ``let``, but evaluates and binds each variable sequentially from
@@ -791,6 +817,9 @@ Special Forms Documentation
     :rtype: any
 
 .. _sf:letrec:
+
+letrec
+======
 
 .. describe:: (letrec bindings body)
 
@@ -870,6 +899,9 @@ Special Forms Documentation
 
 .. _sf:letrec*:
 
+letrec*
+=======
+
 .. describe:: (letrec* bindings body)
 
     Like ``letrec``, but evaluates and assigns each binding sequentially from
@@ -944,6 +976,9 @@ Special Forms Documentation
     :rtype: any
 
 .. _sf:set!:
+
+set!
+====
 
 .. describe:: (set! variable expr)
 
@@ -1026,6 +1061,9 @@ Special Forms Documentation
 
 .. _sf:begin:
 
+begin
+=====
+
 .. describe:: (begin expr ...)
 
     Evaluates *expr* expressions sequentially from left to right and returns
@@ -1104,6 +1142,9 @@ Special Forms Documentation
 
 .. _sf:and:
 
+and
+===
+
 .. describe:: (and test ...)
 
     Evaluates *test* expressions from left to right, returning ``#f``
@@ -1179,6 +1220,10 @@ Special Forms Documentation
       #f
 
 .. _sf:or:
+
+or
+==
+
 
 .. describe:: (or test ...)
 
@@ -1269,6 +1314,9 @@ Special Forms Documentation
       "not found"
 
 .. _sf:case:
+
+case
+====
 
 .. describe:: (case key clause ...)
 
@@ -1389,6 +1437,9 @@ Special Forms Documentation
     :rtype: any
 
 .. _sf:do:
+
+do
+==
 
 .. describe:: (do ((variable init step) ...) (test expr ...) command ...)
 
@@ -1523,6 +1574,9 @@ Special Forms Documentation
 
 .. _sf:when:
 
+when
+====
+
 .. describe:: (when test expr ...)
 
     Evaluates *test* and, if the result is true, evaluates the body
@@ -1581,6 +1635,9 @@ Special Forms Documentation
 
 .. _sf:unless:
 
+unless
+======
+
 .. describe:: (unless test expr ...)
 
     Evaluates *test* and, if the result is ``#f``, evaluates the body
@@ -1637,6 +1694,9 @@ Special Forms Documentation
 
 .. _sf:else:
 
+else
+====
+
 .. describe:: else
 
     A reserved syntactic keyword used as the final clause in ``cond`` and
@@ -1662,6 +1722,9 @@ Special Forms Documentation
     See :ref:`sf:cond` and :ref:`sf:case` for full usage examples.
 
 .. _sf:quasiquote:
+
+quasiquote
+==========
 
 .. describe:: (quasiquote datum)
               `datum
@@ -1768,6 +1831,9 @@ Special Forms Documentation
 
 .. _sf:unquote:
 
+unquote
+=======
+
 .. describe:: (unquote expr)
               ,expr
 
@@ -1794,6 +1860,9 @@ Special Forms Documentation
 
 
 .. _sf:unquote-splicing:
+
+unquote-splicing
+================
 
 .. describe:: (unquote-splicing expr)
               ,@expr
@@ -1827,6 +1896,9 @@ Special Forms Documentation
       Error: unquote-splice: must be contained within a 'quasiquote' expression
 
 .. _sf:defmacro:
+
+defmacro
+========
 
 .. describe:: (defmacro name formals body)
 
@@ -1945,6 +2017,9 @@ Special Forms Documentation
     :rtype: procedure
 
 .. _sf:with-gc-stats:
+
+with-gc-stats
+=============
 
 .. describe:: (with-gc-stats expr)
 

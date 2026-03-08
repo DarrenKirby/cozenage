@@ -154,6 +154,9 @@ Symbol procedures
 
 .. _proc:symbol=?:
 
+symbol=?
+^^^^^^^^
+
 .. function:: (symbol=? sym sym ...)
 
     The symbol=? predicate returns #true if all symbols passed as arguments are equal, otherwise returns #false. Takes
@@ -167,6 +170,9 @@ Symbol procedures
 
 .. _proc:symbol->string:
 
+symbol->string
+^^^^^^^^^^^^^^
+
 .. function:: (symbol->string symbol)
 
     Returns the name of symbol as a string, but without adding escapes. Raises a type error when passed any object
@@ -179,6 +185,9 @@ Symbol procedures
 
 
 .. _proc:string->symbol:
+
+string->symbol
+^^^^^^^^^^^^^^
 
 .. function:: (string->symbol string)
 

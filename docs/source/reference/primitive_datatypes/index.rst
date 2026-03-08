@@ -18,7 +18,7 @@ is to say that any Scheme object will return ``#true`` for one, and only one, of
 * ``string?``
 * ``vector?``
 * ``set?``
-* ``map?``
+* ``hash?``
 
 It is common in Scheme documentation and literature to refer to these datatypes as **objects** of the given type, and
 to use the generic term **object** to refer to an instantiation of any Scheme type. These types/objects can be
@@ -27,7 +27,8 @@ classified as either **atomic** or **compound**. The atomic types, ``boolean``, 
 The compound types represent either homogenic or heterogenic 'containers' which can hold either atomic types, or in
 some cases, atomic types and nested compound types. For example, ``string`` is a homogenic compound type that can hold
 only chars, and ``bytevectors`` are homogenic types that can hold only integers. On the other hand, ``pair`` and
-``vector`` are heterogenic types which can hold any combination of atomic types and/or nested compound types.
+``vector`` are heterogenic types which can hold any combination of atomic types and/or nested compound types. A ``set``
+can hold any hashable type, and a ``hash`` can use any hashable type as key, and any object type as value.
 
 All primitive types and objects are first-class, which means they can be passed to procedures as arguments, and returned
 from procedures as values.
@@ -88,4 +89,4 @@ an error.
    symbols
    vectors
    sets
-   maps
+   hashes

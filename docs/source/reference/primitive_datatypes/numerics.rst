@@ -268,6 +268,9 @@ Numeric procedures
 
 .. _proc:add:
 
+addition
+^^^^^^^^
+
 .. function:: (+ n ...)
 
     Returns the sum of all arguments. Applies numeric promotion as needed across
@@ -299,6 +302,9 @@ Numeric procedures
 
 
 .. _proc:sub:
+
+subtraction
+^^^^^^^^^^^
 
 .. function:: (- n1 [n2 ...])
 
@@ -333,6 +339,9 @@ Numeric procedures
 
 .. _proc:mul:
 
+multiplication
+^^^^^^^^^^^^^^
+
 .. function:: (* n ...)
 
     Returns the product of all arguments. Applies numeric promotion as needed
@@ -364,6 +373,9 @@ Numeric procedures
 
 
 .. _proc:div:
+
+division
+^^^^^^^^
 
 .. function:: (/ n1 [n2 ...])
 
@@ -404,6 +416,9 @@ Numeric procedures
 
 .. _proc:abs:
 
+abs
+^^^
+
 .. function:: (abs x)
 
     Returns the absolute value of *x*. For complex numbers, returns the
@@ -430,6 +445,9 @@ Numeric procedures
 
 
 .. _proc:expt:
+
+expt
+^^^^
 
 .. function:: (expt z1 z2)
 
@@ -472,6 +490,9 @@ Numeric procedures
 
 .. _proc:modulo:
 
+modulo
+^^^^^^
+
 .. function:: (modulo n1 n2)
 
     Returns the remainder of dividing *n1* by *n2*, with the result having the
@@ -499,6 +520,9 @@ Numeric procedures
 
 
 .. _proc:quotient:
+
+quotient
+^^^^^^^^
 
 .. function:: (quotient n1 n2)
 
@@ -528,6 +552,9 @@ Numeric procedures
 
 .. _proc:remainder:
 
+remainder
+^^^^^^^^^
+
 .. function:: (remainder n1 n2)
 
     Returns the remainder of dividing *n1* by *n2*, with the result having the
@@ -555,6 +582,9 @@ Numeric procedures
 
 .. _proc:max:
 
+max
+^^^
+
 .. function:: (max x1 x2 ...)
 
     Returns the largest of its arguments. All arguments must be real numbers;
@@ -580,6 +610,9 @@ Numeric procedures
 
 
 .. _proc:min:
+
+min
+^^^
 
 .. function:: (min x1 x2 ...)
 
@@ -607,6 +640,9 @@ Numeric procedures
 
 .. _proc:floor:
 
+floor
+^^^^^
+
 .. function:: (floor x)
 
     Returns the largest integer not larger than *x*. If *x* is an exact integer
@@ -633,6 +669,9 @@ Numeric procedures
 
 .. _proc:ceiling:
 
+ceiling
+^^^^^^^
+
 .. function:: (ceiling x)
 
     Returns the smallest integer not smaller than *x*. If *x* is an exact
@@ -658,6 +697,9 @@ Numeric procedures
 
 
 .. _proc:round:
+
+round
+^^^^^
 
 .. function:: (round x)
 
@@ -688,6 +730,9 @@ Numeric procedures
 
 .. _proc:truncate:
 
+truncate
+^^^^^^^^
+
 .. function:: (truncate x)
 
     Returns the integer closest to *x* whose absolute value is not larger than
@@ -713,6 +758,9 @@ Numeric procedures
       4
 
 .. _proc:numerator:
+
+numerator
+^^^^^^^^^
 
 .. function:: (numerator q)
 
@@ -740,6 +788,9 @@ Numeric procedures
 
 .. _proc:denominator:
 
+denominator
+^^^^^^^^^^^
+
 .. function:: (denominator q)
 
     Returns the denominator of *q*, computed as if *q* were represented as a
@@ -763,6 +814,9 @@ Numeric procedures
 
 
 .. _proc:rationalize:
+
+rationalize
+^^^^^^^^^^^
 
 .. function:: (rationalize x y)
 
@@ -799,6 +853,9 @@ Numeric procedures
 
 .. _proc:square:
 
+square
+^^^^^^
+
 .. function:: (square z)
 
     Returns the square of *z*. Equivalent to ``(* z z)``.
@@ -825,6 +882,9 @@ Numeric procedures
 
 
 .. _proc:sqrt:
+
+sqrt
+^^^^
 
 .. function:: (sqrt z)
 
@@ -857,6 +917,9 @@ Numeric procedures
 
 .. _proc:exact-integer-sqrt:
 
+exact-integer-sqrt
+^^^^^^^^^^^^^^^^^^
+
 .. function:: (exact-integer-sqrt k)
 
     Returns a list of two exact non-negative integers ``(s r)`` such that
@@ -881,6 +944,9 @@ Numeric procedures
       (1 1)
 
 .. _proc:exact:
+
+exact
+^^^^^
 
 .. function:: (exact z)
 
@@ -908,6 +974,9 @@ Numeric procedures
 
 .. _proc:inexact:
 
+inexact
+^^^^^^^
+
 .. function:: (inexact z)
 
     Returns an inexact representation of *z*. If *z* is already inexact, it is
@@ -933,6 +1002,10 @@ Numeric procedures
 
 
 .. _proc:infinite?:
+
+
+infinite?
+^^^^^^^^^
 
 .. function:: (infinite? z)
 
@@ -962,6 +1035,9 @@ Numeric procedures
 
 .. _proc:finite?:
 
+finite?
+^^^^^^^
+
 .. function:: (finite? z)
 
     Returns ``#t`` if *z* is a finite number. Returns ``#f`` for ``+inf.0``,
@@ -990,6 +1066,9 @@ Numeric procedures
 
 .. _proc:nan?:
 
+nan?
+^^^^
+
 .. function:: (nan? z)
 
     Returns ``#t`` if *z* is ``+nan.0``, or a complex number whose real or
@@ -1013,6 +1092,9 @@ Numeric procedures
       #f
 
 .. _proc:gcd:
+
+gcd
+^^^
 
 .. function:: (gcd n ...)
 
@@ -1044,6 +1126,9 @@ Numeric procedures
 
 
 .. _proc:lcm:
+
+lcm
+^^^
 
 .. function:: (lcm n ...)
 

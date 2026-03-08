@@ -64,9 +64,12 @@ Understanding this distinction is important when writing programs that rely on p
 in-place modification.
 
 Hash Procedures
---------------
+---------------
 
 .. _proc:hash:
+
+hash
+****
 
 .. function:: (hash obj1 obj2 ...)
 
@@ -88,11 +91,14 @@ Hash Procedures
 
     .. code-block:: text
 
-      --> (make-hash 1 "one" 2 "two")
+      --> (hash 1 "one" 2 "two")
       #[1 "one" 2 "two"]
 
 
 .. _proc:hash-copy:
+
+hash-copy
+*********
 
 .. function:: (hash-copy hash)
 
@@ -114,6 +120,9 @@ Hash Procedures
 
 
 .. _proc:hash-clear!:
+
+hash-clear
+**********
 
 .. function:: (hash-clear! hash)
 
@@ -138,6 +147,9 @@ Hash Procedures
 
 
 .. _proc:hash-get:
+
+hash-get
+********
 
 .. function:: (hash-get hash key [default])
 
@@ -167,6 +179,9 @@ Hash Procedures
 
 .. _proc:hash-add!:
 
+hash-add!
+*********
+
 .. function:: (hash-add! hash key value)
 
     Adds or updates a key–value association in hash.
@@ -195,6 +210,9 @@ Hash Procedures
 
 
 .. _proc:hash-remove!:
+
+hash-remove!
+************
 
 .. function:: (hash-remove! hash key [sym])
 
@@ -226,6 +244,9 @@ Hash Procedures
 
 .. _proc:hash-keys:
 
+hash-keys
+*********
+
 .. function:: (hash-keys hash)
 
     Returns a list containing all keys in hash.
@@ -247,6 +268,9 @@ Hash Procedures
 
 .. _proc:hash-values:
 
+hash-values
+***********
+
 .. function:: (hash-values hash)
 
     Returns a list containing all values in hash.
@@ -267,6 +291,9 @@ Hash Procedures
 
 
 .. _proc:hash->alist:
+
+hash->alist
+***********
 
 .. function:: (hash->alist hash)
 
@@ -290,6 +317,9 @@ Hash Procedures
 
 .. _proc:alist->hash:
 
+alist->hash
+***********
+
 .. function:: (alist->hash alist)
 
     Constructs a new hash from an association list.
@@ -312,9 +342,12 @@ Hash Procedures
 
 .. _proc:hash-keys-map:
 
+hash-keys-map
+*************
+
 .. function:: (hash-keys-map proc hash)
 
-    Applies proc to each key in hash and returns a list of results.
+    Applies proc to each key in hash and returns a list of results. ``proc`` must accept one argument.
 
     The order of application is indeterminate.
 
@@ -327,9 +360,12 @@ Hash Procedures
 
 .. _proc:hash-keys-foreach:
 
+hash-keys-foreach
+*****************
+
 .. function:: (hash-keys-foreach proc hash)
 
-    Applies proc to each key in hash for side effects.
+    Applies proc to each key in hash for side effects.  ``proc`` must accept one argument.
 
     Returns #void.
 
@@ -342,9 +378,12 @@ Hash Procedures
 
 .. _proc:hash-values-map:
 
+hash-values-map
+***************
+
 .. function:: (hash-values-map proc hash)
 
-    Applies proc to each value in hash and returns a list of results.
+    Applies proc to each value in hash and returns a list of results. ``proc`` must accept one argument.
 
     :param proc: Procedure accepting one argument.
     :type proc: procedure
@@ -355,9 +394,12 @@ Hash Procedures
 
 .. _proc:hash-values-foreach:
 
+hash-values-foreach
+*******************
+
 .. function:: (hash-values-foreach proc hash)
 
-    Applies proc to each value in hash for side effects.
+    Applies proc to each value in hash for side effects. ``proc`` must accept one argument.
 
     Returns #void.
 
@@ -369,6 +411,9 @@ Hash Procedures
     :rtype: void
 
 .. _proc:hash-items-map:
+
+hash-items-map
+**************
 
 .. function:: (hash-items-map proc hash)
 
@@ -396,10 +441,16 @@ Hash Procedures
 
 .. _proc:hash-items-foreach:
 
+hash-items-foreach
+******************
+
 .. function:: (hash-items-foreach proc hash)
 
     Applies proc to each key–value pair in hash
     for side effects.
+
+    The procedure must accept exactly two arguments:
+    the key and the corresponding value.
 
     Returns #void.
 

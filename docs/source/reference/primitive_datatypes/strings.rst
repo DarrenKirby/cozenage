@@ -71,6 +71,9 @@ String Constructor, Accessor, and Setter Procedures
 
 .. _proc:string:
 
+string
+******
+
 .. function:: (string char ...)
 
     Returns a newly allocated string composed of the given characters, in
@@ -94,6 +97,9 @@ String Constructor, Accessor, and Setter Procedures
       ""
 
 .. _proc:string-append:
+
+string-append
+*************
 
 .. function:: (string-append string ...)
 
@@ -122,6 +128,9 @@ String Constructor, Accessor, and Setter Procedures
 
 
 .. _proc:string-ref:
+
+string-ref
+**********
 
 .. function:: (string-ref string k)
 
@@ -153,6 +162,9 @@ String Constructor, Accessor, and Setter Procedures
 
 .. _proc:make-string:
 
+make-string
+***********
+
 .. function:: (make-string k [char])
 
     Returns a newly allocated string of *k* characters. If *char* is given,
@@ -182,6 +194,9 @@ String Constructor, Accessor, and Setter Procedures
       ""
 
 .. _proc:substring:
+
+substring
+*********
 
 .. function:: (substring string start end)
 
@@ -220,6 +235,9 @@ String Constructor, Accessor, and Setter Procedures
 
 .. _proc:string-set!:
 
+string-set!
+***********
+
 .. function:: (string-set! string k char)
 
     Stores *char* at character index *k* of *string*, mutating it in place.
@@ -255,6 +273,9 @@ String Constructor, Accessor, and Setter Procedures
 
 .. _proc:string-copy:
 
+string-copy
+***********
+
 .. function:: (string-copy string [start [end]])
 
     Returns a newly allocated copy of the characters of *string* between
@@ -289,6 +310,9 @@ String Constructor, Accessor, and Setter Procedures
       "fé"
 
 .. _proc:string-copy!:
+
+string-copy!
+************
 
 .. function:: (string-copy! to at from [start [end]])
 
@@ -333,6 +357,9 @@ String Constructor, Accessor, and Setter Procedures
 
 .. _proc:string-fill!:
 
+string-fill!
+************
+
 .. function:: (string-fill! string fill [start [end]])
 
     Stores the character *fill* in every position of *string* between *start*
@@ -375,6 +402,9 @@ String Misc Procedures
 
 .. _proc:string-length:
 
+string-length
+*************
+
 .. function:: (string-length string)
 
     Returns the number of characters in *string* as an exact integer. Note
@@ -400,6 +430,9 @@ String Misc Procedures
       3
 
 .. _proc:string->list:
+
+string->list
+************
 
 .. function:: (string->list string [start [end]])
 
@@ -439,6 +472,9 @@ String Misc Procedures
 
 .. _proc:list->string:
 
+list->string
+************
+
 .. function:: (list->string list)
 
     Returns a newly allocated string formed from the characters in *list*, in
@@ -462,6 +498,9 @@ String Misc Procedures
       ""
 
 .. _proc:string->number:
+
+string->number
+**************
 
 .. function:: (string->number string [radix])
 
@@ -510,6 +549,10 @@ String Misc Procedures
 
 .. _proc:number->string:
 
+
+number->string
+**************
+
 .. function:: (number->string z [radix])
 
     Returns a string representation of *z* in the given *radix*. *radix* must
@@ -551,6 +594,9 @@ String Misc Procedures
 
 .. _proc:string-split:
 
+string-split
+************
+
 .. function:: (string-split string [delim])
 
     Returns a list of substrings of *string* obtained by splitting on
@@ -587,6 +633,9 @@ String Case-sensitive Comparison Procedures
 
 .. _proc:string=?:
 
+string=?
+********
+
 .. function:: (string=? string1 string2 ...)
 
     Returns ``#t`` if all arguments contain the same sequence of characters,
@@ -613,6 +662,10 @@ String Case-sensitive Comparison Procedures
 
 
 .. _proc:string<?:
+
+string<?
+********
+
 
 .. function:: (string<? string1 string2 ...)
 

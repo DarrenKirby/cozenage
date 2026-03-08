@@ -113,6 +113,9 @@ Bytevector Procedures
 
 .. _proc:bytevector:
 
+bytevector
+**********
+
 .. function:: (bytevector byte ... [type])
 
     Returns a newly allocated bytevector containing *byte* ... as its elements.
@@ -148,6 +151,9 @@ Bytevector Procedures
 
 .. _proc:bytevector-length:
 
+bytevector-length
+*****************
+
 .. function:: (bytevector-length bytevector)
 
     Returns the number of elements in *bytevector* as an exact integer. Note
@@ -171,6 +177,9 @@ Bytevector Procedures
       0
 
 .. _proc:bytevector-ref:
+
+bytevector-ref
+**************
 
 .. function:: (bytevector-ref bytevector k)
 
@@ -198,6 +207,9 @@ Bytevector Procedures
 
 
 .. _proc:bytevector-set!:
+
+bytevector-set!
+***************
 
 .. function:: (bytevector-set! bytevector k byte)
 
@@ -230,6 +242,9 @@ Bytevector Procedures
 
 
 .. _proc:make-bytevector:
+
+make-bytevector
+***************
 
 .. function:: (make-bytevector k [byte [type]])
 
@@ -275,6 +290,9 @@ Bytevector Procedures
 
 .. _proc:bytevector-copy:
 
+bytevector-copy
+***************
+
 .. function:: (bytevector-copy bytevector [start [end]])
 
     Returns a newly allocated bytevector containing the elements of *bytevector*
@@ -307,6 +325,9 @@ Bytevector Procedures
 
 
 .. _proc:bytevector-copy!:
+
+bytevector-copy!
+****************
 
 .. function:: (bytevector-copy! to at from [start [end]])
 
@@ -348,6 +369,9 @@ Bytevector Procedures
 
 .. _proc:bytevector-append:
 
+bytevector-append
+*****************
+
 .. function:: (bytevector-append bytevector ...)
 
     Returns a newly allocated bytevector whose elements are the concatenation
@@ -374,6 +398,9 @@ Bytevector Procedures
 
 
 .. _proc:utf8->string:
+
+utf8->string
+************
 
 .. function:: (utf8->string bytevector [start [end]])
 
@@ -406,6 +433,9 @@ Bytevector Procedures
 
 
 .. _proc:string->utf8:
+
+string->utf8
+************
 
 .. function:: (string->utf8 string [start [end]])
 

@@ -18,7 +18,7 @@ numeric tower, automatically promoting arguments to a common type before
 comparing. ``=`` additionally accepts complex arguments, since complex numbers
 support equality testing even though they have no natural ordering; the
 remaining four require real arguments. These procedures are discussed in full
-in the :doc:`numerics` section.
+in the :doc:`../primitive_datatypes/numerics` section.
 
 **Object Equality**
 

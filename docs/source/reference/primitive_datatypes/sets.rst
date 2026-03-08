@@ -8,10 +8,10 @@ A `set` is an unordered collection of unique elements. Unlike a list, which may 
 is significant, a set guarantees that each element appears at most once and that element order has no meaning. The
 literal syntax for sets is written using ``#{ ... }``. For example:
 
-.. code-block:: scheme
+.. code-block::
 
-    --> #{1 2 3]
-    --> #{"foo" "bar" "baz"]
+    --> #{1 2 3}
+    --> #{"foo" "bar" "baz"}
 
 In mathematics, sets are fundamental objects used to describe collections of distinct elements. Two sets are considered
 equal if they contain the same elements, regardless of order. For example, the sets {1, 2, 3} and {3, 1, 2} are
@@ -55,6 +55,9 @@ Set Procedures
 
 .. _proc:set:
 
+set
+***
+
 .. function:: (set obj ...)
 
     Constructs a new set containing the given objects.
@@ -68,13 +71,16 @@ Set Procedures
 
     Example:
 
-    .. code-block:: scheme
+    .. code-block::
 
       --> (set 1 2 3 2)
       #{1 2 3}
 
 
 .. _proc:set-copy:
+
+set-copy
+********
 
 .. function:: (set-copy set)
 
@@ -89,7 +95,7 @@ Set Procedures
 
     Example:
 
-    .. code-block:: scheme
+    .. code-block::
 
         --> (define s1 #{1 2 3 4 5})
         s1
@@ -102,6 +108,9 @@ Set Procedures
 
 
 .. _proc:set-clear!:
+
+set-clear!
+**********
 
 .. function:: (set-clear! set)
 
@@ -116,7 +125,7 @@ Set Procedures
 
     Example:
 
-    .. code-block:: scheme
+    .. code-block::
 
       --> (define s (set 1 2 3))
       s
@@ -127,6 +136,9 @@ Set Procedures
 
 
 .. _proc:set-add!:
+
+set-add!
+********
 
 .. function:: (set-add! set obj ...)
 
@@ -146,7 +158,7 @@ Set Procedures
 
     Example:
 
-    .. code-block:: scheme
+    .. code-block::
 
       --> (define s (set 1 2))
       s
@@ -157,6 +169,9 @@ Set Procedures
 
 
 .. _proc:set-remove!:
+
+set-remove!
+***********
 
 .. function:: (set-remove! set obj [sym])
 
@@ -179,7 +194,7 @@ Set Procedures
 
     Example:
 
-    .. code-block:: scheme
+    .. code-block::
 
       --> (define s (set 1 2 3))
       s
@@ -188,6 +203,9 @@ Set Procedures
 
 
 .. _proc:set-member?:
+
+set-member?
+***********
 
 .. function:: (set-member? set obj)
 
@@ -202,7 +220,7 @@ Set Procedures
 
     Example:
 
-    .. code-block:: scheme
+    .. code-block::
 
       --> (set-member? #{1 2 3} 2)
       #true
@@ -211,6 +229,9 @@ Set Procedures
 
 
 .. _proc:set-disjoint?:
+
+set-disjoint?
+*************
 
 .. function:: (set-disjoint? set1 set2)
 
@@ -225,6 +246,9 @@ Set Procedures
 
 .. _proc:set-subset?:
 
+set-subset?
+***********
+
 .. function:: (set-subset? set1 set2)
 
     Returns #true if every element of set1 is contained in set2.
@@ -237,6 +261,9 @@ Set Procedures
     :rtype: boolean
 
 .. _proc:set-superset?:
+
+set-superset?
+*************
 
 .. function:: (set-superset? set1 set2)
 
@@ -251,6 +278,9 @@ Set Procedures
 
 .. _proc:set-union:
 
+set-union
+*********
+
 .. function:: (set-union set1 set2)
 
     Returns a new set containing all elements of set1 and set2.
@@ -264,13 +294,16 @@ Set Procedures
 
     Example:
 
-    .. code-block:: scheme
+    .. code-block::
 
       --> (set-union #{1 2} #{2 3})
       #{1 2 3}
 
 
 .. _proc:set-union!:
+
+set-union!
+**********
 
 .. function:: (set-union! set1 set2)
 
@@ -285,6 +318,9 @@ Set Procedures
 
 .. _proc:set-intersection:
 
+set-intersection
+****************
+
 .. function:: (set-intersection set1 set2)
 
     Returns a new set containing elements common to both sets.
@@ -297,6 +333,9 @@ Set Procedures
     :rtype: set
 
 .. _proc:set-intersection!:
+
+set-intersection!
+*****************
 
 .. function:: (set-intersection! set1 set2)
 
@@ -311,6 +350,9 @@ Set Procedures
 
 .. _proc:set-difference:
 
+set-difference
+**************
+
 .. function:: (set-difference set1 set2)
 
     Returns a new set containing elements of set1 that are not in set2.
@@ -324,6 +366,9 @@ Set Procedures
 
 .. _proc:set-difference!:
 
+set-difference!
+***************
+
 .. function:: (set-difference! set1 set2)
 
     Mutates set1 by removing elements also found in set2.
@@ -336,6 +381,9 @@ Set Procedures
     :rtype: set
 
 .. _proc:set-sym-difference:
+
+set-sym-difference
+******************
 
 .. function:: (set-sym-difference set1 set2)
 
@@ -351,6 +399,9 @@ Set Procedures
 
 .. _proc:set-sym-difference!:
 
+set-sym-difference!
+*******************
+
 .. function:: (set-sym-difference! set1 set2)
 
     Mutates set1 so that it becomes the symmetric difference
@@ -364,6 +415,9 @@ Set Procedures
     :rtype: set
 
 .. _proc:set-map:
+
+set-map
+*******
 
 .. function:: (set-map proc set)
 
@@ -380,7 +434,7 @@ Set Procedures
 
     Example:
 
-    .. code-block:: scheme
+    .. code-block::
 
       --> (set-map (lambda (x) (* x 2)) #{1 2 3})
       (6 2 4)
@@ -389,6 +443,9 @@ Set Procedures
 
 
 .. _proc:set-foreach:
+
+set-foreach
+***********
 
 .. function:: (set-foreach proc set)
 
@@ -405,6 +462,9 @@ Set Procedures
 
 .. _proc:list->set:
 
+list->set
+*********
+
 .. function:: (list->set list)
 
     Constructs a new set from the elements of list.
@@ -417,13 +477,16 @@ Set Procedures
 
     Example:
 
-    .. code-block:: scheme
+    .. code-block::
 
       --> (list->set '(1 2 2 3))
         #{3 1 2}
 
 
 .. _proc:set->list:
+
+set->list
+*********
 
 .. function:: (set->list set)
 
@@ -438,7 +501,7 @@ Set Procedures
 
     Example:
 
-    .. code-block:: scheme
+    .. code-block::
 
       --> (set->list #{1 2 3})
       (3 1 2)

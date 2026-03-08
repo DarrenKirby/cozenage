@@ -32,6 +32,9 @@ Boolean procedures
 
 .. _proc:not:
 
+not
+***
+
 .. function:: (not obj)
 
    The not procedure returns ``#true`` if *obj* is false, and returns ``#false`` otherwise.
@@ -62,6 +65,9 @@ Boolean procedures
 
 .. _proc:boolean?:
 
+boolean?
+********
+
 .. function:: (boolean? obj)
 
     The boolean? predicate returns #true if obj is either #true or #false and returns #f otherwise.
@@ -83,6 +89,9 @@ Boolean procedures
           #false
 
 .. _proc:boolean=?:
+
+boolean=?
+*********
 
 .. function:: (boolean=? obj obj ... )
 

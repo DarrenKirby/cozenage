@@ -237,7 +237,7 @@ Procedure Documentation
 
     **Example:**
 
-    .. code-block:: scheme
+    .. code-block::
 
       --> (len '(1 2 3))
       3
@@ -247,11 +247,10 @@ Procedure Documentation
       4
       --> (len #{1 2 3})
       3
-      --> (len #["a" 1 "b" 2])
+      --> (len #["a" 1 "b" 2])  ; For hashes, key/value pairs count as one item
       2
       --> (len "")
       0
-
 
 .. _proc:idx:
 
