@@ -523,6 +523,10 @@ Cell* make_cell_stream(Cell* head, Cell* tail_promise) {
     }
 
     Cell* v = GC_MALLOC(sizeof(Cell));
+    if (!v) {
+        fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
+        exit(EXIT_FAILURE);
+    }
     v->type = CELL_STREAM;
     v->head = head;
     v->tail = tail_promise;
@@ -709,12 +713,17 @@ Cell* cell_copy(const Cell* v) {
     case CELL_PROMISE: {
         copy->promise = GC_MALLOC(sizeof(promise));
         copy->promise->status = v->promise->status;
-        copy->promise->expr = cell_copy(v->promise->expr);
-        if (v->promise->env == nullptr) {
-            copy->promise->env = nullptr;
+        if (v->promise->status == NATIVE) {
+            copy->promise->native = v->promise->native;
+            copy->promise->native_args = v->promise->native_args;
         } else {
-            /* DO NOT copy environments; share the pointer. */
-            copy->promise->env = v->promise->env;
+            copy->promise->expr = cell_copy(v->promise->expr);
+            if (v->promise->env == nullptr) {
+                copy->promise->env = nullptr;
+            } else {
+                /* DO NOT copy environments; share the pointer. */
+                copy->promise->env = v->promise->env;
+            }
         }
         break;
     }
@@ -739,7 +748,7 @@ Cell* cell_copy(const Cell* v) {
         return USP_Obj;
 
     default:
-        fprintf(stderr, "cell_copy: unknown type %d\n", v->type);
+        fprintf(stderr, "cell_copy: unknown type %u\n", v->type);
         return nullptr;
     }
     return copy;

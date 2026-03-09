@@ -72,8 +72,8 @@ typedef enum Cell_t : uint32_t {
     CELL_STREAM     = 1 << 23,  /* A stream datatype for lazy evaluation. */
     
     CELL_MACRO      = 1 << 24,  /* A non-hygienic 'defmacro' macro. */
-    CELL_SET        = 1 << 25,  /* TODO: A set. */
-    CELL_HASH        = 1 << 26,  /* TODO: A hash/dict/hash/associative array. */
+    CELL_SET        = 1 << 25,  /* A set. */
+    CELL_HASH       = 1 << 26,  /* A hash/dict/hash/associative array. */
 } Cell_t;
 
 
@@ -93,14 +93,25 @@ typedef enum P_Status_t : uint8_t {
     READY,     /* Unevaluated state. */
     LAZY,      /* Used by delay-force to trigger trampoline evaluation. */
     RUNNING,   /* Used to detect re-entrant promises. */
-    DONE       /* An evaluated and cached value. */
+    DONE,      /* An evaluated and cached value. */
+    NATIVE     /* Native C code, called directly. */
 } p_status_t;
 
 /* Promise struct. */
 typedef struct Promise {
-    Cell* expr;         /* Either an unevaluated expression, or a final value. */
+    union {
+        /* Standard eval path (READY/LAZY) */
+        struct {
+            Cell* expr;  /* Either an unevaluated expression, or a final value. */
+            Lex* env;    /* Enclosing environment. */
+        };
+        /* Native thunk path (NATIVE) */
+        struct {
+            Cell* (*native)(const Lex*, const Cell*);
+            Cell* native_args;   /* pre-built sexpr of C-level args */
+        };
+    };
     p_status_t status;  /* State flag. */
-    Lex* env;           /* Enclosing environment. */
 } promise;
 
 
