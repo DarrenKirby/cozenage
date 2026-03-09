@@ -210,8 +210,9 @@ static void cell_to_string_worker(const Cell* v,
             char* stat;
             if (v->promise->status == 0) stat = "unevaluated";
             else if (v->promise->status == 1) stat = "lazy";
-            else if (v->promise->status == 2) stat = "evaluated";
-            else stat = "running";
+            else if (v->promise->status == 2) stat = "running";
+            else if (v->promise->status == 3) stat = "evaluated";
+            else stat = "native";
             if (mode == MODE_REPL) {
                 sb_append_fmt(sb, "#<promise object:%s%s%s>", ANSI_BLUE_B, stat, ANSI_RESET);
             } else {

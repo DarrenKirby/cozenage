@@ -23,7 +23,7 @@
 #include "eval.h"
 
 
-/* (make-hash obj1 obj2 ...)
+/* (hash obj1 obj2 ...)
  * Returns a newly allocated hash object made from key -> value pairs supplied as args. */
 Cell* builtin_hash(const Lex* e, const Cell* a)
 {
