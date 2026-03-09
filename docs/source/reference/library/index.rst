@@ -26,6 +26,8 @@ Cozenage 'base' standard libraries
 
 - ``file`` - The ``(base file)`` library provides procedures for accessing and querying files and directories.
 - ``math`` - The ``(base math)`` library exports specialized math procedures.
+- ``lazy`` - The ``(base lazy)`` library exports special forms and procedures for creating and working with
+  delayed/lazy evaluation and streams.
 - ``random`` - The ``(base random)`` library exports procedures for generating random numbers, shuffling containers,
   and generating random samples from collections.
 - ``system`` - The ``(base system)`` library exports procedures for interfacing with the local operating system.
@@ -40,6 +42,7 @@ Cozenage 'base' standard libraries
    cxr
    file
    math
+   lazy
    random
    system
    time

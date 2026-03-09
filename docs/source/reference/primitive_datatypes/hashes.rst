@@ -4,9 +4,9 @@ Hashes
 Overview
 --------
 
-A `hash` is a collection of key–value associations. Each key in a hash is associated with exactly one value, and no
+A ``hash`` is a collection of key–value associations. Each key in a hash is associated with exactly one value, and no
 duplicate keys are permitted. Conceptually, a hash allows you to “look up” a value by providing its corresponding key.
-Hashes are sometimes referred to as dictionaries, hashs, tables, or associative arrays in other languages. In this
+Hashes are sometimes referred to as dictionaries, hashmaps, tables, or associative arrays in other languages. In this
 implementation, hashes are constructed using the ``hash`` procedure and manipulated with procedures such as ``hash-get``,
 ``hash-add!``, and ``hash-remove!``.
 
@@ -45,8 +45,9 @@ where each pair contains a key in its car and a value in its cdr. For example:
 .. code-block:: scheme
 
     --> '((name . "Alice")
-    ...      (age . 30)
-    ...      (city . "Toronto"))
+    ...    (age . 30)
+    ...    (city . "Toronto"))
+    ((name . "Alice") (age . 30) (city . "Toronto"))
 
 Alists are simple, portable, and easy to manipulate using standard list procedures. However, alist lookups require
 scanning the list sequentially, which becomes slower as the list grows. Hashes, by contrast, use hashing to provide
@@ -71,28 +72,29 @@ Hash Procedures
 hash
 ****
 
-.. function:: (hash obj1 obj2 ...)
+.. function:: (hash key value ...)
 
-    Constructs a new hash from key–value pairs supplied as arguments.
+    Returns a newly allocated hash containing the key–value pairs supplied as
+    alternating arguments. Keys must be hashable types; values may be any
+    object. If no arguments are supplied, an empty hash is returned. It is an
+    error if an odd number of arguments is supplied, or if any key is not a
+    hashable type.
 
-    Arguments must be provided in pairs, where each key is followed by its associated value.
-    Keys must be hashable. Values may be any first-class object.
-
-    :param obj1: First key.
-    :type obj1: hashable
-    :param obj2: Value associated with first key.
-    :type obj2: any
-    :param ...: Additional key–value pairs.
-    :type ...: alternating hashable / any
+    :param key: A hashable key.
+    :param value: The value to associate with the preceding key.
     :return: A newly allocated hash.
     :rtype: hash
 
-    Example:
+    **Example:**
 
-    .. code-block:: text
+    .. code-block:: scheme
 
-      --> (hash 1 "one" 2 "two")
-      #[1 "one" 2 "two"]
+        --> (hash 'name "Alice" 'age 30 'city "Toronto")
+        #[name "Alice" age 30 city "Toronto"]
+        --> (hash)
+        #[]
+        --> (hash-get (hash 'x 42) 'x)
+        42
 
 
 .. _proc:hash-copy:
@@ -102,47 +104,51 @@ hash-copy
 
 .. function:: (hash-copy hash)
 
-    Returns a shallow copy of hash.
-
-    The hash structure is duplicated, but keys and values themselves are not copied.
+    Returns a newly allocated copy of *hash*. The copy is shallow — the keys
+    and values themselves are not copied, only the references to them.
+    It is an error if *hash* is not a hash.
 
     :param hash: The hash to copy.
     :type hash: hash
-    :return: A newly allocated hash containing the same key–value pairs.
+    :return: A newly allocated copy of *hash*.
     :rtype: hash
 
-    Example:
+    **Example:**
 
-    .. code-block:: text
+    .. code-block:: scheme
 
-      --> (hash-copy #[1 "one"])
-      #[1 "one"]
+        --> (define h (hash 'a 1 'b 2))
+        --> (define h2 (hash-copy h))
+        --> (hash-add! h2 'c 3)
+        --> (hash-keys h2)
+        (a b c)
+        --> (hash-keys h)
+        (a b)
 
 
 .. _proc:hash-clear!:
 
-hash-clear
-**********
+hash-clear!
+***********
 
 .. function:: (hash-clear! hash)
 
-    Removes all key–value associations from hash.
-
-    This procedure mutates the original hash.
+    Removes all key–value pairs from *hash*, mutating it in place. Returns
+    the same hash object, now empty. It is an error if *hash* is not a hash.
 
     :param hash: The hash to clear.
     :type hash: hash
-    :return: The same hash object, now empty.
+    :return: The mutated hash, now empty.
     :rtype: hash
 
-    Example:
+    **Example:**
 
-    .. code-block:: text
+    .. code-block:: scheme
 
-      --> (define m (make-hash 1 "one"))
-      --> (hash-clear! m)
+        --> (define h (hash 'a 1 'b 2 'c 3))
+        --> (hash-clear! h)
         #[]
-      --> m
+        --> h
         #[]
 
 
@@ -153,28 +159,28 @@ hash-get
 
 .. function:: (hash-get hash key [default])
 
-    Returns the value associated with key in hash.
+    Returns the value associated with *key* in *hash*. If *key* is not found
+    and a *default* value is supplied, *default* is returned. If *key* is not
+    found and no *default* is supplied, an index error is signalled. It is an
+    error if *hash* is not a hash, or if *key* is not a hashable type.
 
-    If key is not present and no default value is supplied, an index error is raised.
-    If default is provided, it is returned instead.
-
-    :param hash: The hash to search.
+    :param hash: The hash to look up.
     :type hash: hash
-    :param key: The lookup key (must be hashable).
-    :type key: hashable
-    :param default: Optional value returned if key is not present.
-    :type default: any
-    :return: The associated value, or default if provided.
-    :rtype: any
+    :param key: The key to look up.
+    :param default: A value to return if *key* is not found. Optional.
+    :return: The value associated with *key*, or *default* if not found.
 
-    Example:
+    **Example:**
 
-    .. code-block:: text
+    .. code-block:: scheme
 
-      --> (hash-get #[1 "one" 2 "two"] 1)
-        "one"
-      --> (hash-get #[1 "one"] 3 "unknown")
-        "unknown"
+        --> (define h (hash 'a 1 'b 2 'c 3))
+        --> (hash-get h 'b)
+        2
+        --> (hash-get h 'z)
+        Index error:  hash-get: object not found in hash
+        --> (hash-get h 'z 'not-found)
+        not-found
 
 
 .. _proc:hash-add!:
@@ -184,29 +190,29 @@ hash-add!
 
 .. function:: (hash-add! hash key value)
 
-    Adds or updates a key–value association in hash.
+    Adds *key* with associated *value* to *hash*, mutating it in place, and
+    returns the mutated hash. If *key* already exists in *hash*, its value is
+    updated. It is an error if *hash* is not a hash, or if *key* is not a
+    hashable type.
 
-    If the key already exists, its value is replaced.
-    This procedure mutates the hash.
-
-    :param hash: The hash to modify.
+    :param hash: The hash to add to.
     :type hash: hash
-    :param key: The key (must be hashable).
-    :type key: hashable
-    :param value: The value to associate with key.
-    :type value: any
-    :return: The modified hash.
+    :param key: The key to add.
+    :param value: The value to associate with *key*.
+    :return: The mutated hash.
     :rtype: hash
 
-    Example:
+    **Example:**
 
-    .. code-block:: text
+    .. code-block:: scheme
 
-      --> (define m #[])
-      --> (hash-add! m 1 "one")
-        #[1 "one"]
-      --> (hash-add! m 1 "uno")
-        #[1 "uno"]
+        --> (define h (hash 'a 1))
+        --> (hash-add! h 'b 2)
+        --> h
+        #[a 1 b 2]
+        --> (hash-add! h 'a 99)
+        --> (hash-get h 'a)
+        99
 
 
 .. _proc:hash-remove!:
@@ -216,30 +222,34 @@ hash-remove!
 
 .. function:: (hash-remove! hash key [sym])
 
-    Removes key and its associated value from hash.
+    Removes *key* and its associated value from *hash*, mutating it in place,
+    and returns the mutated hash. Signals an index error if *key* is not found
+    in *hash*. If an optional symbol is supplied as a third argument, the
+    error is suppressed and the procedure returns silently instead. It is an
+    error if *hash* is not a hash.
 
-    If key is not present and no optional symbol is supplied,
-    an index error is raised. If a symbol is provided as the
-    third argument, the procedure returns silently instead.
-
-    This procedure mutates the hash.
-
-    :param hash: The hash to modify.
+    :param hash: The hash to remove from.
     :type hash: hash
     :param key: The key to remove.
-    :type key: hashable
-    :param sym: Optional symbol suppressing index error.
+    :param sym: An optional symbol. If provided, suppresses the error when
+                *key* is not found.
     :type sym: symbol
-    :return: The modified hash.
+    :return: The mutated hash.
     :rtype: hash
 
-    Example:
+    **Example:**
 
-    .. code-block:: text
+    .. code-block:: scheme
 
-      --> (define m #[1 "one" 2 "two"])
-      --> (hash-remove! m 2)
-        #[1 "one"]
+        --> (define h (hash 'a 1 'b 2 'c 3))
+        --> (hash-remove! h 'b)
+        --> h
+        #[a 1 c 3]
+        --> (hash-remove! h 'z)
+        error: index-error
+        --> (hash-remove! h 'z 'ok)
+        --> h
+        #[a 1 c 3]
 
 
 .. _proc:hash-keys:
@@ -249,21 +259,24 @@ hash-keys
 
 .. function:: (hash-keys hash)
 
-    Returns a list containing all keys in hash.
+    Returns a newly allocated list containing all keys in *hash*. The order
+    of keys in the returned list is indeterminate, as hashes are unordered.
+    It is an error if *hash* is not a hash.
 
-    The order of keys is indeterminate.
-
-    :param hash: The hash to inspect.
+    :param hash: The hash to retrieve keys from.
     :type hash: hash
-    :return: A list of keys.
+    :return: A list of all keys in *hash*.
     :rtype: list
 
-    Example:
+    **Example:**
 
-    .. code-block:: text
+    .. code-block:: scheme
 
-      --> (hash-keys #[1 "one" 2 "two"])
-        (1 2)
+        --> (define h (hash 'a 1 'b 2 'c 3))
+        --> (hash-keys h)
+        (a b c)
+        --> (hash-keys (hash))
+        ()
 
 
 .. _proc:hash-values:
@@ -273,21 +286,24 @@ hash-values
 
 .. function:: (hash-values hash)
 
-    Returns a list containing all values in hash.
+    Returns a newly allocated list containing all values in *hash*. The order
+    of values in the returned list is indeterminate, as hashes are unordered.
+    It is an error if *hash* is not a hash.
 
-    The order of values is indeterminate.
-
-    :param hash: The hash to inspect.
+    :param hash: The hash to retrieve values from.
     :type hash: hash
-    :return: A list of values.
+    :return: A list of all values in *hash*.
     :rtype: list
 
-    Example:
+    **Example:**
 
-    .. code-block:: text
+    .. code-block:: scheme
 
-      --> (hash-values #[1 "one" 2 "two"])
-        ("one" "two")
+        --> (define h (hash 'a 1 'b 2 'c 3))
+        --> (hash-values h)
+        (1 2 3)
+        --> (hash-values (hash))
+        ()
 
 
 .. _proc:hash->alist:
@@ -297,22 +313,23 @@ hash->alist
 
 .. function:: (hash->alist hash)
 
-    Returns an association list representing the contents of hash.
-
-    Each element of the returned list is a dotted pair
-    whose car is a key and whose cdr is its associated value.
+    Returns a newly allocated association list (alist) containing all
+    key–value pairs in *hash*. Each element of the returned list is a dotted
+    pair of the form ``(key . value)``. The order of pairs in the returned
+    list is indeterminate. It is an error if *hash* is not a hash.
 
     :param hash: The hash to convert.
     :type hash: hash
-    :return: An association list.
+    :return: An alist of ``(key . value)`` pairs.
     :rtype: list
 
-    Example:
+    **Example:**
 
-    .. code-block:: text
+    .. code-block:: scheme
 
-      --> (hash->alist #[1 "one"])
-        ((1 . "one"))
+        --> (define h (hash 'a 1 'b 2))
+        --> (hash->alist h)
+        ((a . 1) (b . 2))
 
 
 .. _proc:alist->hash:
@@ -322,22 +339,27 @@ alist->hash
 
 .. function:: (alist->hash alist)
 
-    Constructs a new hash from an association list.
+    Returns a newly allocated hash constructed from the key–value pairs in
+    *alist*. Each element of *alist* must be a dotted pair of the form
+    ``(key . value)``; the ``car`` becomes the key and the ``cdr`` becomes
+    the value. It is an error if *alist* is not a proper list, or if any
+    element is not a dotted pair.
 
-    Each element of alist must be a dotted pair whose
-    car is the key and whose cdr is the value.
-
-    :param alist: Association list.
-    :type alist: list of dotted pairs
+    :param alist: An association list of ``(key . value)`` dotted pairs.
+    :type alist: list
     :return: A newly allocated hash.
     :rtype: hash
 
-    Example:
+    **Example:**
 
-    .. code-block:: text
+    .. code-block:: scheme
 
-      --> (alist->hash '((1 . "one") (2 . "two")))
-        #[1 "one" 2 "two"]
+        --> (define al '((a . 1) (b . 2) (c . 3)))
+        --> (define h (alist->hash al))
+        --> h
+        #[a 1 b 2 c 3]
+        --> (hash-get h 'b)
+        2
 
 
 .. _proc:hash-keys-map:
@@ -347,16 +369,26 @@ hash-keys-map
 
 .. function:: (hash-keys-map proc hash)
 
-    Applies proc to each key in hash and returns a list of results. ``proc`` must accept one argument.
+    Applies *proc* to each key in *hash* and returns a list of the results.
+    The order in which *proc* is applied is indeterminate, as hashes are
+    unordered. *proc* must accept exactly one argument. It is an error if
+    *proc* is not a procedure or *hash* is not a hash.
 
-    The order of application is indeterminate.
-
-    :param proc: Procedure accepting one argument.
+    :param proc: A procedure of one argument.
     :type proc: procedure
-    :param hash: The hash to traverse.
+    :param hash: The hash whose keys to map over.
     :type hash: hash
-    :return: A list of results.
+    :return: A list of results of applying *proc* to each key.
     :rtype: list
+
+    **Example:**
+
+    .. code-block:: scheme
+
+        --> (define h (hash 'a 1 'b 2 'c 3))
+        --> (hash-keys-map symbol->string h)
+        ("a" "b" "c")
+
 
 .. _proc:hash-keys-foreach:
 
@@ -365,16 +397,26 @@ hash-keys-foreach
 
 .. function:: (hash-keys-foreach proc hash)
 
-    Applies proc to each key in hash for side effects.  ``proc`` must accept one argument.
+    Applies *proc* to each key in *hash* for the purpose of side effects.
+    The return values of *proc* are discarded. The order of applications is
+    indeterminate. Returns an unspecified value. *proc* must accept exactly
+    one argument. It is an error if *proc* is not a procedure or *hash* is
+    not a hash.
 
-    Returns #void.
-
-    :param proc: Procedure accepting one argument.
+    :param proc: A procedure of one argument.
     :type proc: procedure
-    :param hash: The hash to traverse.
+    :param hash: The hash whose keys to iterate over.
     :type hash: hash
-    :return: #void
-    :rtype: void
+    :return: Unspecified.
+
+    **Example:**
+
+    .. code-block:: scheme
+
+        --> (define h (hash 'a 1 'b 2 'c 3))
+        --> (hash-keys-foreach display h)
+        abc
+
 
 .. _proc:hash-values-map:
 
@@ -383,14 +425,26 @@ hash-values-map
 
 .. function:: (hash-values-map proc hash)
 
-    Applies proc to each value in hash and returns a list of results. ``proc`` must accept one argument.
+    Applies *proc* to each value in *hash* and returns a list of the results.
+    The order in which *proc* is applied is indeterminate, as hashes are
+    unordered. *proc* must accept exactly one argument. It is an error if
+    *proc* is not a procedure or *hash* is not a hash.
 
-    :param proc: Procedure accepting one argument.
+    :param proc: A procedure of one argument.
     :type proc: procedure
-    :param hash: The hash to traverse.
+    :param hash: The hash whose values to map over.
     :type hash: hash
-    :return: A list of results.
+    :return: A list of results of applying *proc* to each value.
     :rtype: list
+
+    **Example:**
+
+    .. code-block:: scheme
+
+        --> (define h (hash 'a 1 'b 2 'c 3))
+        --> (hash-values-map (lambda (x) (* x 10)) h)
+        (10 20 30)
+
 
 .. _proc:hash-values-foreach:
 
@@ -399,16 +453,26 @@ hash-values-foreach
 
 .. function:: (hash-values-foreach proc hash)
 
-    Applies proc to each value in hash for side effects. ``proc`` must accept one argument.
+    Applies *proc* to each value in *hash* for the purpose of side effects.
+    The return values of *proc* are discarded. The order of applications is
+    indeterminate. Returns an unspecified value. *proc* must accept exactly
+    one argument. It is an error if *proc* is not a procedure or *hash* is
+    not a hash.
 
-    Returns #void.
-
-    :param proc: Procedure accepting one argument.
+    :param proc: A procedure of one argument.
     :type proc: procedure
-    :param hash: The hash to traverse.
+    :param hash: The hash whose values to iterate over.
     :type hash: hash
-    :return: #void
-    :rtype: void
+    :return: Unspecified.
+
+    **Example:**
+
+    .. code-block:: scheme
+
+        --> (define h (hash 'a 1 'b 2 'c 3))
+        --> (hash-values-foreach display h)
+        123
+
 
 .. _proc:hash-items-map:
 
@@ -417,26 +481,27 @@ hash-items-map
 
 .. function:: (hash-items-map proc hash)
 
-    Applies proc to each key–value pair in hash
-    and returns a list of results.
+    Applies *proc* to each key–value pair in *hash* and returns a list of the
+    results. *proc* is called with two arguments for each entry: first the
+    key, then the value. The order of applications is indeterminate. It is an
+    error if *proc* is not a procedure or *hash* is not a hash.
 
-    The procedure must accept exactly two arguments:
-    the key and the corresponding value.
-
-    :param proc: Procedure accepting two arguments.
+    :param proc: A procedure of two arguments.
     :type proc: procedure
-    :param hash: The hash to traverse.
+    :param hash: The hash whose items to map over.
     :type hash: hash
-    :return: A list of results.
+    :return: A list of results of applying *proc* to each key–value pair.
     :rtype: list
 
-    Example:
+    **Example:**
 
-    .. code-block:: text
+    .. code-block:: scheme
 
-      --> (hash-items-hash (lambda (k v) (string-append (number->string k) ":" v))
-      ...      #[1 "one" 2 "two"])
-      ("1:one" "2:two")
+        --> (define h (hash 'a 1 'b 2 'c 3))
+        --> (hash-items-map
+        ...   (lambda (k v) (cons k (* v 10)))
+        ...   h)
+        ((a . 10) (b . 20) (c . 30))
 
 
 .. _proc:hash-items-foreach:
@@ -446,17 +511,26 @@ hash-items-foreach
 
 .. function:: (hash-items-foreach proc hash)
 
-    Applies proc to each key–value pair in hash
-    for side effects.
+    Applies *proc* to each key–value pair in *hash* for the purpose of side
+    effects. *proc* is called with two arguments for each entry: first the
+    key, then the value. The return values of *proc* are discarded. The order
+    of applications is indeterminate. Returns an unspecified value. It is an
+    error if *proc* is not a procedure or *hash* is not a hash.
 
-    The procedure must accept exactly two arguments:
-    the key and the corresponding value.
-
-    Returns #void.
-
-    :param proc: Procedure accepting two arguments.
+    :param proc: A procedure of two arguments.
     :type proc: procedure
-    :param hash: The hash to traverse.
+    :param hash: The hash whose items to iterate over.
     :type hash: hash
-    :return: #void
-    :rtype: void
+    :return: Unspecified.
+
+    **Example:**
+
+    .. code-block:: scheme
+
+        --> (define h (hash 'a 1 'b 2 'c 3))
+        --> (hash-items-foreach
+        ...   (lambda (k v)
+        ...     (display k) (display ":") (display v) (display " "))
+        ...   h)
+        a:1 b:2 c:3
+

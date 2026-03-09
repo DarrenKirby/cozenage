@@ -11,10 +11,12 @@ literal syntax for sets is written using ``#{ ... }``. For example:
 .. code-block::
 
     --> #{1 2 3}
+    #{1 2 3}
     --> #{"foo" "bar" "baz"}
+    #{"foo" "bar" "baz"}
 
 In mathematics, sets are fundamental objects used to describe collections of distinct elements. Two sets are considered
-equal if they contain the same elements, regardless of order. For example, the sets {1, 2, 3} and {3, 1, 2} are
+equal if they contain the same elements, regardless of order. For example, the sets ``#{1, 2, 3}`` and ``#{3, 1, 2}`` are
 identical in set theory. This same principle applies here: the internal ordering of a set is indeterminate and should
 not be relied upon. Sets support classical mathematical operations such as union (∪), intersection (∩), difference (−),
 subset (⊆), superset (⊇), and symmetric difference (Δ), all of which are provided as procedures.
@@ -22,7 +24,7 @@ subset (⊆), superset (⊇), and symmetric difference (Δ), all of which are pr
 In programming, sets are most useful when you care about membership rather than position. Common use cases include
 removing duplicates from data, testing whether a value has already been seen, tracking visited items in a graph
 traversal, implementing filters, and performing fast membership tests. Because sets are implemented using a hash table
-internally, membership checks such as (set-member? s obj) are typically very fast. This makes sets significantly more
+internally, membership checks such as ``(set-member? s obj)`` are typically very fast. This makes sets significantly more
 efficient than lists for repeated lookup operations.
 
 Not all objects may be stored in a set. An object must be hashable in order to be used as a set element. Hashable
@@ -52,7 +54,6 @@ return newly allocated sets. This follows a common Scheme convention indicating 
 Set Procedures
 --------------
 
-
 .. _proc:set:
 
 set
@@ -60,21 +61,31 @@ set
 
 .. function:: (set obj ...)
 
-    Constructs a new set containing the given objects.
+    Returns a newly allocated set containing the given *obj* arguments as
+    members. Duplicate values are silently collapsed — each distinct value
+    appears only once. The set literal syntax ``#{obj ...}`` is equivalent.
+    It is an error if any argument is not a hashable type.
 
-    Each argument must be hashable. Duplicate values are automatically removed.
+    Hashable types include: numbers, strings, characters, symbols, and
+    booleans. Mutable compound types such as lists and vectors are not
+    hashable.
 
-    :param obj: Zero or more hashable objects.
-    :type obj: any (hashable)
+    :param obj: Zero or more hashable objects to include as members.
     :return: A newly allocated set.
     :rtype: set
 
-    Example:
+    **Example:**
 
     .. code-block::
 
-      --> (set 1 2 3 2)
-      #{1 2 3}
+        --> (set 1 2 3)
+        #{1 2 3}
+        --> #{1 2 3}
+        #{1 2 3}
+        --> (set 1 1 2 2 3)
+        #{1 2 3}
+        --> (set)
+        #{}
 
 
 .. _proc:set-copy:
@@ -84,27 +95,26 @@ set-copy
 
 .. function:: (set-copy set)
 
-    Returns a shallow copy of set.
-
-    The structure of the set is duplicated, but the elements themselves are not copied.
+    Returns a newly allocated copy of *set*. The copy is shallow — the member
+    objects themselves are not copied, only the references to them. It is an
+    error if *set* is not a set.
 
     :param set: The set to copy.
     :type set: set
-    :return: A newly allocated set containing the same elements.
+    :return: A newly allocated copy of *set*.
     :rtype: set
 
-    Example:
+    **Example:**
 
     .. code-block::
 
-        --> (define s1 #{1 2 3 4 5})
-        s1
-        --> (define s2 (set-copy s1))
-        s2
-        --> (set-remove! s2 5)
-        #{4 3 1 2}
-        --> s1
-        #{4 5 3 1 2}  ; note that the two sets are independently modified
+        --> (define a #{1 2 3})
+        --> (define b (set-copy a))
+        --> (set-add! b 4)
+        --> b
+        #{1 2 3 4}
+        --> a
+        #{1 2 3}
 
 
 .. _proc:set-clear!:
@@ -114,25 +124,23 @@ set-clear!
 
 .. function:: (set-clear! set)
 
-    Removes all elements from set.
-
-    This procedure mutates the original set.
+    Removes all members from *set*, mutating it in place. Returns the same
+    set object, now empty. It is an error if *set* is not a set.
 
     :param set: The set to clear.
     :type set: set
-    :return: The same set object, now empty.
+    :return: The mutated set, now empty.
     :rtype: set
 
-    Example:
+    **Example:**
 
     .. code-block::
 
-      --> (define s (set 1 2 3))
-      s
-      --> s
-      #{3 1 2}
-      --> (set-clear! s)
-      #{}
+        --> (define s #{1 2 3})
+        --> (set-clear! s)
+        #{}
+        --> s
+        #{}
 
 
 .. _proc:set-add!:
@@ -142,30 +150,31 @@ set-add!
 
 .. function:: (set-add! set obj ...)
 
-    Adds one or more objects to set.
+    Adds one or more objects to *set*, mutating it in place, and returns the
+    mutated set. If a list or vector is passed as an argument, its *members*
+    are added to the set individually rather than the list or vector itself.
+    It is an error if any object, or any member of a list or vector argument,
+    is not a hashable type.
 
-    If an argument is a list or vector, its elements are added individually.
-    All objects must be hashable.
-
-    This procedure mutates the set.
-
-    :param set: The set to modify.
+    :param set: The set to add to.
     :type set: set
-    :param obj: One or more objects, or lists/vectors of objects.
-    :type obj: any (hashable)
-    :return: The modified set.
+    :param obj: One or more hashable objects, lists, or vectors to add.
+    :return: The mutated set.
     :rtype: set
 
-    Example:
+    **Example:**
 
     .. code-block::
 
-      --> (define s (set 1 2))
-      s
-      --> (set-add! s 3)
-      #[1 2 3}
-      --> (set-add! s '(4 5))
-      #{1 2 3 4 5}
+        --> (define s #{1 2 3})
+        --> (set-add! s 4 5)
+        #{1 2 3 4 5}
+        --> (set-add! s '(6 7))
+        #{1 2 3 4 5 6 7}
+        --> (set-add! s #(8 9))
+        #{1 2 3 4 5 6 7 8 9}
+        --> (set-add! s 3)
+        #{1 2 3 4 5 6 7 8 9}
 
 
 .. _proc:set-remove!:
@@ -175,31 +184,32 @@ set-remove!
 
 .. function:: (set-remove! set obj [sym])
 
-    Removes obj from set.
+    Removes *obj* from *set*, mutating it in place, and returns the mutated
+    set. Signals an index error if *obj* is not a member of *set*. If an
+    optional symbol is supplied as a third argument, the error is suppressed
+    and the procedure returns silently instead.
 
-    If obj is not present, an index error is raised unless an optional
-    symbol is supplied as the third argument, in which case the procedure
-    returns silently.
-
-    This procedure mutates the set.
-
-    :param set: The set to modify.
+    :param set: The set to remove from.
     :type set: set
     :param obj: The object to remove.
-    :type obj: any
-    :param sym: Optional symbol suppressing index error.
+    :param sym: An optional symbol. If provided, suppresses the error when
+                *obj* is not a member.
     :type sym: symbol
-    :return: The modified set.
+    :return: The mutated set.
     :rtype: set
 
-    Example:
+    **Example:**
 
     .. code-block::
 
-      --> (define s (set 1 2 3))
-      s
-      --> (set-remove! s 2)
-      #{1 3}
+        --> (define s #{1 2 3})
+        --> (set-remove! s 2)
+        #{1 3}
+        --> (set-remove! s 99)
+        error: index-error
+        --> (set-remove! s 99 'ok)
+        --> s
+        #{1 3}
 
 
 .. _proc:set-member?:
@@ -209,23 +219,23 @@ set-member?
 
 .. function:: (set-member? set obj)
 
-    Tests whether obj is a member of set.
+    Returns ``#t`` if *obj* is a member of *set* (i.e. *obj* ∈ *set*),
+    ``#f`` otherwise. It is an error if *set* is not a set.
 
-    :param set: The set to test.
+    :param set: The set to test membership in.
     :type set: set
-    :param obj: The object to search for.
-    :type obj: any
-    :return: #true if present, otherwise #false.
+    :param obj: The object to test.
+    :return: ``#t`` if *obj* ∈ *set*, ``#f`` otherwise.
     :rtype: boolean
 
-    Example:
+    **Example:**
 
     .. code-block::
 
-      --> (set-member? #{1 2 3} 2)
-      #true
-      --> (set-member? #{1 2 3} 5)
-      #false
+        --> (set-member? #{1 2 3} 2)
+        #t
+        --> (set-member? #{1 2 3} 99)
+        #f
 
 
 .. _proc:set-disjoint?:
@@ -235,14 +245,27 @@ set-disjoint?
 
 .. function:: (set-disjoint? set1 set2)
 
-    Returns #true if set1 and set2 share no common elements.
+    Returns ``#t`` if *set1* and *set2* share no members in common, ``#f``
+    otherwise. Two sets are disjoint if their intersection is empty
+    (i.e. *set1* ∩ *set2* = ∅). It is an error if either argument is not
+    a set.
 
-    :param set1: First set.
+    :param set1: The first set.
     :type set1: set
-    :param set2: Second set.
+    :param set2: The second set.
     :type set2: set
-    :return: #true if disjoint, otherwise #false.
+    :return: ``#t`` if *set1* ∩ *set2* = ∅, ``#f`` otherwise.
     :rtype: boolean
+
+    **Example:**
+
+    .. code-block::
+
+        --> (set-disjoint? #{1 2 3} #{4 5 6})
+        #t
+        --> (set-disjoint? #{1 2 3} #{3 4 5})
+        #f
+
 
 .. _proc:set-subset?:
 
@@ -251,14 +274,28 @@ set-subset?
 
 .. function:: (set-subset? set1 set2)
 
-    Returns #true if every element of set1 is contained in set2.
+    Returns ``#t`` if every member of *set1* is also a member of *set2*
+    (i.e. *set1* ⊆ *set2*), ``#f`` otherwise. A set is always a subset of
+    itself. It is an error if either argument is not a set.
 
-    :param set1: Candidate subset.
+    :param set1: The candidate subset.
     :type set1: set
-    :param set2: Candidate superset.
+    :param set2: The candidate superset.
     :type set2: set
-    :return: #true if set1 ⊆ set2, otherwise #false.
+    :return: ``#t`` if *set1* ⊆ *set2*, ``#f`` otherwise.
     :rtype: boolean
+
+    **Example:**
+
+    .. code-block::
+
+        --> (set-subset? #{1 2} #{1 2 3})
+        #t
+        --> (set-subset? #{1 2 3} #{1 2 3})
+        #t
+        --> (set-subset? #{1 2 4} #{1 2 3})
+        #f
+
 
 .. _proc:set-superset?:
 
@@ -267,14 +304,28 @@ set-superset?
 
 .. function:: (set-superset? set1 set2)
 
-    Returns #true if set1 contains every element of set2.
+    Returns ``#t`` if *set1* contains every member of *set2*
+    (i.e. *set1* ⊇ *set2*), ``#f`` otherwise. A set is always a superset of
+    itself. It is an error if either argument is not a set.
 
-    :param set1: Candidate superset.
+    :param set1: The candidate superset.
     :type set1: set
-    :param set2: Candidate subset.
+    :param set2: The candidate subset.
     :type set2: set
-    :return: #true if set1 ⊇ set2, otherwise #false.
+    :return: ``#t`` if *set1* ⊇ *set2*, ``#f`` otherwise.
     :rtype: boolean
+
+    **Example:**
+
+    .. code-block::
+
+        --> (set-superset? #{1 2 3} #{1 2})
+        #t
+        --> (set-superset? #{1 2 3} #{1 2 3})
+        #t
+        --> (set-superset? #{1 2 3} #{1 2 4})
+        #f
+
 
 .. _proc:set-union:
 
@@ -283,21 +334,25 @@ set-union
 
 .. function:: (set-union set1 set2)
 
-    Returns a new set containing all elements of set1 and set2.
+    Returns a newly allocated set containing all members that appear in
+    *set1*, *set2*, or both (i.e. *set1* ∪ *set2*). Neither argument is
+    modified. It is an error if either argument is not a set.
 
-    :param set1: First set.
+    :param set1: The first set.
     :type set1: set
-    :param set2: Second set.
+    :param set2: The second set.
     :type set2: set
-    :return: A newly allocated set representing the union.
+    :return: A new set equal to *set1* ∪ *set2*.
     :rtype: set
 
-    Example:
+    **Example:**
 
     .. code-block::
 
-      --> (set-union #{1 2} #{2 3})
-      #{1 2 3}
+        --> (set-union #{1 2 3} #{3 4 5})
+        #{1 2 3 4 5}
+        --> (set-union #{1 2 3} #{})
+        #{1 2 3}
 
 
 .. _proc:set-union!:
@@ -307,14 +362,27 @@ set-union!
 
 .. function:: (set-union! set1 set2)
 
-    Mutates set1 so that it becomes the union of set1 and set2.
+    Mutates *set1* to contain all members that appear in *set1*, *set2*, or
+    both (i.e. *set1* ∪ *set2*), and returns the mutated *set1*. It is an
+    error if either argument is not a set.
 
-    :param set1: Set to modify.
+    :param set1: The set to mutate.
     :type set1: set
-    :param set2: Set whose elements will be added.
+    :param set2: The set to union with.
     :type set2: set
-    :return: The modified set1.
+    :return: *set1* mutated to equal *set1* ∪ *set2*.
     :rtype: set
+
+    **Example:**
+
+    .. code-block::
+
+        --> (define s #{1 2 3})
+        --> (set-union! s #{3 4 5})
+        #{1 2 3 4 5}
+        --> s
+        #{1 2 3 4 5}
+
 
 .. _proc:set-intersection:
 
@@ -323,14 +391,26 @@ set-intersection
 
 .. function:: (set-intersection set1 set2)
 
-    Returns a new set containing elements common to both sets.
+    Returns a newly allocated set containing only the members that appear in
+    both *set1* and *set2* (i.e. *set1* ∩ *set2*). Neither argument is
+    modified. It is an error if either argument is not a set.
 
-    :param set1: First set.
+    :param set1: The first set.
     :type set1: set
-    :param set2: Second set.
+    :param set2: The second set.
     :type set2: set
-    :return: A newly allocated set representing the intersection.
+    :return: A new set equal to *set1* ∩ *set2*.
     :rtype: set
+
+    **Example:**
+
+    .. code-block::
+
+        --> (set-intersection #{1 2 3 4} #{3 4 5 6})
+        #{3 4}
+        --> (set-intersection #{1 2 3} #{4 5 6})
+        #{}
+
 
 .. _proc:set-intersection!:
 
@@ -339,14 +419,27 @@ set-intersection!
 
 .. function:: (set-intersection! set1 set2)
 
-    Mutates set1 so that it contains only elements also found in set2.
+    Mutates *set1* to contain only the members that appear in both *set1* and
+    *set2* (i.e. *set1* ∩ *set2*), and returns the mutated *set1*. It is an
+    error if either argument is not a set.
 
-    :param set1: Set to modify.
+    :param set1: The set to mutate.
     :type set1: set
-    :param set2: Comparison set.
+    :param set2: The set to intersect with.
     :type set2: set
-    :return: The modified set1.
+    :return: *set1* mutated to equal *set1* ∩ *set2*.
     :rtype: set
+
+    **Example:**
+
+    .. code-block::
+
+        --> (define s #{1 2 3 4})
+        --> (set-intersection! s #{3 4 5 6})
+        #{3 4}
+        --> s
+        #{3 4}
+
 
 .. _proc:set-difference:
 
@@ -355,14 +448,29 @@ set-difference
 
 .. function:: (set-difference set1 set2)
 
-    Returns a new set containing elements of set1 that are not in set2.
+    Returns a newly allocated set containing the members of *set1* that are
+    not members of *set2* (i.e. *set1* − *set2*). Neither argument is
+    modified. It is an error if either argument is not a set.
 
-    :param set1: First set.
+    Note that set difference is not commutative: *set1* − *set2* and
+    *set2* − *set1* are generally different results.
+
+    :param set1: The set to subtract from.
     :type set1: set
-    :param set2: Second set.
+    :param set2: The set of members to exclude.
     :type set2: set
-    :return: A newly allocated set representing the difference.
+    :return: A new set equal to *set1* − *set2*.
     :rtype: set
+
+    **Example:**
+
+    .. code-block::
+
+        --> (set-difference #{1 2 3 4} #{3 4 5 6})
+        #{1 2}
+        --> (set-difference #{3 4 5 6} #{1 2 3 4})
+        #{5 6}
+
 
 .. _proc:set-difference!:
 
@@ -371,14 +479,27 @@ set-difference!
 
 .. function:: (set-difference! set1 set2)
 
-    Mutates set1 by removing elements also found in set2.
+    Mutates *set1* to contain only the members of *set1* that are not members
+    of *set2* (i.e. *set1* − *set2*), and returns the mutated *set1*. It is
+    an error if either argument is not a set.
 
-    :param set1: Set to modify.
+    :param set1: The set to mutate.
     :type set1: set
-    :param set2: Set whose elements will be removed.
+    :param set2: The set of members to exclude.
     :type set2: set
-    :return: The modified set1.
+    :return: *set1* mutated to equal *set1* − *set2*.
     :rtype: set
+
+    **Example:**
+
+    .. code-block::
+
+        --> (define s #{1 2 3 4})
+        --> (set-difference! s #{3 4 5 6})
+        #{1 2}
+        --> s
+        #{1 2}
+
 
 .. _proc:set-sym-difference:
 
@@ -387,15 +508,27 @@ set-sym-difference
 
 .. function:: (set-sym-difference set1 set2)
 
-    Returns a new set containing elements found in either set,
-    but not in both (the symmetric difference).
+    Returns a newly allocated set containing the members that appear in
+    *set1* or *set2*, but not in both (i.e. *set1* Δ *set2*). This is
+    equivalent to (*set1* ∪ *set2*) − (*set1* ∩ *set2*). Neither argument
+    is modified. It is an error if either argument is not a set.
 
-    :param set1: First set.
+    :param set1: The first set.
     :type set1: set
-    :param set2: Second set.
+    :param set2: The second set.
     :type set2: set
-    :return: A newly allocated set representing the symmetric difference.
+    :return: A new set equal to *set1* Δ *set2*.
     :rtype: set
+
+    **Example:**
+
+    .. code-block::
+
+        --> (set-sym-difference #{1 2 3 4} #{3 4 5 6})
+        #{1 2 5 6}
+        --> (set-sym-difference #{1 2 3} #{1 2 3})
+        #{}
+
 
 .. _proc:set-sym-difference!:
 
@@ -404,15 +537,27 @@ set-sym-difference!
 
 .. function:: (set-sym-difference! set1 set2)
 
-    Mutates set1 so that it becomes the symmetric difference
-    of set1 and set2.
+    Mutates *set1* to contain the members that appear in *set1* or *set2*,
+    but not in both (i.e. *set1* Δ *set2*), and returns the mutated *set1*.
+    It is an error if either argument is not a set.
 
-    :param set1: Set to modify.
+    :param set1: The set to mutate.
     :type set1: set
-    :param set2: Comparison set.
+    :param set2: The second set.
     :type set2: set
-    :return: The modified set1.
+    :return: *set1* mutated to equal *set1* Δ *set2*.
     :rtype: set
+
+    **Example:**
+
+    .. code-block::
+
+        --> (define s #{1 2 3 4})
+        --> (set-sym-difference! s #{3 4 5 6})
+        #{1 2 5 6}
+        --> s
+        #{1 2 5 6}
+
 
 .. _proc:set-map:
 
@@ -421,25 +566,26 @@ set-map
 
 .. function:: (set-map proc set)
 
-    Applies proc to each element of set and returns a list of results.
+    Applies *proc* to each member of *set* and returns a list of the results.
+    The order in which *proc* is applied to the members is indeterminate, as
+    sets are unordered. *proc* must accept exactly one argument. It is an
+    error if *proc* is not a procedure or *set* is not a set.
 
-    The order of application is indeterminate.
-
-    :param proc: Procedure accepting one argument.
+    :param proc: A procedure of one argument.
     :type proc: procedure
-    :param set: Set to traverse.
+    :param set: The set whose members to map over.
     :type set: set
-    :return: A list of results.
+    :return: A list of the results of applying *proc* to each member.
     :rtype: list
 
-    Example:
+    **Example:**
 
     .. code-block::
 
-      --> (set-map (lambda (x) (* x 2)) #{1 2 3})
-      (6 2 4)
-      --> (set-map square #{2 4 6})
-      (16 36 4)
+        --> (set-map (lambda (x) (* x x)) #{1 2 3 4})
+        (1 4 9 16)
+        --> (set-map number->string #{1 2 3})
+        ("1" "2" "3")
 
 
 .. _proc:set-foreach:
@@ -449,16 +595,25 @@ set-foreach
 
 .. function:: (set-foreach proc set)
 
-    Applies proc to each element of set for side effects.
+    Applies *proc* to each member of *set* for the purpose of side effects.
+    The return values of *proc* are discarded. The order in which *proc* is
+    applied to the members is indeterminate, as sets are unordered. Returns
+    an unspecified value. *proc* must accept exactly one argument. It is an
+    error if *proc* is not a procedure or *set* is not a set.
 
-    Returns #void. The order of application is indeterminate.
-
-    :param proc: Procedure accepting one argument.
+    :param proc: A procedure of one argument.
     :type proc: procedure
-    :param set: Set to traverse.
+    :param set: The set whose members to iterate over.
     :type set: set
-    :return: #void
-    :rtype: void
+    :return: Unspecified.
+
+    **Example:**
+
+    .. code-block::
+
+        --> (set-foreach display #{1 2 3})
+        123
+
 
 .. _proc:list->set:
 
@@ -467,20 +622,26 @@ list->set
 
 .. function:: (list->set list)
 
-    Constructs a new set from the elements of list.
-    Duplicate elements are removed.
+    Returns a newly allocated set containing all members of *list*.
+    Duplicate values in *list* are collapsed — each distinct value appears
+    only once in the result. It is an error if *list* is not a proper list,
+    or if any member of *list* is not a hashable type.
 
-    :param list: A proper list.
+    :param list: A proper list of hashable objects.
     :type list: list
-    :return: A newly allocated set.
+    :return: A newly allocated set containing the members of *list*.
     :rtype: set
 
-    Example:
+    **Example:**
 
     .. code-block::
 
-      --> (list->set '(1 2 2 3))
-        #{3 1 2}
+        --> (list->set '(1 2 3))
+        #{1 2 3}
+        --> (list->set '(1 1 2 2 3 3))
+        #{1 2 3}
+        --> (list->set '())
+        #{}
 
 
 .. _proc:set->list:
@@ -490,18 +651,23 @@ set->list
 
 .. function:: (set->list set)
 
-    Returns a list containing all elements of set.
-
-    The order of elements is indeterminate.
+    Returns a newly allocated list containing all members of *set*. The order
+    of the members in the returned list is indeterminate, as sets are
+    unordered. It is an error if *set* is not a set.
 
     :param set: The set to convert.
     :type set: set
-    :return: A newly allocated list.
+    :return: A newly allocated list containing the members of *set*.
     :rtype: list
 
-    Example:
+    **Example:**
 
     .. code-block::
 
-      --> (set->list #{1 2 3})
-      (3 1 2)
+        --> (set->list #{1 2 3})
+        (1 2 3)
+        --> (set->list #{})
+        ()
+        --> (length (set->list #{1 2 3 4 5}))
+        5
+
