@@ -487,7 +487,6 @@ Cell* make_sexpr_from_array(const int count, Cell** cells)
     for (int i = 0; i < count; i++) {
         v->cell[i] = cell_copy(cells[i]);
     }
-
     return v;
 }
 
