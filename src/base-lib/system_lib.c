@@ -20,6 +20,8 @@
 
 #include "types.h"
 #include "cell.h"
+#include "config.h"
+#include "main.h"
 #include "ports.h"
 #include "vectors.h"
 
@@ -389,8 +391,7 @@ static Cell* system_chdir(const Lex* e, const Cell* a) {
             TYPE_ERR);
     }
 
-    char* path = a->cell[0]->str;
-    /* TODO: tilde expand */
+    char* path = tilde_expand(a->cell[0]->str);
     if (chdir(path) == -1) {
         return make_cell_error(
             fmt_err("chdir: %s: %s", path, strerror(errno)),
@@ -583,8 +584,10 @@ Cell* system_system(const Lex* e, const Cell* a) {
     pid_t pid;
     int status;
 
-    /* TODO: signal handling */
-    /* FIXME: cmd output written bold in REPL. */
+    /* This is necessary to clear the REPL input bolding. */
+    fprintf(stdout, "%s", ANSI_RESET);
+    fflush(stdout);
+
     if ((pid = fork()) < 0) {
         status = -1;
     } else if (pid == 0) {
@@ -600,7 +603,6 @@ Cell* system_system(const Lex* e, const Cell* a) {
             }
         }
     }
-
     return make_cell_integer(status);
 }
 
@@ -670,19 +672,6 @@ Cell* system_is_root(const Lex* e, const Cell* a) {
     }
     return False_Obj;
 }
-
-
-/* TODO
- * exec
- * fork
- * chown
- * wait / waitpid
- * clock-time / monotonic-time
- * umask
- * signal / kill
- * rlimit
- * temp-file / temp-directory
- */
 
 
 void cozenage_library_init(const Lex* e)
