@@ -102,7 +102,7 @@ BASE_LIBS = -lm -lgc $(ICU_LIBS) -ldl $(EXE_LDFLAGS) $(GMP_LIBS)
 TEST_LIBS = -lcriterion $(BASE_LIBS)
 
 # --- Phony Targets (Commands) ---
-.PHONY: all cmake_build nocmake test clean rebuild install uninstall
+.PHONY: all cmake_build nocmake test clean rebuild install uninstall docs docs-clean
 
 # The default target when 'make' is run
 all: cmake_build
@@ -189,3 +189,10 @@ install:
 uninstall:
 	@rm -v -f $(INSTALL_BIN_DIR)/$(BINARY)
 	@rm -v -rf $(INSTALL_LIB_DIR)
+
+# --- Docs
+docs:
+	@$(MAKE) -C docs/source html
+
+docs-clean:
+	@$(MAKE) -C docs/source clean
