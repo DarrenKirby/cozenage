@@ -46,9 +46,6 @@ int read_history(const char* filename);
 int write_history(const char* filename);
 void add_history_entry(const char* line);
 
-/* Path expansion. */
-char* tilde_expand(const char* path);
-
 /* Completion interface. */
 void populate_dynamic_completions(const Lex* e);
 

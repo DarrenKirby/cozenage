@@ -22,6 +22,7 @@
 #include "hash.h"
 #include "main.h"
 #include "types.h"
+#include "config.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -33,7 +34,6 @@
 #include <errno.h>
 #include <dirent.h>
 #include <sys/stat.h>
-#include <pwd.h>
 #include <wchar.h>
 #include <gc/gc.h>
 
@@ -311,46 +311,7 @@ int write_history(const char* filename)
 }
 
 
-/* Tilde expansion. */
-char* tilde_expand(const char* path)
-{
-    if (!path || path[0] != '~') {
-        return GC_strdup(path);
-    }
 
-    const char* home;
-    const char* rest;
-
-    if (path[1] == '/' || path[1] == '\0') {
-        /* ~/... or just ~ */
-        home = getenv("HOME");
-        rest = path + 1;
-    } else {
-        /* ~username/... */
-        const char* slash = strchr(path + 1, '/');
-        size_t username_len = slash ? (size_t)(slash - path - 1) : strlen(path + 1);
-        char* username = GC_MALLOC_ATOMIC(username_len + 1);
-        memcpy(username, path + 1, username_len);
-        username[username_len] = '\0';
-
-        const struct passwd* pw = getpwnam(username);
-        if (pw) {
-            home = pw->pw_dir;
-            rest = slash ? slash : "";
-        } else {
-            return GC_strdup(path);
-        }
-    }
-
-    if (!home) {
-        return GC_strdup(path);
-    }
-
-    size_t result_len = strlen(home) + strlen(rest) + 1;
-    char* result = GC_MALLOC_ATOMIC(result_len);
-    snprintf(result, result_len, "%s%s", home, rest);
-    return result;
-}
 
 
 /* Filename completion. */

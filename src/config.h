@@ -40,5 +40,7 @@ typedef struct lib_load {
 void load_initial_libraries(const Lex* e, lib_load_config load_libs);
 void init_history_path();
 void setup_history();
+/* Path expansion. */
+char* tilde_expand(const char* path);
 
 #endif // COZENAGE_CONFIG_H

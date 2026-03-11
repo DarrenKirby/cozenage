@@ -26,6 +26,8 @@
 #include <errno.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <pwd.h>
+#include <gc/gc.h>
 
 
 char *cozenage_history_path = nullptr;
@@ -79,7 +81,7 @@ void init_history_path() {
 }
 
 
-/* TODO: find better spot for this, as it can be used by file_lib.c as well. */
+/* TODO: incorporate this into file library. */
 static int mkdir_p(const char *path) {
     char temp[PATH_MAX];
 
@@ -103,6 +105,48 @@ static int mkdir_p(const char *path) {
         return -1;
     }
     return 0;
+}
+
+
+/* Tilde expansion. */
+char* tilde_expand(const char* path)
+{
+    if (!path || path[0] != '~') {
+        return GC_strdup(path);
+    }
+
+    const char* home;
+    const char* rest;
+
+    if (path[1] == '/' || path[1] == '\0') {
+        /* ~/... or just ~ */
+        home = getenv("HOME");
+        rest = path + 1;
+    } else {
+        /* ~username/... */
+        const char* slash = strchr(path + 1, '/');
+        size_t username_len = slash ? (size_t)(slash - path - 1) : strlen(path + 1);
+        char* username = GC_MALLOC_ATOMIC(username_len + 1);
+        memcpy(username, path + 1, username_len);
+        username[username_len] = '\0';
+
+        const struct passwd* pw = getpwnam(username);
+        if (pw) {
+            home = pw->pw_dir;
+            rest = slash ? slash : "";
+        } else {
+            return GC_strdup(path);
+        }
+    }
+
+    if (!home) {
+        return GC_strdup(path);
+    }
+
+    size_t result_len = strlen(home) + strlen(rest) + 1;
+    char* result = GC_MALLOC_ATOMIC(result_len);
+    snprintf(result, result_len, "%s%s", home, rest);
+    return result;
 }
 
 
