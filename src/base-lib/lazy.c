@@ -29,6 +29,13 @@
 #include <gc/gc.h>
 
 
+/* Forward references. */
+static Cell* lazy_list_to_stream_tail(const Lex* e, const Cell* a);
+static Cell* lazy_weave_tail(const Lex* e, const Cell* a);
+static Cell* lazy_collect_from_tail(const Lex* e, const Cell* a);
+static Cell* lazy_iterate_tail(const Lex* e, const Cell* a);
+
+
 /* Disable 'foo may be made const' linter warnings. */
 /* ReSharper disable twice CppParameterMayBeConstPtrOrRef */
 
@@ -282,6 +289,7 @@ Cell* lazy_at(const Lex* e, const Cell* a) {
     return s->head;
 }
 
+
 /* (take n stream)
  * */
 Cell* lazy_take(const Lex* e, const Cell* a) {
@@ -350,9 +358,6 @@ Cell* lazy_drop(const Lex* e, const Cell* a) {
     return s;
 }
 
-/* Forward reference. */
-static Cell* lazy_list_to_stream_tail(const Lex* e, const Cell* a);
-
 
 /* (list->stream list) -> stream
  * Converts a finite list into a stream. */
@@ -401,9 +406,6 @@ static Cell* lazy_list_to_stream_tail(const Lex* e, const Cell* a) {
     cell_add(args, lst);
     return lazy_list_to_stream(e, args);
 }
-
-/* Forward reference. */
-static Cell* lazy_iterate_tail(const Lex* e, const Cell* a);
 
 
 /* (iterate proc seed) -> stream
@@ -520,10 +522,6 @@ Cell* lazy_select(const Lex* e, const Cell* a) {
 }
 
 
-/* Forward reference — these two call each other. */
-static Cell* lazy_collect_from_tail(const Lex* e, const Cell* a);
-
-
 /* (collect proc stream) -> stream
  * Returns a new stream by applying proc to each element of stream. */
 Cell* lazy_collect(const Lex* e, const Cell* a) {
@@ -581,10 +579,6 @@ static Cell* lazy_collect_from_tail(const Lex* e, const Cell* a) {
     cell_add(args, next);
     return lazy_collect(e, args);
 }
-
-
-/* Forward reference. */
-static Cell* lazy_weave_tail(const Lex* e, const Cell* a);
 
 
 /* (weave stream1 stream2) -> stream
