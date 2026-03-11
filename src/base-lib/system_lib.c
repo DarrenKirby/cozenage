@@ -46,6 +46,7 @@
 #if defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__NetBSD__) || defined(__DragonFly__)
 #include <sys/types.h>
 #include <sys/param.h>
+#include <sys/wait.h>      /* For system (waitpid) */
 #include <vm/vm_param.h>
 #endif
 
@@ -286,27 +287,42 @@ static Cell* system_get_username(const Lex* e, const Cell* a) {
     return False_Obj;
 }
 
-
-/* BSD expects int*, glibc expects gid_t*.
- * We give BSD what it wants without lying about storage. */
 static int portable_getgrouplist(const char *user, const gid_t basegid,
                       gid_t *groups, int *ngroups) {
-#ifdef __linux__
-    /* glibc-style API */
-    return getgrouplist(user, basegid, groups, ngroups);
-#else
-    /* BSD-style API */
+#ifdef __APPLE__
+    /* macOS getgrouplist takes int* for both basegid and groups */
     int *igroups = GC_malloc(sizeof(int) * (*ngroups));
-    const int ret = getgrouplist(user,
-                           (int)basegid,
-                           igroups,
-                           ngroups);
+    const int ret = getgrouplist(user, (int)basegid, igroups, ngroups);
     for (int i = 0; i < *ngroups; i++) {
         groups[i] = (gid_t)igroups[i];
     }
     return ret;
+#else
+    /* Linux and FreeBSD both use gid_t* natively */
+    return getgrouplist(user, basegid, groups, ngroups);
 #endif
 }
+
+// /* BSD expects int*, glibc expects gid_t*.
+//  * We give BSD what it wants without lying about storage. */
+// static int portable_getgrouplist(const char *user, const gid_t basegid,
+//                       gid_t *groups, int *ngroups) {
+// #ifdef __linux__
+//     /* glibc-style API */
+//     return getgrouplist(user, basegid, groups, ngroups);
+// #else
+//     /* BSD-style API */
+//     int *igroups = GC_malloc(sizeof(int) * (*ngroups));
+//     const int ret = getgrouplist(user,
+//                            (int)basegid,
+//                            igroups,
+//                            ngroups);
+//     for (int i = 0; i < *ngroups; i++) {
+//         groups[i] = (gid_t)igroups[i];
+//     }
+//     return ret;
+// #endif
+// }
 
 
 /* (get-groups)

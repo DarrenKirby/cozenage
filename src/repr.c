@@ -57,8 +57,8 @@
 #include <wctype.h>
 #include <math.h>
 
-/* Only Linux needs this include. */
-#ifdef __linux__
+/* macOS does not require these. */
+#ifndef __APPLE__
 #include <ctype.h>
 #include <wchar.h>
 #endif

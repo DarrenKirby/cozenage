@@ -37,7 +37,8 @@
 #include <wchar.h>
 #include <gc/gc.h>
 
-#ifdef __linux__
+/* Linux and *BSD needs this. */
+#ifndef __APPLE__
 #include <ctype.h>
 #endif
 

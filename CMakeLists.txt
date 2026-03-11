@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 
-# here we specify that the project is C language only, so the default
+# Here we specify that the project is C language only, so the default
 # C compiler on the system will be used
 project(Cozenage LANGUAGES C VERSION 0.16.0)
 set(CMAKE_C_STANDARD 23)
@@ -65,13 +65,14 @@ if(ICU_FOUND OR PC_ICU_FOUND)
         # The library was found by the standard find_package(ICU) command.
         # Its target is ICU::uc, so we link our alias to it.
         message(STATUS "Found ICU via standard find_package.")
+        target_include_directories(icu::uc INTERFACE ${ICU_INCLUDE_DIRS})
         target_link_libraries(icu::uc INTERFACE ICU::uc)
     else()
         # The library was found using pkg-config. We configure our alias
         # with the properties discovered by pkg_check_modules.
         message(STATUS "Found ICU via pkg-config.")
         target_include_directories(icu::uc INTERFACE ${PC_ICU_INCLUDE_DIRS})
-        target_link_directories(icu::uc INTERFACE ${PC_ICU_LIBRARY_DIRS}) # <-- THIS IS THE FIX
+        target_link_directories(icu::uc INTERFACE ${PC_ICU_LIBRARY_DIRS})
         target_link_libraries(icu::uc INTERFACE ${PC_ICU_LIBRARIES})
     endif()
 else()
@@ -174,6 +175,9 @@ foreach(LIB_SOURCE ${LIB_SOURCES})
 
     # Add the library as a SHARED module
     add_library(${LIB_TARGET_NAME} SHARED ${LIB_SOURCE})
+
+    # FreeBSD needs this as /usr/local/include/ is not searched by default
+    target_link_libraries(${LIB_TARGET_NAME} PRIVATE icu::uc)
 
     # Set properties:
     # 1. PREFIX: Set to "" to get "math.so" instead of "libmath.so"

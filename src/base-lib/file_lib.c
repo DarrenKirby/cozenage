@@ -27,7 +27,7 @@
 #include <sys/types.h>
 #include <time.h>
 
-#ifndef __APPLE__
+#ifdef __linux__
 #include <limits.h>
 #include <sys/sysmacros.h>
 #endif
