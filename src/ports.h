@@ -74,6 +74,7 @@ Cell* builtin_open_output_file(const Lex* e, const Cell* a);
 Cell* builtin_open_bin_input_file(const Lex* e, const Cell* a);
 Cell* builtin_open_bin_output_file(const Lex* e, const Cell* a);
 Cell* builtin_open_and_trunc_output_file(const Lex* e, const Cell* a);
+Cell* builtin_open_and_trunc_bin_output_file(const Lex* e, const Cell* a);
 Cell* builtin_open_output_string(const Lex* e, const Cell* a);
 Cell* builtin_open_input_string(const Lex* e, const Cell* a);
 Cell* builtin_get_output_string(const Lex* e, const Cell* a);

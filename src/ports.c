@@ -1630,7 +1630,6 @@ Cell* builtin_displayln(const Lex* e, const Cell* a)
             fmt_err("displayln: %s", strerror(err_r)),
             FILE_ERR);
     }
-    /* FIXME: check return of this call. */
     buf = "\n";
     p->port->vtable->write(buf, strlen(buf), p, &err_r);
     return USP_Obj;
@@ -1714,7 +1713,7 @@ Cell* builtin_writeln(const Lex* e, const Cell* a)
     }
 
     const Cell* val = a->cell[0];
-    char* buf = cell_to_string(val, MODE_WRITE);
+    const char* buf = cell_to_string(val, MODE_WRITE);
     int err_r;
     const ssize_t res = p->port->vtable->write(buf, strlen(buf), p, &err_r);
     if (res < 0) {
@@ -1722,7 +1721,6 @@ Cell* builtin_writeln(const Lex* e, const Cell* a)
             fmt_err("writeln: %s", strerror(err_r)),
             FILE_ERR);
     }
-    /* FIXME: check return of this call. */
     buf = "\n";
     p->port->vtable->write(buf, strlen(buf), p, &err_r);
     return USP_Obj;
@@ -1900,8 +1898,46 @@ Cell* builtin_open_and_trunc_output_file(const Lex* e, const Cell* a)
             FILE_ERR);
     }
 
-    /* Must be a file port. */
+    /* Must be a text file port. */
     return make_cell_file_port(filename, fp, OUTPUT_STREAM, BK_FILE_TEXT);
+}
+
+
+/* (open-and-trunc-bin-output-file string )
+ * Takes a string naming an output file to be opened and returns an output port that is capable of writing data to the
+ * file by that name. If a file with the given name does not exist, it will be created. If the file does exist, it will
+ * be truncated to length 0, and overwritten.  If the file cannot be opened, an error that satisfies file-error? is
+ * signalled. */
+Cell* builtin_open_and_trunc_bin_output_file(const Lex* e, const Cell* a)
+{
+    (void)e;
+    Cell* err = check_arg_types(a, CELL_STRING,"open-and-trunc-bin-output-file");
+    if (err) { return err; }
+    err = CHECK_ARITY_RANGE(a, 1, 2, "open-and-trunc-bin-output-file");
+    if (err) { return err; }
+
+    const char *mode = "w";
+    const char* filename = a->cell[0]->str;
+    if (a->count == 2 && a->cell[1]->type == CELL_STRING) {
+        mode = a->cell[1]->str;
+    }
+    FILE *fp = fopen(filename, mode);
+    if (!fp) {
+        return make_cell_error(
+            fmt_err("open-and-trunc-bin-output-file", strerror(errno)),
+            FILE_ERR);
+    }
+    char *actual_path = GC_MALLOC(PATH_MAX);
+    const char *ptr = realpath(filename, actual_path);
+    if (ptr == NULL) {
+        fclose(fp);
+        return make_cell_error(
+            fmt_err("open-and-trunc-bin-output-file", strerror(errno)),
+            FILE_ERR);
+    }
+
+    /* Must be a binary file port. */
+    return make_cell_file_port(filename, fp, OUTPUT_STREAM, BK_FILE_BINARY);
 }
 
 
@@ -2270,5 +2306,3 @@ Cell* builtin_with_output_to_file(const Lex* e, const Cell* a) {
     default_output_port = std_output_port;
     return result;
 }
-
-/* TODO implement: open-and-trunc-bin-output-file */
