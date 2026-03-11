@@ -24,7 +24,7 @@
 
 /* Note: version string typically provided by CMake. */
 #ifndef APP_VERSION
-#define APP_VERSION "0.10.0"
+#define APP_VERSION "0.16.0"
 #endif
 
 #define PS1_PROMPT "--> \001\x1b[37;1m\002"
