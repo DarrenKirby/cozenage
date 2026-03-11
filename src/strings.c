@@ -1062,7 +1062,6 @@ Cell* builtin_string_number(const Lex* e, const Cell* a)
  * point, then the result contains a decimal point and is expressed using the minimum number of digits (exclusive of
  * exponent and trailing zeroes) needed to make the above expression true; otherwise the format of the result is
  * unspecified. The result returned by number->string never contains an explicit radix prefix. */
-/* TODO: handle BIGINT. */
 Cell* builtin_number_string(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -1071,7 +1070,7 @@ Cell* builtin_number_string(const Lex* e, const Cell* a)
 
     const Cell* num = a->cell[0];
     // ReSharper disable once CppVariableCanBeMadeConstexpr
-    const int num_mask = CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX;
+    const int num_mask = CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX|CELL_BIGINT;
     if (!(num->type & num_mask)) {
         return make_cell_error(
             "number->string: arg 1 must be a number",
