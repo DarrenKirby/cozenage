@@ -1,10 +1,13 @@
 # Cozenage
 
-*Getting close to being ready for prime time*
+**Cozenage** is a Scheme-derived, Lisp-like programming language written in C, designed primarily as an educational 
+project and exploratory implementation. It provides a small, expressive core language and is extended through a 
+growing standard library of dynamically loadable modules.
 
-**Cozenage** is a Scheme-derived, Lisp-like programming language written in C, designed primarily as an educational project and exploratory implementation. It provides a small, expressive core language and is extended through a growing standard library of dynamically loadable modules.
-
-While Cozenage borrows heavily from Scheme, particularly R5RS and R7RS, it is **not intended to be fully standard-compliant**. Where possible, Cozenage follows Scheme semantics and conventions, but it intentionally deviates from the standards in a number of non-trivial ways. These deviations are the result of pragmatic design choices, implementation constraints, or deliberate simplifications, and are documented where relevant.
+While Cozenage borrows heavily from Scheme, particularly R5RS and R7RS, it is **not intended to be fully standard-compliant**. 
+Where possible, Cozenage follows Scheme semantics and conventions, but it intentionally deviates from the standards in a 
+number of non-trivial ways. These deviations are the result of pragmatic design choices, implementation constraints, 
+or deliberate simplifications, and are documented where relevant.
 
 Anyone with experience in Scheme or other Lisp dialects should find Cozenage immediately familiar.
 
@@ -30,9 +33,9 @@ Cozenage provides the usual set of disjoint primitive objects common to Scheme-l
 And two primitive object types not specified by R7RS:
 
 - set
-- map
+- hash
 
-Both sets and maps are implemented as hash tables for fast O(1) amortized lookups.
+Both sets and hashes are implemented as hash tables for fast O(1) amortized lookups.
 
 ### Numeric system
 

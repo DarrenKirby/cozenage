@@ -407,6 +407,12 @@ This document tracks the implementation status of procedures in the Cozenage int
 |   ✅    | `promise?`         |
 |   ✅    | `stream?`          |
 |   ✅    | `stream-null?`     |
+|   ✅    | `list->stream`     |
+|   ✅    | `iterate`          |
+|   ✅    | `collect`          |
+|   ✅    | `select`           |
+|   ✅    | `reduce`           |
+|   ✅    | `weave`            |
 
 ---
 

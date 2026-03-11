@@ -3,7 +3,7 @@ Primitive datatypes
 
 Cozenage provides all the primitive Scheme datatypes as would be expected, as well as two other primitive types not
 specified by the R7RS standard. All primitive types are disjoint, which
-is to say that any Scheme object will return ``#true`` for one, and only one, of the following predicates:
+is to say that any object will return ``#true`` for one, and only one, of the following predicates:
 
 * ``boolean?``
 * ``char?``
@@ -30,24 +30,39 @@ only chars, and ``bytevectors`` are homogenic types that can hold only integers.
 ``vector`` are heterogenic types which can hold any combination of atomic types and/or nested compound types. A ``set``
 can hold any hashable type, and a ``hash`` can use any hashable type as key, and any object type as value.
 
-All primitive types and objects are first-class, which means they can be passed to procedures as arguments, and returned
-from procedures as values.
+All primitive types and objects are first-class, which means they can be bound to names (ie: stored in a variable),
+passed to procedures as arguments, and returned from procedures as values.
 
 An important concept in Scheme is that of the external representation of an object as a sequence of characters. For
-example, an external representation of the integer 28 is the sequence of characters ``28```, and an external
+example, an external representation of the integer 28 is the sequence of characters ``28``, and an external
 representation of a list consisting of the integers 8 and 13 is the sequence of characters ``(8 13)``.
 
 The external representation of an object is not necessarily unique. The integer 28 also has representations
 ``#e28.000`` and ``#x1c``, and the list in the previous paragraph also has the representations
 ``( 08 13 )`` and ``(8 . (13 . ()))``.
 
-Many objects have standard external representations, but some, such as procedures and ports, do not have standard
-representations (although Cozenage has defined implementation-specific representations for them). The ``read``
-procedure is used to parse these external representations into live objects, and the ``write`` procedure is used to
-produce them.
+All objects have some representation when displayed at the REPL, but not all of those
+representations are meaningful to ``read``. Types with a defined external representation
+can be written as literals directly in source code or at the REPL, and ``read`` can parse
+them back into live objects — either via the ``quote`` special form or as a plain literal.
 
-An external representation can be written in a program to obtain the corresponding object, either through the
-``quote`` special form, or as a literal at the REPL.
+The following types have a defined external representation:
+
+- Booleans (``#t``, ``#f``)
+- Numbers
+- Characters
+- Strings
+- Symbols
+- Lists and pairs
+- Vectors
+- Bytevectors
+- Sets
+- Hashes
+
+Types without a defined external representation such as procedures and ports are still
+displayed at the REPL using an implementation-specific notation (for example,
+``#<lambda 'fact'>``), but these representations are a display convenience only. They
+cannot be read back by ``read`` or used as literals in source code.
 
 Mutability of Objects
 ----------------------------
