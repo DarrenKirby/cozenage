@@ -42,6 +42,12 @@ static int complex_eq_op(const Lex* e, const Cell* lhs, const Cell* rhs)
     return eq;
 }
 
+/* TODO:
+ * Rational comparison overflow — the expressions lhs->num * rhs->den and lhs->den * rhs->num in all four
+ * ordering operators (<, >, <=, >=) are plain long multiplications with no overflow guard. For rationals
+ * with large numerators or denominators, these products can silently overflow, producing incorrect comparison
+ * results. The safe approach is to either cross-multiply using 64-bit intermediates with overflow detection,
+ * or to normalise both rationals to a common denominator using GMP arithmetic before comparing. */
 
 /* (= z1 z2 z3 ...)
  * Returns true if all arguments are equal. */
@@ -75,7 +81,7 @@ Cell* builtin_eq_op(const Lex* e, const Cell* a)
                 if (mpz_cmp(*lhs->bi, *rhs->bi) == 0) { the_same = 1; }
                 break;
             default: ; /* This will never run as the types are pre-checked,
-                          but without the linter complains */
+                          but without the linter complains. */
         }
         if (!the_same) {
             return False_Obj;

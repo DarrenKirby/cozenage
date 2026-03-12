@@ -1,7 +1,7 @@
 /*
  * 'src/runner.c'
  * This file is part of Cozenage - https://github.com/DarrenKirby/cozenage
- * Copyright © 2025  Darren Kirby <darren@dragonbyte.ca>
+ * Copyright © 2025 Darren Kirby <darren@dragonbyte.ca>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,15 +33,6 @@
 #include <gc/gc.h>
 
 
-void ctrl_c_handler(const int signum)
-{
-    /* Add cleanup code here */
-    printf("\nCaught a <CTRL-C>! Exiting gracefully...\n");
-    save_history_to_file();
-    exit(signum);
-}
-
-
 /* Check the file extension and print a warning if it's non-standard. */
 static void check_and_warn_extension(const char *file_path)
 {
@@ -49,7 +40,7 @@ static void check_and_warn_extension(const char *file_path)
 
     /* Does the file have an extension? Is the extension NOT .scm AND NOT .ss? */
     if (ext != NULL && strcmp(ext, ".scm") != 0 && strcmp(ext, ".ss") != 0) {
-        /* Print the non-fatal warning to stderr */
+        /* Print the non-fatal warning to stderr. */
         fprintf(stderr,
                 "Warning: Running file '%s' which does not have the standard .scm or .ss extension.\n",
                 file_path);
@@ -144,8 +135,6 @@ int run_file_script(const char *file_path, const lib_load_config load_libs)
 
 Cell* parse_all_expressions(Lex* e, TokenArray* ta, const bool is_repl)
 {
-    signal(SIGINT, ctrl_c_handler);
-
     /* Parse the token array and get each parsed expression. */
     while (ta->position <= ta->count) {
         Cell* expression = parse_tokens(ta);

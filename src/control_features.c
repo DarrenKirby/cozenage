@@ -23,13 +23,11 @@
 #include "pairs.h"
 #include "runner.h"
 #include "lexer.h"
-#include "polymorph.h"
 #include "repl.h"
 #include "repr.h"
 
 #include <stdlib.h>
 #include <gc/gc.h>
-#include <unicode/utf8.h>
 
 
 extern int is_repl;
@@ -81,7 +79,7 @@ Cell* builtin_apply(const Lex* e, const Cell* a)
     if (a->cell[0]->type != CELL_PROC) {
         return make_cell_error(
             "apply: arg 1 must be a procedure",
-            ARITY_ERR);
+            TYPE_ERR);
     }
     Cell* final_sexpr = make_cell_sexpr();
     /* Add the proc. */
@@ -230,18 +228,17 @@ Cell* builtin_vector_map(const Lex* e, const Cell* a)
     }
     int shortest_vec_length = INT32_MAX;
     for (int i = 1; i < a->count; i++) {
+        if (a->cell[i]->type != CELL_VECTOR) {
+            return make_cell_error(
+                fmt_err("vector-map: arg %d must be a vector", i+1),
+                TYPE_ERR);
+        }
         /* If vector arg is empty, return empty vector. */
         if (a->cell[i]->count == 0) {
             return make_cell_vector();
         }
-
-        if (a->cell[i]->type != CELL_VECTOR) {
-            return make_cell_error(
-                fmt_err("vector-map: arg %d must be a proper list", i+1),
-                TYPE_ERR);
-        }
         if (a->cell[i]->len < shortest_vec_length) {
-            shortest_vec_length = a->cell[i]->len;
+            shortest_vec_length = a->cell[i]->count;
         }
     }
 
@@ -269,8 +266,10 @@ Cell* builtin_vector_map(const Lex* e, const Cell* a)
         } else {
             tmp_result = coz_apply_and_get_val(proc, arg_list, (Lex*)e);
         }
-        /* Deal with legitimate null value. */
+        /* Deal with legitimate null value. I think this is now unnecessary
+         * after replacing all 'legitimate' null returns with USP_Obj. */
         if (!tmp_result) continue;
+        if (tmp_result == USP_Obj) continue;
         if (tmp_result->type == CELL_ERROR) {
             /* Propagate any evaluation errors */
             return tmp_result;
@@ -330,9 +329,14 @@ Cell* builtin_string_map(const Lex* e, const Cell* a)
         Cell* args_sexpr = make_cell_sexpr();
 
         for (int j = 0; j < num_strings; j++) {
-            UChar32 c;
-            U8_NEXT(s_cells[j]->str, byte_offsets[j], s_cells[j]->count, c);
+            const uint8_t *ptr = (uint8_t*)s_cells[j]->str;
+            const uint8_t *end_ptr = ptr + s_cells[j]->count;
+            ptr += byte_offsets[j];
+
+            const int32_t c = (int)utf8_next(&ptr, end_ptr);
+
             cell_add(args_sexpr, make_cell_char(c));
+            byte_offsets[j] += utf8_code_point_len(c);
         }
 
         Cell* val;
@@ -351,8 +355,7 @@ Cell* builtin_string_map(const Lex* e, const Cell* a)
 
         const UChar32 res_c = val->char_v;
         res_chars[i] = res_c;
-
-        const int b_len = U8_LENGTH(res_c);
+        const int b_len = utf8_code_point_len(res_c);
         total_bytes += b_len;
         if (res_c > 0x7F) {
             is_ascii = 0;
@@ -360,28 +363,17 @@ Cell* builtin_string_map(const Lex* e, const Cell* a)
     }
 
     /* Encode the result array into the final UTF-8 string. */
-    char* buffer = GC_MALLOC_ATOMIC(total_bytes + 1);
-    int32_t write_idx = 0;
+    uint8_t* buffer = GC_MALLOC_ATOMIC(total_bytes + 1);
+    int write_idx = 0;
     for (int i = 0; i < shortest_len; i++) {
-        UBool error = 0;
-        U8_APPEND(buffer, write_idx, total_bytes, res_chars[i], error);
-
-        if (error) {
-            /* If the codepoint is invalid, fall back to the Unicode
-               Replacement Character: U+FFFD.
-               In UTF-8, this is 3 bytes: 0xEF, 0xBF, 0xBD */
-            buffer[0] = (char)0xEF;
-            buffer[1] = (char)0xBF;
-            buffer[2] = (char)0xBD;
-            total_bytes = 3;
-        }
+         write_idx += utf8_encode(res_chars[i], buffer + write_idx);
     }
     buffer[total_bytes] = '\0';
 
     /* Manual Metadata Construction. */
     Cell* v = GC_MALLOC_ATOMIC(sizeof(Cell));
     v->type = CELL_STRING;
-    v->str = buffer;
+    v->str = (char*)buffer;
     v->count = total_bytes;
     v->char_count = shortest_len;
     v->ascii = is_ascii;
@@ -414,10 +406,24 @@ Cell* builtin_foreach(const Lex* e, const Cell* a)
         Cell* lst = a->cell[i + 1];
         if (lst->type == CELL_NIL) return USP_Obj;
 
+        /* Ensure all list args are lists. */
+        if (lst->type != CELL_PAIR) {
+            return make_cell_error(
+                fmt_err("map: arg %d must be a proper list", i+2),
+                TYPE_ERR);
+        }
+
         /* Ensure a valid length for the loop. */
         if (lst->len <= 0) {
-            Cell* len_obj = builtin_len(e, make_sexpr_len1(lst));
-            if (len_obj->type == CELL_ERROR) return len_obj;
+            const Cell* len_obj = builtin_list_length(e, make_sexpr_len1(lst));
+
+            /* If this is an error, it means the list arg is improper or circular. */
+            if (len_obj->type == CELL_ERROR) {
+                return make_cell_error(
+                fmt_err("map: arg %d must be a proper list", i+2),
+                TYPE_ERR);
+            }
+
             lst->len = (int)len_obj->integer_v;
         }
         if (lst->len < shortest_len) shortest_len = lst->len;
@@ -472,7 +478,7 @@ Cell* builtin_vector_foreach(const Lex* e, const Cell* a)
                 fmt_err("vector-for-each: arg %d must be a vector", i+2),
                 TYPE_ERR);
 
-        if (v->len < shortest_len) shortest_len = v->len;
+        if (v->len < shortest_len) shortest_len = v->count;
     }
 
     if (shortest_len == 0) return USP_Obj;
@@ -537,9 +543,14 @@ Cell* builtin_string_foreach(const Lex* e, const Cell* a)
         Cell* args_sexpr = make_cell_sexpr();
 
         for (int j = 0; j < num_strings; j++) {
-            UChar32 c;
-            U8_NEXT(s_cells[j]->str, byte_offsets[j], s_cells[j]->count, c);
+            const uint8_t *ptr = (uint8_t*)s_cells[j]->str;
+            const uint8_t *end_ptr = ptr + s_cells[j]->count;
+            ptr += byte_offsets[j];
+
+            const int32_t c = (int)utf8_next(&ptr, end_ptr);
+
             cell_add(args_sexpr, make_cell_char(c));
+            byte_offsets[j] += utf8_code_point_len(c);
         }
 
         Cell* val;
@@ -585,7 +596,7 @@ Cell* builtin_load(const Lex* e, const Cell* a)
 /* (exit)
  * (exit bool)
  * (exit int)
- * Immediately terminates the running program. An optional boolean or integer value may be passed to denote the exit
+ * Terminates the running program. An optional boolean or integer value may be passed to denote the exit
  * status. #true = exit(0), and #false = exit(1). An integer argument will be directly passed as the exit code to the
  * system. */
 Cell* builtin_exit(const Lex* e, const Cell* a)

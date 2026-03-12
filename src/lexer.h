@@ -26,12 +26,16 @@ typedef enum {
     T_LEFT_PAREN ,
     T_RIGHT_PAREN,
     T_HASH,
+    T_RIGHT_BRACKET,   /* ']' ... signals end of hash. */
+    T_RIGHT_BRACE,     /* '}' ... signals end of set. */
     /* Multi-char tokens */
     T_NUMBER,
     T_CHAR,
     T_STRING,
     T_SYMBOL,
     T_BOOLEAN,
+    T_HASH_START,    /* '#[' ... signals start of hash. */
+    T_SET_START,     /* '#{' ... signals start of set. */
     T_QUOTE,
     T_QUASIQUOTE,
     T_COMMA,

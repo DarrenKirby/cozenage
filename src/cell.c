@@ -27,6 +27,7 @@
 #include "types.h"
 #include "symbols.h"
 #include "hash.h"
+#include "hash_type.h"
 #include "bytevectors.h"
 #include "ports.h"
 
@@ -288,7 +289,7 @@ Cell* make_cell_string(const char* the_string)
     } else {
         /* Scan string to count actual UTF-8 codepoints. */
         v->ascii = 0;
-        v->char_count = string_length_utf8(the_string);
+        v->char_count = utf8_strlen(the_string);
     }
 
     v->type = CELL_STRING;
@@ -522,9 +523,51 @@ Cell* make_cell_stream(Cell* head, Cell* tail_promise) {
     }
 
     Cell* v = GC_MALLOC(sizeof(Cell));
+    if (!v) {
+        fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
+        exit(EXIT_FAILURE);
+    }
     v->type = CELL_STREAM;
     v->head = head;
     v->tail = tail_promise;
+    return v;
+}
+
+
+Cell* make_cell_set(const Cell* values) {
+    Cell* v = GC_MALLOC(sizeof(Cell));
+    if (!v) {
+        fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
+        exit(EXIT_FAILURE);
+    }
+    v->type = CELL_SET;
+    ght_table* t = ght_create(8);
+
+    if (values) {
+        for (int i = 0; i < values->count; i++) {
+            /* Putting NULL as the value does not work with
+             * the hash implementation, so use #t as sentinel. */
+            ght_set(t, values->cell[i], True_Obj);
+        }
+    }
+    v->table = t;
+    return v;
+}
+
+
+Cell* make_cell_hash(const Cell* values) {
+    Cell* v = GC_MALLOC(sizeof(Cell));
+    if (!v) {
+        fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
+        exit(EXIT_FAILURE);
+    }
+    v->type = CELL_HASH;
+    ght_table* t = ght_create(8);
+    /* Already checked for evenness in the parser. */
+    for (int i = 0; i < values->count; i += 2) {
+        ght_set(t, values->cell[i], values->cell[i + 1]);
+    }
+    v->table = t;
     return v;
 }
 
@@ -670,12 +713,17 @@ Cell* cell_copy(const Cell* v) {
     case CELL_PROMISE: {
         copy->promise = GC_MALLOC(sizeof(promise));
         copy->promise->status = v->promise->status;
-        copy->promise->expr = cell_copy(v->promise->expr);
-        if (v->promise->env == nullptr) {
-            copy->promise->env = nullptr;
+        if (v->promise->status == NATIVE) {
+            copy->promise->native = v->promise->native;
+            copy->promise->native_args = v->promise->native_args;
         } else {
-            /* DO NOT copy environments; share the pointer. */
-            copy->promise->env = v->promise->env;
+            copy->promise->expr = cell_copy(v->promise->expr);
+            if (v->promise->env == nullptr) {
+                copy->promise->env = nullptr;
+            } else {
+                /* DO NOT copy environments; share the pointer. */
+                copy->promise->env = v->promise->env;
+            }
         }
         break;
     }
@@ -700,7 +748,7 @@ Cell* cell_copy(const Cell* v) {
         return USP_Obj;
 
     default:
-        fprintf(stderr, "cell_copy: unknown type %d\n", v->type);
+        fprintf(stderr, "cell_copy: unknown type %u\n", v->type);
         return nullptr;
     }
     return copy;

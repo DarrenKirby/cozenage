@@ -1,10 +1,13 @@
 # Cozenage
 
-*Getting close to being ready for prime time*
+**Cozenage** is a Scheme-derived, Lisp-like programming language written in C, designed primarily as an educational 
+project and exploratory implementation. It provides a small, expressive core language and is extended through a 
+growing standard library of dynamically loadable modules.
 
-**Cozenage** is a Scheme-derived, Lisp-like programming language written in C, designed primarily as an educational project and exploratory implementation. It provides a small, expressive core language and is extended through a growing standard library and dynamically loadable modules.
-
-While Cozenage borrows heavily from Scheme—particularly R5RS and R7RS—it is **not intended to be fully standard-compliant**. Where possible, Cozenage follows Scheme semantics and conventions, but it intentionally deviates from the standards in a number of non-trivial ways. These deviations are the result of pragmatic design choices, implementation constraints, or deliberate simplifications, and are documented where relevant.
+While Cozenage borrows heavily from Scheme, particularly R5RS and R7RS, it is **not intended to be fully standard-compliant**. 
+Where possible, Cozenage follows Scheme semantics and conventions, but it intentionally deviates from the standards in a 
+number of non-trivial ways. These deviations are the result of pragmatic design choices, implementation constraints, 
+or deliberate simplifications, and are documented where relevant.
 
 Anyone with experience in Scheme or other Lisp dialects should find Cozenage immediately familiar.
 
@@ -26,6 +29,13 @@ Cozenage provides the usual set of disjoint primitive objects common to Scheme-l
 - boolean
 - port
 - procedure
+
+And two primitive object types not specified by R7RS:
+
+- set
+- hash
+
+Both sets and hashes are implemented as hash tables for fast O(1) amortized lookups.
 
 ### Numeric system
 
@@ -72,9 +82,9 @@ Native bytevector types backed by C arrays:
 
 Several common procedures are polymorphic across compound types, including:
 
-- `len`
-- `idx`
-- `rev`
+- `len` - returns the number of objects in lists, vectors, bytevectors, strings, sets, and maps. 
+- `idx` - returns the object at the supplied index for lists, vectors, bytevectors, and strings.
+- `rev` - returns a reversed copy of lists, vectors, bytevectors, and strings.
 
 ---
 
@@ -89,19 +99,11 @@ Several common procedures are polymorphic across compound types, including:
 
 ---
 
-## Features in progress
+## Features in progress, and Planned and future work
 
-- Arbitrary-precision rationals and reals  
-  (big integers are already supported)
-
----
-
-## Planned and future work
-
-- Custom line editor (replace readline/libedit)
+- Arbitrary-precision rationals and reals (big integers are already supported)
 - Custom allocator / garbage collector
 - Expanded bytevector library
-- Native `set` and `map` types
 - Exception handling (`try` / `catch`)
 - Asynchronous ports (sockets)
 - URL-backed ports
@@ -111,30 +113,34 @@ Several common procedures are polymorphic across compound types, including:
 
 ## Philosophy
 
-Cozenage is best understood as **a Scheme-inspired Lisp**, prioritizing internal consistency, approachability, and educational value over exhaustive standards compliance.
-
-### Design goals
-
-- **Clarity over completeness**  
-  Prefer understandable, inspectable implementations over strict standards compliance.
-
-- **A small, coherent core**  
-  Keep the core language modest, with additional functionality layered on via libraries and modules.
-
-- **Exploration and learning**  
-  Cozenage exists as a vehicle for learning about language implementation, interpreter design, and runtime systems.
-
-- **Practical Lisp semantics**  
-  Favor straightforward, predictable behavior over obscure or highly abstract features.
+Cozenage is best understood as **a Scheme-inspired Lisp**, prioritizing internal consistency, approachability, and
+educational value over exhaustive standards compliance.
 
 ---
 
 ## Dependencies
 
-`Cozenage` requires one of [readline](https://tiswww.cwru.edu/php/chet/readline/rltop.html) or 
-libedit for the REPL. It requires [ICU](https://github.com/unicode-org/icu) for UTF-8.
-These will almost certainly be installed already on any sort of development rig. It requires the [Boehm-Demers-Weiser Garbage Collector](https://github.com/bdwgc/bdwgc)
-which may or may not be installed already on your system. The [GNU GMP library](https://gmplib.org/) is required for the fledgling arbitrary size/precision numeric types I am currently implementing. The [GNU MPFR library](https://www.mpfr.org/) will be required soon, as I wire up bigfloats. 
+`Cozenage` requires [ICU](https://github.com/unicode-org/icu) for UTF-8 support. It requires the [Boehm-Demers-Weiser Garbage Collector](https://github.com/bdwgc/bdwgc).
+The [GNU GMP library](https://gmplib.org/) is required for arbitrary size integers ('big ints'). 
+
+## Obtaining Cozenage
+
+### Git clone
+
+The simplest and easiest way to get Cozenage is to simply clone the GitHub repository:
+
+    $ git clone https://github.com/DarrenKirby/cozenage.git
+
+This command will download the source tree and git metadata to a directory ``cozenage`` in the PWD. The git source will
+contain at least two branches. ``main`` is the currently stable branch. This branch will *always* match the code in the
+most current release available from GitHub. The ``develop`` branch contains the code under active development. While
+the code from this branch is guaranteed to build and run, this is the branch that I push the most recent new features to,
+and it is not as thoroughly tested as ``main``. If you want the latest, this is the branch to build.
+
+### Downloading static packages
+
+If you don't want to bother with git you can download a zip file or tar file (compressed with ``.gz`` or ``.xz`` 
+compression) from GitHub. The latest of these source packages will always match the code in the current ``main`` branch.  
 
 ## Building Cozenage
 
@@ -146,18 +152,20 @@ If you have cmake, run `make`.
 
 If you do not have cmake, or do not want to use it, run `make nocmake`.
 
-There is also a bit more in depth guide as part of the [Cozenage documentation](https://darrenkirby.github.io/cozenage/howto/installation.html)
+To build with debugging symbols, run ``make DEBUG=1``.
+
+There is a more in-depth guide to building as part of the [Cozenage documentation](https://darrenkirby.github.io/cozenage/howto/installation.html)
 
 ## Running Cozenage
 
 To interpret a Scheme file (typically with an .scm or .ss extension, although Cozenage will attempt
 to run any file argument as Scheme code) just add the file name after any options:
 
-    $ ./cozenage -l system,file my_program.scm
+    $ ./cozenage my_program.scm
 
 To run the REPL just run the program with no arguments:
 
-    $ ./cozenage -l system,file
+    $ ./cozenage
 
 ## Status of built-in procedures and special forms
 

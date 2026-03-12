@@ -166,14 +166,17 @@ void init_special_forms(void) {
  *                  Symbol procedures                    *
  * ------------------------------------------------------*/
 
-
+/* (symbol=? sym1 sym2 ...) */
 Cell* builtin_symbol_equal_pred(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = check_arg_types(a, CELL_SYMBOL, "symbol=?");
     if (err) return err;
-    err = CHECK_ARITY_MIN(a, 1, "symbol=?");
-    if (err) return err;
+
+    /* Return #t with one or no args. */
+    if (a->count < 2) {
+        return True_Obj;
+    }
 
     for (int i = 0; i < a->count - 1; i++) {
         const Cell* lhs = a->cell[i];
@@ -188,7 +191,7 @@ Cell* builtin_symbol_equal_pred(const Lex* e, const Cell* a)
 }
 
 
-/* (string->symbol string )
+/* (string->symbol string)
  * Returns the symbol whose name is string. This procedure can create symbols with names containing special characters
  * that would require escaping when written, but does not interpret escapes in its input. */
 Cell* builtin_string_to_symbol(const Lex* e, const Cell* a)

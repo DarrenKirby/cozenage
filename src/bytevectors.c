@@ -129,8 +129,10 @@ static char* get_type_string(const bv_t type)
 Cell* builtin_bytevector(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_MIN(a, 1, "bytevector");
-    if (err) return err;
+    /* Return empty u8 bv if no args. */
+    if (a->count == 0) {
+        return make_cell_bytevector(BV_U8, 0);
+    }
 
     /* See if there's a type argument. */
     int32_t num_bytes = a->count;
@@ -198,6 +200,11 @@ Cell* builtin_bytevector_ref(const Lex* e, const Cell* a)
     }
     const Cell* bv = a->cell[0];
     const int i = (int)a->cell[1]->integer_v;
+    if (i < 0) {
+        return make_cell_error(
+            "bytevector-ref: indice cannot be negative",
+            VALUE_ERR);
+    }
 
     if (i >= a->cell[0]->count) {
         return make_cell_error(
@@ -218,18 +225,23 @@ Cell* builtin_bytevector_set_bang(const Lex* e, const Cell* a)
     if (err) return err;
     if (a->cell[0]->type != CELL_BYTEVECTOR) {
         return make_cell_error(
-            "vector->set!: arg 1 must be a vector",
+            "bytevector-set!: arg 1 must be a vector",
             TYPE_ERR);
     }
     if (a->cell[1]->type != CELL_INTEGER) {
         return make_cell_error(
-            "vector->set!: arg 2 must be an exact non-negative integer",
+            "bytevector-set!: arg 2 must be an exact non-negative integer",
             TYPE_ERR);
     }
 
     const int idx = (int)a->cell[1]->integer_v;
     Cell* bv = a->cell[0];
     const uint8_t type = bv->bv->type;
+    if (a->cell[2]->type != CELL_INTEGER) {
+        return make_cell_error(
+            "bytevector-set: byte arg must be an integer",
+            VALUE_ERR);
+    }
     const int byte = (int)a->cell[2]->integer_v;
     /* Check the range. */
     Cell* check_if = byte_fits(type, byte);
@@ -239,7 +251,7 @@ Cell* builtin_bytevector_set_bang(const Lex* e, const Cell* a)
 
     if (idx < 0 || idx >= bv->count) {
         return make_cell_error(
-            "vector->set!: index out of range",
+            "bytevector-set!: index out of range",
             INDEX_ERR);
     }
 
@@ -266,7 +278,7 @@ Cell* builtin_make_bytevector(const Lex* e, const Cell* a)
             TYPE_ERR);
     }
     const long long n = a->cell[0]->integer_v;
-    if (n < 1) {
+    if (n < 0) {
         return make_cell_error(
             "make-bytevector: arg 1 must be non-negative",
             VALUE_ERR);
@@ -292,6 +304,11 @@ Cell* builtin_make_bytevector(const Lex* e, const Cell* a)
 
     int64_t fill;
     if (a->count > 1) {
+        if (a->cell[1]->type != CELL_INTEGER) {
+            return make_cell_error(
+                "make-bytevector: arg 2 must be an integer",
+                TYPE_ERR);
+        }
         fill = a->cell[1]->integer_v;
         /* Check the range. */
         Cell* check_if = byte_fits(type, fill);
@@ -320,21 +337,42 @@ Cell* builtin_bytevector_copy(const Lex* e, const Cell* a)
     if (err) return err;
     if (a->cell[0]->type != CELL_BYTEVECTOR) {
         return make_cell_error(
-            "bytevector->copy: arg 1 must be a bytevector",
+            "bytevector-copy: arg 1 must be a bytevector",
             TYPE_ERR);
     }
 
     int start = 0;
     int end = a->cell[0]->count;
     if (a->count == 2) {
+        if (a->cell[1]->type != CELL_INTEGER) {
+            return make_cell_error(
+                "bytevector-copy: arg 2 must be an integer",
+                TYPE_ERR);
+        }
         start = (int)a->cell[1]->integer_v;
     }
 
     const Cell* bv = a->cell[0];
     const bv_t type = bv->bv->type;
     if (a->count == 3) {
+        if (a->cell[1]->type != CELL_INTEGER || a->cell[2]->type != CELL_INTEGER) {
+            return make_cell_error(
+                "bytevector-copy: start/end args must be integers",
+                TYPE_ERR);
+        }
         start = (int)a->cell[1]->integer_v;
         end = (int)a->cell[2]->integer_v;
+    }
+
+    if (start < 0) {
+        return make_cell_error(
+            "bytevector-copy: start index must be non-negative",
+            VALUE_ERR);
+    }
+    if (end > a->cell[0]->count) {
+        return make_cell_error(
+            "bytevector-copy: end index out of range",
+            VALUE_ERR);
     }
 
     Cell* vec = make_cell_bytevector(type, end - start);
@@ -386,7 +424,7 @@ Cell* builtin_bytevector_copy_bang(const Lex* e, const Cell* a)
 
     /* Ensure bytevectors are compatible. */
     const uint8_t from_type = from_bv->bv->type;
-    const uint8_t to_type = from_bv->bv->type;
+    const uint8_t to_type = to_bv->bv->type;
     if (from_type != to_type)
     {
         return make_cell_error(
@@ -428,7 +466,7 @@ Cell* builtin_bytevector_copy_bang(const Lex* e, const Cell* a)
             INDEX_ERR);
 
     const int32_t num_bytes = from_end_idx - from_start_idx;
-    for (int i = to_start_idx; i <= num_bytes; i++) {
+    for (int i = to_start_idx; i < to_start_idx + num_bytes; i++) {
         const int64_t byte = BV_OPS[from_type].get(from_bv, from_start_idx);
         BV_OPS[to_type].set(to_bv, i, byte);
         from_start_idx++;
@@ -447,7 +485,7 @@ Cell* builtin_bytevector_append(const Lex* e, const Cell* a)
     if (err) return err;
 
     if (a->count == 0) {
-        return make_cell_bytevector(BV_U8, 1);
+        return make_cell_bytevector(BV_U8, 0);
     }
 
     const bv_t type = a->cell[0]->bv->type;
@@ -476,21 +514,24 @@ Cell* builtin_bytevector_append(const Lex* e, const Cell* a)
 Cell* builtin_utf8_string(const Lex* e, const Cell* a)
 {
     (void)e;
-    const Cell* bv = a->cell[0];
     Cell* err = CHECK_ARITY_RANGE(a, 1, 3, "utf8->string");
     if (err) return err;
+
+    const Cell* bv = a->cell[0];
     if (bv->type != CELL_BYTEVECTOR || bv->bv->type != BV_U8) {
         return make_cell_error(
             "utf8->string: arg 1 must be a u8 bytevector",
             TYPE_ERR);
     }
 
+    /* start and end are byte offsets into the bytevector. */
     int start = 0;
-    int end = a->cell[0]->count;
+    int end = bv->count;
+
     if (a->count > 1) {
         if (a->cell[1]->type != CELL_INTEGER) {
             return make_cell_error(
-                "utf8->string: arg 2 must be an exact positive integer",
+                "utf8->string: arg 2 must be a non-negative integer",
                 TYPE_ERR);
         }
         if (a->cell[1]->integer_v < 0) {
@@ -503,7 +544,7 @@ Cell* builtin_utf8_string(const Lex* e, const Cell* a)
     if (a->count == 3) {
         if (a->cell[2]->type != CELL_INTEGER) {
             return make_cell_error(
-                "utf8->string: arg 3 must be an exact positive integer",
+                "utf8->string: arg 3 must be a non-negative integer",
                 TYPE_ERR);
         }
         if (a->cell[2]->integer_v < 0) {
@@ -514,15 +555,38 @@ Cell* builtin_utf8_string(const Lex* e, const Cell* a)
         end = (int)a->cell[2]->integer_v;
     }
 
-    char* the_str = GC_MALLOC_ATOMIC(bv->count + 1);
-
-    int j = 0;
-    for (int i = start; i < end; i++) {
-        the_str[j] = (char)BV_OPS[bv->bv->type].get(bv, i);
-        j++;
+    if (start > bv->count || end > bv->count) {
+        return make_cell_error(
+            "utf8->string: index out of range",
+            INDEX_ERR);
+    }
+    if (start > end) {
+        return make_cell_error(
+            "utf8->string: start index cannot be greater than end index",
+            INDEX_ERR);
     }
 
-    the_str[j] = '\0';
+    const int byte_count = end - start;
+
+    /* Validate that the byte range begins on a valid UTF-8 codepoint boundary.
+     * A continuation byte (0x80-0xBF) is not a valid start byte. */
+    if (byte_count > 0) {
+        const uint8_t lead = (uint8_t)BV_OPS[BV_U8].get(bv, start);
+        if ((lead & 0xC0) == 0x80) {
+            return make_cell_error(
+                "utf8->string: start is not on a codepoint boundary",
+                VALUE_ERR);
+        }
+    }
+
+    /* Copy the raw UTF-8 bytes into a buffer and let make_cell_string
+     * handle character counting and the ASCII flag. */
+    char* the_str = GC_MALLOC_ATOMIC(byte_count + 1);
+    for (int i = 0; i < byte_count; i++) {
+        the_str[i] = (char)BV_OPS[BV_U8].get(bv, start + i);
+    }
+    the_str[byte_count] = '\0';
+
     return make_cell_string(the_str);
 }
 
@@ -543,12 +607,14 @@ Cell* builtin_string_utf8(const Lex* e, const Cell* a)
             TYPE_ERR);
     }
 
-    int start = 0;
-    size_t end = strlen(a->cell[0]->str);
+    const Cell* str_cell = a->cell[0];
+    int start_char = 0;
+    int end_char = str_cell->char_count;
+
     if (a->count > 1) {
         if (a->cell[1]->type != CELL_INTEGER) {
             return make_cell_error(
-                "string->utf8: arg 2 must be an exact positive integer",
+                "string->utf8: arg 2 must be a non-negative integer",
                 TYPE_ERR);
         }
         if (a->cell[1]->integer_v < 0) {
@@ -556,12 +622,12 @@ Cell* builtin_string_utf8(const Lex* e, const Cell* a)
                 "string->utf8: arg 2 must be non-negative",
                 VALUE_ERR);
         }
-        start = (int)a->cell[1]->integer_v;
+        start_char = (int)a->cell[1]->integer_v;
     }
     if (a->count == 3) {
         if (a->cell[2]->type != CELL_INTEGER) {
             return make_cell_error(
-                "string->utf8: arg 3 must be an exact positive integer",
+                "string->utf8: arg 3 must be a non-negative integer",
                 TYPE_ERR);
         }
         if (a->cell[2]->integer_v < 0) {
@@ -569,15 +635,29 @@ Cell* builtin_string_utf8(const Lex* e, const Cell* a)
                 "string->utf8: arg 3 must be non-negative",
                 VALUE_ERR);
         }
-        end = (int)a->cell[2]->integer_v;
+        end_char = (int)a->cell[2]->integer_v;
     }
 
-    const char* the_s = a->cell[0]->str;
-    Cell* bv = make_cell_bytevector(BV_U8, end - start);
-    for (size_t i = start; i < end; i++)
-    {
-        const uint8_t the_char = (int)the_s[i];
-        byte_add(bv, the_char);
+    if (start_char > str_cell->char_count || end_char > str_cell->char_count) {
+        return make_cell_error(
+            "string->utf8: index out of range",
+            INDEX_ERR);
+    }
+    if (start_char > end_char) {
+        return make_cell_error(
+            "string->utf8: start index cannot be greater than end index",
+            INDEX_ERR);
+    }
+
+    /* Convert character indices to byte offsets.
+     * get_utf8_byte_offset fast-paths pure ASCII strings automatically. */
+    const int32_t start_byte = get_utf8_byte_offset(str_cell, start_char);
+    const int32_t end_byte   = get_utf8_byte_offset(str_cell, end_char);
+
+    const char* the_s = str_cell->str;
+    Cell* bv = make_cell_bytevector(BV_U8, end_byte - start_byte);
+    for (int32_t i = start_byte; i < end_byte; i++) {
+        byte_add(bv, (uint8_t)the_s[i]);
     }
     return bv;
 }

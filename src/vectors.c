@@ -195,14 +195,14 @@ Cell* builtin_vector_to_list(const Lex* e, const Cell* a)
     if (a->count == 3) {
         if (a->cell[2]->type != CELL_INTEGER) {
             return make_cell_error(
-                "vector->list: arg 2 must be an integer",
+                "vector->list: arg 3 must be an integer",
                 TYPE_ERR);
         }
         start = (int)a->cell[1]->integer_v;
-        end = (int)a->cell[2]->integer_v + 1;
-        if (end < 0) {
+        end = (int)a->cell[2]->integer_v;
+        if (start < 0 || end < 0) {
             return make_cell_error(
-                "vector->list: arg 2 must be non-negative",
+                "vector->list: start/end args must be non-negative",
                 VALUE_ERR);
         }
         if (end > a->cell[0]->count) {
@@ -241,9 +241,19 @@ Cell* builtin_vector_copy(const Lex* e, const Cell* a)
     int end = a->cell[0]->count;
 
     if (a->count == 2) {
+        if (a->cell[1]->type != CELL_INTEGER) {
+            return make_cell_error(
+                "vector-copy: start arg must be an integer",
+                TYPE_ERR);
+        }
         start = (int)a->cell[1]->integer_v;
     }
     if (a->count == 3) {
+        if (a->cell[1]->type != CELL_INTEGER || a->cell[2]->type != CELL_INTEGER) {
+            return make_cell_error(
+                "vector-copy: start/end args must be integers",
+                TYPE_ERR);
+        }
         start = (int)a->cell[1]->integer_v;
         end = (int)a->cell[2]->integer_v;
     }
@@ -282,9 +292,9 @@ Cell* builtin_vector_to_string(const Lex* e, const Cell* a)
         start = (int)a->cell[1]->integer_v;
     }
     if (a->count == 3) {
-        if (a->cell[1]->type != CELL_INTEGER) {
+        if (a->cell[1]->type != CELL_INTEGER || a->cell[2]->type != CELL_INTEGER) {
             return make_cell_error(
-                "vector->string: arg3 must be an integer",
+                "vector->string: start/end args must be integers",
                 TYPE_ERR);
         }
         end = (int)a->cell[2]->integer_v;
@@ -383,12 +393,12 @@ Cell* builtin_vector_set_bang(const Lex* e, const Cell* a)
     if (err) return err;
     if (a->cell[0]->type != CELL_VECTOR) {
         return make_cell_error(
-            "vector->set!: arg must be a vector",
+            "vector-set!: arg must be a vector",
             TYPE_ERR);
     }
     if (a->cell[1]->type != CELL_INTEGER) {
         return make_cell_error(
-            "vector->set!: arg must be an integer",
+            "vector-set!: arg must be an integer",
             TYPE_ERR);
     }
 
@@ -398,12 +408,12 @@ Cell* builtin_vector_set_bang(const Lex* e, const Cell* a)
 
     if (idx < 0 || idx >= a->cell[0]->count) {
         return make_cell_error(
-            "vector->set!: index out of range",
+            "vector-set!: index out of range",
             INDEX_ERR);
     }
 
     vec->cell[idx] = obj;
-    return Nil_Obj;
+    return USP_Obj;
 }
 
 

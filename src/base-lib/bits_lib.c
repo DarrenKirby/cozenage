@@ -87,6 +87,14 @@ static char* format_twos_complement(const long long val)
  *            (cozenage bits) library procedures              *
  * -----------------------------------------------------------*/
 
+
+/* (>> n1 n2)
+ * (>> n bitstring)
+ * (>> bitstring n)
+ * (>> bitstring1 bitstring2)
+ * Right-shifts the bits in the integer n1 by the value of n2. Either argument may be an integer or a bitstring,
+ * however, if either argument is a bitstring, the result will be a bitstring. If neither argument is a bitstring,
+ * the result will be an integer. */
 static Cell* bits_right_shift(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -103,6 +111,11 @@ static Cell* bits_right_shift(const Lex* e, const Cell* a)
         arg1 = bits_bitstring_to_int(e, make_sexpr_len1(arg1));
         bs = true;
     }
+    if (arg2->type == CELL_SYMBOL) {
+        arg2 = bits_bitstring_to_int(e, make_sexpr_len1(arg2));
+        bs = true;
+    }
+
     const long long n = (long long)cell_to_long_double(arg1);
     const int shift_amount = (int)cell_to_long_double(arg2);
     Cell* result = make_cell_integer(n >> shift_amount);
@@ -113,6 +126,13 @@ static Cell* bits_right_shift(const Lex* e, const Cell* a)
 }
 
 
+/* (<< n1 n2)
+ * (<< n bitstring)
+ * (<< bitstring n)
+ * (<< bitstring1 bitstring2)
+ * Left-shifts the bits in the integer n1 by the value of n2. Either argument may be an integer or a bitstring,
+ * however, if either argument is a bitstring, the result will be a bitstring. If neither argument is a bitstring,
+ * the result will be an integer. */
 static Cell* bits_left_shift(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -129,6 +149,11 @@ static Cell* bits_left_shift(const Lex* e, const Cell* a)
         arg1 = bits_bitstring_to_int(e, make_sexpr_len1(arg1));
         bs = true;
     }
+    if (arg2->type == CELL_SYMBOL) {
+        arg2 = bits_bitstring_to_int(e, make_sexpr_len1(arg2));
+        bs = true;
+    }
+
     const long long n = (long long)cell_to_long_double(arg1);
     const int shift_amount = (int)cell_to_long_double(arg2);
     Cell* result = make_cell_integer(n << shift_amount);
@@ -139,12 +164,19 @@ static Cell* bits_left_shift(const Lex* e, const Cell* a)
 }
 
 
+/* (band n1 n2)
+ * (band n bitstring)
+ * (band bitstring n)
+ * (band bitstring1 bitstring2)
+ * Returns the bitwise AND of the two values. Either argument may be an integer or a bitstring,
+ * however, if either argument is a bitstring, the result will be a bitstring. If neither argument is a bitstring,
+ * the result will be an integer. */
 static Cell* bits_bitwise_and(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 2, "&");
+    Cell* err = CHECK_ARITY_EXACT(a, 2, "band");
     if (err) return err;
-    err = check_arg_types(a, CELL_INTEGER|CELL_SYMBOL, "&");
+    err = check_arg_types(a, CELL_INTEGER|CELL_SYMBOL, "band");
     if (err) return err;
 
     const Cell* arg1 = a->cell[0];
@@ -155,13 +187,14 @@ static Cell* bits_bitwise_and(const Lex* e, const Cell* a)
         arg1 = bits_bitstring_to_int(e, make_sexpr_len1(arg1));
         bs = true;
     }
+
     if (arg2->type == CELL_SYMBOL) {
         arg2 = bits_bitstring_to_int(e, make_sexpr_len1(arg2));
         bs = true;
     }
 
     const long long lhs = (long long)cell_to_long_double(arg1);
-    const long long rhs = (int)cell_to_long_double(arg2);
+    const long long rhs = (long long)cell_to_long_double(arg2);
     Cell* result = make_cell_integer(lhs & rhs);
     if (bs) {
         return bits_int_to_bitstring(e, make_sexpr_len1(result));
@@ -170,12 +203,19 @@ static Cell* bits_bitwise_and(const Lex* e, const Cell* a)
 }
 
 
+/* (bor n1 n2)
+ * (bor n bitstring)
+ * (bor bitstring n)
+ * (bor bitstring1 bitstring2)
+ * Returns the bitwise OR of the two values. Either argument may be an integer or a bitstring,
+ * however, if either argument is a bitstring, the result will be a bitstring. If neither argument is a bitstring,
+ * the result will be an integer. */
 static Cell* bits_bitwise_or(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 2, "|");
+    Cell* err = CHECK_ARITY_EXACT(a, 2, "bor");
     if (err) return err;
-    err = check_arg_types(a, CELL_INTEGER|CELL_SYMBOL, "|");
+    err = check_arg_types(a, CELL_INTEGER|CELL_SYMBOL, "bor");
     if (err) return err;
 
     const Cell* arg1 = a->cell[0];
@@ -201,12 +241,19 @@ static Cell* bits_bitwise_or(const Lex* e, const Cell* a)
 }
 
 
+/* (bxor n1 n2)
+ * (bxor n bitstring)
+ * (bxor bitstring n)
+ * (bxor bitstring1 bitstring2)
+ * Returns the bitwise XOR (exclusive OR) of the two values. Either argument may be an integer or a bitstring,
+ * however, if either argument is a bitstring, the result will be a bitstring. If neither argument is a bitstring,
+ * the result will be an integer. */
 static Cell* bits_bitwise_xor(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 2, "^");
+    Cell* err = CHECK_ARITY_EXACT(a, 2, "bxor");
     if (err) return err;
-    err = check_arg_types(a, CELL_INTEGER|CELL_SYMBOL, "^");
+    err = check_arg_types(a, CELL_INTEGER|CELL_SYMBOL, "bxor");
     if (err) return err;
 
     const Cell* arg1 = a->cell[0];
@@ -232,12 +279,19 @@ static Cell* bits_bitwise_xor(const Lex* e, const Cell* a)
 }
 
 
+/* (bnot n1 n2)
+ * (bnot n bitstring)
+ * (bnot bitstring n)
+ * (bnot bitstring1 bitstring2)
+ * Returns the bitwise NOT of the two values. Either argument may be an integer or a bitstring,
+ * however, if either argument is a bitstring, the result will be a bitstring. If neither argument is a bitstring,
+ * the result will be an integer. */
 static Cell* bits_bitwise_not(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 1, "~");
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "bnot");
     if (err) return err;
-    err = check_arg_types(a, CELL_INTEGER|CELL_SYMBOL, "~");
+    err = check_arg_types(a, CELL_INTEGER|CELL_SYMBOL, "bnot");
     if (err) return err;
 
     const Cell* arg1 = a->cell[0];
@@ -257,6 +311,8 @@ static Cell* bits_bitwise_not(const Lex* e, const Cell* a)
 }
 
 
+/* (bs+ bitstring1 bitstring2)
+ * Returns the sum of the two arguments as a bitstring. */
 static Cell* bits_add(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -273,6 +329,8 @@ static Cell* bits_add(const Lex* e, const Cell* a)
 }
 
 
+/* (bs- bitstring1 bitstring2)
+ * Returns the difference of the two arguments as a bitstring. */
 static Cell* bits_sub(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -289,6 +347,8 @@ static Cell* bits_sub(const Lex* e, const Cell* a)
 }
 
 
+/* (bs* bitstring1 bitstring2)
+ * Returns the product of the two arguments as a bitstring. */
 static Cell* bits_mul(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -305,6 +365,8 @@ static Cell* bits_mul(const Lex* e, const Cell* a)
 }
 
 
+/* (bs/ bitstring1 bitstring2)
+ * Returns the integer quotient of the two arguments as a bitstring. */
 static Cell* bits_div(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -325,6 +387,8 @@ static Cell* bits_div(const Lex* e, const Cell* a)
 }
 
 
+/* (int->bitstring n)
+ * Returns n represented as a twos-compliment bitstring. */
 static Cell* bits_int_to_bitstring(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -338,20 +402,30 @@ static Cell* bits_int_to_bitstring(const Lex* e, const Cell* a)
     char sym_str[66] = "b";
     strlcat(sym_str, str, 66);
     Cell* result = make_cell_symbol(sym_str);
-    free(str);
     return result;
 }
 
 
+/* (bitstring->int bitstring)
+ * Returns the value represented by bitstring as an integer. */
 static Cell* bits_bitstring_to_int(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "bitstring->int");
     if (err) return err;
-    err = check_arg_types(a, CELL_SYMBOL, "bitstring->int");
-    if (err) return err;
+    if (a->cell[0]->type != CELL_SYMBOL) {
+        return make_cell_error(
+            "bitstring->int: invalid bitstring",
+            VALUE_ERR);
+    }
 
     const char *binaryString = a->cell[0]->sym;
+    if (binaryString[0] != 'b') {
+        return make_cell_error(
+            fmt_err("bitstring->int: invalid bitstring: %s", binaryString),
+            VALUE_ERR);
+    }
+
     const char *ros = binaryString + 1;
     char *end_ptr;
     if (ros[0] == '0') {
@@ -363,6 +437,7 @@ static Cell* bits_bitstring_to_int(const Lex* e, const Cell* a)
         }
         return make_cell_integer(result);
     }
+
     const size_t len = strlen(ros);
     const long long positive_part = strtoll(ros + 1, &end_ptr, 2);
     if (*end_ptr != '\0') {
@@ -381,10 +456,10 @@ static Cell* bits_bitstring_to_int(const Lex* e, const Cell* a)
 void cozenage_library_init(const Lex* e) {
     lex_add_builtin(e, ">>", bits_right_shift);
     lex_add_builtin(e, "<<", bits_left_shift);
-    lex_add_builtin(e, "&", bits_bitwise_and);
-    lex_add_builtin(e, "|", bits_bitwise_or);
-    lex_add_builtin(e, "^", bits_bitwise_xor);
-    lex_add_builtin(e, "~", bits_bitwise_not);
+    lex_add_builtin(e, "band", bits_bitwise_and);
+    lex_add_builtin(e, "bor", bits_bitwise_or);
+    lex_add_builtin(e, "bxor", bits_bitwise_xor);
+    lex_add_builtin(e, "bnot", bits_bitwise_not);
     lex_add_builtin(e, "bs+", bits_add);
     lex_add_builtin(e, "bs-", bits_sub);
     lex_add_builtin(e, "bs*", bits_mul);

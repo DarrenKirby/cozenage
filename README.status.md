@@ -36,7 +36,7 @@ This document tracks the implementation status of procedures in the Cozenage int
 |   ✅    | `bytevector?`                |
 |   ✅    | `call-with-input-file`       |
 |   ✅    | `call-with-output-file`      |
-|   ❌    | `call-with-port`             |
+|   ✅    | `call-with-port`             |
 |   ✅    | `caar`                       |
 |   ✅    | `cadr`                       |
 |   ✅    | `car`                        |
@@ -129,6 +129,7 @@ This document tracks the implementation status of procedures in the Cozenage int
 |   ✅    | `make-string`                |
 |   ✅    | `make-vector`                |
 |   ✅    | `map`                        |
+|   ✅    | `map?`                       |
 |   ✅    | `max`                        |
 |   ✅    | `member`                     |
 |   ✅    | `memq`                       |
@@ -176,8 +177,18 @@ This document tracks the implementation status of procedures in the Cozenage int
 |   ✅    | `remainder`                  |
 |   ✅    | `reverse`                    |
 |   ✅    | `round`                      |
+|   ✅    | `set?`                       |
+|   ✅    | `set-add`                    |
 |   ✅    | `set-car!`                   |
 |   ✅    | `set-cdr!`                   |
+|   ✅    | `set-difference`             |
+|   ✅    | `set-difference!`            |
+|   ✅    | `set-intersection`           |
+|   ✅    | `set-intersection!`          |
+|   ✅    | `set-member?`                |
+|   ✅    | `set-remove`                 |
+|   ✅    | `set-union`                  |
+|   ✅    | `set-union!`                 |
 |   ✅    | `square`                     |
 |   ✅    | `string`                     |
 |   ✅    | `string->list`               |
@@ -311,43 +322,59 @@ This document tracks the implementation status of procedures in the Cozenage int
 
 ## `(base file)`
 
-| Status | Procedure       |
-|:------:|:----------------|
-|   ✅    | `reg-file?`     |
-|   ✅    | `directory?`    |
-|   ✅    | `symlink?`      |
-|   ✅    | `char-device?`  |
-|   ✅    | `block-device?` |
-|   ✅    | `fifo?`         |
-|   ✅    | `socket?`       |
-|   ✅    | `get-cwd`       |
-|   ✅    | `rmdir`         |
-|   ✅    | `mkdir`         |
-|   ✅    | `unlink!`       |
-|   ✅    | `file-exists?`  |
-|   ✅    | `stat`          |
+| Status | Procedure          |
+|:------:|:-------------------|
+|   ✅    | `reg-file?`        |
+|   ✅    | `directory?`       |
+|   ✅    | `symlink?`         |
+|   ✅    | `char-device?`     |
+|   ✅    | `block-device?`    |
+|   ✅    | `fifo?`            |
+|   ✅    | `socket?`          |
+|   ✅    | `rmdir!`           |
+|   ✅    | `mkdir`            |
+|   ✅    | `unlink!`          |
+|   ✅    | `file-exists?`     |
+|   ✅    | `stat`             |
+|   ✅    | `file-size`        |
+|   ✅    | `file-mtime`       |
+|   ✅    | `file-atime`       |
+|   ✅    | `file-ctime`       |
+|   ✅    | `file-readable?`   |
+|   ✅    | `file-writable?`   |
+|   ✅    | `file-executable?` |
 
 
 ---
 
 ## `(base system)`
 
-|   Status   | Procedure      |
-|:----------:|:---------------|
-|     ✅      | `get-pid`      |
-|     ✅      | `get-ppid`     |
-|     ✅      | `get-env-var`  |
-|     ✅      | `get-env-vars` |
-|     ✅      | `get-uid`      |
-|     ✅      | `get-gid`      |
-|     ✅      | `get-euid`     |
-|     ✅      | `get-egid`     |
-|     ✅      | `get-username` |
-|     ✅      | `get-groups`   |
-|     ✅      | `get-cwd`      |
-|     ✅      | `chdir`        |
-|     ✅      | `uname`        |
-|     ✅      | `chmod!`       |
+|   Status   | Procedure       |
+|:----------:|:----------------|
+|     ✅      | `get-pid`       |
+|     ✅      | `get-ppid`      |
+|     ✅      | `get-env-var`   |
+|     ✅      | `get-env-vars`  |
+|     ✅      | `get-uid`       |
+|     ✅      | `get-gid`       |
+|     ✅      | `set-uid!`      |
+|     ✅      | `set-gid!`      |
+|     ✅      | `get-euid`      |
+|     ✅      | `get-egid`      |
+|     ✅      | `get-username`  |
+|     ✅      | `get-groups`    |
+|     ✅      | `get-cwd`       |
+|     ✅      | `chdir`         |
+|     ✅      | `uname`         |
+|     ✅      | `uptime`        |
+|     ✅      | `chmod!`        |
+|     ✅      | `get-hostname`  |
+|     ✅      | `get-home`      |
+|     ✅      | `get-path`      |
+|     ✅      | `is-root?`      |
+|     ✅      | `sleep`         |
+|     ✅      | `cpu-count`     |
+|     ✅      | `system`        |
 
 ---
 
@@ -380,6 +407,12 @@ This document tracks the implementation status of procedures in the Cozenage int
 |   ✅    | `promise?`         |
 |   ✅    | `stream?`          |
 |   ✅    | `stream-null?`     |
+|   ✅    | `list->stream`     |
+|   ✅    | `iterate`          |
+|   ✅    | `collect`          |
+|   ✅    | `select`           |
+|   ✅    | `reduce`           |
+|   ✅    | `weave`            |
 
 ---
 

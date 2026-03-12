@@ -22,6 +22,11 @@
 
 #include "cell.h"
 
+#define R_EOF (-1)
+#define R_ERR (-2)
+#define R_OK 0
+#define UTF8_MAX_LEN 4
+
 
 /* */
 extern const PortInterface FileVTable;
@@ -69,12 +74,14 @@ Cell* builtin_open_output_file(const Lex* e, const Cell* a);
 Cell* builtin_open_bin_input_file(const Lex* e, const Cell* a);
 Cell* builtin_open_bin_output_file(const Lex* e, const Cell* a);
 Cell* builtin_open_and_trunc_output_file(const Lex* e, const Cell* a);
+Cell* builtin_open_and_trunc_bin_output_file(const Lex* e, const Cell* a);
 Cell* builtin_open_output_string(const Lex* e, const Cell* a);
 Cell* builtin_open_input_string(const Lex* e, const Cell* a);
 Cell* builtin_get_output_string(const Lex* e, const Cell* a);
 Cell* builtin_open_output_bytevector(const Lex* e, const Cell* a);
 Cell* builtin_open_input_bytevector(const Lex* e, const Cell* a);
 Cell* builtin_get_output_bytevector(const Lex* e, const Cell* a);
+Cell* builtin_call_with_port(const Lex* e, const Cell* a);
 Cell* builtin_call_with_input_file(const Lex* e, const Cell* a);
 Cell* builtin_call_with_output_file(const Lex* e, const Cell* a);
 Cell* builtin_with_input_from_file(const Lex* e, const Cell* a);

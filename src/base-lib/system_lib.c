@@ -20,6 +20,10 @@
 
 #include "types.h"
 #include "cell.h"
+#include "config.h"
+#include "main.h"
+#include "ports.h"
+#include "vectors.h"
 
 #include <unistd.h>
 #include <stdlib.h>
@@ -31,9 +35,10 @@
 #include <sys/utsname.h>
 #include <sys/stat.h>
 
-/* These includes and defines are all for uptime. */
+
 #ifdef  __linux__
-#include <sys/sysinfo.h>
+#include <sys/sysinfo.h>   /* For uptime (sysinfo) */
+#include <sys/wait.h>      /* For system (waitpid) */
 #else
 #include <sys/sysctl.h>
 #endif
@@ -41,6 +46,7 @@
 #if defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__NetBSD__) || defined(__DragonFly__)
 #include <sys/types.h>
 #include <sys/param.h>
+#include <sys/wait.h>      /* For system (waitpid) */
 #include <vm/vm_param.h>
 #endif
 
@@ -48,9 +54,12 @@
 #define ONE_HOUR    3600
 #define ONE_MINUTE  60
 #define LOADS_SCALE 65536.0
+/* For the human-readable string: "up 13 days 11:14". */
+#define UPTIME_BUF_SIZE 256
 
 
 extern char **environ;
+extern bool is_repl;
 
 
 /* (get-pid)
@@ -132,6 +141,57 @@ static Cell* system_get_env_vars(const Lex* e, const Cell* a)
 }
 
 
+/* (get-home)
+ * Returns the home directory of the current user as a string. */
+Cell* system_get_home(const Lex* e, const Cell* a) {
+    (void)e; (void)a;
+    Cell* err = CHECK_ARITY_EXACT(a, 0, "get-home");
+    if (err) { return err; }
+
+    return make_cell_string(getenv("HOME"));
+}
+
+
+/* (get-path)
+ * Returns a list composed of each directory in the current user's path as a string.
+ * The list is ordered as per the shell's search order. */
+Cell* system_get_path(const Lex* e, const Cell* a) {
+    (void)e; (void)a;
+    Cell* err = CHECK_ARITY_EXACT(a, 0, "get-path");
+    if (err) { return err; }
+
+    const char* path = GC_strdup(getenv("PATH"));
+    Cell* result = make_cell_vector();
+
+    Cell* p = builtin_open_input_string(e, make_sexpr_len1(make_cell_string(path)));
+    char *line = nullptr;
+    size_t n = 0;
+    int err_r = 0;
+
+    for (;;) {
+        const ssize_t len = p->port->vtable->getdelim(
+            &line, &n, ':', p, &err_r);
+
+        if (len == R_EOF)
+            break;
+
+        if (len == R_ERR) {
+            free(line);
+            return make_cell_error(
+                fmt_err("get-path: %s", err_r),
+                FILE_ERR);
+        }
+
+        /* Don't need to include the colons. */
+        if (len > 0 && line[len - 1] == ':')
+            line[len - 1] = '\0';
+
+        cell_add(result, make_cell_string(line));
+    }
+    return builtin_vector_to_list(e, make_sexpr_len1(result));
+}
+
+
 /* (get-uid)
  * (get-gid)
  * (get-euid)
@@ -171,6 +231,45 @@ static Cell* system_get_egid(const Lex* e, const Cell* a) {
 }
 
 
+/* (set-uid! n)
+ * (set-gid! n)
+ * These functions set the user id or group id of the currently running process to the uid/gid indicated by n. They
+ * return #true on success, or else return an OS error.  */
+Cell* system_set_uid(const Lex* e, const Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "set-uid!");
+    if (err) { return err; }
+    err = check_arg_types(a, CELL_INTEGER, "set-uid!");
+    if (err) { return err; }
+
+    const uid_t uid = a->cell[0]->integer_v;
+    if (setuid(uid) != 0) {
+        return make_cell_error(
+            fmt_err("set-uid!: %s", strerror(errno)),
+            OS_ERR);
+    }
+    return True_Obj;
+}
+
+
+Cell* system_set_gid(const Lex* e, const Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "set-gid!");
+    if (err) { return err; }
+    err = check_arg_types(a, CELL_INTEGER, "set-gid!");
+    if (err) { return err; }
+
+    const uid_t uid = a->cell[0]->integer_v;
+    if (setuid(uid) != 0) {
+        return make_cell_error(fmt_err("set-gid!: %s",
+            strerror(errno)),
+            OS_ERR);
+    }
+    return True_Obj;
+}
+
+
+
 /* (get-username)
  * Returns the username associated with the uid of the running process,
  * or #false if it cannot be obtained. */
@@ -188,27 +287,42 @@ static Cell* system_get_username(const Lex* e, const Cell* a) {
     return False_Obj;
 }
 
-
-/* BSD expects int*, glibc expects gid_t*.
- * We give BSD what it wants without lying about storage. */
 static int portable_getgrouplist(const char *user, const gid_t basegid,
                       gid_t *groups, int *ngroups) {
-#ifdef __linux__
-    /* glibc-style API */
-    return getgrouplist(user, basegid, groups, ngroups);
-#else
-    /* BSD-style API */
+#ifdef __APPLE__
+    /* macOS getgrouplist takes int* for both basegid and groups */
     int *igroups = GC_malloc(sizeof(int) * (*ngroups));
-    const int ret = getgrouplist(user,
-                           (int)basegid,
-                           igroups,
-                           ngroups);
+    const int ret = getgrouplist(user, (int)basegid, igroups, ngroups);
     for (int i = 0; i < *ngroups; i++) {
         groups[i] = (gid_t)igroups[i];
     }
     return ret;
+#else
+    /* Linux and FreeBSD both use gid_t* natively */
+    return getgrouplist(user, basegid, groups, ngroups);
 #endif
 }
+
+// /* BSD expects int*, glibc expects gid_t*.
+//  * We give BSD what it wants without lying about storage. */
+// static int portable_getgrouplist(const char *user, const gid_t basegid,
+//                       gid_t *groups, int *ngroups) {
+// #ifdef __linux__
+//     /* glibc-style API */
+//     return getgrouplist(user, basegid, groups, ngroups);
+// #else
+//     /* BSD-style API */
+//     int *igroups = GC_malloc(sizeof(int) * (*ngroups));
+//     const int ret = getgrouplist(user,
+//                            (int)basegid,
+//                            igroups,
+//                            ngroups);
+//     for (int i = 0; i < *ngroups; i++) {
+//         groups[i] = (gid_t)igroups[i];
+//     }
+//     return ret;
+// #endif
+// }
 
 
 /* (get-groups)
@@ -293,8 +407,7 @@ static Cell* system_chdir(const Lex* e, const Cell* a) {
             TYPE_ERR);
     }
 
-    char* path = a->cell[0]->str;
-    /* TODO: tilde expand */
+    char* path = tilde_expand(a->cell[0]->str);
     if (chdir(path) == -1) {
         return make_cell_error(
             fmt_err("chdir: %s: %s", path, strerror(errno)),
@@ -443,7 +556,7 @@ Cell* system_uptime(const Lex* e, const Cell* a) {
     minutes = uptime_in_hours / ONE_MINUTE;
 
     /* Format human-readable string. */
-    char s_buffer[256];
+    char s_buffer[UPTIME_BUF_SIZE];
     snprintf(s_buffer, sizeof(s_buffer), "up %d day%s %02d:%02d",
         days, (days != 1) ? "s" : "", hours, minutes);
     Cell* up_s = make_cell_string(s_buffer);
@@ -472,25 +585,109 @@ Cell* system_uptime(const Lex* e, const Cell* a) {
 }
 
 
-/* TODO:
- * system
- * exec
- * fork
- * chown
- * wait / waitpid
- * sleep
- * get-hostname
- * get-home - More ergonomic than (get-env-var "HOME").
- * get-path
- * cpu-count
- * clock-time / monotonic-time
- * set-uid! / set-gid!
- * umask
- * is-root?
- * signal / kill
- * rlimit
- * temp-file / temp-directory
- */
+/* (system string)
+ * Forks a new process and runs the command specified by string in a new shell.
+ * Returns the exit status of the command as an integer. */
+Cell* system_system(const Lex* e, const Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "system");
+    if (err) return err;
+    err = check_arg_types(a, CELL_STRING, "system");
+    if (err) return err;
+
+    char* cmd = a->cell[0]->str;
+
+    pid_t pid;
+    int status;
+
+    /* This is necessary to clear the REPL input bolding. */
+    fprintf(stdout, "%s", ANSI_RESET);
+    fflush(stdout);
+
+    if ((pid = fork()) < 0) {
+        status = -1;
+    } else if (pid == 0) {
+        /* child */
+        execl("/bin/sh", "sh", "-c", cmd, (char *)nullptr);
+        _exit(127);     /* execl error */
+    } else {
+        /* parent */
+        while (waitpid(pid, &status, 0) < 0) {
+            if (errno != EINTR) {
+                status = -1; /* error other than EINTR from waitpid() */
+                break;
+            }
+        }
+    }
+    return make_cell_integer(status);
+}
+
+
+/* (sleep n)
+ * Causes the running process to sleep for n seconds. */
+Cell* system_sleep(const Lex* e, const Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "sleep");
+    if (err) return err;
+    err = check_arg_types(a, CELL_INTEGER, "sleep");
+    if (err) return err;
+
+    /* sleep does not error. It may return non-zero
+     * if the sleep is interrupted by a signal. */
+    sleep(a->cell[0]->integer_v);
+    return USP_Obj;
+}
+
+
+/* (get-hostname)
+ * Returns the hostname of the system as a string. */
+Cell* system_get_hostname(const Lex* e, const Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 0, "get-hostname");
+    if (err) return err;
+
+    const long host_name_max = sysconf(_SC_HOST_NAME_MAX);
+    char hostname[host_name_max + 1];
+    if (gethostname(hostname, host_name_max + 1) != 0) {
+        return make_cell_error(
+            fmt_err("get-hostname: %s", strerror(errno)),
+            OS_ERR);
+    }
+    return make_cell_string(hostname);
+}
+
+
+/* (cpu-count)
+ * Returns the number of processors as an integer. */
+Cell* system_get_nproc(const Lex* e, const Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 0, "cpu-count");
+    if (err) return err;
+
+    long n_cpu;
+    if ((n_cpu = sysconf(_SC_NPROCESSORS_CONF)) == -1) {
+        return make_cell_error(
+            fmt_err("cpu-count: %s", strerror(errno)),
+            OS_ERR);
+    }
+    return make_cell_integer(n_cpu);
+}
+
+
+/* (is-root?)
+ * Returns #true if the effective uid of the currently running process is 0,
+ * otherwise, returns #false. */
+Cell* system_is_root(const Lex* e, const Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 0, "is-root?");
+    if (err) return err;
+
+    const uid_t uid = getuid();
+    if (uid == 0) {
+        return True_Obj;
+    }
+    return False_Obj;
+}
 
 
 void cozenage_library_init(const Lex* e)
@@ -510,4 +707,13 @@ void cozenage_library_init(const Lex* e)
     lex_add_builtin(e, "uname", system_uname);
     lex_add_builtin(e, "chmod!", system_chmod);
     lex_add_builtin(e, "uptime", system_uptime);
+    lex_add_builtin(e, "system", system_system);
+    lex_add_builtin(e, "sleep", system_sleep);
+    lex_add_builtin(e, "get-hostname", system_get_hostname);
+    lex_add_builtin(e, "get-home", system_get_home);
+    lex_add_builtin(e, "get-path", system_get_path);
+    lex_add_builtin(e, "cpu-count", system_get_nproc);
+    lex_add_builtin(e, "is-root?", system_is_root);
+    lex_add_builtin(e, "set-uid!", system_set_uid);
+    lex_add_builtin(e, "set-gid!", system_set_gid);
 }

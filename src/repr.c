@@ -50,15 +50,17 @@
 #include "main.h"
 #include "bytevectors.h"
 #include "types.h"
+#include "hash_type.h"
 
 #include <stdio.h>
 #include <string.h>
 #include <wctype.h>
 #include <math.h>
 
-/* Only Linux needs this include. */
-#ifdef __linux__
+/* macOS does not require these. */
+#ifndef __APPLE__
 #include <ctype.h>
+#include <wchar.h>
 #endif
 
 
@@ -73,6 +75,14 @@ static void repr_long_double(const long double x, str_buf_t *sb)
 {
     char buf[128];
     snprintf(buf, sizeof buf, "%.15Lg", x);
+
+    /* If there's no '.' or exponent marker, force a ".0". */
+    if (!strchr(buf, '.') && !strchr(buf, 'e') && !strchr(buf, 'E')) {
+        const size_t len = strlen(buf);
+        if (len < sizeof(buf) - 3) {
+            strcat(buf, ".0");
+        }
+    }
 
     sb_append_str(sb, buf);
 }
@@ -117,16 +127,38 @@ static void repr_sequence(const Cell* v,
                           const char close,
                           str_buf_t *sb,
                           const print_mode_t mode) {
-
     if (prefix) sb_append_fmt(sb, "%s", prefix);
     sb_append_fmt(sb, "%c", open);
 
-    for (int i = 0; i < v->count; i++) {
-        cell_to_string_worker(v->cell[i], sb, mode);
-        if (i != v->count - 1) sb_append_char(sb, ' ');
+    if (v->type == CELL_SET) {
+        ghti it = ght_iterator(v->table);
+        const size_t t_len = ght_length(v->table);
+        size_t i = 0;
+        while (ght_next(&it)) {
+            cell_to_string_worker(it.key, sb, mode);
+            if (i != t_len - 1) sb_append_char(sb, ' ');
+            i++;
+        }
+    } else if (v->type == CELL_HASH) {
+        ghti it = ght_iterator(v->table);
+        const size_t t_len = ght_length(v->table);
+        size_t i = 0;
+        while (ght_next(&it)) {
+            cell_to_string_worker(it.key, sb, mode);
+            sb_append_char(sb, ' ');
+            cell_to_string_worker(it.value, sb, mode);
+            if (i != t_len - 1) sb_append_char(sb, ' ');
+            i++;
+        }
+    } else {
+        for (int i = 0; i < v->count; i++) {
+            cell_to_string_worker(v->cell[i], sb, mode);
+            if (i != v->count - 1) sb_append_char(sb, ' ');
+        }
     }
     sb_append_fmt(sb, "%c", close);
 }
+
 
 /* Generate external representations of all Cozenage/Scheme types. */
 static void cell_to_string_worker(const Cell* v,
@@ -178,8 +210,9 @@ static void cell_to_string_worker(const Cell* v,
             char* stat;
             if (v->promise->status == 0) stat = "unevaluated";
             else if (v->promise->status == 1) stat = "lazy";
-            else if (v->promise->status == 2) stat = "evaluated";
-            else stat = "running";
+            else if (v->promise->status == 2) stat = "running";
+            else if (v->promise->status == 3) stat = "evaluated";
+            else stat = "native";
             if (mode == MODE_REPL) {
                 sb_append_fmt(sb, "#<promise object:%s%s%s>", ANSI_BLUE_B, stat, ANSI_RESET);
             } else {
@@ -234,7 +267,7 @@ static void cell_to_string_worker(const Cell* v,
                     case 0x7f: sb_append_str(sb, "#\\delete");    break;
                     case '\0': sb_append_str(sb, "#\\null");      break;
 
-                    default:   sb_append_fmt(sb, "#\\%C", v->char_v); break;
+                    default:   sb_append_fmt(sb, "#\\%lc", (wint_t)v->char_v); break;
                 }
             }
             break;
@@ -373,6 +406,14 @@ static void cell_to_string_worker(const Cell* v,
 
         case CELL_BYTEVECTOR:
             BV_OPS[v->bv->type].repr(v, sb);
+            break;
+
+        case CELL_SET:
+            repr_sequence(v, "#", '{', '}', sb, mode);
+            break;
+
+        case CELL_HASH:
+            repr_sequence(v, "#", '[', ']', sb, mode);
             break;
 
         default:

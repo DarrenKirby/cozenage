@@ -1,5 +1,5 @@
 /*
- * 'bytevectors.h'
+ * 'src/bytevectors.h'
  * This file is part of Cozenage - https://github.com/DarrenKirby/cozenage
  * Copyright © 2025 - 2026 Darren Kirby <darren@dragonbyte.ca>
  *

@@ -33,46 +33,6 @@
 #include <gc/gc.h>
 #include <sys/select.h>
 
-#define R_EOF (-1)
-#define R_ERR (-2)
-#define R_OK 0
-#define UTF8_MAX_LEN 4
-
-
-/* Helpers for read-char and peek-char to deal with multibyte characters. */
-
-/* Encodes a Unicode code point into a byte array. Returns number of bytes (1-4). */
-static int utf8_encode(const UChar32 c, uint8_t* out_buf) {
-    if (c <= 0x7F) {
-        out_buf[0] = (uint8_t)c;
-        return 1;
-    }
-    if (c <= 0x7FF) {
-        out_buf[0] = (uint8_t)((c >> 6) | 0xC0);
-        out_buf[1] = (uint8_t)((c & 0x3F) | 0x80);
-        return 2;
-    }
-    if (c <= 0xFFFF) {
-        out_buf[0] = (uint8_t)((c >> 12) | 0xE0);
-        out_buf[1] = (uint8_t)(((c >> 6) & 0x3F) | 0x80);
-        out_buf[2] = (uint8_t)((c & 0x3F) | 0x80);
-        return 3;
-    }
-    out_buf[0] = (uint8_t)((c >> 18) | 0xF0);
-    out_buf[1] = (uint8_t)(((c >> 12) & 0x3F) | 0x80);
-    out_buf[2] = (uint8_t)(((c >> 6) & 0x3F) | 0x80);
-    out_buf[3] = (uint8_t)((c & 0x3F) | 0x80);
-    return 4;
-}
-
-/* Helper to determine UTF-8 sequence length from the first byte. */
-static int utf8_len(const uint8_t first_byte) {
-    if ((first_byte & 0x80) == 0)    return 1;
-    if ((first_byte & 0xE0) == 0xC0) return 2;
-    if ((first_byte & 0xF0) == 0xE0) return 3;
-    if ((first_byte & 0xF8) == 0xF0) return 4;
-    return -1; /* Invalid UTF-8 start byte. */
-}
 
 /* The actual character reader. */
 static ssize_t port_read_char(const Cell* p, UChar32* out_char, int* err) {
@@ -93,7 +53,7 @@ static ssize_t port_read_char(const Cell* p, UChar32* out_char, int* err) {
         return R_ERR; /* Truncated multi-byte character. */
     }
 
-    /* Reconstruct UChar3.2 */
+    /* Reconstruct UChar32 */
     if (len == 2) {
         *out_char = ((buf[0] & 0x1F) << 6) | (buf[1] & 0x3F);
     } else if (len == 3) {
@@ -368,7 +328,7 @@ Cell* builtin_text_port_pred(const Lex* e, const Cell* a)
 Cell* builtin_binary_port_pred(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 1, "output-port?");
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "binary-port?");
     if (err) return err;
     if (a->cell[0]->type != CELL_PORT || a->cell[0]->port->backend_t == BK_STRING ||
         a->cell[0]->port->backend_t == BK_FILE_TEXT) {
@@ -525,14 +485,14 @@ Cell* builtin_read_lines(const Lex* e, const Cell* a)
         if (len == R_ERR) {
             free(line);
             return make_cell_error(
-                fmt_err("read-lines: %s", err_r),
+                fmt_err("read-lines: %s", strerror(err_r)),
                 FILE_ERR);
         }
 
-        if (len > 0 && line[len - 1] == '\n')
+        if (len > 0 && line[len - 1] == '\n') {
             line[len - 1] = '\0';
-	
-	cell_add(result, make_cell_string(line));
+        }
+        cell_add(result, make_cell_string(line));
     }
 
     free(line);
@@ -541,9 +501,9 @@ Cell* builtin_read_lines(const Lex* e, const Cell* a)
 
 
 Cell* builtin_read(const Lex* e, const Cell* a) {
-    Cell* err = CHECK_ARITY_RANGE(a, 0, 1, "read-lines");
+    Cell* err = CHECK_ARITY_RANGE(a, 0, 1, "read");
     if (err) return err;
-    err = check_arg_types(a, CELL_PORT, "read-lines");
+    err = check_arg_types(a, CELL_PORT, "read");
     if (err) return err;
 
     const Cell* port = a->count == 0
@@ -552,7 +512,7 @@ Cell* builtin_read(const Lex* e, const Cell* a) {
 
     if (!port->is_open || port->port->stream_t != INPUT_STREAM)
         return make_cell_error(
-            "read-lines: port is not open for input",
+            "read: port is not open for input",
             FILE_ERR);
 
     /* Initialize buffer. */
@@ -759,7 +719,7 @@ Cell* builtin_read_bytevector(const Lex* e, const Cell* a)
         /* Make sure port is an open input port! */
         if (port->is_open == 0 || port->port->stream_t != INPUT_STREAM)
             return make_cell_error(
-                "read-u8: port is not open for input",
+                "read-bytevector: port is not open for input",
                 FILE_ERR);
     }
 
@@ -770,15 +730,13 @@ Cell* builtin_read_bytevector(const Lex* e, const Cell* a)
     int err_r;
     const ssize_t bytes_read = port->port->vtable->read(buffer, bytes_to_read, port, &err_r);
 
-    printf("bytes read: %ld\n", bytes_read);
-
     if (bytes_read == R_EOF) {
         return EOF_Obj;
     }
 
     if (bytes_read == R_ERR) {
         return make_cell_error(
-            fmt_err("read-string: %s", strerror(err_r)),
+            fmt_err("read-bytevector: %s", strerror(err_r)),
             OS_ERR);
     }
 
@@ -902,7 +860,7 @@ Cell* builtin_read_bytevector_bang(const Lex* e, const Cell* a)
 
     if (bytes_read == R_ERR) {
         return make_cell_error(
-            fmt_err("read-string: %s", strerror(err_r)),
+            fmt_err("read-bytevector!: %s", strerror(err_r)),
             FILE_ERR);
     }
 
@@ -987,8 +945,6 @@ Cell* builtin_peek_u8(const Lex* e, const Cell* a)
         ? builtin_current_input_port(e, a)
         : a->cell[0];
 
-    debug_print_cell(port);
-
     /* Ensure port is sane. */
     if (port->is_open == 0 || port->port->stream_t != INPUT_STREAM) {
         return make_cell_error(
@@ -1057,8 +1013,8 @@ Cell* builtin_write_char(const Lex* e, const Cell* a)
     }
 
     const Cell* port = a->count == 0
-        ? builtin_current_input_port(e, a)
-        : a->cell[0];
+        ? builtin_current_output_port(e, a)
+        : a->cell[1];
 
     /* Ensure port is sane. */
     if (port->is_open == 0 || port->port->stream_t != OUTPUT_STREAM) {
@@ -1134,8 +1090,8 @@ Cell* builtin_write_string(const Lex* e, const Cell* a)
     }
 
     const Cell* port = a->count == 0
-        ? builtin_current_input_port(e, a)
-        : a->cell[0];
+        ? builtin_current_output_port(e, a)
+        : a->cell[1];
 
     const char* in_string = &a->cell[0]->str[start];
     if (!end) {
@@ -1187,8 +1143,8 @@ Cell* builtin_write_u8(const Lex* e, const Cell* a)
     }
 
     const Cell* port = a->count == 0
-        ? builtin_current_input_port(e, a)
-        : a->cell[0];
+        ? builtin_current_output_port(e, a)
+        : a->cell[1];
 
     /* Ensure port is sane. */
     if (port->is_open == 0 || port->port->stream_t != OUTPUT_STREAM) {
@@ -1208,7 +1164,7 @@ Cell* builtin_write_u8(const Lex* e, const Cell* a)
 
     if (rv == R_ERR) {
         return make_cell_error(
-            fmt_err("newline: %s", strerror(err_r)),
+            fmt_err("write-u8: %s", strerror(err_r)),
             FILE_ERR);
     }
     /* No meaningful return value. */
@@ -1262,8 +1218,8 @@ Cell* builtin_write_bytevector(const Lex* e, const Cell* a)
     }
 
     const Cell* port = a->count == 0
-        ? builtin_current_input_port(e, a)
-        : a->cell[0];
+        ? builtin_current_output_port(e, a)
+        : a->cell[1];
 
     if (port->is_open == 0 || port->port->stream_t != OUTPUT_STREAM) {
         return make_cell_error(
@@ -1526,7 +1482,7 @@ Cell* builtin_char_ready(const Lex* e, const Cell* a)
         return True_Obj;
     }
     /* Error if passed a binary port. */
-    if (port->port->stream_t == BK_BYTEVECTOR || port->port->stream_t == BK_FILE_BINARY) {
+    if (port->port->backend_t == BK_BYTEVECTOR || port->port->backend_t == BK_FILE_BINARY) {
         return make_cell_error(
             "char-ready?: port must be a textual file port or string port",
             FILE_ERR);
@@ -1575,7 +1531,7 @@ Cell* builtin_u8_ready(const Lex* e, const Cell* a)
         return True_Obj;
     }
     /* Error if passed a text port. */
-    if (port->port->stream_t == BK_STRING || port->port->stream_t == BK_FILE_TEXT) {
+    if (port->port->backend_t == BK_STRING || port->port->backend_t == BK_FILE_TEXT) {
         return make_cell_error(
             "u8-ready?: port must be a binary file port or bytevector port",
             FILE_ERR);
@@ -1661,21 +1617,21 @@ Cell* builtin_displayln(const Lex* e, const Cell* a)
 
     if (p->port->stream_t != OUTPUT_STREAM || p->is_open == 0) {
         return make_cell_error(
-            "display: arg2 must be an open output port",
+            "displayln: arg2 must be an open output port",
             FILE_ERR);
     }
 
     const Cell* val = a->cell[0];
     char* buf = cell_to_string(val, MODE_DISPLAY);
-    buf[strlen(buf)] = '\n';
     int err_r;
     const ssize_t res = p->port->vtable->write(buf, strlen(buf), p, &err_r);
     if (res < 0) {
         return make_cell_error(
-            fmt_err("display: %s", strerror(err_r)),
+            fmt_err("displayln: %s", strerror(err_r)),
             FILE_ERR);
     }
-
+    buf = "\n";
+    p->port->vtable->write(buf, strlen(buf), p, &err_r);
     return USP_Obj;
 }
 
@@ -1712,7 +1668,7 @@ Cell* builtin_write(const Lex* e, const Cell* a)
 
     if (p->port->stream_t != OUTPUT_STREAM || p->is_open == 0) {
         return make_cell_error(
-            "display: arg2 must be an open output port",
+            "write: arg2 must be an open output port",
             FILE_ERR);
     }
 
@@ -1722,7 +1678,7 @@ Cell* builtin_write(const Lex* e, const Cell* a)
     const ssize_t res = p->port->vtable->write(buf, strlen(buf), p, &err_r);
     if (res < 0) {
         return make_cell_error(
-            fmt_err("display: %s", strerror(err_r)),
+            fmt_err("write: %s", strerror(err_r)),
             FILE_ERR);
     }
 
@@ -1752,28 +1708,28 @@ Cell* builtin_writeln(const Lex* e, const Cell* a)
 
     if (p->port->stream_t != OUTPUT_STREAM || p->is_open == 0) {
         return make_cell_error(
-            "display: arg2 must be an open output port",
+            "writeln: arg2 must be an open output port",
             FILE_ERR);
     }
 
     const Cell* val = a->cell[0];
-    char* buf = cell_to_string(val, MODE_WRITE);
-    buf[strlen(buf)] = '\n';
+    const char* buf = cell_to_string(val, MODE_WRITE);
     int err_r;
     const ssize_t res = p->port->vtable->write(buf, strlen(buf), p, &err_r);
     if (res < 0) {
         return make_cell_error(
-            fmt_err("display: %s", strerror(err_r)),
+            fmt_err("writeln: %s", strerror(err_r)),
             FILE_ERR);
     }
-
+    buf = "\n";
+    p->port->vtable->write(buf, strlen(buf), p, &err_r);
     return USP_Obj;
 }
 
 
 /* (open-input-file string)
  * Takes a string for an existing file and returns an input port that is capable of delivering text data from the file.
- * If the file does not exist or cannot be opened, an error that satisfies file-error? is signaled. */
+ * If the file does not exist or cannot be opened, an error that satisfies file-error? is signalled. */
 Cell* builtin_open_input_file(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -1805,7 +1761,7 @@ Cell* builtin_open_input_file(const Lex* e, const Cell* a)
 
 /* (open-bin-input-file string)
  * Takes a string for an existing file and returns an input port that is capable of delivering binary data from the file. If
- * the file does not exist or cannot be opened, an error that satisfies file-error? is signaled. */
+ * the file does not exist or cannot be opened, an error that satisfies file-error? is signalled. */
 Cell* builtin_open_bin_input_file(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -1838,7 +1794,7 @@ Cell* builtin_open_bin_input_file(const Lex* e, const Cell* a)
 /* (open-output-file string )
  * Takes a string naming an output file to be opened and returns an output port that is capable of writing data to the
  * file by that name. If a file with the given name does not exist, it will be created. If the file already exists, the
- * file will be appended to. If the file cannot be opened, an error that satisfies file-error? is signaled. */
+ * file will be appended to. If the file cannot be opened, an error that satisfies file-error? is signalled. */
 Cell* builtin_open_output_file(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -1875,7 +1831,7 @@ Cell* builtin_open_output_file(const Lex* e, const Cell* a)
 /* (open-bin-output-file string )
  * Takes a string naming an output file to be opened and returns an output port that is capable of writing binary data to the
  * file by that name. If a file with the given name does not exist, it will be created. If the file already exists, the
- * file will be appended to. If the file cannot be opened, an error that satisfies file-error? is signaled. */
+ * file will be appended to. If the file cannot be opened, an error that satisfies file-error? is signalled. */
 Cell* builtin_open_bin_output_file(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -1913,7 +1869,7 @@ Cell* builtin_open_bin_output_file(const Lex* e, const Cell* a)
  * Takes a string naming an output file to be opened and returns an output port that is capable of writing data to the
  * file by that name. If a file with the given name does not exist, it will be created. If the file does exist, it will
  * be truncated to length 0, and overwritten.  If the file cannot be opened, an error that satisfies file-error? is
- * signaled. */
+ * signalled. */
 Cell* builtin_open_and_trunc_output_file(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -1942,8 +1898,46 @@ Cell* builtin_open_and_trunc_output_file(const Lex* e, const Cell* a)
             FILE_ERR);
     }
 
-    /* Must be a file port. */
+    /* Must be a text file port. */
     return make_cell_file_port(filename, fp, OUTPUT_STREAM, BK_FILE_TEXT);
+}
+
+
+/* (open-and-trunc-bin-output-file string )
+ * Takes a string naming an output file to be opened and returns an output port that is capable of writing data to the
+ * file by that name. If a file with the given name does not exist, it will be created. If the file does exist, it will
+ * be truncated to length 0, and overwritten.  If the file cannot be opened, an error that satisfies file-error? is
+ * signalled. */
+Cell* builtin_open_and_trunc_bin_output_file(const Lex* e, const Cell* a)
+{
+    (void)e;
+    Cell* err = check_arg_types(a, CELL_STRING,"open-and-trunc-bin-output-file");
+    if (err) { return err; }
+    err = CHECK_ARITY_RANGE(a, 1, 2, "open-and-trunc-bin-output-file");
+    if (err) { return err; }
+
+    const char *mode = "w";
+    const char* filename = a->cell[0]->str;
+    if (a->count == 2 && a->cell[1]->type == CELL_STRING) {
+        mode = a->cell[1]->str;
+    }
+    FILE *fp = fopen(filename, mode);
+    if (!fp) {
+        return make_cell_error(
+            fmt_err("open-and-trunc-bin-output-file", strerror(errno)),
+            FILE_ERR);
+    }
+    char *actual_path = GC_MALLOC(PATH_MAX);
+    const char *ptr = realpath(filename, actual_path);
+    if (ptr == NULL) {
+        fclose(fp);
+        return make_cell_error(
+            fmt_err("open-and-trunc-bin-output-file", strerror(errno)),
+            FILE_ERR);
+    }
+
+    /* Must be a binary file port. */
+    return make_cell_file_port(filename, fp, OUTPUT_STREAM, BK_FILE_BINARY);
 }
 
 
@@ -1963,7 +1957,7 @@ Cell* builtin_open_output_string(const Lex* e, const Cell* a) {
  * the effect is unspecified. */
 Cell* builtin_open_input_string(const Lex* e, const Cell* a) {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 1, "open-output-string");
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "open-input-string");
     if (err) { return err; }
 
     if (a->cell[0]->type != CELL_STRING) {
@@ -2072,7 +2066,44 @@ Cell* builtin_get_output_bytevector(const Lex* e, const Cell* a) {
     return bv;
 }
 
-/* TODO: implement (call-with-port port proc) */
+
+/* (call-with-port port proc)
+ * It is an error if proc does not accept one argument. The call-with-port procedure calls proc with port as an
+ * argument. When the proc returns (even on error), then the port is closed automatically and the values yielded
+ * by the proc are returned. */
+Cell* builtin_call_with_port(const Lex* e, const Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 2, "call-with-port");
+    if (err) { return err; }
+    if (a->cell[0]->type != CELL_PORT) {
+        return make_cell_error(
+            "call-with-port: arg1 must be a port",
+            TYPE_ERR);
+    }
+    if (a->cell[1]->type != CELL_PROC) {
+        return make_cell_error(
+            "call-with-port: arg2 must be a procedure",
+            TYPE_ERR);
+    }
+    Cell* p = a->cell[0];
+    const Cell* proc = a->cell[1];
+
+    /* Check arity if proc is a lambda. */
+    if (!proc->is_builtin) {
+        if (check_lambda_arity(proc, 1) != 1) {
+            return make_cell_error(
+                "call-with-port: lambda must take only one argument",
+                VALUE_ERR);
+        }
+    }
+    Cell* args = make_sexpr_len2(proc, p);
+    Cell* result = coz_eval((Lex*)e, args);
+
+    /* Close the port. */
+    p->port->vtable->close(p);
+
+    return result;
+}
 
 
 /* (call-with-input-file string proc)
@@ -2148,23 +2179,23 @@ Cell* builtin_call_with_output_file(const Lex* e, const Cell* a) {
     if (!proc->is_builtin) {
         if (check_lambda_arity(proc, 1) != 1) {
             return make_cell_error(
-                "call-with-input-file: lambda must take exactly one arg",
+                "call-with-output-file: lambda must take exactly one arg",
                 ARITY_ERR);
         }
     }
 
     /* Open the port for writing */
-    FILE* fp = fopen(path, "w");
+    FILE* fp = fopen(path, "a");
     if (!fp) {
         return make_cell_error(strerror(errno), FILE_ERR);
     }
 
-    const Cell* p = make_cell_file_port(path, fp, OUTPUT_STREAM, BK_FILE_TEXT);
+    Cell* p = make_cell_file_port(path, fp, OUTPUT_STREAM, BK_FILE_TEXT);
 
     Cell* clos = make_sexpr_len2(proc, p);
     Cell* result = coz_eval((Lex*)e, clos);
 
-    builtin_close_port((Lex*)e, make_sexpr_len1(p));
+    p->port->vtable->close(p);
     return result;
 }
 
@@ -2196,7 +2227,7 @@ Cell* builtin_with_input_from_file(const Lex* e, const Cell* a) {
     if (!proc->is_builtin) {
         if (check_lambda_arity(proc, 0) != 0) {
             return make_cell_error(
-                "call-with-input-file: lambda must not take args",
+                "with-input-from-file: lambda must not take args",
                 ARITY_ERR);
         }
     }
@@ -2210,14 +2241,14 @@ Cell* builtin_with_input_from_file(const Lex* e, const Cell* a) {
         return make_cell_error(strerror(errno), FILE_ERR);
     }
 
-    default_input_port = make_cell_file_port(path, fp, INPUT_STREAM, BK_FILE_TEXT);
-
+    Cell* p = make_cell_file_port(path, fp, INPUT_STREAM, BK_FILE_TEXT);
+    default_input_port = p;
     /* Pass the thunk to eval. */
     Cell* clos = make_sexpr_len1(proc);
     Cell* result = coz_eval((Lex*)e, clos);
 
     /* Reset original ports, and return result. */
-    builtin_close_port((Lex*)e, default_input_port);
+    p->port->vtable->close(p);
     default_input_port = std_input_port;
     return result;
 }
@@ -2250,7 +2281,7 @@ Cell* builtin_with_output_to_file(const Lex* e, const Cell* a) {
     if (!proc->is_builtin) {
         if (check_lambda_arity(proc, 0) != 0) {
             return make_cell_error(
-                "call-with-input-file: lambda must not take args",
+                "with-output-to-file: lambda must not take args",
                 ARITY_ERR);
         }
     }
@@ -2259,19 +2290,19 @@ Cell* builtin_with_output_to_file(const Lex* e, const Cell* a) {
     Cell* std_output_port = default_output_port;
 
     /* Open the port for writing, and bind to default output. */
-    FILE* fp = fopen(path, "w");
+    FILE* fp = fopen(path, "a");
     if (!fp) {
         return make_cell_error(strerror(errno), FILE_ERR);
     }
 
-    default_output_port = make_cell_file_port(path, fp, OUTPUT_STREAM, BK_FILE_TEXT);
-
+    Cell* p = make_cell_file_port(path, fp, OUTPUT_STREAM, BK_FILE_TEXT);
+    default_output_port = p;
     /* Pass the thunk to eval. */
     Cell* clos = make_sexpr_len1(proc);
     Cell* result = coz_eval((Lex*)e, clos);
 
     /* Reset original ports, and return result. */
-    builtin_close_port((Lex*)e, default_output_port);
+    p->port->vtable->close(p);
     default_output_port = std_output_port;
     return result;
 }

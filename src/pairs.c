@@ -79,6 +79,32 @@ inline Cell* cdr__(const Cell* list)
 }
 
 
+static int32_t list_len(const Cell* list)
+{
+    int32_t count = 0;
+    const Cell* slow = list;
+    const Cell* fast = list;
+
+    while (list->type == CELL_PAIR) {
+        count++;
+        list = list->cdr;
+
+        /* Tortoise and Hare Cycle Detection. */
+        if (fast->type == CELL_PAIR && fast->cdr->type == CELL_PAIR) {
+            fast = fast->cdr->cdr;
+            slow = slow->cdr;
+            if (fast == slow) return -2;
+        }
+
+        if (list->type == CELL_NIL) {
+            /* Found the end! Cache the result in the head for next time. */
+            return count;
+        }
+    }
+    /* Improper list. */
+    return -1;
+}
+
 /* ----------------------------------------------------------*
  *     pair/list constructors, selectors, and procedures     *
  * ----------------------------------------------------------*/
@@ -165,15 +191,8 @@ Cell* builtin_cddr(const Lex* e, const Cell* a)
 Cell* builtin_list(const Lex* e, const Cell* a)
 {
     (void)e;
-    /* Start with nil. */
-    Cell* result = make_cell_nil();
-
-    const int len = a->count;
-    /* Build backwards so it comes out in the right order. */
-    for (int i = len - 1; i >= 0; i--) {
-        result = make_cell_pair(a->cell[i], result);
-        result->len = len - i;
-    }
+    Cell* result = make_list_from_sexpr((Cell*)a);
+    result->len = a->count;
     return result;
 }
 
@@ -243,33 +262,14 @@ Cell* builtin_list_length(const Lex* e, const Cell* a)
     }
 
     /* SLOW PATH: Recount and detect cycles. */
-    int32_t count = 0;
-    const Cell* slow = list;
-    const Cell* fast = list;
-
-    while (list->type == CELL_PAIR) {
-        count++;
-        list = list->cdr;
-
-        /* Tortoise and Hare Cycle Detection. */
-        if (fast->type == CELL_PAIR && fast->cdr->type == CELL_PAIR) {
-            fast = fast->cdr->cdr;
-            slow = slow->cdr;
-            if (fast == slow) return make_cell_error(
-                "length: circular list",
-                VALUE_ERR);
-        }
-
-        if (list->type == CELL_NIL) {
-            /* Found the end! Cache the result in the head for next time. */
-            a->cell[0]->len = count;
-            return make_cell_integer(count);
-        }
+    const int32_t len = list_len(list);
+    if (len == -1) {
+        return make_cell_error("list-len: imprroper list", TYPE_ERR);
     }
-
-    return make_cell_error(
-        "length: improper list",
-        TYPE_ERR);
+    if (len == -2) {
+        return make_cell_error("list-length: circular list", VALUE_ERR);
+    }
+    return make_cell_integer(len);
 }
 
 
@@ -281,10 +281,10 @@ Cell* builtin_list_ref(const Lex* e, const Cell* a)
     Cell* err = CHECK_ARITY_EXACT(a, 2, "list-ref");
     if (err) return err;
 
-    const Cell* list = a->cell[0];
-    if (list->type != CELL_PAIR) {
+    Cell* list = a->cell[0];
+    if (list->type != CELL_PAIR ) {
         return make_cell_error(
-            "list-ref: arg 1 must be a pair",
+            "list-ref: arg 1 must be a list",
             TYPE_ERR);
     }
 
@@ -301,28 +301,23 @@ Cell* builtin_list_ref(const Lex* e, const Cell* a)
             INDEX_ERR);
     }
 
-    /* Fast Path: Bounds check using metadata (if available). */
+    /* Bounds check using metadata. */
     if (list->len > 0 && idx >= list->len) {
         return make_cell_error(
             "list-ref: index out of range",
             INDEX_ERR);
     }
 
-    /* Walk the list. */
-    const Cell* curr = list;
-    int32_t count = idx;
-
-    while (count > 0) {
-        curr = curr->cdr;
-        count--;
-
-        /* If we hit something that isn't a pair before count reaches 0, it's an error. */
-        if (curr->type != CELL_PAIR) {
-            return make_cell_error("list-ref: index out of range or improper list", INDEX_ERR);
+    /* Check if we have proper/improper list. */
+    if (list->len == -1) {
+        const int32_t len = list_len(list);
+        if (len >= 0) {
+            list->len = len;
         }
     }
 
-    return curr->car;
+    /* Already validated idx and list, no need to check the return. */
+    return list_get_nth_cell_ptr(list, idx, false);
 }
 
 
@@ -415,7 +410,7 @@ Cell* builtin_list_append(const Lex* e, const Cell* a)
         }
     }
 
-    /* Finalize: Link the last argument and return */
+    /* Finalize: Link the last argument and return. */
     if (result_tail == NULL) {
         /* This happens if all arguments before the last were '(). */
         return (Cell*)last_arg;
@@ -473,7 +468,8 @@ Cell* builtin_list_tail(const Lex* e, const Cell* a)
     Cell* err = CHECK_ARITY_EXACT(a, 2, "list-tail");
     if (err) return err;
 
-    Cell* lst = a->cell[0];
+    const Cell* lst = a->cell[0];
+
     if (a->cell[1]->type != CELL_INTEGER) {
         return make_cell_error(
             "list-tail: arg 2 must be an integer",
@@ -487,28 +483,23 @@ Cell* builtin_list_tail(const Lex* e, const Cell* a)
             VALUE_ERR);
     }
 
-    /* Fast Path: If we have a cached length, use it to fail fast. */
-    if (lst->type == CELL_PAIR && lst->len > 0 && k > lst->len) {
+    if (lst->type == CELL_NIL) {
+        if (k == 0) return make_cell_nil();
+    }
+
+    if (k > lst->len) {
         return make_cell_error(
             "list-tail: index out of range",
             INDEX_ERR);
     }
 
-    /* Traverse the list. */
-    Cell* p = lst;
-    for (int32_t i = 0; i < k; i++) {
-        if (p->type != CELL_PAIR) {
-            /* If we aren't at a pair and still need to move forward, it's an error. */
-            return make_cell_error(
-                "list-tail: index out of range",
-                INDEX_ERR);
-        }
-        p = p->cdr;
+    if (lst->type != CELL_PAIR) {
+        return make_cell_error(
+            "list-tail: arg1 must be a list",
+            TYPE_ERR);
     }
-
-    /* If k was 0, p is still the original lst (correct for any type).
-       Otherwise, p is the k-th cdr. */
-    return p;
+    /* k-1 for k > 0 here, as by the kth iteration we're pointing at the cdr of the pair we want. */
+    return list_get_nth_cell_ptr(lst, k - 1, true);
 }
 
 
@@ -521,7 +512,7 @@ Cell* builtin_make_list(const Lex* e, const Cell* a)
     (void)e;
     Cell* err = CHECK_ARITY_RANGE(a, 1, 2, "make-list");
     if (err) return err;
-    if (a->cell[0]->type != CELL_INTEGER && a->cell[0]->integer_v < 1) {
+    if (a->cell[0]->type != CELL_INTEGER || a->cell[0]->integer_v < 1) {
         return make_cell_error(
             "make-list: arg 1 must be a positive integer",
             VALUE_ERR);
@@ -709,7 +700,8 @@ Cell* builtin_assq(const Lex* e, const Cell* a)
 /* (assv obj alist )
  * Find the first pair in alist whose car field is obj, and returns that pair. If no pair in alist has obj as its car,
  * then #f is returned. Uses eqv? for the comparison. */
-Cell* builtin_assv(const Lex* e, const Cell* a) {
+Cell* builtin_assv(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2, "assv");
     if (err) return err;
@@ -724,7 +716,7 @@ Cell* builtin_assv(const Lex* e, const Cell* a) {
     while (p->type != CELL_NIL) {
         if (p->car->type != CELL_PAIR) {
             return make_cell_error(
-                "assq: arg 2 must be an association list",
+                "assv: arg 2 must be an association list",
                 VALUE_ERR);
         }
         const Cell* p_test = builtin_eqv(e, make_sexpr_len2(p->car->car, obj));
@@ -740,7 +732,7 @@ Cell* builtin_assv(const Lex* e, const Cell* a) {
 /* (assoc obj alist )
  * (assoc obj alist compare)
  * Find the first pair in alist whose car field is obj, and returns that pair. If no pair in alist has obj as its car,
- * then #f is returned. Uses eq? for the comparison, unless an optional procedure is passed as the third arg. */
+ * then #f is returned. Uses equal? for the comparison, unless an optional procedure is passed as the third arg. */
 Cell* builtin_assoc(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -798,7 +790,7 @@ Cell* builtin_list_copy(const Lex* e, const Cell* a)
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "list-copy");
     if (err) return err;
-    /* Non-pairs get returned unaltered */
+    /* Non-pairs get returned unaltered. */
     if (a->cell[0]->type != CELL_PAIR) {
         return a->cell[0];
     }
@@ -814,7 +806,7 @@ Cell* builtin_list_copy(const Lex* e, const Cell* a)
         old_p = old_p->cdr;
         /* Create a new cell and link it. */
         new_p->cdr = make_cell_pair(old_p->car, nullptr);
-        /* Advance the new pointer */
+        /* Advance the new pointer. */
         new_p = new_p->cdr;
     }
 
@@ -920,7 +912,7 @@ Cell* builtin_foldl(const Lex* e, const Cell* a)
         for (int j = 2; j < 2 + num_lists; j++) {
             /* Add the i-th element of the list argument(s). */
             const Cell* current_list = a->cell[j];
-            Cell* nth_item = list_get_nth_cell_ptr(current_list, i);
+            Cell* nth_item = list_get_nth_cell_ptr(current_list, i, false);
             cell_add(arg_list, nth_item);
         }
 
@@ -937,7 +929,7 @@ Cell* builtin_foldl(const Lex* e, const Cell* a)
             /* Propagate any evaluation errors. */
             return tmp_result;
         }
-        /* assign the result to the accumulator. */
+        /* Assign the result to the accumulator. */
         init = tmp_result;
     }
     /* Return the accumulator after all list args are evaluated. */
@@ -984,7 +976,7 @@ Cell* builtin_foldr(const Lex* e, const Cell* a)
         for (int j = 2; j < 2 + num_lists; j++) {
             /* Add the i-th element of the list argument(s). */
             const Cell* current_list = a->cell[j];
-            Cell* nth_item = list_get_nth_cell_ptr(current_list, i);
+            Cell* nth_item = list_get_nth_cell_ptr(current_list, i, false);
             cell_add(arg_list, nth_item);
         }
         /* Add the acc arg LAST for foldr. */
@@ -1038,31 +1030,31 @@ Cell* builtin_zip(const Lex* e, const Cell* a)
         }
     }
 
-    const int shortest_len = shortest_list_length;
     const int num_lists = a->count;
     Cell* outer_list = make_cell_nil();
-    for (int i = 0; i < shortest_len; i++) {
+    for (int i = 0; i < shortest_list_length; i++) {
         Cell* inner_list = make_cell_nil();
 
         /* Grab vals starting from the last list, so that after the
          * 'reversed' list is constructed, order is correct. */
         for (int j = num_lists-1 ; j >= 0; j--) {
             const Cell* current_list = a->cell[j];
-            Cell* nth_item = list_get_nth_cell_ptr(current_list, i);
+            Cell* nth_item = list_get_nth_cell_ptr(current_list, i, false);
             inner_list = make_cell_pair(nth_item, inner_list);
             /* len is the number of lists. */
             inner_list->len = num_lists;
         }
         outer_list = make_cell_pair(inner_list, outer_list);
     }
-    outer_list->len = num_lists;
+    outer_list->len = shortest_list_length;
     return builtin_list_reverse(e, make_sexpr_len1(outer_list));
 }
 
 
 /* (count pred list)
  * Returns the count of objects in list for which pred returns true. */
-Cell* builtin_count(const Lex* e, const Cell* a) {
+Cell* builtin_count(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2, "count");
     if (err) return err;
@@ -1071,25 +1063,24 @@ Cell* builtin_count(const Lex* e, const Cell* a) {
             "count: arg 1 must be a predicate procedure",
             TYPE_ERR);
     }
-    if (a->cell[1]->type != CELL_PAIR || a->cell[0]->len == -1) {
+    if (a->cell[1]->type != CELL_PAIR || a->cell[1]->len == -1) {
         return make_cell_error(
             "count: arg 2 must be a list",
             TYPE_ERR);
     }
-    /* The arg list. */
-    const Cell* l = a->cell[1];
-    /* The predicate. */
-    const Cell* p = a->cell[0];
+
+    const Cell* predicate = a->cell[0];
+    const Cell* arg_list = a->cell[1];
     int64_t count = 0;
-    while (l != Nil_Obj) {
+    while (arg_list != Nil_Obj) {
         Cell* tmp_result;
         /* If the procedure is a builtin - grab a pointer to it and call it directly
          * otherwise - it is a lambda and needs to be evaluated and applied to the args. */
-        if (p->is_builtin) {
-            Cell* (*func)(const Lex *, const Cell *) = p->builtin;
-            tmp_result = func(e, make_sexpr_len1(l->car));
+        if (predicate->is_builtin) {
+            Cell* (*func)(const Lex *, const Cell *) = predicate->builtin;
+            tmp_result = func(e, make_sexpr_len1(arg_list->car));
         } else {
-            tmp_result = coz_apply_and_get_val(p, make_sexpr_len1(l->car), (Lex*)e);
+            tmp_result = coz_apply_and_get_val(predicate, make_sexpr_len1(arg_list->car), (Lex*)e);
         }
         if (tmp_result->type == CELL_ERROR) {
             /* Propagate any evaluation errors. */
@@ -1106,7 +1097,7 @@ Cell* builtin_count(const Lex* e, const Cell* a) {
             count++;
         }
         /* Adjust pointer to next value in the list. */
-        l = l->cdr;
+        arg_list = arg_list->cdr;
     }
     return make_cell_integer(count);
 }
@@ -1115,24 +1106,25 @@ Cell* builtin_count(const Lex* e, const Cell* a) {
 /* (count-equal obj list)
  * Returns the number of occurrences of obj in list.
  * Uses equal? for the comparison. */
-Cell* builtin_count_equal(const Lex* e, const Cell* a) {
+Cell* builtin_count_equal(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2, "count-equal");
     if (err) return err;
-    if (a->cell[1]->type != CELL_PAIR || a->cell[0]->len == -1) {
-        return make_cell_error("count-equal: arg 2 must be a list", TYPE_ERR);
+    if (a->cell[1]->type != CELL_PAIR || a->cell[1]->len == -1) {
+        return make_cell_error(
+            "count-equal: arg 2 must be a list",
+            TYPE_ERR);
     }
-    /* The haystack. */
-    const Cell* l = a->cell[1];
-    /* The needle. */
-    const Cell* s = a->cell[0];
+
+    const Cell* needle = a->cell[0];
+    const Cell* haystack = a->cell[1];
     int64_t count = 0;
-    while (l != Nil_Obj) {
-        /* (if (equal? s (car l)). */
-        if (builtin_equal(e, make_sexpr_len2(s, l->car))->boolean_v) {
+    while (haystack != Nil_Obj) {
+        if (builtin_equal(e, make_sexpr_len2(needle, haystack->car))->boolean_v) {
             count++;
         }
-        l = l->cdr;
+        haystack = haystack->cdr;
     }
     return make_cell_integer(count);
 }

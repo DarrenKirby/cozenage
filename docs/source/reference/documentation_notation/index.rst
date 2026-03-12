@@ -110,6 +110,12 @@ Other notations
 ``#e`` ``#i`` ``#b`` ``#o`` ``#d`` ``#x``
     These are used in the notation for numbers.
 
+``#{ ... }``
+    The curly-braces are used for ``set`` literal notation.
+
+``#[ ... ]``
+    The square brackets are used for ``hash`` literal notation.
+
 
 Notation used in procedure documentation
 ----------------------------------------

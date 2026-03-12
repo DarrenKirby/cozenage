@@ -83,7 +83,8 @@ Cell* coz_eval(Lex* env, Cell* expr)
                           CELL_BOOLEAN|CELL_CHAR|CELL_STRING|CELL_PAIR|
                           CELL_VECTOR|CELL_BYTEVECTOR|CELL_NIL|CELL_EOF|
                           CELL_PROC|CELL_PORT|CELL_ERROR|CELL_UNSPEC|
-                          CELL_BIGINT|CELL_BIGFLOAT)) {
+                          CELL_BIGINT|CELL_BIGFLOAT|CELL_SET|CELL_HASH|
+                          CELL_PROMISE|CELL_STREAM)) {
             return expr;
         }
 
@@ -143,6 +144,10 @@ Cell* coz_eval(Lex* env, Cell* expr)
             /* Transform the macro. */
             Cell* raw_args = get_args_from_sexpr(expr);
             Cell* result = coz_apply_and_get_val(f, raw_args, env);
+            /* Propagate errors. */
+            if (result->type == CELL_ERROR) {
+                return result;
+            }
             /* Tail-call evaluate the result of the transformation. */
             Cell* s = make_sexpr_from_list(result, true);
             expr = s;
@@ -247,4 +252,3 @@ Cell* coz_apply_and_get_val(const Cell* proc, Cell* args, const Lex* env)
     Cell* body_expr = proc->lambda->body;
     return coz_eval(lambda_env, body_expr);
 }
-

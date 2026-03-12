@@ -4,7 +4,6 @@
 # Targets:
 #   make / make all      - Builds the project using CMake (default).
 #   make DEBUG=1         - builds unoptimized binary and modules with debug symbols.
-#   make USE_LIBEDIT=1   - force linking against libedit instead of GNU readline.
 #   make nocmake         - Builds the project manually without CMake.
 #   make test            - Builds the test runner.
 #   make clean           - Removes all build artifacts, including the build/ directory.
@@ -40,11 +39,6 @@ else
 	# Export symbols AND add RPATH using $ORIGIN
 	# Note: we use \$$ to ensure the '$' reaches the shell/linker correctly
 	EXE_LDFLAGS = -Wl,--export-dynamic -Wl,-rpath,'\$$ORIGIN/../lib/cozenage'
-endif
-
-# Check for force libedit flag
-ifeq ($(origin USE_LIBEDIT), undefined)
-	USE_LIBEDIT=OFF
 endif
 
 # Check for debug build flag
@@ -103,20 +97,12 @@ CFLAGS_DEFAULT = -Wall -Wextra -Werror -Wdeprecated-declarations -O2 -std=gnu2x 
 CFLAGS_TEST = -Wall -Wextra -g -O0 -std=gnu2x $(ICU_CFLAGS) $(GMP_CFLAGS) -fsanitize=address -fno-omit-frame-pointer
 
 # --- Libraries ---
-# Auto-detect readline or libedit
 # Added -ldl (for dlopen) to all BASE_LIBS definitions
-ifeq ($(shell pkg-config --exists readline && echo yes),yes)
-    BASE_LIBS = -lreadline -lm -lgc $(ICU_LIBS) -ldl $(EXE_LDFLAGS) $(GMP_LIBS)
-	CFLAGS_DEFAULT += -DUSE_GNU_READLINE=1
-else ifeq ($(shell pkg-config --exists edit && echo yes),yes)
-    BASE_LIBS = -ledit -lm -lgc $(ICU_LIBS) -ldl $(EXE_LDFLAGS) $(GMP_LIBS)
-else
-    BASE_LIBS = -lreadline -lm -lgc $(ICU_LIBS) -ldl $(EXE_LDFLAGS) $(GMP_LIBS)
-endif
+BASE_LIBS = -lm -lgc $(ICU_LIBS) -ldl $(EXE_LDFLAGS) $(GMP_LIBS)
 TEST_LIBS = -lcriterion $(BASE_LIBS)
 
 # --- Phony Targets (Commands) ---
-.PHONY: all cmake_build nocmake test clean rebuild install uninstall
+.PHONY: all cmake_build nocmake test clean rebuild install uninstall docs docs-clean
 
 # The default target when 'make' is run
 all: cmake_build
@@ -125,7 +111,7 @@ all: cmake_build
 cmake_build:
 	@echo "--- Building with CMake ---"
 	@mkdir -p $(BUILD_DIR)
-	@cd $(BUILD_DIR) && cmake -DUSE_LIBEDIT=$(USE_LIBEDIT) -DDEBUG_BUILD=$(DEBUG) ..
+	@cd $(BUILD_DIR) && cmake -DDEBUG_BUILD=$(DEBUG) ..
 	@$(MAKE) -C $(BUILD_DIR)
 	@cp $(BUILD_DIR)/$(BINARY) .
 
@@ -203,3 +189,10 @@ install:
 uninstall:
 	@rm -v -f $(INSTALL_BIN_DIR)/$(BINARY)
 	@rm -v -rf $(INSTALL_LIB_DIR)
+
+# --- Docs
+docs:
+	@$(MAKE) -C docs/source html
+
+docs-clean:
+	@$(MAKE) -C docs/source clean
