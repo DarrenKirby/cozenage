@@ -46,6 +46,9 @@ should prefer the type-specific procedures.
 Procedure Documentation
 -----------------------
 
+eval
+~~~~
+
 .. _proc:eval:
 
 .. function:: (eval expr)
@@ -83,6 +86,8 @@ Procedure Documentation
       --> (let ((op '+)) (eval (list op 10 20)))
       30
 
+apply
+~~~~~
 
 .. _proc:apply:
 
@@ -122,6 +127,9 @@ Procedure Documentation
       --> (apply map (list char-upcase '("hello" "world")))
       ("HELLO" "WORLD")
 
+load
+~~~~
+
 .. _proc:load:
 
 .. function:: (load filename)
@@ -151,6 +159,8 @@ Procedure Documentation
       --> (load "init.scm")
       #f
 
+exit
+~~~~
 
 .. _proc:exit:
 
@@ -177,6 +187,8 @@ Procedure Documentation
       --> (exit #f)
       --> (exit 42)
 
+command-line
+~~~~~~~~~~~~
 
 .. _proc:command-line:
 
@@ -213,6 +225,8 @@ Procedure Documentation
       --> (command-line)
       ("myscript.scm" "foo" "bar")
 
+len
+~~~
 
 .. _proc:len:
 
@@ -251,6 +265,9 @@ Procedure Documentation
       2
       --> (len "")
       0
+
+idx
+~~~
 
 .. _proc:idx:
 
@@ -303,6 +320,8 @@ Procedure Documentation
       --> (idx "hello" 1)
       #\e
 
+rev
+~~~
 
 .. _proc:rev:
 

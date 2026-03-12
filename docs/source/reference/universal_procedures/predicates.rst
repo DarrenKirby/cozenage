@@ -74,6 +74,9 @@ Predicate Procedures
 Type-Identity Procedures
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
+number?
+~~~~~~~
+
 .. _proc:number?:
 
 .. function:: (number? obj)
@@ -101,6 +104,8 @@ Type-Identity Procedures
       --> (number? "42")
       #f
 
+boolean?
+~~~~~~~~
 
 .. _proc:boolean?:
 
@@ -124,6 +129,8 @@ Type-Identity Procedures
       --> (boolean? 0)
       #f
 
+null?
+~~~~~
 
 .. _proc:null?:
 
@@ -147,6 +154,8 @@ Type-Identity Procedures
       --> (null? #f)
       #f
 
+pair?
+~~~~~
 
 .. _proc:pair?:
 
@@ -172,6 +181,8 @@ Type-Identity Procedures
       --> (pair? 42)
       #f
 
+list?
+~~~~~
 
 .. _proc:list?:
 
@@ -199,6 +210,8 @@ Type-Identity Procedures
       --> (list? 42)
       #f
 
+procedure?
+~~~~~~~~~~
 
 .. _proc:procedure?:
 
@@ -223,6 +236,8 @@ Type-Identity Procedures
       --> (procedure? 42)
       #f
 
+symbol?
+~~~~~~~
 
 .. _proc:symbol?:
 
@@ -246,6 +261,8 @@ Type-Identity Procedures
       --> (symbol? 42)
       #f
 
+string?
+~~~~~~~
 
 .. _proc:string?:
 
@@ -269,6 +286,8 @@ Type-Identity Procedures
       --> (string? 'hello)
       #f
 
+char?
+~~~~~
 
 .. _proc:char?:
 
@@ -292,6 +311,8 @@ Type-Identity Procedures
       --> (char? 97)
       #f
 
+vector?
+~~~~~~~
 
 .. _proc:vector?:
 
@@ -315,6 +336,8 @@ Type-Identity Procedures
       --> (vector? 42)
       #f
 
+bytevector?
+~~~~~~~~~~~
 
 .. _proc:bytevector?:
 
@@ -338,6 +361,8 @@ Type-Identity Procedures
       --> (bytevector? 42)
       #f
 
+port?
+~~~~~
 
 .. _proc:port?:
 
@@ -359,6 +384,8 @@ Type-Identity Procedures
       --> (port? "myfile.txt")
       #f
 
+set?
+~~~~
 
 .. _proc:set?:
 
@@ -384,6 +411,8 @@ Type-Identity Procedures
       --> (set? #[1 "one"])
       #f
 
+hash?
+~~~~~
 
 .. _proc:hash?:
 
@@ -409,6 +438,8 @@ Type-Identity Procedures
       --> (hash? '((a . 1) (b . 2)))
       #f
 
+eof-object?
+~~~~~~~~~~~
 
 .. _proc:eof-object?:
 
@@ -434,6 +465,9 @@ Type-Identity Procedures
 
 Numeric identity procedures
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+exact?
+~~~~~~
 
 .. _proc:exact?:
 
@@ -462,6 +496,8 @@ Numeric identity procedures
       --> (exact? 1+2.0i)
       #f
 
+inexact?
+~~~~~~~~
 
 .. _proc:inexact?:
 
@@ -488,6 +524,8 @@ Numeric identity procedures
       --> (inexact? 1.0+2.0i)
       #t
 
+complex?
+~~~~~~~~
 
 .. _proc:complex?:
 
@@ -515,6 +553,8 @@ Numeric identity procedures
       --> (complex? "hello")
       #f
 
+real?
+~~~~~
 
 .. _proc:real?:
 
@@ -546,6 +586,8 @@ Numeric identity procedures
       --> (real? "hello")
       #f
 
+rational?
+~~~~~~~~~
 
 .. _proc:rational?:
 
@@ -579,6 +621,8 @@ Numeric identity procedures
       --> (rational? "hello")
       #f
 
+integer?
+~~~~~~~~
 
 .. _proc:integer?:
 
@@ -609,6 +653,8 @@ Numeric identity procedures
       --> (integer? "hello")
       #f
 
+exact-integer?
+~~~~~~~~~~~~~~
 
 .. _proc:exact-integer?:
 
@@ -636,6 +682,8 @@ Numeric identity procedures
       --> (exact-integer? "hello")
       #f
 
+bigint?
+~~~~~~~
 
 .. _proc:bigint?:
 
@@ -670,6 +718,9 @@ Numeric identity procedures
 Numeric predicate procedures
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+zero?
+~~~~~
+
 .. _proc:zero?:
 
 .. function:: (zero? z)
@@ -695,6 +746,8 @@ Numeric predicate procedures
       --> (zero? 1)
       #f
 
+positive?
+~~~~~~~~~
 
 .. _proc:positive?:
 
@@ -722,6 +775,8 @@ Numeric predicate procedures
       --> (positive? 0.1)
       #t
 
+negative?
+~~~~~~~~~
 
 .. _proc:negative?:
 
@@ -749,6 +804,8 @@ Numeric predicate procedures
       --> (negative? -0.1)
       #t
 
+odd?
+~~~~
 
 .. _proc:odd?:
 
@@ -776,6 +833,8 @@ Numeric predicate procedures
       --> (odd? 3.0)
       #t
 
+even?
+~~~~~
 
 .. _proc:even?:
 
@@ -806,6 +865,9 @@ Numeric predicate procedures
 Boolean Predicates
 ^^^^^^^^^^^^^^^^^^
 
+false?
+~~~~~~
+
 .. _proc:false?:
 
 .. function:: (false? obj)
@@ -833,6 +895,8 @@ Boolean Predicates
       --> (false? '())
       #f
 
+true?
+~~~~~
 
 .. _proc:true?:
 

@@ -20,6 +20,8 @@ primitives to manage the environment surrounding your Cozenage programs.
 File, Device, and Pipe Predicates
 ---------------------------------
 
+reg-file?
+~~~~~~~~~
 
 .. _proc:reg-file-p:
 
@@ -41,6 +43,9 @@ File, Device, and Pipe Predicates
           --> (reg-file? "/bin")
             #false
 
+directory?
+~~~~~~~~~~
+
 .. _proc:directory-p:
 
 .. function:: (directory? path)
@@ -59,6 +64,9 @@ File, Device, and Pipe Predicates
         --> (directory? "/tmp")
         #true
 
+symlink?
+~~~~~~~~
+
 .. _proc:symlink-p:
 
 .. function:: (symlink? path)
@@ -70,6 +78,8 @@ File, Device, and Pipe Predicates
     :return: #true or #false.
     :rtype: boolean
 
+char-device?
+~~~~~~~~~~~~
 
 .. _proc:char-device-p:
 
@@ -82,6 +92,9 @@ File, Device, and Pipe Predicates
     :return: #true or #false.
     :rtype: boolean
 
+block-device?
+~~~~~~~~~~~~~
+
 .. _proc:block-device-p:
 
 .. function:: (block-device? path)
@@ -92,6 +105,9 @@ File, Device, and Pipe Predicates
     :type path: string
     :return: #true or #false.
     :rtype: boolean
+
+fifo?
+~~~~~
 
 .. _proc:fifo-p:
 
@@ -104,6 +120,9 @@ File, Device, and Pipe Predicates
     :return: #true or #false.
     :rtype: boolean
 
+socket?
+~~~~~~~
+
 .. _proc:socket-p:
 
 .. function:: (socket? path)
@@ -115,6 +134,8 @@ File, Device, and Pipe Predicates
     :return: #true or #false.
     :rtype: boolean
 
+file-exists?
+~~~~~~~~~~~~
 
 .. _proc:file-exists-p:
 
@@ -131,16 +152,23 @@ File, Device, and Pipe Predicates
 Basic File Operations
 ---------------------
 
+mkdir
+~~~~~
+
 .. _proc:mkdir:
 
 .. function:: (mkdir path)
 
-    Creates the directory named by path. If path is relative, it is created in the current working directory. Default permissions are 0755.
+    Creates the directory named by path. If path is relative, it is created in the current working directory. Default
+    permissions are 0755.
 
     :param path: The name of the directory to create.
     :type path: string
     :return: #true on success.
     :rtype: boolean
+
+rmdir!
+~~~~~~
 
 .. _proc:rmdir-bang:
 
@@ -152,6 +180,9 @@ Basic File Operations
     :type path: string
     :return: #true on success.
     :rtype: boolean
+
+unlink!
+~~~~~~~
 
 .. _proc:unlink-bang:
 
@@ -166,6 +197,9 @@ Basic File Operations
 
 File Metadata and Permissions
 -----------------------------
+
+stat
+~~~~
 
 .. _proc:stat:
 
@@ -185,6 +219,9 @@ File Metadata and Permissions
           --> (stat "README.md")
             ((type . "regular") (st_size . 1240) (st_mode . "-rw-r--r--") ...)
 
+file-size
+~~~~~~~~~
+
 .. _proc:file-size:
 
 .. function:: (file-size path)
@@ -196,19 +233,12 @@ File Metadata and Permissions
     :return: The size in bytes.
     :rtype: integer
 
-.. _proc:file-readable-p:
-
-.. function:: (file-readable? path)
-
-    Returns #true if the currently running process has read permissions for the file or directory.
-
-    :param path: The path to check.
-    :type path: string
-    :return: #true or #false.
-    :rtype: boolean
 
 Extended Timestamp Procedures
 -----------------------------
+
+file-mtime
+~~~~~~~~~~
 
 .. _proc:file-mtime:
 
@@ -228,6 +258,9 @@ Extended Timestamp Procedures
       --> (file-mtime "main.c")
         (1706728331 387617529 "2026-01-31 19:12:11.387617529 PST")
 
+file-atime
+~~~~~~~~~~
+
 .. _proc:file-atime:
 
 .. function:: (file-atime path)
@@ -239,11 +272,15 @@ Extended Timestamp Procedures
     :return: A list containing (seconds nanoseconds human-readable-string).
     :rtype: list
 
+file-ctime
+~~~~~~~~~~
+
 .. _proc:file-ctime:
 
 .. function:: (file-ctime path)
 
-    Returns a list representing the last status change time (ctime) of the file pointed to by path. Note that on Unix systems, this typically refers to metadata changes (like permissions) rather than file creation.
+    Returns a list representing the last status change time (ctime) of the file pointed to by path. Note that on Unix
+    systems, this typically refers to metadata changes (like permissions) rather than file creation.
 
     :param path: The path to the file.
     :type path: string
@@ -253,6 +290,24 @@ Extended Timestamp Procedures
 
 Permission Predicates
 ---------------------
+
+
+file-readable?
+~~~~~~~~~~~~~~
+
+.. _proc:file-readable-p:
+
+.. function:: (file-readable? path)
+
+    Returns #true if the currently running process has read permissions for the file or directory.
+
+    :param path: The path to check.
+    :type path: string
+    :return: #true or #false.
+    :rtype: boolean
+
+file-writable?
+~~~~~~~~~~~~~~
 
 .. _proc:file-writable-p:
 
@@ -274,11 +329,15 @@ Permission Predicates
         --> (file-writable? "/tmp/my-temp-file")
         #true
 
+file-executable?
+~~~~~~~~~~~~~~~~
+
 .. _proc:file-executable-p:
 
 .. function:: (file-executable? path)
 
-    Returns #true if the currently running process has execute permissions for the file or directory pointed to by path. For directories, "execute" permission allows the process to enter or search the directory.
+    Returns #true if the currently running process has execute permissions for the file or directory pointed to by path.
+    For directories, "execute" permission allows the process to enter or search the directory.
 
     :param path: The path to check.
     :type path: string

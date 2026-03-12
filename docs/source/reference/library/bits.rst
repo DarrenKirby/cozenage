@@ -99,6 +99,9 @@ There are also four procedures exported for performing basic arithmetic on bitst
 Procedures exported by bits
 ---------------------------
 
+>>
+~~
+
 .. _proc:right-shift:
 
 .. function:: (>> n1 n2)
@@ -112,6 +115,8 @@ Procedures exported by bits
    :return: The shifted value.
    :rtype: integer, if n1 AND n2 are integers, otherwise, a bitstring.
 
+<<
+~~
 
 .. _proc:left-shift:
 
@@ -125,6 +130,9 @@ Procedures exported by bits
    :type n2: integer or bitstring.
    :return: The shifted value.
    :rtype: integer, if n1 AND n2 are integers, otherwise, a bitstring.
+
+band
+~~~~
 
 .. _proc:band:
 
@@ -141,6 +149,9 @@ Procedures exported by bits
 
 .. _proc:bor:
 
+bor
+~~~
+
 .. function:: (bor n1 n2)
 
     Returns the bitwise OR of the two values.
@@ -151,6 +162,9 @@ Procedures exported by bits
     :type n2: integer or bitstring.
     :return: The bitwise OR result.
     :rtype: integer, if n1 AND n2 are integers, otherwise, a bitstring.
+
+bxor
+~~~~
 
 .. _proc:bxor:
 
@@ -165,6 +179,9 @@ Procedures exported by bits
     :return: The bitwise XOR result.
     :rtype: integer, if n1 AND n2 are integers, otherwise, a bitstring.
 
+bnot
+~~~~
+
 .. _proc:bnot:
 
 .. function:: (bnot n)
@@ -175,6 +192,9 @@ Procedures exported by bits
     :type n: integer or bitstring.
     :return: The bitwise NOT result.
     :rtype: integer, if n is an integer, otherwise, a bitstring.
+
+bs+
+~~~
 
 .. _proc:bs-plus:
 
@@ -189,6 +209,9 @@ Procedures exported by bits
     :return: The sum as a bitstring.
     :rtype: bitstring.
 
+bs-
+~~~
+
 .. _proc:bs-minus:
 
 .. function:: (bs- bitstring1 bitstring2)
@@ -201,6 +224,9 @@ Procedures exported by bits
     :type bitstring2: bitstring.
     :return: The difference as a bitstring.
     :rtype: bitstring.
+
+bs*
+~~~
 
 .. _proc:bs-mul:
 
@@ -215,6 +241,9 @@ Procedures exported by bits
     :return: The product as a bitstring.
     :rtype: bitstring.
 
+bs/
+~~~
+
 .. _proc:bs-div:
 
 .. function:: (bs/ bitstring1 bitstring2)
@@ -228,6 +257,9 @@ Procedures exported by bits
     :return: The quotient as a bitstring.
     :rtype: bitstring.
 
+int->bitstring
+~~~~~~~~~~~~~~
+
 .. _proc:int-to-bitstring:
 
 .. function:: (int->bitstring n)
@@ -238,6 +270,9 @@ Procedures exported by bits
     :type n: integer.
     :return: The bitstring representation.
     :rtype: bitstring.
+
+bitstring->int
+~~~~~~~~~~~~~~
 
 .. _proc:bitstring-to-int:
 

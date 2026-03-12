@@ -1,5 +1,5 @@
-The ``(base lazy)`` Library
-=============================
+Base lazy Library
+=================
 
 Overview
 --------
@@ -213,7 +213,7 @@ Special Forms
 
 .. _sf:delay:
 
-``delay``
+delay
 ~~~~~~~~~
 
 .. describe:: (delay expression)
@@ -290,7 +290,7 @@ Special Forms
 
 .. _sf:delay-force:
 
-``delay-force``
+delay-force
 ~~~~~~~~~~~~~~~
 
 .. describe:: (delay-force expression)
@@ -358,7 +358,7 @@ Special Forms
 
 .. _sf:stream:
 
-``stream``
+stream
 ~~~~~~~~~~
 
 .. describe:: (stream head tail)
@@ -440,7 +440,7 @@ Procedures
 
 .. _proc:force:
 
-``force``
+force
 ~~~~~~~~~
 
 .. function:: (force promise)
@@ -519,7 +519,7 @@ Procedures
 
 .. _proc:make-promise:
 
-``make-promise``
+make-promise
 ~~~~~~~~~~~~~~~~
 
 .. function:: (make-promise obj)
@@ -582,7 +582,7 @@ Procedures
 
 .. _proc:promise?:
 
-``promise?``
+promise?
 ~~~~~~~~~~~~
 
 .. function:: (promise? obj)
@@ -632,7 +632,7 @@ Procedures
 
 .. _proc:stream?:
 
-``stream?``
+stream?
 ~~~~~~~~~~~
 
 .. function:: (stream? obj)
@@ -675,7 +675,7 @@ Procedures
 
 .. _proc:stream-null?:
 
-``stream-null?``
+stream-null?
 ~~~~~~~~~~~~~~~~
 
 .. function:: (stream-null? obj)
@@ -726,7 +726,7 @@ Stream Constructors
 
 .. _proc:iterate:
 
-``iterate``
+iterate
 ~~~~~~~~~~~
 
 .. function:: (iterate proc seed)
@@ -783,7 +783,7 @@ Stream Constructors
 
 .. _proc:list->stream:
 
-``list->stream``
+list->stream
 ~~~~~~~~~~~~~~~~
 
 .. function:: (list->stream list)
@@ -841,7 +841,7 @@ Stream Accessors
 
 .. _proc:head:
 
-``head``
+head
 ~~~~~~~~
 
 .. function:: (head stream)
@@ -878,7 +878,7 @@ Stream Accessors
 
 .. _proc:tail:
 
-``tail``
+tail
 ~~~~~~~~
 
 .. function:: (tail stream)
@@ -931,7 +931,7 @@ Stream Accessors
 
 .. _proc:at:
 
-``at``
+at
 ~~~~~~
 
 .. function:: (at n stream)
@@ -983,7 +983,7 @@ Stream Sequence Operations
 
 .. _proc:take:
 
-``take``
+take
 ~~~~~~~~
 
 .. function:: (take n stream)
@@ -1042,7 +1042,7 @@ Stream Sequence Operations
 
 .. _proc:drop:
 
-``drop``
+drop
 ~~~~~~~~
 
 .. function:: (drop n stream)
@@ -1091,7 +1091,7 @@ Stream Transformers
 
 .. _proc:collect:
 
-``collect``
+collect
 ~~~~~~~~~~~
 
 .. function:: (collect proc stream)
@@ -1148,7 +1148,7 @@ Stream Transformers
 
 .. _proc:select:
 
-``select``
+select
 ~~~~~~~~~~
 
 .. function:: (select pred stream)
@@ -1198,7 +1198,7 @@ Stream Transformers
 
 .. _proc:weave:
 
-``weave``
+weave
 ~~~~~~~~~
 
 .. function:: (weave stream1 stream2)
@@ -1255,7 +1255,7 @@ Stream Reduction
 
 .. _proc:reduce:
 
-``reduce``
+reduce
 ~~~~~~~~~~
 
 .. function:: (reduce proc init stream)

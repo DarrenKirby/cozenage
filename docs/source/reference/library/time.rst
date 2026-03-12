@@ -3,6 +3,9 @@ Base Time Library
 
 The ``(base time)`` library provides access to time-related values.
 
+current-seconds
+~~~~~~~~~~~~~~~
+
 .. _proc:current-seconds:
 
 .. function:: (current-seconds)
@@ -48,6 +51,8 @@ The ``(base time)`` library provides access to time-related values.
       [1761060904.3419] [WARN] Could not find config file, using defaults.
       [1761060904.3420] [INFO] REPL is ready.
 
+current-jiffy
+~~~~~~~~~~~~~
 
 .. _proc:current-jiffy:
 
@@ -63,7 +68,8 @@ The ``(base time)`` library provides access to time-related values.
    :return: The current jiffy, as an exact integer.
    :rtype: integer
 
-
+jiffies-per-second
+~~~~~~~~~~~~~~~~~~
 
 .. _proc:jiffies-per-second:
 
@@ -124,6 +130,8 @@ The ``(base time)`` library provides access to time-related values.
        Running (slow-fib 30)...
        Execution time: 0.048215 seconds
 
+current-dt-utc
+~~~~~~~~~~~~~~
 
 .. _proc::current-dt-utc:
 
@@ -147,6 +155,9 @@ The ``(base time)`` library provides access to time-related values.
        "2025-11-10 20:48:46"
        --> (current-dt-utc "%A, %B %d, %Y")
        "Monday, November 10, 2025"
+
+current-dt-local
+~~~~~~~~~~~~~~~~
 
 .. _proc::current-dt-local:
 

@@ -1001,7 +1001,7 @@ read-char
 
     **Example:**
 
-    .. code-block:: scheme
+    .. code-block::
 
         --> (define p (open-input-string "héllo"))
         --> (read-char p)
@@ -1349,7 +1349,7 @@ write-char
 
     **Example:**
 
-    .. code-block:: scheme
+    .. code-block::
 
         --> (write-char #\H)
         H

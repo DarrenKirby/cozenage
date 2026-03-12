@@ -11,6 +11,9 @@ randomized testing to data science applications like bootstrapping and shuffling
 Numerical Randomness
 --------------------
 
+rand-int
+~~~~~~~~
+
 .. _proc:rand-int:
 
 .. function:: (rand-int [limit])
@@ -29,6 +32,9 @@ Numerical Randomness
       --> (rand-int 10)
         7
 
+rand-dbl
+~~~~~~~~
+
 .. _proc:rand-dbl:
 
 .. function:: (rand-dbl)
@@ -37,6 +43,9 @@ Numerical Randomness
 
     :return: A random real number.
     :rtype: real
+
+rand-uniform
+~~~~~~~~~~~~
 
 .. _proc:rand-uniform:
 
@@ -54,6 +63,9 @@ Numerical Randomness
 
 Sequence Manipulation
 ---------------------
+
+shuffle
+~~~~~~~
 
 .. _proc:shuffle:
 
@@ -73,6 +85,9 @@ Sequence Manipulation
       --> (shuffle '(1 2 3 4 5))
         (3 5 1 4 2)
 
+rand-choice
+~~~~~~~~~~~
+
 .. _proc:rand-choice:
 
 .. function:: (rand-choice seq)
@@ -83,6 +98,9 @@ Sequence Manipulation
     :type seq: list or vector
     :return: A single element from the sequence.
     :rtype: any
+
+rand-choices
+~~~~~~~~~~~~
 
 .. _proc:rand-choices:
 

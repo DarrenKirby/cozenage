@@ -9,7 +9,7 @@
 project = 'Cozenage'
 copyright = '2025, Darren Kirby'
 author = 'Darren Kirby'
-release = '0.10.0'
+release = '0.16.0'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration

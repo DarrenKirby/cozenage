@@ -10,9 +10,15 @@ as well as a handful of other numeric procedures too specialized or esoteric for
 Inexact Procedures
 ------------------
 
-This library provides a standard set of procedures for working with inexact (floating-point) real numbers. These procedures are essential for scientific and engineering applications that require trigonometry, logarithms, and exponentiation.
+This library provides a standard set of procedures for working with inexact (floating-point) real numbers. These procedures
+are essential for scientific and engineering applications that require trigonometry, logarithms, and exponentiation.
 
-Cozenage, following the R7RS standard, represents special floating-point values such as positive infinity, negative infinity, and Not a Number as ``+inf.0``, ``-inf.0``, and ``+nan.0`` respectively. This library includes predicates to test for these specific values.
+Cozenage, following the R7RS standard, represents special floating-point values such as positive infinity, negative
+infinity, and Not a Number as ``+inf.0``, ``-inf.0``, and ``+nan.0`` respectively. This library includes predicates
+to test for these specific values.
+
+acos
+~~~~
 
 .. _proc:acos:
 
@@ -34,6 +40,9 @@ Cozenage, following the R7RS standard, represents special floating-point values 
       --> (acos 0.5)
         1.0471975511965979
 
+asin
+~~~~
+
 .. _proc:asin:
 
 .. function:: (asin z)
@@ -53,6 +62,9 @@ Cozenage, following the R7RS standard, represents special floating-point values 
         1.5707963267948966
       --> (asin 0)
         0.0
+
+atan
+~~~~
 
 .. _proc:atan:
 
@@ -77,6 +89,10 @@ Cozenage, following the R7RS standard, represents special floating-point values 
       --> (atan -1 0)
         -1.5707963267948966
 
+
+cos
+~~~
+
 .. _proc:cos:
 
 .. function:: (cos z)
@@ -96,6 +112,9 @@ Cozenage, following the R7RS standard, represents special floating-point values 
         -1.0
       --> (cos 0)
         1.0
+
+exp
+~~~
 
 .. _proc:exp:
 
@@ -117,49 +136,8 @@ Cozenage, following the R7RS standard, represents special floating-point values 
       --> (exp 0)
         1.0
 
-.. _proc:finite?:
-
-.. function:: (finite? z)
-
-   Returns ``#true`` if *z* is a finite number, and ``#false`` otherwise. A number is finite if it is not positive or negative infinity and not NaN.
-
-   :param z: The number to test.
-   :type z: number
-   :return: #true or #false.
-   :rtype: boolean
-
-   **Example:**
-
-   .. code-block:: scheme
-
-      --> (finite? 123.45)
-        #true
-      --> (finite? +inf.0)
-        #false
-      --> (finite? +nan.0)
-        #false
-
-.. _proc:infinite?:
-
-.. function:: (infinite? z)
-
-   Returns ``#true`` if *z* is positive or negative infinity, and ``#false`` otherwise.
-
-   :param z: The number to test.
-   :type z: number
-   :return: #true or #false.
-   :rtype: boolean
-
-   **Example:**
-
-   .. code-block:: scheme
-
-      --> (infinite? (/ 1.0 0.0))
-        #true
-      --> (infinite? -inf.0)
-        #true
-      --> (infinite? 1000)
-        #false
+log
+~~~
 
 .. _proc:log:
 
@@ -184,25 +162,8 @@ Cozenage, following the R7RS standard, represents special floating-point values 
       --> (log 100 10)
         2.0
 
-.. _proc:nan?:
-
-.. function:: (nan? z)
-
-   Returns ``#true`` if *z* is Not a Number (NaN), and ``#false`` otherwise.
-
-   :param z: The number to test.
-   :type z: number
-   :return: #true or #false.
-   :rtype: boolean
-
-   **Example:**
-
-   .. code-block:: scheme
-
-      --> (nan? (/ 0.0 0.0))
-        #true
-      --> (nan? 123)
-        #false
+sin
+~~~
 
 .. _proc:sin:
 
@@ -224,25 +185,8 @@ Cozenage, following the R7RS standard, represents special floating-point values 
       --> (sin 0)
         0.0
 
-.. _proc:sqrt:
-
-.. function:: (sqrt z)
-
-   Returns the principal square root of *z*.
-
-   :param z: The number.
-   :type z: number
-   :return: The square root of z.
-   :rtype: number
-
-   **Example:**
-
-   .. code-block:: scheme
-
-      --> (sqrt 16)
-        4.0
-      --> (sqrt 2)
-        1.4142135623730951
+tan
+~~~
 
 .. _proc:tan:
 
@@ -264,6 +208,9 @@ Cozenage, following the R7RS standard, represents special floating-point values 
       --> (tan 0.785398)
         0.9999996208688432
 
+log2
+~~~~
+
 .. _proc:log2:
 
 .. function:: (log2 z)
@@ -282,6 +229,9 @@ Cozenage, following the R7RS standard, represents special floating-point values 
       --> (log2 256)
         8.0
 
+log10
+~~~~~
+
 .. _proc:log10:
 
 .. function:: (log10 z)
@@ -299,6 +249,9 @@ Cozenage, following the R7RS standard, represents special floating-point values 
 
       --> (log10 1000)
         3.0
+
+cbrt
+~~~~
 
 .. _proc:cbrt:
 
@@ -323,16 +276,21 @@ Cozenage, following the R7RS standard, represents special floating-point values 
 Complex Number Procedures
 -------------------------
 
-The Cozenage complex number library provides a comprehensive set of procedures for creating and manipulating complex numbers. Complex numbers are a fundamental mathematical tool with wide-ranging applications in engineering, physics, signal processing, and graphics.
+The Cozenage complex number library provides a comprehensive set of procedures for creating and manipulating complex
+numbers. Complex numbers are a fundamental mathematical tool with wide-ranging applications in engineering, physics,
+signal processing, and graphics.
 
 Cozenage supports two common representations of complex numbers:
 
 1.  **Rectangular Form:** Represented as ``a+bi``, where `a` is the **real part** and `b` is the **imaginary part**. This form is intuitive for addition and subtraction.
 2.  **Polar Form:** Represented as ``r@θ``, where `r` is the **magnitude** (or modulus) and `θ` is the **angle** (or argument). This form simplifies multiplication and division.
 
-The library provides procedures to create complex numbers from both representations and to extract their component parts. All complex number objects are of the type ``complex``.
+The library provides procedures to create complex numbers from both representations and to extract their component
+parts. All complex number objects are of the type ``complex``.
 
 
+make-rectangular
+~~~~~~~~~~~~~~~~
 
 .. _proc:make-rectangular:
 
@@ -356,6 +314,9 @@ The library provides procedures to create complex numbers from both representati
       --> (make-rectangular -1.5 0)
         -1.5+0i
 
+real-part
+~~~~~~~~~
+
 .. _proc:real-part:
 
 .. function:: (real-part z)
@@ -376,6 +337,9 @@ The library provides procedures to create complex numbers from both representati
       --> (real-part -1.2-5.7i)
         -1.2
 
+imag-part
+~~~~~~~~~
+
 .. _proc:imag-part:
 
 .. function:: (imag-part z)
@@ -395,6 +359,9 @@ The library provides procedures to create complex numbers from both representati
         4
       --> (imag-part -1.2-5.7i)
         -5.7
+
+make-polar
+~~~~~~~~~~
 
 .. _proc:make-polar:
 
@@ -418,6 +385,9 @@ The library provides procedures to create complex numbers from both representati
       --> (make-polar 1 (atan 0 -1)) ; pi
         -1+1.22465e-16i
 
+magnitude
+~~~~~~~~~
+
 .. _proc:magnitude:
 
 .. function:: (magnitude z)
@@ -437,6 +407,9 @@ The library provides procedures to create complex numbers from both representati
         5.0
       --> (magnitude (make-polar 10 2))
         10.0
+
+angle
+~~~~~
 
 .. _proc:angle:
 

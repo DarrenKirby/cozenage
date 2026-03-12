@@ -14,6 +14,9 @@ Cozenage REPL and the underlying Unix-like kernel.
 Process Information
 -------------------
 
+get-pid
+~~~~~~~
+
 .. _proc:get-pid:
 
 .. function:: (get-pid)
@@ -30,6 +33,9 @@ Process Information
         --> (get-pid)
         12345
 
+get-ppid
+~~~~~~~~
+
 .. _proc:get-ppid:
 
 .. function:: (get-ppid)
@@ -41,6 +47,9 @@ Process Information
 
 Environment Variables
 ---------------------
+
+get-env-var
+~~~~~~~~~~~
 
 .. _proc:get-env-var:
 
@@ -62,6 +71,9 @@ Environment Variables
         --> (get-env-var "NON_EXISTENT")
         #false
 
+get-env-vars
+~~~~~~~~~~~~
+
 .. _proc:get-env-vars:
 
 .. function:: (get-env-vars)
@@ -71,6 +83,9 @@ Environment Variables
     :return: An alist of environment variables.
     :rtype: list
 
+get-home
+~~~~~~~~
+
 .. _proc:get-home:
 
 .. function:: (get-home)
@@ -79,6 +94,9 @@ Environment Variables
 
     :return: The home directory path.
     :rtype: string
+
+get-path
+~~~~~~~~
 
 .. _proc:get-path:
 
@@ -92,6 +110,9 @@ Environment Variables
 User and Group IDs
 ------------------
 
+get-uid
+~~~~~~~
+
 .. _proc:get-uid:
 
 .. function:: (get-uid)
@@ -100,6 +121,9 @@ User and Group IDs
 
     :return: The user ID.
     :rtype: integer
+
+get-gid
+~~~~~~~
 
 .. _proc:get-gid:
 
@@ -110,6 +134,9 @@ User and Group IDs
     :return: The group ID.
     :rtype: integer
 
+get-euid
+~~~~~~~~
+
 .. _proc:get-euid:
 
 .. function:: (get-euid)
@@ -119,6 +146,9 @@ User and Group IDs
     :return: The effective user ID.
     :rtype: integer
 
+get-egid
+~~~~~~~~
+
 .. _proc:get-egid:
 
 .. function:: (get-egid)
@@ -127,6 +157,9 @@ User and Group IDs
 
     :return: The effective group ID.
     :rtype: integer
+
+set-uid!
+~~~~~~~~
 
 .. _proc:set-uid-bang:
 
@@ -138,6 +171,9 @@ User and Group IDs
     :type n: integer
     :return: #true on success, otherwise returns an OS error.
     :rtype: boolean
+
+set-gid!
+~~~~~~~~
 
 .. _proc:set-gid-bang:
 
@@ -153,6 +189,9 @@ User and Group IDs
 User and Group Information
 --------------------------
 
+get-username
+~~~~~~~~~~~~
+
 .. _proc:get-username:
 
 .. function:: (get-username)
@@ -162,6 +201,9 @@ User and Group Information
     :return: The username string, or #false if it cannot be determined.
     :rtype: string or boolean
 
+get-groups
+~~~~~~~~~~
+
 .. _proc:get-groups:
 
 .. function:: (get-groups)
@@ -170,6 +212,9 @@ User and Group Information
 
     :return: An alist of group IDs and names.
     :rtype: list
+
+is-root?
+~~~~~~~~
 
 .. _proc:is-root-p:
 
@@ -184,6 +229,9 @@ User and Group Information
 Working Directory and Permissions
 ---------------------------------
 
+get-cwd
+~~~~~~~
+
 .. _proc:get-cwd:
 
 .. function:: (get-cwd)
@@ -192,6 +240,9 @@ Working Directory and Permissions
 
     :return: The absolute path of the current directory.
     :rtype: string
+
+chdir
+~~~~~~
 
 .. _proc:chdir:
 
@@ -203,6 +254,9 @@ Working Directory and Permissions
     :type path: string
     :return: #true on success, or an OS error.
     :rtype: boolean
+
+chmod
+~~~~~
 
 .. _proc:chmod:
 
@@ -228,6 +282,9 @@ Working Directory and Permissions
 System Metadata and Telemetry
 -----------------------------
 
+uname
+~~~~~
+
 .. _proc:uname:
 
 .. function:: (uname)
@@ -236,6 +293,9 @@ System Metadata and Telemetry
 
     :return: A list of 5 strings.
     :rtype: list
+
+uptime
+~~~~~~
 
 .. _proc:uptime:
 
@@ -257,6 +317,9 @@ System Metadata and Telemetry
       --> (uptime)
         (2738231 "up 31 days 16:37" (0.15 0.10 0.05))
 
+cpu-count
+~~~~~~~~~
+
 .. _proc:cpu-count:
 
 .. function:: (cpu-count)
@@ -265,6 +328,9 @@ System Metadata and Telemetry
 
     :return: The number of CPUs.
     :rtype: integer
+
+get-hostname
+~~~~~~~~~~~~
 
 .. _proc:get-hostname:
 
@@ -278,6 +344,9 @@ System Metadata and Telemetry
 Process Control
 ---------------
 
+system
+~~~~~~
+
 .. _proc:system:
 
 .. function:: (system command)
@@ -288,6 +357,9 @@ Process Control
     :type command: string
     :return: The exit status of the command.
     :rtype: integer
+
+sleep
+~~~~~
 
 .. _proc:sleep:
 

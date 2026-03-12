@@ -63,6 +63,9 @@ Comparison Procedures
 Numeric Comparison Procedures
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+equal (=)
+~~~~~~~~~
+
 .. _proc:numeric-eq:
 
 .. function:: (= z1 z2 ...)
@@ -94,6 +97,8 @@ Numeric Comparison Procedures
       --> (= 1 1 1 1)
       #t
 
+greater than (>)
+~~~~~~~~~~~~~~~~
 
 .. _proc:numeric-gt:
 
@@ -124,6 +129,8 @@ Numeric Comparison Procedures
       --> (> 1/2 1/3)
       #t
 
+less than (<)
+~~~~~~~~~~~~~
 
 .. _proc:numeric-lt:
 
@@ -154,6 +161,8 @@ Numeric Comparison Procedures
       --> (< 1/3 1/2)
       #t
 
+greater than or equal (>=)
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. _proc:numeric-gte:
 
@@ -182,6 +191,8 @@ Numeric Comparison Procedures
       --> (>= 3 2 2 1)
       #t
 
+less than or equal (<=)
+~~~~~~~~~~~~~~~~~~~~~~~
 
 .. _proc:numeric-lte:
 
@@ -212,6 +223,9 @@ Numeric Comparison Procedures
 
 General Comparison Procedures
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+eq?
+~~~
 
 .. _proc:eq?:
 
@@ -251,6 +265,8 @@ General Comparison Procedures
       --> (eq? "hello" "hello")
       #f
 
+eqv?
+~~~~
 
 .. _proc:eqv?:
 
@@ -293,6 +309,8 @@ General Comparison Procedures
       --> (eqv? '(1 2) '(1 2))
       #f
 
+equal?
+~~~~~~
 
 .. _proc:equal?:
 
