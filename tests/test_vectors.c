@@ -82,12 +82,12 @@ Test(end_to_end_vectors, test_vector_set, .init = setup_each_test, .fini = teard
     cr_assert_str_eq(t_eval("(begin (define v #(a b c)) (vector-set! v 2 '(x)) v)"), "#(a b (x))");
 
     // ## Index Errors (out of bounds) ##
-    cr_assert_str_eq(t_eval("(vector-set! #(a b) 2 'x)"), " Index error: vector->set!: index out of range");
-    cr_assert_str_eq(t_eval("(vector-set! #() 0 'x)"), " Index error: vector->set!: index out of range");
+    cr_assert_str_eq(t_eval("(vector-set! #(a b) 2 'x)"), " Index error: vector-set!: index out of range");
+    cr_assert_str_eq(t_eval("(vector-set! #() 0 'x)"), " Index error: vector-set!: index out of range");
 
     // ## Type Errors ##
-    cr_assert_str_eq(t_eval("(vector-set! '(1 2) 0 9)"), " Type error: vector->set!: arg must be a vector");
-    cr_assert_str_eq(t_eval("(vector-set! #(1 2) 'a 9)"), " Type error: vector->set!: arg must be an integer");
+    cr_assert_str_eq(t_eval("(vector-set! '(1 2) 0 9)"), " Type error: vector-set!: arg must be a vector");
+    cr_assert_str_eq(t_eval("(vector-set! #(1 2) 'a 9)"), " Type error: vector-set!: arg must be an integer");
 
     // ## Arity ##
     cr_assert_str_eq(t_eval("(vector-set!)"), " Arity error: vector-set!: expected exactly 3 args, got 0");
