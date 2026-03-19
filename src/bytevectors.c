@@ -202,7 +202,7 @@ Cell* builtin_bytevector_ref(const Lex* e, const Cell* a)
     const int i = (int)a->cell[1]->integer_v;
     if (i < 0) {
         return make_cell_error(
-            "bytevector-ref: indice cannot be negative",
+            "bytevector-ref: indices cannot be negative",
             VALUE_ERR);
     }
 
