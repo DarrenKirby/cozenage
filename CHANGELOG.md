@@ -9,7 +9,7 @@
 - Implement `call-with-port`
 
 ### Changed
-- Removed dependancy on Readline/libedit, and implemented line editing/history/tab completion from scratch
+- Removed dependency on Readline/libedit, and implemented line editing/history/tab completion from scratch
 - Streamlined CMakeLists.txt build file
 - Add `install` and `docs` targets to Makefile
 - Substantially finished `base lazy` library
