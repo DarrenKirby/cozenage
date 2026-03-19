@@ -303,26 +303,6 @@ static int portable_getgrouplist(const char *user, const gid_t basegid,
 #endif
 }
 
-// /* BSD expects int*, glibc expects gid_t*.
-//  * We give BSD what it wants without lying about storage. */
-// static int portable_getgrouplist(const char *user, const gid_t basegid,
-//                       gid_t *groups, int *ngroups) {
-// #ifdef __linux__
-//     /* glibc-style API */
-//     return getgrouplist(user, basegid, groups, ngroups);
-// #else
-//     /* BSD-style API */
-//     int *igroups = GC_malloc(sizeof(int) * (*ngroups));
-//     const int ret = getgrouplist(user,
-//                            (int)basegid,
-//                            igroups,
-//                            ngroups);
-//     for (int i = 0; i < *ngroups; i++) {
-//         groups[i] = (gid_t)igroups[i];
-//     }
-//     return ret;
-// #endif
-// }
 
 
 /* (get-groups)
@@ -464,6 +444,7 @@ static Cell* system_chmod(const Lex* e, const Cell* a) {
             "chmod: mode argument must be an (octal) integer",
             TYPE_ERR);
     }
+    /*TODO:SanitizeModeArg*/
     if (chmod(a->cell[0]->str, (mode_t)a->cell[1]->integer_v) != 0) {
         make_cell_error(
             fmt_err("chmod: %s", strerror(errno)),
@@ -518,7 +499,7 @@ Cell* system_uptime(const Lex* e, const Cell* a) {
     const time_t current_sec = time(nullptr);
     uptime_in_seconds = (long)difftime(current_sec, boot_sec);
 
-    /* Get load average *BSD */
+    /* Get load average *BSD. */
 #if defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__NetBSD__) || defined(__DragonFly__)
     double loadavg[3];
     if (getloadavg(loadavg, nitems(loadavg)) == -1) {
