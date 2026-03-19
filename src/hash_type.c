@@ -163,7 +163,7 @@ bool cell_is_hashable(const Cell* c)
 }
 
 
-static ght_item GHT_DELETED_ITEM = { GHT_TOMBSTONE, NULL };
+static ght_item GHT_DELETED_ITEM = { GHT_TOMBSTONE, nullptr };
 
 
 ght_table* ght_create(const size_t initial_capacity)
