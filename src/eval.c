@@ -41,32 +41,27 @@
 #include "symbols.h"
 
 
-/* Helper to extract procedure args from s-expr. */
-static Cell* get_args_from_sexpr(const Cell* v)
-{
-    Cell* args = make_cell_sexpr();
-    for (int i = 1; i < v->count; i++) {
-        cell_add(args, v->cell[i]);
-    }
-    return args;
-}
-
-
 /* This is only for special forms that are manually
  * implemented in special_forms.c */
 special_form_handler_t SF_DISPATCH_TABLE[] = {
-    [SF_ID_DEFINE]   = &sf_define,
-    [SF_ID_QUOTE]    = &sf_quote,
-    [SF_ID_LAMBDA]   = &sf_lambda,
-    [SF_ID_IF]       = &sf_if,
-    [SF_ID_IMPORT]   = &sf_import,
-    [SF_ID_LET]      = &sf_let,
-    [SF_ID_LETREC]   = &sf_letrec,
-    [SF_ID_SET_BANG] = &sf_set_bang,
-    [SF_ID_BEGIN]    = &sf_begin,
-    [SF_ID_AND]      = &sf_and,
-    [SF_ID_DEFMACRO] = &sf_defmacro,
-    [SF_ID_DEBUG]    = &sf_with_gc_stats
+    [SF_ID_DEFINE]      = &sf_define,
+    [SF_ID_QUOTE]       = &sf_quote,
+    [SF_ID_LAMBDA]      = &sf_lambda,
+    [SF_ID_IF]          = &sf_if,
+    [SF_ID_COND]        = &sf_cond,
+    [SF_ID_IMPORT]      = &sf_import,
+    [SF_ID_LET]         = &sf_let,
+    [SF_ID_LET_STAR]    = &sf_let_star,
+    [SF_ID_LETREC]      = &sf_letrec,
+    [SF_ID_LETREC_STAR] = &sf_letrec_star,
+    [SF_ID_SET_BANG]    = &sf_set_bang,
+    [SF_ID_BEGIN]       = &sf_begin,
+    [SF_ID_AND]         = &sf_and,
+    [SF_ID_OR]          = &sf_or,
+    [SF_ID_WHEN]        = &sf_when,
+    [SF_ID_UNLESS]      = &sf_unless,
+    [SF_ID_DEFMACRO]    = &sf_defmacro,
+    [SF_ID_DEBUG]       = &sf_with_gc_stats
 };
 
 
@@ -128,6 +123,7 @@ Cell* coz_eval(Lex* env, Cell* expr)
             }
 
             /* ACTION_CONTINUE from a tail call. */
+            if (!result.env) { fprintf(stderr, "no environment passed with tail call\n"); return False_Obj; }
             expr = result.value;
             env = result.env;
             continue;
