@@ -21,9 +21,9 @@ define
     At the top level, ``define`` creates a binding in the global environment.
     Inside a procedure body or other local context, ``define`` may also appear
     at the head of a sequence of expressions — these *internal defines* are
-    automatically transformed into an equivalent ``letrec`` expression, creating
+    automatically transformed into an equivalent ``letrec*`` expression, creating
     local bindings scoped to the enclosing body. The result is identical to
-    writing ``letrec`` explicitly:
+    writing ``letrec*`` explicitly:
 
     .. code-block:: scheme
 
@@ -34,12 +34,12 @@ define
 
       ; Is equivalent to:
       (define (f x)
-        (letrec ((a 1)
+        (letrec* ((a 1)
                  (b 2))
           (+ x a b)))
 
     To create local bindings outside of an implicit body context, use ``let``,
-    ``letrec``, or ``let*`` explicitly.
+    ``letrec``, ``letrec*`` or ``let*`` explicitly.
 
     **Variable binding**
 
@@ -112,7 +112,7 @@ define
 
     .. code-block:: scheme
 
-      --> (define (define (log label . values)
+      --> (define (log label . values)
       ...   (display label)
       ...   (for-each (lambda (v) (display " ") (display v)) values))
       --> (log "result:" 1 2 3)
@@ -646,7 +646,7 @@ let and named let
 
     Because all *init* expressions are evaluated before any binding takes
     place, a binding's *init* cannot refer to other variables being bound in
-    the same ``let`` — for that, use ``let*`` or ``letrec``.
+    the same ``let`` — for that, use ``let*`` or ``letrec*``.
 
     .. code-block:: scheme
 
