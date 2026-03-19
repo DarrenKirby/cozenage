@@ -23,8 +23,6 @@
 #include "hash.h"
 #include "environment.h"
 
-#include <stdint.h>
-
 
 typedef enum : int8_t {
     /* These are the SFs that are implemented primitively. */
@@ -32,26 +30,26 @@ typedef enum : int8_t {
     SF_ID_QUOTE,
     SF_ID_LAMBDA,
     SF_ID_IF,
+    SF_ID_COND,
     SF_ID_IMPORT,
     SF_ID_LET,
+    SF_ID_LET_STAR,
     SF_ID_LETREC,
+    SF_ID_LETREC_STAR,
     SF_ID_SET_BANG,
     SF_ID_BEGIN,
     SF_ID_AND,
+    SF_ID_OR,
+    SF_ID_WHEN,
+    SF_ID_UNLESS,
     SF_ID_DELAY,
     SF_ID_DELAY_FORCE,
     SF_ID_STREAM,
     SF_ID_DEFMACRO,
     SF_ID_DEBUG,
     /* These are the SFs implemented as transforms. */
-    SF_ID_LET_STAR = 50,
-    SF_ID_OR,
-    SF_ID_WHEN,
-    SF_ID_UNLESS,
-    SF_ID_COND,
-    SF_ID_ELSE,
+    SF_ID_ELSE = 50,
     SF_ID_CASE,
-    SF_ID_LETREC_STAR,
     SF_ID_DO
 } SpecialFormID;
 

@@ -38,6 +38,7 @@ typedef struct {
 
 int is_syntactic_keyword(const Cell* s);
 Lex* build_lambda_env(const Lex* env, Cell* formals, Cell* args);
+Cell* get_args_from_sexpr(const Cell* v);
 
 
 /* Special form primitives. */
@@ -45,12 +46,18 @@ HandlerResult sf_define(Lex* e, Cell* a);
 HandlerResult sf_quote(Lex* e, Cell* a);
 HandlerResult sf_lambda(Lex* e, Cell* a);
 HandlerResult sf_if(Lex* e, Cell* a);
+HandlerResult sf_cond(Lex* e, Cell* a);
 HandlerResult sf_import(Lex* e, Cell* a);
 HandlerResult sf_let(Lex* e, Cell* a);
+HandlerResult sf_let_star(Lex* e, Cell* a);
 HandlerResult sf_letrec(Lex* e, Cell* a);
+HandlerResult sf_letrec_star(Lex* e, Cell* a);
 HandlerResult sf_set_bang(Lex* e, Cell* a);
 HandlerResult sf_begin(Lex* e, Cell* a);
 HandlerResult sf_and(Lex* e, Cell* a);
+HandlerResult sf_or(Lex* e, Cell* a);
+HandlerResult sf_when(Lex* e, Cell* a);
+HandlerResult sf_unless(Lex* e, Cell* a);
 HandlerResult sf_delay(Lex* e, Cell* a);
 HandlerResult sf_stream(Lex* e, Cell* a);
 HandlerResult sf_defmacro(Lex* e, Cell* a);
