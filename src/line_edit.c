@@ -60,8 +60,9 @@
 #define CTRL_F 6
 #define CTRL_G 7
 #define CTRL_H 8
-#define TAB    9
-#define ENTER  13
+#define TAB  9
+#define ENTER 13
+#define ENTER_LF 10
 #define CTRL_K 11
 #define CTRL_L 12
 #define CTRL_U 21
@@ -173,7 +174,7 @@ void install_signal_handlers(void)
 static void disable_raw_mode(void)
 {
     if (raw_mode_enabled) {
-        tcsetattr(STDIN_FILENO, TCSAFLUSH, &orig_termios);
+        tcsetattr(STDIN_FILENO, TCSADRAIN, &orig_termios);
         raw_mode_enabled = 0;
     }
 }
@@ -192,7 +193,7 @@ static int enable_raw_mode(void)
     raw.c_cc[VMIN] = 1;
     raw.c_cc[VTIME] = 0;
 
-    if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw) == -1) return -1;
+    if (tcsetattr(STDIN_FILENO, TCSADRAIN, &raw) == -1) return -1;
     raw_mode_enabled = 1;
     return 0;
 }
@@ -310,9 +311,6 @@ int write_history(const char* filename)
     fclose(fp);
     return 0;
 }
-
-
-
 
 
 /* Filename completion. */
@@ -848,6 +846,7 @@ le_result readline(const char* prompt)
                 break;
 
             case ENTER:
+            case ENTER_LF:
                 printf("\r\n");
                 disable_raw_mode();
                 return (le_result){ .status = LE_LINE, .line = ls.buffer };
