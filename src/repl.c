@@ -123,6 +123,12 @@ static char* read_multiline(const char* prompt, const char* cont_prompt)
     /* Should not ever be null here, but be defensive. */
     if (!r.line)
         return GC_strdup("");
+
+    /* Add first line to history immediately. */
+    if (r.line[0] != '\0') {
+        add_history_entry(r.line);
+    }
+
     balance += paren_balance(r.line, &in_string);
 
     char *input = GC_strdup(r.line);
@@ -144,6 +150,11 @@ static char* read_multiline(const char* prompt, const char* cont_prompt)
                 /* Return empty string to discard multiline and get new prompt. */
                 return GC_strdup("");
             default:
+                /* Add each continuation line to history individually. */
+                if (r.line[0] != '\0') {
+                    add_history_entry(r.line);
+                }
+
                 balance += paren_balance(r.line, &in_string);
 
                 const size_t line_len = strlen(r.line);
@@ -179,10 +190,6 @@ char* coz_read()
         exit(0);
     }
 
-    /* Add expression to history, if it is not empty. */
-    if (input[0] != '\0') {
-        add_history_entry(input);
-    }
     return input;
 }
 
