@@ -483,6 +483,13 @@ HandlerResult sf_import(Lex* e, Cell* a)
                 GEN_ERR);
             return (HandlerResult){ .action = ACTION_RETURN, .value = err };
         }
+        /* Make sure each arg is an s-expression. */
+        if (a->cell[i]->type != CELL_SEXPR) {
+            Cell* err = make_cell_error(
+                "import: import-set must be an S-expression",
+                SYNTAX_ERR);
+            return (HandlerResult){ .action = ACTION_RETURN, .value = err };
+        }
         const char* lib = GC_strdup(a->cell[i]->cell[0]->sym);
         const char* name = GC_strdup(a->cell[i]->cell[1]->sym);
         import_set->cell[i] = make_cell_pair(make_cell_string(lib),
