@@ -22,9 +22,13 @@
 
 #include <time.h>
 
-
-/* R7RSs "suitable constant" (TAI-UTC offset)
- * As of June 2025, this is 37.0 seconds. */
+/* Cozenage uses 1 billion, ie: nanoseconds for J/s. */
+#define JIFFIES_PER_SECOND 1000000000
+#define JIFFIES_PER_SECOND_DBL 1000000000.0
+/* Size of strftime() buffer. */
+#define STRF_BUF_SIZE 128
+/* R7RS's "suitable constant" (TAI-UTC offset)
+ * As of January 2026, this is 37.0 seconds. */
 #define TAI_UTC_OFFSET 37.0;
 
 
@@ -39,14 +43,14 @@ static Cell* builtin_current_second(const Lex* e, const Cell* a)
     (void)e; (void)a;
     struct timespec ts;
 
-    /* CLOCK_REALTIME gives POSIX time (seconds since UTC epoch) */
+    /* CLOCK_REALTIME gives POSIX time (seconds since UTC epoch). */
     if (clock_gettime(CLOCK_REALTIME, &ts) != 0) {
-        /* Handle error... */
+        /* Handle error. */
         return make_cell_real(0.0);
     }
 
     /* Convert timespec (sec, nano sec) to a double */
-    const double posix_time = (double)ts.tv_sec + (double)ts.tv_nsec / 1000000000.0;
+    const double posix_time = (double)ts.tv_sec + (double)ts.tv_nsec / JIFFIES_PER_SECOND_DBL;
     const long double tai_time = posix_time + TAI_UTC_OFFSET;
 
     return make_cell_real(tai_time);
@@ -63,14 +67,14 @@ static Cell* builtin_current_jiffy(const Lex* e, const Cell* a)
     (void)e; (void)a;
     struct timespec ts;
 
-    /* Use CLOCK_MONOTONIC, not CLOCK_REALTIME */
+    /* Use CLOCK_MONOTONIC, not CLOCK_REALTIME. */
     if (clock_gettime(CLOCK_MONOTONIC, &ts) != 0) {
-        /* Handle error */
+        /* Handle error. */
         return make_cell_integer(0);
     }
 
-    /* Convert (seconds + nanoseconds) into total nanoseconds */
-    const int64_t jiffies = (int64_t)ts.tv_sec * 1000000000 + (int64_t)ts.tv_nsec;
+    /* Convert (seconds + nanoseconds) into total nanoseconds. */
+    const int64_t jiffies = (int64_t)ts.tv_sec * JIFFIES_PER_SECOND + (int64_t)ts.tv_nsec;
 
     return make_cell_integer(jiffies);
 }
@@ -78,11 +82,11 @@ static Cell* builtin_current_jiffy(const Lex* e, const Cell* a)
 
 /* (jiffies-per-second)
  * Returns an exact integer representing the number of jiffies per SI second. This value is an
- * implementation-specified constant. Cozenage uses 1 billion, ie: nanoseconds. */
+ * implementation-specified constant. */
 static Cell* builtin_jiffies_per_second(const Lex* e, const Cell* a)
 {
     (void)e; (void)a;
-    return make_cell_integer(1000000000);
+    return make_cell_integer(JIFFIES_PER_SECOND);
 }
 
 
@@ -137,7 +141,7 @@ static Cell* builtin_current_datetime_local(const Lex* e, const Cell* a)
     const time_t t = time(nullptr);
     struct tm ts;
     localtime_r(&t, &ts);
-    char buf[128];
+    char buf[STRF_BUF_SIZE];
     const size_t result = strftime(buf, sizeof(buf), fmt_str, &ts);
     /* strftime returns zero if the buffer is too small, and buf will be garbage.
      * There are also legitimate 0-length conversions, so we just return an empty
