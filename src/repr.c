@@ -360,11 +360,14 @@ static void cell_to_string_worker(const Cell* v,
         }
 
         case CELL_BIGINT: {
-            char i_buf[1024];
-            gmp_snprintf(i_buf, sizeof(i_buf), "%Zd", v->bi);
+            const size_t len = mpz_sizeinbase(*v->bi, 10) + 2;
+            char *i_buf = GC_MALLOC(len);
+
+            gmp_snprintf(i_buf, len, "%Zd", v->bi);
+
             sb_append_str(sb, i_buf);
             break;
-            }
+        }
 
         case CELL_BIGFLOAT: {
             char f_buf[1024];
