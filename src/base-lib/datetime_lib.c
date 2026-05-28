@@ -1,5 +1,5 @@
 /*
- * 'src/base-lib/time_lib.c'
+ * 'src/base-lib/datetime_lib.c'
  * This file is part of Cozenage - https://github.com/DarrenKirby/cozenage
  * Copyright © 2025 Darren Kirby <darren@dragonbyte.ca>
  *
@@ -19,6 +19,7 @@
 
 #include "types.h"
 #include "cell.h"
+#include "load_library.h"
 
 #include <time.h>
 
@@ -38,7 +39,7 @@
  * midnight Universal Time) and the value 1.0 represents one TAI second later. Neither high accuracy
  * nor high precision are required; in particular, returning Coordinated Universal Time plus a
  * suitable constant might be the best an implementation can do. */
-static Cell* builtin_current_second(const Lex* e, const Cell* a)
+static Cell* time_current_second(const Lex* e, const Cell* a)
 {
     (void)e; (void)a;
     struct timespec ts;
@@ -62,7 +63,7 @@ static Cell* builtin_current_second(const Lex* e, const Cell* a)
  * implementation-defined epoch. A jiffy is an implementation-defined fraction of a second which is
  * defined by the return value of the jiffies-per-second procedure. The starting epoch is guaranteed
  * to be constant during a run of the program, but may vary between runs. */
-static Cell* builtin_current_jiffy(const Lex* e, const Cell* a)
+static Cell* time_current_jiffy(const Lex* e, const Cell* a)
 {
     (void)e; (void)a;
     struct timespec ts;
@@ -83,7 +84,7 @@ static Cell* builtin_current_jiffy(const Lex* e, const Cell* a)
 /* (jiffies-per-second)
  * Returns an exact integer representing the number of jiffies per SI second. This value is an
  * implementation-specified constant. */
-static Cell* builtin_jiffies_per_second(const Lex* e, const Cell* a)
+static Cell* time_jiffies_per_second(const Lex* e, const Cell* a)
 {
     (void)e; (void)a;
     return make_cell_integer(JIFFIES_PER_SECOND);
@@ -94,7 +95,7 @@ static Cell* builtin_jiffies_per_second(const Lex* e, const Cell* a)
  * Can be called with zero or one argument. If an argument is provided, it must be a string which is
  * a format specification as per the C library function strftime(3). With no argument, the format
  * specifier is "%Y-%m-%d %H:%M:%S", which prints the date/time as: "2025-10-23 17:00:17" in UTC. */
-static Cell* builtin_current_datetime_utc(const Lex* e, const Cell* a)
+static Cell* time_current_datetime_utc(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_RANGE(a, 0, 1, "current-datetime-utc");
@@ -126,7 +127,7 @@ static Cell* builtin_current_datetime_utc(const Lex* e, const Cell* a)
  * a format specification as per the C library function strftime(3). With no argument, the format
  * specifier is "%Y-%m-%d %H:%M:%S", which prints the date/time as: "2025-10-23 17:00:17" in the
  * local time. */
-static Cell* builtin_current_datetime_local(const Lex* e, const Cell* a)
+static Cell* time_current_datetime_local(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_RANGE(a, 0, 1, "current-datetime-local");
@@ -153,11 +154,23 @@ static Cell* builtin_current_datetime_local(const Lex* e, const Cell* a)
 }
 
 
-void cozenage_library_init(const Lex* e)
+static const CznExport date_exports[] = {
+    { "current-second",    time_current_second},
+    { "current-jiffy",     time_current_jiffy},
+    { "jiffies-per-second",time_jiffies_per_second},
+    { "current-dt-utc",    time_current_datetime_utc},
+    { "current-dt-local",  time_current_datetime_local},
+};
+
+
+static const CznExportTable date_table = {
+    .exports = date_exports,
+    .count   = sizeof(date_exports) / sizeof(date_exports[0]),
+};
+
+
+const CznExportTable* cozenage_library_init(void)
 {
-    lex_add_builtin(e, "current-second", builtin_current_second);
-    lex_add_builtin(e, "current-jiffy", builtin_current_jiffy);
-    lex_add_builtin(e, "jiffies-per-second", builtin_jiffies_per_second);
-    lex_add_builtin(e, "current-dt-utc", builtin_current_datetime_utc);
-    lex_add_builtin(e, "current-dt-local", builtin_current_datetime_local);
+    return &date_table;
 }
+
