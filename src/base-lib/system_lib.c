@@ -24,6 +24,7 @@
 #include "main.h"
 #include "ports.h"
 #include "vectors.h"
+#include "load_library.h"
 
 #include <unistd.h>
 #include <stdlib.h>
@@ -671,30 +672,41 @@ Cell* system_is_root(const Lex* e, const Cell* a) {
 }
 
 
-void cozenage_library_init(const Lex* e)
+static const CznExport system_exports[] = {
+    { "get-pid",        system_get_pid },
+    { "get-ppid",       system_get_ppid },
+    { "get-env-var",    system_get_env_var },
+    { "get-env-vars",   system_get_env_vars },
+    { "get-uid",        system_get_uid },
+    { "get-gid",        system_get_gid },
+    { "get-euid",       system_get_euid },
+    { "get-egid",       system_get_egid },
+    { "get-username",   system_get_username },
+    { "get-groups",     system_get_groups },
+    { "get-cwd",        system_get_cwd },
+    { "chdir",          system_chdir },
+    { "uname",          system_uname },
+    { "chmod!",         system_chmod },
+    { "uptime",         system_uptime },
+    { "system",         system_system },
+    { "sleep",          system_sleep },
+    { "get-hostname",   system_get_hostname },
+    { "get-home",       system_get_home },
+    { "get-path",       system_get_path },
+    { "cpu-count",      system_get_nproc },
+    { "is-root?",       system_is_root },
+    { "set-uid!",       system_set_uid },
+    { "set-gid!",       system_set_gid },
+};
+
+
+static const CznExportTable system_table = {
+    .exports = system_exports,
+    .count   = sizeof(system_exports) / sizeof(system_exports[0]),
+};
+
+
+const CznExportTable* cozenage_library_init(void)
 {
-    lex_add_builtin(e, "get-pid", system_get_pid);
-    lex_add_builtin(e, "get-ppid", system_get_ppid);
-    lex_add_builtin(e, "get-env-var", system_get_env_var);
-    lex_add_builtin(e, "get-env-vars", system_get_env_vars);
-    lex_add_builtin(e, "get-uid", system_get_uid);
-    lex_add_builtin(e, "get-gid", system_get_gid);
-    lex_add_builtin(e, "get-euid", system_get_euid);
-    lex_add_builtin(e, "get-egid", system_get_egid);
-    lex_add_builtin(e, "get-username", system_get_username);
-    lex_add_builtin(e, "get-groups", system_get_groups);
-    lex_add_builtin(e, "get-cwd", system_get_cwd);
-    lex_add_builtin(e, "chdir", system_chdir);
-    lex_add_builtin(e, "uname", system_uname);
-    lex_add_builtin(e, "chmod!", system_chmod);
-    lex_add_builtin(e, "uptime", system_uptime);
-    lex_add_builtin(e, "system", system_system);
-    lex_add_builtin(e, "sleep", system_sleep);
-    lex_add_builtin(e, "get-hostname", system_get_hostname);
-    lex_add_builtin(e, "get-home", system_get_home);
-    lex_add_builtin(e, "get-path", system_get_path);
-    lex_add_builtin(e, "cpu-count", system_get_nproc);
-    lex_add_builtin(e, "is-root?", system_is_root);
-    lex_add_builtin(e, "set-uid!", system_set_uid);
-    lex_add_builtin(e, "set-gid!", system_set_gid);
+    return &system_table;
 }

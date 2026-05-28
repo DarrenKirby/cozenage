@@ -28,6 +28,7 @@
 #include "types.h"
 #include "numerics.h"
 #include "pairs.h"
+#include "load_library.h"
 
 #include <math.h>
 
@@ -511,32 +512,42 @@ static Cell* math_make_polar(const Lex* e, const Cell* a)
 }
 
 
-/* Register the procedures in the global environment. */
-void cozenage_library_init(const Lex* e)
-{
-    lex_add_builtin(e, "cos", math_cos);
-    lex_add_builtin(e, "acos", math_acos);
-    lex_add_builtin(e, "sin", math_sin);
-    lex_add_builtin(e, "asin", math_asin);
-    lex_add_builtin(e, "tan", math_tan);
-    lex_add_builtin(e, "atan", math_atan);
-    lex_add_builtin(e, "exp", math_exp);
-    lex_add_builtin(e, "log", math_log);
-    lex_add_builtin(e, "log2", math_log2);
-    lex_add_builtin(e, "log10", math_log10);
-    lex_add_builtin(e, "cbrt", math_cbrt);
-    lex_add_builtin(e, "truncate/", math_truncate_div);
-    lex_add_builtin(e, "truncate-quotient", builtin_quotient);
-    lex_add_builtin(e, "truncate-remainder", builtin_remainder);
-    lex_add_builtin(e, "floor/", math_floor_div);
-    lex_add_builtin(e, "floor-quotient", math_floor_quotient);
-    lex_add_builtin(e, "floor-remainder", builtin_modulo);
-    lex_add_builtin(e, "real-part", math_real_part);
-    lex_add_builtin(e, "imag-part", math_imag_part);
-    lex_add_builtin(e, "make-rectangular", math_make_rectangular);
+static const CznExport math_exports[] = {
+    { "cos",                  math_cos },
+    { "acos",                 math_acos },
+    { "sin",                  math_sin },
+    { "asin",                 math_asin },
+    { "tan",                  math_tan },
+    { "atan",                 math_atan },
+    { "exp",                  math_exp },
+    { "log",                  math_log },
+    { "log2",                 math_log2 },
+    { "log10",                math_log10 },
+    { "cbrt",                 math_cbrt },
+    { "truncate/",            math_truncate_div },
+    { "truncate-quotient",    builtin_quotient },
+    { "truncate-remainder",   builtin_remainder },
+    { "floor/",               math_floor_div },
+    { "floor-quotient",       math_floor_quotient },
+    { "floor-remainder",      builtin_modulo },
+    { "real-part",            math_real_part },
+    { "imag-part",            math_imag_part },
+    { "make-rectangular",     math_make_rectangular },
     /* 'magnitude' is identical to 'abs' for real/complex numbers -
      * so we just make an alias. */
-    lex_add_builtin(e,"magnitude", builtin_abs);
-    lex_add_builtin(e,"angle", math_angle);
-    lex_add_builtin(e,"make-polar", math_make_polar);
+    { "magnitude",            builtin_abs },
+    { "angle",                math_angle },
+    { "make-polar",           math_make_polar },
+};
+
+
+static const CznExportTable math_table = {
+    .exports = math_exports,
+    .count   = sizeof(math_exports) / sizeof(math_exports[0]),
+};
+
+
+const CznExportTable* cozenage_library_init(void)
+{
+    return &math_table;
 }

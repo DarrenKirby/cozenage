@@ -19,6 +19,7 @@
 
 #include "types.h"
 #include "cell.h"
+#include "load_library.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -28,6 +29,7 @@
 /* Forward declaration */
 static Cell* bits_bitstring_to_int(const Lex* e, const Cell* a);
 static Cell* bits_int_to_bitstring(const Lex* e, const Cell* a);
+
 
 /* Helper which returns a variable-width two's complement representation
  * of a signed long long */
@@ -453,17 +455,29 @@ static Cell* bits_bitstring_to_int(const Lex* e, const Cell* a)
 }
 
 
-void cozenage_library_init(const Lex* e) {
-    lex_add_builtin(e, ">>", bits_right_shift);
-    lex_add_builtin(e, "<<", bits_left_shift);
-    lex_add_builtin(e, "band", bits_bitwise_and);
-    lex_add_builtin(e, "bor", bits_bitwise_or);
-    lex_add_builtin(e, "bxor", bits_bitwise_xor);
-    lex_add_builtin(e, "bnot", bits_bitwise_not);
-    lex_add_builtin(e, "bs+", bits_add);
-    lex_add_builtin(e, "bs-", bits_sub);
-    lex_add_builtin(e, "bs*", bits_mul);
-    lex_add_builtin(e, "bs/", bits_div);
-    lex_add_builtin(e, "bitstring->int", bits_bitstring_to_int);
-    lex_add_builtin(e, "int->bitstring", bits_int_to_bitstring);
+static const CznExport bits_exports[] = {
+    { ">>",               bits_right_shift },
+    { "<<",               bits_left_shift },
+    { "band",             bits_bitwise_and },
+    { "bor",              bits_bitwise_or },
+    { "bxor",             bits_bitwise_xor },
+    { "bnot",             bits_bitwise_not },
+    { "bs+",              bits_add },
+    { "bs-",              bits_sub },
+    { "bs*",              bits_mul },
+    { "bs/",              bits_div },
+    { "bitstring->int",   bits_bitstring_to_int },
+    { "int->bitstring",   bits_int_to_bitstring },
+};
+
+
+static const CznExportTable bits_table = {
+    .exports = bits_exports,
+    .count   = sizeof(bits_exports) / sizeof(bits_exports[0]),
+};
+
+
+const CznExportTable* cozenage_library_init(void)
+{
+    return &bits_table;
 }

@@ -1,7 +1,7 @@
 /*
  * 'src/base-lib/datetime_lib.c'
  * This file is part of Cozenage - https://github.com/DarrenKirby/cozenage
- * Copyright © 2025 Darren Kirby <darren@dragonbyte.ca>
+ * Copyright © 2025 -Darren Kirby <darren@dragonbyte.ca>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,7 +23,7 @@
 
 #include <time.h>
 
-/* Cozenage uses 1 billion, ie: nanoseconds for J/s. */
+/* Cozenage uses 1 billion, ie: nanoseconds for j/s. */
 #define JIFFIES_PER_SECOND 1000000000
 #define JIFFIES_PER_SECOND_DBL 1000000000.0
 /* Size of strftime() buffer. */
@@ -39,7 +39,7 @@
  * midnight Universal Time) and the value 1.0 represents one TAI second later. Neither high accuracy
  * nor high precision are required; in particular, returning Coordinated Universal Time plus a
  * suitable constant might be the best an implementation can do. */
-static Cell* time_current_second(const Lex* e, const Cell* a)
+static Cell* datetime_current_second(const Lex* e, const Cell* a)
 {
     (void)e; (void)a;
     struct timespec ts;
@@ -63,7 +63,7 @@ static Cell* time_current_second(const Lex* e, const Cell* a)
  * implementation-defined epoch. A jiffy is an implementation-defined fraction of a second which is
  * defined by the return value of the jiffies-per-second procedure. The starting epoch is guaranteed
  * to be constant during a run of the program, but may vary between runs. */
-static Cell* time_current_jiffy(const Lex* e, const Cell* a)
+static Cell* datetime_current_jiffy(const Lex* e, const Cell* a)
 {
     (void)e; (void)a;
     struct timespec ts;
@@ -84,7 +84,7 @@ static Cell* time_current_jiffy(const Lex* e, const Cell* a)
 /* (jiffies-per-second)
  * Returns an exact integer representing the number of jiffies per SI second. This value is an
  * implementation-specified constant. */
-static Cell* time_jiffies_per_second(const Lex* e, const Cell* a)
+static Cell* datetime_jiffies_per_second(const Lex* e, const Cell* a)
 {
     (void)e; (void)a;
     return make_cell_integer(JIFFIES_PER_SECOND);
@@ -95,7 +95,7 @@ static Cell* time_jiffies_per_second(const Lex* e, const Cell* a)
  * Can be called with zero or one argument. If an argument is provided, it must be a string which is
  * a format specification as per the C library function strftime(3). With no argument, the format
  * specifier is "%Y-%m-%d %H:%M:%S", which prints the date/time as: "2025-10-23 17:00:17" in UTC. */
-static Cell* time_current_datetime_utc(const Lex* e, const Cell* a)
+static Cell* datetime_current_datetime_utc(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_RANGE(a, 0, 1, "current-datetime-utc");
@@ -127,7 +127,7 @@ static Cell* time_current_datetime_utc(const Lex* e, const Cell* a)
  * a format specification as per the C library function strftime(3). With no argument, the format
  * specifier is "%Y-%m-%d %H:%M:%S", which prints the date/time as: "2025-10-23 17:00:17" in the
  * local time. */
-static Cell* time_current_datetime_local(const Lex* e, const Cell* a)
+static Cell* datetime_current_datetime_local(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_RANGE(a, 0, 1, "current-datetime-local");
@@ -155,11 +155,11 @@ static Cell* time_current_datetime_local(const Lex* e, const Cell* a)
 
 
 static const CznExport date_exports[] = {
-    { "current-second",    time_current_second},
-    { "current-jiffy",     time_current_jiffy},
-    { "jiffies-per-second",time_jiffies_per_second},
-    { "current-dt-utc",    time_current_datetime_utc},
-    { "current-dt-local",  time_current_datetime_local},
+    { "current-second",    datetime_current_second},
+    { "current-jiffy",     datetime_current_jiffy},
+    { "jiffies-per-second",datetime_jiffies_per_second},
+    { "current-dt-utc",    datetime_current_datetime_utc},
+    { "current-dt-local",  datetime_current_datetime_local},
 };
 
 
@@ -173,4 +173,3 @@ const CznExportTable* cozenage_library_init(void)
 {
     return &date_table;
 }
-

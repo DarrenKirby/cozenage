@@ -32,6 +32,7 @@
 
 #include "types.h"
 #include "pairs.h"
+#include "load_library.h"
 
 
 /* The call signature for all 24 cxr procedures is the same:
@@ -279,29 +280,41 @@ static Cell* cxr_cdddr(const Lex* e, const Cell* a)
 }
 
 
-void cozenage_library_init(const Lex* e) {
-    lex_add_builtin(e, "caaaar", cxr_caaaar);
-    lex_add_builtin(e, "caaar", cxr_caaar);
-    lex_add_builtin(e, "caaddr", cxr_caaddr);
-    lex_add_builtin(e, "cadaar", cxr_cadaar);
-    lex_add_builtin(e, "cadar", cxr_cadar);
-    lex_add_builtin(e, "cadddr", cxr_cadddr);
-    lex_add_builtin(e, "cdaaar", cxr_cdaaar);
-    lex_add_builtin(e, "cdaar", cxr_cdaar);
-    lex_add_builtin(e, "cdaddr", cxr_cdaddr);
-    lex_add_builtin(e, "cddaar", cxr_cddaar);
-    lex_add_builtin(e, "cddar", cxr_cddar);
-    lex_add_builtin(e, "cddddr", cxr_cddddr);
-    lex_add_builtin(e, "caaadr", cxr_caaadr);
-    lex_add_builtin(e, "caadar", cxr_caadar);
-    lex_add_builtin(e, "caadr", cxr_caadr);
-    lex_add_builtin(e, "cadadr", cxr_cadadr);
-    lex_add_builtin(e, "caddar", cxr_caddar);
-    lex_add_builtin(e, "caddr", cxr_caddr);
-    lex_add_builtin(e, "cdaadr", cxr_cdaadr);
-    lex_add_builtin(e, "cdadar", cxr_cdadar);
-    lex_add_builtin(e, "cdadr", cxr_cdadr);
-    lex_add_builtin(e, "cddadr", cxr_cddadr);
-    lex_add_builtin(e, "cdddar", cxr_cdddar);
-    lex_add_builtin(e, "cdddr", cxr_cdddr);
+static const CznExport cxr_exports[] = {
+    { "caaaar",  cxr_caaaar },
+    { "caaar",   cxr_caaar },
+    { "caaddr",  cxr_caaddr },
+    { "cadaar",  cxr_cadaar },
+    { "cadar",   cxr_cadar },
+    { "cadddr",  cxr_cadddr },
+    { "cdaaar",  cxr_cdaaar },
+    { "cdaar",   cxr_cdaar },
+    { "cdaddr",  cxr_cdaddr },
+    { "cddaar",  cxr_cddaar },
+    { "cddar",   cxr_cddar },
+    { "cddddr",  cxr_cddddr },
+    { "caaadr",  cxr_caaadr },
+    { "caadar",  cxr_caadar },
+    { "caadr",   cxr_caadr },
+    { "cadadr",  cxr_cadadr },
+    { "caddar",  cxr_caddar },
+    { "caddr",   cxr_caddr },
+    { "cdaadr",  cxr_cdaadr },
+    { "cdadar",  cxr_cdadar },
+    { "cdadr",   cxr_cdadr },
+    { "cddadr",  cxr_cddadr },
+    { "cdddar",  cxr_cdddar },
+    { "cdddr",   cxr_cdddr },
+};
+
+
+static const CznExportTable cxr_table = {
+    .exports = cxr_exports,
+    .count   = sizeof(cxr_exports) / sizeof(cxr_exports[0]),
+};
+
+
+const CznExportTable* cozenage_library_init(void)
+{
+    return &cxr_table;
 }

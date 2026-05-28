@@ -19,6 +19,7 @@
 
 #include "types.h"
 #include "cell.h"
+#include "load_library.h"
 
 #include <unistd.h>
 #include <errno.h>
@@ -750,26 +751,37 @@ Cell* file_file_executable(const Lex* e, const Cell* a) {
  */
 
 
-/* Register the procedures in the environment. */
-void cozenage_library_init(const Lex* e)
+static const CznExport file_exports[] = {
+    { "reg-file?",          file_reg_file_pred },
+    { "directory?",         file_directory_pred },
+    { "symlink?",           file_symlink_pred },
+    { "char-device?",       file_char_device_pred },
+    { "block-device?",      file_block_device_pred },
+    { "fifo?",              file_pipe_pred },
+    { "socket?",            file_socket_pred },
+    { "file-exists?",       file_file_exists_pred },
+    { "rmdir!",             file_rmdir },
+    { "mkdir",              file_mkdir },
+    { "unlink!",            file_unlink },
+    { "stat",               file_stat },
+    { "file-size",          file_file_size },
+    { "file-atime",         file_file_atime },
+    { "file-ctime",         file_file_ctime },
+    { "file-mtime",         file_file_mtime },
+    { "file-readable?",     file_file_readable },
+    { "file-writeable?",    file_file_writable },
+    { "file-executable?",   file_file_executable },
+};
+
+
+static const CznExportTable file_table = {
+    .exports = file_exports,
+    .count   = sizeof(file_exports) / sizeof(file_exports[0]),
+};
+
+
+const CznExportTable* cozenage_library_init(void)
 {
-    lex_add_builtin(e, "reg-file?", file_reg_file_pred);
-    lex_add_builtin(e, "directory?", file_directory_pred);
-    lex_add_builtin(e, "symlink?", file_symlink_pred);
-    lex_add_builtin(e, "char-device?", file_char_device_pred);
-    lex_add_builtin(e, "block-device?", file_block_device_pred);
-    lex_add_builtin(e, "fifo?", file_pipe_pred);
-    lex_add_builtin(e, "socket?", file_socket_pred);
-    lex_add_builtin(e, "file-exists?", file_file_exists_pred);
-    lex_add_builtin(e, "rmdir!", file_rmdir);
-    lex_add_builtin(e, "mkdir", file_mkdir);
-    lex_add_builtin(e, "unlink!", file_unlink);
-    lex_add_builtin(e, "stat", file_stat);
-    lex_add_builtin(e, "file-size", file_file_size);
-    lex_add_builtin(e, "file-atime", file_file_atime);
-    lex_add_builtin(e, "file-ctime", file_file_ctime);
-    lex_add_builtin(e, "file-mtime", file_file_mtime);
-    lex_add_builtin(e, "file-readable?", file_file_readable);
-    lex_add_builtin(e, "file-writeable?", file_file_writable);
-    lex_add_builtin(e, "file-executable?", file_file_executable);
+    return &file_table;
 }
+

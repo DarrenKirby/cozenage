@@ -18,13 +18,13 @@
  */
 
 
-#include "repr.h"
-#include "../cell.h"
-#include "../eval.h"
-#include "../types.h"
-#include "../symbols.h"
-#include "../special_forms.h"
-#include "../predicates.h"
+#include "load_library.h"
+#include "cell.h"
+#include "eval.h"
+#include "types.h"
+#include "symbols.h"
+#include "special_forms.h"
+#include "predicates.h"
 
 #include <gc/gc.h>
 
@@ -689,26 +689,34 @@ Cell* lazy_reduce(const Lex* e, const Cell* a) {
 }
 
 
-void cozenage_library_init(const Lex* e)
-{
-    /* Register builtin procedures in the global environment. */
-    lex_add_builtin(e, "force", lazy_force);
-    lex_add_builtin(e, "make-promise", lazy_make_promise);
-    lex_add_builtin(e, "head", lazy_head);
-    lex_add_builtin(e, "tail", lazy_tail);
-    lex_add_builtin(e, "stream?", lazy_stream_pred);
-    lex_add_builtin(e, "promise?", lazy_promise_pred);
-    lex_add_builtin(e, "at", lazy_at);
-    lex_add_builtin(e, "take", lazy_take);
-    lex_add_builtin(e, "drop", lazy_drop);
-    lex_add_builtin(e, "list->stream", lazy_list_to_stream);
-    lex_add_builtin(e, "iterate", lazy_iterate);
-    lex_add_builtin(e, "collect", lazy_collect);
-    lex_add_builtin(e, "select", lazy_select);
-    lex_add_builtin(e, "reduce", lazy_reduce);
-    lex_add_builtin(e, "weave", lazy_weave);
-    lex_add_builtin(e, "stream-null?", builtin_null_pred);
+static const CznExport lazy_exports[] = {
+    { "force",          lazy_force },
+    { "make-promise",   lazy_make_promise },
+    { "head",           lazy_head },
+    { "tail",           lazy_tail },
+    { "stream?",        lazy_stream_pred },
+    { "promise?",       lazy_promise_pred },
+    { "at",             lazy_at },
+    { "take",           lazy_take },
+    { "drop",           lazy_drop },
+    { "list->stream",   lazy_list_to_stream },
+    { "iterate",        lazy_iterate },
+    { "collect",        lazy_collect },
+    { "select",         lazy_select },
+    { "reduce",         lazy_reduce },
+    { "weave",          lazy_weave },
+    { "stream-null?",   builtin_null_pred },
+};
 
+
+static const CznExportTable lazy_table = {
+    .exports = lazy_exports,
+    .count   = sizeof(lazy_exports) / sizeof(lazy_exports[0]),
+};
+
+
+const CznExportTable* cozenage_library_init(void)
+{
     /* Intern symbols for the three special forms, and set their SF_IDs. */
     Cell* delay = make_cell_symbol("delay");
     delay->sf_id = SF_ID_DELAY;
@@ -723,4 +731,7 @@ void cozenage_library_init(const Lex* e)
     SF_DISPATCH_TABLE[SF_ID_DELAY]       = &sf_delay;
     SF_DISPATCH_TABLE[SF_ID_DELAY_FORCE] = &sf_delay_force;
     SF_DISPATCH_TABLE[SF_ID_STREAM]      = &sf_stream;
+
+    /* Return the Vtable to be loaded. */
+    return &lazy_table;
 }
