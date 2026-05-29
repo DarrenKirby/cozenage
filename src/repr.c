@@ -370,6 +370,7 @@ static void cell_to_string_worker(const Cell* v,
         }
 
         case CELL_BIGFLOAT: {
+            /* TODO: this needs to b changed. */
             char f_buf[1024];
             gmp_snprintf(f_buf, sizeof(f_buf), "%Ff", v->bi);
             sb_append_str(sb, f_buf);
