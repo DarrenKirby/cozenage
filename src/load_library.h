@@ -1,7 +1,7 @@
 /*
  * 'src/load_library.h'
  * This file is part of Cozenage - https://github.com/DarrenKirby/cozenage
- * Copyright © 2025 Darren Kirby <darren@dragonbyte.ca>
+ * Copyright © 2025 - 2026 Darren Kirby <darren@dragonbyte.ca>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,7 +22,45 @@
 
 #include "cell.h"
 
+#define PROCEDURE_NAME_LENGTH 256
 
-Cell* load_library(const char* lib_name, const Lex* env);
+/* builtin function signature. */
+typedef Cell* (*CznBuiltinFn)(const Lex*, const Cell*);
+
+typedef struct {
+    const char*  scheme_name;   /* Scheme-visible name, e.g. "current-second" */
+    CznBuiltinFn func;
+} CznExport;
+
+typedef struct {
+    const CznExport* exports;
+    int              count;
+} CznExportTable;
+
+/* New init signature: pure declaration, no side effects. */
+typedef const CznExportTable* (*CznLibInitFunc)(void);
+
+typedef enum {
+    IMPORT_ALL,
+    IMPORT_ONLY,
+    IMPORT_EXCEPT,
+} ImportMode;
+
+typedef struct {
+    const char* from;
+    const char* to;
+} CznRename;
+
+typedef struct {
+    ImportMode   mode;
+    const char** filter_names;   /* identifiers for only/except */
+    int          filter_count;
+    CznRename*   renames;        /* (old new) pairs for rename */
+    int          rename_count;
+    const char*  prefix;         /* "" means no prefix */
+} ImportSpec;
+
+int internal_cozenage_load_lib(const char* libname, const Lex* env, const ImportSpec* spec);
+void load_library(const char* libname, const Lex* env);
 
 #endif //COZENAGE_LOAD_LIBRARY_H
