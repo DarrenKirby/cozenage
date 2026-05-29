@@ -130,7 +130,7 @@ test: $(TEST_BINARY)
 clean:
 	@echo "--- Cleaning all build artifacts ---"
 	@rm -f $(BINARY) $(TEST_BINARY)
-	@rm -rf $(BUILD_DIR) $(OBJ_DIR) lib
+	@rm -rf $(BUILD_DIR) $(OBJ_DIR) lib/cozenage
 
 # Target to clean and then rebuild using the default method
 rebuild: clean all
@@ -166,7 +166,7 @@ $(OBJ_DIR)/%.o: %.c
 # 'src/base-lib/math_lib.c' and compiles it as a shared library.
 # ==============================================================================
 lib/cozenage/base/%.$(LIB_EXT): src/base-lib/%_lib.c
-	@mkdir -p lib
+	@mkdir -p $(@D)
 	@echo "Building module: $@"
 	$(CC) $(CFLAGS) $(LIB_CFLAGS) $(MODULE_LDFLAGS) $< -o $@
 
