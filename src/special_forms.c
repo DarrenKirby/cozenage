@@ -472,53 +472,103 @@ HandlerResult sf_cond(Lex* e, Cell* a)
 /* TODO: implement 'only', 'except', 'prefix', and 'rename' */
 HandlerResult sf_import(Lex* e, Cell* a)
 {
-    Cell* import_set = make_cell_sexpr();
-    import_set->cell = GC_MALLOC(sizeof(Cell*) * a->count);
-    /* Make a new sexpr which contains pairs of (library . name), */
-    int i;
-    for (i = 0; i < a->count; i++) {
-        if (a->cell[i]->count < 2) {
-            Cell* err = make_cell_error(
-                "import: import-set must include 'library' and 'name' identifiers. (Did you forget 'base'?)",
-                GEN_ERR);
+    for (int i = 0; i < a->count; i++) {
+        Cell* i_set = a->cell[i];
+
+        if (i_set->type != CELL_SEXPR || i_set->count < 2) {
+            Cell* err = make_cell_error("import: invalid import set", SYNTAX_ERR);
             return (HandlerResult){ .action = ACTION_RETURN, .value = err };
         }
-        /* Make sure each arg is an s-expression. */
-        if (a->cell[i]->type != CELL_SEXPR) {
-            Cell* err = make_cell_error(
-                "import: import-set must be an S-expression",
-                SYNTAX_ERR);
-            return (HandlerResult){ .action = ACTION_RETURN, .value = err };
-        }
-        const char* lib = GC_strdup(a->cell[i]->cell[0]->sym);
-        const char* name = GC_strdup(a->cell[i]->cell[1]->sym);
-        import_set->cell[i] = make_cell_pair(make_cell_string(lib),
-                     make_cell_string(name));
-    }
-    import_set->count = i;
 
-    Cell* result = nullptr;
-    for (int j = 0; j < import_set->count; j++) {
-        const char* library_type = import_set->cell[j]->car->str;
-        const char* library_name = import_set->cell[j]->cdr->str;
+        ImportSpec spec = {
+            .mode         = IMPORT_ALL,
+            .filter_names = nullptr,
+            .filter_count = 0,
+            .renames      = nullptr,
+            .rename_count = 0,
+            .prefix       = "",
+        };
 
-        if (strcmp(library_type, "base") == 0) {
-            /* Load the Library */
-            result = load_library(library_name, e);
+        Cell* libname_cell; /* Will point to the (lib name) s-expression. */
+
+        /* Distinguish simple (lib name) from (modifier (lib name) ...). */
+        if (i_set->count == 2
+            && i_set->cell[0]->type == CELL_SYMBOL
+            && i_set->cell[1]->type == CELL_SYMBOL) {
+            /* Simple unmodified import set. */
+            libname_cell = i_set;
         } else {
-            /* TODO: Handle User Libraries Here
-             * For example, (import (my-libs utils)). */
+            /* Modified import set: first element is the modifier name,
+             * second element must be an inner (lib name) s-expression. */
+            if (i_set->cell[1]->type != CELL_SEXPR || i_set->cell[1]->count != 2) {
+                Cell* err = make_cell_error(
+                    "import: modifier requires a library name (lib name) as second element",
+                    SYNTAX_ERR);
+                return (HandlerResult){ .action = ACTION_RETURN, .value = err };
+            }
+            libname_cell = i_set->cell[1];
+            const char* mod = i_set->cell[0]->sym;
+
+            if (strcmp(mod, "only") == 0) {
+                spec.mode         = IMPORT_ONLY;
+                spec.filter_count = i_set->count - 2;
+                spec.filter_names = GC_malloc(spec.filter_count * sizeof(char*));
+                for (int j = 0; j < spec.filter_count; j++)
+                    spec.filter_names[j] = i_set->cell[j + 2]->sym;
+
+            } else if (strcmp(mod, "except") == 0) {
+                spec.mode         = IMPORT_EXCEPT;
+                spec.filter_count = i_set->count - 2;
+                spec.filter_names = GC_malloc(spec.filter_count * sizeof(char*));
+                for (int j = 0; j < spec.filter_count; j++)
+                    spec.filter_names[j] = i_set->cell[j + 2]->sym;
+
+            } else if (strcmp(mod, "prefix") == 0) {
+                if (i_set->count != 3) {
+                    Cell* err = make_cell_error(
+                        "import: 'prefix' requires exactly one argument", SYNTAX_ERR);
+                    return (HandlerResult){ .action = ACTION_RETURN, .value = err };
+                }
+                spec.prefix = i_set->cell[2]->str;  /* string cell */
+
+            } else if (strcmp(mod, "rename") == 0) {
+                spec.rename_count = i_set->count - 2;
+                spec.renames      = GC_malloc(spec.rename_count * sizeof(CznRename));
+                for (int j = 0; j < spec.rename_count; j++) {
+                    Cell* pair = i_set->cell[j + 2];
+                    if (pair->type != CELL_SEXPR || pair->count != 2) {
+                        Cell* err = make_cell_error(
+                            "import: 'rename' expects (old-name new-name) pairs",
+                            SYNTAX_ERR);
+                        return (HandlerResult){ .action = ACTION_RETURN, .value = err };
+                    }
+                    spec.renames[j].from = pair->cell[0]->sym;
+                    spec.renames[j].to   = pair->cell[1]->sym;
+                }
+            } else {
+                Cell* err = make_cell_error("import: unknown import modifier", SYNTAX_ERR);
+                return (HandlerResult){ .action = ACTION_RETURN, .value = err };
+            }
+        }
+
+        /* Extract library identifier and library name from libname_cell. */
+        const char* lib  = libname_cell->cell[0]->sym;
+        const char* name = libname_cell->cell[1]->sym;
+
+        if (strcmp(lib, "base") != 0) {
             Cell* err = make_cell_error(
-                "import: user-defined libraries not yet supported",
-                GEN_ERR);
-            return (HandlerResult) { .action = ACTION_RETURN, .value = err };
+                "import: user-defined libraries not yet supported", GEN_ERR);
+            return (HandlerResult){ .action = ACTION_RETURN, .value = err };
+        }
+
+        if (!internal_cozenage_load_lib(name, e, &spec)) {
+            Cell* err = make_cell_error("import: failed to load library", GEN_ERR);
+            return (HandlerResult){ .action = ACTION_RETURN, .value = err };
         }
     }
-    /* Re-generate the completion array if we're in the REPL. */
-    if (is_repl) {
-        populate_dynamic_completions(e);
-    }
-    return (HandlerResult) { .action = ACTION_RETURN, .value = result };
+
+    if (is_repl) populate_dynamic_completions(e);
+    return (HandlerResult){ .action = ACTION_RETURN, .value = True_Obj };
 }
 
 
