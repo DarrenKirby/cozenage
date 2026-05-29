@@ -28,34 +28,36 @@
 #include <stdlib.h>
 #include <pwd.h>
 #include <gc/gc.h>
+#include <sys/syslimits.h>
 
 
 char *cozenage_history_path = nullptr;
 
 void load_initial_libraries(const Lex* e, const lib_load_config load_libs) {
+
     if (load_libs.file) {
-        (void)load_library("file", e);
+        load_library("file", e);
     }
     if (load_libs.math) {
-        (void)load_library("math", e);
+        load_library("math", e);
     }
     if (load_libs.system) {
-        (void)load_library("system", e);
+        load_library("system", e);
     }
     if (load_libs.cxr) {
-        (void)load_library("cxr", e);
+        load_library("cxr", e);
     }
     if (load_libs.time) {
-        (void)load_library("time", e);
+        load_library("datetime", e);
     }
     if (load_libs.bits) {
-        (void)load_library("bits", e);
+        load_library("bits", e);
     }
     if (load_libs.random) {
-        (void)load_library("random", e);
+        load_library("random", e);
     }
     if (load_libs.lazy) {
-        (void)load_library("lazy", e);
+        load_library("lazy", e);
     }
 }
 
