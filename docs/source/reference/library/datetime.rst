@@ -1,5 +1,5 @@
 Base Datetime Library
-===================
+=====================
 
 The ``(base datetime)`` library provides access to date and time related prcedures.
 

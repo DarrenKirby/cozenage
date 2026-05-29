@@ -46,7 +46,7 @@ CMake build
 
 This will create a build/ directory in the source root which contains all the intermediate object
 files. The main ``cozenage`` binary will be placed in the top-level of the source tree. The library modules will be
-placed in a ``lib/`` subdirectory of the source tree. On macOS systems, these modules will be suffixed with ``.dylib``
+placed in the ``lib/cozenage/base/`` subdirectory of the source tree. On macOS systems, these modules will be suffixed with ``.dylib``
 extensions. All other systems will suffix them with the ``.so`` extension.
 
 The default build specifies an -02 optimized binary. You can specify a non-optimized build with debugging symbols
@@ -88,7 +88,7 @@ To install the cozenage binary and library modules to the system, run:
 
     $ make install
 
-This will install ``cozenage`` to /usr/local/bin, and the modules to
+This will install ``cozenage`` to /usr/local/bin, and the modules under
 /usr/local/lib/cozenage by default. To change this default, add the `PREFIX` variable to
 the command:
 

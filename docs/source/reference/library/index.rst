@@ -2,7 +2,7 @@ Cozenage loadable module libraries
 ==================================
 
 Cozenage supplies libraries beyond the core implementation, all of which use the
-``base`` library prefix.
+``base`` collection prefix.
 
 The procedures exported by these various libraries are documented in this section of the Cozenage
 Reference document. They are:
@@ -31,7 +31,7 @@ Cozenage 'base' standard libraries
 - ``random`` - The ``(base random)`` library exports procedures for generating random numbers, shuffling containers,
   and generating random samples from collections.
 - ``system`` - The ``(base system)`` library exports procedures for interfacing with the local operating system.
-- ``time`` - The ``(base time)`` library provides access to time-related values.
+- ``datetime`` - The ``(base datetime)`` library provides access to date and time related procedures.
 
 
 .. toctree::
@@ -45,4 +45,4 @@ Cozenage 'base' standard libraries
    lazy
    random
    system
-   time
+   datetime

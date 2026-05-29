@@ -568,24 +568,14 @@ import
 .. describe:: (import import-set ...)
 
     Loads one or more named libraries into the current environment, making
-    their exported bindings available for use. Each *import-set* is a
-    two-element list of the form ``(library-group name)``, where
-    *library-group* identifies the collection the library belongs to and
-    *name* identifies the specific library within that collection.
-
-    .. note::
-
-        User-defined and third-party library loading is not yet supported.
-        Currently, ``import`` only loads libraries from the built-in
-        Cozenage standard library collection, referenced using the ``base``
-        group identifier. Support for user and third-party libraries,
-        including the R7RS import modifiers ``only``, ``except``, ``prefix``,
-        and ``rename``, is planned for a future release.
+    their exported bindings available for use. Each *import-set* is either a
+    plain library reference of the form ``(collection library)``, or a
+    modified import set using one of the modifiers described below.
 
     **Cozenage standard libraries**
 
     All built-in Cozenage libraries are referenced using ``base`` as the
-    library group. The following libraries are currently available:
+    collection. The following libraries are currently available:
 
     - ``bits`` — bitwise operations on integers
     - ``cxr`` — extended ``car``/``cdr`` compositions (e.g. ``caddr``,
@@ -596,31 +586,147 @@ import
       ``complex`` libraries
     - ``random`` — random number generation and collection shuffling
     - ``system`` — OS and hardware interfacing procedures
-    - ``time`` — date and time procedures
+    - ``datetime`` — date and time procedures
 
-    Multiple libraries may be imported in a single ``import`` expression by
-    providing multiple *import-sets*:
+    **Import modifiers**
+
+    An import set may be modified to control which bindings are imported and
+    under what names. A modified import set is written as a list beginning
+    with the modifier name, followed by a plain ``(collection library)``
+    import set, followed by any modifier-specific arguments.
+
+    .. note::
+
+       Modifiers cannot currently be nested. The inner import set must
+       always be a plain ``(collection library)`` reference.
+
+    **only**
+
+    ``(only import-set identifier ...)``
+
+    Imports exclusively the named identifiers from the library, ignoring
+    all other exports. This is useful when only a small subset of a
+    library's procedures is needed, or to avoid introducing unwanted names
+    into the global environment.
 
     .. code-block:: scheme
 
-      (import (base bits) (base math))
+      ;;; import only 'sin' and 'cos' from (base math)
+      --> (import (only (base math) sin cos))
+      #t
+      ;;; 'sin' and 'cos' are now available; other (base math) exports are not
+      --> (sin 0.0)
+      0.0
+      --> (floor 1.5)
+      ; error: unbound symbol 'floor'
 
-    :param import-set: One or more two-element lists of the form
-                       ``(library-group name)``.
+    **except**
+
+    ``(except import-set identifier ...)``
+
+    Imports all bindings from the library, excluding those explicitly
+    named. This is the complement of ``only``, and is useful when a library
+    provides many useful procedures but one or more of its exported names
+    would conflict with a binding already present in the environment.
+
+    .. code-block:: scheme
+
+      ;;; 'log' is already bound to a custom implementation;
+      ;;; import all of (base math) without overwriting it
+      --> (import (except (base math) log))
+      #t
+      ;;; all (base math) procedures are now available, except 'log',
+      ;;; which retains its existing binding
+
+    **prefix**
+
+    ``(prefix import-set string)``
+
+    Imports all bindings from the library, prepending *string* to every
+    exported name before it is registered in the environment. This is useful
+    for importing two libraries that would otherwise export identically-named
+    procedures, at the cost of longer names at the call site. Note that
+    *string* is a string literal, not an identifier.
+
+    .. code-block:: scheme
+
+      ;;; import all of (base math) with a 'math-' prefix on every name
+      --> (import (prefix (base math) "math-"))
+      #t
+      ;;; each procedure is accessible under its prefixed name
+      --> (math-sin 0.0)
+      0.0
+      --> (math-floor 1.5)
+      1.0
+
+    **rename**
+
+    ``(rename import-set (old-name new-name) ...)``
+
+    Imports all bindings from the library, substituting a new name for each
+    specified binding. Each rename argument is a two-element list containing
+    the name as exported by the library and the name it should receive in the
+    current environment. Bindings not listed in any rename pair are imported
+    under their original names unchanged. This allows individual naming
+    conflicts to be resolved without affecting the rest of the library's
+    exports, and without prefixing everything.
+
+    .. code-block:: scheme
+
+      ;;; import (base math), renaming 'floor' to 'truncate-down'
+      --> (import (rename (base math) (floor truncate-down)))
+      #t
+      ;;; 'truncate-down' is now bound in the environment; 'floor' is not
+      --> (truncate-down 3.7)
+      3.0
+      ;;; all other (base math) exports retain their original names
+      --> (sin 0.0)
+      0.0
+
+      ;;; multiple bindings can be renamed in a single expression
+      --> (import (rename (base math) (floor truncate-down)
+                                      (ceiling truncate-up)))
+      #t
+
+    Multiple libraries may be imported in a single ``import`` expression by
+    providing multiple *import-sets*. Each import set may independently use
+    any of the modifiers above:
+
+    .. code-block:: scheme
+
+      ;;; plain, filtered, and prefixed imports in a single expression
+      (import (base bits)
+              (only (base math) sin cos)
+              (prefix (base datetime) "dt-"))
+      ;;; bits exports, sin and cos, and all datetime exports
+      ;;; prefixed with 'dt-' are now available
+
+    :param import-set: One or more import sets. Each is either a plain
+                       ``(collection library)`` reference, or a modified
+                       import set using ``only``, ``except``, ``prefix``,
+                       or ``rename``.
     :return: Unspecified.
 
-    **Example:**
+    **Examples:**
 
     .. code-block:: scheme
 
       --> (import (base math))
       #t
-      --> (import (base bits))
-      #t
       --> (import (base bits) (base random))
       #t
-      --> (import (my-libs utils))
-      Error: import: user-defined libraries not yet supported
+      --> (import (only (base math) sin cos tan))
+      #t
+      ;;; 'sin', 'cos', and 'tan' are available; no other math exports are
+      --> (import (except (base math) log))
+      #t
+      ;;; all of (base math) is available except 'log'
+      --> (import (prefix (base datetime) "dt-"))
+      #t
+      ;;; datetime exports are available as 'dt-current-second', etc.
+      --> (import (rename (base math) (floor truncate-down)))
+      #t
+      ;;; (base math) is available with 'truncate-down' in place of 'floor'
 
 .. _sf:let:
 

@@ -20,7 +20,7 @@ Cozenage command line flags
     This is a convenience flag which is identical to manually loading libraries using the ``(import (base foo))``
     syntax. Valid arguments to this flag are:
 
-    ``bits``, ``cxr``, ``file``, ``math``, ``random``, ``system``, and ``time``.
+    ``bits``, ``cxr``, ``file``, ``lazy``, ``math``, ``random``, ``system``, and ``datetime``.
 
 Using the file runner
 ---------------------
