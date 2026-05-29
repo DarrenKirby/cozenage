@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(Cozenage LANGUAGES C VERSION 0.16.0)
+project(Cozenage LANGUAGES C VERSION 0.18.2)
 set(CMAKE_C_STANDARD 23)
 
 message(STATUS "Building ${PROJECT_NAME} v${PROJECT_VERSION}")
@@ -95,17 +95,17 @@ target_compile_definitions(cozenage PUBLIC APP_VERSION="${PROJECT_VERSION}")
 
 # Platform linker flags — set ONCE here, not inside the module loop
 if(APPLE)
-    target_link_options(cozenage PRIVATE "-Wl,-rpath,@executable_path/../lib/cozenage/")
+    target_link_options(cozenage PRIVATE "-Wl,-rpath,@executable_path/../lib/cozenage/base/")
 elseif(UNIX)
     # --export-dynamic makes main binary's symbols visible to dlopen'd modules
     target_link_options(cozenage PRIVATE
             -Wl,--export-dynamic
-            "-Wl,-rpath,\$ORIGIN/../lib/cozenage"
+            "-Wl,-rpath,\$ORIGIN/../lib/cozenage/base"
     )
 endif()
 
 # --- Loadable modules ---
-set(MODULE_OUTPUT_DIR ${PROJECT_SOURCE_DIR}/lib)
+set(MODULE_OUTPUT_DIR ${PROJECT_SOURCE_DIR}/lib/cozenage/base)
 file(MAKE_DIRECTORY ${MODULE_OUTPUT_DIR})
 file(GLOB LIB_SOURCES "src/base-lib/*.c")
 

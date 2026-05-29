@@ -24,7 +24,7 @@ OBJ_DIR = obj
 PREFIX ?= /usr/local
 DESTDIR ?=
 INSTALL_BIN_DIR=$(DESTDIR)$(PREFIX)/bin
-INSTALL_LIB_DIR=$(DESTDIR)$(PREFIX)/lib/cozenage
+INSTALL_LIB_DIR=$(DESTDIR)$(PREFIX)/lib/cozenage/base
 
 # Added OS detection for library extensions
 UNAME_S := $(shell uname -s)
@@ -32,13 +32,13 @@ ifeq ($(UNAME_S),Darwin)
 	LIB_EXT = dylib
 	MODULE_LDFLAGS = -Wl,-undefined,dynamic_lookup
 	# Add RPATH to the executable
-	EXE_LDFLAGS = -Wl,-rpath,@executable_path/../lib/cozenage/
+	EXE_LDFLAGS = -Wl,-rpath,@executable_path/../lib/cozenage/base/
 else
 	LIB_EXT = so
 	MODULE_LDFLAGS =
 	# Export symbols AND add RPATH using $ORIGIN
 	# Note: we use \$$ to ensure the '$' reaches the shell/linker correctly
-	EXE_LDFLAGS = -Wl,--export-dynamic -Wl,-rpath,'\$$ORIGIN/../lib/cozenage'
+	EXE_LDFLAGS = -Wl,--export-dynamic -Wl,-rpath,'\$$ORIGIN/../lib/cozenage/base'
 endif
 
 # Check for debug build flag
@@ -83,13 +83,13 @@ GMP_CFLAGS = $(shell pkg-config --cflags gmp)
 GMP_LIBS = $(shell pkg-config --libs gmp)
 
 # Detect openssl lib, and omit random.so compilation if not present
-LIB_MODULES := $(patsubst src/base-lib/%_lib.c,lib/%.$(LIB_EXT),$(LIB_SOURCES))
+LIB_MODULES := $(patsubst src/base-lib/%_lib.c,lib/cozenage/base/%.$(LIB_EXT),$(LIB_SOURCES))
 
 ifeq ($(shell pkg-config --exists openssl && echo yes),yes)
 	SSL_LIBS := $(shell pkg-config --libs openssl)
 	MODULE_LDFLAGS += $(SSL_LIBS)
 else
-	LIB_MODULES := $(filter-out lib/random.$(LIB_EXT),$(LIB_MODULES))
+	LIB_MODULES := $(filter-out lib/cozenage/base/random.$(LIB_EXT),$(LIB_MODULES))
 endif
 
 # Specific flag sets for different builds
@@ -119,7 +119,7 @@ cmake_build:
 nocmake: CFLAGS += $(CFLAGS_DEFAULT)
 # 'nocmake' now also depends on building all the modules
 nocmake: $(BINARY) $(LIB_MODULES)
-	@echo "--- Manual build complete: ./$(BINARY) and modules in lib/ ---"
+	@echo "--- Manual build complete: ./$(BINARY) and modules in lib/cozenage/base/ ---"
 
 # Target to build the test runner
 test: CFLAGS += $(CFLAGS_TEST)
@@ -162,10 +162,10 @@ $(OBJ_DIR)/%.o: %.c
 # ==============================================================================
 # New Rule to Build Loadable Modules
 #
-# This rule matches, for example, 'lib/math.so' with
+# This rule matches, for example, 'lib/cozenage/base/math.so' with
 # 'src/base-lib/math_lib.c' and compiles it as a shared library.
 # ==============================================================================
-lib/%.$(LIB_EXT): src/base-lib/%_lib.c
+lib/cozenage/base/%.$(LIB_EXT): src/base-lib/%_lib.c
 	@mkdir -p lib
 	@echo "Building module: $@"
 	$(CC) $(CFLAGS) $(LIB_CFLAGS) $(MODULE_LDFLAGS) $< -o $@
@@ -180,7 +180,7 @@ install:
 	@mkdir -v -p $(INSTALL_BIN_DIR)
 	@mkdir -v -p $(INSTALL_LIB_DIR)
 	@install -v -m 755 $(BINARY) $(INSTALL_BIN_DIR)
-	@for m in lib/*.$(LIB_EXT); do \
+	@for m in lib/cozenage/base/*.$(LIB_EXT); do \
     	install -v -m 755 $$m $(INSTALL_LIB_DIR)/$$(basename $$m); \
     done
 	@echo "-- Installed $(BINARY) to $(INSTALL_BIN_DIR)"
