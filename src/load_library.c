@@ -53,8 +53,7 @@ static void apply_import_spec(const Lex* env,
 
     for (int i = 0; i < table->count; i++) {
         const char* scheme_name = table->exports[i].scheme_name;
-        CznBuiltinFn func       = table->exports[i].func;
-        //Cell* func = table->exports[i].func;
+        const CznBuiltinFn func = table->exports[i].func;
 
         /* Apply only/except filter. */
         if (spec->mode == IMPORT_ONLY) {
@@ -83,19 +82,17 @@ static void apply_import_spec(const Lex* env,
 
 
 /*
- * This is the internal C function that handles loading.
- * It takes a "logical" library name (e.g., "math"),
- * the environment to load it into, and an optional 'prefix'
- * modifier.
+ * This is the internal C function that handles module loading.
+ * It takes a collection and library from an import-set,
+ * the environment to load it into, and an import spec.
  *
  * Returns 1 on success, 0 on failure.
  */
-int internal_cozenage_load_lib(const char* libname, const Lex* env,
-                                const ImportSpec* spec)
+int internal_cozenage_load_lib(const char* collection, const char* library,
+                               const Lex* env, const ImportSpec* spec)
 {
     char filepath[PATH_MAX];
     void* lib_handle = NULL;
-    //CznLibInitFunc init_func;
 
     const char* env_path = getenv("COZENAGE_LIB_PATH");
     if (!env_path) {
@@ -109,7 +106,7 @@ int internal_cozenage_load_lib(const char* libname, const Lex* env,
      * for regular/multilib Linux systems, and in /usr/local/lib/ for macOS and *BSD. */
 
     const char* search_paths[] = {
-        "./lib",
+        "./lib/cozenage",
         "../lib/cozenage",
         env_path,
         "/usr/lib/cozenage",
@@ -123,7 +120,7 @@ int internal_cozenage_load_lib(const char* libname, const Lex* env,
     /* Iterate paths and try to load. */
     for (int i = 0; search_paths[i] != NULL; ++i) {
         if (search_paths[i][0] == '\0') continue;
-        snprintf(filepath, sizeof(filepath), "%s/%s.%s", search_paths[i], libname, LIB_EXT);
+        snprintf(filepath, sizeof(filepath), "%s/%s/%s.%s", search_paths[i], collection, library, LIB_EXT);
         lib_handle = dlopen(filepath, RTLD_LAZY);
         if (lib_handle) break;
     }
@@ -131,7 +128,7 @@ int internal_cozenage_load_lib(const char* libname, const Lex* env,
     if (!lib_handle) {
         /* Both failed. Report the error.
          * dlerror() returns a human-readable message. */
-        fprintf(stderr, "Error loading library '%s': %s\n", libname, dlerror());
+        fprintf(stderr, "Error loading library '%s %s': %s\n", collection, library, dlerror());
         return 0;
     }
 
@@ -146,7 +143,7 @@ int internal_cozenage_load_lib(const char* libname, const Lex* env,
 
     const CznExportTable* table = init_func();
     if (!table) {
-        fprintf(stderr, "Library '%s' returned a null export table.\n", libname);
+        fprintf(stderr, "Library '%s %s' returned a null export table.\n", collection, library);
         dlclose(lib_handle);
         return 0;
     }
@@ -159,7 +156,7 @@ int internal_cozenage_load_lib(const char* libname, const Lex* env,
 /* This handles the libs specified to load from CLI args. */
 void load_library(const char* libname, const Lex* env) {
     /* Use default spec. */
-    ImportSpec spec = {
+    const ImportSpec spec = {
         .mode         = IMPORT_ALL,
         .filter_names = nullptr,
         .filter_count = 0,
@@ -169,9 +166,9 @@ void load_library(const char* libname, const Lex* env) {
     };
 
     /* Call the internal loader. */
-    const int success = internal_cozenage_load_lib(libname, env, &spec);
+    const int success = internal_cozenage_load_lib("base", libname, env, &spec);
 
     if (!success) {
-        fprintf(stderr, "Error: unable to load '%s' library\n", libname);
+        fprintf(stderr, "Error: unable to load ' base %s' library\n", libname);
     }
 }

@@ -469,7 +469,6 @@ HandlerResult sf_cond(Lex* e, Cell* a)
  * An import declaration provides a way to import identifiers exported by a library. Each
  * ⟨import set⟩ names a set of bindings from a library and possibly specifies local names for the
  * imported bindings. */
-/* TODO: implement 'only', 'except', 'prefix', and 'rename' */
 HandlerResult sf_import(Lex* e, Cell* a)
 {
     for (int i = 0; i < a->count; i++) {
@@ -502,7 +501,7 @@ HandlerResult sf_import(Lex* e, Cell* a)
              * second element must be an inner (lib name) s-expression. */
             if (i_set->cell[1]->type != CELL_SEXPR || i_set->cell[1]->count != 2) {
                 Cell* err = make_cell_error(
-                    "import: modifier requires a library name (lib name) as second element",
+                    "import: modifier requires an import set: '(collection library)' as second element",
                     SYNTAX_ERR);
                 return (HandlerResult){ .action = ACTION_RETURN, .value = err };
             }
@@ -552,16 +551,10 @@ HandlerResult sf_import(Lex* e, Cell* a)
         }
 
         /* Extract library identifier and library name from libname_cell. */
-        const char* lib  = libname_cell->cell[0]->sym;
-        const char* name = libname_cell->cell[1]->sym;
+        const char* collection  = libname_cell->cell[0]->sym;
+        const char* library = libname_cell->cell[1]->sym;
 
-        if (strcmp(lib, "base") != 0) {
-            Cell* err = make_cell_error(
-                "import: user-defined libraries not yet supported", GEN_ERR);
-            return (HandlerResult){ .action = ACTION_RETURN, .value = err };
-        }
-
-        if (!internal_cozenage_load_lib(name, e, &spec)) {
+        if (!internal_cozenage_load_lib(collection, library, e, &spec)) {
             Cell* err = make_cell_error("import: failed to load library", GEN_ERR);
             return (HandlerResult){ .action = ACTION_RETURN, .value = err };
         }

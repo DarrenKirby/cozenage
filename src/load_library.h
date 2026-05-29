@@ -60,7 +60,8 @@ typedef struct {
     const char*  prefix;         /* "" means no prefix */
 } ImportSpec;
 
-int internal_cozenage_load_lib(const char* libname, const Lex* env, const ImportSpec* spec);
+int internal_cozenage_load_lib(const char* collection, const char* library,
+                               const Lex* env, const ImportSpec* spec);
 void load_library(const char* libname, const Lex* env);
 
 #endif //COZENAGE_LOAD_LIBRARY_H
