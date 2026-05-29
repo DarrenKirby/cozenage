@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.18.2] - 2026-05-29
+
+### Added
+
+- Add support for `only`, `except`, `rename`, and `prefix` import modifiers
+- Add Makefile targets to build and clean HTML docs 
+- Add bigint support to number->string, base 10 only
+
+### Changed
+
+- Rename `time` library to `datetime`.
+- Revert `cond`, `when`, and `unless` back to primitives for performance
+- Complete refactor of module/library loading mechanism
+
+### Fixed
+
+- Fix crash when import set not in S-expr
+- Fix line edit buffer redraw bugs
+- Fix static buffer bigint repr bug
+
 ## [0.16.0] - 2026-03-12
 
 ### Added
