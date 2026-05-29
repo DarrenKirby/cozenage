@@ -1,7 +1,7 @@
-Base Time Library
+Base Datetime Library
 ===================
 
-The ``(base time)`` library provides access to time-related values.
+The ``(base datetime)`` library provides access to date and time related prcedures.
 
 current-seconds
 ~~~~~~~~~~~~~~~
