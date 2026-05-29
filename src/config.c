@@ -28,7 +28,6 @@
 #include <stdlib.h>
 #include <pwd.h>
 #include <gc/gc.h>
-#include <sys/syslimits.h>
 
 
 char *cozenage_history_path = nullptr;
