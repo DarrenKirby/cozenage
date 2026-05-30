@@ -207,9 +207,9 @@ typedef struct Cell {
 
     /* Union of type-specific flags and atomic values. */
     union {
-        int count;       /* length of compound type. (n-bytes for strings)*/
-        int len;         /* length of proper list (-1 for improper). */
-        int err_t;       /* error type. */
+        int32_t count;       /* length of compound type. (n-bytes for strings)*/
+        int32_t len;         /* length of proper list (-1 for improper). */
+        uint8_t err_t;       /* error type. */
         bool exact;      /* exact/inexact flag for numerics. */
         bool is_open;    /* port open/closed status. */
         bool is_builtin; /* proc object: builtin, or user-defined lambda. */
@@ -230,8 +230,8 @@ typedef struct Cell {
 
         /* Rationals */
         struct {
-            long long num;     /* numerator */
-            long long den;     /* denominator */
+            int64_t num;     /* numerator */
+            int64_t den;     /* denominator */
         };
 
         /* Complex numbers */
@@ -243,7 +243,7 @@ typedef struct Cell {
         /* Symbols */
         struct {
             char* sym;        /* Symbol text */
-            int sf_id;        /* Special form id */
+            int32_t sf_id;        /* Special form id */
         };
 
         /* Strings */
@@ -273,7 +273,8 @@ typedef struct Cell {
         byte_v* bv;               /* -> bytevector struct */
         promise* promise;         /* -> promise struct */
         mpz_t* bi;                /* -> GMP integer */
-        mpf_t* bf;                /* -> CELL_BIGFLOAT float */
+        mpq_t* br;                /* -> GMP rational */
+        mpf_t* bf;                /* -> GMP float */
         ght_table* table;         /* -> CELL_SET or CELL_HASH ght pointer. */
     };
 } Cell;
