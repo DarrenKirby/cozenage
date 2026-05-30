@@ -553,6 +553,8 @@ Cell* parse_tokens(TokenArray *ta) {
     if (!token) return nullptr;
 
     switch (token->type) {
+        /* Bail immediately on Syntax errors. */
+        case T_ERROR: return make_cell_error(token_to_string(token), SYNTAX_ERR);
         case T_EOF: return nullptr; /* We're done. */
             /* Dispatch out the atoms, first. */
         case T_NUMBER: return parse_number(token_to_string(token), token->line, token->length);
@@ -560,7 +562,6 @@ Cell* parse_tokens(TokenArray *ta) {
         case T_SYMBOL: return parse_symbol(token_to_string(token), token->line, token->length);
         case T_BOOLEAN: return parse_boolean(token_to_string(token), token->line);
         case T_CHAR: return parse_character(token_to_string(token), token->line, token->length);
-        case T_ERROR: return make_cell_error(token_to_string(token), SYNTAX_ERR);
 
         /* Handle quote and quasiquote.
          * This just transforms:

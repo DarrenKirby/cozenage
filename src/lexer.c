@@ -281,6 +281,9 @@ Token lex_token()
         /* Multiple possibilities, depending on what follows the hash. */
         case '#': {
             switch (peek()) {
+                case ' ':
+                    /* Bare hash is an error. */
+                    return error_token("Bare hash: '#' is invalid token");
                 /* Character literal. */
                 case '\\':
                     advance();
@@ -307,6 +310,7 @@ Token lex_token()
                     t.start++;
                     t.length--;
                     return t;
+                /* Vector or bytevector. */
                 default: return make_token(T_HASH);
             }
         }
