@@ -53,7 +53,7 @@ Options:\n\
 \n\
     '-l' and '--library' accept a required comma-delimited list of\n\
     libraries to pre-load. Accepted values are:\n\
-    'bits' 'cxr' 'file' 'lazy' 'math' 'random' 'system' and 'time' \n\n\
+    'bits' 'cxr' 'file' 'lazy' 'math' 'random' 'system' and 'datetime' \n\n\
 Report bugs to <darren@dragonbyte.ca>\n");
 }
 
@@ -73,7 +73,7 @@ static void process_library_arg(struct lib_load *l, const char *arg)
             l->cxr = 1;
         } else if (strcmp(token, "file") == 0) {
             l->file = 1;
-        } else if (strcmp(token, "time") == 0) {
+        } else if (strcmp(token, "datetime") == 0) {
             l->time = 1;
         } else if (strcmp(token, "math") == 0) {
             l->math = 1;
