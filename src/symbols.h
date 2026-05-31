@@ -50,7 +50,9 @@ typedef enum : int8_t {
     /* These are the SFs implemented as transforms. */
     SF_ID_ELSE = 50,
     SF_ID_CASE,
-    SF_ID_DO
+    SF_ID_DO,
+    /* Interned and assigned SF_ID so it cannot be re-bound */
+    SF_ID_DOT
 } SpecialFormID;
 
 

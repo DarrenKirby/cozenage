@@ -66,6 +66,7 @@ Cell* G_debug_sym = nullptr;
 Cell* G_quasiquote_sym = nullptr;
 Cell* G_unquote_sym = nullptr;
 Cell* G_unquote_splicing_sym = nullptr;
+Cell* G_dot_sym = nullptr;
 
 
 /* Initialize canonical symbols and configure their special form IDs. */
@@ -152,6 +153,11 @@ void init_special_forms(void) {
 
     G_debug_sym = make_cell_symbol("with-gc-stats");
     G_debug_sym->sf_id = SF_ID_DEBUG;
+
+    /* Not actually a special form - but needs to be interned
+     * AND assigned an SF_ID for use in is_syntactic_keyword() */
+    G_dot_sym = make_cell_symbol(".");
+    G_dot_sym->sf_id = SF_ID_DOT;
 
     /* Not actually special forms - but symbols that should
      * be interned on startup - no SF_IDs */
