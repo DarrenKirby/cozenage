@@ -187,19 +187,17 @@ static HandlerResult return_val(Cell* val) {
 HandlerResult sf_define(Lex* e, Cell* a)
 {
     if (a->count < 2) {
-        Cell* err = make_cell_error(
+        return return_val(make_cell_error(
             "define: define requires at least 2 arguments",
-            ARITY_ERR);
-        return return_val(err);
+            ARITY_ERR));
     }
     Cell* target = a->cell[first];
 
     /* Disallow rebinding of keywords. */
     if (is_syntactic_keyword(target)) {
-        Cell* err = make_cell_error(
+        return return_val(make_cell_error(
             fmt_err("define: syntax keyword '%s' cannot be used as a variable", target->sym),
-            VALUE_ERR);
-        return return_val(err);
+            VALUE_ERR));
     }
 
     /* (define <symbol> <expr>) */
@@ -234,18 +232,16 @@ HandlerResult sf_define(Lex* e, Cell* a)
         Cell* formals = make_cell_sexpr();
         for (int i = 1; i < target->count; i++) {
             if (target->cell[i]->type != CELL_SYMBOL) {
-                Cell* err = make_cell_error(
+                return return_val(make_cell_error(
                     "lambda: formals must be symbols",
-                    TYPE_ERR);
-                return return_val(err);
+                    TYPE_ERR));
             }
             /* Ensure formals are unique. */
             for (int j = i + 1; j < target->count; j++) {
                 if (target->cell[i] == target->cell[j]) {
-                    Cell* err = make_cell_error(
+                    return return_val(make_cell_error(
                         "lambda: formals must be unique",
-                        SYNTAX_ERR);
-                    return return_val(err);
+                        SYNTAX_ERR));
                 }
             }
             cell_add(formals, target->cell[i]);
@@ -259,10 +255,9 @@ HandlerResult sf_define(Lex* e, Cell* a)
         return return_val(lam);
     }
 
-    Cell* err = make_cell_error(
+    return return_val(make_cell_error(
         "define: invalid define syntax",
-        SYNTAX_ERR);
-    return return_val(err);
+        SYNTAX_ERR));
 }
 
 
@@ -273,10 +268,9 @@ HandlerResult sf_quote(Lex* e, Cell* a)
 {
     (void)e;
     if (a->count != 1) {
-        Cell* err = make_cell_error(
+        return return_val(make_cell_error(
             "quote: takes exactly one argument",
-            ARITY_ERR);
-        return return_val(err);
+            ARITY_ERR));
     }
 
     /* Extract the expression that was quoted. */
@@ -296,10 +290,9 @@ HandlerResult sf_quote(Lex* e, Cell* a)
 HandlerResult sf_lambda(Lex* e, Cell* a)
 {
     if (a->count < 2) {
-        Cell* err = make_cell_error(
+        return return_val(make_cell_error(
             "lambda: requires formals and a body",
-            SYNTAX_ERR);
-        return return_val(err);
+            SYNTAX_ERR));
     }
 
     Cell* formals = a->cell[first];   /* first arg */
@@ -310,17 +303,15 @@ HandlerResult sf_lambda(Lex* e, Cell* a)
         for (int i = 0; i < formals->count; i++) {
             const Cell* this_formal = formals->cell[i];
             if (this_formal->type != CELL_SYMBOL) {
-                Cell* err = make_cell_error(
+                return return_val(make_cell_error(
                     "lambda: formals must be symbols",
-                    TYPE_ERR);
-                return return_val(err);
+                    TYPE_ERR));
             }
             for (int j = i + 1; j < formals->count; j++) {
                 if (this_formal == formals->cell[j]) {
-                    Cell* err = make_cell_error(
+                    return return_val(make_cell_error(
                         "lambda: formals must be unique symbols",
-                        SYNTAX_ERR);
-                    return return_val(err);
+                        SYNTAX_ERR));
                 }
             }
         }
@@ -387,10 +378,9 @@ HandlerResult sf_if(Lex* e, Cell* a)
 HandlerResult sf_cond(Lex* e, Cell* a)
 {
     if (a->count == 0) {
-        Cell* err = make_cell_error(
+        return return_val(make_cell_error(
             "cond: ill-formed cond expression",
-            VALUE_ERR);
-        return return_val(err);
+            VALUE_ERR));
     }
 
     for (int i = 0; i < a->count; i++) {
@@ -398,20 +388,18 @@ HandlerResult sf_cond(Lex* e, Cell* a)
 
         /* Clause must be a list. */
         if (clause->type != CELL_SEXPR || clause->count == 0) {
-            Cell* err = make_cell_error(
+            return return_val(make_cell_error(
                 "cond: clause must be a non-empty list",
-                SYNTAX_ERR);
-            return return_val(err);
+                SYNTAX_ERR));
         }
 
         /* Check for 'else' clause and if found evaluate any expressions. */
         if (clause->cell[first]->type == CELL_SYMBOL && clause->cell[first] == G_else_sym) {
             /* else clause must be last */
             if (i != last(a)) {
-                Cell* err = make_cell_error(
+                return return_val(make_cell_error(
                     "cond: else clause must be last in the cond expression",
-                    SYNTAX_ERR);
-                return return_val(err);
+                    SYNTAX_ERR));
             }
             /* eval the first n-1 expressions. */
             for (int j = 1; j < last(clause); j++) {
@@ -442,26 +430,23 @@ HandlerResult sf_cond(Lex* e, Cell* a)
         /* Check for cond '=>' form. */
         if (clause->cell[1] == G_arrow_sym) {
             if (clause->count <= 2) {
-                Cell* err = make_cell_error(
+                return return_val(make_cell_error(
                     "cond: '=>' form must have an expression",
-                    SYNTAX_ERR);
-                return return_val(err);
+                    SYNTAX_ERR));
             }
 
             /* '=>' form can only have one expression after the test. */
             if (clause->count > 3) {
-                Cell* err = make_cell_error(
+                return return_val(make_cell_error(
                     "cond: '=>' form can only have 1 expression after the test",
-                    SYNTAX_ERR);
-                return return_val(err);
+                    SYNTAX_ERR));
             }
             const Cell* proc = coz_eval(e, clause->cell[2]);
             /* Expression must evaluate to a procedure. */
             if (proc->type != CELL_PROC) {
-                Cell* err = make_cell_error(
+                return return_val(make_cell_error(
                     "cond: expression after '=>' must evaluate to a procedure",
-                    SYNTAX_ERR);
-                return return_val(err);
+                    SYNTAX_ERR));
             }
             /* A tail call. */
             Cell* tmp = make_sexpr_len2(proc, test);
@@ -493,9 +478,8 @@ HandlerResult sf_import(Lex* e, Cell* a)
         Cell* i_set = a->cell[i];
 
         if (i_set->type != CELL_SEXPR || i_set->count < 2) {
-            Cell* err = make_cell_error("import: invalid import set",
-                SYNTAX_ERR);
-            return (HandlerResult){ .action = ACTION_RETURN, .value = err };
+            return return_val(make_cell_error("import: invalid import set",
+                SYNTAX_ERR));
         }
 
         ImportSpec spec = {
@@ -519,10 +503,9 @@ HandlerResult sf_import(Lex* e, Cell* a)
             /* Modified import set: first element is the modifier name,
              * second element must be an inner (lib name) s-expression. */
             if (i_set->cell[1]->type != CELL_SEXPR || i_set->cell[1]->count != 2) {
-                Cell* err = make_cell_error(
+                return return_val(make_cell_error(
                     "import: modifier requires an import set: '(collection library)' as second element",
-                    SYNTAX_ERR);
-                return (HandlerResult){ .action = ACTION_RETURN, .value = err };
+                    SYNTAX_ERR));
             }
             libname_cell = i_set->cell[1];
             const char* mod = i_set->cell[0]->sym;
@@ -543,9 +526,9 @@ HandlerResult sf_import(Lex* e, Cell* a)
 
             } else if (strcmp(mod, "prefix") == 0) {
                 if (i_set->count != 3) {
-                    Cell* err = make_cell_error(
-                        "import: 'prefix' requires exactly one argument", SYNTAX_ERR);
-                    return (HandlerResult){ .action = ACTION_RETURN, .value = err };
+                    return return_val(make_cell_error(
+                        "import: 'prefix' requires exactly one argument",
+                        SYNTAX_ERR));
                 }
                 spec.prefix = i_set->cell[2]->str;  /* string cell */
 
@@ -553,20 +536,18 @@ HandlerResult sf_import(Lex* e, Cell* a)
                 spec.rename_count = i_set->count - 2;
                 spec.renames      = GC_malloc(spec.rename_count * sizeof(CznRename));
                 for (int j = 0; j < spec.rename_count; j++) {
-                    Cell* pair = i_set->cell[j + 2];
+                    const Cell* pair = i_set->cell[j + 2];
                     if (pair->type != CELL_SEXPR || pair->count != 2) {
-                        Cell* err = make_cell_error(
+                        return return_val(make_cell_error(
                             "import: 'rename' expects (old-name new-name) pairs",
-                            SYNTAX_ERR);
-                        return (HandlerResult){ .action = ACTION_RETURN, .value = err };
+                            SYNTAX_ERR));
                     }
                     spec.renames[j].from = pair->cell[0]->sym;
                     spec.renames[j].to   = pair->cell[1]->sym;
                 }
             } else {
-                Cell* err = make_cell_error("import: unknown import modifier",
-                    SYNTAX_ERR);
-                return (HandlerResult){ .action = ACTION_RETURN, .value = err };
+                return return_val(make_cell_error("import: unknown import modifier",
+                    SYNTAX_ERR));
             }
         }
 
@@ -575,14 +556,13 @@ HandlerResult sf_import(Lex* e, Cell* a)
         const char* library = libname_cell->cell[1]->sym;
 
         if (!internal_cozenage_load_lib(collection, library, e, &spec)) {
-            Cell* err = make_cell_error("import: failed to load library",
-                GEN_ERR);
-            return (HandlerResult){ .action = ACTION_RETURN, .value = err };
+            return return_val(make_cell_error("import: failed to load library",
+                GEN_ERR));
         }
     }
 
     if (is_repl) populate_dynamic_completions(e);
-    return (HandlerResult){ .action = ACTION_RETURN, .value = True_Obj };
+    return return_val(True_Obj);
 }
 
 
@@ -676,10 +656,9 @@ HandlerResult sf_let_star(Lex* e, Cell* a)
 {
     const Cell* bindings = a->cell[0];
     if (bindings->type != CELL_SEXPR) {
-        Cell* err = make_cell_error(
+        return return_val(make_cell_error(
             "let*: Bindings must be a list",
-            VALUE_ERR);
-        return return_val(err);
+            VALUE_ERR));
     }
 
     /* Start with the outer environment. */
@@ -688,22 +667,19 @@ HandlerResult sf_let_star(Lex* e, Cell* a)
     for (int i = 0; i < bindings->count; i++) {
         const Cell* local_b = bindings->cell[i];
         if (local_b->type != CELL_SEXPR) {
-            Cell* err = make_cell_error(
+            return return_val(make_cell_error(
                 "let*: Bindings must be a list",
-                VALUE_ERR);
-            return return_val(err);
+                VALUE_ERR));
         }
         if (local_b->count != 2) {
-            Cell* err = make_cell_error(
+            return return_val(make_cell_error(
                 "let*: bindings must contain exactly 2 items",
-                VALUE_ERR);
-            return return_val(err);
+                VALUE_ERR));
         }
         if (local_b->cell[0]->type != CELL_SYMBOL) {
-            Cell* err = make_cell_error(
+            return return_val(make_cell_error(
                 "let*: first value in binding must be a symbol",
-                VALUE_ERR);
-            return return_val(err);
+                VALUE_ERR));
         }
         const Cell* formal = local_b->cell[0];
         Cell* arg = local_b->cell[1];
@@ -757,10 +733,28 @@ HandlerResult sf_letrec(Lex* e, Cell* a)
             VALUE_ERR));
     }
 
+    /* Pass 1 - Validation. */
+    for (int i = 0; i < bindings->count; i++) {
+        const Cell* b = bindings->cell[i];
+        if (b->cell[0]->type != CELL_SYMBOL) {
+            return return_val(make_cell_error(
+                "letrec: variables must be symbols",
+                TYPE_ERR));
+        }
+        for (int j = i + 1; j < bindings->count; j++) {
+            const Cell* next_b = bindings->cell[j];
+            if (b->cell[0] == next_b->cell[0]) {
+                return return_val(make_cell_error(
+                    "letrec: duplicate variable in bindings",
+                    TYPE_ERR));
+            }
+        }
+    }
+
     /* Create a new child environment. */
     Lex* local_env = new_child_env(e);
 
-    /* Evaluate all init-expressions first (all vars still USP_Obj). */
+    /* Pass 2 - Evaluate all init-expressions (all vars still USP_Obj). */
     Cell** init_vals = GC_MALLOC(sizeof(Cell*) * bindings->count);
     for (int i = 0; i < bindings->count; i++) {
         Cell* local_bind = bindings->cell[i]->cell[1];
@@ -770,7 +764,7 @@ HandlerResult sf_letrec(Lex* e, Cell* a)
         }
     }
 
-    /* Now bind them all. */
+    /* Pass 3 - Now bind them all. */
     for (int i = 0; i < bindings->count; i++) {
         lex_put_local(local_env, bindings->cell[i]->cell[0], init_vals[i]);
     }
@@ -813,15 +807,33 @@ HandlerResult sf_letrec_star(Lex* e, Cell* a)
             VALUE_ERR));
     }
 
+    /* Pass 1 - Validation. */
+    for (int i = 0; i < bindings->count; i++) {
+        const Cell* b = bindings->cell[i];
+        if (b->cell[0]->type != CELL_SYMBOL) {
+            return return_val(make_cell_error(
+                "letrec: variables must be symbols",
+                TYPE_ERR));
+        }
+        for (int j = i + 1; j < bindings->count; j++) {
+            const Cell* next_b = bindings->cell[j];
+            if (b->cell[0] == next_b->cell[0]) {
+                return return_val(make_cell_error(
+                    "letrec: duplicate variable in bindings",
+                    TYPE_ERR));
+            }
+        }
+    }
+
     /* Create a new child environment. */
     Lex* local_env = new_child_env(e);
 
-    /* Iterate and bind 'unspecified' placeholders. */
+    /* Pass 2 - Iterate and bind 'unspecified' placeholders. */
     for (int i = 0; i < bindings->count; i++) {
         const Cell* variable = bindings->cell[i]->cell[0];
         lex_put_local(local_env, variable, USP_Obj);
     }
-    /* Iterate and bind init-expressions (lambdas) to variables (lambda names). */
+    /* Pass 3 - Iterate and bind init-expressions (lambdas) to variables (lambda names). */
     for (int i = 0; i < bindings->count; i++) {
         const Cell* variable = bindings->cell[i]->cell[0];
         Cell* local_bind = bindings->cell[i]->cell[1];
@@ -853,10 +865,9 @@ HandlerResult sf_set_bang(Lex* e, Cell* a)
 
     const Cell* variable = a->cell[first];
     if (variable->type != CELL_SYMBOL) {
-        err = make_cell_error(
+        return return_val(make_cell_error(
             "set!: arg1 must be a symbol",
-            TYPE_ERR);
-        return return_val(err);
+            TYPE_ERR));
     }
 
     const char* sym_to_set = a->cell[0]->sym;
@@ -894,10 +905,9 @@ HandlerResult sf_set_bang(Lex* e, Cell* a)
     }
 
     /* The variable was not found anywhere. This is an error. */
-    err = make_cell_error(
+    return return_val(make_cell_error(
         fmt_err("set!: Unbound symbol: '%s'", sym_to_set),
-        TYPE_ERR);
-    return return_val(err);
+        TYPE_ERR));
 }
 
 
@@ -1075,10 +1085,9 @@ HandlerResult sf_unless(Lex* e, Cell* a)
  */
 HandlerResult sf_defmacro(Lex* e, Cell* a) {
     if (a->count < 3) {
-        Cell* err = make_cell_error(
+        return return_val(make_cell_error(
             "defmacro: requires name, formals, and a body",
-            SYNTAX_ERR);
-        return return_val(err);
+            SYNTAX_ERR));
     }
 
     const Cell* name = a->cell[0]; /* name of the macro. */
@@ -1089,10 +1098,9 @@ HandlerResult sf_defmacro(Lex* e, Cell* a) {
     if (formals->type != CELL_SYMBOL) {
         for (int i = 0; i < formals->count; i++) {
             if (formals->cell[i]->type != CELL_SYMBOL) {
-                Cell* err = make_cell_error(
+                return return_val(make_cell_error(
                     "defmacro: formals must be symbols",
-                    TYPE_ERR);
-                return return_val(err);
+                    TYPE_ERR));
             }
         }
     }
