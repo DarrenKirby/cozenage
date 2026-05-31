@@ -121,7 +121,8 @@ educational value over exhaustive standards compliance.
 ## Dependencies
 
 `Cozenage` requires [ICU](https://github.com/unicode-org/icu) for UTF-8 support. It requires the [Boehm-Demers-Weiser Garbage Collector](https://github.com/bdwgc/bdwgc).
-The [GNU GMP library](https://gmplib.org/) is required for arbitrary size integers ('big ints'). 
+The [GNU GMP library](https://gmplib.org/) is required for arbitrary size integers ('big ints'). The `random`
+module requires [OpenSSL](https://www.openssl.org/), and will not be built if libssl is not found.
 
 ## Obtaining Cozenage
 
