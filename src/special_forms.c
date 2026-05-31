@@ -239,6 +239,15 @@ HandlerResult sf_define(Lex* e, Cell* a)
                     TYPE_ERR);
                 return return_val(err);
             }
+            /* Ensure formals are unique. */
+            for (int j = i + 1; j < target->count; j++) {
+                if (target->cell[i] == target->cell[j]) {
+                    Cell* err = make_cell_error(
+                        "lambda: formals must be unique",
+                        SYNTAX_ERR);
+                    return return_val(err);
+                }
+            }
             cell_add(formals, target->cell[i]);
         }
 
@@ -296,14 +305,23 @@ HandlerResult sf_lambda(Lex* e, Cell* a)
     Cell* formals = a->cell[first];   /* first arg */
     Cell* body = a->cell[second];     /* remaining args */
 
-    /* Formals should be a symbol or list of symbols. */
+    /* Ensure formals are unique symbols. */
     if (formals->type != CELL_SYMBOL) {
         for (int i = 0; i < formals->count; i++) {
-            if (formals->cell[i]->type != CELL_SYMBOL) {
+            const Cell* this_formal = formals->cell[i];
+            if (this_formal->type != CELL_SYMBOL) {
                 Cell* err = make_cell_error(
                     "lambda: formals must be symbols",
                     TYPE_ERR);
                 return return_val(err);
+            }
+            for (int j = i + 1; j < formals->count; j++) {
+                if (this_formal == formals->cell[j]) {
+                    Cell* err = make_cell_error(
+                        "lambda: formals must be unique symbols",
+                        SYNTAX_ERR);
+                    return return_val(err);
+                }
             }
         }
     }
@@ -475,7 +493,8 @@ HandlerResult sf_import(Lex* e, Cell* a)
         Cell* i_set = a->cell[i];
 
         if (i_set->type != CELL_SEXPR || i_set->count < 2) {
-            Cell* err = make_cell_error("import: invalid import set", SYNTAX_ERR);
+            Cell* err = make_cell_error("import: invalid import set",
+                SYNTAX_ERR);
             return (HandlerResult){ .action = ACTION_RETURN, .value = err };
         }
 
@@ -545,7 +564,8 @@ HandlerResult sf_import(Lex* e, Cell* a)
                     spec.renames[j].to   = pair->cell[1]->sym;
                 }
             } else {
-                Cell* err = make_cell_error("import: unknown import modifier", SYNTAX_ERR);
+                Cell* err = make_cell_error("import: unknown import modifier",
+                    SYNTAX_ERR);
                 return (HandlerResult){ .action = ACTION_RETURN, .value = err };
             }
         }
@@ -555,7 +575,8 @@ HandlerResult sf_import(Lex* e, Cell* a)
         const char* library = libname_cell->cell[1]->sym;
 
         if (!internal_cozenage_load_lib(collection, library, e, &spec)) {
-            Cell* err = make_cell_error("import: failed to load library", GEN_ERR);
+            Cell* err = make_cell_error("import: failed to load library",
+                GEN_ERR);
             return (HandlerResult){ .action = ACTION_RETURN, .value = err };
         }
     }
@@ -582,37 +603,49 @@ HandlerResult sf_let(Lex* e, Cell* a) {
     }
 
     const Cell* bindings = a->cell[0];
-    if (bindings->type != CELL_SEXPR) {
-        return return_val(make_cell_error(
-            "let: Bindings must be a list",
-            VALUE_ERR));
+
+    /* Pass 1 - validation and type checking. */
+    for (int i = 0; i < bindings->count; i++) {
+        const Cell* b = bindings->cell[i];
+
+        if (b->type != CELL_SEXPR) {
+            return return_val(make_cell_error(
+                "let: Bindings must be a list",
+                TYPE_ERR));
+        }
+        if (b->count != 2) {
+            return return_val(make_cell_error(
+                "let: bindings must contain exactly 2 items",
+                ARITY_ERR));
+        }
+        if (b->cell[0]->type != CELL_SYMBOL) {
+            return return_val(make_cell_error(
+                "let: first value in binding must be a symbol",
+                TYPE_ERR));
+        }
+
+        /* Check for duplicates ahead of the current index. */
+        for (int j = i + 1; j < bindings->count; j++) {
+            /* We can assume j is a valid binding structure here, or it will
+               fail its own validation check when the outer loop reaches it.
+               But to be safe and avoid segfaults on malformed input ahead of i: */
+            const Cell* next_b = bindings->cell[j];
+            if (next_b->type == CELL_SEXPR && next_b->count > 0 && next_b->cell[0]->type == CELL_SYMBOL) {
+                if (b->cell[0] == next_b->cell[0]) {
+                    return return_val(make_cell_error(
+                        "let: duplicate variable in bindings",
+                        SYNTAX_ERR));
+                }
+            }
+        }
     }
 
     /* Set up the child environment. */
     Lex* local_env = new_child_env(e);
+
+    /* Pass 2 - evaluation and binding. */
     for (int i = 0; i < bindings->count; i++) {
         const Cell* b = bindings->cell[i];
-        if (b->type != CELL_SEXPR) {
-            Cell* err = make_cell_error(
-                "let: Bindings must be a list",
-                VALUE_ERR);
-            return return_val(err);
-        }
-        if (b->count != 2) {
-            Cell* err = make_cell_error(
-                "let: bindings must contain exactly 2 items",
-                VALUE_ERR);
-            return return_val(err);
-        }
-        if (b->cell[0]->type != CELL_SYMBOL) {
-            Cell* err = make_cell_error(
-                "let: first value in binding must be a symbol",
-                VALUE_ERR);
-            return return_val(err);
-        }
-
-        /* FIXME: raise explicit error if symbols/variables are not unique */
-
         /* Evaluate the value in the parent environment. */
         Cell* val = coz_eval(e, b->cell[1]);
         if (val->type == CELL_ERROR) return return_val(val);
