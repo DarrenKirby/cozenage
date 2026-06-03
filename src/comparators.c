@@ -42,12 +42,30 @@ static int complex_eq_op(const Lex* e, const Cell* lhs, const Cell* rhs)
     return eq;
 }
 
-/* TODO:
- * Rational comparison overflow — the expressions lhs->num * rhs->den and lhs->den * rhs->num in all four
- * ordering operators (<, >, <=, >=) are plain long multiplications with no overflow guard. For rationals
- * with large numerators or denominators, these products can silently overflow, producing incorrect comparison
- * results. The safe approach is to either cross-multiply using 64-bit intermediates with overflow detection,
- * or to normalise both rationals to a common denominator using GMP arithmetic before comparing. */
+
+static int compare_rats(const int64_t lhs_num, const int64_t lhs_den,
+                        const int64_t rhs_num, const int64_t rhs_den)
+{
+#ifdef __SIZEOF_INT128__
+    const __int128 lhs = (__int128)lhs_num * rhs_den;
+    const __int128 rhs = (__int128)rhs_num * lhs_den;
+
+    return (lhs > rhs) - (lhs < rhs);
+#else
+    /* Some compilers and systems do not support __int128. */
+    mpq_t lhs, rhs;
+    mpq_inits(lhs, rhs, NULL);
+
+    mpq_set_si(lhs, lhs_num, lhs_den);
+    mpq_set_si(rhs, rhs_num, rhs_den);
+
+    int result = mpq_cmp(lhs, rhs);
+
+    mpq_clears(lhs, rhs, NULL);
+    return result;
+#endif
+}
+
 
 /* (= z1 z2 z3 ...)
  * Returns true if all arguments are equal. */
@@ -69,6 +87,7 @@ Cell* builtin_eq_op(const Lex* e, const Cell* a)
                 if (lhs->integer_v == rhs->integer_v) { the_same = 1; }
                 break;
             case CELL_RATIONAL:
+                /* These are canonicalized already. */
                 if (lhs->den == rhs->den && lhs->num == rhs->num) { the_same = 1; }
                 break;
             case CELL_REAL:
@@ -81,7 +100,7 @@ Cell* builtin_eq_op(const Lex* e, const Cell* a)
                 if (mpz_cmp(*lhs->bi, *rhs->bi) == 0) { the_same = 1; }
                 break;
             default: ; /* This will never run as the types are pre-checked,
-                          but without the linter complains. */
+                          but without it the linter complains. */
         }
         if (!the_same) {
             return False_Obj;
@@ -115,7 +134,10 @@ Cell* builtin_gt_op(const Lex* e, const Cell* a)
                 break;
             }
             case CELL_RATIONAL: {
-                if (lhs->num * rhs->den > lhs->den * rhs->num) { ok = 1; }
+                if (compare_rats(lhs->num, lhs->den,
+                    rhs->num, rhs->den) == 1) {
+                    ok = 1;
+                }
                 break;
             }
             case CELL_BIGINT: {
@@ -156,7 +178,10 @@ Cell* builtin_lt_op(const Lex* e, const Cell* a)
                 break;
             }
             case CELL_RATIONAL: {
-                if (lhs->num * rhs->den < lhs->den * rhs->num) { ok = 1; }
+                if (compare_rats(lhs->num, lhs->den,
+                    rhs->num, rhs->den) == -1) {
+                    ok = 1;
+                }
                 break;
             }
             case CELL_BIGINT: {
@@ -197,7 +222,10 @@ Cell* builtin_gte_op(const Lex* e, const Cell* a)
                 break;
             }
             case CELL_RATIONAL: {
-                if (lhs->num * rhs->den >= lhs->den * rhs->num) { ok = 1; }
+                if (compare_rats(lhs->num, lhs->den,
+                    rhs->num, rhs->den) >= 0) {
+                    ok = 1;
+                }
                 break;
             }
             case CELL_BIGINT: {
@@ -238,7 +266,10 @@ Cell* builtin_lte_op(const Lex* e, const Cell* a)
                 break;
             }
             case CELL_RATIONAL: {
-                if (lhs->num * rhs->den <= lhs->den * rhs->num) { ok = 1; }
+                if (compare_rats(lhs->num, lhs->den,
+                    rhs->num, rhs->den) <= 0) {
+                    ok = 1;
+                }
                 break;
             }
             case CELL_BIGINT: {
