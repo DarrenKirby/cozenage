@@ -369,6 +369,27 @@ static void cell_to_string_worker(const Cell* v,
             break;
         }
 
+        case CELL_BIGRAT: {
+            const mpz_srcptr num = mpq_numref(*v->br);
+            const mpz_srcptr den = mpq_denref(*v->br);
+
+            size_t len;
+
+            if (mpz_cmp_ui(den, 1) == 0) {
+                len = mpz_sizeinbase(num, 10) + 2;
+            } else {
+                len = mpz_sizeinbase(num, 10)
+                    + mpz_sizeinbase(den, 10)
+                    + 3;
+            }
+
+            char *buf = GC_MALLOC(len);
+
+            gmp_snprintf(buf, len, "%Qd", *v->br);
+            sb_append_str(sb, buf);
+            break;
+        }
+
         case CELL_BIGFLOAT: {
             /* TODO: this needs to b changed. */
             char f_buf[1024];
