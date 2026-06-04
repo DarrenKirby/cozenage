@@ -44,7 +44,8 @@ Cell* builtin_add(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = check_arg_types(a,
-        CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX|CELL_BIGINT|CELL_BIGFLOAT, "+");
+        CELL_INTEGER|CELL_REAL|CELL_RATIONAL|
+        CELL_COMPLEX|CELL_BIGINT|CELL_BIGRAT, "+");
     if (err) { return err; }
     /* Identity law logic. */
     if (a->count == 0) return make_cell_integer(0);
@@ -83,6 +84,9 @@ Cell* builtin_add(const Lex* e, const Cell* a)
             case CELL_BIGINT:
                 result = bigint_add(result, rhs);
                 break;
+            case CELL_BIGRAT:
+                result = bigrat_add(result, rhs);
+                break;
             default:
                 ;
         }
@@ -99,7 +103,8 @@ Cell* builtin_add(const Lex* e, const Cell* a)
 Cell* builtin_sub(const Lex* e, const Cell* a)
 {
     Cell* err = check_arg_types(a,
-        CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX|CELL_BIGINT|CELL_BIGFLOAT, "-");
+        CELL_INTEGER|CELL_REAL|CELL_RATIONAL|
+        CELL_COMPLEX|CELL_BIGINT|CELL_BIGRAT, "-");
     if (err) { return err; }
     if ((err = CHECK_ARITY_MIN(a, 1, "-"))) { return err; }
 
@@ -142,6 +147,9 @@ Cell* builtin_sub(const Lex* e, const Cell* a)
             case CELL_BIGINT:
                 result = bigint_sub(result, rhs);
                 break;
+            case CELL_BIGRAT:
+                result = bigrat_sub(result, rhs);
+                break;
             default:
                 ;
         }
@@ -159,7 +167,8 @@ Cell* builtin_sub(const Lex* e, const Cell* a)
 Cell* builtin_mul(const Lex* e, const Cell* a)
 {
     Cell* err = check_arg_types(a,
-        CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX|CELL_BIGINT, "*");
+        CELL_INTEGER|CELL_REAL|CELL_RATIONAL|
+        CELL_COMPLEX|CELL_BIGINT|CELL_BIGRAT, "*");
     if (err) { return err; }
     /* Identity law logic. */
     if (a->count == 0) return make_cell_integer(1);
@@ -198,6 +207,9 @@ Cell* builtin_mul(const Lex* e, const Cell* a)
             case CELL_BIGINT:
                 result = bigint_mul(result, rhs);
                 break;
+            case CELL_BIGRAT:
+                result = bigrat_mul(result, rhs);
+                break;
             default:
                 ;
         }
@@ -214,7 +226,8 @@ Cell* builtin_mul(const Lex* e, const Cell* a)
 Cell* builtin_div(const Lex* e, const Cell* a)
 {
     Cell* err = check_arg_types(a,
-        CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX|CELL_BIGINT,
+        CELL_INTEGER|CELL_REAL|CELL_RATIONAL|
+        CELL_COMPLEX|CELL_BIGINT|CELL_BIGRAT,
         "/");
     if (err) { return err; }
     if ((err = CHECK_ARITY_MIN(a, 1, "/"))) { return err; }
@@ -307,6 +320,9 @@ Cell* builtin_div(const Lex* e, const Cell* a)
         case CELL_BIGINT:
             result = bigint_div(result, rhs);
             break;
+        case CELL_BIGRAT:
+            result = bigrat_div(result, rhs);
+            break;
         default:
             ;
         }
@@ -327,7 +343,8 @@ Cell* builtin_abs(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = check_arg_types(a,
-        CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX|CELL_BIGINT|CELL_BIGFLOAT,
+        CELL_INTEGER|CELL_REAL|CELL_RATIONAL|
+        CELL_COMPLEX|CELL_BIGINT|CELL_BIGRAT,
         "abs");
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 1, "abs"))) { return err; }
@@ -335,13 +352,11 @@ Cell* builtin_abs(const Lex* e, const Cell* a)
     const Cell* arg = a->cell[0];
 
     if (arg->type == CELL_BIGINT) {
-        /* Check signedness - if negative, return a negated copy
-         * of the value, else, just return it directly. */
-        const int sign = mpz_sgn(*arg->bi);
-        if (sign == -1) {
-            return bigint_neg(cell_copy(arg));
-        }
-        return (Cell*)arg;
+        return bigint_abs(cell_copy(arg));
+    }
+
+    if (arg->type == CELL_BIGRAT) {
+        return bigrat_abs(cell_copy(arg));
     }
 
     /* Handle all real numbers. */
@@ -376,7 +391,8 @@ Cell* builtin_expt(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = check_arg_types(a,
-        CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX|CELL_BIGINT,
+        CELL_INTEGER|CELL_REAL|CELL_RATIONAL|
+        CELL_COMPLEX|CELL_BIGINT,
         "expt");
     if (err) { return err; }
     if ((err = CHECK_ARITY_EXACT(a, 2, "expt"))) { return err; }
@@ -405,7 +421,7 @@ Cell* builtin_expt(const Lex* e, const Cell* a)
 
     /* Exact integer base and exponent.
      * This must be checked before the cell_is_real/cell_is_integer semantic
-     * checks below, to ensure exactness is preserved (fixes bugs 16 and 17). */
+     * checks below, to ensure exactness is preserved. */
     if (base->type == CELL_INTEGER && exp->type == CELL_INTEGER) {
         const long long b = base->integer_v;
         const long long x = exp->integer_v;
