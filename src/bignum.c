@@ -113,6 +113,13 @@ Cell* bigint_div(Cell* a, const Cell* b) {
 }
 
 
+Cell* bigint_abs(Cell* a)
+{
+    mpz_abs(*a->bi, *a->bi);
+    return a;
+}
+
+
 Cell* bigint_quo_rem(Cell* a, Cell* b, const qr_t op) {
     Cell* result = cell_copy(a);
     Cell* d;
@@ -205,3 +212,11 @@ Cell* bigrat_div(Cell* a, const Cell* b)
     mpq_div(*a->br, *a->br, *b->br);
     return a;
 }
+
+
+Cell* bigrat_abs(Cell* a)
+{
+    mpq_abs (*a->br, *a->br);
+    return a;
+}
+
