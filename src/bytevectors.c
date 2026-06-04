@@ -26,6 +26,59 @@
 #include <inttypes.h>
 
 
+
+
+static long double get_f32(const Cell* bv, int i) {
+    return ((long double*)bv->bv->data)[i];
+}
+
+static void set_f32(Cell* bv, int i, long double val) {
+    ((float*)bv->bv->data)[i] = (float)val;
+}
+
+static void append_f32(Cell* bv, long double val) {
+    if (bv->count == bv->bv->capacity) {
+        bv->bv->capacity *= 2;
+        bv->bv->data = GC_realloc(bv->bv->data, bv->bv->capacity * sizeof(float));
+    }
+    ((float*)bv->bv->data)[bv->count++] = (float)val;
+}
+
+static void repr_f32(const Cell* bv, str_buf_t *sb) {
+    sb_append_fmt(sb, "#%s(", "u8");
+    for (int i = 0; i < bv->count; i++) {
+        sb_append_fmt(sb, "%f", ((float*)bv->bv->data)[i]);
+        if (i != bv->count - 1) sb_append_char(sb, ' ');
+    }
+    sb_append_char(sb, ')');
+}
+
+static long double get_f64(const Cell* bv, int i) {
+    return ((long double*)bv->bv->data)[i];
+}
+
+static void set_f64(Cell* bv, int i, long double val) {
+    ((float*)bv->bv->data)[i] = (float)val;
+}
+
+static void append_f64(Cell* bv, long double val) {
+    if (bv->count == bv->bv->capacity) {
+        bv->bv->capacity *= 2;
+        bv->bv->data = GC_realloc(bv->bv->data, bv->bv->capacity * sizeof(double));
+    }
+    ((double*)bv->bv->data)[bv->count++] = (double)val;
+}
+
+static void repr_f64(const Cell* bv, str_buf_t *sb) {
+    sb_append_fmt(sb, "#%s(", "u8");
+    for (int i = 0; i < bv->count; i++) {
+        sb_append_fmt(sb, "%f", ((double*)bv->bv->data)[i]);
+        if (i != bv->count - 1) sb_append_char(sb, ' ');
+    }
+    sb_append_char(sb, ')');
+}
+
+
 DEFINE_BV_TYPE(u8,  uint8_t,  "%u")
 DEFINE_BV_TYPE(s8,  int8_t,   "%d")
 DEFINE_BV_TYPE(u16, uint16_t, "%u")
@@ -38,15 +91,20 @@ DEFINE_BV_TYPE(s64, int64_t,  "%d")
 #define INVALID 255
 
 
-const bv_ops_t BV_OPS[] = {
-    [BV_U8]  = { get_u8, set_u8, repr_u8, append_u8,  sizeof(uint8_t)  },
-    [BV_S8]  = { get_s8, set_s8, repr_s8, append_s8,  sizeof(int8_t)   },
+const bv_int_ops_t BV_INT_OPS[] = {
+    [BV_U8]  = { get_u8,  set_u8, repr_u8, append_u8,  sizeof(uint8_t)  },
+    [BV_S8]  = { get_s8,  set_s8, repr_s8, append_s8,  sizeof(int8_t)   },
     [BV_U16] = { get_u16, set_u16, repr_u16, append_u16, sizeof(uint16_t) },
     [BV_S16] = { get_s16, set_s16, repr_s16, append_s16, sizeof(int16_t)  },
     [BV_U32] = { get_u32, set_u32, repr_u32, append_u32, sizeof(uint32_t) },
     [BV_S32] = { get_s32, set_s32, repr_s32, append_s32, sizeof(int32_t)  },
     [BV_U64] = { get_u64, set_u64, repr_u64, append_u64, sizeof(uint64_t) },
     [BV_S64] = { get_s64, set_s64, repr_s64, append_s64, sizeof(int64_t)  },
+};
+
+const bv_fp_ops_t BV_FP_OPS[] = {
+    [BV_F32] = { get_f32, set_f32, repr_f32, append_f32, sizeof(float)  },
+    [BV_F64] = { get_f64, set_f64, repr_f64, append_f64, sizeof(double)  },
 };
 
 
@@ -94,6 +152,8 @@ static bv_t get_type(const Cell* t_sym)
     else if (t_sym == make_cell_symbol("s32")) { type = BV_S32; }
     else if (t_sym == make_cell_symbol("u64")) { type = BV_U64; }
     else if (t_sym == make_cell_symbol("s64")) { type = BV_S64; }
+    else if (t_sym == make_cell_symbol("f32")) { type = BV_F32; }
+    else if (t_sym == make_cell_symbol("f64")) { type = BV_F64; }
     else { type = INVALID; }
     return type;
 }
@@ -111,6 +171,8 @@ static char* get_type_string(const bv_t type)
         case BV_S32: {t_string = "s32"; break; }
         case BV_U64: {t_string = "u64"; break; }
         case BV_S64: {t_string = "s64"; break; }
+        case BV_F32: {t_string = "f32"; break; }
+        case BV_F64: {t_string = "f64"; break; }
         default: { t_string = "unknown"; break; }
     }
     return t_string;
@@ -161,7 +223,7 @@ Cell* builtin_bytevector(const Lex* e, const Cell* a)
         const int64_t byte = a->cell[i]->integer_v;
         Cell* check_if = byte_fits(type, byte);
         if (check_if->type == CELL_ERROR) { return check_if; }
-        byte_add(bv, byte);
+        int_byte_add(bv, byte);
     }
     return bv;
 }
@@ -211,7 +273,11 @@ Cell* builtin_bytevector_ref(const Lex* e, const Cell* a)
             "bytevector-ref: index out of bounds",
             INDEX_ERR);
     }
-    return make_cell_integer(BV_OPS[bv->bv->type].get(bv, i));
+
+    if (bv->bv->type == BV_F32 || bv->bv->type == BV_F64) {
+        return make_cell_real(BV_FP_OPS[bv->bv->type].get(bv, i));
+    }
+    return make_cell_integer(BV_INT_OPS[bv->bv->type].get(bv, i));
 }
 
 
@@ -237,10 +303,28 @@ Cell* builtin_bytevector_set_bang(const Lex* e, const Cell* a)
     const int idx = (int)a->cell[1]->integer_v;
     Cell* bv = a->cell[0];
     const uint8_t type = bv->bv->type;
+
+    if (idx < 0 || idx >= bv->count) {
+        return make_cell_error(
+            "bytevector-set!: index out of range",
+            INDEX_ERR);
+    }
+
+    if (type == BV_F32 || type == BV_F64) {
+        if (a->cell[2]->type != CELL_REAL) {
+            return make_cell_error(
+                "bytevector-set: byte arg must be a real",
+                TYPE_ERR);
+        }
+        const long double byte = a->cell[2]->real_v;
+        BV_FP_OPS[type].set(bv, idx, byte);
+        return USP_Obj;
+    }
+
     if (a->cell[2]->type != CELL_INTEGER) {
         return make_cell_error(
             "bytevector-set: byte arg must be an integer",
-            VALUE_ERR);
+            TYPE_ERR);
     }
     const int byte = (int)a->cell[2]->integer_v;
     /* Check the range. */
@@ -249,13 +333,7 @@ Cell* builtin_bytevector_set_bang(const Lex* e, const Cell* a)
         return check_if;
     }
 
-    if (idx < 0 || idx >= bv->count) {
-        return make_cell_error(
-            "bytevector-set!: index out of range",
-            INDEX_ERR);
-    }
-
-    BV_OPS[type].set(bv, idx, byte);
+    BV_INT_OPS[type].set(bv, idx, byte);
     return USP_Obj;
 }
 
@@ -571,7 +649,7 @@ Cell* builtin_utf8_string(const Lex* e, const Cell* a)
     /* Validate that the byte range begins on a valid UTF-8 codepoint boundary.
      * A continuation byte (0x80-0xBF) is not a valid start byte. */
     if (byte_count > 0) {
-        const uint8_t lead = (uint8_t)BV_OPS[BV_U8].get(bv, start);
+        const uint8_t lead = (uint8_t)BV_INT_OPS[BV_U8].get(bv, start);
         if ((lead & 0xC0) == 0x80) {
             return make_cell_error(
                 "utf8->string: start is not on a codepoint boundary",
@@ -583,7 +661,7 @@ Cell* builtin_utf8_string(const Lex* e, const Cell* a)
      * handle character counting and the ASCII flag. */
     char* the_str = GC_MALLOC_ATOMIC(byte_count + 1);
     for (int i = 0; i < byte_count; i++) {
-        the_str[i] = (char)BV_OPS[BV_U8].get(bv, start + i);
+        the_str[i] = (char)BV_INT_OPS[BV_U8].get(bv, start + i);
     }
     the_str[byte_count] = '\0';
 

@@ -26,16 +26,25 @@
 #include <gc/gc.h>
 
 
-typedef struct bv_ops_t {
+typedef struct bv_int_ops_t {
     int64_t (*get)(const Cell*, int index);
     void (*set)(Cell*, int index, int64_t value);
     void (*repr)(const Cell*, str_buf_t*);
     void (*append)(Cell*, int64_t value);
     size_t elem_size;
-} bv_ops_t;
+} bv_int_ops_t;
+
+typedef struct bv_fp_ops_t {
+    long double (*get)(const Cell*, int index);
+    void (*set)(Cell*, int index, long double value);
+    void (*repr)(const Cell*, str_buf_t*);
+    void (*append)(Cell*, long double value);
+    size_t elem_size;
+} bv_fp_ops_t;
 
 
-extern const bv_ops_t BV_OPS[];
+extern const bv_int_ops_t BV_INT_OPS[];
+extern const bv_fp_ops_t BV_FP_OPS[];
 
 /* This big ugly-ass macro makes a constructor, getter, setter, and repr for
  * each type of bytevector: u8, s8, u16, s16, u32, s32, u64, and s64 */
