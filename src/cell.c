@@ -375,9 +375,13 @@ Cell* make_cell_bytevector(const bv_t t, const size_t initial_size)
     v->bv->capacity = initial_size == 0 ? 8 : initial_size;
     v->count = 0;
 
-    const size_t elem_size = BV_OPS[t].elem_size;
-    v->bv->data = GC_MALLOC_ATOMIC(elem_size * v->bv->capacity);
-
+    if (v->bv->type == BV_F32 || v->bv->type == BV_F64) {
+        const size_t elem_size = BV_FP_OPS[t].elem_size;
+        v->bv->data = GC_MALLOC_ATOMIC(elem_size * v->bv->capacity);
+    } else {
+        const size_t elem_size = BV_INT_OPS[t].elem_size;
+        v->bv->data = GC_MALLOC_ATOMIC(elem_size * v->bv->capacity);
+    }
     return v;
 }
 
@@ -469,7 +473,7 @@ Cell* make_cell_bigint(const char* s, const Cell* a,  const uint8_t base)
 }
 
 
-/* Cell constructor for bigrats. */
+/* Cell constructor for big rats. */
 Cell* make_cell_bigrat(const int64_t num, const int64_t den, const char* s)
 {
     Cell* v = GC_MALLOC(sizeof(Cell));
@@ -609,10 +613,17 @@ Cell* cell_add(Cell* v, Cell* x)
 }
 
 
-/* Adds a byte to a bytevector object. */
-Cell* byte_add(Cell* bv, const int64_t value)
+/* Adds an integer value to a bytevector object. */
+Cell* int_byte_add(Cell* bv, const int64_t value)
 {
-    BV_OPS[bv->bv->type].append(bv, value);
+    BV_INT_OPS[bv->bv->type].append(bv, value);
+    return bv;
+}
+
+/* Adds a floating point value to a bytevector object. */
+Cell* fp_byte_add(Cell* bv, const long double value)
+{
+    BV_FP_OPS[bv->bv->type].append(bv, value);
     return bv;
 }
 

@@ -67,14 +67,14 @@ typedef enum Cell_t : uint32_t {
     CELL_UNSPEC     = 1 << 18,  /* Unspecified object. */
     CELL_BIGINT     = 1 << 19,  /* Arbitrary size/precision integer. */
 
-    CELL_BIGRAT     = 1 << 20,  /* TODO: Arbitrary size/precision rational. */
+    CELL_BIGRAT     = 1 << 20,  /* Arbitrary size/precision rational. */
     CELL_BIGFLOAT   = 1 << 21,  /* TODO: Arbitrary size/precision float. */
     CELL_PROMISE    = 1 << 22,  /* For delayed evaluation/streams. */
     CELL_STREAM     = 1 << 23,  /* A stream datatype for lazy evaluation. */
     
     CELL_MACRO      = 1 << 24,  /* A non-hygienic 'defmacro' macro. */
     CELL_SET        = 1 << 25,  /* A set. */
-    CELL_HASH       = 1 << 26,  /* A hash/dict/hash/associative array. */
+    CELL_HASH       = 1 << 26,  /* A hash/dict/hashmap/associative array. */
 } Cell_t;
 
 
@@ -324,6 +324,7 @@ Cell* make_cell_hash(const Cell* values);
 Cell* cell_add(Cell* v, Cell* x);
 Cell* cell_copy(const Cell* v);
 Cell* make_cell_bytevector_u8(void);
-Cell* byte_add(Cell* bv, int64_t value);
+Cell* int_byte_add(Cell* bv, int64_t value);
+Cell* fp_byte_add(Cell* bv, long double value);
 
 #endif //COZENAGE_CELL_H
