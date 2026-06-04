@@ -469,20 +469,42 @@ Cell* make_cell_bigint(const char* s, const Cell* a,  const uint8_t base)
 }
 
 
-/* Cell constructor for bigfloats. */
-Cell* make_cell_bigfloat(const char* s)
+/* Cell constructor for bigrats. */
+Cell* make_cell_bigrat(const int64_t num, const int64_t den, const char* s)
 {
     Cell* v = GC_MALLOC(sizeof(Cell));
     if (!v) {
         fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
         exit(EXIT_FAILURE);
     }
-    v->type = CELL_BIGINT;
-    mpf_t n;
-    mpf_init_set_str(n, s, 10);
-    v->bf = &n;
+    v->type = CELL_BIGRAT;
+    v->exact = true;
+    v->br = GC_MALLOC(sizeof(mpq_t));
+    mpq_init(*v->br);
+    if (s) {
+        mpq_set_str(*v->br, s, 10);
+    } else {
+        mpq_set_si(*v->br, num, den);
+    }
+    mpq_canonicalize(*v->br);
     return v;
 }
+
+
+/* Cell constructor for bigfloats. */
+// Cell* make_cell_bigfloat(const char* s)
+// {
+//     Cell* v = GC_MALLOC(sizeof(Cell));
+//     if (!v) {
+//         fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
+//         exit(EXIT_FAILURE);
+//     }
+//     v->type = CELL_BIGINT;
+//     mpf_t n;
+//     mpf_init_set_str(n, s, 10);
+//     v->bf = &n;
+//     return v;
+// }
 
 
 /* Cell constructor for promise type. */
@@ -737,6 +759,11 @@ Cell* cell_copy(const Cell* v) {
     case CELL_BIGINT:
         copy->bi = GC_MALLOC(sizeof(mpz_t));
         copy->bi = v->bi;
+        break;
+
+    case CELL_BIGRAT:
+        copy->br = GC_MALLOC(sizeof(mpq_t));
+        copy->br = v->br;
         break;
 
     /* Return the singleton objects instead of allocating for these types. */

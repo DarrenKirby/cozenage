@@ -37,6 +37,7 @@
 #include <stdio.h>
 #include <unicode/umachine.h>
 #include <gmp.h>
+//#include <mpfr.h>
 
 
 /* Cell_t type enum. */
@@ -274,7 +275,7 @@ typedef struct Cell {
         promise* promise;         /* -> promise struct */
         mpz_t* bi;                /* -> GMP integer */
         mpq_t* br;                /* -> GMP rational */
-        mpf_t* bf;                /* -> GMP float */
+        //mpfr_t* bf;               /* -> GMP float */
         ght_table* table;         /* -> CELL_SET or CELL_HASH ght pointer. */
     };
 } Cell;
@@ -310,6 +311,7 @@ Cell* make_cell_symbol(const char* the_symbol);
 Cell* make_cell_string(const char* the_string);
 Cell* make_cell_sexpr(void);
 Cell* make_cell_bigint(const char* s, const Cell* a, uint8_t base);
+Cell* make_cell_bigrat(int64_t num, int64_t den, const char* s);
 Cell* make_cell_bigfloat(const char* s);
 Cell* make_cell_pair(Cell* car, Cell* cdr);
 Cell* make_cell_error(const char* error_string, err_t error_type);
