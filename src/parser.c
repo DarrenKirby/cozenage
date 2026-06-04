@@ -251,6 +251,12 @@ static Cell* parse_number(char* token, const int line, int len)
                 line, ANSI_RED_B, tok, ANSI_RESET), SYNTAX_ERR);
         }
 
+        /* Check if it's a BIGRAT. */
+        if (!fits_in_int64(tok1) || !fits_in_int64(tok2)) {
+            Cell* result = make_cell_bigrat(0, 0, tok);
+            return result;
+        }
+
         const long long n = parse_int_checked(tok1, err_buf, base, &ok);
         const long long d = parse_int_checked(tok2, err_buf, 10, &ok);
 
@@ -271,7 +277,7 @@ static Cell* parse_number(char* token, const int line, int len)
 
     /* Integers and reals. */
 
-    /* Parse as bigint (and eventually bigfloat). */
+    /* Parse as bigint. */
     if (!fits_in_int64(tok) && !strchr(tok, '.')) {
         return make_cell_bigint(tok, nullptr, base);
     }
