@@ -81,6 +81,7 @@ const char* cell_type_name(const int t)
         case CELL_BYTEVECTOR:  return "byte vector";
         case CELL_EOF:         return "eof";
         case CELL_BIGINT:      return "bigint";
+        case CELL_BIGRAT:      return "bigrat";
         case CELL_BIGFLOAT:    return "bigfloat";
         case CELL_PROMISE:     return "promise";
         case CELL_STREAM:      return "stream";
@@ -114,6 +115,7 @@ const char* cell_mask_types(const int mask)
     if (mask & CELL_BYTEVECTOR)  strcat(buf, "byte vector|");
     if (mask & CELL_EOF)         strcat(buf, "eof|");
     if (mask & CELL_BIGINT)      strcat(buf, "bigint|");
+    if (mask & CELL_BIGRAT)      strcat(buf, "bigrat|");
     if (mask & CELL_BIGFLOAT)    strcat(buf, "bigfloat|");
     if (mask & CELL_PROMISE)     strcat(buf, "promise|");
     if (mask & CELL_STREAM)      strcat(buf, "stream|");
