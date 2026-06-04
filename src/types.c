@@ -225,9 +225,21 @@ static Cell* int_to_real(const Cell* v)
 }
 
 
+static Cell* bigint_to_real(const Cell* v)
+{
+    return make_cell_real(mpz_get_d(*v->bi));
+}
+
+
 static Cell* rat_to_real(const Cell* v)
 {
     return make_cell_real((long double)v->num / (long double)v->den);
+}
+
+
+static Cell* bigrat_to_real(const Cell* v)
+{
+    return make_cell_real(mpq_get_d(*v->br));
 }
 
 
@@ -237,10 +249,131 @@ static Cell* to_complex(Cell* v)
 }
 
 
-static Cell* to_bigint(const Cell* v)
+static Cell* int_to_bigint(const Cell* v)
 {
     return make_cell_bigint(nullptr, v, 10);
 }
+
+
+static Cell* int_to_bigrat(const Cell* v)
+{
+    return make_cell_bigrat(v->integer_v, 1, nullptr);
+}
+
+
+static Cell* rat_to_bigrat(const Cell* v)
+{
+    return make_cell_bigrat(v->num, v->den, nullptr);
+}
+
+
+static Cell* bigint_to_bigrat(const Cell* v)
+{
+    Cell* c = GC_MALLOC(sizeof(Cell));
+    if (!v) {
+        fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
+        exit(EXIT_FAILURE);
+    }
+    c->type = CELL_BIGRAT;
+    c->exact = true;
+    c->br = GC_MALLOC(sizeof(mpq_t));
+    mpq_init(*c->br);
+    mpq_set_z(*c->br, *v->bi);
+    return c;
+}
+
+
+static Cell* promote_to(Cell *a, const Cell_t target)
+{
+    switch (target) {
+        case CELL_BIGINT: {
+            if (a->type == CELL_INTEGER) {
+                return int_to_bigint(a);
+            }
+            if (a->type == CELL_BIGINT) return a;
+            break;
+        }
+
+        case CELL_RATIONAL: {
+            if (a->type == CELL_INTEGER) {
+                return int_to_rat(a);
+            }
+            if (a->type == CELL_RATIONAL) return a;
+            break;
+        }
+
+        case CELL_BIGRAT: {
+            if (a->type == CELL_INTEGER) {
+                return int_to_bigrat(a);
+            }
+            if (a->type == CELL_BIGINT) {
+                return bigint_to_bigrat(a);
+            }
+            if (a->type == CELL_RATIONAL) {
+                return rat_to_bigrat(a);
+            }
+            if (a->type == CELL_BIGRAT) return a;
+            break;
+        }
+
+        case CELL_REAL: {
+            if (a->type == CELL_INTEGER) {
+                return int_to_real(a);
+            }
+            if (a->type == CELL_BIGINT) {
+                return bigint_to_real(a);
+            }
+            if (a->type == CELL_RATIONAL) {
+                return rat_to_real(a);
+            }
+            if (a->type == CELL_BIGRAT) {
+                return bigrat_to_real(a);
+            }
+            if (a->type == CELL_REAL) return a;
+            break;
+        }
+
+        case CELL_COMPLEX: {
+            if (a->type == CELL_COMPLEX) {
+                return a;
+            }
+            return to_complex(a);
+
+        }
+
+        default:
+            ;
+    }
+    return a;
+}
+
+
+/* This is not ideal but necessary as the actual Cell type
+ * enum uses powers of 2 for fast bitwise type checking. */
+static NumType numeric_index(const Cell_t t)
+{
+    switch (t) {
+        case CELL_INTEGER:  return NUM_INT;
+        case CELL_BIGINT:   return NUM_BIGINT;
+        case CELL_RATIONAL: return NUM_RATIONAL;
+        case CELL_BIGRAT:   return NUM_BIGRAT;
+        case CELL_REAL:     return NUM_REAL;
+        case CELL_COMPLEX:  return NUM_COMPLEX;
+        default:
+            abort();
+    }
+}
+
+
+static Cell_t promote_table[NUM_TYPE_COUNT][NUM_TYPE_COUNT] = {
+    /*                 int            bigint        rat            bigrat        real          complex */
+    /* int     */ { CELL_INTEGER,  CELL_BIGINT,  CELL_RATIONAL, CELL_BIGRAT,  CELL_REAL,    CELL_COMPLEX },
+    /* bigint  */ { CELL_BIGINT,   CELL_BIGINT,  CELL_BIGRAT,   CELL_BIGRAT,  CELL_REAL,    CELL_COMPLEX },
+    /* rat     */ { CELL_RATIONAL, CELL_BIGRAT,  CELL_RATIONAL, CELL_BIGRAT,  CELL_REAL,    CELL_COMPLEX },
+    /* bigrat  */ { CELL_BIGRAT,   CELL_BIGRAT,  CELL_BIGRAT,   CELL_BIGRAT,  CELL_REAL,    CELL_COMPLEX },
+    /* real    */ { CELL_REAL,     CELL_REAL,    CELL_REAL,     CELL_REAL,    CELL_REAL,    CELL_COMPLEX },
+    /* complex */ { CELL_COMPLEX,  CELL_COMPLEX, CELL_COMPLEX,  CELL_COMPLEX, CELL_COMPLEX, CELL_COMPLEX },
+};
 
 
 /* Promote two numbers to the same type, modifying lhs and rhs in-place. */
@@ -249,35 +382,15 @@ void numeric_promote(Cell** lhs, Cell** rhs)
     Cell* a = *lhs;
     Cell* b = *rhs;
 
-    if (a->type == CELL_BIGINT || b->type == CELL_BIGINT) {
-        if (a->type != CELL_BIGINT) {
-            a = to_bigint(a);
-        }
-        if (b->type != CELL_BIGINT) {
-            b = to_bigint(b);
-        }
-    } else if (a->type == CELL_COMPLEX || b->type == CELL_COMPLEX) {
-        if (a->type != CELL_COMPLEX) {
-            a = to_complex(a);
-        }
-        if (b->type != CELL_COMPLEX) {
-            b = to_complex(b);
-        }
-    } else if (a->type == CELL_REAL || b->type == CELL_REAL) {
-        if (a->type == CELL_INTEGER || a->type == CELL_RATIONAL) {
-            a = a->type == CELL_INTEGER ? int_to_real(a) : rat_to_real(a);
-        }
-        if (b->type == CELL_INTEGER || b->type == CELL_RATIONAL) {
-            b = b->type == CELL_INTEGER ? int_to_real(b) : rat_to_real(b);
-        }
-    } else if (a->type == CELL_RATIONAL || b->type == CELL_RATIONAL) {
-        if (a->type == CELL_INTEGER) {
-            a = int_to_rat(a);
-        }
-        if (b->type == CELL_INTEGER) {
-            b = int_to_rat(b);
-        }
+    /* Safety check. */
+    if (a->type != CELL_ERROR && b->type != CELL_ERROR) {
+        const Cell_t target = promote_table[numeric_index(a->type)]
+                                           [numeric_index(b->type)];
+
+        a = promote_to(a, target);
+        b = promote_to(b, target);
     }
+
     *lhs = a;
     *rhs = b;
 }

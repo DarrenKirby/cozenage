@@ -46,6 +46,17 @@ typedef struct {
     UChar32 codepoint;
 } NamedChar;
 
+typedef enum {
+    NUM_INT = 0,
+    NUM_BIGINT,
+    NUM_RATIONAL,
+    NUM_BIGRAT,
+    NUM_REAL,
+    NUM_COMPLEX,
+    NUM_TYPE_COUNT
+} NumType;
+
+
 typedef Cell* (*BuiltinFn)(const Lex* e, const Cell* args);
 
 const char* fmt_err(const char *fmt, ...);
