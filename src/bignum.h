@@ -46,5 +46,9 @@ Cell* bigint_exact_int_sqrt(Cell* a);
 Cell* bigint_mod(Cell* a, Cell* b);
 Cell* bigint_expt(Cell* a, int exp);
 Cell* bigint_neg(Cell* a);
+Cell* bigrat_add(Cell* a, const Cell* b);
+Cell* bigrat_sub(Cell* a, const Cell* b);
+Cell* bigrat_mul(Cell* a, const Cell* b);
+Cell* bigrat_div(Cell* a, const Cell* b);
 
 #endif //COZENAGE_BIGNUM_H

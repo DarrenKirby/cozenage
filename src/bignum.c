@@ -176,3 +176,32 @@ Cell* bigint_expt(Cell* a, const int exp)
     mpz_pow_ui(*a->bi, *a->bi, exp);
     return a;
 }
+
+
+/* bigrat arithmetic procedures. */
+Cell* bigrat_add(Cell* a, const Cell* b)
+{
+    mpq_add(*a->br, *a->br, *b->br);
+    return a;
+}
+
+
+Cell* bigrat_sub(Cell* a, const Cell* b)
+{
+    mpq_sub(*a->br, *a->br, *b->br);
+    return a;
+}
+
+
+Cell* bigrat_mul(Cell* a, const Cell* b)
+{
+    mpq_mul(*a->br, *a->br, *b->br);
+    return a;
+}
+
+
+Cell* bigrat_div(Cell* a, const Cell* b)
+{
+    mpq_div(*a->br, *a->br, *b->br);
+    return a;
+}
