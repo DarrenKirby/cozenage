@@ -79,7 +79,7 @@ Cell* coz_eval(Lex* env, Cell* expr)
                           CELL_VECTOR|CELL_BYTEVECTOR|CELL_NIL|CELL_EOF|
                           CELL_PROC|CELL_PORT|CELL_ERROR|CELL_UNSPEC|
                           CELL_BIGINT|CELL_BIGFLOAT|CELL_SET|CELL_HASH|
-                          CELL_PROMISE|CELL_STREAM)) {
+                          CELL_PROMISE|CELL_STREAM|CELL_BIGRAT)) {
             return expr;
         }
 
