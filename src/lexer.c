@@ -291,7 +291,13 @@ Token lex_token()
                 /* #t, #f, #true, #false. */
                 case 't':
                 case 'f':
-                    return boolean();
+                    switch (peekNext()) {
+                        case '3':  /* #f32(...) */
+                        case '6':  /* #f64(...) */
+                            return make_token(T_HASH);
+                        default:
+                            return boolean();
+                    }
                 case '[':
                     advance();
                     return make_token(T_HASH_START);
