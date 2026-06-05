@@ -84,5 +84,7 @@ Cell* builtin_bytevector_copy_bang(const Lex* e, const Cell* a);
 Cell* builtin_bytevector_append(const Lex* e, const Cell* a);
 Cell* builtin_utf8_string(const Lex* e, const Cell* a);
 Cell* builtin_string_utf8(const Lex* e, const Cell* a);
+Cell* int_byte_check(bv_t type, int64_t value);
+Cell* fp_byte_check(bv_t type, long double value);
 
 #endif //COZENAGE_BYTEVECTORS_H

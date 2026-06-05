@@ -21,22 +21,23 @@
 #include "strings.h"
 #include "types.h"
 
-#include <string.h>
+#include <float.h>
+#include <math.h>
 #include <gc/gc.h>
 #include <inttypes.h>
 
 
-
-
-static long double get_f32(const Cell* bv, int i) {
-    return ((long double*)bv->bv->data)[i];
+static long double get_f32(const Cell* bv, const int i) {
+    return ((float*)bv->bv->data)[i];
 }
 
-static void set_f32(Cell* bv, int i, long double val) {
+
+static void set_f32(Cell* bv, const int i, const long double val) {
     ((float*)bv->bv->data)[i] = (float)val;
 }
 
-static void append_f32(Cell* bv, long double val) {
+
+static void append_f32(Cell* bv, const long double val) {
     if (bv->count == bv->bv->capacity) {
         bv->bv->capacity *= 2;
         bv->bv->data = GC_realloc(bv->bv->data, bv->bv->capacity * sizeof(float));
@@ -44,24 +45,28 @@ static void append_f32(Cell* bv, long double val) {
     ((float*)bv->bv->data)[bv->count++] = (float)val;
 }
 
+
 static void repr_f32(const Cell* bv, str_buf_t *sb) {
-    sb_append_fmt(sb, "#%s(", "u8");
+    sb_append_fmt(sb, "#%s(", "f32");
     for (int i = 0; i < bv->count; i++) {
-        sb_append_fmt(sb, "%f", ((float*)bv->bv->data)[i]);
+        sb_append_fmt(sb, "%.7g", ((float*)bv->bv->data)[i]);
         if (i != bv->count - 1) sb_append_char(sb, ' ');
     }
     sb_append_char(sb, ')');
 }
 
-static long double get_f64(const Cell* bv, int i) {
-    return ((long double*)bv->bv->data)[i];
+
+static long double get_f64(const Cell* bv, const int i) {
+    return ((double*)bv->bv->data)[i];
 }
 
-static void set_f64(Cell* bv, int i, long double val) {
-    ((float*)bv->bv->data)[i] = (float)val;
+
+static void set_f64(Cell* bv, const int i, const long double val) {
+    ((double*)bv->bv->data)[i] = (double)val;
 }
 
-static void append_f64(Cell* bv, long double val) {
+
+static void append_f64(Cell* bv, const long double val) {
     if (bv->count == bv->bv->capacity) {
         bv->bv->capacity *= 2;
         bv->bv->data = GC_realloc(bv->bv->data, bv->bv->capacity * sizeof(double));
@@ -69,10 +74,11 @@ static void append_f64(Cell* bv, long double val) {
     ((double*)bv->bv->data)[bv->count++] = (double)val;
 }
 
+
 static void repr_f64(const Cell* bv, str_buf_t *sb) {
-    sb_append_fmt(sb, "#%s(", "u8");
+    sb_append_fmt(sb, "#%s(", "f64");
     for (int i = 0; i < bv->count; i++) {
-        sb_append_fmt(sb, "%f", ((double*)bv->bv->data)[i]);
+        sb_append_fmt(sb, "%.15g", ((double*)bv->bv->data)[i]);
         if (i != bv->count - 1) sb_append_char(sb, ' ');
     }
     sb_append_char(sb, ')');
@@ -106,39 +112,6 @@ const bv_fp_ops_t BV_FP_OPS[] = {
     [BV_F32] = { get_f32, set_f32, repr_f32, append_f32, sizeof(float)  },
     [BV_F64] = { get_f64, set_f64, repr_f64, append_f64, sizeof(double)  },
 };
-
-
-static Cell* byte_fits(const bv_t type, const int64_t byte) {
-    /* Quick exit for u64, as UINT64_MAX does not fit in int64_t. */
-    if (type == BV_U64) {
-        if (byte < 0) {
-            return make_cell_error(
-                fmt_err("byte value %ll invalid for u64 bytevector", byte),
-                VALUE_ERR);
-        }
-        return True_Obj;
-    }
-    int64_t min;
-    int64_t max;
-    char* t_s;
-    switch (type) {
-        case BV_U8: { min = 0; max = UINT8_MAX; t_s = "u8"; break; }
-        case BV_S8: { min = INT8_MIN; max = INT8_MAX; t_s = "s8"; break;  }
-        case BV_U16: { min = 0; max = UINT16_MAX; t_s = "u16"; break; }
-        case BV_S16: { min = INT16_MIN; max = INT16_MAX; t_s = "s16"; break;  }
-        case BV_U32: { min = 0; max = UINT32_MAX; t_s = "u32"; break;}
-        case BV_S32: { min = INT32_MIN; max = INT32_MAX; t_s = "s32"; break; }
-        case BV_S64: { min = INT64_MIN; max = INT64_MAX; t_s = "s64"; break; }
-        default: { min = 0; max = UINT8_MAX; t_s = "u8"; break; }
-    }
-    
-    if (byte < min || byte > max) {
-        return make_cell_error(
-            fmt_err("byte value %" PRId64 " invalid for %s bytevector", byte, t_s),
-            VALUE_ERR);
-    }
-    return True_Obj;
-}
 
 
 static bv_t get_type(const Cell* t_sym)
@@ -179,6 +152,66 @@ static char* get_type_string(const bv_t type)
 }
 
 
+/* Adds an integer value to a bytevector object. */
+Cell* int_byte_check(const bv_t type, const int64_t value)
+{
+    if (type == BV_U64) {
+        if (value < 0) {
+            return make_cell_error(
+                fmt_err("byte value '%ll' invalid for u64 bytevector", value),
+                VALUE_ERR);
+        }
+        return nullptr;
+    }
+
+    int64_t min;
+    int64_t max;
+    switch (type) {
+        case BV_U8: { min = 0; max = UINT8_MAX; break; }
+        case BV_S8: { min = INT8_MIN; max = INT8_MAX; break;  }
+        case BV_U16: { min = 0; max = UINT16_MAX; break; }
+        case BV_S16: { min = INT16_MIN; max = INT16_MAX; break;  }
+        case BV_U32: { min = 0; max = UINT32_MAX; break;}
+        case BV_S32: { min = INT32_MIN; max = INT32_MAX; break; }
+        case BV_S64: { min = INT64_MIN; max = INT64_MAX; break; }
+        default: { min = 0; max = UINT8_MAX; break; }
+    }
+
+    if (value < min || value > max) {
+        return make_cell_error(
+            fmt_err("byte value '%" PRId64 "' invalid for %s bytevector", value, get_type_string(type)),
+            VALUE_ERR);
+    }
+    return nullptr;
+}
+
+
+/* Adds a floating point value to a bytevector object. */
+Cell* fp_byte_check(const bv_t type, const long double value)
+{
+    switch (type) {
+        case BV_F32:
+            if (isfinite(value) && fabsl(value) > FLT_MAX)
+                return make_cell_error(fmt_err(
+                    "bad value for f32 bytevector: '%ld'", value),
+                    VALUE_ERR);
+
+            break;
+
+        case BV_F64:
+            if (isfinite(value) && fabsl(value) > DBL_MAX)
+                return make_cell_error(fmt_err(
+                    "bad value for f64 bytevector: '%ld'", value),
+                    VALUE_ERR);
+            break;
+
+        default:
+            ;
+    }
+    return nullptr;
+}
+
+
 /*------------------------------------------------------------*
  *     Byte vector constructors, selectors, and procedures    *
  * -----------------------------------------------------------*/
@@ -214,6 +247,26 @@ Cell* builtin_bytevector(const Lex* e, const Cell* a)
     }
 
     Cell* bv = make_cell_bytevector(type, num_bytes);
+
+    if (type == BV_F32 || type == BV_F64) {
+        for (int i = 0; i < num_bytes; i++) {
+            long double byte;
+            if (a->cell[i]->type == CELL_INTEGER) {
+                byte = a->cell[i]->integer_v;
+            } else if (a->cell[i]->type == CELL_REAL) {
+                byte = a->cell[i]->real_v;
+            } else {
+                return make_cell_error(
+                    "bytevector: floating point bytevector args must be integers or reals",
+                    VALUE_ERR);
+            }
+            Cell* err = fp_byte_check(type, byte);
+            if (err) return err;
+            BV_FP_OPS[bv->bv->type].append(bv, byte);
+        }
+        return bv;
+    }
+
     for (int i = 0; i < num_bytes; i++) {
         if (a->cell[i]->type != CELL_INTEGER) {
             return make_cell_error(
@@ -221,9 +274,9 @@ Cell* builtin_bytevector(const Lex* e, const Cell* a)
                 VALUE_ERR);
         }
         const int64_t byte = a->cell[i]->integer_v;
-        Cell* check_if = byte_fits(type, byte);
-        if (check_if->type == CELL_ERROR) { return check_if; }
-        int_byte_add(bv, byte);
+        Cell* err = int_byte_check(type, byte);
+        if (err) return err;
+        BV_INT_OPS[bv->bv->type].append(bv, byte);
     }
     return bv;
 }
@@ -311,12 +364,16 @@ Cell* builtin_bytevector_set_bang(const Lex* e, const Cell* a)
     }
 
     if (type == BV_F32 || type == BV_F64) {
-        if (a->cell[2]->type != CELL_REAL) {
-            return make_cell_error(
-                "bytevector-set: byte arg must be a real",
-                TYPE_ERR);
+        long double byte;
+        if (a->cell[2]->type == CELL_REAL) {
+            byte = a->cell[2]->real_v;
+
         }
-        const long double byte = a->cell[2]->real_v;
+        if (a->cell[2]->type == CELL_INTEGER) {
+            byte = a->cell[2]->integer_v;
+        }
+        err = fp_byte_check(type, byte);
+        if (err) return err;
         BV_FP_OPS[type].set(bv, idx, byte);
         return USP_Obj;
     }
@@ -326,13 +383,9 @@ Cell* builtin_bytevector_set_bang(const Lex* e, const Cell* a)
             "bytevector-set: byte arg must be an integer",
             TYPE_ERR);
     }
-    const int byte = (int)a->cell[2]->integer_v;
-    /* Check the range. */
-    Cell* check_if = byte_fits(type, byte);
-    if (check_if->type == CELL_ERROR) {
-        return check_if;
-    }
-
+    const int64_t byte = (int)a->cell[2]->integer_v;
+    err = int_byte_check(type, byte);
+    if (err) return err;
     BV_INT_OPS[type].set(bv, idx, byte);
     return USP_Obj;
 }
@@ -380,25 +433,45 @@ Cell* builtin_make_bytevector(const Lex* e, const Cell* a)
         type = BV_U8;
     }
 
-    int64_t fill;
+    Cell *vec = make_cell_bytevector(type, n);
+
+    /* Float vector path. */
+    if (type == BV_F32 || type == BV_F64) {
+        long double fill = 0;
+        if (a->count > 1) {
+            if (a->cell[1]->type == CELL_INTEGER) {
+                fill = a->cell[1]->integer_v;
+            } else if (a->cell[1]->type == CELL_REAL) {
+                fill = a->cell[1]->real_v;
+            } else {
+                return make_cell_error(fmt_err(
+                    "make-bytevector: Fill value must be integer or real",
+                    get_type_string(type)), VALUE_ERR);
+            }
+        }
+        err = fp_byte_check(type, fill);
+        if (err) return err;
+        for (int i = 0; i < n; i++) {
+            BV_FP_OPS[type].append(vec, fill);
+        }
+        return vec;
+    }
+
+    /* Integer vector path. */
+    int64_t fill = 0;
     if (a->count > 1) {
         if (a->cell[1]->type != CELL_INTEGER) {
             return make_cell_error(
-                "make-bytevector: arg 2 must be an integer",
+                "make-bytevector: Fill value must be an integer",
                 TYPE_ERR);
         }
         fill = a->cell[1]->integer_v;
-        /* Check the range. */
-        Cell* check_if = byte_fits(type, fill);
-        if (check_if->type == CELL_ERROR) {
-            return check_if;
-        }
-    } else {
-        fill = 0;
     }
-    Cell *vec = make_cell_bytevector(type, n);
+    err = int_byte_check(type, fill);
+    if (err) return err;
+
     for (int i = 0; i < n; i++) {
-        byte_add(vec, fill);
+        BV_INT_OPS[vec->bv->type].append(vec, fill);
     }
     return vec;
 }
@@ -424,7 +497,7 @@ Cell* builtin_bytevector_copy(const Lex* e, const Cell* a)
     if (a->count == 2) {
         if (a->cell[1]->type != CELL_INTEGER) {
             return make_cell_error(
-                "bytevector-copy: arg 2 must be an integer",
+                "bytevector-copy: start arg must be an integer",
                 TYPE_ERR);
         }
         start = (int)a->cell[1]->integer_v;
@@ -454,9 +527,15 @@ Cell* builtin_bytevector_copy(const Lex* e, const Cell* a)
     }
 
     Cell* vec = make_cell_bytevector(type, end - start);
+
+    /* No need to check type and range, we
+     * already know they are good. */
     for (int i = start; i < end; i++) {
-        const int64_t byte = BV_OPS[type].get(bv, i);
-        byte_add(vec, byte);
+        if (type == BV_F32 || type == BV_F64) {
+            BV_FP_OPS[bv->bv->type].append(vec, BV_FP_OPS[type].get(bv, i));
+            continue;
+        }
+        BV_INT_OPS[vec->bv->type].append(vec, BV_INT_OPS[type].get(bv, i));
     }
     return vec;
 }
@@ -545,8 +624,12 @@ Cell* builtin_bytevector_copy_bang(const Lex* e, const Cell* a)
 
     const int32_t num_bytes = from_end_idx - from_start_idx;
     for (int i = to_start_idx; i < to_start_idx + num_bytes; i++) {
-        const int64_t byte = BV_OPS[from_type].get(from_bv, from_start_idx);
-        BV_OPS[to_type].set(to_bv, i, byte);
+        if (from_type == BV_F32 || from_type == BV_F64) {
+            BV_FP_OPS[to_type].set(to_bv, i, BV_FP_OPS[from_type].get(from_bv, from_start_idx));
+            from_start_idx++;
+            continue;
+        }
+        BV_INT_OPS[to_type].set(to_bv, i, BV_INT_OPS[from_type].get(from_bv, from_start_idx));
         from_start_idx++;
     }
     return USP_Obj;
@@ -567,20 +650,29 @@ Cell* builtin_bytevector_append(const Lex* e, const Cell* a)
     }
 
     const bv_t type = a->cell[0]->bv->type;
-    Cell* result = make_cell_bytevector(type, 8);
+    Cell* vec = make_cell_bytevector(type, 8);
     for (int i = 0; i < a->count; i++) {
         const Cell* bv = a->cell[i];
+        /* TODO: allow appending of 'smaller type' or equal bytevectors. */
         if (bv->bv->type != type) {
             return make_cell_error(
                 "bytevector-append: cannot append different bytevector types",
                 VALUE_ERR);
         }
         for (int j = 0; j < bv->count; j++) {
-            const int64_t byte =  BV_OPS[type].get(bv, j);
-            byte_add(result, byte);
+            if (type == BV_F32 || type == BV_F64) {
+                const long double byte = BV_FP_OPS[type].get(bv, j);
+                err = fp_byte_check(type, byte);
+                if (err) return err;
+                continue;
+            }
+            const int64_t byte =  BV_INT_OPS[type].get(bv, j);
+            err = int_byte_check(type, byte);
+            if (err) return err;
+            BV_INT_OPS[vec->bv->type].append(vec, byte);
         }
     }
-    return result;
+    return vec;
 }
 
 
@@ -735,7 +827,9 @@ Cell* builtin_string_utf8(const Lex* e, const Cell* a)
     const char* the_s = str_cell->str;
     Cell* bv = make_cell_bytevector(BV_U8, end_byte - start_byte);
     for (int32_t i = start_byte; i < end_byte; i++) {
-        byte_add(bv, (uint8_t)the_s[i]);
+        err = int_byte_check(BV_U8, (uint8_t)the_s[i]);
+        if (err) return err;
+        BV_INT_OPS[bv->bv->type].append(bv, (uint8_t)the_s[i]);
     }
     return bv;
 }
