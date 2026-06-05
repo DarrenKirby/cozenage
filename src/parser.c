@@ -21,6 +21,7 @@
 #include "parser.h"
 #include "types.h"
 #include "repr.h"
+#include "bytevectors.h"
 
 #include <gc.h>
 #include <stdio.h>
@@ -672,47 +673,33 @@ Cell* parse_tokens(TokenArray *ta) {
             if (peek(ta)->type == T_SYMBOL) {
                 /* Bytevector. */
                 const char* bv_tok = token_to_string(peek(ta));
-                uint8_t bv_t;
-                int64_t bv_min;
-                int64_t bv_max;
+                bv_t type;
                 if (strcmp(bv_tok, "u8") == 0) {
-                    bv_t = BV_U8;
-                    bv_min = 0;
-                    bv_max = UINT8_MAX;
+                    type = BV_U8;
                 } else if (strcmp(bv_tok, "u16") == 0) {
-                    bv_t = BV_U16;
-                    bv_min = 0;
-                    bv_max = UINT16_MAX;
+                    type = BV_U16;
                 } else if (strcmp(bv_tok, "u32") == 0) {
-                    bv_t = BV_U32;
-                    bv_min = 0;
-                    bv_max = UINT32_MAX;
+                    type = BV_U32;
                 } else if (strcmp(bv_tok, "u64") == 0) {
-                    bv_t = BV_U64;
-                    bv_min = 0;
-                    bv_max = UINT64_MAX;
+                    type = BV_U64;
                 } else if (strcmp(bv_tok, "s8") == 0) {
-                    bv_t = BV_S8;
-                    bv_min = INT8_MIN;
-                    bv_max = INT8_MAX;
+                    type = BV_S8;
                 } else if (strcmp(bv_tok, "s16") == 0) {
-                    bv_t = BV_S16;
-                    bv_min = INT16_MIN;
-                    bv_max = INT16_MAX;
+                    type = BV_S16;
                 } else if (strcmp(bv_tok, "s32") == 0) {
-                    bv_t = BV_S32;
-                    bv_min = INT32_MIN;
-                    bv_max = INT32_MAX;
+                    type = BV_S32;
                 } else if (strcmp(bv_tok, "s64") == 0) {
-                    bv_t = BV_S64;
-                    bv_min = INT64_MIN;
-                    bv_max = INT64_MAX;
+                    type = BV_S64;
+                } else if (strcmp(bv_tok, "f32") == 0) {
+                    type = BV_F32;
+                } else if (strcmp(bv_tok, "f64") == 0) {
+                    type = BV_F64;
                 } else {
                     return make_cell_error(
                         fmt_err("Line %d: Bad bytevector label: %s", token->line, bv_tok),
                         SYNTAX_ERR);
                 }
-                Cell* bv = make_cell_bytevector(bv_t, 8);
+                Cell* bv = make_cell_bytevector(type, 8);
                 token = advance(ta); /* consume 'u8'. */
 
                 if (peek(ta)->type != T_LEFT_PAREN) {
@@ -726,23 +713,38 @@ Cell* parse_tokens(TokenArray *ta) {
                 token = advance(ta); /* Consume '('. */
                 while (peek(ta)->type != T_RIGHT_PAREN) {
                     const Cell* val = parse_tokens(ta);
-                    if (val->type != CELL_INTEGER) {
-                        return make_cell_error(
-                            fmt_err("Line %d: bad value: '%s'. bytevector literals can only contain bytes",
+
+                    if (type == BV_F32 || type == BV_F64) {
+                        long double byte;
+                        if (val->type == CELL_INTEGER) {
+                            byte = val->integer_v;
+                            Cell* err = fp_byte_check(type, byte);
+                            if (err) return err;
+
+                        } else if (val->type == CELL_REAL) {
+                            byte = val->real_v;
+                            Cell* err = fp_byte_check(type, byte);
+                            if (err) return err;
+                        } else {
+                            return make_cell_error(
+                            fmt_err("Line %d: bad value: '%s'. bytevector literals must be integers or reals",
                             token->line, cell_to_string(val, MODE_REPL)),
                             TYPE_ERR);
-                    }
+                        }
+                        BV_FP_OPS[bv->bv->type].append(bv, byte);
+                    } else {
+                        if (val->type != CELL_INTEGER) {
+                            return make_cell_error(
+                                fmt_err("Line %d: bad value: '%s'. bytevector literals can only contain bytes",
+                                token->line, cell_to_string(val, MODE_REPL)),
+                                TYPE_ERR);
+                        }
 
-                    if (val->integer_v < bv_min || val->integer_v > bv_max) {
-                        return make_cell_error(
-                            fmt_err(
-                                "Line %d: invalid byte value for %s, must be (byte >= %"
-                                PRId64 ") and (byte <= %" PRId64 ")",
-                                token->line, bv_tok, bv_min, bv_max),
-                            VALUE_ERR);
+                        const int64_t byte = val->integer_v;
+                        Cell* err = int_byte_check(type, byte);
+                        if (err) return err;
+                        BV_INT_OPS[bv->bv->type].append(bv, byte);
                     }
-                    const int64_t byte = val->integer_v;
-                    byte_add(bv, byte);
                     advance(ta);
                 }
 
