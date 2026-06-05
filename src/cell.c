@@ -613,21 +613,6 @@ Cell* cell_add(Cell* v, Cell* x)
 }
 
 
-/* Adds an integer value to a bytevector object. */
-Cell* int_byte_add(Cell* bv, const int64_t value)
-{
-    BV_INT_OPS[bv->bv->type].append(bv, value);
-    return bv;
-}
-
-/* Adds a floating point value to a bytevector object. */
-Cell* fp_byte_add(Cell* bv, const long double value)
-{
-    BV_FP_OPS[bv->bv->type].append(bv, value);
-    return bv;
-}
-
-
 /* Recursively deep-copy all components of a Cell. Not every Cell type
  * is represented here, as not all Cell types would credibly need to
  * be copied. Deep-copying is expensive, and should be avoided if possible. */

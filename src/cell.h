@@ -127,8 +127,8 @@ typedef enum BV_t : uint8_t {
     BV_S32,
     BV_U64,
     BV_S64,
-    BV_F32, /* TODO: 32-bit single precision floating-point vector. */
-    BV_F64  /* TODO: 64-bit double precision floating-point vector. */
+    BV_F32,
+    BV_F64
 } bv_t;
 
 /* Bytevector struct. */
@@ -324,7 +324,5 @@ Cell* make_cell_hash(const Cell* values);
 Cell* cell_add(Cell* v, Cell* x);
 Cell* cell_copy(const Cell* v);
 Cell* make_cell_bytevector_u8(void);
-Cell* int_byte_add(Cell* bv, int64_t value);
-Cell* fp_byte_add(Cell* bv, long double value);
 
 #endif //COZENAGE_CELL_H
