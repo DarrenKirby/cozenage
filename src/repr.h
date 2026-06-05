@@ -32,7 +32,7 @@ typedef enum {
     MODE_DISPLAY,
 
     /* For the REPL.
-        Like MODE_WRITE, but with ANSI color codes. */
+        Like MODE_WRITE, but with ANSI colour codes. */
     MODE_REPL
 } print_mode_t;
 

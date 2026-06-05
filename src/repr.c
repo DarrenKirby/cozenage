@@ -74,7 +74,7 @@ static void cell_to_string_worker(const Cell* v, str_buf_t *sb, print_mode_t mod
 static void repr_long_double(const long double x, str_buf_t *sb)
 {
     char buf[128];
-    snprintf(buf, sizeof buf, "%.15Lg", x);
+    snprintf(buf, sizeof buf, "%.18Lg", x);
 
     /* If there's no '.' or exponent marker, force a ".0". */
     if (!strchr(buf, '.') && !strchr(buf, 'e') && !strchr(buf, 'E')) {
@@ -391,7 +391,7 @@ static void cell_to_string_worker(const Cell* v,
         }
 
         case CELL_BIGFLOAT: {
-            /* TODO: this needs to b changed. */
+            /* TODO: this needs to be changed when bigfloat implemented. */
             char f_buf[1024];
             gmp_snprintf(f_buf, sizeof(f_buf), "%Ff", v->bi);
             sb_append_str(sb, f_buf);
@@ -430,7 +430,11 @@ static void cell_to_string_worker(const Cell* v,
             break;
 
         case CELL_BYTEVECTOR:
-            BV_OPS[v->bv->type].repr(v, sb);
+            if (v->bv->type == BV_F32 || v->bv->type == BV_F64) {
+                BV_FP_OPS[v->bv->type].repr(v, sb);
+            } else {
+                BV_INT_OPS[v->bv->type].repr(v, sb);
+            }
             break;
 
         case CELL_SET:

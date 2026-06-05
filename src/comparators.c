@@ -412,7 +412,13 @@ static Cell* val_equal(const Lex* e, Cell* x, Cell* y)
                 return False_Obj;
             }
             for (int i = 0; i < x->count; i++) {
-                if (BV_OPS[x->bv->type].get(x, i) != BV_OPS[y->bv->type].get(y, i)) {
+                if (x->bv->type == BV_F32 || x->bv->type == BV_F64) {
+                    if (BV_FP_OPS[x->bv->type].get(x, i) != BV_FP_OPS[y->bv->type].get(y, i)) {
+                        return False_Obj;
+                    }
+                    continue;
+                }
+                if (BV_INT_OPS[x->bv->type].get(x, i) != BV_INT_OPS[y->bv->type].get(y, i)) {
                     return False_Obj;
                 }
             }

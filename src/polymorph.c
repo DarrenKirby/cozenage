@@ -49,15 +49,17 @@ static Cell* bytevector_reverse(const Cell* v)
     const int32_t len = v->count;
     Cell* result = make_cell_bytevector(type, len);
     switch (type) {
-        case BV_U8:  REVERSE_CASE(uint8_t);  break;
-        case BV_S8:  REVERSE_CASE(int8_t);   break;
-        case BV_U16: REVERSE_CASE(uint16_t); break;
-        case BV_S16: REVERSE_CASE(int16_t);  break;
-        case BV_U32: REVERSE_CASE(uint32_t); break;
-        case BV_S32: REVERSE_CASE(int32_t);  break;
-        case BV_U64: REVERSE_CASE(uint64_t); break;
-        case BV_S64: REVERSE_CASE(int64_t);  break;
-        default: return make_cell_error("No f32 or f64 bv yet", TYPE_ERR);
+        case BV_U8:  REVERSE_CASE(uint8_t);   break;
+        case BV_S8:  REVERSE_CASE(int8_t);    break;
+        case BV_U16: REVERSE_CASE(uint16_t);  break;
+        case BV_S16: REVERSE_CASE(int16_t);   break;
+        case BV_U32: REVERSE_CASE(uint32_t);  break;
+        case BV_S32: REVERSE_CASE(int32_t);   break;
+        case BV_U64: REVERSE_CASE(uint64_t);  break;
+        case BV_S64: REVERSE_CASE(int64_t);   break;
+        case BV_F32: REVERSE_CASE_FP(float);  break;
+        case BV_F64: REVERSE_CASE_FP(double); break;
+        default: return make_cell_error("Unknown bytevector type", TYPE_ERR);
     }
     return result;
 }
@@ -201,7 +203,11 @@ static Cell* bytevector_idx(const Cell* a)
 
     Cell* result = make_cell_bytevector(type, (int32_t)result_len);
     for (int64_t i = start; i < stop; i += step) {
-        byte_add(result, BV_OPS[type].get(v, (int)i));
+        if (type == BV_F32 || type == BV_F64) {
+            BV_FP_OPS[type].append(result, BV_FP_OPS[type].get(v, (int)i));
+            continue;
+        }
+        BV_INT_OPS[type].append(result, BV_INT_OPS[type].get(v, (int)i));
     }
     return result;
 }

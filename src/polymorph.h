@@ -27,7 +27,14 @@
 do { \
 C_TYPE* arr = (C_TYPE*)v->bv->data; \
 for (int i = len - 1; i >= 0; i--) \
-byte_add(result, arr[i]); \
+BV_INT_OPS[v->bv->type].append(result, arr[i]); \
+} while (0)
+
+#define REVERSE_CASE_FP(C_TYPE) \
+do { \
+C_TYPE* arr = (C_TYPE*)v->bv->data; \
+for (int i = len - 1; i >= 0; i--) \
+BV_FP_OPS[v->bv->type].append(result, arr[i]); \
 } while (0)
 
 Cell* builtin_len(const Lex* e, const Cell* a);
