@@ -6,8 +6,8 @@ growing standard library of dynamically loadable modules.
 
 While Cozenage borrows heavily from Scheme, particularly R5RS and R7RS, it is **not intended to be fully standard-compliant**. 
 Where possible, Cozenage follows Scheme semantics and conventions, but it intentionally deviates from the standards in a 
-number of non-trivial ways. These deviations are the result of pragmatic design choices, implementation constraints, 
-or deliberate simplifications, and are documented where relevant.
+number of non-trivial ways. These deviations are the result of pragmatic design choices, implementation constraints
+(read: beyond my current technical ability to implement), or deliberate simplifications, and are documented where relevant.
 
 Anyone with experience in Scheme or other Lisp dialects should find Cozenage immediately familiar.
 
@@ -45,17 +45,18 @@ Both sets and hashes are implemented as hash tables for fast O(1) amortized look
     - real
     - complex
 - Exact and inexact numbers
-- Native big integer support
-- Work in progress: arbitrary-precision rationals and reals
+- Arbitrary sized big integer and big rational support, with transparent type promotion
+- Work in progress: arbitrary-precision floats/reals
 
 ### Bytevectors
 
-Native bytevector types backed by C arrays:
+Fast and efficient bytevector types backed by native C arrays:
 
 - u8, s8
 - u16, s16
 - u32, s32
 - u64, s64
+- f32, f64
 
 ### Ports and I/O
 
@@ -101,20 +102,13 @@ Several common procedures are polymorphic across compound types, including:
 
 ## Features in progress, and Planned and future work
 
-- Arbitrary-precision rationals and reals (big integers are already supported)
-- Custom allocator / garbage collector
+- Arbitrary-precision rationals floats/reals
+- Custom allocator / garbage collector (maybe)
 - Expanded bytevector library
 - Exception handling (`try` / `catch`)
 - Asynchronous ports (sockets)
 - URL-backed ports
-- User-defined library loading, both 'Scheme' libraries, and libraries written in C (ie: FFI).
-
----
-
-## Philosophy
-
-Cozenage is best understood as **a Scheme-inspired Lisp**, prioritizing internal consistency, approachability, and
-educational value over exhaustive standards compliance.
+- User-defined library loading, both 'Scheme' libraries, and libraries written in C (ie: FFI). The C FFI is implemented, but not yet documented.
 
 ---
 
@@ -185,23 +179,23 @@ Implemented as primitives:
 - `define`
 - `lambda`
 - `let`
+- `let*`
+- `letrec*`
 - `letrec`
 - `set!`
 - `if`
+- `when`
+- `unless`
+- `cond`
 - `begin`
 - `import`
 - `and`
+- `or`
 - `defmacro`
 
 Implemented as transforms/expands:
 
-- `when`
-- `unless`
-- `cond`
 - `else`
-- `let*`
-- `letrec*`
-- `or`
 - `case`
 - `do`
 - `Named let`
@@ -214,4 +208,3 @@ Implemented as primitives in the ``lazy`` library:
 - `delay`
 - `delay-force`
 - `stream`
-
