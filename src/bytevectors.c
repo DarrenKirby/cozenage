@@ -364,7 +364,7 @@ Cell* builtin_bytevector_set_bang(const Lex* e, const Cell* a)
     }
 
     if (type == BV_F32 || type == BV_F64) {
-        long double byte;
+        long double byte = 0;
         if (a->cell[2]->type == CELL_REAL) {
             byte = a->cell[2]->real_v;
 
@@ -653,10 +653,9 @@ Cell* builtin_bytevector_append(const Lex* e, const Cell* a)
     Cell* vec = make_cell_bytevector(type, 8);
     for (int i = 0; i < a->count; i++) {
         const Cell* bv = a->cell[i];
-        /* TODO: allow appending of 'smaller type' or equal bytevectors. */
         if (bv->bv->type != type) {
             return make_cell_error(
-                "bytevector-append: cannot append different bytevector types",
+                "bytevector-append: cannot append different type-sized bytevector",
                 VALUE_ERR);
         }
         for (int j = 0; j < bv->count; j++) {
@@ -664,6 +663,7 @@ Cell* builtin_bytevector_append(const Lex* e, const Cell* a)
                 const long double byte = BV_FP_OPS[type].get(bv, j);
                 err = fp_byte_check(type, byte);
                 if (err) return err;
+                BV_FP_OPS[vec->bv->type].append(vec, byte);
                 continue;
             }
             const int64_t byte =  BV_INT_OPS[type].get(bv, j);
