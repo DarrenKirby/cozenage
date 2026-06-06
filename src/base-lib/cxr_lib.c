@@ -27,7 +27,12 @@
  * The procedures car and cdr themselves and the four two-level compositions are included
  * in the core interpreter.
  * 
- * TODO: define the first, second, third... helpers in this file?
+ * It also exports Racket-style positional list accessors, up to 'tenth':
+ *
+ *  (first '(1 2 3 4 5))
+ *  1
+ *  (fifth '(1 2 3 4 5))
+ *  5
  */
 
 #include "types.h"
@@ -280,6 +285,114 @@ static Cell* cxr_cdddr(const Lex* e, const Cell* a)
 }
 
 
+/* Racket-style list accessors. */
+
+static Cell* cxr_first(const Lex* e, const Cell* a)
+{
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "first");
+    if (err) { return err; }
+
+    return car__(a->cell[0]);
+}
+
+
+static Cell* cxr_second(const Lex* e, const Cell* a)
+{
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "second");
+    if (err) { return err; }
+
+    return car__(cdr__(a->cell[0]));
+}
+
+
+static Cell* cxr_third(const Lex* e, const Cell* a)
+{
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "third");
+    if (err) { return err; }
+
+    return car__(cdr__(cdr__(a->cell[0])));
+}
+
+
+static Cell* cxr_fourth(const Lex* e, const Cell* a)
+{
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "fourth");
+    if (err) { return err; }
+
+    return car__(cdr__(cdr__(cdr__(a->cell[0]))));
+}
+
+
+static Cell* cxr_fifth(const Lex* e, const Cell* a)
+{
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "fifth");
+    if (err) { return err; }
+
+    return car__(cdr__(cdr__(cdr__(cdr__(
+        a->cell[0])))));
+}
+
+
+static Cell* cxr_sixth(const Lex* e, const Cell* a)
+{
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "sixth");
+    if (err) { return err; }
+
+    return car__(cdr__(cdr__(cdr__(cdr__(
+        cdr__(a->cell[0]))))));
+}
+
+
+static Cell* cxr_seventh(const Lex* e, const Cell* a)
+{
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "seventh");
+    if (err) { return err; }
+
+    return car__(cdr__(cdr__(cdr__(cdr__(
+        cdr__(cdr__(a->cell[0])))))));
+}
+
+
+static Cell* cxr_eighth(const Lex* e, const Cell* a)
+{
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "eighth");
+    if (err) { return err; }
+
+    return car__(cdr__(cdr__(cdr__(cdr__(
+        cdr__(cdr__(cdr__(a->cell[0]))))))));
+}
+
+
+static Cell* cxr_ninth(const Lex* e, const Cell* a)
+{
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "ninth");
+    if (err) { return err; }
+
+    return car__(cdr__(cdr__(cdr__(cdr__(
+        cdr__(cdr__(cdr__(cdr__(a->cell[0])))))))));
+}
+
+
+static Cell* cxr_tenth(const Lex* e, const Cell* a)
+{
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "tenth");
+    if (err) { return err; }
+
+    return car__(cdr__(cdr__(cdr__(cdr__(
+        cdr__(cdr__(cdr__(cdr__(cdr__(a->cell[0]))))))))));
+}
+
+
 static const CznExport cxr_exports[] = {
     { "caaaar",  cxr_caaaar },
     { "caaar",   cxr_caaar },
@@ -305,6 +418,16 @@ static const CznExport cxr_exports[] = {
     { "cddadr",  cxr_cddadr },
     { "cdddar",  cxr_cdddar },
     { "cdddr",   cxr_cdddr },
+    { "first",   cxr_first },
+    { "second",  cxr_second },
+    { "third",   cxr_third },
+    { "fourth",  cxr_fourth},
+    { "fifth",   cxr_fifth},
+    { "sixth",   cxr_sixth},
+    { "seventh", cxr_seventh},
+    { "eighth",  cxr_eighth},
+    { "ninth",   cxr_ninth},
+    { "tenth",   cxr_tenth},
 };
 
 
