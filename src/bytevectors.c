@@ -98,19 +98,19 @@ DEFINE_BV_TYPE(s64, int64_t,  "%d")
 
 
 const bv_int_ops_t BV_INT_OPS[] = {
-    [BV_U8]  = { get_u8,  set_u8, repr_u8, append_u8,  sizeof(uint8_t)  },
-    [BV_S8]  = { get_s8,  set_s8, repr_s8, append_s8,  sizeof(int8_t)   },
-    [BV_U16] = { get_u16, set_u16, repr_u16, append_u16, sizeof(uint16_t) },
-    [BV_S16] = { get_s16, set_s16, repr_s16, append_s16, sizeof(int16_t)  },
-    [BV_U32] = { get_u32, set_u32, repr_u32, append_u32, sizeof(uint32_t) },
-    [BV_S32] = { get_s32, set_s32, repr_s32, append_s32, sizeof(int32_t)  },
-    [BV_U64] = { get_u64, set_u64, repr_u64, append_u64, sizeof(uint64_t) },
-    [BV_S64] = { get_s64, set_s64, repr_s64, append_s64, sizeof(int64_t)  },
+    [BV_U8]  = { get_u8,  set_u8,  repr_u8,  append_u8  },
+    [BV_S8]  = { get_s8,  set_s8,  repr_s8,  append_s8  },
+    [BV_U16] = { get_u16, set_u16, repr_u16, append_u16 },
+    [BV_S16] = { get_s16, set_s16, repr_s16, append_s16 },
+    [BV_U32] = { get_u32, set_u32, repr_u32, append_u32 },
+    [BV_S32] = { get_s32, set_s32, repr_s32, append_s32 },
+    [BV_U64] = { get_u64, set_u64, repr_u64, append_u64 },
+    [BV_S64] = { get_s64, set_s64, repr_s64, append_s64 },
 };
 
 const bv_fp_ops_t BV_FP_OPS[] = {
-    [BV_F32] = { get_f32, set_f32, repr_f32, append_f32, sizeof(float)  },
-    [BV_F64] = { get_f64, set_f64, repr_f64, append_f64, sizeof(double)  },
+    [BV_F32] = { get_f32, set_f32, repr_f32, append_f32 },
+    [BV_F64] = { get_f64, set_f64, repr_f64, append_f64 },
 };
 
 
@@ -209,6 +209,20 @@ Cell* fp_byte_check(const bv_t type, const long double value)
             ;
     }
     return nullptr;
+}
+
+
+// /* Helper to get element width - you'll likely use this in many places */
+size_t get_bv_width(const bv_t type)
+{
+    switch (type) {
+        case BV_U8:  case BV_S8:  return sizeof(int8_t);
+        case BV_U16: case BV_S16: return sizeof(int16_t);
+        case BV_U32: case BV_S32: return sizeof(int32_t);
+        case BV_F32: return sizeof(float);
+        case BV_F64: return sizeof(double);
+        default: return 0;
+    }
 }
 
 

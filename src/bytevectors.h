@@ -31,7 +31,6 @@ typedef struct bv_int_ops_t {
     void (*set)(Cell*, int index, int64_t value);
     void (*repr)(const Cell*, str_buf_t*);
     void (*append)(Cell*, int64_t value);
-    size_t elem_size;
 } bv_int_ops_t;
 
 typedef struct bv_fp_ops_t {
@@ -39,7 +38,6 @@ typedef struct bv_fp_ops_t {
     void (*set)(Cell*, int index, long double value);
     void (*repr)(const Cell*, str_buf_t*);
     void (*append)(Cell*, long double value);
-    size_t elem_size;
 } bv_fp_ops_t;
 
 
@@ -86,5 +84,6 @@ Cell* builtin_utf8_string(const Lex* e, const Cell* a);
 Cell* builtin_string_utf8(const Lex* e, const Cell* a);
 Cell* int_byte_check(bv_t type, int64_t value);
 Cell* fp_byte_check(bv_t type, long double value);
+size_t get_bv_width(bv_t type);
 
 #endif //COZENAGE_BYTEVECTORS_H
