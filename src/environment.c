@@ -540,6 +540,8 @@ void lex_add_builtins(const Lex* e)
     lex_add_builtin(e, "len", builtin_len);
     lex_add_builtin(e, "idx", builtin_idx);
     lex_add_builtin(e, "rev", builtin_rev);
+    lex_add_builtin(e, "sort", builtin_sort);
+    lex_add_builtin(e, "sort!", builtin_sort_bang);
     /*
      * Set procedures.
      *
