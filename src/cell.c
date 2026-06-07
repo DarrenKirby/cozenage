@@ -375,13 +375,10 @@ Cell* make_cell_bytevector(const bv_t t, const size_t initial_size)
     v->bv->capacity = initial_size == 0 ? 8 : initial_size;
     v->count = 0;
 
-    if (v->bv->type == BV_F32 || v->bv->type == BV_F64) {
-        const size_t elem_size = BV_FP_OPS[t].elem_size;
-        v->bv->data = GC_MALLOC_ATOMIC(elem_size * v->bv->capacity);
-    } else {
-        const size_t elem_size = BV_INT_OPS[t].elem_size;
-        v->bv->data = GC_MALLOC_ATOMIC(elem_size * v->bv->capacity);
-    }
+
+    const size_t elem_size = get_bv_width(t);
+    v->bv->data = GC_MALLOC_ATOMIC(elem_size * v->bv->capacity);
+
     return v;
 }
 
@@ -691,6 +688,17 @@ Cell* cell_copy(const Cell* v) {
         }
         break;
 
+    case CELL_BYTEVECTOR: {
+        copy->count = v->count;
+        copy->bv = GC_MALLOC(sizeof(byte_v));
+        copy->bv->capacity = v->bv->capacity;
+        copy->bv->type = v->bv->type;
+        const size_t s = get_bv_width(v->bv->type);
+        copy->bv->data = GC_MALLOC_ATOMIC(v->bv->capacity * s);
+        memcpy(copy->bv->data, v->bv->data, v->bv->capacity * s);
+        break;
+    }
+
     case CELL_PAIR: {
         copy->car = cell_copy(v->car);
         copy->cdr = cell_copy(v->cdr);
@@ -771,7 +779,7 @@ Cell* cell_copy(const Cell* v) {
         return USP_Obj;
 
     default:
-        fprintf(stderr, "cell_copy: unknown type %u\n", v->type);
+        fprintf(stderr, "cell_copy: unknown type %d\n", v->type);
         return nullptr;
     }
     return copy;
