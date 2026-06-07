@@ -25,6 +25,7 @@
 #include "vectors.h"
 
 #include <stdlib.h>
+#include <string.h>
 #include <unicode/utypes.h>
 #include <unicode/ubrk.h>
 #include <unicode/ustring.h>
@@ -234,6 +235,192 @@ static Cell* vector_idx(const Cell* a)
 }
 
 
+/* cmp functions for sort. */
+static int cmp_char(const void* a, const void* b) {
+    const Cell* l = *(const Cell**)a;
+    const Cell* r = *(const Cell**)b;
+
+    return (l->char_v > r->char_v) - (l->char_v < r->char_v);
+}
+
+
+static int cmp_integer(const void* a, const void* b) {
+    /* Cast to double pointer, then dereference ONCE to get the Cell* */
+    const Cell* l = *(const Cell**)a;
+    const Cell* r = *(const Cell**)b;
+
+    return (l->integer_v > r->integer_v) - (l->integer_v < r->integer_v);
+}
+
+
+static int cmp_real(const void* a, const void* b) {
+    /* Cast to double pointer, then dereference ONCE to get the Cell* */
+    const Cell* l = *(const Cell**)a;
+    const Cell* r = *(const Cell**)b;
+
+    return (l->real_v > r->real_v) - (l->real_v < r->real_v);
+}
+
+
+static int cmp_string(const void* a, const void* b) {
+    /* Cast to double pointer, then dereference ONCE to get the Cell* */
+    const Cell* l = *(const Cell**)a;
+    const Cell* r = *(const Cell**)b;
+
+    return strcmp(l->str, r->str);
+}
+
+
+static int cmp_symbol(const void* a, const void* b) {
+    /* Cast to double pointer, then dereference ONCE to get the Cell* */
+    const Cell* l = *(const Cell**)a;
+    const Cell* r = *(const Cell**)b;
+
+    return strcmp(l->sym, r->sym);
+}
+
+
+static int cmp_u8(const void* a, const void* b) {
+    const uint8_t l = *(uint8_t*)a;
+    const uint8_t r = *(uint8_t*)b;
+    return (l > r) - (l < r);
+}
+
+
+static int cmp_s8(const void* a, const void* b) {
+    const int8_t l = *(int8_t*)a;
+    const int8_t r = *(int8_t*)b;
+    return (l > r) - (l < r);
+}
+
+
+static int cmp_u16(const void* a, const void* b) {
+    const uint16_t l = *(uint16_t*)a;
+    const uint16_t r = *(uint16_t*)b;
+    return (l > r) - (l < r);
+}
+
+
+static int cmp_s16(const void* a, const void* b) {
+    const int16_t l = *(int16_t*)a;
+    const int16_t r = *(int16_t*)b;
+    return (l > r) - (l < r);
+}
+
+
+static int cmp_u32(const void* a, const void* b) {
+    const uint32_t l = *(uint32_t*)a;
+    const uint32_t r = *(uint32_t*)b;
+    return (l > r) - (l < r);
+}
+
+
+static int cmp_s32(const void* a, const void* b) {
+    const int32_t l = *(int32_t*)a;
+    const int32_t r = *(int32_t*)b;
+    return (l > r) - (l < r);
+}
+
+static int cmp_f32(const void* a, const void* b) {
+    const float l = *(float*)a;
+    const float r = *(float*)b;
+
+    return (l > r) - (l < r);
+}
+
+static int cmp_f64(const void* a, const void* b) {
+    const double l = *(double*)a;
+    const double r = *(double*)b;
+
+    return (l > r) - (l < r);
+}
+
+
+/* Bytevector sort. */
+Cell* sort_bytevector(Cell* bv) {
+    const size_t nel = bv->count;
+    size_t width = get_bv_width(bv->bv->type);
+
+    /* Function pointer for the correct comparator. */
+    int (*cmp_func)(const void*, const void*);
+
+    switch (bv->bv->type) {
+        case BV_U8:
+            cmp_func = cmp_u8;
+            break;
+        case BV_S8:
+            cmp_func = cmp_s8;
+            break;
+        case BV_U16:
+            cmp_func = cmp_u16;
+            break;
+        case BV_S16:
+            cmp_func = cmp_s16;
+            break;
+        case BV_U32:
+            cmp_func = cmp_u32;
+            break;
+        case BV_S32:
+            cmp_func = cmp_s32;
+            break;
+        case BV_F32:
+            cmp_func = cmp_f32;
+            break;
+        case BV_F64:
+            cmp_func = cmp_f64;
+            break;
+        default:
+            // Handle error or unsupported type
+            return bv;
+    }
+    if (nel > 0 && width > 0) {
+        qsort(bv->bv->data, nel, width, cmp_func);
+    }
+
+    return bv;
+}
+
+
+Cell* sort_vector(Cell* vec, const Cell_t type) {
+    const size_t nel = vec->count;
+
+    /* Function pointer for the correct comparator. */
+    int (*cmp_func)(const void*, const void*);
+
+    switch (type) {
+        case CELL_INTEGER:
+            cmp_func = cmp_integer;
+            break;
+        case CELL_REAL:
+            cmp_func = cmp_real;
+            break;
+        case CELL_STRING:
+            cmp_func = cmp_string;
+            break;
+        case CELL_SYMBOL:
+            cmp_func = cmp_symbol;
+            break;
+        case CELL_CHAR:
+            cmp_func = cmp_char;
+            break;
+        default:
+            return make_cell_error(
+                fmt_err("sort: cannot sort %s\n", cell_type_name(type)),
+                VALUE_ERR);
+    }
+
+    if (nel > 0) {
+        // ReSharper disable once CppVariableCanBeMadeConstexpr
+        const size_t width = sizeof(Cell*);
+        qsort(vec->cell, nel, width, cmp_func);
+    }
+
+    return vec;
+}
+
+
+/* The user-facing procedures. */
+
 Cell* builtin_len(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -241,29 +428,29 @@ Cell* builtin_len(const Lex* e, const Cell* a)
     if (err) return err;
 
     switch (a->cell[0]->type) {
-    case CELL_PAIR:
-        if (a->cell[0]->len >= 0) return make_cell_integer(a->cell[0]->len);
-        /* Still run the check, as the length might not be cached. */
-        Cell* result = builtin_list_length(e, a);
-        if (result->type == CELL_ERROR) {
+        case CELL_PAIR:
+            if (a->cell[0]->len >= 0) return make_cell_integer(a->cell[0]->len);
+            /* Still run the check, as the length might not be cached. */
+            Cell* result = builtin_list_length(e, a);
+            if (result->type == CELL_ERROR) {
+                return make_cell_error(
+                    "len: no length for improper or circular list",
+                    VALUE_ERR);
+            }
+            return result;
+        case CELL_VECTOR:
+        case CELL_BYTEVECTOR:
+            return make_cell_integer(a->cell[0]->count);
+        case CELL_STRING:
+            return make_cell_integer(a->cell[0]->char_count);
+        case CELL_SET:
+        case CELL_HASH:
+            return make_cell_integer((long long)a->cell[0]->table->count);
+        default:
             return make_cell_error(
-                "len: no length for improper or circular list",
-                VALUE_ERR);
+                fmt_err("len: no length for non-compound type: %s",
+                    cell_type_name(a->cell[0]->type)), TYPE_ERR);
         }
-        return result;
-    case CELL_VECTOR:
-    case CELL_BYTEVECTOR:
-        return make_cell_integer(a->cell[0]->count);
-    case CELL_STRING:
-        return make_cell_integer(a->cell[0]->char_count);
-    case CELL_SET:
-    case CELL_HASH:
-        return make_cell_integer((long long)a->cell[0]->table->count);
-    default:
-        return make_cell_error(
-            fmt_err("len: no length for non-compound type: %s",
-                cell_type_name(a->cell[0]->type)), TYPE_ERR);
-    }
 }
 
 
@@ -278,28 +465,28 @@ Cell* builtin_idx(const Lex* e, const Cell* a)
     if (err) return err;
 
     switch (a->cell[0]->type) {
-    case CELL_PAIR:
-        if (a->count == 2) {
-            return builtin_list_ref(e, a);
+        case CELL_PAIR:
+            if (a->count == 2) {
+                return builtin_list_ref(e, a);
+            }
+            return list_idx(e, a);
+        case CELL_VECTOR:
+            if (a->count == 2) {
+                return builtin_vector_ref(e, a);
+            }
+            return vector_idx(a);
+        case CELL_BYTEVECTOR:
+            if (a->count == 2) {
+                return builtin_bytevector_ref(e, a);
+            }
+            return bytevector_idx(a);
+        case CELL_STRING:
+            return builtin_string_ref(e, a);
+        default:
+            return make_cell_error(
+            fmt_err("idx: cannot subscript non-ordered type: %s",
+                cell_type_name(a->cell[0]->type)), TYPE_ERR);
         }
-        return list_idx(e, a);
-    case CELL_VECTOR:
-        if (a->count == 2) {
-            return builtin_vector_ref(e, a);
-        }
-        return vector_idx(a);
-    case CELL_BYTEVECTOR:
-        if (a->count == 2) {
-            return builtin_bytevector_ref(e, a);
-        }
-        return bytevector_idx(a);
-    case CELL_STRING:
-        return builtin_string_ref(e, a);
-    default:
-        return make_cell_error(
-        fmt_err("idx: cannot subscript non-ordered type: %s",
-            cell_type_name(a->cell[0]->type)), TYPE_ERR);
-    }
 }
 
 
@@ -309,18 +496,130 @@ Cell* builtin_rev(const Lex* e, const Cell* a)
     Cell* err = CHECK_ARITY_EXACT(a, 1, "rev");
     if (err) return err;
     switch (a->cell[0]->type) {
-    case CELL_PAIR:
-        return builtin_list_reverse(e, a);
-    case CELL_VECTOR:
-        return vector_reverse(a->cell[0]);
-    case CELL_BYTEVECTOR:
-        return bytevector_reverse(a->cell[0]);
-    case CELL_STRING:
-        return string_reverse(a->cell[0]);
-    default:
-        return make_cell_error(
-            fmt_err("rev: cannot reverse non-ordered type: %s",
-                cell_type_name(a->cell[0]->type)),
-                TYPE_ERR);
+        case CELL_PAIR:
+            return builtin_list_reverse(e, a);
+        case CELL_VECTOR:
+            return vector_reverse(a->cell[0]);
+        case CELL_BYTEVECTOR:
+            return bytevector_reverse(a->cell[0]);
+        case CELL_STRING:
+            return string_reverse(a->cell[0]);
+        default:
+            return make_cell_error(
+                fmt_err("rev: cannot reverse non-ordered type: %s",
+                    cell_type_name(a->cell[0]->type)),
+                    TYPE_ERR);
+        }
+}
+
+
+Cell* builtin_sort(const Lex* e, const Cell* a)
+{
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "sort");
+    if (err) return err;
+
+    Cell* cp = cell_copy(a->cell[0]);
+
+    if (cp->type == CELL_BYTEVECTOR) {
+        return sort_bytevector(cp);
     }
+    if (cp->type == CELL_VECTOR) {
+        /* Ensure homogeneity by grabbing the type of
+         * the first member, and enforcing it. */
+        const Cell_t t = cp->cell[0]->type;
+
+        for (int i = 1; i < cp->count; i++) {
+            if (cp->cell[i]->type != t) {
+                return make_cell_error(
+                    "sort: cannot sort non-homogenous vector",
+                    VALUE_ERR);
+            }
+        }
+        return sort_vector(cp, t);
+    }
+    if (cp->type == CELL_PAIR) {
+        if (cp->len == -1) {
+            return make_cell_error("sort: cannot sort improper list", VALUE_ERR);
+        }
+        Cell* lv = builtin_list_to_vector(e, make_sexpr_len1(a->cell[0]));
+        if (lv->type == CELL_ERROR) {
+            return lv;
+        }
+
+        /* Ensure homogeneity by grabbing the type of
+         * the first member, and enforcing it. */
+        const Cell_t t = lv->cell[0]->type;
+
+        for (int i = 1; i < lv->count; i++) {
+            if (lv->cell[i]->type != t) {
+                return make_cell_error(
+                    "sort: cannot sort non-homogenous list",
+                    VALUE_ERR);
+            }
+        }
+        const Cell* sv = sort_vector(lv, t);
+        return builtin_vector_to_list(e, make_sexpr_len1(sv));
+    }
+
+    return make_cell_error(
+        "sort: can only sort container types",
+        TYPE_ERR);
+}
+
+
+Cell* builtin_sort_bang(const Lex* e, const Cell* a)
+{
+    (void)e;
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "sort");
+    if (err) return err;
+
+    Cell* cp = a->cell[0];
+
+    if (cp->type == CELL_BYTEVECTOR) {
+        return sort_bytevector(cp);
+    }
+    if (cp->type == CELL_VECTOR) {
+        /* Ensure homogeneity by grabbing the type of
+         * the first member, and enforcing it. */
+        const Cell_t t = cp->cell[0]->type;
+
+        for (int i = 1; i < cp->count; i++) {
+            if (cp->cell[i]->type != t) {
+                return make_cell_error(
+                    "sort: cannot sort non-homogenous vector",
+                    VALUE_ERR);
+            }
+        }
+        return sort_vector(cp, t);
+    }
+    if (cp->type == CELL_PAIR) {
+        if (cp->len == -1) {
+            return make_cell_error(
+                "sort: cannot sort improper list",
+                VALUE_ERR);
+        }
+        Cell* lv = builtin_list_to_vector(e, make_sexpr_len1(a->cell[0]));
+        if (lv->type == CELL_ERROR) {
+            return lv;
+        }
+
+        /* Ensure homogeneity by grabbing the type of
+         * the first member, and enforcing it. */
+        const Cell_t t = lv->cell[0]->type;
+
+        for (int i = 1; i < lv->count; i++) {
+            if (lv->cell[i]->type != t) {
+                return make_cell_error(
+                    "sort: cannot sort non-homogenous list",
+                    VALUE_ERR);
+            }
+        }
+        const Cell* sv = sort_vector(lv, t);
+        return builtin_vector_to_list(e, make_sexpr_len1(sv));
+    }
+
+    return make_cell_error(
+        "sort!: can only sort container types",
+        TYPE_ERR);
 }

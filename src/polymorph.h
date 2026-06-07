@@ -40,5 +40,7 @@ BV_FP_OPS[v->bv->type].append(result, arr[i]); \
 Cell* builtin_len(const Lex* e, const Cell* a);
 Cell* builtin_idx(const Lex* e, const Cell* a);
 Cell* builtin_rev(const Lex* e, const Cell* a);
+Cell* builtin_sort(const Lex* e, const Cell* a);
+Cell* builtin_sort_bang(const Lex* e, const Cell* a);
 
 #endif //COZENAGE_POLYMORPH_H
