@@ -264,7 +264,7 @@ Cell* builtin_list_length(const Lex* e, const Cell* a)
     /* SLOW PATH: Recount and detect cycles. */
     const int32_t len = list_len(list);
     if (len == -1) {
-        return make_cell_error("list-len: imprroper list", TYPE_ERR);
+        return make_cell_error("list-len: improper list", TYPE_ERR);
     }
     if (len == -2) {
         return make_cell_error("list-length: circular list", VALUE_ERR);
@@ -316,8 +316,14 @@ Cell* builtin_list_ref(const Lex* e, const Cell* a)
         }
     }
 
-    /* Already validated idx and list, no need to check the return. */
-    return list_get_nth_cell_ptr(list, idx, false);
+    /* Check for indexing cdr of improper list. */
+    Cell* result = list_get_nth_cell_ptr(list, idx, false);
+    if (!result) {
+        return make_cell_error(
+            "list-ref: index out of range for improper list",
+            VALUE_ERR);
+    }
+    return result;
 }
 
 
