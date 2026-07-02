@@ -103,7 +103,7 @@ Cell* builtin_make_vector(const Lex* e, const Cell* a)
             "make-vector: arg 1 must be an integer",
             TYPE_ERR);
     }
-    const long long n = a->cell[0]->integer_v;
+    const int64_t n = a->cell[0]->integer_v;
     /* (make-vector 0) -> #() */
     if (n == 0) {
         return make_cell_vector();
@@ -300,7 +300,7 @@ Cell* builtin_vector_to_string(const Lex* e, const Cell* a)
         end = (int)a->cell[2]->integer_v;
     }
 
-    int32_t j = 0;
+    int j = 0;
     for (int i = start; i < end; i++) {
         const Cell* char_cell = a->cell[0]->cell[i];
         if (char_cell->type != CELL_CHAR) {
@@ -358,8 +358,8 @@ Cell* builtin_string_to_vector(const Lex* e, const Cell* a)
     }
 
     Cell* vec = make_cell_vector();
-    int32_t byte_idx = 0;
-    int32_t char_idx = 0;
+    int byte_idx = 0;
+    int char_idx = 0;
     UChar32 code_point;
 
     /* Advance to the starting character position. */
@@ -402,7 +402,7 @@ Cell* builtin_vector_set_bang(const Lex* e, const Cell* a)
             TYPE_ERR);
     }
 
-    const long long idx = a->cell[1]->integer_v;
+    const int64_t idx = a->cell[1]->integer_v;
     const Cell* vec = a->cell[0];
     Cell* obj = a->cell[2];
 
@@ -439,10 +439,10 @@ Cell* builtin_vector_append(const Lex* e, const Cell* a)
     /* Deal with multiple args. */
     Cell* result = make_cell_vector();
     /* For each vector argument... */
-    for (int i = 0; i < (int)a->count; i++) {
+    for (int i = 0; i < a->count; i++) {
         const Cell* this_vec = a->cell[i];
         /* For each object in vector ... */
-        for (int j = 0; j < (int)this_vec->count; j++) {
+        for (int j = 0; j < this_vec->count; j++) {
             cell_add(result, this_vec->cell[j]);
         }
     }
@@ -470,14 +470,14 @@ Cell* builtin_vector_copy_bang(const Lex* e, const Cell* a)
         return make_cell_error("vector-copy!: arg 3 must be a vector (from)", TYPE_ERR);
 
     const Cell* to_vec = a->cell[0];
-    const int32_t to_vec_len = to_vec->count;
-    const int32_t to_start_idx = (int32_t)a->cell[1]->integer_v;
+    const int to_vec_len = to_vec->count;
+    const int to_start_idx = (int)a->cell[1]->integer_v;
 
     const Cell* from_vec = a->cell[2];
-    const int32_t from_vec_len = from_vec->count;
+    const int from_vec_len = from_vec->count;
 
-    int32_t from_start_idx = 0;
-    int32_t from_end_idx = from_vec_len;
+    int from_start_idx = 0;
+    int from_end_idx = from_vec_len;
 
     if (a->count >= 4) {
         if (a->cell[3]->type != CELL_INTEGER)
@@ -504,7 +504,7 @@ Cell* builtin_vector_copy_bang(const Lex* e, const Cell* a)
             "vector-copy!: 'end' index out of bounds",
             INDEX_ERR);
 
-    const int32_t count = from_end_idx - from_start_idx;
+    const int count = from_end_idx - from_start_idx;
 
     if (to_start_idx < 0 || (to_start_idx + count) > to_vec_len)
         return make_cell_error(
@@ -515,12 +515,12 @@ Cell* builtin_vector_copy_bang(const Lex* e, const Cell* a)
     /* If copying within the same vector and moving data "forward" (to a higher index),
        we must copy from right-to-left to avoid overwriting the source data. */
     if (to_vec == from_vec && to_start_idx > from_start_idx) {
-        for (int32_t i = count - 1; i >= 0; i--) {
+        for (int i = count - 1; i >= 0; i--) {
             to_vec->cell[to_start_idx + i] = from_vec->cell[from_start_idx + i];
         }
     } else {
         /* Standard left-to-right copy for different vectors or backward moves */
-        for (int32_t i = 0; i < count; i++) {
+        for (int i = 0; i < count; i++) {
             to_vec->cell[to_start_idx + i] = from_vec->cell[from_start_idx + i];
         }
     }
@@ -546,10 +546,10 @@ Cell* builtin_vector_fill_bang(const Lex* e, const Cell* a)
             TYPE_ERR);
     }
 
-    const int32_t len = vec->count;
+    const int len = vec->count;
     Cell* fill = a->cell[1];
-    int32_t start = 0;
-    int32_t end = len;
+    int start = 0;
+    int end = len;
 
     /* Validate start. */
     if (a->count >= 3) {
@@ -558,7 +558,7 @@ Cell* builtin_vector_fill_bang(const Lex* e, const Cell* a)
                 "vector-fill!: start must be an integer",
                 TYPE_ERR);
 
-        start = (int32_t)a->cell[2]->integer_v;
+        start = (int)a->cell[2]->integer_v;
         /* start can be equal to len if end is also len (empty range) */
         if (start < 0 || start > len)
             return make_cell_error(
@@ -573,7 +573,7 @@ Cell* builtin_vector_fill_bang(const Lex* e, const Cell* a)
                 "vector-fill!: end must be an integer",
                 TYPE_ERR);
 
-        end = (int32_t)a->cell[3]->integer_v;
+        end = (int)a->cell[3]->integer_v;
         if (end < 0 || end > len || end < start)
             return make_cell_error(
                 "vector-fill!: end index out of range",
@@ -581,7 +581,7 @@ Cell* builtin_vector_fill_bang(const Lex* e, const Cell* a)
     }
 
     /* Perform the fill. */
-    for (int32_t i = start; i < end; i++) {
+    for (int i = start; i < end; i++) {
         vec->cell[i] = fill;
     }
 

@@ -339,7 +339,7 @@ static int cmp_f64(const void* a, const void* b) {
 /* Bytevector sort. */
 Cell* sort_bytevector(Cell* bv) {
     const size_t nel = bv->count;
-    size_t width = get_bv_width(bv->bv->type);
+    const size_t width = get_bv_width(bv->bv->type);
 
     /* Function pointer for the correct comparator. */
     int (*cmp_func)(const void*, const void*);

@@ -89,7 +89,7 @@ static ssize_t file_read(void* buf, const size_t len, const Cell* p, int* err) {
         }
     }
 
-    /* Check for EOFor error. */
+    /* Check for EOF or error. */
     if (ret != len) {
         if (feof(p->port->fh)) {
             return R_EOF;

@@ -450,7 +450,8 @@ static Cell* file_stat(const Lex* e, const Cell* a) {
 #ifndef __linux__  /* Linux stat struct doesn't include birth time. */
     result = make_cell_pair(make_cell_pair(
         make_cell_symbol("st_birthtimespec"),
-        make_cell_string(format_time(&buf.st_birthtimespec))), result);
+        make_cell_pair(make_cell_string(format_time(&buf.st_birthtimespec)),
+        make_cell_real(buf.st_birthtimespec.tv_sec))), result);
     result->len = 1;
     result = make_cell_pair(make_cell_pair(
         make_cell_symbol("st_ctimespec"),
@@ -502,7 +503,7 @@ static Cell* file_stat(const Lex* e, const Cell* a) {
 
     result = make_cell_pair(make_cell_pair(
     make_cell_symbol("st_ino"),
-    make_cell_integer((long long)buf.st_ino)), result);
+    make_cell_integer((int64_t)buf.st_ino)), result);
     result->len = ++list_len;
 
     Cell* min = make_cell_integer(minor(buf.st_dev));
