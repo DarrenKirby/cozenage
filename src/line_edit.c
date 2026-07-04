@@ -80,6 +80,14 @@
 
 char **scheme_procedures = nullptr;
 
+/* Comparison function for qsort. */
+int compare_pointers(const void *a, const void *b)
+{
+    const char *str_a = *(const char **)a;
+    const char *str_b = *(const char **)b;
+    return strcmp(str_a, str_b);
+}
+
 /* This cycles through the procedures in the global environment and builds
  * an array of strings used by the procedure completion generator. It is
  * called at interpreter startup, and again when library modules are loaded. */
@@ -118,6 +126,9 @@ void populate_dynamic_completions(const Lex* e)
         scheme_procedures[i] = GC_strdup(it.key);
         i++;
     }
+
+    /* Sort the completions. */
+    qsort(scheme_procedures, i, sizeof(char *), compare_pointers);
 
     /* The list must be NULL-terminated for the generator to know when to stop. */
     scheme_procedures[i] = nullptr;
@@ -656,6 +667,8 @@ static void handle_completion(LineState* ls)
             const size_t col_width = max_len + 2;  /* Add 2 for spacing. */
             int cols = term_width / (int)col_width;
             if (cols < 1) cols = 1;
+
+
 
             /* Display completions in columns. */
             size_t col = 0;
