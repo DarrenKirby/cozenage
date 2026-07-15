@@ -55,11 +55,11 @@ uint64_t hash_real_key(const long double key)
     }
 
     int exp;
-    const long double mant = frexpl(key, &exp);
+    const long double mantissa = frexpl(key, &exp);
 
     const uint64_t h = hash_int_key((uint64_t)exp);
     uint64_t m;
-    memcpy(&m, &mant, sizeof(uint64_t));
+    memcpy(&m, &mantissa, sizeof(uint64_t));
     return h ^ hash_int_key(m);
 }
 

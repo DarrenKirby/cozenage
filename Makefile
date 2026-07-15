@@ -14,7 +14,7 @@
 #   make uninstall       - deletes the binary and module directory.
 
 # --- Primary Variables ---
-CC = cc
+CC ?= cc
 BINARY = cozenage
 TEST_BINARY = run_tests
 BUILD_DIR = build
@@ -26,7 +26,7 @@ DESTDIR ?=
 INSTALL_BIN_DIR=$(DESTDIR)$(PREFIX)/bin
 INSTALL_LIB_DIR=$(DESTDIR)$(PREFIX)/lib/cozenage/base
 
-# Added OS detection for library extensions
+# OS detection for library extensions
 UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S),Darwin)
 	LIB_EXT = dylib
@@ -46,7 +46,7 @@ ifeq ($(origin DEBUG), undefined)
 	DEBUG=OFF
 endif
 
-# Added flags for building shared libraries
+# Flags for building shared libraries
 LIB_CFLAGS = -shared -fPIC
 
 # --- Source and Object Files ---
@@ -97,7 +97,7 @@ CFLAGS_DEFAULT = -Wall -Wextra -Werror -Wdeprecated-declarations -O2 -std=gnu2x 
 CFLAGS_TEST = -Wall -Wextra -g -O0 -std=gnu2x $(ICU_CFLAGS) $(GMP_CFLAGS) -fsanitize=address -fno-omit-frame-pointer
 
 # --- Libraries ---
-# Added -ldl (for dlopen) to all BASE_LIBS definitions
+# -ldl (for dlopen) to all BASE_LIBS definitions
 BASE_LIBS = -lm -lgc $(ICU_LIBS) -ldl $(EXE_LDFLAGS) $(GMP_LIBS)
 TEST_LIBS = -lcriterion $(BASE_LIBS)
 

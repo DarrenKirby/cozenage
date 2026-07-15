@@ -104,7 +104,7 @@ void populate_dynamic_completions(const Lex* e)
     char* special_forms[] = { "quote", "define", "lambda", "let", "let*", "letrec", "set!", "if",
         "when", "unless", "cond", "else", "begin", "import", "and", "or", "do", "case", "letrec*",
         "defmacro", "quasiquote", "unquote", "unquote-splicing", "with_gc_stats"};
-    /* Why tho, does CLion always think this is C++ code? */
+
     // ReSharper disable once CppVariableCanBeMadeConstexpr
     const int num_sfs = sizeof(special_forms) / sizeof(special_forms[0]);
 

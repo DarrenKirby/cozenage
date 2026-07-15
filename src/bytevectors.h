@@ -45,7 +45,7 @@ extern const bv_int_ops_t BV_INT_OPS[];
 extern const bv_fp_ops_t BV_FP_OPS[];
 
 /* This big ugly-ass macro makes a constructor, getter, setter, and repr for
- * each type of bytevector: u8, s8, u16, s16, u32, s32, u64, and s64 */
+ * each type of integer bytevector: u8, s8, u16, s16, u32, s32, u64, and s64 */
 
 #define DEFINE_BV_TYPE(suffix, ctype, fmt)                                  \
 static int64_t get_##suffix(const Cell* bv, int i) {                        \

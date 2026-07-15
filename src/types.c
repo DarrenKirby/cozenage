@@ -1053,15 +1053,15 @@ char* GC_strdup(const char* s)
 
 char* GC_strndup(const char* s, size_t byte_len)
 {
-    /* +1 for the null terminator (for C-compatibility/printing). */
+    /* Allocate GC-managed memory for the new string. */
     char* new_str = GC_MALLOC_ATOMIC(byte_len + 1);
     if (new_str == NULL) {
         fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
         exit(EXIT_FAILURE);
     }
-
+    /* Copy the string content. */
     memcpy(new_str, s, byte_len);
-    new_str[byte_len] = '\0'; /* Always safety-terminate. */
+    new_str[byte_len] = '\0';
     return new_str;
 }
 

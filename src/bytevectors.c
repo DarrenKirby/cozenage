@@ -212,7 +212,7 @@ Cell* fp_byte_check(const bv_t type, const long double value)
 }
 
 
-// /* Helper to get element width - you'll likely use this in many places */
+/* Helper to get element width. */
 size_t get_bv_width(const bv_t type)
 {
     switch (type) {
