@@ -114,13 +114,13 @@ static char* unicode_reverse(const char* input, const int32_t byte_len)
     while (start != UBRK_DONE) {
         /* We have a segment from 'start' to 'end' in the UTF-16 buffer
            Convert just this segment back to UTF-8 and append to our result. */
-        int32_t destLen = 0;
+        int32_t dest_len = 0;
 
         /* Convert this specific grapheme back to UTF-8. */
-        u_strToUTF8(revCursor, byte_len - (int)(revCursor - reversed) + 1, &destLen,
+        u_strToUTF8(revCursor, byte_len - (int)(revCursor - reversed) + 1, &dest_len,
                     uBuf + start, end - start, &status);
 
-        revCursor += destLen; /* Advance our output pointer. */
+        revCursor += dest_len; /* Advance our output pointer. */
 
         /* Move pointers back. */
         end = start;
@@ -337,7 +337,7 @@ static int cmp_f64(const void* a, const void* b) {
 
 
 /* Bytevector sort. */
-Cell* sort_bytevector(Cell* bv) {
+static Cell* sort_bytevector(Cell* bv) {
     const size_t nel = bv->count;
     const size_t width = get_bv_width(bv->bv->type);
 
@@ -381,7 +381,7 @@ Cell* sort_bytevector(Cell* bv) {
 }
 
 
-Cell* sort_vector(Cell* vec, const Cell_t type) {
+static Cell* sort_vector(Cell* vec, const Cell_t type) {
     const size_t nel = vec->count;
 
     /* Function pointer for the correct comparator. */

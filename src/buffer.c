@@ -29,21 +29,19 @@
  * it allows for appending formatted data a la sprintf().
  */
 
-
 #include "buffer.h"
 
 #include <string.h>
 #include <stdarg.h>
 #include <gc/gc.h>
 #include <errno.h>
-#include <assert.h>
-
 
 /* A reasonable initial size. */
 #define INITIAL_BUFFER_CAPACITY 256
 
+
 /* The constructor function to initialize a new buffer. */
-str_buf_t* sb_new(void)
+str_buf_t* sb_new()
 {
     /* Allocate the struct itself with the GC. */
     str_buf_t *sb = GC_MALLOC(sizeof(str_buf_t));
@@ -113,7 +111,7 @@ void sb_append_data(str_buf_t *sb, const void *data, size_t len)
 /* Append formatted data, like sprintf. */
 void sb_append_fmt(str_buf_t *sb, const char *fmt, ...)
 {
-    va_list args;
+    va_list args = {};
 
     /* Try to print into the existing space. */
     va_start(args, fmt);

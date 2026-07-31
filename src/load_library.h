@@ -38,7 +38,7 @@ typedef struct {
 } CznExportTable;
 
 /* New init signature: pure declaration, no side effects. */
-typedef const CznExportTable* (*CznLibInitFunc)(void);
+typedef const CznExportTable* (*CznLibInitFunc)();
 
 typedef enum {
     IMPORT_ALL,

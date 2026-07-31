@@ -19,7 +19,6 @@
 
 #include "runner.h"
 #include "symbols.h"
-#include "special_forms.h"
 #include "parser.h"
 #include "eval.h"
 #include "repl.h"
@@ -29,7 +28,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <signal.h>
 #include <gc/gc.h>
 
 
@@ -118,7 +116,7 @@ int run_file_script(const char *file_path, const lib_load_config load_libs)
     }
 
     TokenArray* ta = scan_all_tokens(input);
-    const Cell* result = parse_all_expressions(e, ta, false);
+    const Cell* result = parse_all_expressions(e, ta);
 
     if (result->type == CELL_INTEGER) {
         exit((int)result->integer_v);
@@ -133,7 +131,7 @@ int run_file_script(const char *file_path, const lib_load_config load_libs)
 }
 
 
-Cell* parse_all_expressions(Lex* e, TokenArray* ta, const bool is_repl)
+Cell* parse_all_expressions(Lex* e, TokenArray* ta)
 {
     /* Parse the token array and get each parsed expression. */
     while (ta->position <= ta->count) {

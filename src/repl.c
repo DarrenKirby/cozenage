@@ -30,12 +30,8 @@
 
 #include <unistd.h>
 #include <string.h>
-#include <signal.h>
 #include <stdlib.h>
 #include <gc/gc.h>
-
-
-int is_repl;
 
 
 /* Read in the history. */
@@ -58,7 +54,7 @@ void save_history_to_file()
 
 /* Count parens, and determine if inside a string literal to decide
  * if we have a full expression, or need to wait for more input. */
-int paren_balance(const char *s, int *in_string)
+static int paren_balance(const char *s, int *in_string)
 {
     int balance = 0;
     int escaped = 0;
@@ -179,7 +175,7 @@ void coz_print(const Cell* v)
 
 
 /* Print a prompt, return the input to the REPL. */
-char* coz_read()
+static char* coz_read()
 {
     char *input = read_multiline(PS1_PROMPT, PS2_PROMPT);
 
@@ -196,7 +192,7 @@ char* coz_read()
 
 /* repl()
  * Read-Evaluate-Print loop. */
-void repl(Lex* e)
+static void repl(Lex* e)
 {
     // ReSharper disable once CppDFAEndlessLoop
     while (true) {
@@ -207,7 +203,7 @@ void repl(Lex* e)
         /* Debug print the token array. */
         //debug_lexer(ta);
         /* Run it through the parser and evaluate. */
-        Cell* result = parse_all_expressions(e, ta, true);
+        Cell* result = parse_all_expressions(e, ta);
         /* Print either new prompt or error. */
         if (!result) {
             continue;

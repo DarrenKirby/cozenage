@@ -36,7 +36,6 @@
 #include <stdarg.h>
 #include <string.h>
 #include <stdint.h>
-#include <string.h>
 #include <errno.h>
 #include <math.h>
 #include <limits.h>
@@ -48,10 +47,17 @@
 #endif
 
 
+/* Global copies of argc and argv for use by (command-line). */
+int g_argc;
+char** g_argv;
+/* Global is_repl used by many. */
+bool is_repl;
+
+
 const char* fmt_err(const char *fmt, ...)
 {
     static char buf[512];
-    va_list args;
+    va_list args = {};
     va_start(args, fmt);
     if (vsnprintf(buf, 512, fmt, args) < 0) {
         fprintf(stderr, "vsnprintf failed!: %s\n", strerror(errno));

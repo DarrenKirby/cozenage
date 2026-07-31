@@ -36,8 +36,6 @@
 #define third  2
 #define last(ptr) ((ptr)->count - 1)
 
-/* import needs to know if we're in the REPL. */
-extern int is_repl;
 
 /* Disable 'foo may be made const' linter warnings. */
 /* ReSharper disable twice CppParameterMayBeConstPtrOrRef */
@@ -111,7 +109,7 @@ Lex* build_lambda_env(const Lex* env, Cell* formals, Cell* args)
 
 
 /* Just takes body statements and stuffs them in a 'begin' expression. */
-Cell* sequence_sf_body(const Cell* body)
+static Cell* sequence_sf_body(const Cell* body)
 {
     Cell* seq = make_cell_sexpr();
     cell_add(seq, G_begin_sym);

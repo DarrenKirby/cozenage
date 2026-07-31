@@ -30,7 +30,7 @@
 
 
 /* Thomas Wang's fast, avalanching, 64-bit integer hash function. */
-uint64_t hash_int_key(uint64_t key)
+static uint64_t hash_int_key(uint64_t key)
 {
     key = (~key) + (key << 21);
     key = key ^ (key >> 24);
@@ -43,7 +43,7 @@ uint64_t hash_int_key(uint64_t key)
 }
 
 
-uint64_t hash_real_key(const long double key)
+static uint64_t hash_real_key(const long double key)
 {
     /* Ensure 0.0 and −0.0 hash to the same value. */
     if (key == 0.0L) {
@@ -64,7 +64,7 @@ uint64_t hash_real_key(const long double key)
 }
 
 
-uint64_t hash_cell(const Cell* c)
+static uint64_t hash_cell(const Cell* c)
 {
     uint64_t h = 0;
 
@@ -112,7 +112,7 @@ uint64_t hash_cell(const Cell* c)
 }
 
 
-bool equal_cell(const Cell* a, const Cell* b)
+static bool equal_cell(const Cell* a, const Cell* b)
 {
     if (a->type != b->type) {
         return false;
@@ -226,8 +226,8 @@ Cell* ght_get(const ght_table* table, const Cell* key)
 
 
 /* Internal function to populate a slot with an item */
-bool ght_set_item(ght_item* slot, const size_t capacity,
-        Cell* key, Cell* value, size_t* p_length)
+static bool ght_set_item(ght_item* slot, const size_t capacity,
+                         Cell* key, Cell* value, size_t* p_length)
 {
     if (!key || !value || !slot) {
         return false;

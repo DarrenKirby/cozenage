@@ -18,6 +18,7 @@
  */
 
 #include "main.h"
+#include "types.h"
 #include "parser.h"
 #include "config.h"
 #include "repl.h"
@@ -31,18 +32,12 @@
 #include <unistd.h>
 #include <locale.h>
 
-#define nullptr ((void*)0)
-
 
 /* Initialize load_libs struct to zeros. */
-lib_load_config load_libs = {0};
-
-/* 'Global' argc and argv for use by (command-line). */
-int g_argc;
-char** g_argv;
+static lib_load_config load_libs = {0};
 
 
-static void show_help(void)
+static void show_help()
 {
     printf("Usage: cozenage [option ...] [file] \n\n\
 A Scheme-derived REPL and code runner\n\n\
@@ -105,10 +100,10 @@ int main(const int argc, char** argv)
     setlocale(LC_ALL, "");
 
     const struct option long_opts[] = {
-        {"help", no_argument, nullptr, 'h'},
-        {"version", no_argument, nullptr, 'V'},
-        {"library", required_argument, nullptr, 'l'},
-        {nullptr,0,nullptr,0}
+        { .name = "help",    .has_arg = no_argument,       .flag = nullptr, .val = 'h' },
+        { .name = "version", .has_arg = no_argument,       .flag = nullptr, .val = 'V' },
+        { .name = "library", .has_arg = required_argument, .flag = nullptr, .val = 'l' },
+        { .name = nullptr,   .has_arg = no_argument,       .flag = nullptr, .val = 0 }
     };
 
     int opt;
@@ -131,7 +126,10 @@ int main(const int argc, char** argv)
 
     const int non_option_args = argc - optind;
 
+    /* File runner mode. */
+
     if (non_option_args > 0) {
+        is_repl = false;
         /* Grab the number of args, and the args themselves starting from the file arg
          * to construct (command-line) later if needed. */
         if (non_option_args > 1) {
@@ -147,12 +145,13 @@ int main(const int argc, char** argv)
 
     /* REPL mode (no non-option arguments were provided). */
 
+    is_repl = true;
     /* Check if history file exists. If not, create it. */
     init_history_path();
     if (access(cozenage_history_path, F_OK) == -1) {
         setup_history();
     }
-    /*Run theREPL.*/
+    /* Run the REPL. */
     run_repl(load_libs);
     return EXIT_SUCCESS;
 }

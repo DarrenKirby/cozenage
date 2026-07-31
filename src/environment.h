@@ -46,7 +46,7 @@ typedef struct Ch_Env {
 
 
 /* Environment management. */
-Lex* lex_initialize_global_env(void);
+Lex* lex_initialize_global_env();
 Lex* new_child_env(const Lex* parent_env);
 
 

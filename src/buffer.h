@@ -30,7 +30,7 @@ typedef struct {
 } str_buf_t;
 
 
-str_buf_t* sb_new(void);
+str_buf_t* sb_new();
 void sb_append_str(str_buf_t *sb, const char *s);
 void sb_append_data(str_buf_t *sb, const void *data, size_t len);
 void sb_append_char(str_buf_t *sb, char c);

@@ -44,7 +44,7 @@
 
 
 /* Initialize the global environment, and return a pointer to it. */
-Lex* lex_initialize_global_env(void)
+Lex* lex_initialize_global_env()
 {
     ht_table* global_env = ht_create(256);
     Lex* e = GC_MALLOC(sizeof(Lex));
@@ -204,7 +204,7 @@ Cell* lex_make_defmacro(char* name, Cell* formals, Cell* body, Lex* env)
 
 
 /* Dump the global env for debugging. */
-Cell* builtin_print_env(const Lex* e, const Cell* a) {
+static Cell* builtin_print_env(const Lex* e, const Cell* a) {
     (void)a;
     debug_print_env((Lex*)e);
     return USP_Obj;
@@ -312,6 +312,7 @@ void lex_add_builtins(const Lex* e)
     lex_add_builtin(e, "integer?", builtin_integer);
     lex_add_builtin(e, "exact-integer?", builtin_exact_integer);
     lex_add_builtin(e, "bigint?", builtin_bigint);
+    lex_add_builtin(e, "bigrat?", builtin_bigrat);
     lex_add_builtin(e, "bigfloat?", builtin_bigfloat);
     lex_add_builtin(e, "infinite?", builtin_infinite);
     lex_add_builtin(e, "finite?", builtin_finite);

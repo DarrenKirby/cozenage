@@ -25,7 +25,7 @@
 
 
 int run_file_script(const char *file_path, lib_load_config load_libs);
-Cell* parse_all_expressions(Lex* e, TokenArray* ta, bool is_repl);
+Cell* parse_all_expressions(Lex* e, TokenArray* ta);
 char* read_file_to_string(const char* filename);
 
 #endif //COZENAGE_RUNNER_H

@@ -88,7 +88,7 @@ extern Cell* G_unquote_splicing_sym;
 extern ht_table* symbol_table;
 
 /* SF initialization function. */
-void init_special_forms(void);
+void init_special_forms();
 
 /* Builtin symbol procedures. */
 Cell* builtin_string_to_symbol(const Lex* e, const Cell* a);

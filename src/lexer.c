@@ -31,9 +31,9 @@ typedef struct {
     int line;
 } Scanner;
 
-Scanner scanner;
+static Scanner scanner;
 
-void init_lexer(const char* source)
+static void init_lexer(const char* source)
 {
     scanner.start = source;
     scanner.current = source;
@@ -230,7 +230,7 @@ static Token character()
 }
 
 
-Token lex_token()
+static Token lex_token()
 {
     skip_whitespace();
     scanner.start = scanner.current;

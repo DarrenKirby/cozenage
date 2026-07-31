@@ -59,7 +59,7 @@ Cell* default_error_port  = nullptr;
 
 
 /* Initialize default input, output, and error ports. */
-void init_default_ports(void)
+void init_default_ports()
 {
     default_input_port  = make_cell_file_port("stdin",  stdin,  INPUT_STREAM, BK_FILE_TEXT);
     default_output_port = make_cell_file_port("stdout", stdout, OUTPUT_STREAM, BK_FILE_TEXT);
@@ -75,7 +75,7 @@ void init_default_ports(void)
  * ------------------------------------------*/
 
 
-static Cell* make_cell_nil__(void)
+static Cell* make_cell_nil__()
 {
     Cell* nil_obj = GC_MALLOC_ATOMIC_UNCOLLECTABLE(sizeof(Cell));
     nil_obj->type = CELL_NIL;
@@ -92,7 +92,7 @@ static Cell* make_cell_boolean__(const int the_boolean)
 }
 
 
-static Cell* make_cell_eof__(void)
+static Cell* make_cell_eof__()
 {
     Cell* eof_obj = GC_MALLOC_ATOMIC_UNCOLLECTABLE(sizeof(Cell));
     eof_obj->type = CELL_EOF;
@@ -100,7 +100,7 @@ static Cell* make_cell_eof__(void)
 }
 
 
-static Cell* make_cell_tcs__(void)
+static Cell* make_cell_tcs__()
 {
     Cell* tcs_obj = GC_MALLOC_ATOMIC_UNCOLLECTABLE(sizeof(Cell));
     tcs_obj->type = CELL_TCS;
@@ -108,7 +108,7 @@ static Cell* make_cell_tcs__(void)
 }
 
 
-static Cell* make_cell_usp__(void)
+static Cell* make_cell_usp__()
 {
     Cell* usp_obj = GC_MALLOC_ATOMIC_UNCOLLECTABLE(sizeof(Cell));
     usp_obj->type = CELL_UNSPEC;
@@ -117,7 +117,7 @@ static Cell* make_cell_usp__(void)
 
 
 /* Initialize global singletons. */
-void init_global_singletons(void)
+void init_global_singletons()
 {
     Nil_Obj = make_cell_nil__();
     True_Obj = make_cell_boolean__(1);
@@ -134,7 +134,7 @@ void init_global_singletons(void)
 
 
 /* Thin wrapper that returns the singleton nil object. */
-Cell* make_cell_nil(void)
+Cell* make_cell_nil()
 {
     return Nil_Obj;
 }
@@ -154,21 +154,21 @@ Cell* make_cell_boolean(const int the_boolean)
 
 
 /* Thin wrapper that returns the singleton EOF object. */
-Cell* make_cell_eof(void)
+Cell* make_cell_eof()
 {
     return EOF_Obj;
 }
 
 
 /* Thin wrapper that returns the singleton TCS object. */
-Cell* make_cell_tcs(void)
+Cell* make_cell_tcs()
 {
     return TCS_Obj;
 }
 
 
 /* Thin wrapper that returns the singleton unspecified object. */
-Cell* make_cell_usp(void)
+Cell* make_cell_usp()
 {
     return USP_Obj;
 }
@@ -300,7 +300,7 @@ Cell* make_cell_string(const char* the_string)
 
 /* Cell constructor for S-expressions. Not a user-type, but all builtin procedures expect the args to be wrapped
  * in one. */
-Cell* make_cell_sexpr(void)
+Cell* make_cell_sexpr()
 {
     Cell* v = GC_MALLOC(sizeof(Cell));
     if (!v) {
@@ -345,7 +345,7 @@ Cell* make_cell_pair(Cell* car, Cell* cdr)
 
 
 /* Cell constructor for vectors. */
-Cell* make_cell_vector(void)
+Cell* make_cell_vector()
 {
     Cell* v = GC_MALLOC(sizeof(Cell));
     if (!v) {

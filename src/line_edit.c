@@ -78,10 +78,10 @@
 #define COMP_DISPLAY_MAX 100
 
 
-char **scheme_procedures = nullptr;
+static char **scheme_procedures = nullptr;
 
 /* Comparison function for qsort. */
-int compare_pointers(const void *a, const void *b)
+static int compare_pointers(const void *a, const void *b)
 {
     const char *str_a = *(const char **)a;
     const char *str_b = *(const char **)b;
@@ -171,7 +171,7 @@ static void sigint_handler(const int sig)
 }
 
 
-void install_signal_handlers(void)
+void install_signal_handlers()
 {
     struct sigaction sa = {0};
     sa.sa_handler = sigint_handler;
@@ -182,7 +182,7 @@ void install_signal_handlers(void)
 
 
 /* Terminal management */
-static void disable_raw_mode(void)
+static void disable_raw_mode()
 {
     if (raw_mode_enabled) {
         tcsetattr(STDIN_FILENO, TCSADRAIN, &orig_termios);
@@ -191,7 +191,7 @@ static void disable_raw_mode(void)
 }
 
 
-static int enable_raw_mode(void)
+static int enable_raw_mode()
 {
     if (!isatty(STDIN_FILENO)) return -1;
     if (tcgetattr(STDIN_FILENO, &orig_termios) == -1) return -1;
@@ -211,7 +211,7 @@ static int enable_raw_mode(void)
 
 
 /* Get terminal width. */
-static int get_terminal_width(void)
+static int get_terminal_width()
 {
     struct winsize ws;
     if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws) == -1) return 80;

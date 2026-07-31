@@ -21,9 +21,16 @@
 #define COZENAGE_TYPES_H
 
 #include "environment.h"
+
 #include <stdio.h>
 #include <complex.h>
 #include <unicode/umachine.h>
+
+/* Global copies of argc and argv for use by (command-line). */
+extern int g_argc;
+extern char** g_argv;
+/* Global is_repl used by many. */
+extern bool is_repl;
 
 
 /* Convenience macros for readability */

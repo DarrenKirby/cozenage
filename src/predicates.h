@@ -49,6 +49,7 @@ Cell* builtin_integer(const Lex* e, const Cell* a);
 Cell* builtin_exact_integer(const Lex* e, const Cell* a);
 Cell* builtin_bigint(const Lex* e, const Cell* a);
 Cell* builtin_bigfloat(const Lex* e, const Cell* a);
+Cell* builtin_bigrat(const Lex* e, const Cell* a);
 /* Numeric predicate procedures. */
 Cell* builtin_zero(const Lex* e, const Cell* a);
 Cell* builtin_positive(const Lex* e, const Cell* a);

@@ -117,7 +117,7 @@ static char* token_to_string(const Token* token)
 }
 
 
-bool fits_in_int64(const char *s) {
+static bool fits_in_int64(const char *s) {
     const int neg = s[0] == '-';
     const char *p = neg ? s + 1 : s;
 

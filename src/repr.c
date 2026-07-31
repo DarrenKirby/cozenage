@@ -55,7 +55,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <wctype.h>
-#include <math.h>
 
 /* macOS does not require these. */
 #ifndef __APPLE__

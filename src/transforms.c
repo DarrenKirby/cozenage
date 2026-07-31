@@ -33,7 +33,7 @@
 static int gen_sym_counter = 0;
 
 
-static Cell* gen_sym(void) {
+static Cell* gen_sym() {
     char name[64];
     /* Use the prefix "_" to further distinguish from user symbols. */
     snprintf(name, sizeof(name), "_case%d", gen_sym_counter++);
@@ -437,7 +437,7 @@ static Cell* expand_let_family(const Cell* c)
 
 
 /* Helper to handle the append logic for transform_qq(). */
-Cell* transform_qq_list_logic(const Cell* input, const int depth) {
+static Cell* transform_qq_list_logic(const Cell* input, const int depth) {
     Cell* out_expr = make_cell_sexpr();
     cell_add(out_expr, make_cell_symbol("append"));
 

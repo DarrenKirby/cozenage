@@ -50,6 +50,6 @@ void add_history_entry(const char* line);
 void populate_dynamic_completions(const Lex* e);
 
 /* Signal handling. */
-void install_signal_handlers(void);
+void install_signal_handlers();
 
 #endif //COZENAGE_LINE_EDIT_H

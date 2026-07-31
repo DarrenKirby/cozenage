@@ -1140,16 +1140,6 @@ static long long gcd_helper(long long x, long long y)
 }
 
 
-/* Helper for the core LCM logic (using the overflow-safe formula). */
-// static long long lcm_helper(long long x, long long y)
-// {
-//     if (x == 0 || y == 0) return 0;
-//     x = llabs(x);
-//     y = llabs(y);
-//     return x / gcd_helper(x, y) * y;
-// }
-
-
 /* (gcd n1 ... )
  * Return the greatest common divisor of the arguments. The result is always non-negative. */
 Cell* builtin_gcd(const Lex* e, const Cell* a)

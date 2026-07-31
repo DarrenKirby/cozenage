@@ -100,7 +100,7 @@ Cell* builtin_raise(const Lex* e, const Cell* a) {
  * but I wanted a procedure that prints a report from
  * libgc... */
 
-void gc_print_report(void)
+static void gc_print_report()
 {
     const size_t heap_size        = GC_get_heap_size();
     const size_t free_bytes       = GC_get_free_bytes();

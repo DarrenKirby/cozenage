@@ -37,7 +37,6 @@
 #include <stdio.h>
 #include <unicode/umachine.h>
 #include <gmp.h>
-//#include <mpfr.h>
 
 
 /* Cell_t type enum. */
@@ -275,7 +274,6 @@ typedef struct Cell {
         promise* promise;         /* -> promise struct */
         mpz_t* bi;                /* -> GMP integer */
         mpq_t* br;                /* -> GMP rational */
-        //mpfr_t* bf;               /* -> GMP float */
         ght_table* table;         /* -> CELL_SET or CELL_HASH ght pointer. */
     };
 } Cell;
@@ -291,25 +289,25 @@ extern Cell* USP_Obj;
 extern Cell* default_input_port;
 extern Cell* default_output_port;
 extern Cell* default_error_port;
-void init_default_ports(void);
-void init_global_singletons(void);
+void init_default_ports();
+void init_global_singletons();
 
 
-Cell* make_cell_nil(void);
+Cell* make_cell_nil();
 Cell* make_cell_boolean(int the_boolean);
-Cell* make_cell_eof(void);
-Cell* make_cell_tcs(void);
-Cell* make_cell_usp(void);
+Cell* make_cell_eof();
+Cell* make_cell_tcs();
+Cell* make_cell_usp();
 Cell* make_cell_real(long double the_real);
 Cell* make_cell_integer(long long the_integer);
 Cell* make_cell_rational(long int numerator, long int denominator, bool simplify);
 Cell* make_cell_complex(Cell* real_part, Cell *imag_part);
 Cell* make_cell_char(UChar32 the_char);
-Cell* make_cell_vector(void);
+Cell* make_cell_vector();
 Cell* make_cell_bytevector(bv_t t, size_t initial_size);
 Cell* make_cell_symbol(const char* the_symbol);
 Cell* make_cell_string(const char* the_string);
-Cell* make_cell_sexpr(void);
+Cell* make_cell_sexpr();
 Cell* make_cell_bigint(const char* s, const Cell* a, uint8_t base);
 Cell* make_cell_bigrat(int64_t num, int64_t den, const char* s);
 Cell* make_cell_bigfloat(const char* s);
@@ -323,6 +321,6 @@ Cell* make_cell_set(const Cell* values);
 Cell* make_cell_hash(const Cell* values);
 Cell* cell_add(Cell* v, Cell* x);
 Cell* cell_copy(const Cell* v);
-Cell* make_cell_bytevector_u8(void);
+Cell* make_cell_bytevector_u8();
 
 #endif //COZENAGE_CELL_H

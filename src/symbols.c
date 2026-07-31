@@ -70,7 +70,7 @@ Cell* G_dot_sym = nullptr;
 
 
 /* Initialize canonical symbols and configure their special form IDs. */
-void init_special_forms(void) {
+void init_special_forms() {
     /* Primitive syntax. */
     G_define_sym = make_cell_symbol("define");
     G_define_sym->sf_id = SF_ID_DEFINE;

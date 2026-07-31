@@ -98,19 +98,19 @@ DEFINE_BV_TYPE(s64, int64_t,  "%d")
 
 
 const bv_int_ops_t BV_INT_OPS[] = {
-    [BV_U8]  = { get_u8,  set_u8,  repr_u8,  append_u8  },
-    [BV_S8]  = { get_s8,  set_s8,  repr_s8,  append_s8  },
-    [BV_U16] = { get_u16, set_u16, repr_u16, append_u16 },
-    [BV_S16] = { get_s16, set_s16, repr_s16, append_s16 },
-    [BV_U32] = { get_u32, set_u32, repr_u32, append_u32 },
-    [BV_S32] = { get_s32, set_s32, repr_s32, append_s32 },
-    [BV_U64] = { get_u64, set_u64, repr_u64, append_u64 },
-    [BV_S64] = { get_s64, set_s64, repr_s64, append_s64 },
+    [BV_U8]  = { .get = get_u8,  .set = set_u8,  .repr = repr_u8,  .append = append_u8  },
+    [BV_S8]  = { .get = get_s8,  .set = set_s8,  .repr = repr_s8,  .append = append_s8  },
+    [BV_U16] = { .get = get_u16, .set = set_u16, .repr = repr_u16, .append = append_u16 },
+    [BV_S16] = { .get = get_s16, .set = set_s16, .repr = repr_s16, .append = append_s16 },
+    [BV_U32] = { .get = get_u32, .set = set_u32, .repr = repr_u32, .append = append_u32 },
+    [BV_S32] = { .get = get_s32, .set = set_s32, .repr = repr_s32, .append = append_s32 },
+    [BV_U64] = { .get = get_u64, .set = set_u64, .repr = repr_u64, .append = append_u64 },
+    [BV_S64] = { .get = get_s64, .set = set_s64, .repr = repr_s64, .append = append_s64 },
 };
 
 const bv_fp_ops_t BV_FP_OPS[] = {
-    [BV_F32] = { get_f32, set_f32, repr_f32, append_f32 },
-    [BV_F64] = { get_f64, set_f64, repr_f64, append_f64 },
+    [BV_F32] = { .get = get_f32, .set = set_f32, .repr = repr_f32, .append = append_f32 },
+    [BV_F64] = { .get = get_f64, .set = set_f64, .repr = repr_f64, .append = append_f64 },
 };
 
 

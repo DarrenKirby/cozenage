@@ -30,11 +30,6 @@
 #include <gc/gc.h>
 
 
-extern int is_repl;
-extern int g_argc;
-extern char **g_argv;
-
-
 /*-------------------------------------------------------*
  *    Control features and list iteration procedures     *
  * ------------------------------------------------------*/
@@ -583,7 +578,7 @@ Cell* builtin_load(const Lex* e, const Cell* a)
     const char* file = a->cell[0]->str;
     const char* input = read_file_to_string(file);
     TokenArray* ta = scan_all_tokens(input);
-    const Cell* result = parse_all_expressions((Lex*)e, ta, false);
+    const Cell* result = parse_all_expressions((Lex*)e, ta);
 
     if (result && result->type == CELL_ERROR) {
         fprintf(stderr, "%s\n", cell_to_string(result, MODE_REPL));
