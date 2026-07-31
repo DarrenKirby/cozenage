@@ -74,22 +74,14 @@ static f_type f_get_type(const char* file)
 
 static char *filetype(const mode_t st_mode) {
     switch (st_mode & S_IFMT) {
-        case S_IFBLK:
-            return "block device";
-        case S_IFCHR:
-            return "character device";
-        case S_IFDIR:
-            return "directory";
-        case S_IFIFO:
-            return "FIFO/pipe";
-        case S_IFLNK:
-            return "symlink";
-        case S_IFREG:
-            return "regular file";
-        case S_IFSOCK:
-            return "socket";
-        default:
-            return "unknown";
+    case S_IFBLK:  return "block device";
+    case S_IFCHR:  return "character device";
+    case S_IFDIR:  return "directory";
+    case S_IFIFO:  return "FIFO/pipe";
+    case S_IFLNK:  return "symlink";
+    case S_IFREG:  return "regular file";
+    case S_IFSOCK: return "socket";
+    default:       return "unknown";
     }
 }
 
@@ -540,7 +532,7 @@ static Cell* file_stat(const Lex* e, const Cell* a) {
 
 /* (file-size path)
  * Returns the size in bytes of the file pointed to by path. */
-Cell* file_file_size(const Lex* e, const Cell* a) {
+static Cell* file_file_size(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "file-size");
     if (err) return err;
@@ -565,7 +557,7 @@ Cell* file_file_size(const Lex* e, const Cell* a) {
  * seconds (integer)
  * nanoseconds (integer)
  * human-readable string in the form "2026-01-31 19:12:11.387617529 PST" where PST is the local TZ. */
-Cell* file_file_mtime(const Lex* e, const Cell* a) {
+static Cell* file_file_mtime(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "file-mtime");
     if (err) return err;
@@ -600,7 +592,7 @@ Cell* file_file_mtime(const Lex* e, const Cell* a) {
  * seconds (integer)
  * nanoseconds (integer)
  * human-readable string in the form "2026-01-31 19:12:11.387617529 PST" where PST is the local TZ. */
-Cell* file_file_ctime(const Lex* e, const Cell* a) {
+static Cell* file_file_ctime(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "file-ctime");
     if (err) return err;
@@ -635,7 +627,7 @@ Cell* file_file_ctime(const Lex* e, const Cell* a) {
  * seconds (integer)
  * nanoseconds (integer)
  * human-readable string in the form "2026-01-31 19:12:11.387617529 PST" where PST is the local TZ. */
-Cell* file_file_atime(const Lex* e, const Cell* a) {
+static Cell* file_file_atime(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "file-atime");
     if (err) return err;
@@ -666,7 +658,7 @@ Cell* file_file_atime(const Lex* e, const Cell* a) {
 
 /* (file-readable? path)
  * Returns true if the currently running process has read permissions for the file/directory pointed to by path. */
-Cell* file_file_readable(const Lex* e, const Cell* a) {
+static Cell* file_file_readable(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "file-readable?");
     if (err) return err;
@@ -690,7 +682,7 @@ Cell* file_file_readable(const Lex* e, const Cell* a) {
 
 /* (file-writable? path)
  * Returns true if the currently running process has write permissions for the file/directory pointed to by path. */
-Cell* file_file_writable(const Lex* e, const Cell* a) {
+static Cell* file_file_writable(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "file-writable?");
     if (err) return err;
@@ -714,7 +706,7 @@ Cell* file_file_writable(const Lex* e, const Cell* a) {
 
 /* (file-executable? path)
  * Returns true if the currently running process has execute permissions for the file/directory pointed to by path. */
-Cell* file_file_executable(const Lex* e, const Cell* a) {
+static Cell* file_file_executable(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "file-executable?");
     if (err) return err;
@@ -753,25 +745,25 @@ Cell* file_file_executable(const Lex* e, const Cell* a) {
 
 
 static const CznExport file_exports[] = {
-    { "reg-file?",          file_reg_file_pred },
-    { "directory?",         file_directory_pred },
-    { "symlink?",           file_symlink_pred },
-    { "char-device?",       file_char_device_pred },
-    { "block-device?",      file_block_device_pred },
-    { "fifo?",              file_pipe_pred },
-    { "socket?",            file_socket_pred },
-    { "file-exists?",       file_file_exists_pred },
-    { "rmdir!",             file_rmdir },
-    { "mkdir",              file_mkdir },
-    { "unlink!",            file_unlink },
-    { "stat",               file_stat },
-    { "file-size",          file_file_size },
-    { "file-atime",         file_file_atime },
-    { "file-ctime",         file_file_ctime },
-    { "file-mtime",         file_file_mtime },
-    { "file-readable?",     file_file_readable },
-    { "file-writeable?",    file_file_writable },
-    { "file-executable?",   file_file_executable },
+    { .scheme_name = "reg-file?",          .func = file_reg_file_pred },
+    { .scheme_name = "directory?",         .func = file_directory_pred },
+    { .scheme_name = "symlink?",           .func = file_symlink_pred },
+    { .scheme_name = "char-device?",       .func = file_char_device_pred },
+    { .scheme_name = "block-device?",      .func = file_block_device_pred },
+    { .scheme_name = "fifo?",              .func = file_pipe_pred },
+    { .scheme_name = "socket?",            .func = file_socket_pred },
+    { .scheme_name = "file-exists?",       .func = file_file_exists_pred },
+    { .scheme_name = "rmdir!",             .func = file_rmdir },
+    { .scheme_name = "mkdir",              .func = file_mkdir },
+    { .scheme_name = "unlink!",            .func = file_unlink },
+    { .scheme_name = "stat",               .func = file_stat },
+    { .scheme_name = "file-size",          .func = file_file_size },
+    { .scheme_name = "file-atime",         .func = file_file_atime },
+    { .scheme_name = "file-ctime",         .func = file_file_ctime },
+    { .scheme_name = "file-mtime",         .func = file_file_mtime },
+    { .scheme_name = "file-readable?",     .func = file_file_readable },
+    { .scheme_name = "file-writeable?",    .func = file_file_writable },
+    { .scheme_name = "file-executable?",   .func = file_file_executable },
 };
 
 
@@ -781,7 +773,7 @@ static const CznExportTable file_table = {
 };
 
 
-const CznExportTable* cozenage_library_init(void)
+extern const CznExportTable* cozenage_library_init()
 {
     return &file_table;
 }

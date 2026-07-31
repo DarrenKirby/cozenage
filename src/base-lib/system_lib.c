@@ -60,7 +60,6 @@
 
 
 extern char **environ;
-extern bool is_repl;
 
 
 /* (get-pid)
@@ -144,7 +143,7 @@ static Cell* system_get_env_vars(const Lex* e, const Cell* a)
 
 /* (get-home)
  * Returns the home directory of the current user as a string. */
-Cell* system_get_home(const Lex* e, const Cell* a) {
+static Cell* system_get_home(const Lex* e, const Cell* a) {
     (void)e; (void)a;
     Cell* err = CHECK_ARITY_EXACT(a, 0, "get-home");
     if (err) { return err; }
@@ -156,7 +155,7 @@ Cell* system_get_home(const Lex* e, const Cell* a) {
 /* (get-path)
  * Returns a list composed of each directory in the current user's path as a string.
  * The list is ordered as per the shell's search order. */
-Cell* system_get_path(const Lex* e, const Cell* a) {
+static Cell* system_get_path(const Lex* e, const Cell* a) {
     (void)e; (void)a;
     Cell* err = CHECK_ARITY_EXACT(a, 0, "get-path");
     if (err) { return err; }
@@ -236,7 +235,7 @@ static Cell* system_get_egid(const Lex* e, const Cell* a) {
  * (set-gid! n)
  * These functions set the user id or group id of the currently running process to the uid/gid indicated by n. They
  * return #true on success, or else return an OS error.  */
-Cell* system_set_uid(const Lex* e, const Cell* a) {
+static Cell* system_set_uid(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "set-uid!");
     if (err) { return err; }
@@ -253,7 +252,7 @@ Cell* system_set_uid(const Lex* e, const Cell* a) {
 }
 
 
-Cell* system_set_gid(const Lex* e, const Cell* a) {
+static Cell* system_set_gid(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "set-gid!");
     if (err) { return err; }
@@ -445,7 +444,7 @@ static Cell* system_chmod(const Lex* e, const Cell* a) {
             "chmod: mode argument must be an (octal) integer",
             TYPE_ERR);
     }
-    /*TODO:SanitizeModeArg*/
+    /*TODO: Sanitize Mode Arg*/
     if (chmod(a->cell[0]->str, (mode_t)a->cell[1]->integer_v) != 0) {
         make_cell_error(
             fmt_err("chmod: %s", strerror(errno)),
@@ -460,7 +459,7 @@ static Cell* system_chmod(const Lex* e, const Cell* a) {
  * The first item is an integer representing uptime in seconds. The second item is a human-readable uptime string of
  * the form "up 31 days 16:37". The third item is itself a three item list of floats which represent the 1, 5, and 15-
  * minute load average figures in that order. */
-Cell* system_uptime(const Lex* e, const Cell* a) {
+static Cell* system_uptime(const Lex* e, const Cell* a) {
     (void)e; (void)a;
     Cell* err = CHECK_ARITY_EXACT(a, 0, "uptime");
     if (err) { return err; }
@@ -570,7 +569,7 @@ Cell* system_uptime(const Lex* e, const Cell* a) {
 /* (system string)
  * Forks a new process and runs the command specified by string in a new shell.
  * Returns the exit status of the command as an integer. */
-Cell* system_system(const Lex* e, const Cell* a) {
+static Cell* system_system(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "system");
     if (err) return err;
@@ -607,7 +606,7 @@ Cell* system_system(const Lex* e, const Cell* a) {
 
 /* (sleep n)
  * Causes the running process to sleep for n seconds. */
-Cell* system_sleep(const Lex* e, const Cell* a) {
+static Cell* system_sleep(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "sleep");
     if (err) return err;
@@ -623,7 +622,7 @@ Cell* system_sleep(const Lex* e, const Cell* a) {
 
 /* (get-hostname)
  * Returns the hostname of the system as a string. */
-Cell* system_get_hostname(const Lex* e, const Cell* a) {
+static Cell* system_get_hostname(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 0, "get-hostname");
     if (err) return err;
@@ -641,7 +640,7 @@ Cell* system_get_hostname(const Lex* e, const Cell* a) {
 
 /* (cpu-count)
  * Returns the number of processors as an integer. */
-Cell* system_get_nproc(const Lex* e, const Cell* a) {
+static Cell* system_get_nproc(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 0, "cpu-count");
     if (err) return err;
@@ -659,7 +658,7 @@ Cell* system_get_nproc(const Lex* e, const Cell* a) {
 /* (is-root?)
  * Returns #true if the effective uid of the currently running process is 0,
  * otherwise, returns #false. */
-Cell* system_is_root(const Lex* e, const Cell* a) {
+static Cell* system_is_root(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 0, "is-root?");
     if (err) return err;
@@ -706,7 +705,7 @@ static const CznExportTable system_table = {
 };
 
 
-const CznExportTable* cozenage_library_init(void)
+extern const CznExportTable* cozenage_library_init()
 {
     return &system_table;
 }

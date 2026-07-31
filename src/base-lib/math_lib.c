@@ -513,31 +513,31 @@ static Cell* math_make_polar(const Lex* e, const Cell* a)
 
 
 static const CznExport math_exports[] = {
-    { "cos",                  math_cos },
-    { "acos",                 math_acos },
-    { "sin",                  math_sin },
-    { "asin",                 math_asin },
-    { "tan",                  math_tan },
-    { "atan",                 math_atan },
-    { "exp",                  math_exp },
-    { "log",                  math_log },
-    { "log2",                 math_log2 },
-    { "log10",                math_log10 },
-    { "cbrt",                 math_cbrt },
-    { "truncate/",            math_truncate_div },
-    { "truncate-quotient",    builtin_quotient },
-    { "truncate-remainder",   builtin_remainder },
-    { "floor/",               math_floor_div },
-    { "floor-quotient",       math_floor_quotient },
-    { "floor-remainder",      builtin_modulo },
-    { "real-part",            math_real_part },
-    { "imag-part",            math_imag_part },
-    { "make-rectangular",     math_make_rectangular },
+    { .scheme_name = "cos",                  .func = math_cos },
+    { .scheme_name = "acos",                 .func = math_acos },
+    { .scheme_name = "sin",                  .func = math_sin },
+    { .scheme_name = "asin",                 .func = math_asin },
+    { .scheme_name = "tan",                  .func = math_tan },
+    { .scheme_name = "atan",                 .func = math_atan },
+    { .scheme_name = "exp",                  .func = math_exp },
+    { .scheme_name = "log",                  .func = math_log },
+    { .scheme_name = "log2",                 .func = math_log2 },
+    { .scheme_name = "log10",                .func = math_log10 },
+    { .scheme_name = "cbrt",                 .func = math_cbrt },
+    { .scheme_name = "truncate/",            .func = math_truncate_div },
+    { .scheme_name = "truncate-quotient",    .func = builtin_quotient },
+    { .scheme_name = "truncate-remainder",   .func = builtin_remainder },
+    { .scheme_name = "floor/",               .func = math_floor_div },
+    { .scheme_name = "floor-quotient",       .func = math_floor_quotient },
+    { .scheme_name = "floor-remainder",      .func = builtin_modulo },
+    { .scheme_name = "real-part",            .func = math_real_part },
+    { .scheme_name = "imag-part",            .func = math_imag_part },
+    { .scheme_name = "make-rectangular",     .func = math_make_rectangular },
     /* 'magnitude' is identical to 'abs' for real/complex numbers -
      * so we just make an alias. */
-    { "magnitude",            builtin_abs },
-    { "angle",                math_angle },
-    { "make-polar",           math_make_polar },
+    { .scheme_name = "magnitude",            .func = builtin_abs },
+    { .scheme_name = "angle",                .func = math_angle },
+    { .scheme_name = "make-polar",           .func = math_make_polar },
 };
 
 
@@ -547,7 +547,7 @@ static const CznExportTable math_table = {
 };
 
 
-const CznExportTable* cozenage_library_init(void)
+extern const CznExportTable* cozenage_library_init()
 {
     return &math_table;
 }

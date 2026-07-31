@@ -64,7 +64,7 @@ HandlerResult sf_delay(Lex* e, Cell* a)
  * that forcing the result of delay-force will in effect result in a tail call to (force expression). Forcing the
  * result of (delay (force expression)) might not. Thus, iterative lazy algorithms that might result in a long series of
  * chains of delay and force can be rewritten using delay-force to prevent consuming unbounded space during evaluation. */
-HandlerResult sf_delay_force(Lex* e, Cell* a)
+static HandlerResult sf_delay_force(Lex* e, Cell* a)
 {
     if (a->count != 1) {
         Cell* err = make_cell_error(
@@ -108,7 +108,7 @@ HandlerResult sf_stream(Lex* e, Cell* a)
  * “memoized”) so that if it is forced a second time, the previously computed value is returned. Consequently, a delayed
  * expression is evaluated using the parameter values and exception handler of the call to force which first requested
  * its value. If promise is not a promise, it may be returned unchanged. */
-Cell* lazy_force(const Lex* e, const Cell* a)
+static Cell* lazy_force(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "force");
@@ -167,7 +167,7 @@ Cell* lazy_force(const Lex* e, const Cell* a)
 /* (make-promise obj)
  * The make-promise procedure returns a promise which, when forced, will return obj. It is similar to delay, but does
  * not delay its argument: it is a procedure rather than syntax. If obj is already a promise, it is returned. */
-Cell* lazy_make_promise(const Lex* e, const Cell* a)
+static Cell* lazy_make_promise(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "make-promise");
@@ -186,7 +186,7 @@ Cell* lazy_make_promise(const Lex* e, const Cell* a)
 /* (promise? obj)
  * The promise? procedure returns #t if its argument is a promise, and #f otherwise. Note that promises are not
  * necessarily disjoint from other Scheme types such as procedures. */
-Cell* lazy_promise_pred(const Lex* e, const Cell* a)
+static Cell* lazy_promise_pred(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "promise?");
@@ -201,7 +201,7 @@ Cell* lazy_promise_pred(const Lex* e, const Cell* a)
 
 /* (stream? obj)
  * The stream? procedure returns #t if obj represents a stream, and #f otherwise. */
-Cell* lazy_stream_pred(const Lex* e, const Cell* a)
+static Cell* lazy_stream_pred(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "stream?");
@@ -215,7 +215,7 @@ Cell* lazy_stream_pred(const Lex* e, const Cell* a)
 
 
 /* (head stream) -> stream.car */
-Cell* lazy_head(const Lex* e, const Cell* a) {
+static Cell* lazy_head(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "head");
     if (err) return err;
@@ -230,7 +230,7 @@ Cell* lazy_head(const Lex* e, const Cell* a) {
 
 
 /* (tail stream) -> stream.cdr */
-Cell* lazy_tail(const Lex* e, const Cell* a) {
+static Cell* lazy_tail(const Lex* e, const Cell* a) {
     Cell* err = CHECK_ARITY_EXACT(a, 1, "tail");
     if (err) return err;
     if (a->cell[0]->type == CELL_NIL) {
@@ -249,7 +249,7 @@ Cell* lazy_tail(const Lex* e, const Cell* a) {
 
 
 /* (at n stream) -> value */
-Cell* lazy_at(const Lex* e, const Cell* a) {
+static Cell* lazy_at(const Lex* e, const Cell* a) {
     Cell* err = CHECK_ARITY_EXACT(a, 2, "at");
     if (err) return err;
     if (a->cell[0]->type != CELL_INTEGER) {
@@ -292,7 +292,7 @@ Cell* lazy_at(const Lex* e, const Cell* a) {
 
 /* (take n stream)
  * */
-Cell* lazy_take(const Lex* e, const Cell* a) {
+static Cell* lazy_take(const Lex* e, const Cell* a) {
     Cell* err = CHECK_ARITY_EXACT(a, 2, "take");
     if (err) return err;
 
@@ -333,7 +333,7 @@ Cell* lazy_take(const Lex* e, const Cell* a) {
 
 
 /* (drop n stream) -> stream */
-Cell* lazy_drop(const Lex* e, const Cell* a) {
+static Cell* lazy_drop(const Lex* e, const Cell* a) {
     Cell* err = CHECK_ARITY_EXACT(a, 2, "drop");
     if (err) return err;
 
@@ -361,7 +361,7 @@ Cell* lazy_drop(const Lex* e, const Cell* a) {
 
 /* (list->stream list) -> stream
  * Converts a finite list into a stream. */
-Cell* lazy_list_to_stream(const Lex* e, const Cell* a) {
+static Cell* lazy_list_to_stream(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "list->stream");
     if (err) return err;
@@ -410,7 +410,7 @@ static Cell* lazy_list_to_stream_tail(const Lex* e, const Cell* a) {
 
 /* (iterate proc seed) -> stream
  * Returns an infinite stream (seed (f seed) (f (f seed)) ...) */
-Cell* lazy_iterate(const Lex* e, const Cell* a) {
+static Cell* lazy_iterate(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2, "iterate");
     if (err) return err;
@@ -455,7 +455,7 @@ static Cell* lazy_iterate_tail(const Lex* e, const Cell* a) {
 }
 
 
-Cell* lazy_select(const Lex* e, const Cell* a);
+static Cell* lazy_select(const Lex* e, const Cell* a);
 
 /* Advance s by one tail step, then run select. Used as a native thunk. */
 static Cell* lazy_select_from_tail(const Lex* e, const Cell* a) {
@@ -524,7 +524,7 @@ Cell* lazy_select(const Lex* e, const Cell* a) {
 
 /* (collect proc stream) -> stream
  * Returns a new stream by applying proc to each element of stream. */
-Cell* lazy_collect(const Lex* e, const Cell* a) {
+static Cell* lazy_collect(const Lex* e, const Cell* a) {
     Cell* err = CHECK_ARITY_EXACT(a, 2, "collect");
     if (err) return err;
 
@@ -583,7 +583,7 @@ static Cell* lazy_collect_from_tail(const Lex* e, const Cell* a) {
 
 /* (weave stream1 stream2) -> stream
  * Returns a new stream of pairs, combining elements from two streams. */
-Cell* lazy_weave(const Lex* e, const Cell* a) {
+static Cell* lazy_weave(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2, "weave");
     if (err) return err;
@@ -647,7 +647,7 @@ static Cell* lazy_weave_tail(const Lex* e, const Cell* a) {
 /* (reduce proc init stream) -> value
  * Folds proc over a finite stream, accumulating a result.
  * WARNING: Diverges on infinite streams. Use (take n stream) first. */
-Cell* lazy_reduce(const Lex* e, const Cell* a) {
+static Cell* lazy_reduce(const Lex* e, const Cell* a) {
     Cell* err = CHECK_ARITY_EXACT(a, 3, "reduce");
     if (err) return err;
 
@@ -690,22 +690,22 @@ Cell* lazy_reduce(const Lex* e, const Cell* a) {
 
 
 static const CznExport lazy_exports[] = {
-    { "force",          lazy_force },
-    { "make-promise",   lazy_make_promise },
-    { "head",           lazy_head },
-    { "tail",           lazy_tail },
-    { "stream?",        lazy_stream_pred },
-    { "promise?",       lazy_promise_pred },
-    { "at",             lazy_at },
-    { "take",           lazy_take },
-    { "drop",           lazy_drop },
-    { "list->stream",   lazy_list_to_stream },
-    { "iterate",        lazy_iterate },
-    { "collect",        lazy_collect },
-    { "select",         lazy_select },
-    { "reduce",         lazy_reduce },
-    { "weave",          lazy_weave },
-    { "stream-null?",   builtin_null_pred },
+    { .scheme_name = "force",          .func = lazy_force },
+    { .scheme_name = "make-promise",   .func = lazy_make_promise },
+    { .scheme_name = "head",           .func = lazy_head },
+    { .scheme_name = "tail",           .func = lazy_tail },
+    { .scheme_name = "stream?",        .func = lazy_stream_pred },
+    { .scheme_name = "promise?",       .func = lazy_promise_pred },
+    { .scheme_name = "at",             .func = lazy_at },
+    { .scheme_name = "take",           .func = lazy_take },
+    { .scheme_name = "drop",           .func = lazy_drop },
+    { .scheme_name = "list->stream",   .func = lazy_list_to_stream },
+    { .scheme_name = "iterate",        .func = lazy_iterate },
+    { .scheme_name = "collect",        .func = lazy_collect },
+    { .scheme_name = "select",         .func = lazy_select },
+    { .scheme_name = "reduce",         .func = lazy_reduce },
+    { .scheme_name = "weave",          .func = lazy_weave },
+    { .scheme_name = "stream-null?",   .func = builtin_null_pred },
 };
 
 
@@ -715,7 +715,7 @@ static const CznExportTable lazy_table = {
 };
 
 
-const CznExportTable* cozenage_library_init(void)
+extern const CznExportTable* cozenage_library_init()
 {
     /* Intern symbols for the three special forms, and set their SF_IDs. */
     Cell* delay = make_cell_symbol("delay");

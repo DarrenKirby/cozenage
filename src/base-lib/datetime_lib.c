@@ -155,11 +155,11 @@ static Cell* datetime_current_datetime_local(const Lex* e, const Cell* a)
 
 
 static const CznExport date_exports[] = {
-    { "current-second",    datetime_current_second},
-    { "current-jiffy",     datetime_current_jiffy},
-    { "jiffies-per-second",datetime_jiffies_per_second},
-    { "current-dt-utc",    datetime_current_datetime_utc},
-    { "current-dt-local",  datetime_current_datetime_local},
+    { .scheme_name = "current-second",    .func = datetime_current_second},
+    { .scheme_name = "current-jiffy",     .func = datetime_current_jiffy},
+    { .scheme_name = "jiffies-per-second",.func = datetime_jiffies_per_second},
+    { .scheme_name = "current-dt-utc",    .func = datetime_current_datetime_utc},
+    { .scheme_name = "current-dt-local",  .func = datetime_current_datetime_local},
 };
 
 
@@ -169,7 +169,7 @@ static const CznExportTable date_table = {
 };
 
 
-const CznExportTable* cozenage_library_init(void)
+extern const CznExportTable* cozenage_library_init()
 {
     return &date_table;
 }

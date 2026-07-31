@@ -394,40 +394,40 @@ static Cell* cxr_tenth(const Lex* e, const Cell* a)
 
 
 static const CznExport cxr_exports[] = {
-    { "caaaar",  cxr_caaaar },
-    { "caaar",   cxr_caaar },
-    { "caaddr",  cxr_caaddr },
-    { "cadaar",  cxr_cadaar },
-    { "cadar",   cxr_cadar },
-    { "cadddr",  cxr_cadddr },
-    { "cdaaar",  cxr_cdaaar },
-    { "cdaar",   cxr_cdaar },
-    { "cdaddr",  cxr_cdaddr },
-    { "cddaar",  cxr_cddaar },
-    { "cddar",   cxr_cddar },
-    { "cddddr",  cxr_cddddr },
-    { "caaadr",  cxr_caaadr },
-    { "caadar",  cxr_caadar },
-    { "caadr",   cxr_caadr },
-    { "cadadr",  cxr_cadadr },
-    { "caddar",  cxr_caddar },
-    { "caddr",   cxr_caddr },
-    { "cdaadr",  cxr_cdaadr },
-    { "cdadar",  cxr_cdadar },
-    { "cdadr",   cxr_cdadr },
-    { "cddadr",  cxr_cddadr },
-    { "cdddar",  cxr_cdddar },
-    { "cdddr",   cxr_cdddr },
-    { "first",   cxr_first },
-    { "second",  cxr_second },
-    { "third",   cxr_third },
-    { "fourth",  cxr_fourth},
-    { "fifth",   cxr_fifth},
-    { "sixth",   cxr_sixth},
-    { "seventh", cxr_seventh},
-    { "eighth",  cxr_eighth},
-    { "ninth",   cxr_ninth},
-    { "tenth",   cxr_tenth},
+    { .scheme_name = "caaaar",  .func = cxr_caaaar },
+    { .scheme_name = "caaar",   .func = cxr_caaar },
+    { .scheme_name = "caaddr",  .func = cxr_caaddr },
+    { .scheme_name = "cadaar",  .func = cxr_cadaar },
+    { .scheme_name = "cadar",   .func = cxr_cadar },
+    { .scheme_name = "cadddr",  .func = cxr_cadddr },
+    { .scheme_name = "cdaaar",  .func = cxr_cdaaar },
+    { .scheme_name = "cdaar",   .func = cxr_cdaar },
+    { .scheme_name = "cdaddr",  .func = cxr_cdaddr },
+    { .scheme_name = "cddaar",  .func = cxr_cddaar },
+    { .scheme_name = "cddar",   .func = cxr_cddar },
+    { .scheme_name = "cddddr",  .func = cxr_cddddr },
+    { .scheme_name = "caaadr",  .func = cxr_caaadr },
+    { .scheme_name = "caadar",  .func = cxr_caadar },
+    { .scheme_name = "caadr",   .func = cxr_caadr },
+    { .scheme_name = "cadadr",  .func = cxr_cadadr },
+    { .scheme_name = "caddar",  .func = cxr_caddar },
+    { .scheme_name = "caddr",   .func = cxr_caddr },
+    { .scheme_name = "cdaadr",  .func = cxr_cdaadr },
+    { .scheme_name = "cdadar",  .func = cxr_cdadar },
+    { .scheme_name = "cdadr",   .func = cxr_cdadr },
+    { .scheme_name = "cddadr",  .func = cxr_cddadr },
+    { .scheme_name = "cdddar",  .func = cxr_cdddar },
+    { .scheme_name = "cdddr",   .func = cxr_cdddr },
+    { .scheme_name = "first",   .func = cxr_first },
+    { .scheme_name = "second",  .func = cxr_second },
+    { .scheme_name = "third",   .func = cxr_third },
+    { .scheme_name = "fourth",  .func = cxr_fourth},
+    { .scheme_name = "fifth",   .func = cxr_fifth},
+    { .scheme_name = "sixth",   .func = cxr_sixth},
+    { .scheme_name = "seventh", .func = cxr_seventh},
+    { .scheme_name = "eighth",  .func = cxr_eighth},
+    { .scheme_name = "ninth",   .func = cxr_ninth},
+    { .scheme_name = "tenth",   .func = cxr_tenth},
 };
 
 
@@ -437,7 +437,7 @@ static const CznExportTable cxr_table = {
 };
 
 
-const CznExportTable* cozenage_library_init(void)
+extern const CznExportTable* cozenage_library_init()
 {
     return &cxr_table;
 }

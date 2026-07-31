@@ -21,7 +21,6 @@
 #include "cell.h"
 #include "load_library.h"
 
-#include <openssl/ssl.h>
 #include <openssl/rand.h>
 
 
@@ -263,12 +262,12 @@ static Cell* random_choices(const Lex* e, const Cell* a)
 
 
 static const CznExport random_exports[] = {
-    { "rand-int",      random_randint },
-    { "rand-dbl",      random_randbl },
-    { "rand-uniform",  random_uniform },
-    { "shuffle",       random_shuffle },
-    { "rand-choice",   random_choice },
-    { "rand-choices",  random_choices },
+    { .scheme_name = "rand-int",      .func = random_randint },
+    { .scheme_name = "rand-dbl",      .func = random_randbl },
+    { .scheme_name = "rand-uniform",  .func = random_uniform },
+    { .scheme_name = "shuffle",       .func = random_shuffle },
+    { .scheme_name = "rand-choice",   .func = random_choice },
+    { .scheme_name = "rand-choices",  .func = random_choices },
 };
 
 
@@ -278,7 +277,7 @@ static const CznExportTable random_table = {
 };
 
 
-const CznExportTable* cozenage_library_init(void)
+extern const CznExportTable* cozenage_library_init()
 {
     return &random_table;
 }

@@ -456,18 +456,18 @@ static Cell* bits_bitstring_to_int(const Lex* e, const Cell* a)
 
 
 static const CznExport bits_exports[] = {
-    { ">>",               bits_right_shift },
-    { "<<",               bits_left_shift },
-    { "band",             bits_bitwise_and },
-    { "bor",              bits_bitwise_or },
-    { "bxor",             bits_bitwise_xor },
-    { "bnot",             bits_bitwise_not },
-    { "bs+",              bits_add },
-    { "bs-",              bits_sub },
-    { "bs*",              bits_mul },
-    { "bs/",              bits_div },
-    { "bitstring->int",   bits_bitstring_to_int },
-    { "int->bitstring",   bits_int_to_bitstring },
+    { .scheme_name = ">>",               .func = bits_right_shift },
+    { .scheme_name = "<<",               .func = bits_left_shift },
+    { .scheme_name = "band",             .func = bits_bitwise_and },
+    { .scheme_name = "bor",              .func = bits_bitwise_or },
+    { .scheme_name = "bxor",             .func = bits_bitwise_xor },
+    { .scheme_name = "bnot",             .func = bits_bitwise_not },
+    { .scheme_name = "bs+",              .func = bits_add },
+    { .scheme_name = "bs-",              .func = bits_sub },
+    { .scheme_name = "bs*",              .func = bits_mul },
+    { .scheme_name = "bs/",              .func = bits_div },
+    { .scheme_name = "bitstring->int",   .func = bits_bitstring_to_int },
+    { .scheme_name = "int->bitstring",   .func = bits_int_to_bitstring },
 };
 
 
@@ -477,7 +477,7 @@ static const CznExportTable bits_table = {
 };
 
 
-const CznExportTable* cozenage_library_init(void)
+extern const CznExportTable* cozenage_library_init()
 {
     return &bits_table;
 }
