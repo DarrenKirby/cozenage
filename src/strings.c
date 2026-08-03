@@ -1374,7 +1374,7 @@ Cell* builtin_string_split(const Lex* e, const Cell* a) {
         sep_len = 1;
     }
 
-    const char* src = a->cell[0]->str;
+    char* src = a->cell[0]->str;
     Cell* result = make_cell_vector();
     char* delim_pos;
 
