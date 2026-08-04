@@ -98,7 +98,7 @@ const char* cell_type_name(const int t)
 
 
 /* Turn a mask (possibly multiple flags ORed together) into a string
-   e.g. (CELL_INTEGER | CELL_REAL) -> "int|real" */
+   e.g. (CELL_INTEGER | CELL_REAL) -> "int|real". */
 const char* cell_mask_types(const int mask)
 {
     static char buf[128];  /* static to return pointer safely. */

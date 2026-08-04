@@ -356,7 +356,7 @@ Cell* builtin_string_ref(const Lex* e, const Cell* a)
  * (make-string k char)
  * The make-string procedure returns a newly allocated string of length k. If char is given, then
  * all the characters of the string are initialized to char, otherwise the contents of the string
- * are initialized to a space: " " aka 0x0020 */
+ * are initialized to a space: " " aka 0x0020. */
 Cell* builtin_make_string(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -616,7 +616,7 @@ Cell* builtin_substring(const Lex* e, const Cell* a)
     v->char_count = end - start;
     v->ascii = s_cell->ascii;
 
-    /* If the parent wasn't ASCII, the substring MIGHT be ASCII */
+    /* If the parent wasn't ASCII, the substring MIGHT be ASCII. */
     if (!v->ascii) {
         v->ascii = is_pure_ascii(v->str, v->count);
     }
@@ -743,7 +743,7 @@ Cell* builtin_string_copy(const Lex* e, const Cell* a)
             "string-copy: index out of range",
             INDEX_ERR);
 
-    /* Handle full copy shortcut */
+    /* Handle full copy shortcut. */
     /* If the user wants the whole string, just do a clean byte-copy and clone metadata. */
     if (start == 0 && end == s_cell->char_count) {
         char* new_str = GC_strndup(s_cell->str, s_cell->count);
@@ -844,7 +844,7 @@ Cell* builtin_string_copy_bang(const Lex* e, const Cell* a)
             "string-copy!: target string too small",
             VALUE_ERR);
 
-    /* ASCII to ASCII */
+    /* ASCII to ASCII. */
     if (to_cell->ascii && from_cell->ascii) {
         /* No resizing needed, just a memmove (to handle overlap correctly). */
         memmove(to_cell->str + to_at, from_cell->str + f_start, num_chars);
@@ -1027,7 +1027,7 @@ Cell* builtin_string_number(const Lex* e, const Cell* a)
         snprintf(parse_buf, buf_size, "%s%s", prefix, s_cell->str);
     }
 
-    /* Use internal lexer/parser */
+    /* Use internal lexer/parser. */
     TokenArray* ta = scan_all_tokens(parse_buf);
     if (!ta) return False_Obj;
 
@@ -1036,8 +1036,7 @@ Cell* builtin_string_number(const Lex* e, const Cell* a)
     /* Validation of result. */
     if (result->type == CELL_ERROR) return False_Obj;
 
-    // ReSharper disable once CppVariableCanBeMadeConstexpr
-    const int num_mask = CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX;
+    constexpr int num_mask = CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX;
     if (!(result->type & num_mask)) return False_Obj;
 
     return result;
@@ -1069,8 +1068,7 @@ Cell* builtin_number_string(const Lex* e, const Cell* a)
     if (err) return err;
 
     const Cell* num = a->cell[0];
-    // ReSharper disable once CppVariableCanBeMadeConstexpr
-    const int num_mask = CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX|CELL_BIGINT;
+    constexpr int num_mask = CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX|CELL_BIGINT;
     if (!(num->type & num_mask)) {
         return make_cell_error(
             "number->string: arg 1 must be a number",
@@ -1236,7 +1234,7 @@ Cell* builtin_string_equal_ci(const Lex* e, const Cell* a)
     Cell* err = check_arg_types(a, CELL_STRING, "string-ci=?");
     if (err) return err;
 
-    /* 0 or 1 args is technically true in R7RS */
+    /* 0 or 1 arg is technically true in R7RS. */
     if (a->count < 2) return True_Obj;
 
     for (int i = 0; i < a->count - 1; i++) {
@@ -1258,7 +1256,8 @@ Cell* builtin_string_equal_ci(const Lex* e, const Cell* a)
 
 
 /* (string-ci<? string1 string2 string3 ... ) */
-Cell* builtin_string_lt_ci(const Lex* e, const Cell* a) {
+Cell* builtin_string_lt_ci(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING, "string-ci<?");
     if (err) return err;
@@ -1282,7 +1281,8 @@ Cell* builtin_string_lt_ci(const Lex* e, const Cell* a) {
 
 
 /* (string-ci<=? string1 string2 string3 ... ) */
-Cell* builtin_string_lte_ci(const Lex* e, const Cell* a) {
+Cell* builtin_string_lte_ci(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING, "string-ci<=?");
     if (err) return err;
@@ -1306,7 +1306,8 @@ Cell* builtin_string_lte_ci(const Lex* e, const Cell* a) {
 
 
 /* (string-ci>? string1 string2 string3 ... ) */
-Cell* builtin_string_gt_ci(const Lex* e, const Cell* a) {
+Cell* builtin_string_gt_ci(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING, "string-ci>?");
     if (err) return err;
@@ -1330,7 +1331,8 @@ Cell* builtin_string_gt_ci(const Lex* e, const Cell* a) {
 
 
 /* (string-ci>=? string1 string2 string3 ... ) */
-Cell* builtin_string_gte_ci(const Lex* e, const Cell* a) {
+Cell* builtin_string_gte_ci(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING, "string-ci>=?");
     if (err) return err;
@@ -1357,7 +1359,8 @@ Cell* builtin_string_gte_ci(const Lex* e, const Cell* a) {
  * Returns a list of strings where each value is substrings of 'string'
  * split by occurrences of "delim". The delimiter is passed as a string
  * rather than a char to allow for multi-char delimiters. */
-Cell* builtin_string_split(const Lex* e, const Cell* a) {
+Cell* builtin_string_split(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING, "string-split");
     if (err) return err;
