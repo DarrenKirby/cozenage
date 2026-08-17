@@ -113,3 +113,4 @@ char* convert_to_utf8(const UChar* ustr);
 UChar* convert_to_utf16(const char* str);
 
 #endif //COZENAGE_TYPES_H
+
