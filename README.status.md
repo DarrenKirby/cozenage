@@ -189,6 +189,8 @@ This document tracks the implementation status of procedures in the Cozenage int
 |   ✅    | `set-remove`                 |
 |   ✅    | `set-union`                  |
 |   ✅    | `set-union!`                 |
+|   ✅    | `sort` - polymorphic         |
+|   ✅    | `sort!` - polymorphic        |
 |   ✅    | `square`                     |
 |   ✅    | `string`                     |
 |   ✅    | `string->list`               |
