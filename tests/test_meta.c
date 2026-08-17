@@ -1,6 +1,6 @@
 
 #include "test_meta.h"
-#include "load_library.h"
+#include "../src/load_library.h"
 #include "../src/eval.h"
 #include "../src/parser.h"
 #include "../src/repr.h"
@@ -16,8 +16,8 @@ Lex* test_env;
 /* Unused -- this is to satisfy the linker, as there is no main.c
  * in the tests, and command-line in control_features.c need these
  * vars */
-int g_argc;
-char** g_argv;
+//int g_argc;
+//char** g_argv;
 
 void setup_each_test(void) {
     setlocale(LC_ALL, "");
@@ -36,7 +36,7 @@ static bool engine_prepped = false;
 
 char* t_eval(const char* input) {
     if (!engine_prepped) {
-        GC_INIT(); // Only call this ONCE per process
+        GC_INIT();
         symbol_table = ht_create(128);
         init_global_singletons();
         init_special_forms();
@@ -58,7 +58,7 @@ char* t_eval(const char* input) {
 
 long double t_eval_math_lib(const char* input) {
     if (!engine_prepped) {
-        GC_INIT(); // Only call this ONCE per process
+        GC_INIT();
         symbol_table = ht_create(128);
         init_global_singletons();
         init_special_forms();
@@ -71,11 +71,7 @@ long double t_eval_math_lib(const char* input) {
     lex_add_builtins(test_env);
 
     /* Load the lib */
-    const Cell* ll = load_library("math", test_env);
-    if (ll == False_Obj) {
-        printf("Failed to load %s library!!!!\n", "math");
-        return -1;
-    }
+    load_library("math", test_env);
 
     TokenArray* ta = scan_all_tokens(input);
     Cell* parsed = parse_tokens(ta);

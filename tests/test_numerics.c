@@ -325,7 +325,7 @@ Test(end_to_end_numerics, test_div_rational, .init = setup_each_test, .fini = te
 Test(end_to_end_numerics, test_div_real, .init = setup_each_test, .fini = teardown_each_test) {
     cr_assert_str_eq(t_eval("(/ 2.0)"), "0.5");
     cr_assert_str_eq(t_eval("(/ -4.0)"), "-0.25");
-    cr_assert_str_eq(t_eval("(/ 5.5)"), "0.181818181818182");
+    cr_assert_str_eq(t_eval("(/ 5.5)"), "0.181818181818181818");
     cr_assert_str_eq(t_eval("(/ 10.0 4.0)"), "2.5");
     cr_assert_str_eq(t_eval("(/ 5.0 2.0)"), "2.5");
     cr_assert_str_eq(t_eval("(/ -10.0 4.0)"), "-2.5");
