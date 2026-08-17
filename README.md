@@ -85,7 +85,9 @@ Several common procedures are polymorphic across compound types, including:
 
 - `len` - returns the number of objects in lists, vectors, bytevectors, strings, sets, and maps. 
 - `idx` - returns the object at the supplied index for lists, vectors, bytevectors, and strings.
-- `rev` - returns a reversed copy of lists, vectors, bytevectors, and strings.
+- `rev`- returns a reversed copy of lists, vectors, bytevectors, and strings.
+- `sort` - returns a sorted copy of any compound type (must be homogenous types).
+- `sort!` - returns any compound type sorted in place (must be homogenous types).
 
 ---
 
