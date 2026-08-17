@@ -84,6 +84,16 @@ static double rand_double() {
 static Cell* random_randint(const Lex* e, const Cell* a)
 {
     (void)e;
+    Cell* err = CHECK_ARITY_RANGE(a, 0, 1, "rand-int");
+    if (err) return err;
+    if (a->count == 1) {
+        err = check_arg_types(a, CELL_INTEGER, "rand-int");
+        if (err) return err;
+        if (a->cell[0]->integer_v < 0) {
+            return make_cell_error("rand-int: limit arg must be positive", VALUE_ERR);
+        }
+    }
+
     uint32_t limit = UINT32_MAX;
     if (a->count == 1) {
         limit = a->cell[0]->integer_v;
