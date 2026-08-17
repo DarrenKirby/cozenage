@@ -37,7 +37,7 @@ else
 	LIB_EXT = so
 	MODULE_LDFLAGS =
 	# Export symbols AND add RPATH using $ORIGIN
-	# Note: we use \$$ to ensure the '$' reaches the shell/linker correctly
+	# Note: use \$$ to ensure the '$' reaches the shell/linker correctly
 	EXE_LDFLAGS = -Wl,--export-dynamic -Wl,-rpath,'\$$ORIGIN/../lib/cozenage/base'
 endif
 
@@ -107,7 +107,7 @@ TEST_LIBS = -lcriterion $(BASE_LIBS)
 # The default target when 'make' is run
 all: cmake_build
 
-# Target to build using CMake (unchanged)
+# Target to build using CMake 
 cmake_build:
 	@echo "--- Building with CMake ---"
 	@mkdir -p $(BUILD_DIR)
@@ -117,7 +117,7 @@ cmake_build:
 
 # Target to build manually (without CMake)
 nocmake: CFLAGS += $(CFLAGS_DEFAULT)
-# 'nocmake' now also depends on building all the modules
+# 'nocmake' also depends on building all the modules
 nocmake: $(BINARY) $(LIB_MODULES)
 	@echo "--- Manual build complete: ./$(BINARY) and modules in lib/cozenage/base/ ---"
 
@@ -137,7 +137,7 @@ rebuild: clean all
 
 # --- File-Generating Rules ---
 
-# Rule to link the main application now *only* uses CORE_OBJECTS
+# Rule to link the main application *only* uses CORE_OBJECTS
 $(BINARY): $(CORE_OBJECTS)
 	@echo "Linking application: $@"
 	$(CC) $(CFLAGS) -o $@ $^ $(BASE_LIBS)
@@ -160,7 +160,7 @@ $(OBJ_DIR)/%.o: %.c
 
 
 # ==============================================================================
-# New Rule to Build Loadable Modules
+# Rule to Build Loadable Modules
 #
 # This rule matches, for example, 'lib/cozenage/base/math.so' with
 # 'src/base-lib/math_lib.c' and compiles it as a shared library.
