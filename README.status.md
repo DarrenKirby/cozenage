@@ -318,6 +318,16 @@ This document tracks the implementation status of procedures in the Cozenage int
 |   ✅    | `cdddar`  |
 |   ✅    | `cddddr`  |
 |   ✅    | `cdddr`   |
+|   ✅    | `first`   |
+|   ✅    | `second`  |
+|   ✅    | `third`   |
+|   ✅    | `fourth`  |
+|   ✅    | `fifth`   |
+|   ✅    | `sixth`   |
+|   ✅    | `seventh` |
+|   ✅    | `eighth`  |
+|   ✅    | `ninth`   |
+|   ✅    | `tenth`   |
 
 
 ---
