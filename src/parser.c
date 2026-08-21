@@ -32,11 +32,6 @@
 #include <limits.h>
 #include <unicode/uchar.h>
 
-/* Linux needs this include, macOS and FreeBSD do not. */
-#ifdef __linux__
-#include <ctype.h>
-#endif
-
 
 static long double parse_float_checked(const char* str, char* err_buf, int* ok)
 {
@@ -262,7 +257,6 @@ static Cell* parse_number(char* token, const int line, int len)
         const long long d = parse_int_checked(tok2, err_buf, 10, &ok);
 
         if (d == 0) {
-            fprintf(stderr, "Line %d: Invalid token: '%s'\n",line, tok);
             return make_cell_error(
                 "Cannot have zero-value denominator in rational",
                 VALUE_ERR);
@@ -295,8 +289,8 @@ static Cell* parse_number(char* token, const int line, int len)
             return result;
         }
         if (!ok) {
-            fprintf(stderr, "Error in numeric on line %d:\n", line);
-            return make_cell_error(err_buf, SYNTAX_ERR);
+            return make_cell_error(fmt_err("Error in numeric on line %d: %s", line, err_buf),
+            SYNTAX_ERR);
         }
     }
 
@@ -314,8 +308,8 @@ static Cell* parse_number(char* token, const int line, int len)
 
     /* If parsing fails but there is a numeric-like string, return error. */
     if (!ok) {
-        fprintf(stderr, "Error in numeric on line %d:\n", line);
-        return make_cell_error(err_buf, SYNTAX_ERR);
+        return make_cell_error(fmt_err("Error in numeric on line %d: %s", line, err_buf),
+            SYNTAX_ERR);
     }
 
     /* If here, something's really wrong. */
