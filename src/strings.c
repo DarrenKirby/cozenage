@@ -1036,8 +1036,7 @@ Cell* builtin_string_number(const Lex* e, const Cell* a)
     /* Validation of result. */
     if (result->type == CELL_ERROR) return False_Obj;
 
-    // ReSharper disable once CppVariableCanBeMadeConstexpr
-    const int num_mask = CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX;
+    constexpr int num_mask = CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX;
     if (!(result->type & num_mask)) return False_Obj;
 
     return result;
