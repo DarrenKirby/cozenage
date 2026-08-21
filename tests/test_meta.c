@@ -13,19 +13,13 @@
 
 /* Define the global test environment variable. */
 Lex* test_env;
-/* Unused -- this is to satisfy the linker, as there is no main.c
- * in the tests, and command-line in control_features.c need these
- * vars */
-//int g_argc;
-//char** g_argv;
 
 void setup_each_test(void) {
     setlocale(LC_ALL, "");
 }
 
-// This function will run after EACH test
 void teardown_each_test(void) {
-    //ht_destroy(symbol_table);
+    ;
 }
 
 void load_math_lib(void) {
@@ -43,7 +37,6 @@ char* t_eval(const char* input) {
         engine_prepped = true;
     }
 
-    // These ARE safe to refresh per call
     init_default_ports();
     test_env = lex_initialize_global_env();
     lex_add_builtins(test_env);
@@ -65,7 +58,6 @@ long double t_eval_math_lib(const char* input) {
         engine_prepped = true;
     }
 
-    // These ARE safe to refresh per call
     init_default_ports();
     test_env = lex_initialize_global_env();
     lex_add_builtins(test_env);
@@ -75,10 +67,9 @@ long double t_eval_math_lib(const char* input) {
 
     TokenArray* ta = scan_all_tokens(input);
     Cell* parsed = parse_tokens(ta);
-    //Cell* expr = expand(parsed);
 
     Cell* result = coz_eval(test_env, parsed);
-    //assert(result->type == CELL_REAL);
 
     return result->real_v;
 }
+
