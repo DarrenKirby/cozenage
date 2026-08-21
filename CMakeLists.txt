@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.16)
 
 project(Cozenage
-        VERSION 0.19.0
+        VERSION 0.19.1
         LANGUAGES C
 )
 
@@ -18,7 +18,7 @@ option(DEBUG_BUILD "Build with debugging information" OFF)
 
 add_library(cozenage_options INTERFACE)
 
-if(DEBUG_BUILD)
+if (DEBUG_BUILD)
     message(STATUS "Debug build enabled.")
     target_compile_options(cozenage_options INTERFACE
             -march=native
@@ -30,7 +30,7 @@ if(DEBUG_BUILD)
             -frounding-math
             -fsigned-zeros
     )
-else()
+else ()
     target_compile_options(cozenage_options INTERFACE
             -march=native
             -Wall
@@ -40,22 +40,22 @@ else()
             -frounding-math
             -fsigned-zeros
     )
-endif()
+endif ()
 
 #
 # Platform search paths
 #
 
-if(APPLE)
+if (APPLE)
     list(APPEND CMAKE_PREFIX_PATH
             /opt/homebrew
             /usr/local
     )
-elseif(CMAKE_SYSTEM_NAME STREQUAL "FreeBSD")
+elseif (CMAKE_SYSTEM_NAME STREQUAL "FreeBSD")
     list(APPEND CMAKE_PREFIX_PATH
             /usr/local
     )
-endif()
+endif ()
 
 #
 # Find dependencies
@@ -67,29 +67,29 @@ pkg_check_modules(GMP REQUIRED IMPORTED_TARGET gmp)
 pkg_check_modules(GC REQUIRED IMPORTED_TARGET bdw-gc)
 
 find_package(ICU COMPONENTS uc QUIET)
-if(NOT ICU_FOUND AND PKG_CONFIG_FOUND)
+if (NOT ICU_FOUND AND PKG_CONFIG_FOUND)
     message(STATUS "CMake FindICU failed, falling back to pkg-config...")
     pkg_check_modules(ICU QUIET IMPORTED_TARGET icu-uc)
 
-    if(ICU_FOUND)
+    if (ICU_FOUND)
         add_library(ICU::uc INTERFACE IMPORTED)
         target_link_libraries(ICU::uc INTERFACE PkgConfig::ICU)
-    endif()
-endif()
+    endif ()
+endif ()
 
-if(NOT ICU_FOUND)
+if (NOT ICU_FOUND)
     message(FATAL_ERROR "Could not find ICU.")
-endif()
+endif ()
 
 find_library(M_LIB m)
 
 find_package(OpenSSL QUIET)
 
-if(OpenSSL_FOUND)
+if (OpenSSL_FOUND)
     message(STATUS "Found OpenSSL ${OPENSSL_VERSION} — random module will be built.")
-else()
+else ()
     message(STATUS "OpenSSL not found — random module will NOT be built.")
-endif()
+endif ()
 
 #
 # Common project configuration
@@ -132,30 +132,30 @@ target_link_libraries(cozenage PRIVATE
         ${CMAKE_DL_LIBS}
 )
 
-if(M_LIB)
+if (M_LIB)
     target_link_libraries(cozenage PRIVATE
             ${M_LIB}
     )
-endif()
+endif ()
 
 target_compile_definitions(cozenage PRIVATE
         APP_VERSION="${PROJECT_VERSION}"
 )
 
-if(APPLE)
+if (APPLE)
 
     target_link_options(cozenage PRIVATE
             "-Wl,-rpath,@executable_path/../lib/cozenage/base"
     )
 
-elseif(UNIX)
+elseif (UNIX)
 
     target_link_options(cozenage PRIVATE
             -Wl,--export-dynamic
             "-Wl,-rpath,\$ORIGIN/../lib/cozenage/base"
     )
 
-endif()
+endif ()
 
 #
 # Loadable modules
@@ -170,7 +170,7 @@ file(GLOB MODULE_SOURCES
         "${PROJECT_SOURCE_DIR}/src/base-lib/*.c"
 )
 
-foreach(MODULE_SOURCE ${MODULE_SOURCES})
+foreach (MODULE_SOURCE ${MODULE_SOURCES})
 
     get_filename_component(MODULE_NAME
             ${MODULE_SOURCE}
@@ -182,10 +182,10 @@ foreach(MODULE_SOURCE ${MODULE_SOURCES})
             ${MODULE_NAME}
     )
 
-    if(MODULE_TARGET_NAME STREQUAL "random"
+    if (MODULE_TARGET_NAME STREQUAL "random"
             AND NOT OpenSSL_FOUND)
         continue()
-    endif()
+    endif ()
 
     add_library(${MODULE_TARGET_NAME}
             SHARED
@@ -201,7 +201,7 @@ foreach(MODULE_SOURCE ${MODULE_SOURCES})
     # Module-specific dependencies
     #
 
-    if(MODULE_TARGET_NAME STREQUAL "random")
+    if (MODULE_TARGET_NAME STREQUAL "random")
 
         target_link_libraries(${MODULE_TARGET_NAME}
                 PRIVATE
@@ -209,7 +209,7 @@ foreach(MODULE_SOURCE ${MODULE_SOURCES})
                 OpenSSL::Crypto
         )
 
-    endif()
+    endif ()
 
     # Example:
     #
@@ -226,13 +226,13 @@ foreach(MODULE_SOURCE ${MODULE_SOURCES})
             LIBRARY_OUTPUT_DIRECTORY ${MODULE_OUTPUT_DIR}
     )
 
-    if(APPLE)
+    if (APPLE)
 
         set_target_properties(${MODULE_TARGET_NAME}
                 PROPERTIES
                 LINK_FLAGS "-Wl,-undefined,dynamic_lookup"
         )
 
-    endif()
+    endif ()
 
-endforeach()
+endforeach ()
