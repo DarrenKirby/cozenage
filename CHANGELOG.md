@@ -1,5 +1,40 @@
 # Changelog
 
+## [0.19.1] - 2026-08-21
+
+### Added
+
+- Test suite for the `base math` library
+- Dockerfile which helps test building against musl.libc, but may be appreciated by others
+
+### Fixed
+
+- Remove fprintf statements that dump to stderr from numeric parser
+
+## [0.19.0] - 2026-08-03
+
+### Added
+
+- Add `sort` and `sort!`, and write helper comparison funcs
+- Add Racket-style list accessors first thru tenth
+- Add f32 and f64 bytevector support
+- Add bigint_abs and bigrat_abs
+- Add bigint literal parsing
+- Add bigrat support (arbitrary size rational numbers)
+- Add explicit check for duplicated variables in `letrec` and `letrec*`
+- Add explicit check for duplicated formals in define/lambda/let
+
+### Changed
+
+- Refactor type promotion matrix
+- Move bytevector type/range checker funcs to bytevector.c
+- Sort the completion generator candidates.
+
+### Fixed
+
+- Add code to distinguish #f[alse] from #f[32|64]
+- Fixed crash when using -ref to grab last cdr of improper list
+
 ## [0.18.2] - 2026-05-29
 
 ### Added
@@ -38,7 +73,7 @@
 - Add Unicode functions to replace ICU macros
 
 ### Fixed
-- Change symbol=? to allow zero arguments as per R7RS
+- Change `symbol=?` to allow zero arguments as per R7RS
 - Change all bitwise procedure names from chars; | won't parse correctly
 - Fix critical bugs in `expt`, `gcd`, and `lcm`
 
@@ -46,3 +81,4 @@
 
 ### Added
 - Initial release
+
