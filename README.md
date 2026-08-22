@@ -164,6 +164,22 @@ To run the REPL just run the program with no arguments:
 
     $ ./cozenage
 
+## Building and Running in Docker
+
+There is a dockerfile provided in the top-level of the source tree for those who may want to try out cozenage before
+commiting to installing the dependancies. And apparently, some folks just like using docker anyway. To build the image, 
+simply run:
+
+    $ docker build -t cozenage .
+
+and then run the cozenage REPL in the image:
+
+    $ docker run --rm -it cozenage
+
+You can also run scripts through the image by passing the filename as an argument:
+
+    $ docker run --rm -it cozenage myscript.scm
+    
 ## Status of built-in procedures and special forms
 
 The status of the base procedures
