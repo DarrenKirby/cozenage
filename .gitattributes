@@ -1,5 +1,5 @@
-# Exclude specific CI/CD and configuration folders
-/.github/ export-ignore
+# Exclude specific CI/CD and directories
+.github/ export-ignore
 
 # Exclude specific configuration files 
 .gitignore export-ignore
