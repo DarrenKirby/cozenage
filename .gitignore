@@ -6,6 +6,9 @@ cozenage
 # Module directory
 lib/
 
+# clangd files
+compile_commands.json
+
 # ======================
 # CLion
 # ======================
