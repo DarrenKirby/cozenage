@@ -244,8 +244,8 @@ Cell* builtin_features(const Lex* e, const Cell* a)
     char* feature_array[] =  {
         "exact-closed", "exact-complex", "ieee-float", "full-unicode", "ratios"
     };
-    // ReSharper disable once CppVariableCanBeMadeConstexpr
-    const int feature_count = sizeof(feature_array) / sizeof(feature_array[0]);
+
+    constexpr int feature_count = sizeof(feature_array) / sizeof(feature_array[0]);
 
     for (int i = 0; i < feature_count; i++) {
         cell_add(result_l, make_cell_symbol(feature_array[i]));

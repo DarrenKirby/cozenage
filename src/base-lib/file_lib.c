@@ -113,8 +113,7 @@ bit information in returned string */
  * 'The Linux Programming Interface' */
 static char *file_perm_str(const mode_t perm) {
     static char str[PERM_STR_SIZE];
-    // ReSharper disable once CppVariableCanBeMadeConstexpr
-    const int flags = 1;
+    constexpr int flags = 1;
     snprintf(str, PERM_STR_SIZE, "%c%c%c%c%c%c%c%c%c",
     (perm & S_IRUSR) ? 'r' : '-',
     (perm & S_IWUSR) ? 'w' : '-',

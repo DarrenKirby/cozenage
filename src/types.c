@@ -1319,8 +1319,7 @@ bool is_pure_ascii(const char *str, size_t len) {
      * Cast to uint64_t pointer now that we know we are aligned. */
     const uint64_t *ptr64 = (const uint64_t *)ptr;
     // ReSharper disable once CppTooWideScope
-    // ReSharper disable once CppVariableCanBeMadeConstexpr
-    const uint64_t high_bit_mask = 0x8080808080808080ULL;
+    constexpr uint64_t high_bit_mask = 0x8080808080808080ULL;
 
     while (len >= 8) {
         /* If (chunk & mask) is non-zero, one of the bytes had the high bit set. */

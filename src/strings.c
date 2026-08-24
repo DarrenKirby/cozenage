@@ -1068,8 +1068,7 @@ Cell* builtin_number_string(const Lex* e, const Cell* a)
     if (err) return err;
 
     const Cell* num = a->cell[0];
-    // ReSharper disable once CppVariableCanBeMadeConstexpr
-    const int num_mask = CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX|CELL_BIGINT;
+    constexpr int num_mask = CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX|CELL_BIGINT;
     if (!(num->type & num_mask)) {
         return make_cell_error(
             "number->string: arg 1 must be a number",

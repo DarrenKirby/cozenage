@@ -43,7 +43,7 @@
 #endif
 
 
-/* ANSI escape codes */
+/* ANSI escape codes. */
 #define ESC "\033"
 #define CURSOR_LEFT  ESC "[D"
 #define CURSOR_RIGHT ESC "[C"
@@ -51,7 +51,7 @@
 #define CURSOR_UP    ESC "[A"
 #define CURSOR_DOWN  ESC "[B"
 
-/* Special key codes */
+/* Special key codes. */
 #define CTRL_A 1
 #define CTRL_B 2
 #define CTRL_C 3
@@ -70,7 +70,7 @@
 #define ESC_CODE 27
 #define BACKSPACE 127
 
-/* History settings */
+/* History settings. */
 #define DEFAULT_HISTORY_SIZE 500
 
 /* The number of completion candidates to display
@@ -105,8 +105,7 @@ void populate_dynamic_completions(const Lex* e)
         "when", "unless", "cond", "else", "begin", "import", "and", "or", "do", "case", "letrec*",
         "defmacro", "quasiquote", "unquote", "unquote-splicing", "with_gc_stats"};
 
-    // ReSharper disable once CppVariableCanBeMadeConstexpr
-    const int num_sfs = sizeof(special_forms) / sizeof(special_forms[0]);
+    constexpr int num_sfs = sizeof(special_forms) / sizeof(special_forms[0]);
 
     /* Allocate space for 'symbol_count' pointers to strings, plus one for NULL, plus num_sfs for the SF. */
     scheme_procedures = GC_MALLOC(sizeof(char*) * (symbol_count + 1 + num_sfs));
@@ -198,8 +197,8 @@ static int enable_raw_mode()
 
     struct termios raw = orig_termios;
     raw.c_iflag &= ~(BRKINT | ICRNL | INPCK | ISTRIP | IXON);
-    raw.c_oflag &= ~(OPOST);
-    raw.c_cflag |= (CS8);
+    raw.c_oflag &= ~OPOST;
+    raw.c_cflag |= CS8;
     raw.c_lflag &= ~(ECHO | ICANON | IEXTEN | ISIG);
     raw.c_cc[VMIN] = 1;
     raw.c_cc[VTIME] = 0;

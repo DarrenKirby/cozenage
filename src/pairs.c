@@ -37,8 +37,7 @@ static Cell* sexp_cdr(const Cell* s) {
 
 inline Cell* car__(const Cell* list)
 {
-    // ReSharper disable once CppVariableCanBeMadeConstexpr
-    const int mask = CELL_PAIR|CELL_NIL|CELL_SEXPR;
+    constexpr int mask = CELL_PAIR|CELL_NIL|CELL_SEXPR;
     if (!(list->type & mask)) {
         return make_cell_error(
         fmt_err("car: got %s, expected %s",
@@ -59,8 +58,7 @@ inline Cell* car__(const Cell* list)
 
 inline Cell* cdr__(const Cell* list)
 {
-    // ReSharper disable once CppVariableCanBeMadeConstexpr
-    const int mask = CELL_PAIR|CELL_NIL|CELL_SEXPR;
+    constexpr int mask = CELL_PAIR|CELL_NIL|CELL_SEXPR;
     if (!(list->type & mask)) {
         return make_cell_error(
         fmt_err("car: got %s, expected %s",
