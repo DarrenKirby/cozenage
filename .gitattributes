@@ -4,3 +4,6 @@
 # Exclude specific configuration files 
 .gitignore export-ignore
 .gitattributes export-ignore
+.clangd export-ignore
+compile_commands.json export-ignore
+
