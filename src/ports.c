@@ -729,14 +729,13 @@ Cell* builtin_read_bytevector(const Lex* e, const Cell* a)
                 TYPE_ERR);
         }
         port = a->cell[1];
-        /* Make sure port is an open input port! */
+        /* Make sure port is an open input port. */
         if (port->is_open == 0 || port->port->stream_t != INPUT_STREAM)
             return make_cell_error(
                 "read-bytevector: port is not open for input",
                 FILE_ERR);
     }
 
-    // ReSharper disable once CppVariableCanBeMadeConstexpr
     Cell* bv = make_cell_bytevector(BV_U8, bytes_to_read);
 
     uint8_t* buffer = GC_MALLOC_ATOMIC(bytes_to_read * sizeof(uint8_t));

@@ -327,8 +327,7 @@ Cell* builtin_eqv(const Lex* e, const Cell* a)
     if (x->type != y->type) return False_Obj;
 
     /* Just kick numbers over to '='. */
-    // ReSharper disable once CppVariableCanBeMadeConstexpr
-    const int mask = CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX|CELL_BIGINT;
+    constexpr int mask = CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX|CELL_BIGINT|CELL_BIGRAT;
     if (x->type & mask) {
         return builtin_eq_op(e, make_sexpr_len2(x, y));
     }
@@ -388,8 +387,7 @@ static Cell* check_if_lists_are_equal(const Lex* e, Cell* x, Cell* y) {
 static Cell* val_equal(const Lex* e, Cell* x, Cell* y)
 {
     /* Just kick numbers over to '='. */
-    // ReSharper disable once CppVariableCanBeMadeConstexpr
-    const int mask = CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX|CELL_BIGINT;
+    constexpr int mask = CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX|CELL_BIGINT|CELL_BIGRAT;
     if (x->type & mask) {
         /* 2 != 2.0, but 2 = 2/1. */
         if (x->exact != y->exact) {

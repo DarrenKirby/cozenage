@@ -809,8 +809,7 @@ Cell* builtin_rationalize(const Lex* e, const Cell* a)
     if ((err = CHECK_ARITY_EXACT(a, 2, "rationalize"))) { return err; }
 
     /* A practical limit based on ~16-17 digits of precision. */
-    // ReSharper disable once CppVariableCanBeMadeConstexpr
-    const long long MAX_DENOMINATOR = 10000000000000000LL; /* 10^16 */
+    constexpr long long MAX_DENOMINATOR = 10000000000000000LL; /* 10^16 */
 
     const long double x_ld = cell_to_long_double(a->cell[0]);
     const long double y_ld = cell_to_long_double(a->cell[1]);

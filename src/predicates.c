@@ -36,8 +36,7 @@ Cell* builtin_number_pred(const Lex* e, const Cell* a)
     Cell* err = CHECK_ARITY_EXACT(a, 1, "number?");
     if (err) return err;
 
-    // ReSharper disable once CppVariableCanBeMadeConstexpr
-    const int mask = CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX|CELL_BIGINT|CELL_BIGFLOAT;
+    constexpr int mask = CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX|CELL_BIGINT|CELL_BIGRAT;
     if (a->cell[0]->type & mask) {
         return True_Obj;
     }
@@ -269,8 +268,7 @@ Cell* builtin_complex(const Lex* e, const Cell* a)
     if (err) return err;
 
     /* All numbers are complex numbers. */
-    // ReSharper disable once CppVariableCanBeMadeConstexpr
-    const int mask = CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX|CELL_BIGINT;
+    constexpr int mask = CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX|CELL_BIGINT|CELL_BIGRAT;
     if (a->cell[0]->type & mask) {
         return True_Obj;
     }

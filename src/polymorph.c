@@ -410,8 +410,7 @@ static Cell* sort_vector(Cell* vec, const Cell_t type) {
     }
 
     if (nel > 0) {
-        // ReSharper disable once CppVariableCanBeMadeConstexpr
-        const size_t width = sizeof(Cell*);
+        constexpr size_t width = sizeof(Cell*);
         qsort(vec->cell, nel, width, cmp_func);
     }
 

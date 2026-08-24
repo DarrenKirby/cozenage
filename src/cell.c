@@ -522,9 +522,8 @@ Cell* make_cell_promise(Cell* expr, Lex* env)
     v->promise = GC_MALLOC(sizeof(promise));
     v->promise->expr = expr;
     /* Optimization - if expr is atomic, just set as DONE. */
-    // ReSharper disable once CppVariableCanBeMadeConstexpr
-    const int mask = CELL_BOOLEAN|CELL_CHAR|CELL_INTEGER|CELL_RATIONAL|
-                     CELL_REAL|CELL_COMPLEX|CELL_STRING;
+    constexpr int mask = CELL_BOOLEAN|CELL_CHAR|CELL_INTEGER|CELL_RATIONAL|
+                         CELL_REAL|CELL_COMPLEX|CELL_STRING|CELL_BIGRAT;
     if (expr->type & mask) {
         v->promise->status = DONE;
         v->promise->env = nullptr;

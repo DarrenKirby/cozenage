@@ -228,8 +228,8 @@ static Cell* random_choices(const Lex* e, const Cell* a)
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2, "rand-choices");
     if (err) return err;
-    // ReSharper disable once CppVariableCanBeMadeConstexpr
-    const int mask = CELL_PAIR|CELL_VECTOR|CELL_SEXPR;
+
+    constexpr int mask = CELL_PAIR|CELL_VECTOR|CELL_SEXPR;
     if (!(a->cell[0]->type & mask)) {
         return make_cell_error("rand-choices: arg1 must be a list or vector", TYPE_ERR);
     }
