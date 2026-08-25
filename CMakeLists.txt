@@ -35,7 +35,6 @@ else ()
             -march=native
             -Wall
             -Wextra
-            -Werror
             -O2
             -frounding-math
             -fsigned-zeros

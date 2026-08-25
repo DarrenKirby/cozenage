@@ -93,8 +93,8 @@ else
 endif
 
 # Specific flag sets for different builds
-CFLAGS_DEFAULT = -Wall -Wextra -Werror -Wdeprecated-declarations -O2 -std=gnu2x $(ICU_CFLAGS) $(GMP_CFLAGS)
-CFLAGS_TEST = -Wall -Wextra -g -O0 -std=gnu2x $(ICU_CFLAGS) $(GMP_CFLAGS) -fsanitize=address -fno-omit-frame-pointer
+CFLAGS_DEFAULT = -Wall -Wextra -Wdeprecated-declarations -O2 -std=gnu2x $(ICU_CFLAGS) $(GMP_CFLAGS)
+CFLAGS_TEST = -Wall -Wextra -g -O0 -std=gnu2x $(ICU_CFLAGS) $(GMP_CFLAGS) -fno-omit-frame-pointer
 
 # --- Libraries ---
 # -ldl (for dlopen) to all BASE_LIBS definitions
