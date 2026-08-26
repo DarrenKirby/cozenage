@@ -24,6 +24,15 @@
 
 #define PROCEDURE_NAME_LENGTH 256
 
+/* Define the library file extension based on the OS. */
+#ifdef __APPLE__
+    #define LIB_EXT "dylib"
+#else
+    #define LIB_EXT "so"
+#endif
+
+#define SCHEME_EXT "sls"
+
 /* builtin function signature. */
 typedef Cell* (*CznBuiltinFn)(const Lex*, const Cell*);
 
@@ -60,8 +69,11 @@ typedef struct {
     const char*  prefix;         /* "" means no prefix */
 } ImportSpec;
 
-int internal_cozenage_load_lib(const char* collection, const char* library,
-                               const Lex* env, const ImportSpec* spec);
+char **get_load_paths();
+//int internal_cozenage_load_lib(const char* collection, const char* library,
+                             //  const Lex* env, const ImportSpec* spec);
+Cell* parse_import_spec(const Cell* i_set, const char* mod, ImportSpec* spec);
 void load_library(const char* libname, const Lex* env);
-
+Cell* load_c_module(const Cell* libspec, const Lex* e, char *path, const ImportSpec *spec);
+Cell* load_scheme_lib(const Cell* libspec, const Lex* e, char *path, const ImportSpec *spec);
 #endif //COZENAGE_LOAD_LIBRARY_H

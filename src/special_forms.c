@@ -26,7 +26,9 @@
 #include "line_edit.h"
 
 #include <math.h>
+#include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include <gc/gc.h>
 
 
@@ -465,7 +467,6 @@ HandlerResult sf_cond(Lex* e, Cell* a)
 }
 
 
-
 /* (import ⟨import-set⟩ ...)
  * An import declaration provides a way to import identifiers exported by a library. Each
  * ⟨import set⟩ names a set of bindings from a library and possibly specifies local names for the
@@ -473,21 +474,16 @@ HandlerResult sf_cond(Lex* e, Cell* a)
 HandlerResult sf_import(Lex* e, Cell* a)
 {
     for (int i = 0; i < a->count; i++) {
+        /* For each arg to import, we need to determine if it is a C module, or a Scheme library.
+         * We also need to determine if the import spec is modified. */
+        bool is_c_lib = false;
+        const char *mod = nullptr;
         Cell* i_set = a->cell[i];
 
         if (i_set->type != CELL_SEXPR || i_set->count < 2) {
             return return_val(make_cell_error("import: invalid import set",
                 SYNTAX_ERR));
         }
-
-        ImportSpec spec = {
-            .mode         = IMPORT_ALL,
-            .filter_names = nullptr,
-            .filter_count = 0,
-            .renames      = nullptr,
-            .rename_count = 0,
-            .prefix       = "",
-        };
 
         Cell* libname_cell; /* Will point to the (lib name) s-expression. */
 
@@ -497,66 +493,88 @@ HandlerResult sf_import(Lex* e, Cell* a)
             && i_set->cell[1]->type == CELL_SYMBOL) {
             /* Simple unmodified import set. */
             libname_cell = i_set;
-        } else {
-            /* Modified import set: first element is the modifier name,
-             * second element must be an inner (lib name) s-expression. */
-            if (i_set->cell[1]->type != CELL_SEXPR || i_set->cell[1]->count != 2) {
-                return return_val(make_cell_error(
-                    "import: modifier requires an import set: '(collection library)' as second element",
-                    SYNTAX_ERR));
-            }
-            libname_cell = i_set->cell[1];
-            const char* mod = i_set->cell[0]->sym;
-
-            if (strcmp(mod, "only") == 0) {
-                spec.mode         = IMPORT_ONLY;
-                spec.filter_count = i_set->count - 2;
-                spec.filter_names = GC_malloc(spec.filter_count * sizeof(char*));
-                for (int j = 0; j < spec.filter_count; j++)
-                    spec.filter_names[j] = i_set->cell[j + 2]->sym;
-
-            } else if (strcmp(mod, "except") == 0) {
-                spec.mode         = IMPORT_EXCEPT;
-                spec.filter_count = i_set->count - 2;
-                spec.filter_names = GC_malloc(spec.filter_count * sizeof(char*));
-                for (int j = 0; j < spec.filter_count; j++)
-                    spec.filter_names[j] = i_set->cell[j + 2]->sym;
-
-            } else if (strcmp(mod, "prefix") == 0) {
-                if (i_set->count != 3) {
+            } else {
+                /* Modified import set: first element is the modifier name,
+                 * second element must be an inner (lib name) s-expression. */
+                if (i_set->cell[1]->type != CELL_SEXPR || i_set->cell[1]->count != 2) {
                     return return_val(make_cell_error(
-                        "import: 'prefix' requires exactly one argument",
+                        "import: modifier requires an import set: '(collection library)' as second element",
                         SYNTAX_ERR));
                 }
-                spec.prefix = i_set->cell[2]->str;  /* string cell */
-
-            } else if (strcmp(mod, "rename") == 0) {
-                spec.rename_count = i_set->count - 2;
-                spec.renames      = GC_malloc(spec.rename_count * sizeof(CznRename));
-                for (int j = 0; j < spec.rename_count; j++) {
-                    const Cell* pair = i_set->cell[j + 2];
-                    if (pair->type != CELL_SEXPR || pair->count != 2) {
-                        return return_val(make_cell_error(
-                            "import: 'rename' expects (old-name new-name) pairs",
-                            SYNTAX_ERR));
-                    }
-                    spec.renames[j].from = pair->cell[0]->sym;
-                    spec.renames[j].to   = pair->cell[1]->sym;
-                }
-            } else {
-                return return_val(make_cell_error("import: unknown import modifier",
-                    SYNTAX_ERR));
+                libname_cell = i_set->cell[1];
+                mod = i_set->cell[0]->sym;
             }
-        }
 
         /* Extract library identifier and library name from libname_cell. */
         const char* collection  = libname_cell->cell[0]->sym;
         const char* library = libname_cell->cell[1]->sym;
 
-        if (!internal_cozenage_load_lib(collection, library, e, &spec)) {
-            return return_val(make_cell_error("import: failed to load library",
+        /* Get array of load paths. */
+        char **search_paths = get_load_paths();
+
+        char filepath[PATH_MAX];
+        bool found = false;
+
+        /* Iterate paths and try to find the module/library. */
+        for (int j = 0; search_paths[j] != NULL; ++j) {
+            if (search_paths[j][0] == '\0') continue;
+
+            /* Check if it's a C module. */
+            snprintf(filepath, sizeof(filepath), "%s/%s/%s.%s",
+                search_paths[j], collection, library, LIB_EXT);
+            if (access(filepath, F_OK) == 0) {
+                is_c_lib = true;
+                found = true;
+                break;
+            }
+            /* Check if it's a Scheme library. */
+            snprintf(filepath, sizeof(filepath), "%s/%s/%s.%s",
+                search_paths[j], collection, library, SCHEME_EXT);
+            if (access(filepath, F_OK) == 0) {
+                is_c_lib = false;
+                found = true;
+                break;
+            }
+        }
+
+        if (!found) {
+            /* The module/library was not found: that's an error. */
+            return return_val(make_cell_error(fmt_err(
+                "import: cannot find library (%s %s)", collection, library),
                 GEN_ERR));
         }
+
+        /* Parse the import modifiers. */
+        ImportSpec spec;
+        Cell* spec_err = parse_import_spec(i_set, mod, &spec);
+        if (spec_err->type == CELL_ERROR) {
+            return return_val(spec_err);
+        }
+
+        /* Load the module/library. */
+        Cell* ret;
+        if (is_c_lib) {
+            /* Load C module. */
+            ret = load_c_module(libname_cell, e, filepath, &spec);
+        } else {
+            /* Load scheme library. */
+            ret = load_scheme_lib(libname_cell, e, filepath, &spec);
+        }
+        /* Check if the load errored... */
+        if (ret->type == CELL_ERROR) {
+            return return_val(ret);
+        }
+
+        /* Load was successful - on to next import. */
+        if (ret == True_Obj) {
+            continue;
+        }
+
+        /* Unknown return - should not happen. */
+        fprintf(stderr, "unexpected return of %s when loading %s\n",
+                cell_to_string(ret, MODE_REPL),
+                cell_to_string(libname_cell, MODE_REPL));
+        exit(EXIT_FAILURE);
     }
 
     if (is_repl) populate_dynamic_completions(e);
