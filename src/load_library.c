@@ -20,6 +20,11 @@
 #include "environment.h"
 #include "cell.h"
 #include "load_library.h"
+#include "eval.h"
+#include "parser.h"
+#include "repr.h"
+#include "runner.h"
+#include "types.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -27,9 +32,6 @@
 #include <dlfcn.h>
 #include <unistd.h>
 #include <gc/gc.h>
-
-#include "repr.h"
-#include "types.h"
 
 
 static bool name_in_list(const char* name, const char** list, const int count)
@@ -99,6 +101,30 @@ Cell* load_scheme_lib(const Cell* libspec, const Lex* e, char *path, const Impor
     fprintf(stdout, "Inside load_scheme_lib\n");
     fprintf(stdout, "Library is: %s\n", path);
     fprintf(stdout, "libspec is: %s\n", cell_to_string(libspec, MODE_REPL));
+
+    Lex *sandbox = lex_initialize_global_env();
+    lex_add_builtins(sandbox);
+    const char* input = read_file_to_string(path);
+    TokenArray* ta = scan_all_tokens(input);
+    Cell* ast = parse_tokens(ta);
+
+    debug_print_cell(ast);
+    debug_print_cell(ast->cell[3]);
+
+    Cell* definitions = ast->cell[3];
+
+    debug_print_cell(definitions->cell[1]->cell[1]);
+
+    for (int i = 1; i < definitions->count; i++) {
+        Cell* l = coz_eval(sandbox, definitions->cell[i]);
+        debug_print_cell(l);
+        lex_put_global(e, definitions->cell[i]->cell[1]->cell[0], l);
+    }
+
+    //Cell* res = coz_eval(sandbox, ast->cell[3]);
+
+    //debug_print_cell(res);
+    debug_print_env(sandbox);
 
     return True_Obj;
 }
