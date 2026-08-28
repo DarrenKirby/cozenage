@@ -43,18 +43,32 @@
 #include <string.h>
 
 
-/* Initialize the global environment, and return a pointer to it. */
-Lex* lex_initialize_global_env()
+/* Bootstraps the core language. */
+Lex* lex_initialize_bootstrap_env()
 {
-    ht_table* global_env = ht_create(256);
     Lex* e = GC_MALLOC(sizeof(Lex));
     e->local = nullptr;
-    e->global = global_env;
+    /* There are currently 311 builtin procedures loaded
+     * into the bootstrap environment so initialize the
+     * hash to the next largest power of 2, at ~60% cap. */
+    e->working = ht_create(512);
+    e->bootstrap = nullptr;
     return e;
 }
 
 
-/* Initialize a new child environment */
+/* Creates a lightweight user or sandbox environment. */
+Lex* lex_initialize_working_env(ht_table* shared_bootstrap)
+{
+    Lex* e = GC_MALLOC(sizeof(Lex));
+    e->local = nullptr;
+    e->working = ht_create(32);
+    e->bootstrap = shared_bootstrap;
+    return e;
+}
+
+
+/* Initialize a new child environment. */
 Lex* new_child_env(const Lex* parent_env)
 {
     Ch_Env* e = GC_MALLOC(sizeof(Ch_Env));
@@ -67,7 +81,8 @@ Lex* new_child_env(const Lex* parent_env)
 
     Lex* w = GC_MALLOC(sizeof(Lex));
     w->local = e; /* The new wrapper points to the new local frame. */
-    w->global = parent_env->global;
+    w->working = parent_env->working;
+    w->bootstrap = parent_env->bootstrap;
     return w;
 }
 
@@ -80,23 +95,28 @@ Cell* lex_get(const Lex* e, const Cell* k)
     /* Search the entire local environment chain iteratively. */
     const Ch_Env* current_frame = e->local;
     while (current_frame != nullptr) {
-        /* Linearly scan the symbols in the current frame. */
         for (int i = 0; i < current_frame->count; i++) {
             if (strcmp(current_frame->syms[i], k->sym) == 0) {
                 return current_frame->vals[i];
             }
         }
-        /* Not in this frame, move up to the parent frame. */
         current_frame = current_frame->parent;
     }
 
-    /* If not found in any local frame, check the global environment. */
-    Cell* result = ht_get(e->global, k->sym);
+    /* Check the mutable working environment. */
+    Cell* result = ht_get(e->working, k->sym);
     if (result) {
         return result;
     }
 
-    /* If not found anywhere, the symbol is unbound. */
+    /* Check the shared immutable bootstrap. */
+    if (e->bootstrap) {
+        result = ht_get(e->bootstrap, k->sym);
+        if (result) {
+            return result;
+        }
+    }
+
     return make_cell_error(
         fmt_err("Unbound symbol: '%s'", k->sym),
         VALUE_ERR);
@@ -112,7 +132,7 @@ void lex_put_local(Lex* e, const Cell* k, const Cell* v)
     }
     /* Check if we need to reallocate. */
     if (e->local->count == e->local->capacity) {
-        e->local->capacity *= 2; /* Double the capacity */
+        e->local->capacity *= 2;
         e->local->syms = GC_REALLOC(e->local->syms, sizeof(char*) * e->local->capacity);
         e->local->vals = GC_REALLOC(e->local->vals, sizeof(Cell*) * e->local->capacity);
         if (!e->local->syms || !e->local->vals) {
@@ -135,14 +155,14 @@ void lex_put_local(Lex* e, const Cell* k, const Cell* v)
 }
 
 
-/* Place a Cell* value in the global environment. */
-void lex_put_global(const Lex* e, const Cell* k, Cell* v)
+/* Place a Cell* value in the working environment. */
+void lex_put_working(const Lex* e, const Cell* k, Cell* v)
 {
     if (!e || !k || !v || k->type != CELL_SYMBOL) {
         fprintf(stderr, "lex_put: invalid arguments\n");
         return;
     }
-    ht_set(e->global, k->sym, v);
+    ht_set(e->working, k->sym, v);
 }
 
 
@@ -211,16 +231,16 @@ static Cell* builtin_print_env(const Lex* e, const Cell* a) {
 }
 
 
-/* Register a procedure in the global environment. */
+/* Register a builtin procedure in the passed environment. */
 void lex_add_builtin(const Lex* e, const char* name, Cell* (*func)(const Lex*, const Cell*))
 {
     Cell* fn = lex_make_builtin(name, func);
     const Cell* k = make_cell_symbol(name);
-    lex_put_global(e, k, fn);
+    lex_put_working(e, k, fn);
 }
 
 
-/* Register all builtin procedures in the global environment. */
+/* Register all builtin procedures in the passed environment. */
 void lex_add_builtins(const Lex* e)
 {
     /*

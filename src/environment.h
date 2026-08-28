@@ -1,7 +1,7 @@
 /*
  * 'src/environment.h'
  * This file is part of Cozenage - https://github.com/DarrenKirby/cozenage
- * Copyright © 2025 Darren Kirby <darren@dragonbyte.ca>
+ * Copyright © 2025-2026 Darren Kirby <darren@dragonbyte.ca>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,34 +27,35 @@ typedef struct Ch_Env Ch_Env;
 
 #define INITIAL_CHILD_ENV_CAPACITY 4
 
-/* Wrapper which holds the current child-env (if any), and a
- * pointer to the global env hash table. */
+/* Wrapper which holds the current child-env (if any), and
+ * pointers to the global env hash tables. */
 typedef struct Lex {
-    Ch_Env* local;     /* The current local scope. */
-    ht_table* global;  /* The global hash table. */
+    Ch_Env* local;           /* The current local scope. */
+    ht_table* working;       /* User-specific working env. */
+    ht_table* bootstrap;     /* Immutable env of builtins. */
 } Lex;
 
 
 /* Just parallel arrays for small, short-lived child environments. */
 typedef struct Ch_Env {
-    int count;              /* Number of occupied slots. */
-    int capacity;           /* Allocated slots. */
-    char** syms;            /* symbol names. */
-    Cell** vals;            /* values. */
-    Ch_Env* parent;         /* points to parent env, NULL if top-level. */
+    int count;               /* Number of occupied slots. */
+    int capacity;            /* Allocated slots. */
+    char** syms;             /* symbol names. */
+    Cell** vals;             /* values. */
+    Ch_Env* parent;          /* points to parent env, NULL if top-level. */
 } Ch_Env;
 
 
 /* Environment management. */
-Lex* lex_initialize_global_env();
+//Lex* lex_initialize_global_env();
+Lex* lex_initialize_bootstrap_env();
+Lex* lex_initialize_working_env(ht_table* shared_bootstrap);
 Lex* new_child_env(const Lex* parent_env);
-
 
 /* Environment operations. */
 Cell* lex_get(const Lex* e, const Cell* k);
 void lex_put_local(Lex* e, const Cell* k, const Cell* v);
-void lex_put_global(const Lex* e, const Cell* k, Cell* v);
-
+void lex_put_working(const Lex* e, const Cell* k, Cell* v);
 
 /* Builtin helpers. */
 Cell* lex_make_builtin(const char* name, Cell* (*func)(const Lex*, const Cell*));
