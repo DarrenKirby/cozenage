@@ -17,6 +17,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/* This file contains the implementations of all the primitive
+ * special forms. Unlike the regular procedures, they receive
+ * their arguments unevaluated. They also do not return Cell*
+ * values directly, and instead the return values are passed
+ * through a wrapper which allows for direct returns as well as
+ * tail calls. Note that the derived special forms are 'defined'
+ * in transforms.c */
+
 #include "special_forms.h"
 #include "eval.h"
 #include "types.h"
@@ -30,7 +38,6 @@
 #include <string.h>
 #include <unistd.h>
 #include <gc/gc.h>
-
 
 /* Helpers for iteration clarity. */
 #define first  0
@@ -211,7 +218,7 @@ HandlerResult sf_define(Lex* e, Cell* a)
         if (val->type == CELL_PROC) {
             val->lambda->l_name = target->sym;
         }
-        lex_put_global(e, target, val);
+        lex_put_working(e, target, val);
 
         /* For lambdas, return the lambda for REPL pretty-print.
          * For variable bindings, return the bound symbol. */
@@ -251,7 +258,7 @@ HandlerResult sf_define(Lex* e, Cell* a)
         Cell* body = a->cell[second];
         Cell* lam = lex_make_named_lambda(fname->sym, formals, body, e);
 
-        lex_put_global(e, fname, lam);
+        lex_put_working(e, fname, lam);
         return return_val(lam);
     }
 
@@ -924,9 +931,9 @@ HandlerResult sf_set_bang(Lex* e, Cell* a)
     } else {
         /* The variable was not in any local frame. Check global.
          * Use ht_get to see if it *exists* before we set it. */
-        if (ht_get(e->global, sym_to_set)) {
+        if (ht_get(e->working, sym_to_set)) {
             /* It exists globally, so update it in the hash table. */
-            ht_set(e->global, sym_to_set, value_to_set);
+            ht_set(e->working, sym_to_set, value_to_set);
             if (is_repl) {
                 fprintf(stdout, "%s\n", cell_to_string(value_to_set, MODE_REPL));
             }
@@ -1137,7 +1144,7 @@ HandlerResult sf_defmacro(Lex* e, Cell* a) {
 
     /* Build the lambda cell. */
     Cell* lambda = lex_make_defmacro(name->str, formals, body, e);
-    lex_put_global(e, make_cell_symbol(name->str), lambda);
+    lex_put_working(e, make_cell_symbol(name->str), lambda);
     return return_val(lambda);
 }
 

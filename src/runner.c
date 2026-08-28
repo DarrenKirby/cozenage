@@ -100,10 +100,12 @@ int run_file_script(const char *file_path, const lib_load_config load_libs)
     init_default_ports();
     /* Initialize global singleton objects, nil, #t, #f, and EOF. */
     init_global_singletons();
-    /* Initialize global environment. */
-    Lex* e = lex_initialize_global_env();
-    /* Load (scheme base) procedures into the environment. */
-    lex_add_builtins(e);
+    /* Initialize bootstrap environment. */
+    const Lex* bootstrap = lex_initialize_bootstrap_env();
+    lex_add_builtins(bootstrap);
+    ht_table* core_builtins = bootstrap->working;
+    /* Initialize working environment. */
+    Lex* e = lex_initialize_working_env(core_builtins);
     /* Initialize special form lookup table. */
     init_special_forms();
     /* Loads the CLI-specified libraries into the environment. */

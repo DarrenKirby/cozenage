@@ -223,7 +223,7 @@ Cell* lex_make_defmacro(char* name, Cell* formals, Cell* body, Lex* env)
 }
 
 
-/* Dump the global env for debugging. */
+/* Dump the global envs for debugging. */
 static Cell* builtin_print_env(const Lex* e, const Cell* a) {
     (void)a;
     debug_print_env((Lex*)e);

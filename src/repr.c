@@ -478,8 +478,17 @@ void debug_print_cell(const Cell* v)
 /* Dump the environment 'symbol' -> 'value' pairs. */
 void debug_print_env(const Lex* e)
 {
-    /* Print global env hash items. */
-    hti it = ht_iterator(e->global);
+    /* Print bootstrap env hash items. */
+    printf("   Bootstrap environment procedures:\n\n");
+    hti it = ht_iterator(e->bootstrap);
+    while (ht_next(&it)) {
+        printf("%s%s%s -> ", ANSI_BLUE_B, it.key, ANSI_RESET);
+        printf("%s\n", cell_to_string(it.value, MODE_REPL));
+    }
+
+    /* Print working env hash items. */
+    printf("   Working environment procedures:\n\n");
+    it = ht_iterator(e->working);
     while (ht_next(&it)) {
         printf("%s%s%s -> ", ANSI_BLUE_B, it.key, ANSI_RESET);
         printf("%s\n", cell_to_string(it.value, MODE_REPL));

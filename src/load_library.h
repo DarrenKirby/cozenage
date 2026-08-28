@@ -46,7 +46,7 @@ typedef struct {
     int              count;
 } CznExportTable;
 
-/* New init signature: pure declaration, no side effects. */
+/* New init signature. */
 typedef const CznExportTable* (*CznLibInitFunc)();
 
 typedef enum {
@@ -62,11 +62,11 @@ typedef struct {
 
 typedef struct {
     ImportMode   mode;
-    const char** filter_names;   /* identifiers for only/except */
+    const char** filter_names;   /* identifiers for only/except. */
     int          filter_count;
-    CznRename*   renames;        /* (old new) pairs for rename */
+    CznRename*   renames;        /* (old new) pairs for rename. */
     int          rename_count;
-    const char*  prefix;         /* "" means no prefix */
+    const char*  prefix;         /* "" means no prefix. */
 } ImportSpec;
 
 

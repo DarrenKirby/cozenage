@@ -19,7 +19,6 @@
 
 #include "main.h"
 #include "types.h"
-#include "parser.h"
 #include "config.h"
 #include "repl.h"
 #include "runner.h"
@@ -39,17 +38,17 @@ static lib_load_config load_libs = {0};
 
 static void show_help()
 {
-    printf("Usage: cozenage [option ...] [file] \n\n\
-A Scheme-derived REPL and code runner\n\n\
-Options:\n\
-    -l, --library\t preload Cozenage libraries at startup\n\
-    -h, --help\t\t display this help\n\
-    -V, --version\t display version information\n\n\
-\n\
-    '-l' and '--library' accept a required comma-delimited list of\n\
-    libraries to pre-load. Accepted values are:\n\
-    'bits' 'cxr' 'file' 'lazy' 'math' 'random' 'system' and 'datetime' \n\n\
-Report bugs to <darren@dragonbyte.ca>\n");
+    printf(
+        "Usage: cozenage [option ...] [file] \n\n"
+        "A Scheme-derived REPL and code runner\n\n"
+        "Options:\n"
+        "    -l, --library\t preload Cozenage libraries at startup\n"
+        "    -h, --help\t\t display this help\n"
+        "    -V, --version\t display version information\n\n"
+        "    '-l' and '--library' accept a required comma-delimited list of\n"
+        "    libraries to pre-load. Accepted values are:\n"
+        "    'bits' 'cxr' 'file' 'lazy' 'math' 'random' 'system' and 'datetime' \n\n"
+        "Report bugs to <darren@dragonbyte.ca>\n");
 }
 
 
