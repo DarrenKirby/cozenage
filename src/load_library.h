@@ -26,18 +26,18 @@
 
 /* Define the library file extension based on the OS. */
 #ifdef __APPLE__
-    #define LIB_EXT "dylib"
+    #define C_LIB_EXT "dylib"
 #else
-    #define LIB_EXT "so"
+    #define C_LIB_EXT "so"
 #endif
 
-#define SCHEME_EXT "sls"
+#define SCHEME_LIB_EXT "sls"
 
 /* builtin function signature. */
 typedef Cell* (*CznBuiltinFn)(const Lex*, const Cell*);
 
 typedef struct {
-    const char*  scheme_name;   /* Scheme-visible name, e.g. "current-second" */
+    const char*  scheme_name;   /* Scheme-visible name. */
     CznBuiltinFn func;
 } CznExport;
 
@@ -69,11 +69,12 @@ typedef struct {
     const char*  prefix;         /* "" means no prefix */
 } ImportSpec;
 
+
 char **get_load_paths();
-//int internal_cozenage_load_lib(const char* collection, const char* library,
-                             //  const Lex* env, const ImportSpec* spec);
-Cell* parse_import_spec(const Cell* i_set, const char* mod, ImportSpec* spec);
+void init_import_spec(ImportSpec* spec);
+Cell* parse_import_spec(const Cell* node, ImportSpec* spec);
 void load_library(const char* libname, const Lex* env);
 Cell* load_c_module(const Cell* libspec, const Lex* e, char *path, const ImportSpec *spec);
 Cell* load_scheme_lib(const Cell* libspec, const Lex* e, char *path, const ImportSpec *spec);
+
 #endif //COZENAGE_LOAD_LIBRARY_H

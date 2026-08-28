@@ -467,6 +467,26 @@ HandlerResult sf_cond(Lex* e, Cell* a)
 }
 
 
+static Cell* get_base_libspec(Cell* node) {
+    if (!node || node->type != CELL_SEXPR || node->count < 2) return nullptr;
+
+    /* Base case: (collection library) */
+    if (node->count == 2 &&
+        node->cell[0]->type == CELL_SYMBOL &&
+        node->cell[1]->type == CELL_SYMBOL) {
+        return node;
+        }
+
+    /* Recursive case: drill into the second element of the modifier */
+    if (node->cell[0]->type == CELL_SYMBOL &&
+        node->cell[1]->type == CELL_SEXPR) {
+        return get_base_libspec(node->cell[1]);
+        }
+
+    return nullptr;
+}
+
+
 /* (import ⟨import-set⟩ ...)
  * An import declaration provides a way to import identifiers exported by a library. Each
  * ⟨import set⟩ names a set of bindings from a library and possibly specifies local names for the
@@ -477,7 +497,6 @@ HandlerResult sf_import(Lex* e, Cell* a)
         /* For each arg to import, we need to determine if it is a C module, or a Scheme library.
          * We also need to determine if the import spec is modified. */
         bool is_c_lib = false;
-        const char *mod = nullptr;
         Cell* i_set = a->cell[i];
 
         if (i_set->type != CELL_SEXPR || i_set->count < 2) {
@@ -485,25 +504,17 @@ HandlerResult sf_import(Lex* e, Cell* a)
                 SYNTAX_ERR));
         }
 
-        Cell* libname_cell; /* Will point to the (lib name) s-expression. */
+        if (i_set->type != CELL_SEXPR || i_set->count < 2) {
+            return return_val(make_cell_error("import: invalid import set", SYNTAX_ERR));
+        }
 
-        /* Distinguish simple (lib name) from (modifier (lib name) ...). */
-        if (i_set->count == 2
-            && i_set->cell[0]->type == CELL_SYMBOL
-            && i_set->cell[1]->type == CELL_SYMBOL) {
-            /* Simple unmodified import set. */
-            libname_cell = i_set;
-            } else {
-                /* Modified import set: first element is the modifier name,
-                 * second element must be an inner (lib name) s-expression. */
-                if (i_set->cell[1]->type != CELL_SEXPR || i_set->cell[1]->count != 2) {
-                    return return_val(make_cell_error(
-                        "import: modifier requires an import set: '(collection library)' as second element",
-                        SYNTAX_ERR));
-                }
-                libname_cell = i_set->cell[1];
-                mod = i_set->cell[0]->sym;
-            }
+        /* Drill down to extract the base library name */
+        Cell* libname_cell = get_base_libspec(i_set);
+        if (!libname_cell) {
+            return return_val(make_cell_error(
+                "import: malformed import set or missing (collection library)",
+                SYNTAX_ERR));
+        }
 
         /* Extract library identifier and library name from libname_cell. */
         const char* collection  = libname_cell->cell[0]->sym;
@@ -521,7 +532,7 @@ HandlerResult sf_import(Lex* e, Cell* a)
 
             /* Check if it's a C module. */
             snprintf(filepath, sizeof(filepath), "%s/%s/%s.%s",
-                search_paths[j], collection, library, LIB_EXT);
+                search_paths[j], collection, library, C_LIB_EXT);
             if (access(filepath, F_OK) == 0) {
                 is_c_lib = true;
                 found = true;
@@ -529,7 +540,7 @@ HandlerResult sf_import(Lex* e, Cell* a)
             }
             /* Check if it's a Scheme library. */
             snprintf(filepath, sizeof(filepath), "%s/%s/%s.%s",
-                search_paths[j], collection, library, SCHEME_EXT);
+                search_paths[j], collection, library, SCHEME_LIB_EXT);
             if (access(filepath, F_OK) == 0) {
                 is_c_lib = false;
                 found = true;
@@ -546,7 +557,9 @@ HandlerResult sf_import(Lex* e, Cell* a)
 
         /* Parse the import modifiers. */
         ImportSpec spec;
-        Cell* spec_err = parse_import_spec(i_set, mod, &spec);
+        init_import_spec(&spec);
+
+        Cell* spec_err = parse_import_spec(i_set, &spec);
         if (spec_err->type == CELL_ERROR) {
             return return_val(spec_err);
         }
@@ -560,6 +573,7 @@ HandlerResult sf_import(Lex* e, Cell* a)
             /* Load scheme library. */
             ret = load_scheme_lib(libname_cell, e, filepath, &spec);
         }
+
         /* Check if the load errored... */
         if (ret->type == CELL_ERROR) {
             return return_val(ret);

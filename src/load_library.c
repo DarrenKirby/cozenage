@@ -22,7 +22,6 @@
 #include "load_library.h"
 #include "eval.h"
 #include "parser.h"
-#include "repr.h"
 #include "runner.h"
 #include "types.h"
 
@@ -95,94 +94,257 @@ char **get_load_paths()
 
 Cell* load_scheme_lib(const Cell* libspec, const Lex* e, char *path, const ImportSpec *spec)
 {
-    /* TODO: finish this... */
-    (void)e;
-    (void)spec;
-    fprintf(stdout, "Inside load_scheme_lib\n");
-    fprintf(stdout, "Library is: %s\n", path);
-    fprintf(stdout, "libspec is: %s\n", cell_to_string(libspec, MODE_REPL));
-
     Lex *sandbox = lex_initialize_global_env();
     lex_add_builtins(sandbox);
     const char* input = read_file_to_string(path);
     TokenArray* ta = scan_all_tokens(input);
-    Cell* ast = parse_tokens(ta);
+    const Cell* ast = parse_tokens(ta);
 
-    debug_print_cell(ast);
-    debug_print_cell(ast->cell[3]);
-
-    Cell* definitions = ast->cell[3];
-
-    debug_print_cell(definitions->cell[1]->cell[1]);
-
-    for (int i = 1; i < definitions->count; i++) {
-        Cell* l = coz_eval(sandbox, definitions->cell[i]);
-        debug_print_cell(l);
-        lex_put_global(e, definitions->cell[i]->cell[1]->cell[0], l);
+    if (ast->cell[0] != make_cell_symbol("define-library")) {
+        return make_cell_error(fmt_err(
+            "invalid library definition in %s", path),
+            SYNTAX_ERR);
     }
 
-    //Cell* res = coz_eval(sandbox, ast->cell[3]);
+    /* Ensure libspec matches library definition. */
+    if (ast->cell[1]->cell[0] != libspec->cell[0] ||
+        ast->cell[1]->cell[1] != libspec->cell[1]) {
+        return make_cell_error(fmt_err(
+            "unmatched collection/library spec in %s", path),
+            SYNTAX_ERR);
+    }
 
-    //debug_print_cell(res);
-    debug_print_env(sandbox);
+    Cell *exports = nullptr;
+    Cell *definitions = nullptr;
+
+    /* Start at index 2, iterate safely through the array */
+    for (int k = 2; k < ast->count; k++) {
+        const Cell* block_type = ast->cell[k]->cell[0];
+
+        if (block_type == make_cell_symbol("import")) {
+            Cell *res = coz_eval(sandbox, ast->cell[k]);
+            if (res->type == CELL_ERROR) return res;
+        }
+        else if (block_type == make_cell_symbol("export")) {
+            exports = ast->cell[k];
+        }
+        else if (block_type == make_cell_symbol("begin")) {
+            definitions = ast->cell[k];
+        }
+    }
+
+    /* Throw error if export list is not found. */
+    if (!exports) {
+        return make_cell_error(fmt_err(
+            "missing export list in %s", path),
+            SYNTAX_ERR);
+    }
+
+    /* Evaluate the library definitions in the sandbox. */
+    Cell *l = coz_eval(sandbox, definitions);
+    if (l->type == CELL_ERROR) {
+        return l;
+    }
+
+    /* Iterate the export list, copy definitions from the sandbox to the global env,
+     * and apply any import modifiers. */
+    for (int i = 1; i < exports->count; i++) {
+        const char* orig_name = exports->cell[i]->sym;
+        bool skip = false;
+
+        /* Apply ONLY and EXCEPT filters */
+        if (spec->mode == IMPORT_ONLY) {
+            skip = true; /* Assume skip unless explicitly found in the 'only' list */
+            for (int j = 0; j < spec->filter_count; j++) {
+                if (strcmp(orig_name, spec->filter_names[j]) == 0) {
+                    skip = false;
+                    break;
+                }
+            }
+        } else if (spec->mode == IMPORT_EXCEPT) {
+            for (int j = 0; j < spec->filter_count; j++) {
+                if (strcmp(orig_name, spec->filter_names[j]) == 0) {
+                    skip = true;
+                    break;
+                }
+            }
+        }
+
+        if (skip) continue;
+
+        /* Apply RENAME modifier */
+        const char* dest_name = orig_name;
+        for (int j = 0; j < spec->rename_count; j++) {
+            if (strcmp(orig_name, spec->renames[j].from) == 0) {
+                dest_name = spec->renames[j].to;
+                break;
+            }
+        }
+
+        /* Apply PREFIX modifier and construct the final Cell */
+        const Cell* dest_cell = nullptr;
+        if (spec->prefix && spec->prefix[0] != '\0') {
+            /* Allocate string using atomic since it contains no pointers for libgc to trace */
+            const size_t len = strlen(spec->prefix) + strlen(dest_name) + 1;
+            char* prefixed_name = GC_malloc_atomic(len);
+            snprintf(prefixed_name, len, "%s%s", spec->prefix, dest_name);
+            dest_cell = make_cell_symbol(prefixed_name);
+        } else if (dest_name != orig_name) {
+            /* Renamed, but no prefix */
+            dest_cell = make_cell_symbol((char*)dest_name);
+        } else {
+            /* Unchanged */
+            dest_cell = exports->cell[i];
+        }
+
+        /* Fetch the object and bind it */
+        Cell* obj = lex_get(sandbox, exports->cell[i]);
+        if (!obj || obj->type == CELL_ERROR) {
+            return make_cell_error(fmt_err(
+                "exported symbol '%s' not defined in library", orig_name),
+                VALUE_ERR);
+        }
+        lex_put_global(e, dest_cell, obj);
+    }
 
     return True_Obj;
 }
 
 
-Cell* parse_import_spec(const Cell* i_set, const char* mod, ImportSpec* spec)
-{
-    /* Set defaults first. */
+void init_import_spec(ImportSpec* spec) {
     spec->mode         = IMPORT_ALL;
     spec->filter_names = nullptr;
     spec->filter_count = 0;
     spec->renames      = nullptr;
     spec->rename_count = 0;
     spec->prefix       = "";
+}
 
-    if (mod) {
-        if (strcmp(mod, "only") == 0) {
-            spec->mode         = IMPORT_ONLY;
-            spec->filter_count = i_set->count - 2;
-            spec->filter_names = GC_malloc(spec->filter_count * sizeof(char*));
-            for (int j = 0; j < spec->filter_count; j++)
-                spec->filter_names[j] = i_set->cell[j + 2]->sym;
-
-        } else if (strcmp(mod, "except") == 0) {
-            spec->mode         = IMPORT_EXCEPT;
-            spec->filter_count = i_set->count - 2;
-            spec->filter_names = GC_malloc(spec->filter_count * sizeof(char*));
-            for (int j = 0; j < spec->filter_count; j++)
-                spec->filter_names[j] = i_set->cell[j + 2]->sym;
-
-        } else if (strcmp(mod, "prefix") == 0) {
-            if (i_set->count != 3) {
-                return make_cell_error(
-                    "import: 'prefix' requires exactly one argument",
-                    SYNTAX_ERR);
-            }
-            spec->prefix = i_set->cell[2]->str;  /* string cell */
-
-        } else if (strcmp(mod, "rename") == 0) {
-            spec->rename_count = i_set->count - 2;
-            spec->renames      = GC_malloc(spec->rename_count * sizeof(CznRename));
-            for (int j = 0; j < spec->rename_count; j++) {
-                const Cell* pair = i_set->cell[j + 2];
-                if (pair->type != CELL_SEXPR || pair->count != 2) {
-                    return make_cell_error(
-                        "import: 'rename' expects (old-name new-name) pairs",
-                        SYNTAX_ERR);
-                }
-                spec->renames[j].from = pair->cell[0]->sym;
-                spec->renames[j].to   = pair->cell[1]->sym;
-            }
-        } else {
-            return make_cell_error("import: unknown import modifier",
-                SYNTAX_ERR);
-        }
+Cell* parse_import_spec(const Cell* node, ImportSpec* spec) {
+    /* Base case: We reached (collection library) */
+    if (node->count == 2 &&
+        node->cell[0]->type == CELL_SYMBOL &&
+        node->cell[1]->type == CELL_SYMBOL) {
+        return True_Obj;
     }
+
+    /* Recurse first so modifiers apply inside-out */
+    Cell* inner_res = parse_import_spec(node->cell[1], spec);
+    if (inner_res->type == CELL_ERROR) return inner_res;
+
+    const char* mod = node->cell[0]->sym;
+
+    if (strcmp(mod, "only") == 0) {
+        spec->mode = IMPORT_ONLY;
+        spec->filter_count = node->count - 2;
+        spec->filter_names = GC_malloc(spec->filter_count * sizeof(char*));
+        for (int j = 0; j < spec->filter_count; j++)
+            spec->filter_names[j] = node->cell[j + 2]->sym;
+
+    } else if (strcmp(mod, "except") == 0) {
+        spec->mode = IMPORT_EXCEPT;
+        spec->filter_count = node->count - 2;
+        spec->filter_names = GC_malloc(spec->filter_count * sizeof(char*));
+        for (int j = 0; j < spec->filter_count; j++)
+            spec->filter_names[j] = node->cell[j + 2]->sym;
+
+    } else if (strcmp(mod, "prefix") == 0) {
+        if (node->count != 3) {
+            return make_cell_error("import: 'prefix' requires exactly one argument", SYNTAX_ERR);
+        }
+        /* If nested prefixes exist, concatenate them */
+        if (spec->prefix[0] != '\0') {
+            const char* new_pref = node->cell[2]->str;
+            size_t len = strlen(new_pref) + strlen(spec->prefix) + 1;
+            char* combined = GC_malloc_atomic(len);
+            snprintf(combined, len, "%s%s", new_pref, spec->prefix);
+            spec->prefix = combined;
+        } else {
+            spec->prefix = node->cell[2]->str;
+        }
+
+    } else if (strcmp(mod, "rename") == 0) {
+        /* Append new renames to existing renames if nested */
+        int new_count = node->count - 2;
+        int total_count = spec->rename_count + new_count;
+        CznRename* combined = GC_malloc(total_count * sizeof(CznRename));
+
+        /* Copy existing */
+        for (int j = 0; j < spec->rename_count; j++) combined[j] = spec->renames[j];
+
+        /* Add new */
+        for (int j = 0; j < new_count; j++) {
+            const Cell* pair = node->cell[j + 2];
+            if (pair->type != CELL_SEXPR || pair->count != 2) {
+                return make_cell_error("import: 'rename' expects (old new) pairs", SYNTAX_ERR);
+            }
+            combined[spec->rename_count + j].from = pair->cell[0]->sym;
+            combined[spec->rename_count + j].to   = pair->cell[1]->sym;
+        }
+        spec->renames = combined;
+        spec->rename_count = total_count;
+
+    } else {
+        return make_cell_error("import: unknown import modifier", SYNTAX_ERR);
+    }
+
     return True_Obj;
 }
+
+
+// Cell* parse_import_spec(const Cell* i_set, const char* mod, ImportSpec* spec)
+// {
+//     /* Set defaults first. */
+//     spec->mode         = IMPORT_ALL;
+//     spec->filter_names = nullptr;
+//     spec->filter_count = 0;
+//     spec->renames      = nullptr;
+//     spec->rename_count = 0;
+//     spec->prefix       = "";
+//
+//     if (mod) {
+//         if (strcmp(mod, "only") == 0) {
+//             spec->mode         = IMPORT_ONLY;
+//             spec->filter_count = i_set->count - 2;
+//             spec->filter_names = GC_malloc(spec->filter_count * sizeof(char*));
+//             for (int j = 0; j < spec->filter_count; j++)
+//                 spec->filter_names[j] = i_set->cell[j + 2]->sym;
+//
+//         } else if (strcmp(mod, "except") == 0) {
+//             spec->mode         = IMPORT_EXCEPT;
+//             spec->filter_count = i_set->count - 2;
+//             spec->filter_names = GC_malloc(spec->filter_count * sizeof(char*));
+//             for (int j = 0; j < spec->filter_count; j++)
+//                 spec->filter_names[j] = i_set->cell[j + 2]->sym;
+//
+//         } else if (strcmp(mod, "prefix") == 0) {
+//             if (i_set->count != 3) {
+//                 return make_cell_error(
+//                     "import: 'prefix' requires exactly one argument",
+//                     SYNTAX_ERR);
+//             }
+//             spec->prefix = i_set->cell[2]->str;  /* string cell */
+//
+//         } else if (strcmp(mod, "rename") == 0) {
+//             spec->rename_count = i_set->count - 2;
+//             spec->renames      = GC_malloc(spec->rename_count * sizeof(CznRename));
+//             for (int j = 0; j < spec->rename_count; j++) {
+//                 const Cell* pair = i_set->cell[j + 2];
+//                 if (pair->type != CELL_SEXPR || pair->count != 2) {
+//                     return make_cell_error(
+//                         "import: 'rename' expects (old-name new-name) pairs",
+//                         SYNTAX_ERR);
+//                 }
+//                 spec->renames[j].from = pair->cell[0]->sym;
+//                 spec->renames[j].to   = pair->cell[1]->sym;
+//             }
+//         } else {
+//             return make_cell_error("import: unknown import modifier",
+//                 SYNTAX_ERR);
+//         }
+//     }
+//     return True_Obj;
+// }
 
 
 static void apply_import_spec(const Lex* env,
@@ -273,7 +435,7 @@ void load_library(const char* libname, const Lex* env) {
     for (int j = 0; search_paths[j] != NULL; ++j) {
         if (search_paths[j][0] == '\0') continue;
         snprintf(path, sizeof(path), "%s/%s/%s.%s",
-            search_paths[j], "base", libname, LIB_EXT);
+            search_paths[j], "base", libname, C_LIB_EXT);
 
         if (access(path, F_OK) == 0) {
             break;
@@ -281,15 +443,10 @@ void load_library(const char* libname, const Lex* env) {
     }
 
     /* Call the internal loader. We need to create a
-     * dummy, default ImportSpec even though it is not used. */
-    const ImportSpec spec = {
-        .mode         = IMPORT_ALL,
-        .filter_names = nullptr,
-        .filter_count = 0,
-        .renames      = nullptr,
-        .rename_count = 0,
-        .prefix       = "",
-    };
+     * dummy default ImportSpec even though it is not used. */
+    ImportSpec spec;
+    init_import_spec(&spec);
+
     const Cell* ret = load_c_module(libspec, env, path, &spec);
 
     /* There is no REPL, or anything else running at this point, and
