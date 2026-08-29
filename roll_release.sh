@@ -9,8 +9,8 @@ VERSION=${1}
 NVERSION="cozenage-${VERSION}"
 
 echo "Creating archives..."
-git archive --format=tar.gz --prefix=${NVERSION}/ -o ${NVERSION}.tar.gz v${VERSION}
-git archive --format=zip --prefix=${NVERSION}/ -o ${NVERSION}.zip v${VERSION}
-git archive v${VERSION} --format=tar --prefix=${NVERSION}/ | xz -9e > ${NVERSION}.tar.xz
+git archive --format=tar.gz --prefix="${NVERSION}"/ -o "${NVERSION}".tar.gz v"${VERSION}" || exit 1
+git archive --format=zip --prefix="${NVERSION}"/ -o "${NVERSION}".zip v"${VERSION}" || exit 1
+git archive v"${VERSION}" --format=tar --prefix="${NVERSION}"/ | xz -9e > "${NVERSION}".tar.xz || exit 1
 echo "Done."
 
