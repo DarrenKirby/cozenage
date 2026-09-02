@@ -366,7 +366,7 @@ Cell* builtin_string_map(const Lex* e, const Cell* a)
     buffer[total_bytes] = '\0';
 
     /* Manual Metadata Construction. */
-    Cell* v = GC_MALLOC_ATOMIC(sizeof(Cell));
+    Cell* v = GC_MALLOC(sizeof(Cell));
     v->type = CELL_STRING;
     v->str = (char*)buffer;
     v->count = total_bytes;

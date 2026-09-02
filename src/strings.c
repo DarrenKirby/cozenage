@@ -94,7 +94,7 @@ Cell* builtin_string(const Lex* e, const Cell* a)
 
     const int32_t char_count = a->count;
     /* Bypass the string constructor and fill metadata directly. */
-    Cell* v = GC_MALLOC_ATOMIC(sizeof(Cell));
+    Cell* v = GC_MALLOC(sizeof(Cell));
 
     /* Worst-case allocation: 4 bytes per codepoint + null terminator. */
     uint8_t* buffer = GC_MALLOC_ATOMIC(char_count * 4 + 1);
@@ -295,7 +295,7 @@ Cell* builtin_string_append(const Lex* e, const Cell* a)
     *current_ptr = '\0';
 
     /* Construct Cell and set metadata manually to avoid rescanning. */
-    Cell* v = GC_MALLOC_ATOMIC(sizeof(Cell));
+    Cell* v = GC_MALLOC(sizeof(Cell));
     v->type = CELL_STRING;
     v->str = buffer;
     v->count = (int)total_bytes;
@@ -383,7 +383,7 @@ Cell* builtin_make_string(const Lex* e, const Cell* a)
     const int32_t fill_cp = (a->count == 2) ? a->cell[1]->char_v : 0x0020;
 
     /* Allocate the Cell and the buffer. */
-    Cell* v = GC_MALLOC_ATOMIC(sizeof(Cell));
+    Cell* v = GC_MALLOC(sizeof(Cell));
     char* buffer;
     int32_t total_bytes;
     const int is_ascii = (fill_cp <= 0x7F);
@@ -548,7 +548,7 @@ Cell* builtin_list_string(const Lex* e, const Cell* a)
     buffer[byte_idx] = '\0';
 
     /* Construct Cell with manual metadata. */
-    Cell* v = GC_MALLOC_ATOMIC(sizeof(Cell));
+    Cell* v = GC_MALLOC(sizeof(Cell));
     v->type = CELL_STRING;
     v->str = buffer;
     v->count = total_bytes;
@@ -609,7 +609,7 @@ Cell* builtin_substring(const Lex* e, const Cell* a)
     buffer[byte_len] = '\0';
 
     /* Construct Cell and populate metadata. */
-    Cell* v = GC_MALLOC_ATOMIC(sizeof(Cell));
+    Cell* v = GC_MALLOC(sizeof(Cell));
     v->type = CELL_STRING;
     v->str = buffer;
     v->count = byte_len;
@@ -747,7 +747,7 @@ Cell* builtin_string_copy(const Lex* e, const Cell* a)
     /* If the user wants the whole string, just do a clean byte-copy and clone metadata. */
     if (start == 0 && end == s_cell->char_count) {
         char* new_str = GC_strndup(s_cell->str, s_cell->count);
-        Cell* v = GC_MALLOC_ATOMIC(sizeof(Cell));
+        Cell* v = GC_MALLOC(sizeof(Cell));
         v->type = CELL_STRING;
         v->str = new_str;
         v->count = s_cell->count;
@@ -766,7 +766,7 @@ Cell* builtin_string_copy(const Lex* e, const Cell* a)
     buffer[byte_len] = '\0';
 
     /* Construct and set metadata. */
-    Cell* v = GC_MALLOC_ATOMIC(sizeof(Cell));
+    Cell* v = GC_MALLOC(sizeof(Cell));
     v->type = CELL_STRING;
     v->str = buffer;
     v->count = byte_len;
@@ -1393,8 +1393,7 @@ Cell* builtin_string_split(const Lex* e, const Cell* a)
         const char *start_pos = src;
         const ptrdiff_t distance = delim_pos - start_pos;
 
-        char* tok = GC_strndup(src, distance);
-        tok[distance] = '\0';
+        const char* tok = GC_strndup(src, distance);
 
         Cell* s = make_cell_string(tok);
         cell_add(result, s);
