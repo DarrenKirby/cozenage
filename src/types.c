@@ -41,6 +41,14 @@
 #include <limits.h>
 #include <unicode/ustring.h>
 
+#ifdef CRITERION_TEST_BUILD
+    /* During tests, STATIC compiles away to nothing, exposing the functions */
+    #define STATIC
+#else
+    /* In standard builds, STATIC acts exactly like the static keyword */
+    #define STATIC static
+#endif
+
 /* Not all systems provide this macro. */
 #ifndef CMPLXL
 #define CMPLXL(a,b) ((long double _Complex)((a) + (b) * I))
@@ -71,7 +79,7 @@ const char* cell_type_name(const int t)
 {
     switch (t) {
         case CELL_INTEGER:     return "integer";
-        case CELL_REAL:        return "float";
+        case CELL_REAL:        return "real";
         case CELL_RATIONAL:    return "rational";
         case CELL_COMPLEX:     return "complex";
         case CELL_BOOLEAN:     return "bool";
@@ -221,61 +229,61 @@ int check_lambda_arity(const Cell* proc, const int expected) {
  * --------------------------------------------------------*/
 
 /* Convertors. */
-static Cell* int_to_rat(const Cell* v)
+STATIC Cell* int_to_rat(const Cell* v)
 {
     return make_cell_rational(v->integer_v, 1, 0);
 }
 
 
-static Cell* int_to_real(const Cell* v)
+STATIC Cell* int_to_real(const Cell* v)
 {
     return make_cell_real((long double)v->integer_v);
 }
 
 
-static Cell* bigint_to_real(const Cell* v)
+STATIC Cell* bigint_to_real(const Cell* v)
 {
     return make_cell_real(mpz_get_d(*v->bi));
 }
 
 
-static Cell* rat_to_real(const Cell* v)
+STATIC Cell* rat_to_real(const Cell* v)
 {
     return make_cell_real((long double)v->num / (long double)v->den);
 }
 
 
-static Cell* bigrat_to_real(const Cell* v)
+STATIC Cell* bigrat_to_real(const Cell* v)
 {
     return make_cell_real(mpq_get_d(*v->br));
 }
 
 
-static Cell* to_complex(Cell* v)
+STATIC Cell* to_complex(Cell* v)
 {
     return make_cell_complex(v, make_cell_integer(0));
 }
 
 
-static Cell* int_to_bigint(const Cell* v)
+STATIC Cell* int_to_bigint(const Cell* v)
 {
     return make_cell_bigint(nullptr, v, 10);
 }
 
 
-static Cell* int_to_bigrat(const Cell* v)
+STATIC Cell* int_to_bigrat(const Cell* v)
 {
     return make_cell_bigrat(v->integer_v, 1, nullptr);
 }
 
 
-static Cell* rat_to_bigrat(const Cell* v)
+STATIC Cell* rat_to_bigrat(const Cell* v)
 {
     return make_cell_bigrat(v->num, v->den, nullptr);
 }
 
 
-static Cell* bigint_to_bigrat(const Cell* v)
+STATIC Cell* bigint_to_bigrat(const Cell* v)
 {
     Cell* c = GC_MALLOC(sizeof(Cell));
     if (!v) {

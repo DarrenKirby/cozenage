@@ -110,4 +110,10 @@ bool is_pure_ascii(const char *str, size_t len);
 char* convert_to_utf8(const UChar* ustr);
 UChar* convert_to_utf16(const char* str);
 
+/* Only need these for the test builds. */
+#ifdef CRITERION_TEST_BUILD
+Cell* int_to_rat(const Cell* v);
+Cell* int_to_real(const Cell* v);
+#endif
+
 #endif //COZENAGE_TYPES_H
