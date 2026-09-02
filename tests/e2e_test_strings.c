@@ -634,3 +634,37 @@ Test(end_to_end_strings, test_string_ci_ordering, .init = setup_each_test, .fini
     cr_assert_str_eq(t_eval("(string-ci<? \"App\" \"apple\")"), "#true");
 }
 
+Test(end_to_end_strings, test_string_split, .init = setup_each_test, .fini = teardown_each_test) {
+    cr_assert_str_eq(t_eval("(string-split \"This is cozenage\")"), "(\"This\" \"is\" \"cozenage\")");
+    cr_assert_str_eq(t_eval("(string-split \"foo -> bar\" \" -> \")"), "(\"foo\" \"bar\")");
+    cr_assert_str_eq(t_eval(
+    R"(
+(begin
+    (define (test-split-loop limit)
+      (let loop ((i 1))
+        (if (> i limit)
+            ;;(display "SUCCESS: Passed all iterations without failing.\n")
+            #true
+            (let* (;; We generate a fresh string every time so the GC has to work
+                   (s (string-append "535,100 -> 981,54" (number->string (modulo i 10))))
+                   (parts (string-split s " -> ")))
+              (if (< (length parts) 2)
+                  (begin
+                    (display "FAILED arrow split on iteration: ") (display i) (newline)
+                    (display "String was: ") (write s) (newline))
+                  (let ((a (string-split (car parts) ",")))
+                    (if (< (length a) 2)
+                        (begin
+                          (display "FAILED comma split on iteration: ") (display i) (newline)
+                          (display "Parts were: ") (write parts) (newline))
+                        ;; Success on this iteration, keep going
+                        (loop (+ i 1)))))))))
+
+    ;; Run it for 10,000 iterations
+    (test-split-loop 10000)
+)
+    )"
+    ), "#true");
+    //cr_assert_str_eq(t_eval(""), "");
+}
+
