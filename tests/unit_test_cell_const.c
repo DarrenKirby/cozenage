@@ -1,13 +1,16 @@
 #include <criterion/criterion.h>
 #include <gc/gc.h>
 
+#include "cell.h"
 #include "symbols.h"
+#include "types.h"
 
 
 void setup(void) {
     GC_INIT();
     init_global_singletons();
     symbol_table = ht_create(128);
+    init_special_forms();
 }
 
 Test(cell_constructors, boolean, .init = setup) {
@@ -247,13 +250,13 @@ Test(cell_constructors, complex_error_nested, .init = setup) {
 
     Cell* valid_real = make_cell_real(1.0);
 
-    // 1. Try passing the complex cell as the real part
+    // Try passing the complex cell as the real part
     Cell* err_cell_1 = make_cell_complex(nested_complex, valid_real);
     cr_assert_not_null(err_cell_1);
     cr_assert_neq(err_cell_1->type, CELL_COMPLEX, "Should not successfully construct a nested complex cell");
     cr_assert_eq(err_cell_1->type, CELL_ERROR);
 
-    // 2. Try passing the complex cell as the imaginary part
+    // Try passing the complex cell as the imaginary part
     Cell* err_cell_2 = make_cell_complex(valid_real, nested_complex);
     cr_assert_not_null(err_cell_2);
     cr_assert_neq(err_cell_2->type, CELL_COMPLEX, "Should not successfully construct a nested complex cell");
@@ -302,3 +305,86 @@ Test(cell_constructors, string_utf8_allocation, .init = setup) {
     // Verify the SWAR check correctly identified it as NON-ascii
     cr_assert_eq(v->ascii, 0, "Expected ascii flag to be 0 for UTF-8 string");
 }
+
+
+Test(cell_constructors, make_cell_symbol, .init = setup) {
+    Cell* sym = make_cell_symbol("hello");
+    cr_assert_not_null(sym);
+    cr_assert_eq(sym->type, CELL_SYMBOL);
+    cr_assert_eq(sym->sf_id, 0);
+    cr_assert_not_null(sym->sym);
+    cr_assert_str_eq(sym->sym, "hello");
+
+    sym = make_cell_symbol("goodbye");
+    cr_assert_not_null(sym);
+    cr_assert_eq(sym->type, CELL_SYMBOL);
+    cr_assert_eq(sym->sf_id, 0);
+    cr_assert_not_null(sym->sym);
+    cr_assert_str_eq(sym->sym, "goodbye");
+
+    // Ensure SF symbol returns correct sf_id
+    sym = make_cell_symbol("define");
+    cr_assert_not_null(sym);
+    cr_assert_eq(sym->type, CELL_SYMBOL);
+    cr_assert_eq(sym->sf_id, SF_ID_DEFINE);
+    cr_assert_not_null(sym->sym);
+    cr_assert_str_eq(sym->sym, "define");
+
+    sym = make_cell_symbol("import");
+    cr_assert_not_null(sym);
+    cr_assert_eq(sym->type, CELL_SYMBOL);
+    cr_assert_eq(sym->sf_id, SF_ID_IMPORT);
+    cr_assert_not_null(sym->sym);
+    cr_assert_str_eq(sym->sym, "import");
+}
+
+Test(cell_constructors, make_cell_sexpr, .init = setup) {
+    Cell* i = make_cell_integer(25);
+    Cell* s = make_sexpr_len4(i, i, i, i);
+    cr_assert_not_null(s);
+    cr_assert_eq(s->type, CELL_SEXPR);
+    cr_assert_eq(s->count, 4);
+
+    Cell* j = make_cell_integer(25);
+    Cell* k = make_cell_integer(25);
+    Cell* l = make_cell_integer(25);
+    Cell* m = make_cell_integer(25);
+
+    s = make_sexpr_len4(j, k, l, m);
+    cr_assert_not_null(s);
+    cr_assert_eq(s->type, CELL_SEXPR);
+    cr_assert_eq(s->count, 4);
+}
+
+Test(cell_constructors, make_cell_char, .init = setup) {
+    UChar32 c = 0x0041;
+    Cell* ch = make_cell_char(c);
+    cr_assert_not_null(ch);
+    cr_assert_eq(ch->type, CELL_CHAR);
+    cr_assert_eq(ch->char_v, 0x0041);
+
+    c = 0x0041;
+    ch = make_cell_char(c);
+    cr_assert_not_null(ch);
+    cr_assert_eq(ch->type, CELL_CHAR);
+    cr_assert_eq(ch->char_v, 0x0041);
+
+    c = 0x00ac;
+    ch = make_cell_char(c);
+    cr_assert_not_null(ch);
+    cr_assert_eq(ch->type, CELL_CHAR);
+    cr_assert_eq(ch->char_v, 0x00ac);
+
+    c = 0x00DF;
+    ch = make_cell_char(c);
+    cr_assert_not_null(ch);
+    cr_assert_eq(ch->type, CELL_CHAR);
+    cr_assert_eq(ch->char_v, 0x00DF);
+
+    c = 0x03A9;
+    ch = make_cell_char(c);
+    cr_assert_not_null(ch);
+    cr_assert_eq(ch->type, CELL_CHAR);
+    cr_assert_eq(ch->char_v, 0x03A9);
+}
+
