@@ -48,9 +48,9 @@ Both sets and hashes are implemented as hash tables for fast O(1) amortized look
 - Arbitrary sized big integer and big rational support, with transparent type promotion
 - Work in progress: arbitrary-precision floats/reals
 
-### Bytevectors
+### Numeric vectors
 
-Fast and efficient bytevector types backed by native C arrays:
+SRFI-4 style fast and efficient floating point and integer vector types backed by native C arrays:
 
 - u8, s8
 - u16, s16
@@ -83,7 +83,7 @@ Fast and efficient bytevector types backed by native C arrays:
 
 Several common procedures are polymorphic across compound types, including:
 
-- `len` - returns the number of objects in lists, vectors, bytevectors, strings, sets, and maps. 
+- `len` - returns the number of objects in lists, vectors, bytevectors, strings, sets, and maps.
 - `idx` - returns the object at the supplied index for lists, vectors, bytevectors, and strings.
 - `rev`- returns a reversed copy of lists, vectors, bytevectors, and strings.
 - `sort` - returns a sorted copy of any compound type (must be homogenous types).
@@ -93,16 +93,16 @@ Several common procedures are polymorphic across compound types, including:
 
 ## Intentional omissions
 
-- **First-class continuations (`call/cc`)**  
-  These are unlikely to be implemented. Control-flow patterns typically expressed using continuations may instead be 
+- **First-class continuations (`call/cc`)**
+  These are unlikely to be implemented. Control-flow patterns typically expressed using continuations may instead be
   provided as primitive syntax or built-in forms.
 
-- **Hygienic macros**  
+- **Hygienic macros**
   While desirable, hygienic macros are complex and currently low priority. Cozenage instead provides Lisp-style, non-hygienic macros.
 
 ---
 
-## Features in progress, and Planned and future work
+## Features in progress, and planned and future work
 
 - Arbitrary-precision rationals floats/reals
 - Custom allocator / garbage collector (maybe)
@@ -136,8 +136,8 @@ and it is not as thoroughly tested as ``main``. If you want the latest, this is 
 
 ### Downloading static packages
 
-If you don't want to bother with git you can download a zip file or tar file (compressed with ``.gz`` or ``.xz`` 
-compression) from GitHub. The latest of these source packages will always match the code in the current ``main`` branch.  
+If you don't want toher with git you can download a zip file or tar file (compressed with ``.gz`` or ``.xz``
+compression) from GitHub. The latest of these source packages will always match the code in the current ``main`` branch.
 
 ## Building Cozenage
 
@@ -179,11 +179,11 @@ and then run the cozenage REPL in the image:
 You can also run scripts through the image by passing the filename as an argument:
 
     $ docker run --rm -it cozenage myscript.scm
-    
+
 ## Status of built-in procedures and special forms
 
 The status of the base procedures
-are documented on another page: 
+are documented on another page:
 
 [built-in and library procedures](README.status.md)
 
@@ -226,3 +226,4 @@ Implemented as primitives in the ``lazy`` library:
 - `delay`
 - `delay-force`
 - `stream`
+
