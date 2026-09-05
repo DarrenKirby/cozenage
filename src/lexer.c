@@ -396,6 +396,7 @@ void debug_lexer(const TokenArray* ta)
         const Token token = ta->tokens[i];
 
         if (token.type == T_EOF) {
+            printf("   [ EOF ]\n");
             break;
         }
 
