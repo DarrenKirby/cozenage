@@ -550,257 +550,317 @@ Cell* parse_tokens(TokenArray *ta) {
     }
 
     /* Check token type and dispatch accordingly. */
-    Token *token = &ta->tokens[ta->position];
+    Token *token = peek(ta);
     if (!token) return nullptr;
 
     switch (token->type) {
-        /* Bail immediately on Syntax errors. */
-        case T_ERROR: return make_cell_error(token_to_string(token), SYNTAX_ERR);
-        case T_EOF: return nullptr; /* We're done. */
-            /* Dispatch out the atoms, first. */
-        case T_NUMBER: return parse_number(token_to_string(token), token->line, token->length);
-        case T_STRING: return parse_string(token_to_string(token), token->length);
-        case T_SYMBOL: return parse_symbol(token_to_string(token), token->line, token->length);
-        case T_BOOLEAN: return parse_boolean(token_to_string(token), token->line);
-        case T_CHAR: return parse_character(token_to_string(token), token->line, token->length);
+    /* Bail immediately on Syntax errors. */
+    case T_ERROR: return make_cell_error(token_to_string(token), SYNTAX_ERR);
+    case T_EOF: return nullptr; /* We're done. */
+    /* Dispatch out the atoms, first. */
+    case T_NUMBER: {
+        Cell* val = parse_number(token_to_string(token), token->line, token->length);
+        advance(ta);
+        return val;
+    }
+    case T_STRING: {
+        Cell* val = parse_string(token_to_string(token), token->length);
+        advance(ta);
+        return val;
+    }
+    case T_SYMBOL: {
+        Cell* val = parse_symbol(token_to_string(token), token->line, token->length);
+        advance(ta);
+        return val;
+    }
+    case T_BOOLEAN: {
+        Cell* val = parse_boolean(token_to_string(token), token->line);
+        advance(ta);
+        return val;
+    }
+    case T_CHAR: {
+        Cell* val = parse_character(token_to_string(token), token->line, token->length);
+        advance(ta);
+        return val;
+    }
 
-        /* Handle quote and quasiquote.
-         * This just transforms:
-         * 'foo -> (quote foo)
-         * `foo -> (quasiquote foo) */
-        case T_QUOTE:
-        case T_QUASIQUOTE:
-        {
-            /* Grab the next token. */
-            const Token* t = advance(ta);
-            Cell *quoted = parse_tokens(ta);
-            if (!quoted) {
-                return make_cell_error(fmt_err("Line %d: Expected expression after quote: '%s%s%s'",
-                            t->line, ANSI_RED_B, token_to_string(t), ANSI_RESET), SYNTAX_ERR);
-            }
-            Cell *qexpr = make_cell_sexpr();
-            /* Emit appropriate SF literal. */
-            token->type == T_QUOTE ?
-                cell_add(qexpr, make_cell_symbol("quote")) :
-                cell_add(qexpr, make_cell_symbol("quasiquote"));
-
-            cell_add(qexpr, quoted);
-            return qexpr;
-        }
-
-        /* Comma and comma-at. */
-        case T_COMMA:
-        case T_COMMA_AT:
-        {
-            const Token* t = advance(ta);
-            Cell *expr = parse_tokens(ta);
-            if (!expr) {
-                return make_cell_error(fmt_err("Line %d: Expected expression after comma: '%s%s%s'",
-                            t->line, ANSI_RED_B, token_to_string(t), ANSI_RESET),
-                            SYNTAX_ERR);
-            }
-            Cell *qexpr = make_cell_sexpr();
-            /* Emit appropriate SF literal. */
-            token->type == T_COMMA ?
-                cell_add(qexpr, make_cell_symbol("unquote")) :
-                cell_add(qexpr, make_cell_symbol("unquote-splicing"));
-
-            cell_add(qexpr, expr);
-            return qexpr;
-        }
-
-        case T_SET_START: {
-            /* Consume '#{' */
-            token = advance(ta);
-
-            Cell *sexpr = make_cell_sexpr();
-
-            while (peek(ta)->type != T_RIGHT_BRACE) {
-                cell_add(sexpr, parse_tokens(ta));
-                advance(ta);
-            }
-
-            if (!peek(ta)) {
-                return make_cell_error(
-                    fmt_err("Line %d: Unmatched '{' in set literal: '%s%s%s'",
-                    token->line, ANSI_RED_B, token_to_string(token), ANSI_RESET),
-                    SYNTAX_ERR);
-            }
-            return make_cell_set(sexpr);
-        }
-
-        case T_HASH_START: {
-            /* Consume '#[' */
-            token = advance(ta);
-
-            Cell *sexpr = make_cell_sexpr();
-
-            int n_forms = 0;
-            while (peek(ta)->type != T_RIGHT_BRACKET) {
-                cell_add(sexpr, parse_tokens(ta));
-                n_forms++;
-                advance(ta);
-            }
-
-            /* Check for even number of forms in hash literal. */
-            if (n_forms % 2 != 0) {
-                return make_cell_error(
-                    fmt_err("Line %d: hash literal requires even number of forms, %d provided",
-                    token->line, n_forms),
-                    SYNTAX_ERR);
-            }
-
-            if (!peek(ta)) {
-                return make_cell_error(
-                    fmt_err("Line %d: Unmatched '[' in hash literal: '%s%s%s'",
-                    token->line, ANSI_RED_B, token_to_string(token), ANSI_RESET),
-                    SYNTAX_ERR);
-            }
-            return make_cell_hash(sexpr);
-        }
-
-        /* Vector or bytevector. */
-        case T_HASH:
-        {
-            token = advance(ta); /* Consume '#' */
-
-            if (peek(ta)->type == T_SYMBOL) {
-                /* Bytevector. */
-                const char* bv_tok = token_to_string(peek(ta));
-                bv_t type;
-                if (strcmp(bv_tok, "u8") == 0) {
-                    type = BV_U8;
-                } else if (strcmp(bv_tok, "u16") == 0) {
-                    type = BV_U16;
-                } else if (strcmp(bv_tok, "u32") == 0) {
-                    type = BV_U32;
-                } else if (strcmp(bv_tok, "u64") == 0) {
-                    type = BV_U64;
-                } else if (strcmp(bv_tok, "s8") == 0) {
-                    type = BV_S8;
-                } else if (strcmp(bv_tok, "s16") == 0) {
-                    type = BV_S16;
-                } else if (strcmp(bv_tok, "s32") == 0) {
-                    type = BV_S32;
-                } else if (strcmp(bv_tok, "s64") == 0) {
-                    type = BV_S64;
-                } else if (strcmp(bv_tok, "f32") == 0) {
-                    type = BV_F32;
-                } else if (strcmp(bv_tok, "f64") == 0) {
-                    type = BV_F64;
-                } else {
-                    return make_cell_error(
-                        fmt_err("Line %d: Bad bytevector label: %s", token->line, bv_tok),
+    /* Handle quote and quasiquote.
+     * This just transforms:
+     * 'foo -> (quote foo)
+     * `foo -> (quasiquote foo) */
+    case T_QUOTE:
+    case T_QUASIQUOTE:
+    {
+        /* Grab the next token. */
+        const Token* t = advance(ta);
+        Cell *quoted = parse_tokens(ta);
+        if (!quoted) {
+            return make_cell_error(fmt_err("Line %d: Expected expression after quote: '%s%s%s'",
+                        t->line, ANSI_RED_B, token_to_string(t), ANSI_RESET),
                         SYNTAX_ERR);
-                }
-                Cell* bv = make_cell_bytevector(type, 8);
-                token = advance(ta); /* consume 'u8'. */
+        }
 
-                if (peek(ta)->type != T_LEFT_PAREN) {
-                    return make_cell_error(
-                        fmt_err(
-                        "Line %d: Expected '(' in bytevector literal: '%s%s%s'",
-                        token->line, ANSI_RED_B, token_to_string(token), ANSI_RESET),
+        /* Bubble up the error. */
+        if (quoted->type == CELL_ERROR) {
+            return quoted;
+        }
+
+        Cell *qexpr = make_cell_sexpr();
+        /* Emit appropriate SF literal. */
+        token->type == T_QUOTE ?
+            cell_add(qexpr, make_cell_symbol("quote")) :
+            cell_add(qexpr, make_cell_symbol("quasiquote"));
+
+        cell_add(qexpr, quoted);
+        return qexpr;
+    }
+
+    /* Comma and comma-at. */
+    case T_COMMA:
+    case T_COMMA_AT:
+    {
+        const Token* t = advance(ta);
+        Cell *expr = parse_tokens(ta);
+        if (!expr) {
+            return make_cell_error(fmt_err("Line %d: Expected expression after comma: '%s%s%s'",
+                        t->line, ANSI_RED_B, token_to_string(t), ANSI_RESET),
                         SYNTAX_ERR);
-                }
+        }
 
-                token = advance(ta); /* Consume '('. */
-                while (peek(ta)->type != T_RIGHT_PAREN) {
-                    const Cell* val = parse_tokens(ta);
+        /* Bubble up the error. */
+        if (expr->type == CELL_ERROR) {
+            return expr;
+        }
 
-                    if (type == BV_F32 || type == BV_F64) {
-                        long double byte;
-                        if (val->type == CELL_INTEGER) {
-                            byte = val->integer_v;
-                            Cell* err = fp_byte_check(type, byte);
-                            if (err) return err;
+        Cell *qexpr = make_cell_sexpr();
+        /* Emit appropriate SF literal. */
+        token->type == T_COMMA ?
+            cell_add(qexpr, make_cell_symbol("unquote")) :
+            cell_add(qexpr, make_cell_symbol("unquote-splicing"));
 
-                        } else if (val->type == CELL_REAL) {
-                            byte = val->real_v;
-                            Cell* err = fp_byte_check(type, byte);
-                            if (err) return err;
-                        } else {
-                            return make_cell_error(
-                            fmt_err("Line %d: bad value: '%s'. bytevector literals must be integers or reals",
-                            token->line, cell_to_string(val, MODE_REPL)),
-                            TYPE_ERR);
-                        }
-                        BV_FP_OPS[bv->bv->type].append(bv, byte);
-                    } else {
-                        if (val->type != CELL_INTEGER) {
-                            return make_cell_error(
-                                fmt_err("Line %d: bad value: '%s'. bytevector literals can only contain bytes",
-                                token->line, cell_to_string(val, MODE_REPL)),
-                                TYPE_ERR);
-                        }
+        cell_add(qexpr, expr);
+        return qexpr;
+    }
 
-                        const int64_t byte = val->integer_v;
-                        Cell* err = int_byte_check(type, byte);
-                        if (err) return err;
-                        BV_INT_OPS[bv->bv->type].append(bv, byte);
-                    }
-                    advance(ta);
-                }
+    case T_SET_START: {
+        /* Consume '#{' */
+        token = advance(ta);
 
-                if (!peek(ta)) {
-                    return make_cell_error(
-                        fmt_err("Line %d: Unmatched '(' in bytevector literal: '%s%s%s'",
-                        token->line, ANSI_RED_B, token_to_string(token), ANSI_RESET), SYNTAX_ERR);
-                }
-                return bv;
+        Cell *sexpr = make_cell_sexpr();
+
+        while (peek(ta) && peek(ta)->type != T_RIGHT_BRACE) {
+            Cell* next = parse_tokens(ta);
+            if (!next) return make_cell_error("Unexpected EOF",
+                SYNTAX_ERR);
+            if (next->type == CELL_ERROR) return next;
+            cell_add(sexpr, next);
+        }
+
+        if (!peek(ta)) {
+            return make_cell_error(
+                fmt_err("Line %d: Unmatched '{' in set literal: '%s%s%s'",
+                token->line, ANSI_RED_B, token_to_string(token), ANSI_RESET),
+                SYNTAX_ERR);
+        }
+        advance(ta);
+        return make_cell_set(sexpr);
+    }
+
+    case T_HASH_START: {
+        /* Consume '#[' */
+        token = advance(ta);
+
+        Cell *sexpr = make_cell_sexpr();
+
+        int n_forms = 0;
+        while (peek(ta) && peek(ta)->type != T_RIGHT_BRACKET) {
+            Cell* next = parse_tokens(ta);
+            if (!next) return make_cell_error("Unexpected EOF",
+                SYNTAX_ERR);
+            if (next->type == CELL_ERROR) return next;
+            cell_add(sexpr, next);
+            n_forms++;
+        }
+
+        /* Check for even number of forms in hash literal. */
+        if (n_forms % 2 != 0) {
+            return make_cell_error(
+                fmt_err("Line %d: hash literal requires even number of forms, %d provided",
+                token->line, n_forms),
+                SYNTAX_ERR);
+        }
+
+        if (!peek(ta)) {
+            return make_cell_error(
+                fmt_err("Line %d: Unmatched '[' in hash literal: '%s%s%s'",
+                token->line, ANSI_RED_B, token_to_string(token), ANSI_RESET),
+                SYNTAX_ERR);
+        }
+        advance(ta);
+        return make_cell_hash(sexpr);
+    }
+
+    /* Vector or bytevector. */
+    case T_HASH:
+    {
+        token = advance(ta); /* Consume '#' */
+
+        if (peek(ta)->type == T_SYMBOL) {
+            /* Bytevector. */
+            const char* bv_tok = token_to_string(peek(ta));
+            bv_t type;
+            if (strcmp(bv_tok, "u8") == 0) {
+                type = BV_U8;
+            } else if (strcmp(bv_tok, "u16") == 0) {
+                type = BV_U16;
+            } else if (strcmp(bv_tok, "u32") == 0) {
+                type = BV_U32;
+            } else if (strcmp(bv_tok, "u64") == 0) {
+                type = BV_U64;
+            } else if (strcmp(bv_tok, "s8") == 0) {
+                type = BV_S8;
+            } else if (strcmp(bv_tok, "s16") == 0) {
+                type = BV_S16;
+            } else if (strcmp(bv_tok, "s32") == 0) {
+                type = BV_S32;
+            } else if (strcmp(bv_tok, "s64") == 0) {
+                type = BV_S64;
+            } else if (strcmp(bv_tok, "f32") == 0) {
+                type = BV_F32;
+            } else if (strcmp(bv_tok, "f64") == 0) {
+                type = BV_F64;
+            } else {
+                return make_cell_error(
+                    fmt_err("Line %d: Bad bytevector label: %s", token->line, bv_tok),
+                    SYNTAX_ERR);
             }
-
-            /* Vector. */
-            Cell* vec = make_cell_vector();
+            Cell* bv = make_cell_bytevector(type, 8);
+            token = advance(ta); /* consume 'u8'. */
 
             if (peek(ta)->type != T_LEFT_PAREN) {
                 return make_cell_error(
-                    fmt_err("Line %d: Expected '(' in vector literal: '%s%s%s'",
-                    token->line, ANSI_RED_B, token_to_string(token), ANSI_RESET), SYNTAX_ERR);
+                    fmt_err(
+                    "Line %d: Expected '(' in bytevector literal: '%s%s%s'",
+                    token->line, ANSI_RED_B, token_to_string(token), ANSI_RESET),
+                    SYNTAX_ERR);
             }
 
             token = advance(ta); /* Consume '('. */
-            while (peek(ta)->type != T_RIGHT_PAREN) {
-                cell_add(vec, parse_tokens(ta));
-                advance(ta);
+
+            while (peek(ta) && peek(ta)->type != T_RIGHT_PAREN) {
+                const Cell* val = parse_tokens(ta);
+                if (!val) return make_cell_error("Unexpected EOF",
+                    SYNTAX_ERR);
+                if (val->type == CELL_ERROR) return (Cell*)val; /* Bubble error */
+
+                if (type == BV_F32 || type == BV_F64) {
+                    long double byte;
+                    if (val->type == CELL_INTEGER) {
+                        byte = val->integer_v;
+                        Cell* err = fp_byte_check(type, byte);
+                        if (err) return err;
+
+                    } else if (val->type == CELL_REAL) {
+                        byte = val->real_v;
+                        Cell* err = fp_byte_check(type, byte);
+                        if (err) return err;
+                    } else {
+                        return make_cell_error(
+                        fmt_err("Line %d: bad value: '%s'. bytevector literals must be integers or reals",
+                        token->line, cell_to_string(val, MODE_REPL)),
+                        TYPE_ERR);
+                    }
+                    BV_FP_OPS[bv->bv->type].append(bv, byte);
+                } else {
+                    if (val->type != CELL_INTEGER) {
+                        return make_cell_error(
+                            fmt_err("Line %d: bad value: '%s'. bytevector literals can only contain bytes",
+                            token->line, cell_to_string(val, MODE_REPL)),
+                            TYPE_ERR);
+                    }
+
+                    const int64_t byte = val->integer_v;
+                    Cell* err = int_byte_check(type, byte);
+                    if (err) return err;
+                    BV_INT_OPS[bv->bv->type].append(bv, byte);
+                }
             }
 
             if (!peek(ta)) {
                 return make_cell_error(
-                    fmt_err("Line %d: Unmatched '(' in vector literal: '%s%s%s'",
-                    token->line, ANSI_RED_B, token_to_string(token), ANSI_RESET), SYNTAX_ERR);
-            }
-            return vec;
-        }
-
-        /* S-expression. */
-        case T_LEFT_PAREN:
-        {
-            token = advance(ta); /* Consume '('. */
-            if (token->type == T_RIGHT_PAREN) {
-                /* Unquoted nil is an error. */
-                return make_cell_error(
-                    fmt_err("Line %d: Empty S-expression.", token->line),
+                    fmt_err("Line %d: Unmatched '(' in bytevector literal: '%s%s%s'",
+                    token->line, ANSI_RED_B, token_to_string(token), ANSI_RESET),
                     SYNTAX_ERR);
             }
-            Cell *sexpr = make_cell_sexpr();
-
-            while (peek(ta)->type != T_RIGHT_PAREN) {
-                cell_add(sexpr, parse_tokens(ta));
-                advance(ta);
-            }
-            if (!peek(ta)) {
-                return make_cell_error(
-                    fmt_err("Line %d: Unmatched '('.", token->line),
-                    SYNTAX_ERR);
-            }
-            return sexpr;
+            advance(ta);
+            return bv;
         }
 
-        default:
-            /* Should not ever get here, but maybe it's a hash with no vector? */
+        /* Vector. */
+        Cell* vec = make_cell_vector();
+
+        if (peek(ta)->type != T_LEFT_PAREN) {
             return make_cell_error(
-                fmt_err("Line %d: bad token", token->line),
+                fmt_err("Line %d: Expected '(' in vector literal: '%s%s%s'",
+                token->line, ANSI_RED_B, token_to_string(token), ANSI_RESET),
                 SYNTAX_ERR);
+        }
+
+        token = advance(ta); /* Consume '('. */
+
+        while (peek(ta) && peek(ta)->type != T_RIGHT_PAREN) {
+            Cell* next = parse_tokens(ta);
+            if (!next) return make_cell_error("Unexpected EOF",
+                SYNTAX_ERR);
+            if (next->type == CELL_ERROR) return next;
+            cell_add(vec, next);
+        }
+
+        if (!peek(ta)) {
+            return make_cell_error(
+                fmt_err("Line %d: Unmatched '(' in vector literal: '%s%s%s'",
+                token->line, ANSI_RED_B, token_to_string(token), ANSI_RESET),
+                SYNTAX_ERR);
+        }
+        advance(ta);
+        return vec;
+    }
+
+    /* S-expression. */
+    case T_LEFT_PAREN:
+    {
+        token = advance(ta); /* Consume '('. */
+
+        if (token->type == T_RIGHT_PAREN) {
+            /* Unquoted nil is an error. */
+            return make_cell_error(
+                fmt_err("Line %d: Empty S-expression.", token->line),
+                SYNTAX_ERR);
+        }
+
+        Cell *sexpr = make_cell_sexpr();
+
+        while (peek(ta) && peek(ta)->type != T_RIGHT_PAREN) {
+            Cell* next = parse_tokens(ta);
+            if (!next) return make_cell_error("Unexpected EOF",
+                SYNTAX_ERR);
+            if (next->type == CELL_ERROR) return next;
+            cell_add(sexpr, next);
+        }
+
+        if (!peek(ta)) {
+            return make_cell_error(
+                fmt_err("Line %d: Unmatched '('.", token->line),
+                SYNTAX_ERR);
+        }
+        advance(ta);
+        return sexpr;
+    }
+
+    default:
+        /* Should not ever get here, but return a generic error. */
+        return make_cell_error(
+            fmt_err("Line %d: bad token", token->line),
+            SYNTAX_ERR);
     }
 }
