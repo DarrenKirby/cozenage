@@ -315,6 +315,20 @@ Test(test_lexer, test_lex_error, .init = setup) {
     cr_assert_not_null(ta->tokens++);
     cr_assert_eq(ta->tokens->type, T_EOF);
 
+    // Test unterminated string is caught by lexer
+    // The T_RIGHT_PAREN is not lexed, as it is assumed 
+    // part of the unterminated string
+    src = "(foo \"hello world)";
+    ta = scan_all_tokens(src);
+    //debug_lexer(ta);
+    cr_assert_eq(ta->count, 4, "Expected 4; got %d", ta->count);
+    cr_assert_eq(ta->tokens->type, T_LEFT_PAREN, "Expected %d: got %d", T_LEFT_PAREN, ta->tokens->type);
+    cr_assert_not_null(ta->tokens++);
+    cr_assert_eq(ta->tokens->type, T_SYMBOL, "Expected %d: got %d", T_SYMBOL, ta->tokens->type);
+    cr_assert_not_null(ta->tokens++);
+    cr_assert_eq(ta->tokens->type, T_ERROR, "Expected %d: got %d", T_ERROR, ta->tokens->type);
+    cr_assert_not_null(ta->tokens++);
+    cr_assert_eq(ta->tokens->type, T_EOF);
 }
 
 
