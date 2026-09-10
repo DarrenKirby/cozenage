@@ -33,7 +33,7 @@
 #include <unicode/uchar.h>
 
 
-static long double parse_float_checked(const char* str, char* err_buf, int* ok)
+STATIC long double parse_float_checked(const char* str, char* err_buf, int* ok)
 {
     errno = 0;
     char* end_ptr;
@@ -66,7 +66,7 @@ static long double parse_float_checked(const char* str, char* err_buf, int* ok)
 }
 
 
-static long long parse_int_checked(const char* str, char* err_buf, const int base, int* ok)
+STATIC long long parse_int_checked(const char* str, char* err_buf, const int base, int* ok)
 {
     errno = 0;
     char* end_ptr;
@@ -93,7 +93,7 @@ static long long parse_int_checked(const char* str, char* err_buf, const int bas
 }
 
 
-static char* token_to_string(const Token* token)
+STATIC char* token_to_string(const Token* token)
 {
     /* Allocate memory for the new string (+1 for the null terminator). */
     char* str = GC_MALLOC(token->length + 1);
@@ -112,7 +112,7 @@ static char* token_to_string(const Token* token)
 }
 
 
-static bool fits_in_int64(const char *s) {
+STATIC bool fits_in_int64(const char *s) {
     const int neg = s[0] == '-';
     const char *p = neg ? s + 1 : s;
 
@@ -128,7 +128,7 @@ static bool fits_in_int64(const char *s) {
 }
 
 
-static Cell* parse_number(char* token, const int line, int len)
+STATIC Cell* parse_number(char* token, const int line, int len)
 {
     int base = 10;   /* Default to base 10. */
     int exact = -1;  /* Default to unspecified. */
@@ -318,7 +318,7 @@ static Cell* parse_number(char* token, const int line, int len)
 }
 
 
-static Cell* parse_string(const char* str, const int len)
+STATIC Cell* parse_string(const char* str, const int len)
 {
     /* Allocate a new buffer. The final string will be
        less than or equal to the original length. */
@@ -426,7 +426,7 @@ static Cell* parse_string(const char* str, const int len)
 }
 
 
-static Cell* parse_boolean(const char* tok, const int line)
+STATIC Cell* parse_boolean(const char* tok, const int line)
 {
     if (strcmp(tok, "t") == 0 ||
         strcmp(tok, "true") == 0) return True_Obj;
@@ -438,7 +438,7 @@ static Cell* parse_boolean(const char* tok, const int line)
 }
 
 
-static Cell* parse_symbol(char* tok, const int line, const int len)
+STATIC Cell* parse_symbol(char* tok, const int line, const int len)
 {
     /* This is kind of an ugly kludge, but I'm
      * not sure how to do it more elegantly. */
@@ -454,7 +454,7 @@ static Cell* parse_symbol(char* tok, const int line, const int len)
 }
 
 
-static Cell* parse_character(char* tok, const int line, const int len)
+STATIC Cell* parse_character(char* tok, const int line, const int len)
 {
     /* Handle the special '#\' -> space case. */
     if (len == 0) {
@@ -520,14 +520,14 @@ static Cell* parse_character(char* tok, const int line, const int len)
 }
 
 
-static Token *peek(const TokenArray *p)
+STATIC Token *peek_p(const TokenArray *p)
 {
     if (p->position < p->count) return &p->tokens[p->position];
     return nullptr;
 }
 
 
-static Token *advance(TokenArray *p)
+STATIC Token *advance_p(TokenArray *p)
 {
     if (p->position < p->count) return &p->tokens[p->position++];
     return nullptr;
@@ -550,7 +550,7 @@ Cell* parse_tokens(TokenArray *ta) {
     }
 
     /* Check token type and dispatch accordingly. */
-    Token *token = peek(ta);
+    Token *token = peek_p(ta);
     if (!token) return nullptr;
 
     switch (token->type) {
@@ -560,27 +560,27 @@ Cell* parse_tokens(TokenArray *ta) {
     /* Dispatch out the atoms, first. */
     case T_NUMBER: {
         Cell* val = parse_number(token_to_string(token), token->line, token->length);
-        advance(ta);
+        advance_p(ta);
         return val;
     }
     case T_STRING: {
         Cell* val = parse_string(token_to_string(token), token->length);
-        advance(ta);
+        advance_p(ta);
         return val;
     }
     case T_SYMBOL: {
         Cell* val = parse_symbol(token_to_string(token), token->line, token->length);
-        advance(ta);
+        advance_p(ta);
         return val;
     }
     case T_BOOLEAN: {
         Cell* val = parse_boolean(token_to_string(token), token->line);
-        advance(ta);
+        advance_p(ta);
         return val;
     }
     case T_CHAR: {
         Cell* val = parse_character(token_to_string(token), token->line, token->length);
-        advance(ta);
+        advance_p(ta);
         return val;
     }
 
@@ -592,7 +592,7 @@ Cell* parse_tokens(TokenArray *ta) {
     case T_QUASIQUOTE:
     {
         /* Grab the next token. */
-        const Token* t = advance(ta);
+        const Token* t = advance_p(ta);
         Cell *quoted = parse_tokens(ta);
         if (!quoted) {
             return make_cell_error(fmt_err("Line %d: Expected expression after quote: '%s%s%s'",
@@ -619,7 +619,7 @@ Cell* parse_tokens(TokenArray *ta) {
     case T_COMMA:
     case T_COMMA_AT:
     {
-        const Token* t = advance(ta);
+        const Token* t = advance_p(ta);
         Cell *expr = parse_tokens(ta);
         if (!expr) {
             return make_cell_error(fmt_err("Line %d: Expected expression after comma: '%s%s%s'",
@@ -644,11 +644,11 @@ Cell* parse_tokens(TokenArray *ta) {
 
     case T_SET_START: {
         /* Consume '#{' */
-        token = advance(ta);
+        token = advance_p(ta);
 
         Cell *sexpr = make_cell_sexpr();
 
-        while (peek(ta) && peek(ta)->type != T_RIGHT_BRACE) {
+        while (peek_p(ta) && peek_p(ta)->type != T_RIGHT_BRACE) {
             Cell* next = parse_tokens(ta);
             if (!next) return make_cell_error("Unexpected EOF",
                 SYNTAX_ERR);
@@ -656,24 +656,24 @@ Cell* parse_tokens(TokenArray *ta) {
             cell_add(sexpr, next);
         }
 
-        if (!peek(ta)) {
+        if (!peek_p(ta)) {
             return make_cell_error(
                 fmt_err("Line %d: Unmatched '{' in set literal: '%s%s%s'",
                 token->line, ANSI_RED_B, token_to_string(token), ANSI_RESET),
                 SYNTAX_ERR);
         }
-        advance(ta);
+        advance_p(ta);
         return make_cell_set(sexpr);
     }
 
     case T_HASH_START: {
         /* Consume '#[' */
-        token = advance(ta);
+        token = advance_p(ta);
 
         Cell *sexpr = make_cell_sexpr();
 
         int n_forms = 0;
-        while (peek(ta) && peek(ta)->type != T_RIGHT_BRACKET) {
+        while (peek_p(ta) && peek_p(ta)->type != T_RIGHT_BRACKET) {
             Cell* next = parse_tokens(ta);
             if (!next) return make_cell_error("Unexpected EOF",
                 SYNTAX_ERR);
@@ -690,24 +690,24 @@ Cell* parse_tokens(TokenArray *ta) {
                 SYNTAX_ERR);
         }
 
-        if (!peek(ta)) {
+        if (!peek_p(ta)) {
             return make_cell_error(
                 fmt_err("Line %d: Unmatched '[' in hash literal: '%s%s%s'",
                 token->line, ANSI_RED_B, token_to_string(token), ANSI_RESET),
                 SYNTAX_ERR);
         }
-        advance(ta);
+        advance_p(ta);
         return make_cell_hash(sexpr);
     }
 
     /* Vector or bytevector. */
     case T_HASH:
     {
-        token = advance(ta); /* Consume '#' */
+        token = advance_p(ta); /* Consume '#' */
 
-        if (peek(ta)->type == T_SYMBOL) {
+        if (peek_p(ta)->type == T_SYMBOL) {
             /* Bytevector. */
-            const char* bv_tok = token_to_string(peek(ta));
+            const char* bv_tok = token_to_string(peek_p(ta));
             bv_t type;
             if (strcmp(bv_tok, "u8") == 0) {
                 type = BV_U8;
@@ -735,9 +735,9 @@ Cell* parse_tokens(TokenArray *ta) {
                     SYNTAX_ERR);
             }
             Cell* bv = make_cell_bytevector(type, 8);
-            token = advance(ta); /* consume 'u8'. */
+            token = advance_p(ta); /* consume 'u8'. */
 
-            if (peek(ta)->type != T_LEFT_PAREN) {
+            if (peek_p(ta)->type != T_LEFT_PAREN) {
                 return make_cell_error(
                     fmt_err(
                     "Line %d: Expected '(' in bytevector literal: '%s%s%s'",
@@ -745,9 +745,9 @@ Cell* parse_tokens(TokenArray *ta) {
                     SYNTAX_ERR);
             }
 
-            token = advance(ta); /* Consume '('. */
+            token = advance_p(ta); /* Consume '('. */
 
-            while (peek(ta) && peek(ta)->type != T_RIGHT_PAREN) {
+            while (peek_p(ta) && peek_p(ta)->type != T_RIGHT_PAREN) {
                 const Cell* val = parse_tokens(ta);
                 if (!val) return make_cell_error("Unexpected EOF",
                     SYNTAX_ERR);
@@ -786,29 +786,29 @@ Cell* parse_tokens(TokenArray *ta) {
                 }
             }
 
-            if (!peek(ta)) {
+            if (!peek_p(ta)) {
                 return make_cell_error(
                     fmt_err("Line %d: Unmatched '(' in bytevector literal: '%s%s%s'",
                     token->line, ANSI_RED_B, token_to_string(token), ANSI_RESET),
                     SYNTAX_ERR);
             }
-            advance(ta);
+            advance_p(ta);
             return bv;
         }
 
         /* Vector. */
         Cell* vec = make_cell_vector();
 
-        if (peek(ta)->type != T_LEFT_PAREN) {
+        if (peek_p(ta)->type != T_LEFT_PAREN) {
             return make_cell_error(
                 fmt_err("Line %d: Expected '(' in vector literal: '%s%s%s'",
                 token->line, ANSI_RED_B, token_to_string(token), ANSI_RESET),
                 SYNTAX_ERR);
         }
 
-        token = advance(ta); /* Consume '('. */
+        token = advance_p(ta); /* Consume '('. */
 
-        while (peek(ta) && peek(ta)->type != T_RIGHT_PAREN) {
+        while (peek_p(ta) && peek_p(ta)->type != T_RIGHT_PAREN) {
             Cell* next = parse_tokens(ta);
             if (!next) return make_cell_error("Unexpected EOF",
                 SYNTAX_ERR);
@@ -816,20 +816,20 @@ Cell* parse_tokens(TokenArray *ta) {
             cell_add(vec, next);
         }
 
-        if (!peek(ta)) {
+        if (!peek_p(ta)) {
             return make_cell_error(
                 fmt_err("Line %d: Unmatched '(' in vector literal: '%s%s%s'",
                 token->line, ANSI_RED_B, token_to_string(token), ANSI_RESET),
                 SYNTAX_ERR);
         }
-        advance(ta);
+        advance_p(ta);
         return vec;
     }
 
     /* S-expression. */
     case T_LEFT_PAREN:
     {
-        token = advance(ta); /* Consume '('. */
+        token = advance_p(ta); /* Consume '('. */
 
         if (token->type == T_RIGHT_PAREN) {
             /* Unquoted nil is an error. */
@@ -840,7 +840,7 @@ Cell* parse_tokens(TokenArray *ta) {
 
         Cell *sexpr = make_cell_sexpr();
 
-        while (peek(ta) && peek(ta)->type != T_RIGHT_PAREN) {
+        while (peek_p(ta) && peek_p(ta)->type != T_RIGHT_PAREN) {
             Cell* next = parse_tokens(ta);
             if (!next) return make_cell_error("Unexpected EOF",
                 SYNTAX_ERR);
@@ -848,12 +848,12 @@ Cell* parse_tokens(TokenArray *ta) {
             cell_add(sexpr, next);
         }
 
-        if (!peek(ta)) {
+        if (!peek_p(ta)) {
             return make_cell_error(
                 fmt_err("Line %d: Unmatched '('.", token->line),
                 SYNTAX_ERR);
         }
-        advance(ta);
+        advance_p(ta);
         return sexpr;
     }
 

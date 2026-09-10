@@ -20,6 +20,12 @@
 #ifndef COZENAGE_LEXER_H
 #define COZENAGE_LEXER_H
 
+#ifdef CRITERION_TEST_BUILD
+    #define STATIC
+#else
+    #define STATIC static
+#endif
+
 
 typedef enum {
     /* Single char tokens */
@@ -64,5 +70,11 @@ typedef struct {
 
 TokenArray* scan_all_tokens(const char* source);
 void debug_lexer(const TokenArray* ta);
+
+/* Only need these for the test builds. */
+#ifdef CRITERION_TEST_BUILD
+bool is_digit(const char c);
+bool is_whitespace(const char c);
+#endif
 
 #endif //COZENAGE_LEXER_H
