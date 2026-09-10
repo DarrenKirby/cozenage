@@ -1,4 +1,5 @@
 #include <criterion/criterion.h>
+#include <criterion/internal/test.h>
 #include <gc/gc.h>
 
 #include "types.h"
@@ -8,6 +9,8 @@ static void setup(void) {
     GC_INIT();
     init_global_singletons();
 }
+
+TestSuite(string_builtins);
 
 Test(string_builtins, string_split_basic, .init = setup) {
     // Manually construct the argument list: '("A,B" ",")
@@ -39,3 +42,4 @@ Test(string_builtins, string_split_basic, .init = setup) {
     cr_assert_eq(second_tok->type, CELL_STRING);
     cr_assert_str_eq(second_tok->str, "B");
 }
+

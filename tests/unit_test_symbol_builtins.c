@@ -1,4 +1,5 @@
 #include <criterion/criterion.h>
+#include <criterion/internal/test.h>
 #include <gc/gc.h>
 
 #include "symbols.h"
@@ -12,6 +13,8 @@ static void setup(void) {
     symbol_table = ht_create(128);
     init_special_forms();
 }
+
+TestSuite(symbol_builtins);
 
 Test(symbol_builtins, builtin_symbol_equal_pred, .init = setup) {
     Cell* a = make_cell_symbol("a");

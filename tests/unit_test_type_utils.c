@@ -1,4 +1,5 @@
 #include <criterion/criterion.h>
+#include <criterion/internal/test.h>
 #include <gc/gc.h>
 
 #define CRITERION_TEST_BUILD 1
@@ -8,6 +9,8 @@ static void setup(void) {
     GC_INIT();
     init_global_singletons();
 }
+
+TestSuite(type_utils);
 
 Test(type_utils, test_cell_type_name, .init = setup) {
     cr_assert_str_eq(cell_type_name(CELL_INTEGER), "integer");

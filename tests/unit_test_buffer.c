@@ -9,7 +9,9 @@ static void setup(void) {
     GC_INIT();
 }
 
-Test(string_builtins, test_buffer_new, .init = setup) {
+TestSuite(unit_test_buffer);
+
+Test(unit_test_buffer, test_buffer_new, .init = setup) {
     str_buf_t *sb = sb_new();
     cr_assert_not_null(sb);
     cr_assert_not_null(sb->buffer);
@@ -18,7 +20,7 @@ Test(string_builtins, test_buffer_new, .init = setup) {
     cr_assert_eq(sb->length, 0);
 }
 
-Test(string_builtins, test_sb_append_char, .init = setup) {
+Test(unit_test_buffer, test_sb_append_char, .init = setup) {
     // Allocate empty buffer
     str_buf_t *sb = sb_new();
     cr_assert_not_null(sb);
@@ -49,8 +51,7 @@ Test(string_builtins, test_sb_append_char, .init = setup) {
     cr_assert_eq(sb->length, 3);
 }
 
-
-Test(string_builtins, test_sb_append_string, .init = setup) {
+Test(unit_test_buffer, test_sb_append_string, .init = setup) {
     // Allocate empty buffer
     str_buf_t *sb = sb_new();
     cr_assert_not_null(sb);
@@ -74,7 +75,7 @@ Test(string_builtins, test_sb_append_string, .init = setup) {
     cr_assert_eq(sb->length, 32);
 }
 
-Test(string_builtins, test_sb_append_data, .init = setup) {
+Test(unit_test_buffer, test_sb_append_data, .init = setup) {
     // Allocate empty buffer
     str_buf_t *sb = sb_new();
     cr_assert_not_null(sb);
@@ -100,7 +101,7 @@ Test(string_builtins, test_sb_append_data, .init = setup) {
     cr_assert_eq(sb->length, 32);
 }
 
-Test(string_builtins, test_sb_append_fmt, .init = setup) {
+Test(unit_test_buffer, test_sb_append_fmt, .init = setup) {
     // Allocate empty buffer
     str_buf_t *sb = sb_new();
     cr_assert_not_null(sb);
@@ -116,7 +117,7 @@ Test(string_builtins, test_sb_append_fmt, .init = setup) {
     cr_assert_eq(sb->length, 24);
 }
 
-Test(string_builtins, test_sb_ensure_capacity, .init = setup) {
+Test(unit_test_buffer, test_sb_ensure_capacity, .init = setup) {
     // Allocate empty buffer
     str_buf_t *sb = sb_new();
     cr_assert_not_null(sb);
@@ -139,6 +140,4 @@ Test(string_builtins, test_sb_ensure_capacity, .init = setup) {
     cr_assert_eq(sb->capacity, 512);
     cr_assert_eq(sb->length, 257);
 }
-
-
 

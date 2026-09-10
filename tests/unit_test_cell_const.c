@@ -13,6 +13,8 @@ void setup(void) {
     init_special_forms();
 }
 
+TestSuite(cell_constructors);
+
 Test(cell_constructors, boolean, .init = setup) {
     constexpr int true_int = 1;
     constexpr int false_int = 0;
@@ -305,7 +307,6 @@ Test(cell_constructors, string_utf8_allocation, .init = setup) {
     // Verify the SWAR check correctly identified it as NON-ascii
     cr_assert_eq(v->ascii, 0, "Expected ascii flag to be 0 for UTF-8 string");
 }
-
 
 Test(cell_constructors, make_cell_symbol, .init = setup) {
     Cell* sym = make_cell_symbol("hello");

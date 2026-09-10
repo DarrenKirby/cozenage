@@ -1,13 +1,16 @@
 #include <criterion/criterion.h>
-#include <criterion/internal/assert.h>
+//#include <criterion/internal/assert.h>
+//#include <criterion/internal/test.h>
 #include <gc/gc.h>
 
+#define CRITERION_TEST_BUILD 1
 #include "lexer.h"
-
 
 static void setup(void) {
     GC_INIT();
 }
+
+TestSuite(test_lexer);
 
 Test(test_lexer, test_lex_simp, .init = setup) {
     char *src = "(+ 1 1)";
@@ -316,7 +319,7 @@ Test(test_lexer, test_lex_error, .init = setup) {
     cr_assert_eq(ta->tokens->type, T_EOF);
 
     // Test unterminated string is caught by lexer
-    // The T_RIGHT_PAREN is not lexed, as it is assumed 
+    // The T_RIGHT_PAREN is not lexed, as it is assumed
     // part of the unterminated string
     src = "(foo \"hello world)";
     ta = scan_all_tokens(src);
@@ -330,5 +333,52 @@ Test(test_lexer, test_lex_error, .init = setup) {
     cr_assert_not_null(ta->tokens++);
     cr_assert_eq(ta->tokens->type, T_EOF);
 }
+
+// Test the helper functions
+
+
+Test(test_lexer, test_is_digit, .init = setup) {
+    cr_assert_eq(is_digit('0'), 1);
+    cr_assert_eq(is_digit('1'), 1);
+    cr_assert_eq(is_digit('2'), 1);
+    cr_assert_eq(is_digit('3'), 1);
+    cr_assert_eq(is_digit('4'), 1);
+    cr_assert_eq(is_digit('5'), 1);
+    cr_assert_eq(is_digit('6'), 1);
+    cr_assert_eq(is_digit('7'), 1);
+    cr_assert_eq(is_digit('8'), 1);
+    cr_assert_eq(is_digit('9'), 1);
+    cr_assert_eq(is_digit('a'), 0);
+    cr_assert_eq(is_digit('z'), 0);
+    cr_assert_eq(is_digit('A'), 0);
+    cr_assert_eq(is_digit('Z'), 0);
+    cr_assert_eq(is_digit(' '), 0);
+    cr_assert_eq(is_digit('.'), 0);
+    cr_assert_eq(is_digit('\n'), 0);
+    cr_assert_eq(is_digit('\0'), 0);
+}
+
+Test(test_lexer, test_is_whitespace, .init = setup) {
+    cr_assert_eq(is_whitespace(' '), 1);
+    cr_assert_eq(is_whitespace('\n'), 1);
+    cr_assert_eq(is_whitespace('\r'), 1);
+    cr_assert_eq(is_whitespace('\t'), 1);
+    cr_assert_eq(is_whitespace('A'), 0);
+    cr_assert_eq(is_whitespace('a'), 0);
+    cr_assert_eq(is_whitespace('b'), 0);
+    cr_assert_eq(is_whitespace('.'), 0);
+    cr_assert_eq(is_whitespace(':'), 0);
+    cr_assert_eq(is_whitespace('"'), 0);
+    cr_assert_eq(is_whitespace('0'), 0);
+    cr_assert_eq(is_whitespace('Z'), 0);
+    cr_assert_eq(is_whitespace('z'), 0);
+    cr_assert_eq(is_whitespace('@'), 0);
+    cr_assert_eq(is_whitespace('!'), 0);
+    cr_assert_eq(is_whitespace('*'), 0);
+    cr_assert_eq(is_whitespace('&'), 0);
+    cr_assert_eq(is_whitespace('%'), 0);
+    cr_assert_eq(is_whitespace('('), 0);
+}
+
 
 

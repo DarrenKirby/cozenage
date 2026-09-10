@@ -1,4 +1,5 @@
 #include <criterion/criterion.h>
+#include <criterion/internal/assert.h>
 #include <gc/gc.h>
 
 #include "bools.h"
@@ -10,6 +11,9 @@ static void setup(void) {
     GC_INIT();
     init_global_singletons();
 }
+
+
+TestSuite(bool_builtins);
 
 Test(bool_builtins, builtin_not, .init = setup) {
     // Random cell value == false
