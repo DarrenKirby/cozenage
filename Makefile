@@ -2,12 +2,11 @@
 # Unified Makefile for the 'cozenage' project
 #
 # Targets:
-#   make / make all      - Builds the project using CMake (default).
+#   make / make all      - Builds the cozenage binary and loadable modules.
 #   make DEBUG=1         - builds unoptimized binary and modules with debug symbols.
-#   make nocmake         - Builds the project manually without CMake.
 #   make test            - Builds the test runner.
-#   make clean           - Removes all build artifacts, including the build/ directory.
-#   make rebuild         - Cleans and rebuilds using the default (CMake) method.
+#   make clean           - Removes all build artifacts
+#   make rebuild         - Cleans and rebuilds the main binary and modules
 #   make install         - installs the binary to ${PREFIX}/bin/cozenage
 #                           and the modules to $(PREFIX)/lib/cozenage/
 #                           Override default using: $ make install PREFIX=/my/custom/path
@@ -17,8 +16,9 @@
 CC ?= cc
 BINARY = cozenage
 TEST_BINARY = run_tests
-BUILD_DIR = build
 OBJ_DIR = obj
+PROD_OBJ_DIR = $(OBJ_DIR)/prod
+TEST_OBJ_DIR = $(OBJ_DIR)/test
 # Install targets - prefix configurable via:
 # `make install PREFIX=/path/to/install`
 PREFIX ?= /usr/local
@@ -63,16 +63,32 @@ LIB_SOURCES := $(foreach dir,$(LIB_SOURCE_DIRS),$(wildcard $(dir)/*.c))
 TEST_SOURCES = $(foreach dir,$(TEST_SOURCE_DIRS),$(wildcard $(dir)/*.c))
 
 # Objects for main binary now *only* come from CORE_SOURCES
-CORE_OBJECTS = $(patsubst %.c,$(OBJ_DIR)/%.o,$(CORE_SOURCES))
+CORE_OBJECTS = $(patsubst %.c,$(PROD_OBJ_DIR)/%.o,$(CORE_SOURCES))
 
-# Test sources now correctly use CORE_SOURCES
+# Test sources use CORE_SOURCES
 APP_SOURCES_FOR_TEST = $(filter-out src/main.c, $(CORE_SOURCES))
 ALL_SOURCES_FOR_TEST = $(APP_SOURCES_FOR_TEST) $(TEST_SOURCES)
-TEST_OBJECTS = $(patsubst %.c,$(OBJ_DIR)/%.o,$(ALL_SOURCES_FOR_TEST))
+TEST_OBJECTS = $(patsubst %.c,$(TEST_OBJ_DIR)/%.o,$(ALL_SOURCES_FOR_TEST))
 
 # --- Compiler Flags ---
-# Add include paths for ALL source directories to CFLAGS
-CFLAGS = $(foreach dir,$(ALL_SOURCE_DIRS),-I$(dir))
+
+# Use := to execute exactly once at parse time
+ICU_VERSION := $(shell pkg-config --modversion icu-uc 2>/dev/null)
+GMP_VERSION := $(shell pkg-config --modversion gmp 2>/dev/null)
+GC_VERSION  := $(shell pkg-config --modversion bdw-gc 2>/dev/null)
+
+# Abort immediately if any are empty
+ifeq ($(ICU_VERSION),)
+  $(error "Hard dependency 'icu-uc' not found. Please install ICU.")
+endif
+
+ifeq ($(GMP_VERSION),)
+  $(error "Hard dependency 'gmp' not found. Please install GMP.")
+endif
+
+ifeq ($(GC_VERSION),)
+  $(error "Hard dependency 'bdw-gc' not found. Please install libgc.")
+endif
 
 # Detect ICU flags using pkg-config
 ICU_CFLAGS = $(shell pkg-config --cflags icu-uc)
@@ -82,94 +98,116 @@ ICU_LIBS = $(shell pkg-config --libs icu-uc)
 GMP_CFLAGS = $(shell pkg-config --cflags gmp)
 GMP_LIBS = $(shell pkg-config --libs gmp)
 
+# Detect libgc flags and libs
+GC_CFLAGS = $(shell pkg-config --cflags bdw-gc)
+GC_LIBS = $(shell pkg-config --libs bdw-gc)
+
+# Mandatory flags (includes, language standard, pkg-config)
+APP_CFLAGS = -std=gnu2x \
+             $(foreach dir,$(ALL_SOURCE_DIRS),-I$(dir)) \
+             $(ICU_CFLAGS) $(GMP_CFLAGS) $(GC_CFLAGS)
+
+# Detect criterion flags and libs
+# Check if 'test' is anywhere in the command line args (e.g., 'make test')
+ifneq ($(filter test,$(MAKECMDGOALS)),)
+  CRITERION_VERSION := $(shell pkg-config --modversion criterion 2>/dev/null)
+  
+  ifeq ($(CRITERION_VERSION),)
+    $(error "Hard dependency 'criterion' not found. Required to run 'make test'.")
+  endif
+  
+  CRIT_CFLAGS = $(shell pkg-config --cflags criterion)
+  CRIT_LIBS   = $(shell pkg-config --libs criterion)
+endif
+
+SSL_VERSION = $(shell pkg-config --modversion openssl || echo "Not found! 'random' module will not be built")
+
 # Detect openssl lib, and omit random.so compilation if not present
 LIB_MODULES := $(patsubst src/base-lib/%_lib.c,lib/cozenage/base/%.$(LIB_EXT),$(LIB_SOURCES))
 
 ifeq ($(shell pkg-config --exists openssl && echo yes),yes)
+	SSL_CFLAGS = $(shell pkg-config --cflags openssl)
 	SSL_LIBS := $(shell pkg-config --libs openssl)
 	MODULE_LDFLAGS += $(SSL_LIBS)
+	APP_CFLAGS += $(SSL_CFLAGS)
 else
 	LIB_MODULES := $(filter-out lib/cozenage/base/random.$(LIB_EXT),$(LIB_MODULES))
 endif
 
 # Specific flag sets for different builds
-CFLAGS_DEFAULT = -Wall -Wextra -Wdeprecated-declarations -O2 -std=gnu2x $(ICU_CFLAGS) $(GMP_CFLAGS)
-CFLAGS_TEST = -Wall -Wextra -g -O0 -std=gnu2x $(ICU_CFLAGS) $(GMP_CFLAGS) -fno-omit-frame-pointer -DCRITERION_TEST_BUILD
+CFLAGS ?= -Wall -Wextra -Wdeprecated-declarations -O2
 
 # --- Libraries ---
 # -ldl (for dlopen) to all BASE_LIBS definitions
-BASE_LIBS = -lm -lgc $(ICU_LIBS) -ldl $(EXE_LDFLAGS) $(GMP_LIBS)
-TEST_LIBS = -lcriterion $(BASE_LIBS)
+BASE_LIBS = -lm $(GC_LIBS) $(ICU_LIBS) -ldl $(EXE_LDFLAGS) $(GMP_LIBS)
+TEST_LIBS = $(CRIT_LIBS) $(BASE_LIBS)
 
 # --- Phony Targets (Commands) ---
-.PHONY: all cmake_build nocmake test clean rebuild install uninstall docs docs-clean
+.PHONY: all test clean rebuild install uninstall docs docs-clean
 
 # The default target when 'make' is run
-all: cmake_build
+all:
+	@$(MAKE) print_msg
+	@$(MAKE) cozenage_build
 
-# Target to build using CMake 
-cmake_build:
-	@echo "--- Building with CMake ---"
-	@mkdir -p $(BUILD_DIR)
-	@cd $(BUILD_DIR) && cmake -DDEBUG_BUILD=$(DEBUG) ..
-	@$(MAKE) -C $(BUILD_DIR)
-	@cp $(BUILD_DIR)/$(BINARY) .
-
-# Target to build manually (without CMake)
-nocmake: CFLAGS += $(CFLAGS_DEFAULT)
-# 'nocmake' also depends on building all the modules
-nocmake: $(BINARY) $(LIB_MODULES)
-	@echo "--- Manual build complete: ./$(BINARY) and modules in lib/cozenage/base/ ---"
+# Target to build main binary and modules
+cozenage_build: $(BINARY) $(LIB_MODULES)
+	@echo "\x1b[32;1m---- Manual build complete: ./$(BINARY) and modules in lib/cozenage/base/ ---\x1b[0m"
 
 # Target to build the test runner
-test: CFLAGS += $(CFLAGS_TEST)
+test: APP_CFLAGS += -g -O0 $(CRIT_CFLAGS) -DCRITERION_TEST_BUILD
 test: $(TEST_BINARY)
-	@echo "--- Test build complete: ./$(TEST_BINARY) ---"
+	@echo "\x1b[32;1m--- Test build complete: ./$(TEST_BINARY) ---\x1b[0m"
 
-# Target to clean all artifacts from all build methods
+print_msg:
+	@echo "\x1b[32;1m--- Building cozenage binary ---\x1b[0m"
+	@echo "    ICU version       $(ICU_VERSION)"
+	@echo "    GMP version       $(GMP_VERSION)"
+	@echo "    libgc version     $(GC_VERSION)"
+	@echo "    OpenSSL version   $(SSL_VERSION)"
+	@echo "-------------------------------------"
+
+
+# Target to clean all artifacts from all build directories
 clean:
-	@echo "--- Cleaning all build artifacts ---"
+	@echo "\x1b[32;1m--- Cleaning all build artifacts ---\x1b[0m"
 	@rm -f $(BINARY) $(TEST_BINARY)
-	@rm -rf $(BUILD_DIR) $(OBJ_DIR) lib/cozenage
+	@rm -rf $(OBJ_DIR) lib/cozenage
 
-# Target to clean and then rebuild using the default method
+# Target to clean and then rebuild
 rebuild: clean all
 
 # --- File-Generating Rules ---
-
-# Rule to link the main application *only* uses CORE_OBJECTS
-$(BINARY): $(CORE_OBJECTS)
-	@echo "Linking application: $@"
-	$(CC) $(CFLAGS) -o $@ $^ $(BASE_LIBS)
-
-# Rule to link the test runner for 'test' build
-$(TEST_BINARY): $(TEST_OBJECTS)
-	@echo "Linking test runner: $@"
-	$(CC) $(CFLAGS) -o $@ $^ $(TEST_LIBS) -fsanitize=address
-
-# A static pattern rule to compile any .c file into its corresponding
-# location inside the obj directory.
-$(OBJ_DIR)/%.o: %.c
-    # Ensure the target directory exists before compiling (e.g., obj/src/scheme-lib/)
-	@mkdir -p $(@D)
-	$(CC) $(CFLAGS) -c $< -o $@
 
 # $< is the first prerequisite (the .c file)
 # $@ is the target (the .o file)
 # $(@D) is the directory part of the target
 
+# Rule for production objects
+$(PROD_OBJ_DIR)/%.o: %.c
+	@mkdir -p $(@D)
+	$(CC) $(APP_CFLAGS) $(CFLAGS) -c $< -o $@
 
-# ==============================================================================
-# Rule to Build Loadable Modules
-#
-# This rule matches, for example, 'lib/cozenage/base/math.so' with
-# 'src/base-lib/math_lib.c' and compiles it as a shared library.
-# ==============================================================================
+# Rule for test objects
+$(TEST_OBJ_DIR)/%.o: %.c
+	@mkdir -p $(@D)
+	$(CC) $(APP_CFLAGS) -c $< -o $@
+
+# Apply the same logic to your $(BINARY), $(TEST_BINARY), and loadable module rules
+$(BINARY): $(CORE_OBJECTS)
+	@echo "\x1b[32;1m--- Linking application: $@ ---\x1b[0m"
+	$(CC) $(APP_CFLAGS) $(CFLAGS) -o $@ $^ $(BASE_LIBS)
+
+# Rule to link the test runner for 'test' build
+$(TEST_BINARY): $(TEST_OBJECTS)
+	@echo "Linking test runner: $@"
+	$(CC) $(APP_CFLAGS) -o $@ $^ $(TEST_LIBS) -fsanitize=address
+
+# Rule to build modules
 lib/cozenage/base/%.$(LIB_EXT): src/base-lib/%_lib.c
 	@mkdir -p $(@D)
-	@echo "Building module: $@"
-	$(CC) $(CFLAGS) $(LIB_CFLAGS) $(MODULE_LDFLAGS) $< -o $@
-
+	@echo "\x1b[32;1m--- Building module: $@ ---\x1b[0m"
+	$(CC) $(APP_CFLAGS) $(LIB_CFLAGS) $(MODULE_LDFLAGS) $(CFLAGS) $< -o $@
 
 # --- install rules
 install:
