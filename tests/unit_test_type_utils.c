@@ -1,8 +1,8 @@
 #include <criterion/criterion.h>
-#include <criterion/internal/test.h>
 #include <gc/gc.h>
 
 #define CRITERION_TEST_BUILD 1
+#include "cell.h"
 #include "types.h"
 
 static void setup(void) {

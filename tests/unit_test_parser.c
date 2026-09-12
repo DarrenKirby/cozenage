@@ -3,6 +3,7 @@
 #include <gc/gc.h>
 
 #define CRITERION_TEST_BUILD 1
+#include "cell.h"
 #include "parser.h"
 
 static void setup(void) {

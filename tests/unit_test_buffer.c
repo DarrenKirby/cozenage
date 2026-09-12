@@ -2,6 +2,7 @@
 #include <criterion/internal/assert.h>
 #include <gc/gc.h>
 
+#include "cell.h"
 #include "buffer.h"
 
 
