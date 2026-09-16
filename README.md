@@ -145,9 +145,7 @@ Cozenage has been built and tested on Linux, FreeBSD, and macOS. Building on Win
 certainly break without a POSIX subsystem in place. See [this bug](https://github.com/DarrenKirby/cozenage/issues/1) if you are able to help.
 The build system(s) specify the C23 standard, so the build might fail on older compilers.
 
-If you have cmake, run `make`.
-
-If you do not have cmake, or do not want to use it, run `make nocmake`.
+To build, just run `make` or `make -jn` to run `n` number of build jobs.
 
 To build with debugging symbols, run ``make DEBUG=1``.
 
