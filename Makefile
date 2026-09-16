@@ -111,11 +111,11 @@ APP_CFLAGS = -std=gnu2x \
 # Check if 'test' is anywhere in the command line args (e.g., 'make test')
 ifneq ($(filter test,$(MAKECMDGOALS)),)
   CRITERION_VERSION := $(shell pkg-config --modversion criterion 2>/dev/null)
-  
+
   ifeq ($(CRITERION_VERSION),)
     $(error "Hard dependency 'criterion' not found. Required to run 'make test'.")
   endif
-  
+
   CRIT_CFLAGS = $(shell pkg-config --cflags criterion)
   CRIT_LIBS   = $(shell pkg-config --libs criterion)
 endif
@@ -152,25 +152,25 @@ all:
 
 # Target to build main binary and modules
 cozenage_build: $(BINARY) $(LIB_MODULES)
-	@echo "\x1b[32;1m---- Manual build complete: ./$(BINARY) and modules in lib/cozenage/base/ ---\x1b[0m"
+	@printf "\x1b[32;1m---- Manual build complete: ./$(BINARY) and modules in lib/cozenage/base/ ---\x1b[0m\n"
 
 # Target to build the test runner
 test: APP_CFLAGS += -g -O0 $(CRIT_CFLAGS) -DCRITERION_TEST_BUILD
 test: $(TEST_BINARY)
-	@echo "\x1b[32;1m--- Test build complete: ./$(TEST_BINARY) ---\x1b[0m"
+	@printf "\x1b[32;1m--- Test build complete: ./$(TEST_BINARY) ---\x1b[0m\n"
 
 print_msg:
-	@echo "\x1b[32;1m--- Building cozenage binary ---\x1b[0m"
-	@echo "    ICU version       $(ICU_VERSION)"
-	@echo "    GMP version       $(GMP_VERSION)"
-	@echo "    libgc version     $(GC_VERSION)"
-	@echo "    OpenSSL version   $(SSL_VERSION)"
-	@echo "-------------------------------------"
+	@printf "\x1b[32;1m--- Building cozenage binary ---\x1b[0m\n"
+	@printf "    ICU version       $(ICU_VERSION)\n"
+	@printf "    GMP version       $(GMP_VERSION)\n"
+	@printf "    libgc version     $(GC_VERSION)\n"
+	@printf "    OpenSSL version   $(SSL_VERSION)\n"
+	@printf " -------------------------------------\n"
 
 
 # Target to clean all artifacts from all build directories
 clean:
-	@echo "\x1b[32;1m--- Cleaning all build artifacts ---\x1b[0m"
+	@printf "\x1b[32;1m--- Cleaning all build artifacts ---\x1b[0m\n"
 	@rm -f $(BINARY) $(TEST_BINARY)
 	@rm -rf $(OBJ_DIR) lib/cozenage
 
@@ -195,18 +195,18 @@ $(TEST_OBJ_DIR)/%.o: %.c
 
 # Apply the same logic to your $(BINARY), $(TEST_BINARY), and loadable module rules
 $(BINARY): $(CORE_OBJECTS)
-	@echo "\x1b[32;1m--- Linking application: $@ ---\x1b[0m"
+	@printf "\x1b[32;1m--- Linking application: $@ ---\x1b[0m\n"
 	$(CC) $(APP_CFLAGS) $(CFLAGS) -o $@ $^ $(BASE_LIBS)
 
 # Rule to link the test runner for 'test' build
 $(TEST_BINARY): $(TEST_OBJECTS)
-	@echo "Linking test runner: $@"
+	@printf "\x1b[32;1m--- Linking test runner: $@ ---\x1b[0m\n"
 	$(CC) $(APP_CFLAGS) -o $@ $^ $(TEST_LIBS) -fsanitize=address
 
 # Rule to build modules
 lib/cozenage/base/%.$(LIB_EXT): src/base-lib/%_lib.c
 	@mkdir -p $(@D)
-	@echo "\x1b[32;1m--- Building module: $@ ---\x1b[0m"
+	@printf "\x1b[32;1m--- Building module: $@ ---\x1b[0m\n"
 	$(CC) $(APP_CFLAGS) $(LIB_CFLAGS) $(MODULE_LDFLAGS) $(CFLAGS) $< -o $@
 
 # --- install rules
