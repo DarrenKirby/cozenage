@@ -69,7 +69,7 @@ String Procedures
 String Constructor, Accessor, and Setter Procedures
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. _proc:string:
+.. index:: string
 
 string
 ******
@@ -96,7 +96,7 @@ string
       --> (string)
       ""
 
-.. _proc:string-append:
+.. index:: string-append
 
 string-append
 *************
@@ -127,7 +127,7 @@ string-append
       ""
 
 
-.. _proc:string-ref:
+.. index:: string-ref
 
 string-ref
 **********
@@ -160,7 +160,7 @@ string-ref
       #\本
 
 
-.. _proc:make-string:
+.. index:: make-string
 
 make-string
 ***********
@@ -193,7 +193,7 @@ make-string
       --> (make-string 0)
       ""
 
-.. _proc:substring:
+.. index:: substring
 
 substring
 *********
@@ -233,7 +233,7 @@ substring
       "本語"
 
 
-.. _proc:string-set!:
+.. index:: string-set!
 
 string-set!
 ***********
@@ -271,7 +271,7 @@ string-set!
       "café"
 
 
-.. _proc:string-copy:
+.. index:: string-copy
 
 string-copy
 ***********
@@ -309,7 +309,7 @@ string-copy
       --> (string-copy "café" 2)
       "fé"
 
-.. _proc:string-copy!:
+.. index:: string-copy!
 
 string-copy!
 ************
@@ -355,7 +355,7 @@ string-copy!
       "café 日本"
 
 
-.. _proc:string-fill!:
+.. index:: string-fill!
 
 string-fill!
 ************
@@ -400,7 +400,7 @@ string-fill!
 String Misc Procedures
 ^^^^^^^^^^^^^^^^^^^^^^
 
-.. _proc:string-length:
+.. index:: string-length
 
 string-length
 *************
@@ -429,7 +429,7 @@ string-length
       --> (string-length "日本語")
       3
 
-.. _proc:string->list:
+.. index:: string->list
 
 string->list
 ************
@@ -470,7 +470,7 @@ string->list
       ()
 
 
-.. _proc:list->string:
+.. index:: list->string
 
 list->string
 ************
@@ -497,7 +497,7 @@ list->string
       --> (list->string '())
       ""
 
-.. _proc:string->number:
+.. index:: string->number
 
 string->number
 **************
@@ -547,7 +547,7 @@ string->number
       #f
 
 
-.. _proc:number->string:
+.. index:: number->string
 
 
 number->string
@@ -592,7 +592,7 @@ number->string
       --> (number->string 1+2i)
       "1+2i"
 
-.. _proc:string-split:
+.. index:: string-split
 
 string-split
 ************
@@ -631,7 +631,7 @@ string-split
 String Case-sensitive Comparison Procedures
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. _proc:string=?:
+.. index:: string=?
 
 string=?
 ********
@@ -661,7 +661,7 @@ string=?
       #t
 
 
-.. _proc:string<?:
+.. index:: string<?
 
 string<?
 ********
@@ -691,7 +691,7 @@ string<?
       #t
 
 
-.. _proc:string<=?:
+.. index:: string<=?
 
 .. function:: (string<=? string1 string2 ...)
 
@@ -719,7 +719,7 @@ string<?
       #t
 
 
-.. _proc:string>?:
+.. index:: string>?
 
 .. function:: (string>? string1 string2 ...)
 
@@ -745,7 +745,7 @@ string<?
       #t
 
 
-.. _proc:string>=?:
+.. index:: string>=?
 
 .. function:: (string>=? string1 string2 ...)
 
@@ -775,7 +775,7 @@ string<?
 String Case-insensitive Comparison Procedures
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. _proc:string-ci=?:
+.. index:: string-ci=?
 
 .. function:: (string-ci=? string1 string2 ...)
 
@@ -802,7 +802,7 @@ String Case-insensitive Comparison Procedures
       #t
 
 
-.. _proc:string-ci<?:
+.. index:: string-ci<?
 
 .. function:: (string-ci<? string1 string2 ...)
 
@@ -828,7 +828,7 @@ String Case-insensitive Comparison Procedures
       #f
 
 
-.. _proc:string-ci<=?:
+.. index:: string-ci<=?
 
 .. function:: (string-ci<=? string1 string2 ...)
 
@@ -854,7 +854,7 @@ String Case-insensitive Comparison Procedures
       #f
 
 
-.. _proc:string-ci>?:
+.. index:: string-ci>?
 
 .. function:: (string-ci>? string1 string2 ...)
 
@@ -880,7 +880,7 @@ String Case-insensitive Comparison Procedures
       #t
 
 
-.. _proc:string-ci>=?:
+.. index:: string-ci>=?
 
 .. function:: (string-ci>=? string1 string2 ...)
 
@@ -910,7 +910,7 @@ String Case-insensitive Comparison Procedures
 String Case-transformation Procedures
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. _proc:string-upcase:
+.. index:: string-upcase
 
 .. function:: (string-upcase string)
 
@@ -928,7 +928,7 @@ String Case-transformation Procedures
       --> (string-upcase "Hello World")
         "HELLO WORLD"
 
-.. _proc:string-downcase:
+.. index:: string-downcase
 
 .. function:: (string-downcase string)
 
@@ -946,7 +946,7 @@ String Case-transformation Procedures
       --> (string-downcase "Hello World")
         "hello world"
 
-.. _proc:string-foldcase:
+.. index:: string-foldcase
 
 .. function:: (string-foldcase string)
 
@@ -968,7 +968,7 @@ String Case-transformation Procedures
 String Iteration Procedures
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. _proc:string-map:
+.. index:: string-map
 
 .. function:: (string-map proc string ...)
 
@@ -1001,7 +1001,7 @@ String Iteration Procedures
       "hello"
 
 
-.. _proc:string-for-each:
+.. index:: string-for-each
 
 .. function:: (string-for-each proc string ...)
 

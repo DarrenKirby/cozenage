@@ -210,8 +210,8 @@ Each call to ``take`` drives exactly as much evaluation as is needed, and no mor
 
 Special Forms
 -------------
-
-.. _sf:delay:
+.. _index:delay:
+.. index:: delay
 
 delay
 ~~~~~~~~~
@@ -282,13 +282,14 @@ delay
 
     .. seealso::
 
-        :ref:`force <proc:force>`, :ref:`delay-force <sf:delay-force>`,
-        :ref:`make-promise <proc:make-promise>`
+        :ref:`force <index:force>`, :ref:`delay-force <index:delay-force>`,
+        :ref:`make-promise <index:make-promise>`
 
 
 ----
 
-.. _sf:delay-force:
+.. _index:delay-force:
+.. index:: delay-force
 
 delay-force
 ~~~~~~~~~~~~~~~
@@ -351,12 +352,13 @@ delay-force
 
     .. seealso::
 
-        :ref:`delay <sf:delay>`, :ref:`force <proc:force>`
+        :ref:`delay <index:delay>`, :ref:`force <index:force>`
 
 
 ----
 
-.. _sf:stream:
+.. _index:stream:
+.. index:: stream
 
 stream
 ~~~~~~~~~~
@@ -432,13 +434,14 @@ stream
 
     .. seealso::
 
-        :ref:`head <proc:head>`, :ref:`tail <proc:tail>`,
-        :ref:`iterate <proc:iterate>`, :ref:`list->stream <proc:list->stream>`
+        :ref:`head <index:head>`, :ref:`tail <index:tail>`,
+        :ref:`iterate <index:iterate>`, :ref:`list->stream <index:list->stream>`
 
 Procedures
 ----------
 
-.. _proc:force:
+.. _index:force:
+.. index:: force
 
 force
 ~~~~~~~~~
@@ -511,13 +514,14 @@ force
 
     .. seealso::
 
-        :ref:`delay <sf:delay>`, :ref:`delay-force <sf:delay-force>`,
-        :ref:`make-promise <proc:make-promise>`
+        :ref:`delay <index:delay>`, :ref:`delay-force <index:delay-force>`,
+        :ref:`make-promise <index:make-promise>`
 
 
 ----
 
-.. _proc:make-promise:
+.. _index:make-promise:
+.. index:: make-promise
 
 make-promise
 ~~~~~~~~~~~~~~~~
@@ -574,13 +578,14 @@ make-promise
 
     .. seealso::
 
-        :ref:`delay <sf:delay>`, :ref:`force <proc:force>`,
-        :ref:`promise? <proc:promise?>`
+        :ref:`delay <index:delay>`, :ref:`force <index:force>`,
+        :ref:`promise? <index:promise?>`
 
 
 ----
 
-.. _proc:promise?:
+.. _index:promise?:
+.. index:: promise?
 
 promise?
 ~~~~~~~~~~~~
@@ -624,13 +629,14 @@ promise?
 
     .. seealso::
 
-        :ref:`delay <sf:delay>`, :ref:`force <proc:force>`,
-        :ref:`stream? <proc:stream?>`
+        :ref:`delay <index:delay>`, :ref:`force <index:force>`,
+        :ref:`stream? <index:stream?>`
 
 
 ----
 
-.. _proc:stream?:
+.. _index:stream?:
+.. index:: stream?
 
 stream?
 ~~~~~~~~~~~
@@ -667,13 +673,14 @@ stream?
 
     .. seealso::
 
-        :ref:`stream-null? <proc:stream-null?>`, :ref:`promise? <proc:promise?>`,
-        :ref:`stream <sf:stream>`
+        :ref:`stream-null? <index:stream-null?>`, :ref:`promise? <index:promise?>`,
+        :ref:`stream <index:stream>`
 
 
 ----
 
-.. _proc:stream-null?:
+.. _index:stream-null?:
+.. index:: stream-null?
 
 stream-null?
 ~~~~~~~~~~~~~~~~
@@ -719,12 +726,13 @@ stream-null?
 
     .. seealso::
 
-        :ref:`stream? <proc:stream?>`, :ref:`list->stream <proc:list->stream>`
+        :ref:`stream? <index:stream?>`, :ref:`list->stream <index:list->stream>`
 
 Stream Constructors
 -------------------
 
-.. _proc:iterate:
+.. _index:iterate:
+.. index:: iterate
 
 iterate
 ~~~~~~~~~~~
@@ -775,13 +783,14 @@ iterate
 
     .. seealso::
 
-        :ref:`stream <sf:stream>`, :ref:`list->stream <proc:list->stream>`,
-        :ref:`collect <proc:collect>`, :ref:`select <proc:select>`
+        :ref:`stream <index:stream>`, :ref:`list->stream <index:list->stream>`,
+        :ref:`collect <index:collect>`, :ref:`select <index:select>`
 
 
 ----
 
-.. _proc:list->stream:
+.. _index:list->stream:
+.. index:: list->stream
 
 list->stream
 ~~~~~~~~~~~~~~~~
@@ -830,8 +839,8 @@ list->stream
 
     .. seealso::
 
-        :ref:`iterate <proc:iterate>`, :ref:`stream <sf:stream>`,
-        :ref:`stream-null? <proc:stream-null?>`
+        :ref:`iterate <index:iterate>`, :ref:`stream <index:stream>`,
+        :ref:`stream-null? <index:stream-null?>`
 
 
 ----
@@ -839,7 +848,8 @@ list->stream
 Stream Accessors
 ----------------
 
-.. _proc:head:
+.. _index:head:
+.. index:: head
 
 head
 ~~~~~~~~
@@ -871,12 +881,13 @@ head
 
     .. seealso::
 
-        :ref:`tail <proc:tail>`, :ref:`at <proc:at>`
+        :ref:`tail <index:tail>`, :ref:`at <index:at>`
 
 
 ----
 
-.. _proc:tail:
+.. _index:tail:
+.. index:: tail
 
 tail
 ~~~~~~~~
@@ -924,12 +935,12 @@ tail
 
     .. seealso::
 
-        :ref:`head <proc:head>`, :ref:`drop <proc:drop>`
-
+        :ref:`head <index:head>`, :ref:`drop <index:drop>`
 
 ----
 
-.. _proc:at:
+.. _index:at:
+.. index:: at
 
 at
 ~~~~~~
@@ -972,8 +983,8 @@ at
 
     .. seealso::
 
-        :ref:`head <proc:head>`, :ref:`take <proc:take>`,
-        :ref:`drop <proc:drop>`
+        :ref:`head <index:head>`, :ref:`take <index:take>`,
+        :ref:`drop <index:drop>`
 
 
 ----
@@ -981,7 +992,8 @@ at
 Stream Sequence Operations
 --------------------------
 
-.. _proc:take:
+.. _index:take:
+.. index:: take
 
 take
 ~~~~~~~~
@@ -1034,13 +1046,14 @@ take
 
     .. seealso::
 
-        :ref:`drop <proc:drop>`, :ref:`at <proc:at>`,
-        :ref:`reduce <proc:reduce>`
+        :ref:`drop <index:drop>`, :ref:`at <index:at>`,
+        :ref:`reduce <index:reduce>`
 
 
 ----
 
-.. _proc:drop:
+.. _index:drop:
+.. index:: drop
 
 drop
 ~~~~~~~~
@@ -1081,15 +1094,15 @@ drop
 
     .. seealso::
 
-        :ref:`take <proc:take>`, :ref:`tail <proc:tail>`
-
+        :ref:`take <index:take>`, :ref:`tail <index:tail>`
 
 ----
 
 Stream Transformers
 -------------------
 
-.. _proc:collect:
+.. _index:collect:
+.. index:: collect
 
 collect
 ~~~~~~~~~~~
@@ -1140,13 +1153,14 @@ collect
 
     .. seealso::
 
-        :ref:`select <proc:select>`, :ref:`weave <proc:weave>`,
-        :ref:`reduce <proc:reduce>`
+        :ref:`select <index:select>`, :ref:`weave <index:weave>`,
+        :ref:`reduce <index:reduce>`
 
 
 ----
 
-.. _proc:select:
+.. _index:select:
+.. index:: select
 
 select
 ~~~~~~~~~~
@@ -1190,13 +1204,14 @@ select
 
     .. seealso::
 
-        :ref:`collect <proc:collect>`, :ref:`weave <proc:weave>`,
-        :ref:`reduce <proc:reduce>`
+        :ref:`collect <index:collect>`, :ref:`weave <index:weave>`,
+        :ref:`reduce <index:reduce>`
 
 
 ----
 
-.. _proc:weave:
+.. _index:weave:
+.. index:: weave
 
 weave
 ~~~~~~~~~
@@ -1245,7 +1260,7 @@ weave
 
     .. seealso::
 
-        :ref:`collect <proc:collect>`, :ref:`select <proc:select>`
+        :ref:`collect <index:collect>`, :ref:`select <index:select>`
 
 
 ----
@@ -1253,7 +1268,8 @@ weave
 Stream Reduction
 ----------------
 
-.. _proc:reduce:
+.. _index:reduce:
+.. index:: reduce
 
 reduce
 ~~~~~~~~~~
@@ -1318,6 +1334,5 @@ reduce
 
     .. seealso::
 
-        :ref:`take <proc:take>`, :ref:`collect <proc:collect>`,
-        :ref:`select <proc:select>`
-
+        :ref:`take <index:take>`, :ref:`collect <index:collect>`,
+        :ref:`select <index:select>`

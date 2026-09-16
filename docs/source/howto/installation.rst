@@ -16,7 +16,7 @@ The quickest and easiest way to get the source is to simply clone the GitHub rep
 This command will download the source tree and git metadata to a directory ``cozenage`` in the PWD. The git source will
 contain at least two branches. ``main`` is the currently stable branch. This branch will *always* match the code in the
 most current release available from GitHub. The ``develop`` branch contains the code under active development. While
-the code from this branch is guaranteed to build and run, this is the branch that I push the most recent new features to,
+the code from this branch *should* build and run, this is the branch that I push the most recent new features to,
 and it is not as thoroughly tested as ``main``. If you want the latest, this is the branch to build.
 
 Static Source downloads
@@ -37,39 +37,33 @@ It requires `libgc <https://www.hboehm.info/gc/>`_ for garbage collection.
 It requires `GNU GMP <https://gmplib.org/>`_ for ``bigint`` support,
 and (may) soon require GNU MPFR for bigfloat support.
 
-CMake build
------------
+There is an optional dependancy on 
+`OpenSSL <https://openssl-library.org/>`_. If OpenSSL is not found on the host system, then the 
+``random`` module will not be built.
+
+Build
+------
 
 .. code-block:: bash
 
     $ make
 
-This will create a build/ directory in the source root which contains all the intermediate object
+This will create an ``obj/`` directory in the source root which contains all the intermediate object
 files. The main ``cozenage`` binary will be placed in the top-level of the source tree. The library modules will be
-placed in the ``lib/cozenage/base/`` subdirectory of the source tree. On macOS systems, these modules will be suffixed with ``.dylib``
-extensions. All other systems will suffix them with the ``.so`` extension.
+placed in the ``lib/cozenage/base/`` subdirectory of the source tree. On macOS systems, these modules will be suffixed
+with ``.dylib`` extensions. All other systems will suffix them with the ``.so`` extension.
 
 The default build specifies an -02 optimized binary. You can specify a non-optimized build with debugging symbols
 by running:
 
 .. code-block:: bash
 
-    $ make DEBUG=ON
-
-
-GNU make build
---------------
-
-If you do not have Cmake installed, or prefer not to use it, you can run:
-
-.. code-block:: bash
-
-    $ make nocmake
+    $ make DEBUG=1
 
 Building the testrunner
 -----------------------
 
-Cozenage comes with an (incomplete) set of end-to-end tests. To build this suite, and run the tests:
+Cozenage comes with an (presently incomplete) set of end-to-end and unit tests. To build this suite, and run the tests:
 
 .. code-block:: bash
 
@@ -88,14 +82,13 @@ To install the cozenage binary and library modules to the system, run:
 
     $ make install
 
-This will install ``cozenage`` to /usr/local/bin, and the modules under
-/usr/local/lib/cozenage by default. To change this default, add the `PREFIX` variable to
+This will install ``cozenage`` to ``/usr/local/bin``, and the modules under
+``/usr/local/lib/cozenage`` by default. To change this default, add the `PREFIX` variable to
 the command:
 
 .. code-block:: bash
 
     $ make install PREFIX=/my/custom/path
-
 
 Cleaning and rebuilding the source tree
 ---------------------------------------
@@ -122,17 +115,24 @@ which is shorthand for
 
 .. tip::
 
-    The unified Makefile uses GNU-extensions that will cause an error on most \*BSD systems that have standard make
-    installed. On such systems, replace all the ``make`` commands above with ``gmake``, if GNU Make is installed. If not,
-    CMake must be used manually to build. For example, from the top of the source directory:
+    The Makefile uses GNU-extensions that will cause an error on most \*BSD systems that have standard make
+    installed. On such systems, replace all the ``make`` commands above with ``gmake``.
 
-    .. code-block::
+Building the html documentation
+-------------------------------
 
-        $ mkdir build
-        $ cd build
-        $ cmake ..
-        $ make
-        $ mv cozenage ..
+Running
+
+.. code-block:: bash
+
+   $ make docs
+
+will build the html documentation at ``docs/source/_build/html/``. This requires having
+`Sphinx <https://www.sphinx-doc.org/en/master/>`_ installed. There is no docs install target
+so the docs will have to be copied somewhere appropriate manually. You can also build the 
+docs in various other formats using the docs-specific Makefile located at ``docs/source``.
+Running ``make help`` in this directory will show the various options and output formats
+available, which depend on certain tools being available on the system.
 
 Portability
 -----------

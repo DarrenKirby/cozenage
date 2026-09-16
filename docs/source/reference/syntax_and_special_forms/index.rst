@@ -4,16 +4,16 @@ Syntax and Special Forms
 Special forms are the syntactic backbone of Cozenage. Where procedures are
 values that can be passed around, stored in variables, and called at runtime,
 special forms are fixed constructs that the evaluator recognises by shape and
-handles directly — they are what most languages would call *syntax* or
+handles directly. They are what most languages would call *syntax* or
 *keywords*. You cannot redefine a special form, pass it as an argument, or
-use it as a value. Attempting to rebind one raises an error.
+use it as a value. Attempting to rebind them raises an error.
 
 The distinction matters because procedures always evaluate all their arguments
 before the procedure body runs. Special forms are not bound by this rule: they
 can choose which sub-expressions to evaluate, when to evaluate them, and how
 many times. This selective evaluation is what makes special forms necessary.
 ``if``, for example, must evaluate its test first and then evaluate *either*
-the consequent *or* the alternate — never both. If ``if`` were an ordinary
+the consequent *or* the alternate, never both. If ``if`` were an ordinary
 procedure, both branches would be evaluated before any choice was made, which
 would be both semantically wrong and potentially disastrous for recursive
 programs. The same logic applies to ``and``, ``or``, ``when``, ``cond``, and
@@ -21,7 +21,7 @@ every other conditional form: they exist as special forms precisely because
 short-circuit evaluation cannot be achieved with procedures.
 
 ``quote`` is the starkest example of this principle. Its entire purpose is to
-*suppress* evaluation — to return its argument as a literal datum rather than
+*suppress* evaluation and to return its argument as a literal datum rather than
 treating it as an expression to be evaluated. No procedure could do this, since
 a procedure would receive the already-evaluated argument.
 
@@ -34,10 +34,9 @@ intrinsically tied to the evaluator's internal machinery and cannot be
 expressed as ordinary calls.
 
 ``begin``, ``let``, ``letrec``, ``let*``, ``letrec*``, and ``do`` are special
-because they establish *sequential* or *scoped* evaluation contexts — regions
-of code with their own local bindings and their own evaluation order. They
+because they establish *sequential* or *scoped* evaluation contexts. These are
+code with their own local bindings and their own evaluation order. They
 are the tools from which all structured programs are built.
-
 
 **Functional programming and why it matters here**
 
@@ -45,7 +44,7 @@ Cozenage is a Scheme, and Scheme is a functional language. Understanding what
 that means in practice helps explain why the special forms are designed the
 way they are.
 
-In most imperative languages — C, Java, Python — a program is fundamentally a
+In most imperative languages (C, Java, Python) a program is fundamentally a
 sequence of instructions that modify shared state: variables are assigned,
 arrays are updated, objects are mutated, and the program proceeds step by step
 through these mutations. The meaning of a piece of code depends not just on
@@ -58,8 +57,8 @@ inputs to outputs without modifying anything else. Code written in this style
 is easier to reason about because the value of an expression depends only on
 its inputs, not on hidden state elsewhere in the program.
 
-Scheme does not enforce pure functional style — ``set!``, ``string-set!``,
-and similar mutation procedures exist and are sometimes the right tool — but
+Scheme does not enforce pure functional style. ``set!``, ``string-set!``,
+and similar mutation procedures exist and are sometimes the right tool but
 the language is designed to make the functional style natural and efficient.
 In particular:
 
@@ -95,8 +94,8 @@ In particular:
     2
 
   Each call to ``make-counter`` produces an independent counter whose state
-  is entirely private. This pattern — combining ``lambda``, ``let``, and
-  ``set!`` — is the Scheme idiom for encapsulation.
+  is entirely private. This pattern of combining ``lambda``, ``let``, and
+  ``set!`` is the Scheme idiom for encapsulation.
 
 
 **Choosing the right form**
@@ -120,7 +119,7 @@ Using ``let`` here ensures ``expensive-computation`` and ``other-computation``
 are each called exactly once, and their results are given readable names.
 
 *Defining procedures:* Use the ``define`` shorthand for top-level procedures.
-Use ``lambda`` directly when you need an anonymous procedure — as an argument
+Use ``lambda`` directly when you need an anonymous procedure: as an argument
 to ``map``, ``filter``, or ``for-each``, or when returning a procedure from
 another procedure. Use named ``let`` for self-contained recursive loops that
 do not need a name outside the loop body:
@@ -152,7 +151,7 @@ one-sided conditionals where the false branch is unimportant:
   ...   (else              "weekday"))
 
 *Sequencing side effects:* Use ``begin`` to group multiple expressions where
-only one is expected — for example, in the true branch of an ``if``. In a
+only one is expected, for example, in the true branch of an ``if``. In a
 procedure body or ``let`` body, multiple expressions are already sequenced
 implicitly and ``begin`` is not needed.
 
@@ -178,7 +177,7 @@ to the same underlying mechanism and are equally efficient:
 *Mutation:* Use ``set!`` sparingly and deliberately. In functional style,
 the need for ``set!`` is a signal to consider whether the computation could
 be restructured to pass updated values as arguments instead. That said,
-``set!`` is sometimes the clearest and most efficient tool — particularly for
+``set!`` is sometimes the clearest and most efficient tool, particularly for
 implementing stateful objects, caches, or counters.
 
 *Constructing code as data:* Use ``quasiquote`` with ``unquote`` and
@@ -199,7 +198,7 @@ fixed shape with variable content:
   (record name age email)
 
 *Macros:* Use ``defmacro`` when you need a new syntactic form that cannot be
-expressed as a procedure — most commonly when you need to control evaluation
+expressed as a procedure, most commonly when you need to control evaluation
 order or introduce new binding forms. Prefer procedures over macros wherever
 possible, since procedures are easier to reason about, test, and compose.
 When you do write a macro, use ``quasiquote`` to construct the expansion and
@@ -209,15 +208,16 @@ any bindings the macro introduces.
 
 **Derived forms**
 
-Several special forms in this implementation are *derived* — they are
+Several special forms in this implementation are *derived*. They are
 transformed into simpler primitives before evaluation rather than being
-evaluated directly. The derived forms are ``when``, ``unless``, ``or``,
-``cond``, ``case``, ``do``, ``let*``, ``letrec*``, named ``let``, and
-``quasiquote``. Their semantics are defined entirely by their expansions; they
+evaluated directly. The derived forms are ``case``, ``do``, named ``let``, and ``quasiquote``.
+Their semantics are defined entirely by their expansions; they
 exist purely as a convenience for the programmer. This is worth knowing because
 it means error messages from derived forms may sometimes refer to the primitive
 form they expanded into (``if``, ``let``, ``letrec``, etc.) rather than the
 original source form.
+
+This transformation takes place directly between the parser and the evaluator.
 
 .. toctree::
    :maxdepth: 1

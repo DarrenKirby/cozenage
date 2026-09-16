@@ -102,7 +102,7 @@ Procedures exported by bits
 >>
 ~~
 
-.. _proc:right-shift:
+.. index:: >>
 
 .. function:: (>> n1 n2)
 
@@ -118,7 +118,7 @@ Procedures exported by bits
 <<
 ~~
 
-.. _proc:left-shift:
+.. index:: <<
 
 .. function:: (<< n1 n2)
 
@@ -134,7 +134,7 @@ Procedures exported by bits
 band
 ~~~~
 
-.. _proc:band:
+.. index:: band
 
 .. function:: (band n1 n2)
 
@@ -147,7 +147,7 @@ band
     :return: The bitwise AND result.
     :rtype: integer, if n1 AND n2 are integers, otherwise, a bitstring.
 
-.. _proc:bor:
+.. index:: bor
 
 bor
 ~~~
@@ -166,7 +166,7 @@ bor
 bxor
 ~~~~
 
-.. _proc:bxor:
+.. index:: bxor
 
 .. function:: (bxor n1 n2)
 
@@ -182,7 +182,7 @@ bxor
 bnot
 ~~~~
 
-.. _proc:bnot:
+.. index:: bnot
 
 .. function:: (bnot n)
 
@@ -196,7 +196,7 @@ bnot
 bs+
 ~~~
 
-.. _proc:bs-plus:
+.. index:: bs+
 
 .. function:: (bs+ bitstring1 bitstring2)
 
@@ -212,7 +212,7 @@ bs+
 bs-
 ~~~
 
-.. _proc:bs-minus:
+.. index:: bs-
 
 .. function:: (bs- bitstring1 bitstring2)
 
@@ -228,7 +228,7 @@ bs-
 bs*
 ~~~
 
-.. _proc:bs-mul:
+.. index:: bs*
 
 .. function:: (bs* bitstring1 bitstring2)
 
@@ -244,7 +244,7 @@ bs*
 bs/
 ~~~
 
-.. _proc:bs-div:
+.. index:: bs/
 
 .. function:: (bs/ bitstring1 bitstring2)
 
@@ -260,7 +260,7 @@ bs/
 int->bitstring
 ~~~~~~~~~~~~~~
 
-.. _proc:int-to-bitstring:
+.. index:: int->bitstring
 
 .. function:: (int->bitstring n)
 
@@ -274,7 +274,7 @@ int->bitstring
 bitstring->int
 ~~~~~~~~~~~~~~
 
-.. _proc:bitstring-to-int:
+.. index:: bitstring->int
 
 .. function:: (bitstring->int bitstring)
 

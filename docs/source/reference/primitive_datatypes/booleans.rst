@@ -30,7 +30,7 @@ Boolean constants evaluate to themselves, so they do not need to be quoted in pr
 Boolean procedures
 ------------------
 
-.. _proc:not:
+.. index:: not
 
 not
 ***
@@ -63,7 +63,7 @@ not
       --> (not 'nil)
         #false
 
-.. _proc:boolean?:
+.. index:: boolean?
 
 boolean?
 ********
@@ -88,7 +88,7 @@ boolean?
         --> (boolean? "a string")
           #false
 
-.. _proc:boolean=?:
+.. index:: boolean=?
 
 boolean=?
 *********

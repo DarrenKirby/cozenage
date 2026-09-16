@@ -54,7 +54,7 @@ return newly allocated sets. This follows a common Scheme convention indicating 
 Set Procedures
 --------------
 
-.. _proc:set:
+.. index:: set
 
 set
 ***
@@ -88,7 +88,7 @@ set
         #{}
 
 
-.. _proc:set-copy:
+.. index:: set-copy
 
 set-copy
 ********
@@ -117,7 +117,7 @@ set-copy
         #{1 2 3}
 
 
-.. _proc:set-clear!:
+.. index:: set-clear!
 
 set-clear!
 **********
@@ -143,7 +143,7 @@ set-clear!
         #{}
 
 
-.. _proc:set-add!:
+.. index:: set-add!
 
 set-add!
 ********
@@ -177,7 +177,7 @@ set-add!
         #{1 2 3 4 5 6 7 8 9}
 
 
-.. _proc:set-remove!:
+.. index:: set-remove!
 
 set-remove!
 ***********
@@ -212,7 +212,7 @@ set-remove!
         #{1 3}
 
 
-.. _proc:set-member?:
+.. index:: set-member?
 
 set-member?
 ***********
@@ -238,7 +238,7 @@ set-member?
         #f
 
 
-.. _proc:set-disjoint?:
+.. index:: set-disjoint?
 
 set-disjoint?
 *************
@@ -267,7 +267,7 @@ set-disjoint?
         #f
 
 
-.. _proc:set-subset?:
+.. index:: set-subset?
 
 set-subset?
 ***********
@@ -297,7 +297,7 @@ set-subset?
         #f
 
 
-.. _proc:set-superset?:
+.. index:: set-superset?
 
 set-superset?
 *************
@@ -327,7 +327,7 @@ set-superset?
         #f
 
 
-.. _proc:set-union:
+.. index:: set-union
 
 set-union
 *********
@@ -355,7 +355,7 @@ set-union
         #{1 2 3}
 
 
-.. _proc:set-union!:
+.. index:: set-union!
 
 set-union!
 **********
@@ -384,7 +384,7 @@ set-union!
         #{1 2 3 4 5}
 
 
-.. _proc:set-intersection:
+.. index:: set-intersection
 
 set-intersection
 ****************
@@ -412,7 +412,7 @@ set-intersection
         #{}
 
 
-.. _proc:set-intersection!:
+.. index:: set-intersection!
 
 set-intersection!
 *****************
@@ -441,7 +441,7 @@ set-intersection!
         #{3 4}
 
 
-.. _proc:set-difference:
+.. index:: set-difference
 
 set-difference
 **************
@@ -472,7 +472,7 @@ set-difference
         #{5 6}
 
 
-.. _proc:set-difference!:
+.. index:: set-difference!
 
 set-difference!
 ***************
@@ -501,7 +501,7 @@ set-difference!
         #{1 2}
 
 
-.. _proc:set-sym-difference:
+.. index:: set-sym-difference
 
 set-sym-difference
 ******************
@@ -530,7 +530,7 @@ set-sym-difference
         #{}
 
 
-.. _proc:set-sym-difference!:
+.. index:: set-sym-difference!
 
 set-sym-difference!
 *******************
@@ -559,7 +559,7 @@ set-sym-difference!
         #{1 2 5 6}
 
 
-.. _proc:set-map:
+.. index:: set-map
 
 set-map
 *******
@@ -588,7 +588,7 @@ set-map
         ("1" "2" "3")
 
 
-.. _proc:set-foreach:
+.. index:: set-foreach
 
 set-foreach
 ***********
@@ -615,7 +615,7 @@ set-foreach
         123
 
 
-.. _proc:list->set:
+.. index:: list->set
 
 list->set
 *********
@@ -644,7 +644,7 @@ list->set
         #{}
 
 
-.. _proc:set->list:
+.. index:: set->list
 
 set->list
 *********

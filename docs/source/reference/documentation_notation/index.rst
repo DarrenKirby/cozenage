@@ -32,7 +32,7 @@ Here are some examples of valid identifiers:
 * ``list->vector``
 * ``q``
 * ``V17a``
-* ``\|two words\|``
+* ``|two words|``
 * ``the-word-recursion-has-many-meanings``
 
 The syntax distinguishes between upper and lower case in identifiers and in characters specified using their names.
@@ -104,11 +104,11 @@ Other notations
 ``#(``
     This introduces a vector constant. Vector constants are terminated by ``)``.
 
-``#u8(`` ``#s8(`` ``#u16(`` ``#s16(`` ``#u32(`` ``#s32(`` ``#u64(`` ``#s64(``
+``#u8(`` ``#s8(`` ``#u16(`` ``#s16(`` ``#u32(`` ``#s32(`` ``#u64(`` ``#s64(`` ``#f32(`` ``#f64(``
     These introduce a bytevector constant. Bytevector constants are terminated by ``)``.
 
 ``#e`` ``#i`` ``#b`` ``#o`` ``#d`` ``#x``
-    These are used in the notation for numbers.
+    These are used in the notation for numeric literals.
 
 ``#{ ... }``
     The curly-braces are used for ``set`` literal notation.

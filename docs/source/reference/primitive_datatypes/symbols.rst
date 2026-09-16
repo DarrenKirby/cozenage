@@ -152,7 +152,7 @@ backbone of both the language’s syntax and its symbolic data structures.
 Symbol procedures
 -----------------
 
-.. _proc:symbol=?:
+.. index:: symbol=?
 
 symbol=?
 ^^^^^^^^
@@ -168,7 +168,7 @@ symbol=?
     :return: #true or #false
     :rtype: boolean
 
-.. _proc:symbol->string:
+.. index:: symbol->string
 
 symbol->string
 ^^^^^^^^^^^^^^
@@ -184,7 +184,7 @@ symbol->string
     :rtype: string
 
 
-.. _proc:string->symbol:
+.. index:: string->symbol
 
 string->symbol
 ^^^^^^^^^^^^^^

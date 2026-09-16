@@ -188,7 +188,7 @@ Character Procedures
 Char Type Predicate Procedures
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. _proc:char-alphabetic?:
+.. index:: char-alphabetic?
 
 char-alphabetic?
 ****************
@@ -213,7 +213,7 @@ char-alphabetic?
       --> (char-alphabetic? #\7)
         #false
 
-.. _proc:char-numeric?:
+.. index:: char-numeric?
 
 char-numeric?
 *************
@@ -236,7 +236,7 @@ char-numeric?
       --> (char-numeric? #\x)
         #false
 
-.. _proc:char-whitespace?:
+.. index:: char-whitespace?
 
 char-whitespace?
 ****************
@@ -261,7 +261,7 @@ char-whitespace?
       --> (char-whitespace? #\a)
         #false
 
-.. _proc:char-upper-case?:
+.. index:: char-upper-case?
 
 char-upper-case?
 ****************
@@ -284,7 +284,7 @@ char-upper-case?
       --> (char-upper-case? #\a)
         #false
 
-.. _proc:char-lower-case?:
+.. index:: char-lower-case?
 
 char-lower-case?
 ****************
@@ -310,7 +310,7 @@ char-lower-case?
 Char to Numeric Value and Inverse Procedures
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. _proc:digit-value:
+.. index:: digit-value
 
 digit-value
 ***********
@@ -335,7 +335,7 @@ digit-value
         #false
 
 
-.. _proc:char->integer:
+.. index:: char->integer
 
 char->integer
 *************
@@ -365,7 +365,7 @@ char->integer
       955
 
 
-.. _proc:integer->char:
+.. index:: integer->char
 
 integer->char
 *************
@@ -398,7 +398,7 @@ integer->char
 Case Conversion Procedures
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. _proc:char-upcase:
+.. index:: char-upcase
 
 char-upcase
 ***********
@@ -421,7 +421,7 @@ char-upcase
       --> (char-upcase #\B)
         #\B
 
-.. _proc:char-downcase:
+.. index:: char-downcase
 
 char-downcase
 *************
@@ -444,7 +444,7 @@ char-downcase
       --> (char-downcase #\b)
         #\b
 
-.. _proc:char-foldcase:
+.. index:: char-foldcase
 
 char-foldcase
 *************
@@ -471,7 +471,7 @@ char-foldcase
 Case-Sensitive Comparison Procedures
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. _proc:char=?:
+.. index:: char=?
 
 char=?
 ******
@@ -498,7 +498,7 @@ char=?
       #t
 
 
-.. _proc:char<?:
+.. index:: char<?
 
 char<?
 ******
@@ -526,7 +526,7 @@ char<?
       #t
 
 
-.. _proc:char<=?:
+.. index:: char<=?
 
 char<=?
 *******
@@ -556,7 +556,7 @@ char<=?
       #t
 
 
-.. _proc:char>?:
+.. index:: char>?
 
 char>?
 ******
@@ -584,7 +584,7 @@ char>?
       #t
 
 
-.. _proc:char>=?:
+.. index:: char>=?
 
 char>=?
 *******
@@ -617,7 +617,7 @@ char>=?
 Case-Insensitive Comparison Procedures
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. _proc:char-ci=?:
+.. index:: char-ci=?
 
 char-ci=?
 *********
@@ -645,7 +645,7 @@ char-ci=?
       #f
 
 
-.. _proc:char-ci<?:
+.. index:: char-ci<?
 
 char-ci<?
 *********
@@ -674,7 +674,7 @@ char-ci<?
       #f
 
 
-.. _proc:char-ci<=?:
+.. index:: char-ci<=?
 
 char-ci<=?
 **********
@@ -703,7 +703,7 @@ char-ci<=?
       #f
 
 
-.. _proc:char-ci>?:
+.. index:: char-ci>?
 
 char-ci>?
 *********
@@ -732,7 +732,7 @@ char-ci>?
       #t
 
 
-.. _proc:char-ci>=?:
+.. index:: char-ci>=?
 
 char-ci>=?
 **********

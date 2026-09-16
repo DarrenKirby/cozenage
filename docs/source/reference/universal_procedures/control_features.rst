@@ -49,7 +49,7 @@ Procedure Documentation
 eval
 ~~~~
 
-.. _proc:eval:
+.. index:: eval
 
 .. function:: (eval expr)
 
@@ -89,7 +89,7 @@ eval
 apply
 ~~~~~
 
-.. _proc:apply:
+.. index:: apply
 
 .. function:: (apply proc arg1 ... args)
 
@@ -130,7 +130,7 @@ apply
 load
 ~~~~
 
-.. _proc:load:
+.. index:: load
 
 .. function:: (load filename)
 
@@ -162,7 +162,7 @@ load
 exit
 ~~~~
 
-.. _proc:exit:
+.. index:: exit
 
 .. function:: (exit [code])
 
@@ -190,7 +190,7 @@ exit
 command-line
 ~~~~~~~~~~~~
 
-.. _proc:command-line:
+.. index:: command-line
 
 .. function:: (command-line)
 
@@ -228,7 +228,7 @@ command-line
 len
 ~~~
 
-.. _proc:len:
+.. index:: len
 
 .. function:: (len obj)
 
@@ -269,7 +269,7 @@ len
 idx
 ~~~
 
-.. _proc:idx:
+.. index:: idx
 
 .. function:: (idx seq i)
               (idx seq start end)
@@ -323,7 +323,7 @@ idx
 rev
 ~~~
 
-.. _proc:rev:
+.. index:: rev
 
 .. function:: (rev seq)
 
@@ -356,10 +356,10 @@ rev
       --> (rev "café")
       "éfac"
 
+.. index:: sort
+
 sort
 ~~~~
-
-.. _proc:sort:
 
 .. function:: (sort seq)
 
@@ -390,11 +390,12 @@ sort
       #(2 12 45)
       --> (sort '(#\z #\x #\y))
       (#\x #\y #\z)
-      
-sort!
-~~~~
 
-.. _proc:sort!:
+
+.. index:: sort!
+
+sort!
+~~~~~
 
 .. function:: (sort! seq)
 

@@ -111,7 +111,7 @@ integers would require 1024 object pointers plus the objects themselves.
 Bytevector Procedures
 ---------------------
 
-.. _proc:bytevector:
+.. index:: bytevector
 
 bytevector
 **********
@@ -149,7 +149,7 @@ bytevector
       #s16(-1 -2 -3)
 
 
-.. _proc:bytevector-length:
+.. index:: bytevector-length
 
 bytevector-length
 *****************
@@ -176,7 +176,7 @@ bytevector-length
       --> (bytevector-length (bytevector))
       0
 
-.. _proc:bytevector-ref:
+.. index:: bytevector-ref
 
 bytevector-ref
 **************
@@ -206,7 +206,7 @@ bytevector-ref
       -1
 
 
-.. _proc:bytevector-set!:
+.. index:: bytevector-set!
 
 bytevector-set!
 ***************
@@ -241,7 +241,7 @@ bytevector-set!
       #u16(1000 200 300)
 
 
-.. _proc:make-bytevector:
+.. index:: make-bytevector
 
 make-bytevector
 ***************
@@ -288,7 +288,7 @@ make-bytevector
       #u16()
 
 
-.. _proc:bytevector-copy:
+.. index:: bytevector-copy
 
 bytevector-copy
 ***************
@@ -324,7 +324,7 @@ bytevector-copy
       #u16(200 300)
 
 
-.. _proc:bytevector-copy!:
+.. index:: bytevector-copy!
 
 bytevector-copy!
 ****************
@@ -367,7 +367,7 @@ bytevector-copy!
       #u8(20 30 20 30 5)
 
 
-.. _proc:bytevector-append:
+.. index:: bytevector-append
 
 bytevector-append
 *****************
@@ -397,7 +397,7 @@ bytevector-append
       #u8()
 
 
-.. _proc:utf8->string:
+.. index:: utf8->string
 
 utf8->string
 ************
@@ -432,7 +432,7 @@ utf8->string
       "el"
 
 
-.. _proc:string->utf8:
+.. index:: string->utf8
 
 string->utf8
 ************
