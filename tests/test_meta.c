@@ -6,6 +6,7 @@
 #include "../src/repr.h"
 #include "../src/symbols.h"
 #include "../src/transforms.h"
+#include "runner.h"
 
 #include <locale.h>
 #include <gc/gc.h>
@@ -48,6 +49,30 @@ char* t_eval(const char* input) {
     Cell* parsed = parse_tokens(ta);
     Cell* expr = expand(parsed);
     const Cell *result = coz_eval(test_env, expr);
+
+    return cell_to_string(result, MODE_WRITE);
+}
+
+char* m_eval(const char* input) {
+    if (!engine_prepped) {
+        GC_INIT();
+        symbol_table = ht_create(512);
+        init_global_singletons();
+        init_special_forms();
+        engine_prepped = true;
+    }
+
+    init_default_ports();
+
+    /* Initialize bootstrap environment. */
+    const Lex* bootstrap = lex_initialize_bootstrap_env();
+    lex_add_builtins(bootstrap);
+    ht_table* core_builtins = bootstrap->working;
+    /* Initialize working environment. */
+    test_env = lex_initialize_working_env(core_builtins);
+
+    TokenArray* ta = scan_all_tokens(input);
+    Cell* result = parse_all_expressions(test_env, ta);
 
     return cell_to_string(result, MODE_WRITE);
 }

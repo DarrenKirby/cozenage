@@ -1,7 +1,6 @@
 #include <criterion/criterion.h>
 
 #include "test_meta.h"
-/////#include <gc/gc.h>
 
 TestSuite(end_to_end_sf);
 
@@ -15,6 +14,7 @@ Test(end_to_end_sf, test_define, .init = setup_each_test, .fini = teardown_each_
 Test(end_to_end_sf, test_lambda, .init = setup_each_test, .fini = teardown_each_test) {
     cr_assert_str_eq(t_eval("((lambda (x) x) 23)"), "23");
     cr_assert_str_eq(t_eval("((lambda (x y) (+ x y)) 2 3)"), "5");
+    cr_assert_str_eq(t_eval("(define add10 (lambda (n) (+ 10 n)))"), "#<lambda 'add10'>");
 }
 
 Test(end_to_end_sf, test_boolean_logic, .init = setup_each_test, .fini = teardown_each_test) {
@@ -148,7 +148,13 @@ Test(end_to_end_sf, test_internal_defines, .init = setup_each_test, .fini = tear
 //     cr_assert_str_eq(result, "\"Done\"");
 // }
 
-//Test(end_to_end_sf, test_map_procedure, .init = setup_each_test, .fini = teardown_each_test) {}
+// Test against regressions in the parser concerning multiple expressions
+Test(end_to_end_sf, test_multiple_expressions, .init = setup_each_test, .fini = teardown_each_test) {
+    cr_assert_str_eq(m_eval("(+ 10 10) (newline)"), "0"); // success value returned by parse_all_expressions
+    cr_assert_str_eq(m_eval("(+ 10 10) (+ 20 20)"), "0"); // success value returned by parse_all_expressions
+    // This should perform the arithmetic correctly, and error on the bare define
+    cr_assert_str_eq(m_eval("(+ 10 10) define"), " Syntax error: Syntax keyword 'define' cannot be used as a variable");
+}
 
 //Test(end_to_end_sf, test_map_procedure, .init = setup_each_test, .fini = teardown_each_test) {}
 
