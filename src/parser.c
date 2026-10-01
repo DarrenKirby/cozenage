@@ -534,21 +534,8 @@ STATIC Token *advance_p(TokenArray *p)
 }
 
 
-Cell* parse_tokens(TokenArray *ta) {
-    /* First check that the expression is balanced. */
-    int left_count = 0, right_count = 0;
-
-    for (int i = 0; i < ta->count; i++) {
-        if (ta->tokens[i].type == T_LEFT_PAREN) left_count++;
-        if (ta->tokens[i].type == T_RIGHT_PAREN) right_count++;
-    }
-
-    if (left_count != right_count) {
-        return make_cell_error(
-            "Expression has unbalanced parentheses.",
-            SYNTAX_ERR);
-    }
-
+Cell* parse_tokens(TokenArray *ta)
+{
     /* Check token type and dispatch accordingly. */
     Token *token = peek_p(ta);
     if (!token) return nullptr;
@@ -830,14 +817,6 @@ Cell* parse_tokens(TokenArray *ta) {
     case T_LEFT_PAREN:
     {
         token = advance_p(ta); /* Consume '('. */
-
-        if (token->type == T_RIGHT_PAREN) {
-            /* Unquoted nil is an error. */
-            return make_cell_error(
-                fmt_err("Line %d: Empty S-expression.", token->line),
-                SYNTAX_ERR);
-        }
-
         Cell *sexpr = make_cell_sexpr();
 
         while (peek_p(ta) && peek_p(ta)->type != T_RIGHT_PAREN) {

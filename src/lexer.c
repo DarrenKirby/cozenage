@@ -408,7 +408,7 @@ void debug_lexer(const TokenArray* ta)
         } else {
             printf("   | ");
         }
-        printf("%2d [ %.*s ]\n", token.type, token.length, token.start);
+        printf("pos: %d %2d [ %.*s ]\n", i, token.type, token.length, token.start);
     }
     printf("token count: %d\n", ta->count);
     printf("token position: %d\n", ta->position);
