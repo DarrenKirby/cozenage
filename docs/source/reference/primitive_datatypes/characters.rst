@@ -1,3 +1,5 @@
+.. index:: char type
+
 Characters
 ==========
 
@@ -56,6 +58,8 @@ and returned as values.
 
 Understanding the distinction between characters and strings is important: characters represent atomic textual units,
 while strings represent ordered sequences of those units.
+
+.. index:: Named character literals
 
 Named Character Literals
 ------------------------

@@ -1,3 +1,5 @@
+.. index:: hash type
+
 Hashes
 ======
 

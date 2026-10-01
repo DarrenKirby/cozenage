@@ -1,3 +1,5 @@
+.. index:: numeric types
+
 Numerics
 ========
 
@@ -22,6 +24,9 @@ Cozenage implements four distinct object types to represent mathematical values:
 * **Complex numbers**
 
 Each of these types corresponds to a well-known mathematical category, and each has a clear meaning independent of Cozenage.
+
+
+.. index:: numeric tower
 
 The Numeric Tower
 ^^^^^^^^^^^^^^^^^
@@ -160,6 +165,8 @@ representations, and on any combination of them.
 
 For example, arithmetic procedures do not require operands to have the same numeric type.
 
+.. index:: numeric literals
+
 Numeric Literal Syntax
 ^^^^^^^^^^^^^^^^^^^^^^
 
@@ -199,6 +206,8 @@ Examples:
     #xFF     ; hexadecimal 255
 
 All of these literals denote exact integer values, regardless of the base used to write them.
+
+.. index:: exact and inexact numbers
 
 Exact and Inexact Numbers
 ^^^^^^^^^^^^^^^^^^^^^^^^^

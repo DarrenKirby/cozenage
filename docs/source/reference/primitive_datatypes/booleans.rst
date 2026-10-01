@@ -1,3 +1,5 @@
+.. index:: boolean type
+
 Booleans
 ========
 
