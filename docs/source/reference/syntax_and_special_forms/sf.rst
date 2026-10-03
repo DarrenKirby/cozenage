@@ -572,6 +572,7 @@ cond
              unspecified if no clause matches.
     :rtype: any
 
+.. _import-form:
 .. index:: import
 
 import
@@ -613,7 +614,7 @@ import
 
     See the :ref:`loadable modules<loadable_modules>` section of the documentation for details on search paths and
     library file formats. They behave exactly the same as the built-in ``base`` libraries in terms of the
-    ``import`` special form, including honouring the import modifiers documented inn the next sub-section.
+    ``import`` special form, including honouring the import modifiers documented in the next sub-section.
 
     **Import modifiers**
 

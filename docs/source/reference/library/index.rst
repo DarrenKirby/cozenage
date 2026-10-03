@@ -1,6 +1,11 @@
 Cozenage loadable module libraries
 ==================================
 
+Cozenage provides a sort of 'standard library' in the form of loadable modules (written in C) that is
+included with the main distribution,
+as well as a mechanism for writing and loading user-written (or third-party written) libraries written
+in Cozenage Scheme. This section documents these features.
+
 .. _loadable_modules:
 
 Cozenage supplies libraries beyond the core implementation, all of which use the
@@ -32,6 +37,7 @@ Cozenage 'base' standard libraries
    :maxdepth: 1
    :caption: Contents:
 
+   user-libs
    bits
    cxr
    file
