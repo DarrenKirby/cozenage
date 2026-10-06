@@ -1,5 +1,29 @@
 # Changelog
 
+## [0.20.0] - 2026-10-06
+
+### Added
+
+- Many, MANY new tests (from ~130 to 196)
+- Implement user-written/third-party Scheme library loading
+- Implement string-join procedure
+
+### Changed
+
+- const -> constexpr in a bunch of files, must use strict C23 to build
+- Refactor environment structure for loaded libs
+- Refactor local procedures to use new 2-tier env
+- Split tests into end-to-end and unit types
+- Refactor parse_token for standardized token consumption
+- Remove all Cmake build stuff; just plain Make now
+
+### Fixed
+
+- Add bounds and type checking to rand-int arg
+- Remove -Werror from production builds
+- MALLOC_ATOMIC -> MALLOC for cell inits
+- Fix for proper lexing of +i and -i
+
 ## [0.19.1] - 2026-08-21
 
 ### Added
