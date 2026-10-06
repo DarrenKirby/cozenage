@@ -471,6 +471,7 @@ void lex_add_builtins(const Lex* e)
     lex_add_builtin(e, "string-ci>?", builtin_string_gt_ci);
     lex_add_builtin(e, "string-ci>=?", builtin_string_gte_ci);
     lex_add_builtin(e, "string-split", builtin_string_split);
+    lex_add_builtin(e, "string-join", builtin_string_join);
     /*
      * Control features.
      *
