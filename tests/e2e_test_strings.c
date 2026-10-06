@@ -643,7 +643,6 @@ Test(end_to_end_strings, test_string_split, .init = setup_each_test, .fini = tea
     (define (test-split-loop limit)
       (let loop ((i 1))
         (if (> i limit)
-            ;;(display "SUCCESS: Passed all iterations without failing.\n")
             #true
             (let* (;; We generate a fresh string every time so the GC has to work
                    (s (string-append "535,100 -> 981,54" (number->string (modulo i 10))))
@@ -668,3 +667,45 @@ Test(end_to_end_strings, test_string_split, .init = setup_each_test, .fini = tea
     //cr_assert_str_eq(t_eval(""), "");
 }
 
+Test(end_to_end_strings, test_string_join, .init = setup_each_test, .fini = teardown_each_test) {
+    // basic cases
+    cr_assert_str_eq(t_eval("(string-join '())"), "\"\"");
+    cr_assert_str_eq(t_eval("(string-join '(""))"), "\"\"");
+    cr_assert_str_eq(t_eval("(string-join '(\"a\"))"), "\"a\"");
+    cr_assert_str_eq(t_eval("(string-join '(\"a\" \"b\"))"), "\"a b\"");
+    cr_assert_str_eq(t_eval("(string-join '(\"a\" \"b\" \"c\") \"\")"), "\"abc\"");
+    cr_assert_str_eq(t_eval("(string-join '(\"a\" \"b\" \"c\") \"::\")"), "\"a::b::c\"");
+    // empty elements
+    cr_assert_str_eq(t_eval("(string-join '(\"\" \"a\" \"b\") \",\")"), "\",a,b\"");
+    cr_assert_str_eq(t_eval("(string-join '(\"a\" \"\" \"b\") \",\")"), "\"a,,b\"");
+    cr_assert_str_eq(t_eval("(string-join '(\"a\" \"b\" \"\") \",\")"), "\"a,b,\"");
+    cr_assert_str_eq(t_eval("(string-join '(\"\" \"\" \"\") \",\")"), "\",,\"");
+    // delimiter edge cases
+    cr_assert_str_eq(t_eval("(string-join '(\"a\" \"b\") \"\")"), "\"ab\"");
+    cr_assert_str_eq(t_eval("(string-join '(\"a\" \"b\") \"::\")"), "\"a::b\"");
+    cr_assert_str_eq(t_eval("(string-join '(\"b\" \"b\") \"aaaa\")"), "\"baaaab\"");
+    cr_assert_str_eq(t_eval("(string-join '(\"a\" \"b\") \",,\")"), "\"a,,b\"");
+    cr_assert_str_eq(t_eval("(string-join '(\"a\" \"b\") \"\n\")"), "\"a\\nb\"");
+    // test failures
+
+}
+
+Test(end_to_end_strings, test_string_join_split_errors, .init = setup_each_test, .fini = teardown_each_test) {
+    cr_assert_str_eq(t_eval("(string-split 42)"), " Type error: string-split: bad type at arg 1: got integer, expected string");
+    cr_assert_str_eq(t_eval("(string-join 42)"), " Type error: string-join: arg 1 must be a proper list of strings");
+    cr_assert_str_eq(t_eval("(string-join \"abc\")"), " Type error: string-join: arg 1 must be a proper list of strings");
+    cr_assert_str_eq(t_eval("(string-join '(1 2 3))"), " Type error: string-join: arg 1 must be a proper list of strings");
+    cr_assert_str_eq(t_eval("(string-join '(\"a\" 42 \"c\"))"), " Type error: string-join: arg 1 must be a proper list of strings");
+    cr_assert_str_eq(t_eval("(string-split '(\"a\" \"b\") 42)"), " Type error: string-split: bad type at arg 1: got pair, expected string");
+    cr_assert_str_eq(t_eval("(string-join '(\"a\" \"b\") 42)"), " Type error: string-join: arg 2 must be a string");
+}
+
+Test(end_to_end_strings, test_string_join_split_roundtrip, .init = setup_each_test, .fini = teardown_each_test) {
+    cr_assert_str_eq(t_eval("(string-join (string-split \"\" \",\") \",\")"), "\"\"");
+    cr_assert_str_eq(t_eval("(string-join (string-split \",\" \",\") \",\")"), "\",\"");
+    cr_assert_str_eq(t_eval("(string-join (string-split \",,\" \",\") \",\")"), "\",,\"");
+    cr_assert_str_eq(t_eval("(string-join (string-split \",a,\" \",\") \",\")"), "\",a,\"");
+    cr_assert_str_eq(t_eval("(string-join (string-split \"a,,b,\" \",\") \",\")"), "\"a,,b,\"");
+    cr_assert_str_eq(t_eval("(string-join (string-split \"a::b::::c::\" \"::\") \"::\")"), "\"a::b::::c::\"");
+    cr_assert_str_eq(t_eval("(string-join (string-split \"   \" \" \") \" \")"), "\"   \"");
+}
