@@ -150,7 +150,7 @@ Test(end_to_end_sf, test_internal_defines, .init = setup_each_test, .fini = tear
 
 // Test against regressions in the parser concerning multiple expressions
 Test(end_to_end_sf, test_multiple_expressions, .init = setup_each_test, .fini = teardown_each_test) {
-    cr_assert_str_eq(m_eval("(+ 10 10) (newline)"), "0"); // success value returned by parse_all_expressions
+    cr_assert_str_eq(m_eval("(+ 10 10) (/ 100 10)"), "0"); // success value returned by parse_all_expressions
     cr_assert_str_eq(m_eval("(+ 10 10) (+ 20 20)"), "0"); // success value returned by parse_all_expressions
     // This should perform the arithmetic correctly, and error on the bare define
     cr_assert_str_eq(m_eval("(+ 10 10) define"), " Syntax error: Syntax keyword 'define' cannot be used as a variable");
