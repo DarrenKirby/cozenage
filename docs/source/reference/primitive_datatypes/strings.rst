@@ -602,8 +602,12 @@ string-split
     Returns a list of substrings of *string* obtained by splitting on
     occurrences of *delim*. *delim* is a string rather than a character,
     allowing for multi-character delimiters. Empty substrings produced by
-    adjacent delimiters or leading/trailing delimiters are suppressed. If
-    *delim* is omitted, *string* is split on spaces.
+    adjacent delimiters or leading/trailing delimiters are NOT suppressed.
+    Empty substrings are preserved so that splitting and subsequently
+    joining with the same delimiter does not lose information or alter the
+    original string.
+
+    If *delim* is omitted, *string* is split on spaces.
 
     Raises an error if *delim* is longer than *string*, which most likely
     indicates reversed argument order.
@@ -623,10 +627,45 @@ string-split
       ("hello" "world" "foo")
       --> (string-split "a,b,c" ",")
       ("a" "b" "c")
+      --> (string-split "a,b,c," ",")
+      ("a" "b" "c" "")
       --> (string-split "one::two::three" "::")
       ("one" "two" "three")
-      --> (string-split "  hello  world  ")
-      ("hello" "world")
+      --> (string-split " hello world ")
+      ("" "hello" "world" "")
+
+.. index:: string-join
+
+string-join
+************
+
+.. function:: (string-join list [delim])
+
+    Returns a string derived from *list*, which must be a list of strings,
+    joined by *delim*. *delim* is a string rather than a character,
+    allowing for multi-character delimiters. This is the direct inverse
+    of string-split.
+
+    If *delim* is omitted, *list* is joined with a single space.
+
+    :param list: A proper list of strings.
+    :type list: list
+    :param delim: The delimiter string to join with. Defaults to ``" "``.
+    :type delim: string
+    :return: A string derived from the substrings in *list* joined by *delim*.
+    :rtype: string
+
+    **Example:**
+
+    .. code-block:: scheme
+
+        --> (string-join '("a" "b" "c"))
+        "a b c"
+        --> (string-join '("Tea" "crumpets" "and cake.") ", ")
+        "Tea, crumpets, and cake."
+        --> (string-join (string-split "::a::::b::" "::") "::")
+        "::a::::b::"
+
 
 String Case-sensitive Comparison Procedures
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
