@@ -1,3 +1,5 @@
+.. index:: hash type
+
 Hashes
 ======
 
@@ -67,7 +69,7 @@ in-place modification.
 Hash Procedures
 ---------------
 
-.. _proc:hash:
+.. index:: hash
 
 hash
 ****
@@ -97,7 +99,7 @@ hash
         42
 
 
-.. _proc:hash-copy:
+.. index:: hash-copy
 
 hash-copy
 *********
@@ -126,7 +128,7 @@ hash-copy
         (a b)
 
 
-.. _proc:hash-clear!:
+.. index:: hash-clear!
 
 hash-clear!
 ***********
@@ -152,7 +154,7 @@ hash-clear!
         #[]
 
 
-.. _proc:hash-get:
+.. index:: hash-get
 
 hash-get
 ********
@@ -183,7 +185,7 @@ hash-get
         not-found
 
 
-.. _proc:hash-add!:
+.. index:: hash-add!
 
 hash-add!
 *********
@@ -215,7 +217,7 @@ hash-add!
         99
 
 
-.. _proc:hash-remove!:
+.. index:: hash-remove!
 
 hash-remove!
 ************
@@ -252,7 +254,7 @@ hash-remove!
         #[a 1 c 3]
 
 
-.. _proc:hash-keys:
+.. index:: hash-keys
 
 hash-keys
 *********
@@ -279,7 +281,7 @@ hash-keys
         ()
 
 
-.. _proc:hash-values:
+.. index:: hash-values
 
 hash-values
 ***********
@@ -306,7 +308,7 @@ hash-values
         ()
 
 
-.. _proc:hash->alist:
+.. index:: hash->alist
 
 hash->alist
 ***********
@@ -332,7 +334,7 @@ hash->alist
         ((a . 1) (b . 2))
 
 
-.. _proc:alist->hash:
+.. index:: alist->hash
 
 alist->hash
 ***********
@@ -362,7 +364,7 @@ alist->hash
         2
 
 
-.. _proc:hash-keys-map:
+.. index:: hash-keys-map
 
 hash-keys-map
 *************
@@ -390,7 +392,7 @@ hash-keys-map
         ("a" "b" "c")
 
 
-.. _proc:hash-keys-foreach:
+.. index:: hash-keys-foreach
 
 hash-keys-foreach
 *****************
@@ -418,7 +420,7 @@ hash-keys-foreach
         abc
 
 
-.. _proc:hash-values-map:
+.. index:: hash-values-map
 
 hash-values-map
 ***************
@@ -446,7 +448,7 @@ hash-values-map
         (10 20 30)
 
 
-.. _proc:hash-values-foreach:
+.. index:: hash-values-foreach
 
 hash-values-foreach
 *******************
@@ -474,7 +476,7 @@ hash-values-foreach
         123
 
 
-.. _proc:hash-items-map:
+.. index:: hash-items-map
 
 hash-items-map
 **************
@@ -504,7 +506,7 @@ hash-items-map
         ((a . 10) (b . 20) (c . 30))
 
 
-.. _proc:hash-items-foreach:
+.. index:: hash-items-foreach
 
 hash-items-foreach
 ******************

@@ -22,16 +22,8 @@
 
 #include "environment.h"
 
-#include <stdio.h>
 #include <complex.h>
 #include <unicode/umachine.h>
-
-/* Global copies of argc and argv for use by (command-line). */
-extern int g_argc;
-extern char** g_argv;
-/* Global is_repl used by many. */
-extern bool is_repl;
-
 
 /* Convenience macros for readability */
 #define CHECK_ARITY_EXACT(a, n, s) \
@@ -46,6 +38,12 @@ check_arg_arity((a), -1, -1, (n), (s))
 #define CHECK_ARITY_RANGE(a, lo, hi, s) \
 check_arg_arity((a), -1, (lo), (hi), (s))
 
+
+/* Global copies of argc and argv for use by (command-line). */
+extern int g_argc;
+extern char** g_argv;
+/* Global is_repl used by many. */
+extern bool is_repl;
 
 /* For named chars */
 typedef struct {
@@ -111,6 +109,12 @@ int32_t utf8_strlen(const char* s);
 bool is_pure_ascii(const char *str, size_t len);
 char* convert_to_utf8(const UChar* ustr);
 UChar* convert_to_utf16(const char* str);
+
+/* Only need these for the test builds. */
+#ifdef CRITERION_TEST_BUILD
+Cell* int_to_rat(const Cell* v);
+Cell* int_to_real(const Cell* v);
+#endif
 
 #endif //COZENAGE_TYPES_H
 

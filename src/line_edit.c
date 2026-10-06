@@ -88,49 +88,76 @@ static int compare_pointers(const void *a, const void *b)
     return strcmp(str_a, str_b);
 }
 
-/* This cycles through the procedures in the global environment and builds
+
+/* This cycles through the procedures in the global environments and builds
  * an array of strings used by the procedure completion generator. It is
  * called at interpreter startup, and again when library modules are loaded. */
 void populate_dynamic_completions(const Lex* e)
 {
     int symbol_count = 0;
-    /* Iterate once to get number of symbols. */
-    hti it = ht_iterator(e->global);
-    while (ht_next(&it)) {
-        symbol_count++;
+    hti it;
+
+    /* Iterate to get the total number of symbols from both environments. */
+    if (e->working) {
+        it = ht_iterator(e->working);
+        while (ht_next(&it)) symbol_count++;
+    }
+    if (e->bootstrap) {
+        it = ht_iterator(e->bootstrap);
+        while (ht_next(&it)) symbol_count++;
     }
 
     /* Special forms have to be added manually. */
-    char* special_forms[] = { "quote", "define", "lambda", "let", "let*", "letrec", "set!", "if",
+    const char* special_forms[] = { "quote", "define", "lambda", "let", "let*", "letrec", "set!", "if",
         "when", "unless", "cond", "else", "begin", "import", "and", "or", "do", "case", "letrec*",
         "defmacro", "quasiquote", "unquote", "unquote-splicing", "with_gc_stats"};
 
     constexpr int num_sfs = sizeof(special_forms) / sizeof(special_forms[0]);
 
-    /* Allocate space for 'symbol_count' pointers to strings, plus one for NULL, plus num_sfs for the SF. */
-    scheme_procedures = GC_MALLOC(sizeof(char*) * (symbol_count + 1 + num_sfs));
+    /* Allocate a temporary array for raw pointers (no strdup yet). */
+    const int max_capacity = symbol_count + num_sfs;
+    const char** temp_array = GC_MALLOC(sizeof(char*) * max_capacity);
+    if (!temp_array) {
+        perror("ENOMEM: malloc failed");
+        exit(EXIT_FAILURE);
+    }
+
+    /* Dump all raw pointers into the temporary array. */
+    int idx = 0;
+    for (int j = 0; j < num_sfs; j++) {
+        temp_array[idx++] = special_forms[j];
+    }
+    if (e->working) {
+        it = ht_iterator(e->working);
+        while (ht_next(&it)) temp_array[idx++] = it.key;
+    }
+    if (e->bootstrap) {
+        it = ht_iterator(e->bootstrap);
+        while (ht_next(&it)) temp_array[idx++] = it.key;
+    }
+
+    /* Sort the raw pointers alphabetically.
+     * All shadowed duplicates will now be adjacent. */
+    qsort(temp_array, idx, sizeof(char*), compare_pointers);
+
+    /* Allocate space for the final deduplicated array, plus one for NULL. */
+    scheme_procedures = GC_MALLOC(sizeof(char*) * (idx + 1));
     if (!scheme_procedures) {
         perror("ENOMEM: malloc failed");
         exit(EXIT_FAILURE);
     }
 
-    int i = 0;
-    for (int j = 0; j < num_sfs; j++) {
-        scheme_procedures[i] = GC_strdup(special_forms[j]);
-        i++;
+    /* Linear deduplication and strdup in one pass. */
+    int unique_count = 0;
+    for (int j = 0; j < idx; j++) {
+        /* Only copy if it is the first element, or if it differs from the previous element. */
+        if (j == 0 || strcmp(temp_array[j], temp_array[j - 1]) != 0) {
+            scheme_procedures[unique_count++] = GC_strdup(temp_array[j]);
+        }
     }
-    /* Iterate second time to copy symbol names. */
-    it = ht_iterator(e->global);
-    while (ht_next(&it)) {
-        scheme_procedures[i] = GC_strdup(it.key);
-        i++;
-    }
-
-    /* Sort the completions. */
-    qsort(scheme_procedures, i, sizeof(char *), compare_pointers);
 
     /* The list must be NULL-terminated for the generator to know when to stop. */
-    scheme_procedures[i] = nullptr;
+    scheme_procedures[unique_count] = nullptr;
 }
 
 
@@ -147,7 +174,12 @@ typedef struct {
     size_t current;
 } History;
 
-static History history = {nullptr, 0, 0, 0};
+static History history = {
+    .entries = nullptr,
+    .count = 0,
+    .capacity = 0,
+    .current = 0
+};
 
 
 /* Line editing state. */

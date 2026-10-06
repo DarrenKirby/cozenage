@@ -1,6 +1,13 @@
 Cozenage loadable module libraries
 ==================================
 
+Cozenage provides a sort of 'standard library' in the form of loadable modules (written in C) that is
+included with the main distribution,
+as well as a mechanism for writing and loading user-written (or third-party written) libraries written
+in Cozenage Scheme. This section documents these features.
+
+.. _loadable_modules:
+
 Cozenage supplies libraries beyond the core implementation, all of which use the
 ``base`` collection prefix.
 
@@ -14,16 +21,9 @@ Cozenage 'base' standard libraries
     integers, and provides a mechanism for converting integers to and from bitstrings. A bitstring is
     a symbol which represents a binary integer as a string of ones and zeros.
 - ``cxr`` - The ``(base cxr)`` library exports twenty-four procedures which are the compositions of
-    from three to four car and cdr operations. For example caddar could be defined by:
-
-    .. code-block:: scheme
-
-        (define caddar
-            (lambda (x) (car (cdr (cdr (car x))))))
-
-    The procedures ``car`` and ``cdr`` themselves and the four two-level compositions are included in
-    the core interpreter and are exported by default.
-
+    from three to four car and cdr operations. The procedures ``car`` and ``cdr`` themselves and the
+    four two-level compositions are included in the core interpreter and are exported by default. The module also
+    exports ten positional list accessors from ``first`` through ``tenth``.
 - ``file`` - The ``(base file)`` library provides procedures for accessing and querying files and directories.
 - ``math`` - The ``(base math)`` library exports specialized math procedures.
 - ``lazy`` - The ``(base lazy)`` library exports special forms and procedures for creating and working with
@@ -33,11 +33,11 @@ Cozenage 'base' standard libraries
 - ``system`` - The ``(base system)`` library exports procedures for interfacing with the local operating system.
 - ``datetime`` - The ``(base datetime)`` library provides access to date and time related procedures.
 
-
 .. toctree::
    :maxdepth: 1
    :caption: Contents:
 
+   user-libs
    bits
    cxr
    file

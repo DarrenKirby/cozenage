@@ -18,6 +18,7 @@
  */
 
 #include "runner.h"
+#include "lexer.h"
 #include "symbols.h"
 #include "parser.h"
 #include "eval.h"
@@ -42,6 +43,25 @@ static void check_and_warn_extension(const char *file_path)
         fprintf(stderr,
                 "Warning: Running file '%s' which does not have the standard .scm or .ss extension.\n",
                 file_path);
+    }
+}
+
+
+/* The REPL has its own paren balance logic, so this only runs
+ * for the file runner... */
+static void check_paren_balance(const TokenArray* ta, const char *file)
+{
+    /* First check that the expression is balanced. */
+    int left_count = 0, right_count = 0;
+
+    for (int i = 0; i < ta->count; i++) {
+        if (ta->tokens[i].type == T_LEFT_PAREN) left_count++;
+        if (ta->tokens[i].type == T_RIGHT_PAREN) right_count++;
+    }
+
+    if (left_count != right_count) {
+        fprintf(stderr, "Syntax error: code in %s has unbalanced parentheses\n", file);
+        exit(EXIT_FAILURE);
     }
 }
 
@@ -100,10 +120,12 @@ int run_file_script(const char *file_path, const lib_load_config load_libs)
     init_default_ports();
     /* Initialize global singleton objects, nil, #t, #f, and EOF. */
     init_global_singletons();
-    /* Initialize global environment. */
-    Lex* e = lex_initialize_global_env();
-    /* Load (scheme base) procedures into the environment. */
-    lex_add_builtins(e);
+    /* Initialize bootstrap environment. */
+    const Lex* bootstrap = lex_initialize_bootstrap_env();
+    lex_add_builtins(bootstrap);
+    ht_table* core_builtins = bootstrap->working;
+    /* Initialize working environment. */
+    Lex* e = lex_initialize_working_env(core_builtins);
     /* Initialize special form lookup table. */
     init_special_forms();
     /* Loads the CLI-specified libraries into the environment. */
@@ -116,6 +138,7 @@ int run_file_script(const char *file_path, const lib_load_config load_libs)
     }
 
     TokenArray* ta = scan_all_tokens(input);
+    check_paren_balance(ta, file_path);
     const Cell* result = parse_all_expressions(e, ta);
 
     if (result->type == CELL_INTEGER) {
@@ -172,15 +195,15 @@ Cell* parse_all_expressions(Lex* e, TokenArray* ta)
         if (is_repl) {
             coz_print(result);
         }
-
-        /* Bump the token position. */
-        ta->position++;
     }
+
     /* No more expressions... */
     /* return null to get new REPL prompt. */
     if (is_repl) {
         return nullptr;
     }
+
     /* Return success exit status to file runner. */
     return make_cell_integer(0);
 }
+

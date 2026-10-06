@@ -14,7 +14,7 @@ Numerical Randomness
 rand-int
 ~~~~~~~~
 
-.. _proc:rand-int:
+.. index:: rand-int
 
 .. function:: (rand-int [limit])
 
@@ -35,7 +35,7 @@ rand-int
 rand-dbl
 ~~~~~~~~
 
-.. _proc:rand-dbl:
+.. index:: rand-dbl
 
 .. function:: (rand-dbl)
 
@@ -47,7 +47,7 @@ rand-dbl
 rand-uniform
 ~~~~~~~~~~~~
 
-.. _proc:rand-uniform:
+.. index:: rand-uniform
 
 .. function:: (rand-uniform min max)
 
@@ -67,7 +67,7 @@ Sequence Manipulation
 shuffle
 ~~~~~~~
 
-.. _proc:shuffle:
+.. index:: shuffle
 
 .. function:: (shuffle seq)
 
@@ -88,7 +88,7 @@ shuffle
 rand-choice
 ~~~~~~~~~~~
 
-.. _proc:rand-choice:
+.. index:: rand-choice
 
 .. function:: (rand-choice seq)
 
@@ -102,7 +102,7 @@ rand-choice
 rand-choices
 ~~~~~~~~~~~~
 
-.. _proc:rand-choices:
+.. index:: rand-choices
 
 .. function:: (rand-choices seq k)
 

@@ -511,7 +511,8 @@ Cell* builtin_rev(const Lex* e, const Cell* a)
         }
 }
 
-
+/*  TODO: fix so container of any real-valued
+ *  numbers can be sorted. */
 Cell* builtin_sort(const Lex* e, const Cell* a)
 {
     (void)e;

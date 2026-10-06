@@ -2,6 +2,7 @@ cozenage
 
 # Objects
 *.o
+run_tests
 
 # Module directory
 lib/

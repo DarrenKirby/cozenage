@@ -24,11 +24,20 @@
 
 #define PROCEDURE_NAME_LENGTH 256
 
+/* Define the library file extension based on the OS. */
+#ifdef __APPLE__
+    #define C_LIB_EXT "dylib"
+#else
+    #define C_LIB_EXT "so"
+#endif
+
+#define SCHEME_LIB_EXT "sls"
+
 /* builtin function signature. */
 typedef Cell* (*CznBuiltinFn)(const Lex*, const Cell*);
 
 typedef struct {
-    const char*  scheme_name;   /* Scheme-visible name, e.g. "current-second" */
+    const char*  scheme_name;   /* Scheme-visible name. */
     CznBuiltinFn func;
 } CznExport;
 
@@ -37,7 +46,7 @@ typedef struct {
     int              count;
 } CznExportTable;
 
-/* New init signature: pure declaration, no side effects. */
+/* New init signature. */
 typedef const CznExportTable* (*CznLibInitFunc)();
 
 typedef enum {
@@ -53,15 +62,19 @@ typedef struct {
 
 typedef struct {
     ImportMode   mode;
-    const char** filter_names;   /* identifiers for only/except */
+    const char** filter_names;   /* identifiers for only/except. */
     int          filter_count;
-    CznRename*   renames;        /* (old new) pairs for rename */
+    CznRename*   renames;        /* (old new) pairs for rename. */
     int          rename_count;
-    const char*  prefix;         /* "" means no prefix */
+    const char*  prefix;         /* "" means no prefix. */
 } ImportSpec;
 
-int internal_cozenage_load_lib(const char* collection, const char* library,
-                               const Lex* env, const ImportSpec* spec);
+
+char **get_load_paths();
+void init_import_spec(ImportSpec* spec);
+Cell* parse_import_spec(const Cell* node, ImportSpec* spec);
 void load_library(const char* libname, const Lex* env);
+Cell* load_c_module(const Cell* libspec, const Lex* e, char *path, const ImportSpec *spec);
+Cell* load_scheme_lib(const Cell* libspec, const Lex* e, char *path, const ImportSpec *spec);
 
 #endif //COZENAGE_LOAD_LIBRARY_H

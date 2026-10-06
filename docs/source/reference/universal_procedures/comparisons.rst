@@ -66,7 +66,7 @@ Numeric Comparison Procedures
 equal (=)
 ~~~~~~~~~
 
-.. _proc:numeric-eq:
+.. index:: =
 
 .. function:: (= z1 z2 ...)
 
@@ -100,7 +100,7 @@ equal (=)
 greater than (>)
 ~~~~~~~~~~~~~~~~
 
-.. _proc:numeric-gt:
+.. index:: >
 
 .. function:: (> x1 x2 ...)
 
@@ -132,7 +132,7 @@ greater than (>)
 less than (<)
 ~~~~~~~~~~~~~
 
-.. _proc:numeric-lt:
+.. index:: <
 
 .. function:: (< x1 x2 ...)
 
@@ -164,7 +164,7 @@ less than (<)
 greater than or equal (>=)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. _proc:numeric-gte:
+.. index:: >=
 
 .. function:: (>= x1 x2 ...)
 
@@ -194,7 +194,7 @@ greater than or equal (>=)
 less than or equal (<=)
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-.. _proc:numeric-lte:
+.. index:: <=
 
 .. function:: (<= x1 x2 ...)
 
@@ -227,7 +227,7 @@ General Comparison Procedures
 eq?
 ~~~
 
-.. _proc:eq?:
+.. index:: eq?
 
 .. function:: (eq? obj1 obj2)
 
@@ -268,7 +268,7 @@ eq?
 eqv?
 ~~~~
 
-.. _proc:eqv?:
+.. index:: eqv?
 
 .. function:: (eqv? obj1 obj2)
 
@@ -312,7 +312,7 @@ eqv?
 equal?
 ~~~~~~
 
-.. _proc:equal?:
+.. index:: equal?
 
 .. function:: (equal? obj1 obj2)
 

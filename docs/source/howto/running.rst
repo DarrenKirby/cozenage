@@ -110,8 +110,8 @@ Using the REPL
 --------------
 
 Most modern interpreted languages provide a :abbr:`REPL` for interactive use. The idea of a REPL was first described by
-John McCarthy, the inventor of the original LISP language in his 1960 paper named "Recursive functions of symbolic
-expressions and their computation by machine". The interactive loop he described is the direct ancestor of every
+John McCarthy, the inventor of the original LISP language in his 1960 paper named *Recursive functions of symbolic
+expressions and their computation by machine*. The interactive loop he described is the direct ancestor of every
 REPL that exists today.
 
 REPLs are a very powerful tool which allow for interactive 'conversations' with the interpreter, in order to experiment
@@ -123,7 +123,7 @@ Running Cozenage with no file arguments will start the program in REPL mode:
 .. code-block:: bash
 
     $ cozenage
-      Cozenage version 0.11.0
+      Cozenage version 0.20.0
       Press <Ctrl+d> or type '(exit)' to quit
 
     -->
@@ -174,7 +174,8 @@ Tab Completion
 ^^^^^^^^^^^^^^
 
 Cozenage provides tab-completion for convenience. There are two kinds of completions that will be deployed depending on
-context. If inside a string literal the filename completer will be activated, using filenames relative to the CWD. In all other
+context. If inside a string literal the filename completer will be activated, using filenames relative to the
+:abbr:`CWD (current working directory)`. In all other
 contexts, Cozenage provides extended tab completion for all defined procedures and special forms at startup.
 
 To use tab completion, simply type in the first few characters of the desired name. If there is no ambiguity, the rest
@@ -205,8 +206,8 @@ discard the current text buffer and print a new prompt. At the secondary prompt 
 behaviors are subtly different: ``Ctrl + C`` will discard ONLY the current line, to allow for corrections. Pressing
 ``Ctrl + G`` will discard the entire multiline buffer, and print a new prompt.
 
-To exit Cozenage, press ``Ctrl + D`` (EOF) when the text buffer is empty (ie: Press Ctrl + C first if necessary).
-Another way to exit is to simply use the ``exit`` builtin procedure:
+To exit Cozenage, press ``Ctrl + D`` (:abbr:`EOF (End-of-file)`) when the text buffer is empty (ie: Press Ctrl + C first
+if necessary). Another way to exit is to simply use the ``exit`` builtin procedure:
 
 .. code-block:: scheme
 

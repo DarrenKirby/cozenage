@@ -41,45 +41,45 @@ static void init_lexer(const char* source)
 }
 
 
-static bool is_digit(const char c)
+STATIC bool is_digit(const char c)
 {
     return c >= '0' && c <= '9';
 }
 
 
-static bool is_whitespace(const char c)
+STATIC bool is_whitespace(const char c)
 {
     return c == ' ' || c == '\t' || c == '\r' || c == '\n';
 }
 
 
-static bool at_end()
+STATIC bool at_end()
 {
     return *scanner.current == '\0';
 }
 
 
-static char advance()
+STATIC char advance()
 {
     scanner.current++;
     return scanner.current[-1];
 }
 
 
-static char peek()
+STATIC char peek()
 {
     return *scanner.current;
 }
 
 
-static char peekNext()
+STATIC char peekNext()
 {
     if (at_end()) return '\0';
     return scanner.current[1];
 }
 
 
-static Token make_token(const TokenType type)
+STATIC Token make_token(const TokenType type)
 {
     Token token;
     token.type = type;
@@ -90,7 +90,7 @@ static Token make_token(const TokenType type)
 }
 
 
-static Token error_token(const char* message)
+STATIC Token error_token(const char* message)
 {
     Token token;
     token.type = T_ERROR;
@@ -101,7 +101,7 @@ static Token error_token(const char* message)
 }
 
 
-static void skip_whitespace()
+STATIC void skip_whitespace()
 {
     for (;;) {
         const char c = peek();
@@ -142,7 +142,7 @@ static void skip_whitespace()
 }
 
 
-static Token string()
+STATIC Token string()
 {
     while (peek() != '"' && !at_end()) {
         const char c = peek();
@@ -180,7 +180,7 @@ static Token string()
 }
 
 
-static Token number()
+STATIC Token number()
 {
     while (!is_whitespace(peek()) && !at_end() && peek() != ')' && peek() != ']' && peek() != '}') {
         advance();
@@ -189,7 +189,7 @@ static Token number()
 }
 
 
-static Token boolean()
+STATIC Token boolean()
 {
     scanner.start = scanner.current;
     while (!is_whitespace(peek()) && !at_end() && peek() != ')' && peek() != ']' && peek() != '}') {
@@ -199,7 +199,7 @@ static Token boolean()
 }
 
 
-static Token multi_word_identifier()
+STATIC Token multi_word_identifier()
 {
     while (peek() != '|' && !at_end()) {
         advance();
@@ -211,7 +211,7 @@ static Token multi_word_identifier()
 }
 
 
-static Token symbol()
+STATIC Token symbol()
 {
     while (!is_whitespace(peek()) && peek() != ')' && peek() != '(' && peek() != ']' && peek() != '}' && !at_end()) {
         advance();
@@ -220,7 +220,7 @@ static Token symbol()
 }
 
 
-static Token character()
+STATIC Token character()
 {
     scanner.start = scanner.current;
     while (!is_whitespace(peek()) && peek() != ')' && peek() != '(' && peek() != ']' && peek() != '}' && !at_end()) {
@@ -230,7 +230,7 @@ static Token character()
 }
 
 
-static Token lex_token()
+STATIC Token lex_token()
 {
     skip_whitespace();
     scanner.start = scanner.current;
@@ -262,6 +262,8 @@ static Token lex_token()
             /* -inf.0, +inf.0, +nan.0, and -nan.0 need special handling.
              * lex them as symbols, and deal with it in the parser. */
             if (peek() == 'i' && peekNext() == 'n') return symbol();
+            /* Catch +i and -i ... should parse to 0+1i and 0-1i respectively. */
+            if (peek() == 'i') return number();
             if (peek() == 'n' && peekNext() == 'a') return symbol();
             if (is_digit(peek())) return number();
             return make_token(T_SYMBOL);
@@ -329,7 +331,7 @@ static Token lex_token()
 }
 
 
-static TokenArray* init_token_array()
+STATIC TokenArray* init_token_array()
 {
     /* Allocate space for the manager struct itself. */
     TokenArray *ta = GC_MALLOC(sizeof(TokenArray));
@@ -352,7 +354,7 @@ static TokenArray* init_token_array()
 }
 
 
-static TokenArray* write_token_array(TokenArray* ta, const Token token)
+STATIC TokenArray* write_token_array(TokenArray* ta, const Token token)
 {
     /* Check if we need to reallocate. */
     if (ta->count == ta->capacity) {
@@ -396,6 +398,7 @@ void debug_lexer(const TokenArray* ta)
         const Token token = ta->tokens[i];
 
         if (token.type == T_EOF) {
+            printf("   [ EOF ]\n");
             break;
         }
 
@@ -405,7 +408,7 @@ void debug_lexer(const TokenArray* ta)
         } else {
             printf("   | ");
         }
-        printf("%2d [ %.*s ]\n", token.type, token.length, token.start);
+        printf("pos: %d %2d [ %.*s ]\n", i, token.type, token.length, token.start);
     }
     printf("token count: %d\n", ta->count);
     printf("token position: %d\n", ta->position);

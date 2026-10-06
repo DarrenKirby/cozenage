@@ -17,7 +17,7 @@ Process Information
 get-pid
 ~~~~~~~
 
-.. _proc:get-pid:
+.. index:: get-pid
 
 .. function:: (get-pid)
 
@@ -36,7 +36,7 @@ get-pid
 get-ppid
 ~~~~~~~~
 
-.. _proc:get-ppid:
+.. index:: get-ppid
 
 .. function:: (get-ppid)
 
@@ -51,7 +51,7 @@ Environment Variables
 get-env-var
 ~~~~~~~~~~~
 
-.. _proc:get-env-var:
+.. index:: get-env-var
 
 .. function:: (get-env-var string)
 
@@ -74,7 +74,7 @@ get-env-var
 get-env-vars
 ~~~~~~~~~~~~
 
-.. _proc:get-env-vars:
+.. index:: get-env-vars
 
 .. function:: (get-env-vars)
 
@@ -86,7 +86,7 @@ get-env-vars
 get-home
 ~~~~~~~~
 
-.. _proc:get-home:
+.. index:: get-home
 
 .. function:: (get-home)
 
@@ -98,7 +98,7 @@ get-home
 get-path
 ~~~~~~~~
 
-.. _proc:get-path:
+.. index:: get-path
 
 .. function:: (get-path)
 
@@ -113,7 +113,7 @@ User and Group IDs
 get-uid
 ~~~~~~~
 
-.. _proc:get-uid:
+.. index:: get-uid
 
 .. function:: (get-uid)
 
@@ -125,7 +125,7 @@ get-uid
 get-gid
 ~~~~~~~
 
-.. _proc:get-gid:
+.. index:: get-gid
 
 .. function:: (get-gid)
 
@@ -137,7 +137,7 @@ get-gid
 get-euid
 ~~~~~~~~
 
-.. _proc:get-euid:
+.. index:: get-euid
 
 .. function:: (get-euid)
 
@@ -149,7 +149,7 @@ get-euid
 get-egid
 ~~~~~~~~
 
-.. _proc:get-egid:
+.. index:: get-egid
 
 .. function:: (get-egid)
 
@@ -161,7 +161,7 @@ get-egid
 set-uid!
 ~~~~~~~~
 
-.. _proc:set-uid-bang:
+.. index:: set-uid!
 
 .. function:: (set-uid! n)
 
@@ -175,7 +175,7 @@ set-uid!
 set-gid!
 ~~~~~~~~
 
-.. _proc:set-gid-bang:
+.. index:: set-gid!
 
 .. function:: (set-gid! n)
 
@@ -192,7 +192,7 @@ User and Group Information
 get-username
 ~~~~~~~~~~~~
 
-.. _proc:get-username:
+.. index:: get-username
 
 .. function:: (get-username)
 
@@ -204,7 +204,7 @@ get-username
 get-groups
 ~~~~~~~~~~
 
-.. _proc:get-groups:
+.. index:: get-groups
 
 .. function:: (get-groups)
 
@@ -216,7 +216,7 @@ get-groups
 is-root?
 ~~~~~~~~
 
-.. _proc:is-root-p:
+.. index:: is-root?
 
 .. function:: (is-root?)
 
@@ -232,7 +232,7 @@ Working Directory and Permissions
 get-cwd
 ~~~~~~~
 
-.. _proc:get-cwd:
+.. index:: get-cwd
 
 .. function:: (get-cwd)
 
@@ -244,7 +244,7 @@ get-cwd
 chdir
 ~~~~~~
 
-.. _proc:chdir:
+.. index:: chdir
 
 .. function:: (chdir path)
 
@@ -258,7 +258,7 @@ chdir
 chmod
 ~~~~~
 
-.. _proc:chmod:
+.. index:: chmod
 
 .. function:: (chmod path mode)
 
@@ -285,7 +285,7 @@ System Metadata and Telemetry
 uname
 ~~~~~
 
-.. _proc:uname:
+.. index:: uname
 
 .. function:: (uname)
 
@@ -297,7 +297,7 @@ uname
 uptime
 ~~~~~~
 
-.. _proc:uptime:
+.. index:: uptime
 
 .. function:: (uptime)
 
@@ -320,7 +320,7 @@ uptime
 cpu-count
 ~~~~~~~~~
 
-.. _proc:cpu-count:
+.. index:: cpu-count
 
 .. function:: (cpu-count)
 
@@ -332,7 +332,7 @@ cpu-count
 get-hostname
 ~~~~~~~~~~~~
 
-.. _proc:get-hostname:
+.. index:: get-hostname
 
 .. function:: (get-hostname)
 
@@ -347,7 +347,7 @@ Process Control
 system
 ~~~~~~
 
-.. _proc:system:
+.. index:: system
 
 .. function:: (system command)
 
@@ -361,7 +361,7 @@ system
 sleep
 ~~~~~
 
-.. _proc:sleep:
+.. index:: sleep
 
 .. function:: (sleep n)
 

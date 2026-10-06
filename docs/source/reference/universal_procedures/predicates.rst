@@ -77,7 +77,7 @@ Type-Identity Procedures
 number?
 ~~~~~~~
 
-.. _proc:number?:
+.. index:: number?
 
 .. function:: (number? obj)
 
@@ -107,7 +107,7 @@ number?
 boolean?
 ~~~~~~~~
 
-.. _proc:boolean?:
+.. index:: boolean?
 
 .. function:: (boolean? obj)
 
@@ -132,7 +132,7 @@ boolean?
 null?
 ~~~~~
 
-.. _proc:null?:
+.. index:: null?
 
 .. function:: (null? obj)
 
@@ -157,7 +157,7 @@ null?
 pair?
 ~~~~~
 
-.. _proc:pair?:
+.. index:: pair?
 
 .. function:: (pair? obj)
 
@@ -184,7 +184,7 @@ pair?
 list?
 ~~~~~
 
-.. _proc:list?:
+.. index:: list?
 
 .. function:: (list? obj)
 
@@ -213,7 +213,7 @@ list?
 procedure?
 ~~~~~~~~~~
 
-.. _proc:procedure?:
+.. index:: procedure?
 
 .. function:: (procedure? obj)
 
@@ -239,7 +239,7 @@ procedure?
 symbol?
 ~~~~~~~
 
-.. _proc:symbol?:
+.. index:: symbol?
 
 .. function:: (symbol? obj)
 
@@ -264,7 +264,7 @@ symbol?
 string?
 ~~~~~~~
 
-.. _proc:string?:
+.. index:: string?
 
 .. function:: (string? obj)
 
@@ -289,7 +289,7 @@ string?
 char?
 ~~~~~
 
-.. _proc:char?:
+.. index:: char?
 
 .. function:: (char? obj)
 
@@ -314,7 +314,7 @@ char?
 vector?
 ~~~~~~~
 
-.. _proc:vector?:
+.. index:: vector?
 
 .. function:: (vector? obj)
 
@@ -339,7 +339,7 @@ vector?
 bytevector?
 ~~~~~~~~~~~
 
-.. _proc:bytevector?:
+.. index:: bytevector?
 
 .. function:: (bytevector? obj)
 
@@ -364,7 +364,7 @@ bytevector?
 port?
 ~~~~~
 
-.. _proc:port?:
+.. index:: port?
 
 .. function:: (port? obj)
 
@@ -387,7 +387,7 @@ port?
 set?
 ~~~~
 
-.. _proc:set?:
+.. index:: set?
 
 .. function:: (set? obj)
 
@@ -414,7 +414,7 @@ set?
 hash?
 ~~~~~
 
-.. _proc:hash?:
+.. index:: hash?
 
 .. function:: (hash? obj)
 
@@ -441,7 +441,7 @@ hash?
 eof-object?
 ~~~~~~~~~~~
 
-.. _proc:eof-object?:
+.. index:: eof-object?
 
 .. function:: (eof-object? obj)
 
@@ -469,7 +469,7 @@ Numeric identity procedures
 exact?
 ~~~~~~
 
-.. _proc:exact?:
+.. index:: exact?
 
 .. function:: (exact? z)
 
@@ -499,7 +499,7 @@ exact?
 inexact?
 ~~~~~~~~
 
-.. _proc:inexact?:
+.. index:: inexact?
 
 .. function:: (inexact? z)
 
@@ -527,7 +527,7 @@ inexact?
 complex?
 ~~~~~~~~
 
-.. _proc:complex?:
+.. index:: complex?
 
 .. function:: (complex? obj)
 
@@ -556,7 +556,7 @@ complex?
 real?
 ~~~~~
 
-.. _proc:real?:
+.. index:: real?
 
 .. function:: (real? obj)
 
@@ -589,7 +589,7 @@ real?
 rational?
 ~~~~~~~~~
 
-.. _proc:rational?:
+.. index:: rational?
 
 .. function:: (rational? obj)
 
@@ -624,7 +624,7 @@ rational?
 integer?
 ~~~~~~~~
 
-.. _proc:integer?:
+.. index:: integer?
 
 .. function:: (integer? obj)
 
@@ -656,7 +656,7 @@ integer?
 exact-integer?
 ~~~~~~~~~~~~~~
 
-.. _proc:exact-integer?:
+.. index:: exact-integer?
 
 .. function:: (exact-integer? obj)
 
@@ -685,7 +685,7 @@ exact-integer?
 bigint?
 ~~~~~~~
 
-.. _proc:bigint?:
+.. index:: bigint?
 
 .. function:: (bigint? obj)
 
@@ -721,7 +721,7 @@ Numeric predicate procedures
 zero?
 ~~~~~
 
-.. _proc:zero?:
+.. index:: zero?
 
 .. function:: (zero? z)
 
@@ -749,7 +749,7 @@ zero?
 positive?
 ~~~~~~~~~
 
-.. _proc:positive?:
+.. index:: positive?
 
 .. function:: (positive? x)
 
@@ -778,7 +778,7 @@ positive?
 negative?
 ~~~~~~~~~
 
-.. _proc:negative?:
+.. index:: negative?
 
 .. function:: (negative? x)
 
@@ -807,7 +807,7 @@ negative?
 odd?
 ~~~~
 
-.. _proc:odd?:
+.. index:: odd?
 
 .. function:: (odd? n)
 
@@ -836,7 +836,7 @@ odd?
 even?
 ~~~~~
 
-.. _proc:even?:
+.. index:: even?
 
 .. function:: (even? n)
 
@@ -868,7 +868,7 @@ Boolean Predicates
 false?
 ~~~~~~
 
-.. _proc:false?:
+.. index:: false?
 
 .. function:: (false? obj)
 
@@ -898,7 +898,7 @@ false?
 true?
 ~~~~~
 
-.. _proc:true?:
+.. index:: true?
 
 .. function:: (true? obj)
 

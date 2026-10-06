@@ -23,7 +23,7 @@ File, Device, and Pipe Predicates
 reg-file?
 ~~~~~~~~~
 
-.. _proc:reg-file-p:
+.. index:: reg-file?
 
 .. function:: (reg-file? path)
 
@@ -46,7 +46,7 @@ reg-file?
 directory?
 ~~~~~~~~~~
 
-.. _proc:directory-p:
+.. index:: directory?
 
 .. function:: (directory? path)
 
@@ -67,7 +67,7 @@ directory?
 symlink?
 ~~~~~~~~
 
-.. _proc:symlink-p:
+.. index:: symlink?
 
 .. function:: (symlink? path)
 
@@ -81,7 +81,7 @@ symlink?
 char-device?
 ~~~~~~~~~~~~
 
-.. _proc:char-device-p:
+.. index:: char-device?
 
 .. function:: (char-device? path)
 
@@ -95,7 +95,7 @@ char-device?
 block-device?
 ~~~~~~~~~~~~~
 
-.. _proc:block-device-p:
+.. index:: block-device?
 
 .. function:: (block-device? path)
 
@@ -109,7 +109,7 @@ block-device?
 fifo?
 ~~~~~
 
-.. _proc:fifo-p:
+.. index:: fifo?
 
 .. function:: (fifo? path)
 
@@ -123,7 +123,7 @@ fifo?
 socket?
 ~~~~~~~
 
-.. _proc:socket-p:
+.. index:: socket?
 
 .. function:: (socket? path)
 
@@ -137,7 +137,7 @@ socket?
 file-exists?
 ~~~~~~~~~~~~
 
-.. _proc:file-exists-p:
+.. index:: file-exists?
 
 .. function:: (file-exists? path)
 
@@ -155,7 +155,7 @@ Basic File Operations
 mkdir
 ~~~~~
 
-.. _proc:mkdir:
+.. index:: mkdir
 
 .. function:: (mkdir path)
 
@@ -170,7 +170,7 @@ mkdir
 rmdir!
 ~~~~~~
 
-.. _proc:rmdir-bang:
+.. index:: rmdir!
 
 .. function:: (rmdir! path)
 
@@ -184,7 +184,7 @@ rmdir!
 unlink!
 ~~~~~~~
 
-.. _proc:unlink-bang:
+.. index:: unlink!
 
 .. function:: (unlink! path)
 
@@ -201,7 +201,7 @@ File Metadata and Permissions
 stat
 ~~~~
 
-.. _proc:stat:
+.. index:: stat
 
 .. function:: (stat path)
 
@@ -222,7 +222,7 @@ stat
 file-size
 ~~~~~~~~~
 
-.. _proc:file-size:
+.. index:: file-size
 
 .. function:: (file-size path)
 
@@ -240,7 +240,7 @@ Extended Timestamp Procedures
 file-mtime
 ~~~~~~~~~~
 
-.. _proc:file-mtime:
+.. index:: file-mtime
 
 .. function:: (file-mtime path)
 
@@ -261,7 +261,7 @@ file-mtime
 file-atime
 ~~~~~~~~~~
 
-.. _proc:file-atime:
+.. index:: file-atime
 
 .. function:: (file-atime path)
 
@@ -275,7 +275,7 @@ file-atime
 file-ctime
 ~~~~~~~~~~
 
-.. _proc:file-ctime:
+.. index:: file-ctime
 
 .. function:: (file-ctime path)
 
@@ -295,7 +295,7 @@ Permission Predicates
 file-readable?
 ~~~~~~~~~~~~~~
 
-.. _proc:file-readable-p:
+.. index:: file-readable?
 
 .. function:: (file-readable? path)
 
@@ -309,7 +309,7 @@ file-readable?
 file-writable?
 ~~~~~~~~~~~~~~
 
-.. _proc:file-writable-p:
+.. index:: file-writable?
 
 .. function:: (file-writable? path)
 
@@ -332,7 +332,7 @@ file-writable?
 file-executable?
 ~~~~~~~~~~~~~~~~
 
-.. _proc:file-executable-p:
+.. index:: file-executable?
 
 .. function:: (file-executable? path)
 

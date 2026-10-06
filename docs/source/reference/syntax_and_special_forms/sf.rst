@@ -1,7 +1,7 @@
 Special Forms Documentation
 ---------------------------
 
-.. _sf:define:
+.. index:: define
 
 define
 ======
@@ -20,7 +20,7 @@ define
 
     At the top level, ``define`` creates a binding in the global environment.
     Inside a procedure body or other local context, ``define`` may also appear
-    at the head of a sequence of expressions — these *internal defines* are
+    at the head of a sequence of expressions.  These *internal defines* are
     automatically transformed into an equivalent ``letrec*`` expression, creating
     local bindings scoped to the enclosing body. The result is identical to
     writing ``letrec*`` explicitly:
@@ -87,9 +87,11 @@ define
     .. code-block:: scheme
 
       --> (define (square x) (* x x))
+      #<lambda 'square'>
       --> (square 7)
       49
       --> (define (add a b) (+ a b))
+      #<lambda 'add'>
       --> (add 3 4)
       7
 
@@ -102,6 +104,7 @@ define
     .. code-block:: scheme
 
       --> (define (sum . args) (foldl + 0 args))
+      #<lambda 'sum'>
       --> (sum 1 2 3 4 5)
       15
 
@@ -115,6 +118,7 @@ define
       --> (define (log label . values)
       ...   (display label)
       ...   (for-each (lambda (v) (display " ") (display v)) values))
+      #<lambda 'log'>
       --> (log "result:" 1 2 3)
       result: 1 2 3
 
@@ -130,6 +134,7 @@ define
       ...   (display x)
       ...   (newline)
       ...   x)
+      #<lambda 'describe'>
       --> (describe 99)
       The value is: 99
       99
@@ -150,7 +155,7 @@ define
 
     To mutate an existing binding in place, use ``set!`` instead.
 
-.. _sf:lambda:
+.. index:: lambda
 
 lambda
 ======
@@ -191,9 +196,11 @@ lambda
     .. code-block:: scheme
 
       --> (define square (lambda (x) (* x x)))
+      #<lambda 'square'>
       --> (square 7)
       49
       --> (define add (lambda (a b) (+ a b)))
+      #<lambda 'add'>
       --> (add 3 4)
       7
       --> ((lambda (x y) (* x y)) 6 7)
@@ -204,6 +211,7 @@ lambda
     .. code-block:: scheme
 
       --> (define greet (lambda () "hello"))
+      #<lambda 'greet'>
       --> (greet)
       "hello"
 
@@ -219,6 +227,7 @@ lambda
     .. code-block:: scheme
 
       --> (define my-list (lambda args args))
+      #<lambda 'my-list'>
       --> (my-list 1 2 3)
       (1 2 3)
       --> (my-list)
@@ -238,6 +247,7 @@ lambda
     .. code-block:: scheme
 
       --> (define f (lambda (a b . rest) (list a b rest)))
+      #<lambda 'f'>
       --> (f 1 2 3 4 5)
       (1 2 (3 4 5))
       --> (f 1 2)
@@ -254,10 +264,13 @@ lambda
 
       --> (define (make-adder n)
       ...   (lambda (x) (+ x n)))
+      #<lambda 'make-adder'>
       --> (define add5 (make-adder 5))
+      #<lambda 'add5'>
       --> (add5 10)
       15
       --> (define add10 (make-adder 10))
+      #<lambda 'add10'>
       --> (add10 10)
       20
 
@@ -276,6 +289,7 @@ lambda
       ...   (display x)
       ...   (newline)
       ...   x)
+      #<lambda 'describe'>
       --> (describe 42)
       value: 42
       42
@@ -286,7 +300,7 @@ lambda
     :return: A procedure object.
     :rtype: procedure
 
-.. _sf:quote:
+.. index:: quote
 
 quote
 =====
@@ -346,7 +360,7 @@ quote
       (+ 1 2)
 
     Note that numbers, booleans, strings, and characters are
-    *self-evaluating* — they evaluate to themselves without needing to be
+    *self-evaluating*. They evaluate to themselves without needing to be
     quoted. ``quote`` is most commonly needed for symbols and lists:
 
     .. code-block:: scheme
@@ -360,11 +374,10 @@ quote
       --> #\a
       #\a
 
-.. _sf:if:
+.. index:: if
 
 if
 ==
-
 
 .. describe:: (if test consequent)
               (if test consequent alternate)
@@ -380,7 +393,7 @@ if
     returned. If no *alternate* is provided and the test is false, an
     unspecified value is returned.
 
-    Note that only ``#f`` is considered false — every other value, including
+    Note that only ``#f`` is considered false. Every other value, including
     ``0``, the empty list ``()``, and the empty string ``""``, is considered
     true. This is a fundamental property of Scheme's boolean model.
 
@@ -442,12 +455,11 @@ if
       --> (classify 1)
       "positive"
 
-
-.. _sf:cond:
+.. _index:cond:
+.. index:: cond
 
 cond
 ====
-
 
 .. describe:: (cond clause ...)
 
@@ -560,7 +572,8 @@ cond
              unspecified if no clause matches.
     :rtype: any
 
-.. _sf:import:
+.. _import-form:
+.. index:: import
 
 import
 ======
@@ -588,6 +601,21 @@ import
     - ``system`` — OS and hardware interfacing procedures
     - ``datetime`` — date and time procedures
 
+    **User-written and third-party libraries**
+
+    Cozenage supports external libraries written in Cozenage Scheme. These libraries
+    allow for a set of common procedures and constants to be loaded and
+    used at will. These libraries are searched for in the filesystem in a predetermined order of
+    potential library directories, and they must be specified in a particular form, with the code
+    file itself having an ``.sls`` extension.
+
+    Briefly, an import declaration such as ``(import (testlib test))`` will look sequentially
+    through the library locations for ``testlib/test.sls``, or error if it cannot be found.
+
+    See the :ref:`loadable modules<loadable_modules>` section of the documentation for details on search paths and
+    library file formats. They behave exactly the same as the built-in ``base`` libraries in terms of the
+    ``import`` special form, including honouring the import modifiers documented in the next sub-section.
+
     **Import modifiers**
 
     An import set may be modified to control which bindings are imported and
@@ -595,10 +623,7 @@ import
     with the modifier name, followed by a plain ``(collection library)``
     import set, followed by any modifier-specific arguments.
 
-    .. note::
-
-       Modifiers cannot currently be nested. The inner import set must
-       always be a plain ``(collection library)`` reference.
+    .. index:: only
 
     **only**
 
@@ -620,6 +645,8 @@ import
       --> (floor 1.5)
       ; error: unbound symbol 'floor'
 
+    .. index:: except
+
     **except**
 
     ``(except import-set identifier ...)``
@@ -637,6 +664,8 @@ import
       #t
       ;;; all (base math) procedures are now available, except 'log',
       ;;; which retains its existing binding
+
+    .. index:: prefix
 
     **prefix**
 
@@ -658,6 +687,8 @@ import
       0.0
       --> (math-floor 1.5)
       1.0
+
+    .. index:: rename
 
     **rename**
 
@@ -728,7 +759,7 @@ import
       #t
       ;;; (base math) is available with 'truncate-down' in place of 'floor'
 
-.. _sf:let:
+.. index:: let
 
 let and named let
 =================
@@ -752,7 +783,7 @@ let and named let
 
     Because all *init* expressions are evaluated before any binding takes
     place, a binding's *init* cannot refer to other variables being bound in
-    the same ``let`` — for that, use ``let*`` or ``letrec*``.
+    the same ``let``. For that, use ``let*`` or ``letrec*``.
 
     .. code-block:: scheme
 
@@ -844,7 +875,7 @@ let and named let
     :return: The value of the last body expression.
     :rtype: any
 
-.. _sf:let*:
+.. index:: let*
 
 let*
 ====
@@ -922,7 +953,7 @@ let*
     :return: The value of the last body expression.
     :rtype: any
 
-.. _sf:letrec:
+.. index:: letrec
 
 letrec
 ======
@@ -1003,7 +1034,7 @@ letrec
     :return: The value of the last body expression.
     :rtype: any
 
-.. _sf:letrec*:
+.. index:: letrec*
 
 letrec*
 =======
@@ -1081,7 +1112,7 @@ letrec*
     :return: The value of the last body expression.
     :rtype: any
 
-.. _sf:set!:
+.. index:: set!
 
 set!
 ====
@@ -1165,7 +1196,7 @@ set!
       --> (set! undefined-var 42)
       Error: set!: Unbound symbol: 'undefined-var'
 
-.. _sf:begin:
+.. index:: begin
 
 begin
 =====
@@ -1246,7 +1277,7 @@ begin
         implementation supports only the expression form documented here.
 
 
-.. _sf:and:
+.. index:: and
 
 and
 ===
@@ -1325,7 +1356,7 @@ and
       --> (safe-divide 10 0)
       #f
 
-.. _sf:or:
+.. index:: or
 
 or
 ==
@@ -1419,7 +1450,8 @@ or
       --> (lookup 99 '((1 . "one") (2 . "two")))
       "not found"
 
-.. _sf:case:
+.. _index:case:
+.. index:: case
 
 case
 ====
@@ -1542,7 +1574,7 @@ case
              unspecified if no clause matches.
     :rtype: any
 
-.. _sf:do:
+.. index:: do
 
 do
 ==
@@ -1678,7 +1710,7 @@ do
              if no *expr* is present.
     :rtype: any
 
-.. _sf:when:
+.. index:: when
 
 when
 ====
@@ -1739,7 +1771,7 @@ when
       99
 
 
-.. _sf:unless:
+.. index:: unless
 
 unless
 ======
@@ -1798,7 +1830,7 @@ unless
       ...   (unless (positive? n)
       ...     (error "expected positive number")))
 
-.. _sf:else:
+.. index:: else
 
 else
 ====
@@ -1825,9 +1857,11 @@ else
       --> (define else #f)
       Error: define: syntax keyword 'else' cannot be used as a variable
 
-    See :ref:`sf:cond` and :ref:`sf:case` for full usage examples.
+    .. seealso::
 
-.. _sf:quasiquote:
+      :ref:`cond <index:cond>`, :ref:`case <index:case>`
+
+.. index:: quasiquote
 
 quasiquote
 ==========
@@ -1935,7 +1969,7 @@ quasiquote
       #(1 99 3)
 
 
-.. _sf:unquote:
+.. index:: unquote
 
 unquote
 =======
@@ -1965,7 +1999,7 @@ unquote
       Error: unquote: must be contained within a 'quasiquote' expression
 
 
-.. _sf:unquote-splicing:
+.. index:: unquote-splicing
 
 unquote-splicing
 ================
@@ -2001,7 +2035,7 @@ unquote-splicing
       --> ,@xs
       Error: unquote-splice: must be contained within a 'quasiquote' expression
 
-.. _sf:defmacro:
+.. index:: defmacro
 
 defmacro
 ========
@@ -2122,7 +2156,7 @@ defmacro
     :return: The macro procedure object.
     :rtype: procedure
 
-.. _sf:with-gc-stats:
+.. index:: with-gc-stats
 
 with-gc-stats
 =============

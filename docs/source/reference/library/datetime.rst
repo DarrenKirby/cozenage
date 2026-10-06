@@ -6,7 +6,7 @@ The ``(base datetime)`` library provides access to date and time related prcedur
 current-seconds
 ~~~~~~~~~~~~~~~
 
-.. _proc:current-seconds:
+.. index:: current-seconds
 
 .. function:: (current-seconds)
 
@@ -54,7 +54,7 @@ current-seconds
 current-jiffy
 ~~~~~~~~~~~~~
 
-.. _proc:current-jiffy:
+.. index:: current-jiffy
 
 .. function:: (current-jiffy)
 
@@ -71,7 +71,7 @@ current-jiffy
 jiffies-per-second
 ~~~~~~~~~~~~~~~~~~
 
-.. _proc:jiffies-per-second:
+.. index:: jiffies-per-second
 
 .. function:: (jiffies-per-second)
 
@@ -133,7 +133,7 @@ jiffies-per-second
 current-dt-utc
 ~~~~~~~~~~~~~~
 
-.. _proc::current-dt-utc:
+.. index:: current-dt-utc
 
 .. function:: (current-dt-utc)
               (current-dt-utc string)
@@ -159,7 +159,7 @@ current-dt-utc
 current-dt-local
 ~~~~~~~~~~~~~~~~
 
-.. _proc::current-dt-local:
+.. index:: current-dt-local
 
 .. function:: (current-dt-local)
               (current-dt-local string)

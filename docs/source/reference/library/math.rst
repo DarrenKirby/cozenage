@@ -20,7 +20,7 @@ to test for these specific values.
 acos
 ~~~~
 
-.. _proc:acos:
+.. index:: acos
 
 .. function:: (acos z)
 
@@ -43,7 +43,7 @@ acos
 asin
 ~~~~
 
-.. _proc:asin:
+.. index:: asin
 
 .. function:: (asin z)
 
@@ -66,7 +66,7 @@ asin
 atan
 ~~~~
 
-.. _proc:atan:
+.. index:: atan
 
 .. function:: (atan y)
 .. function:: (atan y x)
@@ -93,7 +93,7 @@ atan
 cos
 ~~~
 
-.. _proc:cos:
+.. index:: cos
 
 .. function:: (cos z)
 
@@ -116,7 +116,7 @@ cos
 exp
 ~~~
 
-.. _proc:exp:
+.. index:: exp
 
 .. function:: (exp z)
 
@@ -139,7 +139,7 @@ exp
 log
 ~~~
 
-.. _proc:log:
+.. index:: log
 
 .. function:: (log z)
 .. function:: (log z b)
@@ -165,7 +165,7 @@ log
 sin
 ~~~
 
-.. _proc:sin:
+.. index:: sin
 
 .. function:: (sin z)
 
@@ -188,7 +188,7 @@ sin
 tan
 ~~~
 
-.. _proc:tan:
+.. index:: tan
 
 .. function:: (tan z)
 
@@ -211,7 +211,7 @@ tan
 log2
 ~~~~
 
-.. _proc:log2:
+.. index:: log2
 
 .. function:: (log2 z)
 
@@ -232,7 +232,7 @@ log2
 log10
 ~~~~~
 
-.. _proc:log10:
+.. index:: log10
 
 .. function:: (log10 z)
 
@@ -253,7 +253,7 @@ log10
 cbrt
 ~~~~
 
-.. _proc:cbrt:
+.. index:: cbrt
 
 .. function:: (cbrt z)
 
@@ -292,7 +292,7 @@ parts. All complex number objects are of the type ``complex``.
 make-rectangular
 ~~~~~~~~~~~~~~~~
 
-.. _proc:make-rectangular:
+.. index:: make-rectangular
 
 .. function:: (make-rectangular x1 x2)
 
@@ -317,7 +317,7 @@ make-rectangular
 real-part
 ~~~~~~~~~
 
-.. _proc:real-part:
+.. index:: real-part
 
 .. function:: (real-part z)
 
@@ -340,7 +340,7 @@ real-part
 imag-part
 ~~~~~~~~~
 
-.. _proc:imag-part:
+.. index:: imag-part
 
 .. function:: (imag-part z)
 
@@ -363,7 +363,7 @@ imag-part
 make-polar
 ~~~~~~~~~~
 
-.. _proc:make-polar:
+.. index:: make-polar
 
 .. function:: (make-polar r theta)
 
@@ -388,7 +388,7 @@ make-polar
 magnitude
 ~~~~~~~~~
 
-.. _proc:magnitude:
+.. index:: magnitude
 
 .. function:: (magnitude z)
 
@@ -411,7 +411,7 @@ magnitude
 angle
 ~~~~~
 
-.. _proc:angle:
+.. index:: angle
 
 .. function:: (angle z)
 

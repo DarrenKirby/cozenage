@@ -210,7 +210,7 @@ expressive way to organize data.
 List and pair procedures
 ------------------------
 
-.. _proc:cons:
+.. index:: cons
 
 cons
 ^^^^
@@ -233,7 +233,7 @@ cons
       --> (cons 1 2)
         (1 . 2)
 
-.. _proc:car:
+.. index:: car
 
 car
 ^^^
@@ -257,7 +257,7 @@ car
       --> (car '(1 2 3))
         1
 
-.. _proc:cdr:
+.. index:: cdr
 
 cdr
 ^^^
@@ -281,7 +281,7 @@ cdr
       --> (cdr '(1 2 3 ))
         (2 3)
 
-.. _proc:caar:
+.. index:: caar
 
 caar
 ^^^^
@@ -303,7 +303,7 @@ caar
       1
 
 
-.. _proc:cadr:
+.. index:: cadr
 
 cadr
 ^^^^
@@ -326,7 +326,7 @@ cadr
       2
 
 
-.. _proc:cdar:
+.. index:: cdar
 
 cdar
 ^^^^
@@ -348,7 +348,7 @@ cdar
       (2)
 
 
-.. _proc:cddr:
+.. index:: cddr
 
 cddr
 ^^^^
@@ -370,7 +370,7 @@ cddr
       --> (cddr '(1 2 3))
       (3)
 
-.. _proc:list:
+.. index:: list
 
 list
 ^^^^
@@ -397,7 +397,7 @@ list
       ()
 
 
-.. _proc:set-car!:
+.. index:: set-car!
 
 set-car!
 ^^^^^^^^
@@ -425,7 +425,7 @@ set-car!
       (99 . 2)
 
 
-.. _proc:set-cdr!:
+.. index:: set-cdr!
 
 set-cdr!
 ^^^^^^^^
@@ -453,7 +453,7 @@ set-cdr!
       (1 2 3)
 
 
-.. _proc:length:
+.. index:: length
 
 length
 ^^^^^^
@@ -478,7 +478,7 @@ length
       0
 
 
-.. _proc:list-ref:
+.. index:: list-ref
 
 list-ref
 ^^^^^^^^
@@ -505,7 +505,7 @@ list-ref
       --> (list-ref '(a b c d) 2)
       c
 
-.. _proc:append:
+.. index:: append
 
 append
 ^^^^^^
@@ -547,7 +547,7 @@ append
       (1 2)
 
 
-.. _proc:reverse:
+.. index:: reverse
 
 reverse
 ^^^^^^^
@@ -574,7 +574,7 @@ reverse
       ()
 
 
-.. _proc:list-tail:
+.. index:: list-tail
 
 list-tail
 ^^^^^^^^^
@@ -603,7 +603,7 @@ list-tail
       ()
 
 
-.. _proc:make-list:
+.. index:: make-list
 
 make-list
 ^^^^^^^^^
@@ -633,7 +633,7 @@ make-list
       (#f #f #f #f #f)
 
 
-.. _proc:list-set!:
+.. index:: list-set!
 
 list-set!
 ^^^^^^^^^
@@ -660,7 +660,7 @@ list-set!
       --> lst
       (a b z d)
 
-.. _proc:memq:
+.. index:: memq
 
 memq
 ^^^^
@@ -689,7 +689,7 @@ memq
       (() b)
 
 
-.. _proc:memv:
+.. index:: memv
 
 memv
 ^^^^
@@ -717,7 +717,7 @@ memv
       #f
 
 
-.. _proc:member:
+.. index:: member
 
 member
 ^^^^^^
@@ -751,7 +751,7 @@ member
       (2 3)
 
 
-.. _proc:assq:
+.. index:: assq
 
 assq
 ^^^^
@@ -779,7 +779,7 @@ assq
       #f
 
 
-.. _proc:assv:
+.. index:: assv
 
 assv
 ^^^^
@@ -808,7 +808,7 @@ assv
       #f
 
 
-.. _proc:assoc:
+.. index:: assoc
 
 assoc
 ^^^^^
@@ -843,7 +843,7 @@ assoc
       #f
 
 
-.. _proc:list-copy:
+.. index:: list-copy
 
 list-copy
 ^^^^^^^^^
@@ -881,7 +881,7 @@ list-copy
       (1 2 . 3)
 
 
-.. _proc:map:
+.. index:: map
 
 map
 ^^^
@@ -915,7 +915,7 @@ map
       (11 22)
 
 
-.. _proc:for-each:
+.. index:: for-each
 
 for-each
 ^^^^^^^^
@@ -948,7 +948,7 @@ for-each
       (9 4 1)
 
 
-.. _proc:filter:
+.. index:: filter
 
 filter
 ^^^^^^
@@ -981,7 +981,7 @@ filter
       ()
 
 
-.. _proc:foldl:
+.. index:: foldl
 
 foldl
 ^^^^^
@@ -1026,7 +1026,7 @@ foldl
       66
 
 
-.. _proc:foldr:
+.. index:: fold
 
 foldr
 ^^^^^
@@ -1072,7 +1072,7 @@ foldr
       ((1 . 10) (2 . 20) (3 . 30))
 
 
-.. _proc:zip:
+.. index:: zip
 
 zip
 ^^^
@@ -1105,7 +1105,7 @@ zip
       ()
 
 
-.. _proc:count:
+.. index:: count
 
 count
 ^^^^^
@@ -1137,7 +1137,7 @@ count
       0
 
 
-.. _proc:count-equal:
+.. index:: count-equal
 
 count-equal
 ^^^^^^^^^^^

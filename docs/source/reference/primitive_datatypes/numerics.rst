@@ -1,3 +1,5 @@
+.. index:: numeric types
+
 Numerics
 ========
 
@@ -22,6 +24,9 @@ Cozenage implements four distinct object types to represent mathematical values:
 * **Complex numbers**
 
 Each of these types corresponds to a well-known mathematical category, and each has a clear meaning independent of Cozenage.
+
+
+.. index:: numeric tower
 
 The Numeric Tower
 ^^^^^^^^^^^^^^^^^
@@ -160,6 +165,8 @@ representations, and on any combination of them.
 
 For example, arithmetic procedures do not require operands to have the same numeric type.
 
+.. index:: numeric literals
+
 Numeric Literal Syntax
 ^^^^^^^^^^^^^^^^^^^^^^
 
@@ -199,6 +206,8 @@ Examples:
     #xFF     ; hexadecimal 255
 
 All of these literals denote exact integer values, regardless of the base used to write them.
+
+.. index:: exact and inexact numbers
 
 Exact and Inexact Numbers
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -266,7 +275,7 @@ mathematically natural style.
 Numeric procedures
 ------------------
 
-.. _proc:add:
+.. index:: +
 
 addition
 ^^^^^^^^
@@ -301,7 +310,7 @@ addition
       4+6i
 
 
-.. _proc:sub:
+.. index:: -
 
 subtraction
 ^^^^^^^^^^^
@@ -337,7 +346,7 @@ subtraction
       -1-2i
 
 
-.. _proc:mul:
+.. index:: *
 
 multiplication
 ^^^^^^^^^^^^^^
@@ -372,7 +381,7 @@ multiplication
       -5+10i
 
 
-.. _proc:div:
+.. index:: /
 
 division
 ^^^^^^^^
@@ -414,7 +423,7 @@ division
       --> (/ 1+2i)
       1/5-2/5i
 
-.. _proc:abs:
+.. index:: abs
 
 abs
 ^^^
@@ -444,7 +453,7 @@ abs
       5.0
 
 
-.. _proc:expt:
+.. index:: expt
 
 expt
 ^^^^
@@ -488,7 +497,7 @@ expt
       1
 
 
-.. _proc:modulo:
+.. index:: modulo
 
 modulo
 ^^^^^^
@@ -519,7 +528,7 @@ modulo
       -1
 
 
-.. _proc:quotient:
+.. index:: quotient
 
 quotient
 ^^^^^^^^
@@ -550,7 +559,7 @@ quotient
       3
 
 
-.. _proc:remainder:
+.. index:: remainder
 
 remainder
 ^^^^^^^^^
@@ -580,7 +589,7 @@ remainder
       --> (remainder -10 -3)
       -1
 
-.. _proc:max:
+.. index:: max
 
 max
 ^^^
@@ -609,7 +618,7 @@ max
       42
 
 
-.. _proc:min:
+.. index:: min
 
 min
 ^^^
@@ -638,7 +647,7 @@ min
       42
 
 
-.. _proc:floor:
+.. index:: floor
 
 floor
 ^^^^^
@@ -667,7 +676,7 @@ floor
       4
 
 
-.. _proc:ceiling:
+.. index:: ceiling
 
 ceiling
 ^^^^^^^
@@ -696,7 +705,7 @@ ceiling
       4
 
 
-.. _proc:round:
+.. index:: round
 
 round
 ^^^^^
@@ -728,7 +737,7 @@ round
       -4
 
 
-.. _proc:truncate:
+.. index:: truncate
 
 truncate
 ^^^^^^^^
@@ -757,7 +766,7 @@ truncate
       --> (truncate 4)
       4
 
-.. _proc:numerator:
+.. index:: numerator
 
 numerator
 ^^^^^^^^^
@@ -786,7 +795,7 @@ numerator
       5
 
 
-.. _proc:denominator:
+.. index:: denominator
 
 denominator
 ^^^^^^^^^^^
@@ -813,7 +822,7 @@ denominator
       1
 
 
-.. _proc:rationalize:
+.. index:: rationalize
 
 rationalize
 ^^^^^^^^^^^
@@ -851,7 +860,7 @@ rationalize
       3602879701896397/36028797018963968
 
 
-.. _proc:square:
+.. index:: square
 
 square
 ^^^^^^
@@ -881,7 +890,7 @@ square
       -5+12i
 
 
-.. _proc:sqrt:
+.. index:: sqrt
 
 sqrt
 ^^^^
@@ -915,7 +924,7 @@ sqrt
       1.272+0.786i
 
 
-.. _proc:exact-integer-sqrt:
+.. index:: exact-integer-sqrt
 
 exact-integer-sqrt
 ^^^^^^^^^^^^^^^^^^
@@ -943,7 +952,7 @@ exact-integer-sqrt
       --> (exact-integer-sqrt 2)
       (1 1)
 
-.. _proc:exact:
+.. index:: exact
 
 exact
 ^^^^^
@@ -972,7 +981,7 @@ exact
       1/3
 
 
-.. _proc:inexact:
+.. index:: inexact
 
 inexact
 ^^^^^^^
@@ -1001,7 +1010,7 @@ inexact
       1.5
 
 
-.. _proc:infinite?:
+.. index:: infinite?
 
 
 infinite?
@@ -1033,7 +1042,7 @@ infinite?
       #f
 
 
-.. _proc:finite?:
+.. index:: finite?
 
 finite?
 ^^^^^^^
@@ -1064,7 +1073,7 @@ finite?
       #f
 
 
-.. _proc:nan?:
+.. index:: nan?
 
 nan?
 ^^^^
@@ -1091,7 +1100,7 @@ nan?
       --> (nan? 42)
       #f
 
-.. _proc:gcd:
+.. index:: gcd
 
 gcd
 ^^^
@@ -1125,7 +1134,7 @@ gcd
       2
 
 
-.. _proc:lcm:
+.. index:: lcm
 
 lcm
 ^^^

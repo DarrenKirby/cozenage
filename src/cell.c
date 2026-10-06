@@ -177,7 +177,7 @@ Cell* make_cell_usp()
 /* Cell constructor for real-valued numbers. */
 Cell* make_cell_real(const long double the_real)
 {
-    Cell* v = GC_MALLOC_ATOMIC(sizeof(Cell));
+    Cell* v = GC_MALLOC(sizeof(Cell));
     if (!v) {
         fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
         exit(EXIT_FAILURE);
@@ -192,7 +192,7 @@ Cell* make_cell_real(const long double the_real)
 /* Cell constructor for integers < INT64_MAX. */
 Cell* make_cell_integer(const long long int the_integer)
 {
-    Cell* v = GC_MALLOC_ATOMIC(sizeof(Cell));
+    Cell* v = GC_MALLOC(sizeof(Cell));
     if (!v) {
         fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
         exit(EXIT_FAILURE);
@@ -209,7 +209,7 @@ Cell* make_cell_rational(const long int numerator,
                          const long int denominator,
                          const bool simplify)
 {
-    Cell* v = GC_MALLOC_ATOMIC(sizeof(Cell));
+    Cell* v = GC_MALLOC(sizeof(Cell));
     if (!v) {
         fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
         exit(EXIT_FAILURE);
@@ -256,7 +256,7 @@ Cell* make_cell_symbol(const char* the_symbol)
     }
     /* Not found, so construct the cell,
      * place in the table, then return it. */
-    v = GC_MALLOC_ATOMIC(sizeof(Cell));
+    v = GC_MALLOC(sizeof(Cell));
     if (!v) {
         fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
         exit(EXIT_FAILURE);
@@ -273,7 +273,7 @@ Cell* make_cell_symbol(const char* the_symbol)
  * operations on pure-ascii strings. */
 Cell* make_cell_string(const char* the_string)
 {
-    Cell* v = GC_MALLOC_ATOMIC(sizeof(Cell));
+    Cell* v = GC_MALLOC(sizeof(Cell));
     if (!v) {
         fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
         exit(EXIT_FAILURE);
@@ -317,7 +317,7 @@ Cell* make_cell_sexpr()
 /* Cell constructor for chars. */
 Cell* make_cell_char(const UChar32 the_char)
 {
-    Cell* v = GC_MALLOC_ATOMIC(sizeof(Cell));
+    Cell* v = GC_MALLOC(sizeof(Cell));
     if (!v) {
         fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
         exit(EXIT_FAILURE);

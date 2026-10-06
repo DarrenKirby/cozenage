@@ -26,4 +26,12 @@
 
 Cell* parse_tokens(TokenArray *ta);
 
+#ifdef CRITERION_TEST_BUILD
+long double parse_float_checked(const char* str, char* err_buf, int* ok);
+long long parse_int_checked(const char* str, char* err_buf, const int base, int* ok);
+bool fits_in_int64(const char *s);
+Cell* parse_number(char* token, const int line, int len);
+#endif
+
+
 #endif //COZENAGE_PARSER_H

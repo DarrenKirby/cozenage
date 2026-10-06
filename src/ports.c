@@ -35,7 +35,8 @@
 
 
 /* The actual character reader. */
-static ssize_t port_read_char(const Cell* p, UChar32* out_char, int* err) {
+static ssize_t port_read_char(const Cell* p, UChar32* out_char, int* err)
+{
     uint8_t buf[4];
 
     /* Read the first byte. */
@@ -69,7 +70,8 @@ static ssize_t port_read_char(const Cell* p, UChar32* out_char, int* err) {
  * generic I/O procedures. They are specific to whether the backing store
  * is a file or memory.*/
 
-static ssize_t file_write(const void* buf, const size_t len, const Cell* p, int* err) {
+static ssize_t file_write(const void* buf, const size_t len, const Cell* p, int* err)
+{
     const size_t ret = fwrite(buf, 1, len, p->port->fh);
     if (ret != len) {
         *err = errno;
@@ -79,7 +81,8 @@ static ssize_t file_write(const void* buf, const size_t len, const Cell* p, int*
 }
 
 
-static ssize_t file_read(void* buf, const size_t len, const Cell* p, int* err) {
+static ssize_t file_read(void* buf, const size_t len, const Cell* p, int* err)
+{
     const size_t ret = fread(buf, 1, len, p->port->fh);
 
     /* There were bytes to read, but not as many as asked for. */
@@ -103,7 +106,8 @@ static ssize_t file_read(void* buf, const size_t len, const Cell* p, int* err) {
 }
 
 
-static long file_tell(const Cell* p, int* err) {
+static long file_tell(const Cell* p, int* err)
+{
     const long ret = ftell(p->port->fh);
     if (ret < 0) {
         *err = errno;
@@ -113,14 +117,16 @@ static long file_tell(const Cell* p, int* err) {
 }
 
 
-static int file_seek(const Cell* p, const long offset, int* err) {
+static int file_seek(const Cell* p, const long offset, int* err)
+{
     if (fseek(p->port->fh, offset, SEEK_SET) == 0) return R_OK;
     *err = errno;
     return R_ERR;
 }
 
 
-static ssize_t file_getdelim(char **lineptr, size_t *n, const int delim, const Cell *port, int* err) {
+static ssize_t file_getdelim(char **lineptr, size_t *n, const int delim, const Cell *port, int* err)
+{
     const ssize_t ret = getdelim(lineptr, n, delim, port->port->fh);
     if (ret < 0) {
         if (feof(port->port->fh)) {
@@ -134,7 +140,8 @@ static ssize_t file_getdelim(char **lineptr, size_t *n, const int delim, const C
 }
 
 
-static void file_close(Cell* p) {
+static void file_close(Cell* p)
+{
     if (p->is_open) {
         fflush(p->port->fh);
         fclose(p->port->fh);
@@ -143,7 +150,8 @@ static void file_close(Cell* p) {
 }
 
 
-static ssize_t memory_write(const void* buf, const size_t len, const Cell* p, int* err) {
+static ssize_t memory_write(const void* buf, const size_t len, const Cell* p, int* err)
+{
     *err = 0;
     sb_append_data(p->port->data, buf, len);
     p->port->index += len;
@@ -151,7 +159,8 @@ static ssize_t memory_write(const void* buf, const size_t len, const Cell* p, in
 }
 
 
-static ssize_t memory_read(void* buf, const size_t len, const Cell* p, int* err) {
+static ssize_t memory_read(void* buf, const size_t len, const Cell* p, int* err)
+{
     *err = 0;
     /* Use void* buf as char* buf. */
     char* dest = buf;
@@ -176,20 +185,23 @@ static ssize_t memory_read(void* buf, const size_t len, const Cell* p, int* err)
 }
 
 
-static long memory_tell(const Cell* p, int* err) {
+static long memory_tell(const Cell* p, int* err)
+{
     *err = 0;
     return p->port->index;
 }
 
 
-static int memory_seek(const Cell* p, const long offset, int* err) {
+static int memory_seek(const Cell* p, const long offset, int* err)
+{
     *err = 0;
     p->port->index = offset;
     return R_OK;
 }
 
 
-static ssize_t memory_getdelim(char **lineptr, size_t *n, const int delim, const Cell* p, int *err) {
+static ssize_t memory_getdelim(char **lineptr, size_t *n, const int delim, const Cell* p, int *err)
+{
     if (p->port->index >= p->port->data->length)
         return R_EOF;
 
@@ -220,7 +232,8 @@ static ssize_t memory_getdelim(char **lineptr, size_t *n, const int delim, const
 }
 
 
-static void memory_close(Cell* p) {
+static void memory_close(Cell* p)
+{
     if (p->is_open) p->is_open = 0;
 }
 

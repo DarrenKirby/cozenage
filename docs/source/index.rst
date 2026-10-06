@@ -5,9 +5,14 @@
 Cozenage
 ========
 
-**Cozenage** is a Scheme-derived, Lisp-like programming language written in C, designed primarily as an educational project and exploratory implementation. It provides a small, expressive core language and is extended through a growing standard library and dynamically loadable modules.
+**Cozenage** is a Scheme-derived, Lisp-like programming language written in C, designed primarily as an educational
+project and exploratory implementation. It provides a small, expressive core language and is extended through a growing
+standard library and dynamically loadable modules.
 
-While Cozenage borrows heavily from Scheme—particularly R5RS and R7RS—it is **not intended to be fully standard-compliant**. Where possible, Cozenage follows Scheme semantics and conventions, but it intentionally deviates from the standards in a number of non-trivial ways. These deviations are the result of pragmatic design choices, implementation constraints, or deliberate simplifications, and are documented where relevant.
+While Cozenage borrows heavily from Scheme—particularly R5RS and R7RS—it is **not intended to be fully
+standard-compliant**. Where possible, Cozenage follows Scheme semantics and conventions, but it intentionally deviates
+from the standards in a number of non-trivial ways. These deviations are the result of pragmatic design choices,
+implementation constraints, or deliberate simplifications, and are documented where relevant.
 
 Anyone with experience in Scheme or other Lisp dialects should find Cozenage immediately familiar.
 
@@ -73,6 +78,7 @@ Native bytevector types backed by C arrays:
 - u16, s16
 - u32, s32
 - u64, s64
+- f32, f64
 
 Ports and I/O
 ^^^^^^^^^^^^^
@@ -105,15 +111,18 @@ Polymorphic procedures
 - ``len``
 - ``idx``
 - ``rev``
+- ``sort`` and ``sort!``
 
 Intentional omissions
 ---------------------
 
 - **First-class continuations (``call/cc``)**
-  These are unlikely to be implemented. Control-flow patterns typically expressed using continuations may instead be provided as primitive syntax or built-in forms.
+  These are unlikely to be implemented. Control-flow patterns typically expressed using continuations may instead be
+  provided as primitive syntax or built-in forms.
 
 - **Hygienic macros**
-  While desirable, hygienic macros are complex and currently low priority. Cozenage instead provides Lisp-style, non-hygienic macros.
+  While desirable, hygienic macros are complex and currently low priority. Cozenage instead provides Lisp-style,
+  non-hygienic macros.
 
 Features in progress
 --------------------
@@ -164,4 +173,11 @@ specific goal, and just want to learn more about Scheme and/or Cozenage, try a t
    howto/index
    tutorial/index
    reference/index
+   genindex
+
+Indices and tables
+==================
+
+* :ref:`genindex`
+* :ref:`search`
 

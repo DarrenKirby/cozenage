@@ -94,7 +94,7 @@ Cell* builtin_string(const Lex* e, const Cell* a)
 
     const int32_t char_count = a->count;
     /* Bypass the string constructor and fill metadata directly. */
-    Cell* v = GC_MALLOC_ATOMIC(sizeof(Cell));
+    Cell* v = GC_MALLOC(sizeof(Cell));
 
     /* Worst-case allocation: 4 bytes per codepoint + null terminator. */
     uint8_t* buffer = GC_MALLOC_ATOMIC(char_count * 4 + 1);
@@ -295,7 +295,7 @@ Cell* builtin_string_append(const Lex* e, const Cell* a)
     *current_ptr = '\0';
 
     /* Construct Cell and set metadata manually to avoid rescanning. */
-    Cell* v = GC_MALLOC_ATOMIC(sizeof(Cell));
+    Cell* v = GC_MALLOC(sizeof(Cell));
     v->type = CELL_STRING;
     v->str = buffer;
     v->count = (int)total_bytes;
@@ -356,7 +356,7 @@ Cell* builtin_string_ref(const Lex* e, const Cell* a)
  * (make-string k char)
  * The make-string procedure returns a newly allocated string of length k. If char is given, then
  * all the characters of the string are initialized to char, otherwise the contents of the string
- * are initialized to a space: " " aka 0x0020 */
+ * are initialized to a space: " " aka 0x0020. */
 Cell* builtin_make_string(const Lex* e, const Cell* a)
 {
     (void)e;
@@ -383,7 +383,7 @@ Cell* builtin_make_string(const Lex* e, const Cell* a)
     const int32_t fill_cp = (a->count == 2) ? a->cell[1]->char_v : 0x0020;
 
     /* Allocate the Cell and the buffer. */
-    Cell* v = GC_MALLOC_ATOMIC(sizeof(Cell));
+    Cell* v = GC_MALLOC(sizeof(Cell));
     char* buffer;
     int32_t total_bytes;
     const int is_ascii = (fill_cp <= 0x7F);
@@ -548,7 +548,7 @@ Cell* builtin_list_string(const Lex* e, const Cell* a)
     buffer[byte_idx] = '\0';
 
     /* Construct Cell with manual metadata. */
-    Cell* v = GC_MALLOC_ATOMIC(sizeof(Cell));
+    Cell* v = GC_MALLOC(sizeof(Cell));
     v->type = CELL_STRING;
     v->str = buffer;
     v->count = total_bytes;
@@ -609,14 +609,14 @@ Cell* builtin_substring(const Lex* e, const Cell* a)
     buffer[byte_len] = '\0';
 
     /* Construct Cell and populate metadata. */
-    Cell* v = GC_MALLOC_ATOMIC(sizeof(Cell));
+    Cell* v = GC_MALLOC(sizeof(Cell));
     v->type = CELL_STRING;
     v->str = buffer;
     v->count = byte_len;
     v->char_count = end - start;
     v->ascii = s_cell->ascii;
 
-    /* If the parent wasn't ASCII, the substring MIGHT be ASCII */
+    /* If the parent wasn't ASCII, the substring MIGHT be ASCII. */
     if (!v->ascii) {
         v->ascii = is_pure_ascii(v->str, v->count);
     }
@@ -743,11 +743,11 @@ Cell* builtin_string_copy(const Lex* e, const Cell* a)
             "string-copy: index out of range",
             INDEX_ERR);
 
-    /* Handle full copy shortcut */
+    /* Handle full copy shortcut. */
     /* If the user wants the whole string, just do a clean byte-copy and clone metadata. */
     if (start == 0 && end == s_cell->char_count) {
         char* new_str = GC_strndup(s_cell->str, s_cell->count);
-        Cell* v = GC_MALLOC_ATOMIC(sizeof(Cell));
+        Cell* v = GC_MALLOC(sizeof(Cell));
         v->type = CELL_STRING;
         v->str = new_str;
         v->count = s_cell->count;
@@ -766,7 +766,7 @@ Cell* builtin_string_copy(const Lex* e, const Cell* a)
     buffer[byte_len] = '\0';
 
     /* Construct and set metadata. */
-    Cell* v = GC_MALLOC_ATOMIC(sizeof(Cell));
+    Cell* v = GC_MALLOC(sizeof(Cell));
     v->type = CELL_STRING;
     v->str = buffer;
     v->count = byte_len;
@@ -844,7 +844,7 @@ Cell* builtin_string_copy_bang(const Lex* e, const Cell* a)
             "string-copy!: target string too small",
             VALUE_ERR);
 
-    /* ASCII to ASCII */
+    /* ASCII to ASCII. */
     if (to_cell->ascii && from_cell->ascii) {
         /* No resizing needed, just a memmove (to handle overlap correctly). */
         memmove(to_cell->str + to_at, from_cell->str + f_start, num_chars);
@@ -1027,7 +1027,7 @@ Cell* builtin_string_number(const Lex* e, const Cell* a)
         snprintf(parse_buf, buf_size, "%s%s", prefix, s_cell->str);
     }
 
-    /* Use internal lexer/parser */
+    /* Use internal lexer/parser. */
     TokenArray* ta = scan_all_tokens(parse_buf);
     if (!ta) return False_Obj;
 
@@ -1234,7 +1234,7 @@ Cell* builtin_string_equal_ci(const Lex* e, const Cell* a)
     Cell* err = check_arg_types(a, CELL_STRING, "string-ci=?");
     if (err) return err;
 
-    /* 0 or 1 args is technically true in R7RS */
+    /* 0 or 1 arg is technically true in R7RS. */
     if (a->count < 2) return True_Obj;
 
     for (int i = 0; i < a->count - 1; i++) {
@@ -1256,7 +1256,8 @@ Cell* builtin_string_equal_ci(const Lex* e, const Cell* a)
 
 
 /* (string-ci<? string1 string2 string3 ... ) */
-Cell* builtin_string_lt_ci(const Lex* e, const Cell* a) {
+Cell* builtin_string_lt_ci(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING, "string-ci<?");
     if (err) return err;
@@ -1280,7 +1281,8 @@ Cell* builtin_string_lt_ci(const Lex* e, const Cell* a) {
 
 
 /* (string-ci<=? string1 string2 string3 ... ) */
-Cell* builtin_string_lte_ci(const Lex* e, const Cell* a) {
+Cell* builtin_string_lte_ci(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING, "string-ci<=?");
     if (err) return err;
@@ -1304,7 +1306,8 @@ Cell* builtin_string_lte_ci(const Lex* e, const Cell* a) {
 
 
 /* (string-ci>? string1 string2 string3 ... ) */
-Cell* builtin_string_gt_ci(const Lex* e, const Cell* a) {
+Cell* builtin_string_gt_ci(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING, "string-ci>?");
     if (err) return err;
@@ -1328,7 +1331,8 @@ Cell* builtin_string_gt_ci(const Lex* e, const Cell* a) {
 
 
 /* (string-ci>=? string1 string2 string3 ... ) */
-Cell* builtin_string_gte_ci(const Lex* e, const Cell* a) {
+Cell* builtin_string_gte_ci(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING, "string-ci>=?");
     if (err) return err;
@@ -1355,7 +1359,8 @@ Cell* builtin_string_gte_ci(const Lex* e, const Cell* a) {
  * Returns a list of strings where each value is substrings of 'string'
  * split by occurrences of "delim". The delimiter is passed as a string
  * rather than a char to allow for multi-char delimiters. */
-Cell* builtin_string_split(const Lex* e, const Cell* a) {
+Cell* builtin_string_split(const Lex* e, const Cell* a)
+{
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING, "string-split");
     if (err) return err;
@@ -1388,8 +1393,7 @@ Cell* builtin_string_split(const Lex* e, const Cell* a) {
         const char *start_pos = src;
         const ptrdiff_t distance = delim_pos - start_pos;
 
-        char* tok = GC_strndup(src, distance);
-        tok[distance] = '\0';
+        const char* tok = GC_strndup(src, distance);
 
         Cell* s = make_cell_string(tok);
         cell_add(result, s);
@@ -1397,9 +1401,76 @@ Cell* builtin_string_split(const Lex* e, const Cell* a) {
         delim_pos += sep_len;
         src = delim_pos;
     }
-    /* Add the final tok. */
+
+    /* Add the final token. If the delimiter appears at the end of the string,
+     * then src will be '\0', and an empty string will intentionally be added to the
+     * end of the result list. This matches Python's behavior (but not Ruby's)
+     *
+     * Justification is that (string-join (string-split s delim) delim) should
+     * just return s unaltered, and dropping the final "" breaks this. */
     Cell* s = make_cell_string(src);
     cell_add(result, s);
 
     return builtin_vector_to_list(e, make_sexpr_len1(result));
+}
+
+
+/* (string-join list-of-strings delim)
+ * Returns a string with each sub-string in list-of-strings joined
+ * by string delim. list-of-strings must be a proper list. An empty
+ * list arg will return an empty string no matter the delim. */
+Cell* builtin_string_join(const Lex* e, const Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_RANGE(a, 1, 2, "string-join");
+    if (err) return err;
+
+    const Cell* l = a->cell[0];
+    /* Early exit for empty list edge case. */
+    if (l->type == CELL_NIL) {
+        return make_cell_string("");
+    }
+
+    if (l->type != CELL_PAIR) {
+        return make_cell_error(
+            "string-join: arg 1 must be a proper list of strings",
+            TYPE_ERR);
+    }
+
+    char* sep;
+    if (a->count == 2) {
+        if (a->cell[1]->type != CELL_STRING) {
+            return make_cell_error(
+                "string-join: arg 2 must be a string",
+                TYPE_ERR);
+        }
+        sep = a->cell[1]->str;
+    } else {
+        sep = " ";
+    }
+
+    str_buf_t *buf = sb_new();
+
+
+    while (l->type == CELL_PAIR) {
+        if (l->car->type != CELL_STRING) {
+            return make_cell_error(
+                "string-join: arg 1 must be a proper list of strings",
+                TYPE_ERR);
+        }
+
+        sb_append_str(buf, l->car->str);
+
+        l = l->cdr;
+        if (l->type == CELL_PAIR) {
+            sb_append_str(buf, sep);
+        }
+    }
+
+    if (l->type != CELL_NIL) {
+        return make_cell_error(
+            "string-join: arg 1 must be a proper list of strings",
+            TYPE_ERR);
+    }
+
+    return make_cell_string(buf->buffer);
 }

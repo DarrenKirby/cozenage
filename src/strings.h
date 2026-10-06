@@ -52,5 +52,6 @@ Cell* builtin_string_lte_ci(const Lex* e, const Cell* a);
 Cell* builtin_string_gt_ci(const Lex* e, const Cell* a);
 Cell* builtin_string_gte_ci(const Lex* e, const Cell* a);
 Cell* builtin_string_split(const Lex* e, const Cell* a);
+Cell* builtin_string_join(const Lex* e, const Cell* a);
 
 #endif //COZENAGE_STRINGS_H

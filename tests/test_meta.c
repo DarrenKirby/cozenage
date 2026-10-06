@@ -6,8 +6,8 @@
 #include "../src/repr.h"
 #include "../src/symbols.h"
 #include "../src/transforms.h"
+#include "runner.h"
 
-#include <assert.h>
 #include <locale.h>
 #include <gc/gc.h>
 
@@ -19,7 +19,6 @@ void setup_each_test(void) {
 }
 
 void teardown_each_test(void) {
-    ;
 }
 
 void load_math_lib(void) {
@@ -31,15 +30,20 @@ static bool engine_prepped = false;
 char* t_eval(const char* input) {
     if (!engine_prepped) {
         GC_INIT();
-        symbol_table = ht_create(128);
+        symbol_table = ht_create(512);
         init_global_singletons();
         init_special_forms();
         engine_prepped = true;
     }
 
     init_default_ports();
-    test_env = lex_initialize_global_env();
-    lex_add_builtins(test_env);
+
+    /* Initialize bootstrap environment. */
+    const Lex* bootstrap = lex_initialize_bootstrap_env();
+    lex_add_builtins(bootstrap);
+    ht_table* core_builtins = bootstrap->working;
+    /* Initialize working environment. */
+    test_env = lex_initialize_working_env(core_builtins);
 
     TokenArray* ta = scan_all_tokens(input);
     Cell* parsed = parse_tokens(ta);
@@ -49,18 +53,46 @@ char* t_eval(const char* input) {
     return cell_to_string(result, MODE_WRITE);
 }
 
-long double t_eval_math_lib(const char* input) {
+char* m_eval(const char* input) {
     if (!engine_prepped) {
         GC_INIT();
-        symbol_table = ht_create(128);
+        symbol_table = ht_create(512);
         init_global_singletons();
         init_special_forms();
         engine_prepped = true;
     }
 
     init_default_ports();
-    test_env = lex_initialize_global_env();
-    lex_add_builtins(test_env);
+
+    /* Initialize bootstrap environment. */
+    const Lex* bootstrap = lex_initialize_bootstrap_env();
+    lex_add_builtins(bootstrap);
+    ht_table* core_builtins = bootstrap->working;
+    /* Initialize working environment. */
+    test_env = lex_initialize_working_env(core_builtins);
+
+    TokenArray* ta = scan_all_tokens(input);
+    Cell* result = parse_all_expressions(test_env, ta);
+
+    return cell_to_string(result, MODE_WRITE);
+}
+
+long double t_eval_math_lib(const char* input) {
+    if (!engine_prepped) {
+        GC_INIT();
+        symbol_table = ht_create(512);
+        init_global_singletons();
+        init_special_forms();
+        engine_prepped = true;
+    }
+
+    init_default_ports();
+    /* Initialize bootstrap environment. */
+    const Lex* bootstrap = lex_initialize_bootstrap_env();
+    lex_add_builtins(bootstrap);
+    ht_table* core_builtins = bootstrap->working;
+    /* Initialize working environment. */
+    test_env = lex_initialize_working_env(core_builtins);
 
     /* Load the lib */
     load_library("math", test_env);

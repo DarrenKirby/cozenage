@@ -40,7 +40,7 @@ Test(end_to_end_chars, test_char_integer_conversions, .init = setup_each_test, .
     cr_assert_str_eq(t_eval("(integer->char #x110000)"), " Value error: integer->char: invalid code point");
     cr_assert_str_eq(t_eval("(integer->char #xD800)"), " Value error: integer->char: invalid code point (surrogate)");
     cr_assert_str_eq(t_eval("(char->integer 123)"), " Type error: char->integer: bad type at arg 1: got integer, expected char");
-    cr_assert_str_eq(t_eval("(integer->char 1.0)"), " Type error: integer->char: bad type at arg 1: got float, expected integer");
+    cr_assert_str_eq(t_eval("(integer->char 1.0)"), " Type error: integer->char: bad type at arg 1: got real, expected integer");
 }
 
 Test(end_to_end_chars, test_char_equal, .init = setup_each_test, .fini = teardown_each_test) {

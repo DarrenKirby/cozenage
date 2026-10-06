@@ -101,7 +101,7 @@ Cell* coz_eval(Lex* env, Cell* expr)
         if (expr->count == 0) {
             /* Unquoted "()" */
             return make_cell_error(
-                "bad expression: '()'",
+                "missing expression in ()",
                 SYNTAX_ERR);
         }
 

@@ -177,7 +177,7 @@ Port Procedures
 Default Ports
 ^^^^^^^^^^^^^
 
-.. _proc:current-input-port:
+.. index:: current-input-port
 
 current-input-port
 ******************
@@ -198,7 +198,7 @@ current-input-port
         #<open:text-file-port input-port 'stdin'>
 
 
-.. _proc:current-output-port:
+.. index:: current-output-port
 
 current-output-port
 *******************
@@ -219,7 +219,7 @@ current-output-port
         #<open:text-file-port output-port 'stdout'>
 
 
-.. _proc:current-error-port:
+.. index:: current-error-port
 
 current-error-port
 ******************
@@ -242,7 +242,7 @@ current-error-port
 Port Type Predicates
 ^^^^^^^^^^^^^^^^^^^^
 
-.. _proc:input-port?:
+.. index:: input-port?
 
 input-port?
 ***********
@@ -268,7 +268,7 @@ input-port?
         #f
 
 
-.. _proc:output-port?:
+.. index:: output-port?
 
 output-port?
 ************
@@ -294,7 +294,7 @@ output-port?
         #f
 
 
-.. _proc:textual-port?:
+.. index:: textual-port?
 
 textual-port?
 *************
@@ -322,7 +322,7 @@ textual-port?
         #f
 
 
-.. _proc:binary-port?:
+.. index:: binary-port?
 
 binary-port?
 ************
@@ -350,7 +350,7 @@ binary-port?
         #f
 
 
-.. _proc:input-port-open?:
+.. index:: input-port-open?
 
 input-port-open?
 ****************
@@ -377,7 +377,7 @@ input-port-open?
         #f
 
 
-.. _proc:output-port-open?:
+.. index:: output-port-open?
 
 output-port-open?
 *****************
@@ -406,7 +406,7 @@ output-port-open?
 Opening and Closing Ports
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. _proc:open-input-file:
+.. index:: open-input-file
 
 open-input-file
 ***************
@@ -435,7 +435,7 @@ open-input-file
         #t
 
 
-.. _proc:open-bin-input-file:
+.. index:: open-bin-input-file
 
 open-bin-input-file
 *******************
@@ -462,7 +462,7 @@ open-bin-input-file
         #t
 
 
-.. _proc:open-output-file:
+.. index:: open-output-file
 
 open-output-file
 ****************
@@ -506,7 +506,7 @@ open-output-file
         #t
 
 
-.. _proc:open-bin-output-file:
+.. index:: open-bin-output-file
 
 open-bin-output-file
 ********************
@@ -548,7 +548,7 @@ open-bin-output-file
         #t
 
 
-.. _proc:open-and-trunc-output-file:
+.. index:: open-and-trunc-output-file
 
 open-and-trunc-output-file
 **************************
@@ -583,7 +583,7 @@ open-and-trunc-output-file
         --> (display "replaced" p2)
         --> (close-port p2)
 
-.. _proc:open-and-trunc-bin-output-file:
+.. index:: open-and-trunc-bin-output-file
 
 open-and-trunc-bin-output-file
 ******************************
@@ -621,7 +621,7 @@ open-and-trunc-bin-output-file
         --> (write-u8 42 p2)
         --> (close-port p2)
 
-.. _proc:open-output-string:
+.. index:: open-output-string
 
 open-output-string
 ******************
@@ -648,7 +648,7 @@ open-output-string
         "hello, world"
 
 
-.. _proc:open-input-string:
+.. index:: open-input-string
 
 open-input-string
 *****************
@@ -678,7 +678,7 @@ open-input-string
         "ello, world"
 
 
-.. _proc:get-output-string:
+.. index:: get-output-string
 
 get-output-string
 *****************
@@ -710,7 +710,7 @@ get-output-string
         "hello, world!"
 
 
-.. _proc:open-output-bytevector:
+.. index:: open-output-bytevector
 
 open-output-bytevector
 **********************
@@ -737,7 +737,7 @@ open-output-bytevector
         #u8(72 105)
 
 
-.. _proc:open-input-bytevector:
+.. index:: open-input-bytevector
 
 open-input-bytevector
 *********************
@@ -767,7 +767,7 @@ open-input-bytevector
         101
 
 
-.. _proc:get-output-bytevector:
+.. index:: get-output-bytevector
 
 get-output-bytevector
 *********************
@@ -799,7 +799,7 @@ get-output-bytevector
         #u8(72 105 33)
 
 
-.. _proc:close-port:
+.. index:: close-port
 
 close-port
 **********
@@ -829,7 +829,7 @@ close-port
 Input Operations
 ^^^^^^^^^^^^^^^^
 
-.. _proc:read-line:
+.. index:: read-line
 
 read-line
 *********
@@ -867,7 +867,7 @@ read-line
         #<eof>
 
 
-.. _proc:read-lines:
+.. index:: read-lines
 
 read-lines
 **********
@@ -896,7 +896,7 @@ read-lines
         --> (read-lines (open-input-string ""))
         ()
 
-.. _proc:read:
+.. index:: read
 
 read
 ****
@@ -944,7 +944,7 @@ read
         ...   (+ 1 2))
         (define x (+ 1 2))
 
-.. _proc:read-string:
+.. index:: read-string
 
 read-string
 ***********
@@ -981,7 +981,7 @@ read-string
         #<eof>
 
 
-.. _proc:read-char:
+.. index:: read-char
 
 read-char
 *********
@@ -1012,7 +1012,7 @@ read-char
         #\l
 
 
-.. _proc:read-u8:
+.. index:: read-u8
 
 read-u8
 *******
@@ -1043,7 +1043,7 @@ read-u8
         --> (read-u8 p)
         108
 
-.. _proc:read-bytevector:
+.. index:: read-bytevector
 
 read-bytevector
 ***************
@@ -1077,7 +1077,7 @@ read-bytevector
         #<eof>
 
 
-.. _proc:read-bytevector!:
+.. index:: read-bytevector!
 
 read-bytevector!
 ****************
@@ -1126,7 +1126,7 @@ read-bytevector!
         --> bv2
         #u8(0 1 2 3 0)
 
-.. _proc:peek-char:
+.. index:: peek-char
 
 peek-char
 *********
@@ -1160,7 +1160,7 @@ peek-char
         #\e
 
 
-.. _proc:peek-u8:
+.. index:: peek-u8
 
 peek-u8
 *******
@@ -1197,7 +1197,7 @@ peek-u8
 Output Operations
 ^^^^^^^^^^^^^^^^^
 
-.. _proc:display:
+.. index:: display
 
 display
 *******
@@ -1235,7 +1235,7 @@ display
         42
 
 
-.. _proc:displayln:
+.. index:: displayln
 
 displayln
 *********
@@ -1264,7 +1264,7 @@ displayln
         second
 
 
-.. _proc:write:
+.. index:: write
 
 write
 *****
@@ -1302,7 +1302,7 @@ write
         42
 
 
-.. _proc:writeln:
+.. index:: writeln
 
 writeln
 *******
@@ -1328,7 +1328,7 @@ writeln
         --> (writeln '(1 2 3))
         (1 2 3)
 
-.. _proc:write-char:
+.. index:: write-char
 
 write-char
 **********
@@ -1362,7 +1362,7 @@ write-char
         "AB"
 
 
-.. _proc:write-string:
+.. index:: write-string
 
 write-string
 ************
@@ -1398,7 +1398,7 @@ write-string
         hello
 
 
-.. _proc:write-u8:
+.. index:: write-u8
 
 write-u8
 ********
@@ -1427,7 +1427,7 @@ write-u8
         #u8(72 105)
 
 
-.. _proc:write-bytevector:
+.. index:: write-bytevector
 
 write-bytevector
 ****************
@@ -1465,7 +1465,7 @@ write-bytevector
         --> (get-output-bytevector p2)
         #u8(2 3 4)
 
-.. _proc:newline:
+.. index:: newline
 
 newline
 *******
@@ -1496,7 +1496,7 @@ newline
 Miscellaneous I/O Procedures
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. _proc:eof-object:
+.. index:: eof-object
 
 eof-object
 **********
@@ -1521,7 +1521,7 @@ eof-object
         #t
 
 
-.. _proc:read-error?:
+.. index:: read-error?
 
 read-error?
 ***********
@@ -1547,7 +1547,7 @@ read-error?
         #f
 
 
-.. _proc:file-error?:
+.. index:: file-error?
 
 file-error?
 ***********
@@ -1571,7 +1571,7 @@ file-error?
         #f
 
 
-.. _proc:flush-output-port:
+.. index:: flush-output-port
 
 flush-output-port
 *****************
@@ -1600,7 +1600,7 @@ flush-output-port
         --> (close-port p)
 
 
-.. _proc:char-ready?:
+.. index:: char-ready?
 
 char-ready?
 ***********
@@ -1634,7 +1634,7 @@ char-ready?
         #\h
 
 
-.. _proc:u8-ready?:
+.. index:: u8-ready?
 
 u8-ready?
 *********
@@ -1672,7 +1672,7 @@ u8-ready?
 High-Level Port Handlers
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. _proc:call-with-port:
+.. index:: call-with-port
 
 call-with-port
 **************
@@ -1705,7 +1705,7 @@ call-with-port
         "first line of data.txt"
 
 
-.. _proc:call-with-input-file:
+.. index:: call-with-input-file
 
 call-with-input-file
 ********************
@@ -1734,7 +1734,7 @@ call-with-input-file
         "first line of data.txt"
 
 
-.. _proc:call-with-output-file:
+.. index:: call-with-output-file
 
 call-with-output-file
 *********************
@@ -1765,7 +1765,7 @@ call-with-output-file
         ...     (display "hello, world" p)))
 
 
-.. _proc:with-input-from-file:
+.. index:: with-input-from-file
 
 with-input-from-file
 ********************
@@ -1800,7 +1800,7 @@ with-input-from-file
         "first line of data.txt"
 
 
-.. _proc:with-output-to-file:
+.. index:: with-output-to-file
 
 with-output-to-file
 *******************

@@ -12,6 +12,7 @@ void teardown_each_test(void);
 void suite_setup_wrapper(void);
 void teardown_suite(void);
 char* t_eval(const char* input);
+char* m_eval(const char* input);
 long double t_eval_math_lib(const char* input);
 
 #endif // TEST_META_H

@@ -60,7 +60,7 @@ an important general-purpose data structure.
 Vector Procedures
 -----------------
 
-.. _proc:vector:
+.. index:: vector
 
 vector
 ^^^^^^
@@ -88,7 +88,7 @@ vector
       #()
 
 
-.. _proc:vector-length:
+.. index:: vector-length
 
 vector-length
 ^^^^^^^^^^^^^
@@ -112,7 +112,7 @@ vector-length
       0
 
 
-.. _proc:vector-ref:
+.. index:: vector-ref
 
 vector-ref
 ^^^^^^^^^^
@@ -139,7 +139,7 @@ vector-ref
       c
 
 
-.. _proc:make-vector:
+.. index:: make-vector
 
 make-vector
 ^^^^^^^^^^^
@@ -168,7 +168,7 @@ make-vector
       --> (make-vector 0)
       #()
 
-.. _proc:list->vector:
+.. index:: list->vector
 
 list->vector
 ^^^^^^^^^^^^
@@ -195,7 +195,7 @@ list->vector
       #(1 (2 3) 4)
 
 
-.. _proc:vector->list:
+.. index:: vector->list
 
 vector->list
 ^^^^^^^^^^^^
@@ -230,7 +230,7 @@ vector->list
       ()
 
 
-.. _proc:vector-copy:
+.. index:: vector-copy
 
 vector-copy
 ^^^^^^^^^^^
@@ -264,7 +264,7 @@ vector-copy
       #(b c)
 
 
-.. _proc:vector->string:
+.. index:: vector->string
 
 vector->string
 ^^^^^^^^^^^^^^
@@ -299,7 +299,7 @@ vector->string
       "el"
 
 
-.. _proc:string->vector:
+.. index:: string->vector
 
 string->vector
 ^^^^^^^^^^^^^^
@@ -334,7 +334,7 @@ string->vector
       --> (string->vector "hello" 1 3)
       #(#\e #\l)
 
-.. _proc:vector-set!:
+.. index:: vector-set!
 
 vector-set!
 ^^^^^^^^^^^
@@ -362,7 +362,7 @@ vector-set!
       #(a z c)
 
 
-.. _proc:vector-append:
+.. index:: vector-append
 
 vector-append
 ^^^^^^^^^^^^^
@@ -393,7 +393,7 @@ vector-append
       #()
 
 
-.. _proc:vector-copy!:
+.. index:: vector-copy!
 
 vector-copy!
 ^^^^^^^^^^^^^
@@ -437,7 +437,7 @@ vector-copy!
       #(y z y z e)
 
 
-.. _proc:vector-fill!:
+.. index:: vector-fill!
 
 vector-fill!
 ^^^^^^^^^^^^
@@ -475,7 +475,7 @@ vector-fill!
       --> v
       #(z x y y y)
 
-.. _proc:vector-map:
+.. index:: vector-map
 
 vector-map
 ^^^^^^^^^^
@@ -509,7 +509,7 @@ vector-map
       #()
 
 
-.. _proc:vector-for-each:
+.. index:: vector-for-each
 
 vector-for-each
 ^^^^^^^^^^^^^^^

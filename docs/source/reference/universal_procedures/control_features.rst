@@ -49,7 +49,7 @@ Procedure Documentation
 eval
 ~~~~
 
-.. _proc:eval:
+.. index:: eval
 
 .. function:: (eval expr)
 
@@ -89,7 +89,7 @@ eval
 apply
 ~~~~~
 
-.. _proc:apply:
+.. index:: apply
 
 .. function:: (apply proc arg1 ... args)
 
@@ -130,7 +130,7 @@ apply
 load
 ~~~~
 
-.. _proc:load:
+.. index:: load
 
 .. function:: (load filename)
 
@@ -162,7 +162,7 @@ load
 exit
 ~~~~
 
-.. _proc:exit:
+.. index:: exit
 
 .. function:: (exit [code])
 
@@ -190,7 +190,7 @@ exit
 command-line
 ~~~~~~~~~~~~
 
-.. _proc:command-line:
+.. index:: command-line
 
 .. function:: (command-line)
 
@@ -228,7 +228,7 @@ command-line
 len
 ~~~
 
-.. _proc:len:
+.. index:: len
 
 .. function:: (len obj)
 
@@ -269,7 +269,7 @@ len
 idx
 ~~~
 
-.. _proc:idx:
+.. index:: idx
 
 .. function:: (idx seq i)
               (idx seq start end)
@@ -323,7 +323,7 @@ idx
 rev
 ~~~
 
-.. _proc:rev:
+.. index:: rev
 
 .. function:: (rev seq)
 
@@ -355,4 +355,61 @@ rev
       "olleh"
       --> (rev "café")
       "éfac"
+
+.. index:: sort
+
+sort
+~~~~
+
+.. function:: (sort seq)
+
+    Returns a new sequence containing the elements of *seq* in sorted order.
+    Accepts lists, vectors, and bytevectors. In the case of lists and vectors,
+    all members of the sequence type must be homogenous. That is, they must be
+    of the same type, as it does not make sense to sort integers versus, say, 
+    characters. 
+
+    .. note::
+
+        For now, even numeric types must be homogenous. A future release will allow
+        for sorting sequences of any type that responds #t to `real?`, to wit: 
+        integers, rationals, and reals.
+
+    :param seq: A sequence to sort.
+    :type seq: list, vector, or bytevector.
+    :return: A new sequence with the elements of *seq* in ascending order.
+    :rtype: list, vector, or bytevector
+
+    **Example:**
+
+    .. code-block:: scheme
+
+      --> (sort '(10 5 1))
+      (1 5 10)
+      --> (sort #(12 2 45))
+      #(2 12 45)
+      --> (sort '(#\z #\x #\y))
+      (#\x #\y #\z)
+
+
+.. index:: sort!
+
+sort!
+~~~~~
+
+.. function:: (sort! seq)
+
+    Like `sort`, but sorts in place and returns a mutated version of the *seq*
+    argument.
+
+    .. note::
+
+        For now, even numeric types must be homogenous. A future release will allow
+        for sorting sequences of any type that responds #t to `real?`, to wit: 
+        integers, rationals, and reals.
+
+    :param seq: A sequence to sort.
+    :type seq: list, vector, or bytevector.
+    :return: Mutated arg with the elements of *seq* in ascending order.
+    :rtype: list, vector, or bytevector
 
