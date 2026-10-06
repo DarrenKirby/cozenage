@@ -1401,9 +1401,76 @@ Cell* builtin_string_split(const Lex* e, const Cell* a)
         delim_pos += sep_len;
         src = delim_pos;
     }
-    /* Add the final tok. */
+
+    /* Add the final token. If the delimiter appears at the end of the string,
+     * then src will be '\0', and an empty string will intentionally be added to the
+     * end of the result list. This matches Python's behavior (but not Ruby's)
+     *
+     * Justification is that (string-join (string-split s delim) delim) should
+     * just return s unaltered, and dropping the final "" breaks this. */
     Cell* s = make_cell_string(src);
     cell_add(result, s);
 
     return builtin_vector_to_list(e, make_sexpr_len1(result));
+}
+
+
+/* (string-join list-of-strings delim)
+ * Returns a string with each sub-string in list-of-strings joined
+ * by string delim. list-of-strings must be a proper list. An empty
+ * list arg will return an empty string no matter the delim. */
+Cell* builtin_string_join(const Lex* e, const Cell* a) {
+    (void)e;
+    Cell* err = CHECK_ARITY_RANGE(a, 1, 2, "string-join");
+    if (err) return err;
+
+    const Cell* l = a->cell[0];
+    /* Early exit for empty list edge case. */
+    if (l->type == CELL_NIL) {
+        return make_cell_string("");
+    }
+
+    if (l->type != CELL_PAIR) {
+        return make_cell_error(
+            "string-join: arg 1 must be a proper list of strings",
+            TYPE_ERR);
+    }
+
+    char* sep;
+    if (a->count == 2) {
+        if (a->cell[1]->type != CELL_STRING) {
+            return make_cell_error(
+                "string-join: arg 2 must be a string",
+                TYPE_ERR);
+        }
+        sep = a->cell[1]->str;
+    } else {
+        sep = " ";
+    }
+
+    str_buf_t *buf = sb_new();
+
+
+    while (l->type == CELL_PAIR) {
+        if (l->car->type != CELL_STRING) {
+            return make_cell_error(
+                "string-join: arg 1 must be a proper list of strings",
+                TYPE_ERR);
+        }
+
+        sb_append_str(buf, l->car->str);
+
+        l = l->cdr;
+        if (l->type == CELL_PAIR) {
+            sb_append_str(buf, sep);
+        }
+    }
+
+    if (l->type != CELL_NIL) {
+        return make_cell_error(
+            "string-join: arg 1 must be a proper list of strings",
+            TYPE_ERR);
+    }
+
+    return make_cell_string(buf->buffer);
 }
