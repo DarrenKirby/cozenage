@@ -131,12 +131,12 @@ The simplest and easiest way to get Cozenage is to simply clone the GitHub repos
 This command will download the source tree and git metadata to a directory ``cozenage`` in the PWD. The git source will
 contain at least two branches. ``main`` is the currently stable branch. This branch will *always* match the code in the
 most current release available from GitHub. The ``develop`` branch contains the code under active development. While
-the code from this branch is guaranteed to build and run, this is the branch that I push the most recent new features to,
+the code from this branch will build and run, this is the branch that I push the most recent new features to,
 and it is not as thoroughly tested as ``main``. If you want the latest, this is the branch to build.
 
 ### Downloading static packages
 
-If you don't want toher with git you can download a zip file or tar file (compressed with ``.gz`` or ``.xz``
+If you don't want to use git you can download a zip file or tar file (compressed with ``.gz`` or ``.xz``
 compression) from GitHub. The latest of these source packages will always match the code in the current ``main`` branch.
 
 ## Building Cozenage
@@ -165,7 +165,7 @@ To run the REPL just run the program with no arguments:
 ## Building and Running in Docker
 
 There is a dockerfile provided in the top-level of the source tree for those who may want to try out cozenage before
-commiting to installing the dependancies. And apparently, some folks just like using docker anyway. To build the image, 
+commiting to installing the dependencies. And some folks just like using docker anyway. To build the image, 
 simply run:
 
     $ docker build -t cozenage .
