@@ -5,7 +5,8 @@
 #   make / make all      - Builds the cozenage binary and loadable modules.
 #   make DEBUG=1         - builds unoptimized binary and modules with debug symbols.
 #   make test            - Builds the test runner.
-#   make clean           - Removes all build artifacts
+#   make test_run        - Builds AND runs the tests.
+#   make clean           - Removes all build artifacts.
 #   make rebuild         - Cleans and rebuilds the main binary and modules
 #   make install         - installs the binary to ${PREFIX}/bin/cozenage
 #                           and the modules to $(PREFIX)/lib/cozenage/
@@ -31,19 +32,20 @@ UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S),Darwin)
 	LIB_EXT = dylib
 	MODULE_LDFLAGS = -Wl,-undefined,dynamic_lookup
-	# Add RPATH to the executable
-	EXE_LDFLAGS = -Wl,-rpath,@executable_path/../lib/cozenage/base/
+	EXE_LDFLAGS =
 else
 	LIB_EXT = so
 	MODULE_LDFLAGS =
-	# Export symbols AND add RPATH using $ORIGIN
-	# Note: use \$$ to ensure the '$' reaches the shell/linker correctly
-	EXE_LDFLAGS = -Wl,--export-dynamic -Wl,-rpath,'\$$ORIGIN/../lib/cozenage/base'
+	# Export interpreter symbols so dlopen'd modules can call back into it.
+	EXE_LDFLAGS = -Wl,--export-dynamic
 endif
 
-# Check for debug build flag
-ifeq ($(origin DEBUG), undefined)
-	DEBUG=OFF
+# Default warning/optimization flags; overridden by CFLAGS from the CLI/env.
+# DEBUG=1 selects an unoptimized build with debug symbols.
+ifeq ($(DEBUG),1)
+  CFLAGS ?= -Wall -Wextra -Wdeprecated-declarations -g -O0
+else
+  CFLAGS ?= -Wall -Wextra -Wdeprecated-declarations -O2
 endif
 
 # Flags for building shared libraries
@@ -109,11 +111,11 @@ APP_CFLAGS = -std=gnu2x \
 
 # Detect criterion flags and libs
 # Check if 'test' is anywhere in the command line args (e.g., 'make test')
-ifneq ($(filter test,$(MAKECMDGOALS)),)
+ifneq ($(filter test test_run,$(MAKECMDGOALS)),)
   CRITERION_VERSION := $(shell pkg-config --modversion criterion 2>/dev/null)
 
   ifeq ($(CRITERION_VERSION),)
-    $(error "Hard dependency 'criterion' not found. Required to run 'make test'.")
+    $(error "Hard dependency 'criterion' not found. Required to run 'make test or make test_run'.")
   endif
 
   CRIT_CFLAGS = $(shell pkg-config --cflags criterion)
@@ -134,16 +136,13 @@ else
 	LIB_MODULES := $(filter-out lib/cozenage/base/random.$(LIB_EXT),$(LIB_MODULES))
 endif
 
-# Specific flag sets for different builds
-CFLAGS ?= -Wall -Wextra -Wdeprecated-declarations -O2
-
 # --- Libraries ---
 # -ldl (for dlopen) to all BASE_LIBS definitions
 BASE_LIBS = -lm $(GC_LIBS) $(ICU_LIBS) -ldl $(EXE_LDFLAGS) $(GMP_LIBS)
 TEST_LIBS = $(CRIT_LIBS) $(BASE_LIBS)
 
 # --- Phony Targets (Commands) ---
-.PHONY: all test clean rebuild install uninstall docs docs-clean
+.PHONY: all test clean rebuild install uninstall docs docs-clean test_run
 
 # The default target when 'make' is run
 all:
@@ -193,21 +192,21 @@ $(TEST_OBJ_DIR)/%.o: %.c
 	@mkdir -p $(@D)
 	$(CC) $(APP_CFLAGS) -c $< -o $@
 
-# Apply the same logic to your $(BINARY), $(TEST_BINARY), and loadable module rules
+# Apply the same logic to $(BINARY), $(TEST_BINARY), and loadable module rules
 $(BINARY): $(CORE_OBJECTS)
 	@printf "\x1b[32;1m--- Linking application: $@ ---\x1b[0m\n"
-	$(CC) $(APP_CFLAGS) $(CFLAGS) -o $@ $^ $(BASE_LIBS)
+	$(CC) $(APP_CFLAGS) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(BASE_LIBS)
 
 # Rule to link the test runner for 'test' build
 $(TEST_BINARY): $(TEST_OBJECTS)
 	@printf "\x1b[32;1m--- Linking test runner: $@ ---\x1b[0m\n"
-	$(CC) $(APP_CFLAGS) -o $@ $^ $(TEST_LIBS) -fsanitize=address
+	$(CC) $(APP_CFLAGS) -o $@ $^ $(TEST_LIBS)
 
 # Rule to build modules
 lib/cozenage/base/%.$(LIB_EXT): src/base-lib/%_lib.c
 	@mkdir -p $(@D)
 	@printf "\x1b[32;1m--- Building module: $@ ---\x1b[0m\n"
-	$(CC) $(APP_CFLAGS) $(LIB_CFLAGS) $(MODULE_LDFLAGS) $(CFLAGS) $< -o $@
+	$(CC) $(APP_CFLAGS) $(LIB_CFLAGS) $(MODULE_LDFLAGS) $(LDFLAGS) $(CFLAGS) $< -o $@
 
 # --- install rules
 install:
@@ -234,3 +233,7 @@ docs:
 
 docs-clean:
 	@$(MAKE) -C docs/source clean
+
+# --- test runner
+test_run: test
+	COZENAGE_LIB_PATH="$(CURDIR)/lib/cozenage" ./$(TEST_BINARY)
