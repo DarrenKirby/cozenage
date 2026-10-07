@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.20.1] - 2026-10-07
+
+### Added
+
+- test_run target to build AND run tests in one go
+
+### Changed
+
+- load_lib_path now checks the relative directories last for security reasons
+
+### Fixed
+
+- Changed Makefile so DEBUG=1 actually works, it respects user LDFLAGS, and the broken and unnecessary RPATH stuff is removed
+
 ## [0.20.0] - 2026-10-06
 
 ### Added
@@ -10,7 +24,7 @@
 
 ### Changed
 
-- const -> constexpr in a bunch of files, must use strict C23 to build
+- const → constexpr in a bunch of files, must use strict C23 to build
 - Refactor environment structure for loaded libs
 - Refactor local procedures to use new 2-tier env
 - Split tests into end-to-end and unit types
@@ -21,7 +35,7 @@
 
 - Add bounds and type checking to rand-int arg
 - Remove -Werror from production builds
-- MALLOC_ATOMIC -> MALLOC for cell inits
+- MALLOC_ATOMIC → MALLOC for cell inits
 - Fix for proper lexing of +i and -i
 
 ## [0.19.1] - 2026-08-21
@@ -40,7 +54,7 @@
 ### Added
 
 - Add `sort` and `sort!`, and write helper comparison funcs
-- Add Racket-style list accessors first thru tenth
+- Add Racket-style list accessors first through tenth
 - Add f32 and f64 bytevector support
 - Add bigint_abs and bigrat_abs
 - Add bigint literal parsing
