@@ -36,19 +36,15 @@
 
 
 /* Library Search Path Logic.
- * It looks in "./lib/cozenage" first, then tries "../lib/cozenage/".
- * It then checks if the COZENAGE_LIB_PATH ENV VAR has been set.
+ * It first checks if the $COZENAGE_LIB_PATH ENV VAR has been set.
  * It then checks in $XDG_DATA_HOME/cozenage, or ~/.local/share/cozenage if it is not set.
  * If none of these resolve, it will look in /usr/lib and /usr/lib64/
- * for regular/multilib Linux systems, and in /usr/local/lib/ for macOS and *BSD. */
+ * for regular/multilib Linux systems, and in /usr/local/lib/ for macOS and *BSD.
+ * Lastly, it looks in "./lib/cozenage" for running from the build directory. */
 char **get_load_paths()
 {
     char **paths = GC_MALLOC(MAX_SEARCH_PATHS * sizeof(char*));
     int i = 0;
-
-    /*  Local relative paths. */
-    paths[i++] = GC_STRDUP("./lib/cozenage");
-    paths[i++] = GC_STRDUP("../lib/cozenage");
 
     /* Environment override. */
     const char *env_path = getenv("COZENAGE_LIB_PATH");
@@ -77,6 +73,9 @@ char **get_load_paths()
     paths[i++] = GC_STRDUP("/usr/lib64/cozenage");
 #endif
     paths[i++] = GC_STRDUP("/usr/local/lib/cozenage");
+
+    /* For running from build directory. */
+    paths[i++] = GC_STRDUP("./lib/cozenage");
 
     paths[i] = nullptr;
     return paths;
@@ -353,7 +352,7 @@ static void apply_import_spec(const Lex* env,
 /* Loads a C module and links it against the cozenage interpreter. */
 Cell* load_c_module(const Cell* libspec, const Lex* e, char* path, const ImportSpec *spec)
 {
-    void* lib_handle = NULL;
+    void* lib_handle = nullptr;
 
     /* Extract library identifier and library name from libspec. */
     const char* collection  = libspec->cell[0]->sym;
@@ -399,7 +398,7 @@ void load_library(const char* libname, const Lex* env) {
     char path[PATH_MAX];
     char **search_paths = get_load_paths();
 
-    for (int j = 0; search_paths[j] != NULL; ++j) {
+    for (int j = 0; search_paths[j] != nullptr; ++j) {
         if (search_paths[j][0] == '\0') continue;
         snprintf(path, sizeof(path), "%s/%s/%s.%s",
             search_paths[j], "base", libname, C_LIB_EXT);
