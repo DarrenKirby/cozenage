@@ -31,10 +31,10 @@
 
 #include "buffer.h"
 
-#include <string.h>
-#include <stdarg.h>
-#include <gc/gc.h>
 #include <errno.h>
+#include <gc/gc.h>
+#include <stdarg.h>
+#include <string.h>
 
 /* A reasonable initial size. */
 #define INITIAL_BUFFER_CAPACITY 256

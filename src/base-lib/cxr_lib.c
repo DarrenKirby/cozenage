@@ -35,9 +35,9 @@
  *  5
  */
 
-#include "types.h"
-#include "pairs.h"
 #include "load_library.h"
+#include "pairs.h"
+#include "types.h"
 
 
 /* The call signature for all 24 cxr procedures is the same:

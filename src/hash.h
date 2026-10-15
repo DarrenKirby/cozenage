@@ -20,8 +20,8 @@
 #ifndef COZENAGE_HASH_H
 #define COZENAGE_HASH_H
 
-#include <stdio.h>
 #include <stdint.h>
+#include <stdio.h>
 
 
 /* Forward declare Cell. */

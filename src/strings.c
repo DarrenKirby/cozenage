@@ -17,19 +17,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "lexer.h"
+#include "parser.h"
+#include "repr.h"
 #include "strings.h"
 #include "types.h"
-#include "lexer.h"
-#include "repr.h"
-#include "parser.h"
 #include "vectors.h"
 
-#include <string.h>
-#include <stdlib.h>
 #include <gc/gc.h>
-#include <unicode/ustring.h>
+#include <stdlib.h>
+#include <string.h>
 #include <unicode/uchar.h>
 #include <unicode/umachine.h>
+#include <unicode/ustring.h>
 
 
 static int string_compare(const Cell* a, const Cell* b) {

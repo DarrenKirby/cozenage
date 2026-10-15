@@ -25,19 +25,18 @@
  * tail calls. Note that the derived special forms are 'defined'
  * in transforms.c */
 
-#include "special_forms.h"
 #include "eval.h"
-#include "types.h"
-#include "symbols.h"
-#include "repr.h"
-#include "load_library.h"
 #include "line_edit.h"
+#include "load_library.h"
+#include "repr.h"
+#include "special_forms.h"
+#include "symbols.h"
+#include "types.h"
 
-#include <math.h>
+#include <gc/gc.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <gc/gc.h>
 
 /* Helpers for iteration clarity. */
 #define first  0

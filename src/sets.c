@@ -17,11 +17,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "sets.h"
 #include "eval.h"
-#include "types.h"
 #include "hash_type.h"
-#include "repr.h"
+#include "sets.h"
+#include "types.h"
 
 #include <gc/gc.h>
 #include <string.h>

@@ -17,17 +17,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "numerics.h"
-#include "types.h"
-#include "environment.h"
-#include "comparators.h"
 #include "bignum.h"
+#include "comparators.h"
+#include "environment.h"
+#include "numerics.h"
 #include "pairs.h"
+#include "types.h"
 
-#include <math.h>
 #include <complex.h>
-#include <stdlib.h>
 #include <float.h>
+#include <math.h>
+#include <stdlib.h>
 
 
 /*------------------------------------*

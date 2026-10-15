@@ -17,19 +17,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "runner.h"
-#include "lexer.h"
-#include "symbols.h"
-#include "parser.h"
 #include "eval.h"
+#include "lexer.h"
+#include "parser.h"
 #include "repl.h"
 #include "repr.h"
+#include "runner.h"
+#include "symbols.h"
 #include "transforms.h"
 
+#include <gc/gc.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <gc/gc.h>
 
 
 /* Check the file extension and print a warning if it's non-standard. */

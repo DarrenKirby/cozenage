@@ -18,13 +18,12 @@
  */
 
 #include "bytevectors.h"
-#include "strings.h"
 #include "types.h"
 
 #include <float.h>
-#include <math.h>
 #include <gc/gc.h>
 #include <inttypes.h>
+#include <math.h>
 
 
 static long double get_f32(const Cell* bv, const int i) {

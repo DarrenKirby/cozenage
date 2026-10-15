@@ -17,11 +17,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "vectors.h"
 #include "types.h"
+#include "vectors.h"
 
-#include <string.h>
 #include <gc/gc.h>
+#include <string.h>
 #include <unicode/utf8.h>
 
 

@@ -17,20 +17,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "ports.h"
-#include "eval.h"
-#include "types.h"
-#include "strings.h"
-#include "repr.h"
-#include "vectors.h"
 #include "buffer.h"
+#include "eval.h"
 #include "lexer.h"
 #include "parser.h"
+#include "ports.h"
+#include "repr.h"
+#include "types.h"
+#include "vectors.h"
 
-#include <stdlib.h>
-#include <string.h>
 #include <errno.h>
 #include <gc/gc.h>
+#include <stdlib.h>
+#include <string.h>
 #include <sys/select.h>
 
 

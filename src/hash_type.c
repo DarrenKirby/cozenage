@@ -17,14 +17,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "hash_type.h"
 #include "cell.h"
 #include "hash.h"
+#include "hash_type.h"
 
+#include <gc/gc.h>
+#include <math.h>
 #include <stdlib.h>
 #include <string.h>
-#include <math.h>
-#include <gc/gc.h>
 
 #define GHT_TOMBSTONE ((Cell*)0x1)
 

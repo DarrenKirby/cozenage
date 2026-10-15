@@ -33,12 +33,12 @@
  * evaluate a result from other C-functions internally.
  */
 
-#include "eval.h"
-#include "special_forms.h"
 #include "cell.h"
-#include "types.h"
+#include "eval.h"
 #include "repr.h"
+#include "special_forms.h"
 #include "symbols.h"
+#include "types.h"
 
 
 /* This is only for special forms that are manually

@@ -17,13 +17,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "types.h"
 #include "cell.h"
 #include "load_library.h"
+#include "types.h"
 
+#include <gc/gc.h>
 #include <stdlib.h>
 #include <string.h>
-#include <gc/gc.h>
 
 
 /* Forward declaration */

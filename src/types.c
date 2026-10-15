@@ -25,20 +25,20 @@
  * lookup table for mapping #\sigma style helpers to actual #\σ char literals.
  */
 
-#include "types.h"
+#include "bignum.h"
 #include "cell.h"
 #include "numerics.h"
-#include "bignum.h"
+#include "types.h"
 
+#include <errno.h>
 #include <gc.h>
+#include <limits.h>
+#include <math.h>
+#include <stdarg.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdarg.h>
 #include <string.h>
-#include <stdint.h>
-#include <errno.h>
-#include <math.h>
-#include <limits.h>
 #include <unicode/ustring.h>
 
 #ifdef CRITERION_TEST_BUILD

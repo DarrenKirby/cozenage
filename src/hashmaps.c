@@ -17,10 +17,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "eval.h"
 #include "hashmaps.h"
 #include "sets.h"
 #include "types.h"
-#include "eval.h"
 
 
 /* (hash obj1 obj2 ...)

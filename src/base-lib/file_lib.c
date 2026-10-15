@@ -17,16 +17,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "types.h"
 #include "cell.h"
 #include "load_library.h"
+#include "types.h"
 
-#include <unistd.h>
 #include <errno.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <time.h>
+#include <unistd.h>
 
 #ifdef __linux__
 #include <limits.h>

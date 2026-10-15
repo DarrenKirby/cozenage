@@ -25,10 +25,10 @@
  * TODO: Incorporate bigint support for the trunc/floor div procedures.
  */
 
-#include "types.h"
+#include "load_library.h"
 #include "numerics.h"
 #include "pairs.h"
-#include "load_library.h"
+#include "types.h"
 
 #include <math.h>
 

@@ -17,18 +17,18 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "polymorph.h"
 #include "bytevectors.h"
 #include "cell.h"
 #include "pairs.h"
+#include "polymorph.h"
 #include "strings.h"
 #include "vectors.h"
 
 #include <stdlib.h>
 #include <string.h>
-#include <unicode/utypes.h>
 #include <unicode/ubrk.h>
 #include <unicode/ustring.h>
+#include <unicode/utypes.h>
 
 
 static Cell* vector_reverse(const Cell* v)

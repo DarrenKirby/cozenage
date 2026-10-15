@@ -17,21 +17,21 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "repl.h"
+#include "cell.h"
+#include "config.h"
+#include "lexer.h"
 #include "line_edit.h"
 #include "main.h"
-#include "cell.h"
-#include "types.h"
+#include "repl.h"
 #include "repr.h"
-#include "symbols.h"
-#include "lexer.h"
 #include "runner.h"
-#include "config.h"
+#include "symbols.h"
+#include "types.h"
 
-#include <unistd.h>
-#include <string.h>
-#include <stdlib.h>
 #include <gc/gc.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
 
 
 /* Read in the history. */

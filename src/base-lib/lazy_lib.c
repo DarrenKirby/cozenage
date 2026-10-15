@@ -17,14 +17,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
-#include "load_library.h"
 #include "cell.h"
 #include "eval.h"
-#include "types.h"
-#include "symbols.h"
-#include "special_forms.h"
+#include "load_library.h"
 #include "predicates.h"
+#include "special_forms.h"
+#include "symbols.h"
+#include "types.h"
 
 #include <gc/gc.h>
 

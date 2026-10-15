@@ -17,20 +17,20 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "environment.h"
 #include "cell.h"
-#include "load_library.h"
+#include "environment.h"
 #include "eval.h"
+#include "load_library.h"
 #include "parser.h"
 #include "runner.h"
 #include "types.h"
 
+#include <dlfcn.h>
+#include <gc/gc.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <dlfcn.h>
 #include <unistd.h>
-#include <gc/gc.h>
 
 #define MAX_SEARCH_PATHS 10
 

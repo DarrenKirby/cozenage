@@ -22,8 +22,8 @@
  */
 
 #include "chars.h"
-#include "types.h"
 #include "comparators.h"
+#include "types.h"
 
 #include <gc/gc.h>
 #include <unicode/uchar.h>

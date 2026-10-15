@@ -18,16 +18,16 @@
  */
 
 #include "control_features.h"
-#include "types.h"
 #include "eval.h"
-#include "pairs.h"
-#include "runner.h"
 #include "lexer.h"
+#include "pairs.h"
 #include "repl.h"
 #include "repr.h"
+#include "runner.h"
+#include "types.h"
 
-#include <stdlib.h>
 #include <gc/gc.h>
+#include <stdlib.h>
 
 
 /*-------------------------------------------------------*

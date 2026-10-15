@@ -17,11 +17,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "pairs.h"
-#include "eval.h"
-#include "repr.h"
-#include "types.h"
 #include "comparators.h"
+#include "eval.h"
+#include "pairs.h"
+#include "types.h"
 
 
 /* Helpers */

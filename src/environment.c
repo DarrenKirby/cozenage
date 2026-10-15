@@ -17,25 +17,25 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "environment.h"
-#include "numerics.h"
-#include "types.h"
+#include "bools.h"
+#include "bytevectors.h"
+#include "chars.h"
 #include "comparators.h"
 #include "control_features.h"
-#include "bools.h"
-#include "predicates.h"
-#include "pairs.h"
-#include "vectors.h"
-#include "bytevectors.h"
-#include "ports.h"
-#include "strings.h"
-#include "chars.h"
-#include "symbols.h"
+#include "environment.h"
 #include "errors.h"
 #include "hashmaps.h"
+#include "numerics.h"
+#include "pairs.h"
 #include "polymorph.h"
+#include "ports.h"
+#include "predicates.h"
 #include "repr.h"
 #include "sets.h"
+#include "strings.h"
+#include "symbols.h"
+#include "types.h"
+#include "vectors.h"
 
 #include <gc.h>
 #include <stdio.h>

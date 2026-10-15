@@ -17,19 +17,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "main.h"
-#include "types.h"
 #include "config.h"
+#include "main.h"
 #include "repl.h"
 #include "runner.h"
+#include "types.h"
 
 #include <gc/gc.h>
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
 #include <getopt.h>
-#include <unistd.h>
 #include <locale.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
 
 
 /* Initialize load_libs struct to zeros. */

@@ -30,13 +30,13 @@
 #ifndef COZENAGE_CELL_H
 #define COZENAGE_CELL_H
 
-#include "environment.h"
 #include "buffer.h"
+#include "environment.h"
 #include "hash_type.h"
 
+#include <gmp.h>
 #include <stdio.h>
 #include <unicode/umachine.h>
-#include <gmp.h>
 
 
 /* Cell_t type enum. */

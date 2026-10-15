@@ -18,24 +18,23 @@
  */
 
 
-#include "types.h"
 #include "cell.h"
 #include "config.h"
+#include "load_library.h"
 #include "main.h"
 #include "ports.h"
+#include "types.h"
 #include "vectors.h"
-#include "load_library.h"
 
-#include <unistd.h>
+#include <errno.h>
+#include <gc/gc.h>
+#include <grp.h>
+#include <pwd.h>
 #include <stdlib.h>
 #include <string.h>
-#include <pwd.h>
-#include <grp.h>
-#include <gc/gc.h>
-#include <errno.h>
-#include <sys/utsname.h>
 #include <sys/stat.h>
-
+#include <sys/utsname.h>
+#include <unistd.h>
 
 #ifdef  __linux__
 #include <sys/sysinfo.h>   /* For uptime (sysinfo) */
@@ -45,8 +44,8 @@
 #endif
 
 #if defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__NetBSD__) || defined(__DragonFly__)
-#include <sys/types.h>
 #include <sys/param.h>
+#include <sys/types.h>
 #include <sys/wait.h>      /* For system (waitpid) */
 #include <vm/vm_param.h>
 #endif

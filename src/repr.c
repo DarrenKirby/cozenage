@@ -44,13 +44,12 @@
  * mappings in the global environment one per line
  */
 
-#include "repr.h"
-#include "parser.h"
 #include "buffer.h"
-#include "main.h"
 #include "bytevectors.h"
-#include "types.h"
 #include "hash_type.h"
+#include "main.h"
+#include "repr.h"
+#include "types.h"
 
 #include <stdio.h>
 #include <string.h>

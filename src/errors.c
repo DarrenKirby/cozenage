@@ -17,8 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "errors.h"
 #include "cell.h"
+#include "errors.h"
 #include "repr.h"
 #include "types.h"
 

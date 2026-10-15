@@ -18,24 +18,24 @@
  */
 
 
-#include "line_edit.h"
+#include "config.h"
 #include "hash.h"
+#include "line_edit.h"
 #include "main.h"
 #include "types.h"
-#include "config.h"
 
+#include <dirent.h>
+#include <errno.h>
+#include <gc/gc.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
-#include <termios.h>
 #include <sys/ioctl.h>
-#include <signal.h>
-#include <errno.h>
-#include <dirent.h>
 #include <sys/stat.h>
+#include <termios.h>
+#include <unistd.h>
 #include <wchar.h>
-#include <gc/gc.h>
 
 /* Linux and *BSD needs this. */
 #ifndef __APPLE__

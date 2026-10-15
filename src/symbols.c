@@ -24,17 +24,15 @@
  * all the special forms, whether implemented primitive or as transforms.
  */
 
-#include "symbols.h"
 #include "cell.h"
-#include "types.h"
 #include "main.h"
+#include "symbols.h"
+#include "types.h"
 
-/* For _POSIX_VERSION */
-#include <unistd.h>
-/* For uname */
-#include <string.h>
 #include <errno.h>
+#include <string.h>
 #include <sys/utsname.h>
+#include <unistd.h>
 
 
 /* Declare the symbol table. */

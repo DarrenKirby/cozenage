@@ -25,9 +25,9 @@
  * The code in this file is run directly between the parser and evaluator.
  */
 
-#include "transforms.h"
 #include "cell.h"
 #include "symbols.h"
+#include "transforms.h"
 
 
 static int gen_sym_counter = 0;

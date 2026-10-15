@@ -20,13 +20,13 @@
 #include "config.h"
 #include "load_library.h"
 
+#include <errno.h>
+#include <gc/gc.h>
+#include <pwd.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
-#include <errno.h>
-#include <stdlib.h>
-#include <pwd.h>
-#include <gc/gc.h>
 
 
 char *cozenage_history_path = nullptr;

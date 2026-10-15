@@ -17,19 +17,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "bytevectors.h"
 #include "main.h"
 #include "parser.h"
-#include "types.h"
 #include "repr.h"
-#include "bytevectors.h"
+#include "types.h"
 
-#include <gc.h>
+#include <errno.h>
+#include <gc/gc.h>
+#include <inttypes.h>
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <errno.h>
-#include <inttypes.h>
-#include <limits.h>
 #include <unicode/uchar.h>
 
 
