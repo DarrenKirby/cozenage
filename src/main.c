@@ -21,6 +21,7 @@
 #include "main.h"
 #include "repl.h"
 #include "runner.h"
+#include "stack_guard.h"
 #include "types.h"
 
 #include <gc/gc.h>
@@ -30,7 +31,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-
 
 /* Initialize load_libs struct to zeros. */
 static lib_load_config load_libs = {0};
@@ -124,6 +124,9 @@ int main(const int argc, char** argv)
     }
 
     const int non_option_args = argc - optind;
+
+    /*  Initialize stack protection. */
+    stack_guard_init();
 
     /* File runner mode. */
 

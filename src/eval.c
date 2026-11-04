@@ -37,6 +37,7 @@
 #include "eval.h"
 #include "repr.h"
 #include "special_forms.h"
+#include "stack_guard.h"
 #include "symbols.h"
 #include "types.h"
 
@@ -70,6 +71,12 @@ static Cell* coz_apply(const Cell* proc, Cell* args, Lex** env_out, Cell** expr_
 /* Evaluate a Cell in the given environment. */
 Cell* coz_eval(Lex* env, Cell* expr)
 {
+    if (stack_exhausted()) {
+        return make_cell_error(
+            "stack overflow: recursion too deep",
+            STACK_ERR);
+    }
+
     while (true) {
         if (!expr) return nullptr;
 

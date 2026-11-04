@@ -55,6 +55,8 @@
 #include <string.h>
 #include <wctype.h>
 
+#include "stack_guard.h"
+
 /* macOS does not require these. */
 #ifndef __APPLE__
 #include <ctype.h>
@@ -165,6 +167,11 @@ static void cell_to_string_worker(const Cell* v,
 {
     if (v == NULL) return;
 
+    if (stack_exhausted()) {
+        sb_append_str(sb, "... output truncated ...");
+        return;
+    }
+
     switch (v->type) {
 
         case CELL_REAL:
@@ -238,6 +245,7 @@ static void cell_to_string_worker(const Cell* v,
                 case TYPE_ERR:   { err_str = "Type error:"; break; }
                 case INDEX_ERR:  { err_str = "Index error:"; break; }
                 case VALUE_ERR:  { err_str = "Value error:"; break; }
+                case STACK_ERR:  { err_str = "Stack error:"; break; }
                 default:         { err_str = "Error: "; break; }
             }
 
@@ -456,8 +464,11 @@ static void cell_to_string_worker(const Cell* v,
 char* cell_to_string(const Cell* cell, const print_mode_t mode)
 {
     if (cell == NULL) return "";
+
     str_buf_t *sb = sb_new();
     cell_to_string_worker(cell, sb, mode);
+
+
     return sb->buffer;
 }
 

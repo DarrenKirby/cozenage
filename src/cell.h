@@ -192,7 +192,8 @@ typedef enum Err_t : uint8_t  {
     TYPE_ERR,   /* Type error - wrong type of arg passed to procedure. */
     INDEX_ERR,  /* Index error - invalid index passed for compound type. */
     VALUE_ERR,  /* Value error - Invalid value of correct type. */
-    OS_ERR      /* OS error - mainly used in system library to report failed syscalls. */
+    OS_ERR,     /* OS error - mainly used in system library to report failed syscalls. */
+    STACK_ERR   /* Signals stack overflow/recursion error. */
 } err_t;
 
 
