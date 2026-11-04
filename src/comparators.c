@@ -19,6 +19,7 @@
 
 #include "bytevectors.h"
 #include "comparators.h"
+#include "stack_guard.h"
 #include "types.h"
 
 #include <string.h>
@@ -344,51 +345,48 @@ Cell* builtin_eqv(const Lex* e, const Cell* a)
 /* Helpers for equal? */
 static Cell* val_equal(const Lex* e, Cell* x, Cell* y);
 
+static Cell* check_if_lists_are_equal(const Lex* e, Cell* x, Cell* y)
+{
+    const Cell *slow_x = x;
+    const Cell *slow_y = y;
+    size_t steps = 0;
 
-static Cell* check_if_lists_are_equal_recursive(const Lex* e, Cell* x, Cell* y, Cell* visited) {
-    /* Base Cases. */
-    if (x == y) return True_Obj;
-    if (x->type != y->type) return False_Obj;
-    if (x->type != CELL_PAIR) {
-        /* If at the end of the list structure (could be NIL or an improper tail)
-         * Use the main val_equal to handle the final tail values. */
-        return val_equal(e, x, y);
+    while (x->type == CELL_PAIR && y->type == CELL_PAIR) {
+        if (x == y) return True_Obj;        /* shared tail: identical from here on */
+
+        Cell* r = val_equal(e, x->car, y->car);
+        if (r->type == CELL_ERROR) return r;
+        if (r == False_Obj) return False_Obj;
+
+        x = x->cdr;
+        y = y->cdr;
+
+        /* Floyd-style cycle check: slow pair advances at half speed. If the
+         * (x, y) pair of positions repeats, every remaining comparison repeats
+         * one we've already passed, so the lists are equal. */
+        if ((++steps & 1) == 0) {
+            slow_x = slow_x->cdr;
+            slow_y = slow_y->cdr;
+        }
+        if (x == slow_x && y == slow_y) return True_Obj;
     }
-
-    /* Cycle Detection.
-     * If this specific pair of pairs have already been compared,
-     * assume they are equal to break the infinite recursion. */
-    const Cell* v = visited;
-    while (v->type == CELL_PAIR) {
-        const Cell* comparison = v->car;
-        if (comparison->car == x && comparison->cdr == y) return True_Obj;
-        v = v->cdr;
-    }
-
-    /* Record this visit.
-     * Push the pair (x . y) onto the visited stack. */
-    Cell* current_comp = make_cell_pair(x, y);
-    Cell* new_visited = make_cell_pair(current_comp, visited);
-
-    /* Recurse: CAR must be equal, then CDR must be equal. */
-    if (val_equal(e, x->car, y->car) == False_Obj) {
-        return False_Obj;
-    }
-
-    return check_if_lists_are_equal_recursive(e, x->cdr, y->cdr, new_visited);
-}
-
-
-static Cell* check_if_lists_are_equal(const Lex* e, Cell* x, Cell* y) {
-    return check_if_lists_are_equal_recursive(e, x, y, make_cell_nil());
+    /* Tails: NIL, or an improper tail */
+    return val_equal(e, x, y);
 }
 
 
 static Cell* val_equal(const Lex* e, Cell* x, Cell* y)
 {
+    /* Check for stack issues. */
+    if (stack_exhausted()) {
+        return make_cell_error(
+            "Stack depth exceeded.",
+            STACK_ERR);
+    }
+
     /* Just kick numbers over to '='. */
     constexpr int mask = CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX|CELL_BIGINT|CELL_BIGRAT;
-    if (x->type & mask) {
+    if (x->type & mask && y->type & mask) {
         /* 2 != 2.0, but 2 = 2/1. */
         if (x->exact != y->exact) {
             return False_Obj;
@@ -427,8 +425,9 @@ static Cell* val_equal(const Lex* e, Cell* x, Cell* y)
         case CELL_VECTOR:
             if (x->count != y->count) return False_Obj;
             for (int i = 0; i < x->count; i++) {
-                const Cell* eq = val_equal(e, x->cell[i], y->cell[i]);
-                if (!eq->boolean_v) { return False_Obj; }
+                Cell* eq = val_equal(e, x->cell[i], y->cell[i]);
+                if (eq->type == CELL_ERROR) return eq;
+                if (eq == False_Obj) { return False_Obj; }
             }
             return True_Obj;
 
