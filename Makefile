@@ -209,11 +209,7 @@ lib/cozenage/base/%.$(LIB_EXT): src/base-lib/%_lib.c
 	$(CC) $(APP_CFLAGS) $(LIB_CFLAGS) $(MODULE_LDFLAGS) $(LDFLAGS) $(CFLAGS) $< -o $@
 
 # --- install rules
-install:
-	@if [ ! -f $(BINARY) ]; then \
-		echo "ERROR: $(BINARY) not found. Please run 'make' before 'make install'."; \
-		exit 1; \
-	fi
+install: cozenage_build
 	@mkdir -v -p $(INSTALL_BIN_DIR)
 	@mkdir -v -p $(INSTALL_LIB_DIR)
 	@install -v -m 755 $(BINARY) $(INSTALL_BIN_DIR)
