@@ -920,12 +920,6 @@ HandlerResult sf_set_bang(Lex* e, Cell* a)
         for (int i = 0; i < target_frame->count; i++) {
             if (strcmp(target_frame->syms[i], sym_to_set) == 0) {
                 target_frame->vals[i] = value_to_set;
-                // /* R7RS says the return from set! is unspecified.
-                //  * Cozenage will return the value set, for visual
-                //  * feedback that the operation was successful (REPL-only). */
-                // if (is_repl) {
-                //     fprintf(stdout, "%s\n", cell_to_string(value_to_set, MODE_REPL));
-                // }
                 return return_val(USP_Obj);
             }
         }
@@ -935,9 +929,6 @@ HandlerResult sf_set_bang(Lex* e, Cell* a)
         if (ht_get(e->working, sym_to_set)) {
             /* It exists globally, so update it in the hash table. */
             ht_set(e->working, sym_to_set, value_to_set);
-            if (is_repl) {
-                fprintf(stdout, "%s\n", cell_to_string(value_to_set, MODE_REPL));
-            }
             return return_val(USP_Obj);
         }
     }
