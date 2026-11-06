@@ -20,12 +20,49 @@
 #ifndef COZENAGE_TYPES_H
 #define COZENAGE_TYPES_H
 
+#include "cell.h"
 #include "environment.h"
 
 #include <complex.h>
+#include <stddef.h>
+#include <stdint.h>
 #include <unicode/umachine.h>
 
-/* Convenience macros for readability */
+#define INIT_HASH_CAPACITY 8
+#define INIT_BV_CAPACITY 8
+#define INIT_SYMBOL_TABLE_SIZE 256
+#define GMP_BASE 10
+#define WORD_SIZE 8
+
+#define BASE_2   2
+#define BASE_8   8
+#define BASE_10 10
+#define BASE_16 16
+
+/* For Unicode checks. */
+#define MAX_VALID_CODEPOINT 0x10FFFFu
+#define SURROGATE_MIN       0xD800u
+#define SURROGATE_MAX       0xDFFFu
+#define UNICODE_REPLACEMENT 0xFFFDu
+#define UTF8_MASK_TAG       0xC0u   /* top two bits of a byte */
+#define UTF8_CONT_TAG       0x80u   /* 10xxxxxx marks a continuation byte */
+#define UTF8_CONT_MASK      0x3Fu   /* payload bits of a continuation byte */
+#define UTF8_CONT_BITS      6       /* ...and how many there are */
+#define UTF8_MAX_LEN        4
+#define ASCII_MAX           0x80
+
+/* ASCII key codes. */
+#define ASC_BELL 0x7
+#define ASC_BACKSPACE 0x8
+#define ASC_DELETE 0x7f
+#define ASC_ESCAPE 0x1b
+#define ASC_RETURN 0xd
+
+static inline bool is_scalar_value(const uint32_t cp) {
+    return cp <= MAX_VALID_CODEPOINT && (cp < SURROGATE_MIN || cp > SURROGATE_MAX);
+}
+
+/* Convenience macros for arity checks. */
 #define CHECK_ARITY_EXACT(a, n, s) \
 check_arg_arity((a), (n), -1, -1, (s))
 
@@ -58,15 +95,16 @@ typedef enum {
     NUM_BIGRAT,
     NUM_REAL,
     NUM_COMPLEX,
-    NUM_TYPE_COUNT
+    NUM_TYPE_COUNT,
 } NumType;
 
 
 typedef Cell* (*BuiltinFn)(const Lex* e, const Cell* args);
 
 const char* fmt_err(const char *fmt, ...);
-const char* cell_type_name(int t);
-const char* cell_mask_types(int mask);
+//const char* cell_type_name(int t);
+const char* cell_type_name(uint32_t t);
+const char* cell_mask_types(uint32_t mask);
 Cell* check_arg_types(const Cell* a, int mask, const char* fname);
 Cell* check_arg_arity(const Cell* a, int exact, int min, int max, const char* fname);
 int check_lambda_arity(const Cell* proc, int expected);
@@ -76,7 +114,7 @@ Cell* make_sexpr_len2(const Cell* a, const Cell* b);
 Cell* make_sexpr_len3(const Cell* a, const Cell* b, const Cell* c);
 Cell* make_sexpr_len4(const Cell* a, const Cell* b, const Cell* c, const Cell* d);
 Cell* make_list_from_sexpr(Cell* c);
-Cell* make_sexpr_from_list(Cell* v, bool recurse);
+Cell* make_sexpr_from_list(const Cell* v, bool recurse);
 Cell* make_sexpr_from_array(int count, Cell** cells);
 Cell* flatten_sexpr(const Cell* sexpr);
 long double complex cell_to_c_complex(const Cell* c);
@@ -92,12 +130,11 @@ Cell* simplify_rational(Cell* v);
 void complex_apply(BuiltinFn fn, const Lex* e, Cell* result, const Cell* rhs);
 long double cell_to_long_double(const Cell* c);
 Cell* make_cell_from_double(long double d);
-char* GC_strdup(const char* s);
-char* GC_strndup(const char* s, size_t byte_len);
 int compare_named_chars(const void* key, const void* element);
 const NamedChar* find_named_char(const char* name);
 Cell* list_get_nth_cell_ptr(const Cell* list, long n, bool tail);
 int utf8_encode(UChar32 c, uint8_t* out_buf);
+int utf8_decode(const uint8_t* s, size_t n, UChar32* cp);
 int utf8_append(UChar32 c, char *out_buf);
 int utf8_len(uint8_t first_byte);
 int utf8_code_point_len(uint32_t cp);
@@ -116,5 +153,5 @@ Cell* int_to_rat(const Cell* v);
 Cell* int_to_real(const Cell* v);
 #endif
 
-#endif //COZENAGE_TYPES_H
+#endif // COZENAGE_TYPES_H
 

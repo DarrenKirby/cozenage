@@ -23,13 +23,13 @@
  * defines a function for internal use that deep-copies a Cell object.
  */
 
+#include "bytevectors.h"
 #include "cell.h"
-#include "types.h"
-#include "symbols.h"
 #include "hash.h"
 #include "hash_type.h"
-#include "bytevectors.h"
 #include "ports.h"
+#include "symbols.h"
+#include "types.h"
 
 #include <gc/gc.h>
 #include <stdlib.h>
@@ -141,10 +141,10 @@ Cell* make_cell_nil()
 
 
 /* Thin wrapper that returns the singleton #t or #f object. */
-Cell* make_cell_boolean(const int the_boolean)
-{
-    if (the_boolean == 1) return True_Obj;
-    if (the_boolean == 0) return False_Obj;
+Cell* make_cell_boolean(const int the_boolean) {
+    if (the_boolean == 1) { return True_Obj; }
+    if (the_boolean == 0) { return False_Obj;
+}
     /* This would only be triggered from C code, so
      * raise an error and print diagnostic message. */
     fprintf(stderr, "Bad value passed to boolean constructor: make_cell_boolean()\n");
@@ -359,7 +359,7 @@ Cell* make_cell_vector()
 }
 
 
-/* Cell constructor for bytevectors. */
+/* Cell constructor for byte vectors. */
 Cell* make_cell_bytevector(const bv_t t, const size_t initial_size)
 {
     Cell* v = GC_MALLOC(sizeof(Cell));
@@ -372,7 +372,7 @@ Cell* make_cell_bytevector(const bv_t t, const size_t initial_size)
     v->bv = GC_MALLOC(sizeof(byte_v));
 
     v->bv->type = t;
-    v->bv->capacity = initial_size == 0 ? 8 : initial_size;
+    v->bv->capacity = initial_size == 0 ? INIT_BV_CAPACITY : initial_size;
     v->count = 0;
 
 
@@ -483,7 +483,7 @@ Cell* make_cell_bigrat(const int64_t num, const int64_t den, const char* s)
     v->br = GC_MALLOC(sizeof(mpq_t));
     mpq_init(*v->br);
     if (s) {
-        mpq_set_str(*v->br, s, 10);
+        mpq_set_str(*v->br, s, GMP_BASE);
     } else {
         mpq_set_si(*v->br, num, den);
     }
@@ -522,7 +522,7 @@ Cell* make_cell_promise(Cell* expr, Lex* env)
     v->promise = GC_MALLOC(sizeof(promise));
     v->promise->expr = expr;
     /* Optimization - if expr is atomic, just set as DONE. */
-    constexpr int mask = CELL_BOOLEAN|CELL_CHAR|CELL_INTEGER|CELL_RATIONAL|
+    constexpr uint32_t mask = CELL_BOOLEAN|CELL_CHAR|CELL_INTEGER|CELL_RATIONAL|
                          CELL_REAL|CELL_COMPLEX|CELL_STRING|CELL_BIGRAT;
     if (expr->type & mask) {
         v->promise->status = DONE;
@@ -563,7 +563,7 @@ Cell* make_cell_set(const Cell* values) {
         exit(EXIT_FAILURE);
     }
     v->type = CELL_SET;
-    ght_table* t = ght_create(8);
+    ght_table* t = ght_create(INIT_HASH_CAPACITY);
 
     if (values) {
         for (int i = 0; i < values->count; i++) {
@@ -584,7 +584,7 @@ Cell* make_cell_hash(const Cell* values) {
         exit(EXIT_FAILURE);
     }
     v->type = CELL_HASH;
-    ght_table* t = ght_create(8);
+    ght_table* t = ght_create(INIT_HASH_CAPACITY);
     /* Already checked for evenness in the parser. */
     for (int i = 0; i < values->count; i += 2) {
         ght_set(t, values->cell[i], values->cell[i + 1]);
@@ -613,7 +613,7 @@ Cell* cell_add(Cell* v, Cell* x)
  * is represented here, as not all Cell types would credibly need to
  * be copied. Deep-copying is expensive, and should be avoided if possible. */
 Cell* cell_copy(const Cell* v) {
-    if (!v) return nullptr;
+    if (!v) { return nullptr; }
 
     Cell* copy = GC_MALLOC(sizeof(Cell));
     if (!copy) {

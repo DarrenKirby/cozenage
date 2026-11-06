@@ -34,6 +34,8 @@
 #include <sys/utsname.h>
 #include <unistd.h>
 
+#define VERSION_BUF_SIZE 64
+
 
 /* Declare the symbol table. */
 ht_table* symbol_table = nullptr;
@@ -175,7 +177,7 @@ Cell* builtin_symbol_equal_pred(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = check_arg_types(a, CELL_SYMBOL, "symbol=?");
-    if (err) return err;
+    if (err) { return err; }
 
     /* Return #t with one or no args. */
     if (a->count < 2) {
@@ -202,7 +204,7 @@ Cell* builtin_string_to_symbol(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "string->symbol");
-    if (err) return err;
+    if (err) { return err; }
     if (a->cell[0]->type != CELL_STRING) {
         return make_cell_error(
             "string->symbol: arg 1 must be a string",
@@ -219,7 +221,7 @@ Cell* builtin_symbol_to_string(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "symbol->string");
-    if (err) return err;
+    if (err) { return err; }
     if (a->cell[0]->type != CELL_SYMBOL) {
         return make_cell_error(
             "symbol->string: arg 1 must be a symbol",
@@ -235,12 +237,12 @@ Cell* builtin_features(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 0, "features");
-    if (err) return err;
+    if (err) { return err; }
 
     Cell* result_l = make_cell_sexpr();
     /* Start by adding all the builtin features always present. */
     char* feature_array[] =  {
-        "exact-closed", "exact-complex", "ieee-float", "full-unicode", "ratios"
+        "exact-closed", "exact-complex", "ieee-float", "full-unicode", "ratios",
     };
 
     constexpr int feature_count = sizeof(feature_array) / sizeof(feature_array[0]);
@@ -272,7 +274,7 @@ Cell* builtin_features(const Lex* e, const Cell* a)
     /* Add Cozenage name and version. */
     cell_add(result_l, make_cell_symbol(APP_NAME));
 
-    char buf[64];
+    char buf[VERSION_BUF_SIZE];
     snprintf(buf, sizeof(buf), "%s-%s", APP_NAME, APP_VERSION);
     cell_add(result_l, make_cell_symbol(buf));
 

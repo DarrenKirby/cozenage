@@ -171,8 +171,7 @@ static Cell* system_get_path(const Lex* e, const Cell* a) {
         const ssize_t len = p->port->vtable->getdelim(
             &line, &n, ':', p, &err_r);
 
-        if (len == R_EOF)
-            break;
+        if (len == R_EOF) { break; }
 
         if (len == R_ERR) {
             free(line);
@@ -182,8 +181,9 @@ static Cell* system_get_path(const Lex* e, const Cell* a) {
         }
 
         /* Don't need to include the colons. */
-        if (len > 0 && line[len - 1] == ':')
+        if (len > 0 && line[len - 1] == ':') {
             line[len - 1] = '\0';
+        }
 
         cell_add(result, make_cell_string(line));
     }
@@ -313,7 +313,7 @@ static Cell* system_get_groups(const Lex* e, const Cell* a) {
     if (err) { return err; }
 
     long max = sysconf(_SC_NGROUPS_MAX);
-    if (max < 0) max = 32;
+    if (max < 0) { max = 32; }
 
     int ngroups = (int)max;
     gid_t *groups = GC_malloc(sizeof(gid_t) * ngroups);
@@ -571,9 +571,9 @@ static Cell* system_uptime(const Lex* e, const Cell* a) {
 static Cell* system_system(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "system");
-    if (err) return err;
+    if (err) { return err; }
     err = check_arg_types(a, CELL_STRING, "system");
-    if (err) return err;
+    if (err) { return err; }
 
     char* cmd = a->cell[0]->str;
 
@@ -608,9 +608,9 @@ static Cell* system_system(const Lex* e, const Cell* a) {
 static Cell* system_sleep(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "sleep");
-    if (err) return err;
+    if (err) { return err; }
     err = check_arg_types(a, CELL_INTEGER, "sleep");
-    if (err) return err;
+    if (err) { return err; }
 
     /* sleep does not error. It may return non-zero
      * if the sleep is interrupted by a signal. */
@@ -624,7 +624,7 @@ static Cell* system_sleep(const Lex* e, const Cell* a) {
 static Cell* system_get_hostname(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 0, "get-hostname");
-    if (err) return err;
+    if (err) { return err; }
 
     const long host_name_max = sysconf(_SC_HOST_NAME_MAX);
     char hostname[host_name_max + 1];
@@ -642,7 +642,7 @@ static Cell* system_get_hostname(const Lex* e, const Cell* a) {
 static Cell* system_get_nproc(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 0, "cpu-count");
-    if (err) return err;
+    if (err) { return err; }
 
     long n_cpu;
     if ((n_cpu = sysconf(_SC_NPROCESSORS_CONF)) == -1) {
@@ -660,7 +660,7 @@ static Cell* system_get_nproc(const Lex* e, const Cell* a) {
 static Cell* system_is_root(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 0, "is-root?");
-    if (err) return err;
+    if (err) { return err; }
 
     const uid_t uid = getuid();
     if (uid == 0) {

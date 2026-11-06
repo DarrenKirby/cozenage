@@ -49,7 +49,7 @@ static void repr_f32(const Cell* bv, str_buf_t *sb) {
     sb_append_fmt(sb, "#%s(", "f32");
     for (int i = 0; i < bv->count; i++) {
         sb_append_fmt(sb, "%.7g", ((float*)bv->bv->data)[i]);
-        if (i != bv->count - 1) sb_append_char(sb, ' ');
+        if (i != bv->count - 1) { sb_append_char(sb, ' '); }
     }
     sb_append_char(sb, ')');
 }
@@ -78,7 +78,7 @@ static void repr_f64(const Cell* bv, str_buf_t *sb) {
     sb_append_fmt(sb, "#%s(", "f64");
     for (int i = 0; i < bv->count; i++) {
         sb_append_fmt(sb, "%.15g", ((double*)bv->bv->data)[i]);
-        if (i != bv->count - 1) sb_append_char(sb, ' ');
+        if (i != bv->count - 1) { sb_append_char(sb, ' '); }
     }
     sb_append_char(sb, ')');
 }
@@ -92,8 +92,6 @@ DEFINE_BV_TYPE(u32, uint32_t, "%u")
 DEFINE_BV_TYPE(s32, int32_t,  "%d")
 DEFINE_BV_TYPE(u64, uint64_t, "%u")
 DEFINE_BV_TYPE(s64, int64_t,  "%d")
-
-#define INVALID 255
 
 
 const bv_int_ops_t BV_INT_OPS[] = {
@@ -126,7 +124,7 @@ static bv_t get_type(const Cell* t_sym)
     else if (t_sym == make_cell_symbol("s64")) { type = BV_S64; }
     else if (t_sym == make_cell_symbol("f32")) { type = BV_F32; }
     else if (t_sym == make_cell_symbol("f64")) { type = BV_F64; }
-    else { type = INVALID; }
+    else { type = BV_INVALID; }
     return type;
 }
 
@@ -190,18 +188,19 @@ Cell* fp_byte_check(const bv_t type, const long double value)
 {
     switch (type) {
         case BV_F32:
-            if (isfinite(value) && fabsl(value) > FLT_MAX)
+            if (isfinite(value) && fabsl(value) > FLT_MAX) {
                 return make_cell_error(fmt_err(
                     "bad value for f32 bytevector: '%ld'", value),
                     VALUE_ERR);
-
+            }
             break;
 
         case BV_F64:
-            if (isfinite(value) && fabsl(value) > DBL_MAX)
+            if (isfinite(value) && fabsl(value) > DBL_MAX) {
                 return make_cell_error(fmt_err(
                     "bad value for f64 bytevector: '%ld'", value),
                     VALUE_ERR);
+            }
             break;
 
         default:
@@ -248,7 +247,7 @@ Cell* builtin_bytevector(const Lex* e, const Cell* a)
     if (a->cell[num_bytes - 1]->type == CELL_SYMBOL)
     {
         type = get_type(a->cell[num_bytes - 1]);
-        if (type == INVALID) {
+        if (type == BV_INVALID) {
             return make_cell_error(
                 fmt_err("bytevector: invalid bytevector type: %s",
                     a->cell[num_bytes - 1]->sym),
@@ -274,7 +273,7 @@ Cell* builtin_bytevector(const Lex* e, const Cell* a)
                     VALUE_ERR);
             }
             Cell* err = fp_byte_check(type, byte);
-            if (err) return err;
+            if (err) { return err; }
             BV_FP_OPS[bv->bv->type].append(bv, byte);
         }
         return bv;
@@ -288,7 +287,7 @@ Cell* builtin_bytevector(const Lex* e, const Cell* a)
         }
         const int64_t byte = a->cell[i]->integer_v;
         Cell* err = int_byte_check(type, byte);
-        if (err) return err;
+        if (err) { return err; }
         BV_INT_OPS[bv->bv->type].append(bv, byte);
     }
     return bv;
@@ -301,9 +300,9 @@ Cell* builtin_bytevector_length(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "bytevector-length");
-    if (err) return err;
+    if (err) { return err; }
     err = check_arg_types(a, CELL_BYTEVECTOR, "bytevector-length");
-    if (err) return err;
+    if (err) { return err; }
 
     return make_cell_integer(a->cell[0]->count);
 }
@@ -315,7 +314,7 @@ Cell* builtin_bytevector_ref(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2, "bytevector-ref");
-    if (err) return err;
+    if (err) { return err; }
     if (a->cell[0]->type != CELL_BYTEVECTOR) {
         return make_cell_error(
             "bytevector-ref: arg 1 must be a bytevector",
@@ -350,11 +349,10 @@ Cell* builtin_bytevector_ref(const Lex* e, const Cell* a)
 /* (bytevector-set! bytevector k byte)
  * It is an error if k is not a valid index of the bytevector.
  * This procedure stores byte in the kth position of bytevector. */
-Cell* builtin_bytevector_set_bang(const Lex* e, const Cell* a)
-{
+Cell* builtin_bytevector_set_bang(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 3, "bytevector-set!");
-    if (err) return err;
+    if (err) { return err; }
     if (a->cell[0]->type != CELL_BYTEVECTOR) {
         return make_cell_error(
             "bytevector-set!: arg 1 must be a vector",
@@ -386,7 +384,7 @@ Cell* builtin_bytevector_set_bang(const Lex* e, const Cell* a)
             byte = a->cell[2]->integer_v;
         }
         err = fp_byte_check(type, byte);
-        if (err) return err;
+        if (err) { return err; }
         BV_FP_OPS[type].set(bv, idx, byte);
         return USP_Obj;
     }
@@ -396,9 +394,16 @@ Cell* builtin_bytevector_set_bang(const Lex* e, const Cell* a)
             "bytevector-set: byte arg must be an integer",
             TYPE_ERR);
     }
-    const int64_t byte = (int)a->cell[2]->integer_v;
+    const int64_t byte = a->cell[2]->integer_v;
     err = int_byte_check(type, byte);
-    if (err) return err;
+    if (err) { return err; }
+
+    if (type > BV_S64) {
+        return make_cell_error(
+            "bytevector-set!: invalid bytevector type",
+            TYPE_ERR);
+    }
+
     BV_INT_OPS[type].set(bv, idx, byte);
     return USP_Obj;
 }
@@ -415,7 +420,7 @@ Cell* builtin_make_bytevector(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_RANGE(a, 1, 3, "make-bytevector");
-    if (err) return err;
+    if (err) { return err; }
     if (a->cell[0]->type != CELL_INTEGER) {
         return make_cell_error(
             "make-bytevector: arg 1 must be an integer",
@@ -437,7 +442,7 @@ Cell* builtin_make_bytevector(const Lex* e, const Cell* a)
                 TYPE_ERR);
         }
         type = get_type(t_sym);
-        if (type == INVALID) {
+        if (type == BV_INVALID) {
             return make_cell_error(
                 "arg 3 must be one of 'u8, 's8, 'u16, 's16, 'u32, 's32', 'u64', or 's64' ",
                 VALUE_ERR);
@@ -463,7 +468,7 @@ Cell* builtin_make_bytevector(const Lex* e, const Cell* a)
             }
         }
         err = fp_byte_check(type, fill);
-        if (err) return err;
+        if (err) { return err; }
         for (int i = 0; i < n; i++) {
             BV_FP_OPS[type].append(vec, fill);
         }
@@ -481,7 +486,7 @@ Cell* builtin_make_bytevector(const Lex* e, const Cell* a)
         fill = a->cell[1]->integer_v;
     }
     err = int_byte_check(type, fill);
-    if (err) return err;
+    if (err) { return err; }
 
     for (int i = 0; i < n; i++) {
         BV_INT_OPS[vec->bv->type].append(vec, fill);
@@ -498,7 +503,7 @@ Cell* builtin_bytevector_copy(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_RANGE(a, 1, 3, "bytevector-copy");
-    if (err) return err;
+    if (err) { return err; }
     if (a->cell[0]->type != CELL_BYTEVECTOR) {
         return make_cell_error(
             "bytevector-copy: arg 1 must be a bytevector",
@@ -564,21 +569,24 @@ Cell* builtin_bytevector_copy_bang(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_RANGE(a, 3, 5, "bytevector-copy!");
-    if (err) return err;
+    if (err) { return err; }
 
     /* Validate arg types. */
-    if (a->cell[0]->type != CELL_BYTEVECTOR)
+    if (a->cell[0]->type != CELL_BYTEVECTOR) {
         return make_cell_error(
             "bytevector-copy!: arg 1 must be a bytevector (to)",
             TYPE_ERR);
-    if (a->cell[1]->type != CELL_INTEGER)
+    }
+    if (a->cell[1]->type != CELL_INTEGER) {
         return make_cell_error(
             "bytevector-copy!: arg 2 must be an integer (at)",
             TYPE_ERR);
-    if (a->cell[2]->type != CELL_BYTEVECTOR)
+    }
+    if (a->cell[2]->type != CELL_BYTEVECTOR) {
         return make_cell_error(
             "bytevector-copy!: arg 3 must be a bytevector (from)",
             TYPE_ERR);
+    }
 
     /* Get 'to' bytevector and 'at' index. */
     Cell* to_bv = a->cell[0];
@@ -592,7 +600,7 @@ Cell* builtin_bytevector_copy_bang(const Lex* e, const Cell* a)
     int32_t from_start_idx = 0;
     int32_t from_end_idx = from_bv_len; /* Default to char length. */
 
-    /* Ensure bytevectors are compatible. */
+    /* Ensure byte vectors are compatible. */
     const uint8_t from_type = from_bv->bv->type;
     const uint8_t to_type = to_bv->bv->type;
     if (from_type != to_type)
@@ -603,37 +611,43 @@ Cell* builtin_bytevector_copy_bang(const Lex* e, const Cell* a)
     }
 
     if (a->count >= 4) {
-        if (a->cell[3]->type != CELL_INTEGER)
+        if (a->cell[3]->type != CELL_INTEGER) {
             return make_cell_error(
                 "bytevector-copy!: arg 4 must be an integer (start)",
                 TYPE_ERR);
+        }
         from_start_idx = (int32_t)a->cell[3]->integer_v;
     }
     if (a->count == 5) {
-        if (a->cell[4]->type != CELL_INTEGER)
+        if (a->cell[4]->type != CELL_INTEGER) {
             return make_cell_error(
                 "bytevector-copy!: arg 5 must be an integer (end)",
                 TYPE_ERR);
+        }
         from_end_idx = (int32_t)a->cell[4]->integer_v;
     }
 
     /* R7RS Index Validation. */
-    if (to_start_idx < 0 || to_start_idx > to_bv_len)
+    if (to_start_idx < 0 || to_start_idx > to_bv_len) {
         return make_cell_error(
             "bytevector-copy!: 'at' index is out of bounds for 'to' bytevector",
             INDEX_ERR);
-    if (from_start_idx < 0 || from_start_idx > from_bv_len)
+    }
+    if (from_start_idx < 0 || from_start_idx > from_bv_len) {
         return make_cell_error(
             "bytevector-copy!: 'start' index is out of bounds for 'from' bytevector",
             INDEX_ERR);
-    if (from_end_idx < 0 || from_end_idx > from_bv_len)
+    }
+    if (from_end_idx < 0 || from_end_idx > from_bv_len) {
         return make_cell_error(
             "bytevector-copy!: 'end' index is out of bounds for 'from' bytevector",
             INDEX_ERR);
-    if (from_start_idx > from_end_idx)
+    }
+    if (from_start_idx > from_end_idx) {
         return make_cell_error(
             "bytevector-copy!: 'start' index cannot be greater than 'end' index",
             INDEX_ERR);
+    }
 
     const int32_t num_bytes = from_end_idx - from_start_idx;
     for (int i = to_start_idx; i < to_start_idx + num_bytes; i++) {
@@ -651,19 +665,19 @@ Cell* builtin_bytevector_copy_bang(const Lex* e, const Cell* a)
 
 /* (bytevector-append bytevector ...)
 * Returns a newly allocated bytevector whose elements are
-the concatenation of the elements in the given bytevectors. */
+the concatenation of the elements in the given byte vectors. */
 Cell* builtin_bytevector_append(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = check_arg_types(a, CELL_BYTEVECTOR, "bytevector-append");
-    if (err) return err;
+    if (err) { return err; }
 
     if (a->count == 0) {
         return make_cell_bytevector(BV_U8, 0);
     }
 
     const bv_t type = a->cell[0]->bv->type;
-    Cell* vec = make_cell_bytevector(type, 8);
+    Cell* vec = make_cell_bytevector(type, INIT_BV_CAPACITY);
     for (int i = 0; i < a->count; i++) {
         const Cell* bv = a->cell[i];
         if (bv->bv->type != type) {
@@ -675,13 +689,13 @@ Cell* builtin_bytevector_append(const Lex* e, const Cell* a)
             if (type == BV_F32 || type == BV_F64) {
                 const long double byte = BV_FP_OPS[type].get(bv, j);
                 err = fp_byte_check(type, byte);
-                if (err) return err;
+                if (err) { return err; }
                 BV_FP_OPS[vec->bv->type].append(vec, byte);
                 continue;
             }
             const int64_t byte =  BV_INT_OPS[type].get(bv, j);
             err = int_byte_check(type, byte);
-            if (err) return err;
+            if (err) { return err; }
             BV_INT_OPS[vec->bv->type].append(vec, byte);
         }
     }
@@ -698,7 +712,7 @@ Cell* builtin_utf8_string(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_RANGE(a, 1, 3, "utf8->string");
-    if (err) return err;
+    if (err) { return err; }
 
     const Cell* bv = a->cell[0];
     if (bv->type != CELL_BYTEVECTOR || bv->bv->type != BV_U8) {
@@ -755,7 +769,7 @@ Cell* builtin_utf8_string(const Lex* e, const Cell* a)
      * A continuation byte (0x80-0xBF) is not a valid start byte. */
     if (byte_count > 0) {
         const uint8_t lead = (uint8_t)BV_INT_OPS[BV_U8].get(bv, start);
-        if ((lead & 0xC0) == 0x80) {
+        if ((lead & UTF8_MASK_TAG) == UTF8_CONT_TAG) {
             return make_cell_error(
                 "utf8->string: start is not on a codepoint boundary",
                 VALUE_ERR);
@@ -783,7 +797,7 @@ Cell* builtin_string_utf8(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_RANGE(a, 1, 3, "string->utf8");
-    if (err) return err;
+    if (err) { return err; }
     if (a->cell[0]->type != CELL_STRING) {
         return make_cell_error(
             "string->utf8: arg 1 must be a string",
@@ -841,7 +855,7 @@ Cell* builtin_string_utf8(const Lex* e, const Cell* a)
     Cell* bv = make_cell_bytevector(BV_U8, end_byte - start_byte);
     for (int32_t i = start_byte; i < end_byte; i++) {
         err = int_byte_check(BV_U8, (uint8_t)the_s[i]);
-        if (err) return err;
+        if (err) { return err; }
         BV_INT_OPS[bv->bv->type].append(bv, (uint8_t)the_s[i]);
     }
     return bv;

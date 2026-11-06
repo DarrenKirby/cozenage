@@ -301,7 +301,7 @@ Cell* builtin_eq(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2, "eq?");
-    if (err) return err;
+    if (err) { return err; }
 
     const Cell* x = a->cell[0];
     const Cell* y = a->cell[1];
@@ -320,15 +320,15 @@ Cell* builtin_eq(const Lex* e, const Cell* a)
 Cell* builtin_eqv(const Lex* e, const Cell* a)
 {
     Cell* err = CHECK_ARITY_EXACT(a, 2, "eqv?");
-    if (err) return err;
+    if (err) { return err; }
 
     const Cell* x = a->cell[0];
     const Cell* y = a->cell[1];
 
-    if (x->type != y->type) return False_Obj;
+    if (x->type != y->type) { return False_Obj; }
 
-    /* Just kick numbers over to '='. */
-    constexpr int mask = CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX|CELL_BIGINT|CELL_BIGRAT;
+    /* Already compared types, kick numbers over to '='. */
+    constexpr uint32_t mask = CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX|CELL_BIGINT|CELL_BIGRAT;
     if (x->type & mask) {
         return builtin_eq_op(e, make_sexpr_len2(x, y));
     }
@@ -352,11 +352,11 @@ static Cell* check_if_lists_are_equal(const Lex* e, Cell* x, Cell* y)
     size_t steps = 0;
 
     while (x->type == CELL_PAIR && y->type == CELL_PAIR) {
-        if (x == y) return True_Obj;        /* shared tail: identical from here on */
+        if (x == y) { return True_Obj; }        /* shared tail: identical from here on */
 
         Cell* r = val_equal(e, x->car, y->car);
-        if (r->type == CELL_ERROR) return r;
-        if (r == False_Obj) return False_Obj;
+        if (r->type == CELL_ERROR) { return r; }
+        if (r == False_Obj) { return False_Obj; }
 
         x = x->cdr;
         y = y->cdr;
@@ -364,11 +364,11 @@ static Cell* check_if_lists_are_equal(const Lex* e, Cell* x, Cell* y)
         /* Floyd-style cycle check: slow pair advances at half speed. If the
          * (x, y) pair of positions repeats, every remaining comparison repeats
          * one we've already passed, so the lists are equal. */
-        if ((++steps & 1) == 0) {
+        if ((++steps & 1U) == 0) {
             slow_x = slow_x->cdr;
             slow_y = slow_y->cdr;
         }
-        if (x == slow_x && y == slow_y) return True_Obj;
+        if (x == slow_x && y == slow_y) { return True_Obj; }
     }
     /* Tails: NIL, or an improper tail */
     return val_equal(e, x, y);
@@ -384,8 +384,8 @@ static Cell* val_equal(const Lex* e, Cell* x, Cell* y)
             STACK_ERR);
     }
 
-    /* Just kick numbers over to '='. */
-    constexpr int mask = CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX|CELL_BIGINT|CELL_BIGRAT;
+    /* If both types are numbers, kick over to '='. */
+    constexpr uint32_t mask = CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX|CELL_BIGINT|CELL_BIGRAT;
     if (x->type & mask && y->type & mask) {
         /* 2 != 2.0, but 2 = 2/1. */
         if (x->exact != y->exact) {
@@ -423,10 +423,10 @@ static Cell* val_equal(const Lex* e, Cell* x, Cell* y)
             return check_if_lists_are_equal(e, x, y);
         case CELL_SEXPR:
         case CELL_VECTOR:
-            if (x->count != y->count) return False_Obj;
+            if (x->count != y->count) { return False_Obj; }
             for (int i = 0; i < x->count; i++) {
                 Cell* eq = val_equal(e, x->cell[i], y->cell[i]);
-                if (eq->type == CELL_ERROR) return eq;
+                if (eq->type == CELL_ERROR) { return eq; }
                 if (eq == False_Obj) { return False_Obj; }
             }
             return True_Obj;
@@ -444,6 +444,6 @@ static Cell* val_equal(const Lex* e, Cell* x, Cell* y)
 Cell* builtin_equal(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2, "equal?");
-    if (err) return err;
+    if (err) { return err; }
     return val_equal(e, a->cell[0], a->cell[1]);
 }

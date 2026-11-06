@@ -102,7 +102,7 @@ int main(const int argc, char** argv)
         { .name = "help",    .has_arg = no_argument,       .flag = nullptr, .val = 'h' },
         { .name = "version", .has_arg = no_argument,       .flag = nullptr, .val = 'V' },
         { .name = "library", .has_arg = required_argument, .flag = nullptr, .val = 'l' },
-        { .name = nullptr,   .has_arg = no_argument,       .flag = nullptr, .val = 0 }
+        { .name = nullptr,   .has_arg = no_argument,       .flag = nullptr, .val = 0 },
     };
 
     int opt;

@@ -22,11 +22,13 @@
 
 #include "types.h"
 
+#define BIGINT_BASE 10
+
 
 /* Flag for bigint_quo_rem(). */
 typedef enum : uint8_t {
     QR_QUOTIENT,
-    QR_REMAINDER
+    QR_REMAINDER,
 } qr_t;
 
 

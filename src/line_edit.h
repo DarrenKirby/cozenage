@@ -28,7 +28,7 @@ typedef enum {
     LE_LINE,        /* Normal line read. */
     LE_EOF,         /* Ctrl-D on empty line. */
     LE_INTERRUPT,   /* Ctrl-C. */
-    LE_ABORT        /* Ctrl-G. */
+    LE_ABORT,       /* Ctrl-G. */
 } le_status;
 
 

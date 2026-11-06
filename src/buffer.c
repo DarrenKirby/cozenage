@@ -116,7 +116,7 @@ void sb_append_fmt(str_buf_t *sb, const char *fmt, ...)
     /* Try to print into the existing space. */
     va_start(args, fmt);
     /* vsnprintf returns the number of chars that would have been written. */
-    int n = vsnprintf(sb->buffer + sb->length,
+    const int n = vsnprintf(sb->buffer + sb->length,
                       sb->capacity - sb->length,
                       fmt,
                       args);
@@ -137,7 +137,7 @@ void sb_append_fmt(str_buf_t *sb, const char *fmt, ...)
 
         /* Try again with a guaranteed-large-enough buffer. */
         va_start(args, fmt);
-        int n2 = vsnprintf(sb->buffer + sb->length,
+        const int n2 = vsnprintf(sb->buffer + sb->length,
                   sb->capacity - sb->length,
                   fmt,
                   args);

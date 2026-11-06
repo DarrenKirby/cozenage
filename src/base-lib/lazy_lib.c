@@ -111,10 +111,10 @@ static Cell* lazy_force(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "force");
-    if (err) return err;
+    if (err) { return err; }
 
     Cell* p = a->cell[0];
-    if (p->type != CELL_PROMISE) return p;
+    if (p->type != CELL_PROMISE)  { return p; }
 
     if (p->promise->status == RUNNING) {
         return make_cell_error("force: re-entrant promise", GEN_ERR);
@@ -170,7 +170,7 @@ static Cell* lazy_make_promise(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "make-promise");
-    if (err) return err;
+    if (err) { return err; }
 
     if (a->cell[0]->type == CELL_PROMISE) {
         return a->cell[0];
@@ -189,7 +189,7 @@ static Cell* lazy_promise_pred(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "promise?");
-    if (err) return err;
+    if (err) { return err; }
 
     if (a->cell[0]->type != CELL_PROMISE) {
         return False_Obj;
@@ -204,7 +204,7 @@ static Cell* lazy_stream_pred(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "stream?");
-    if (err) return err;
+    if (err) { return err; }
 
     if (a->cell[0]->type != CELL_STREAM) {
         return False_Obj;
@@ -217,7 +217,7 @@ static Cell* lazy_stream_pred(const Lex* e, const Cell* a)
 static Cell* lazy_head(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "head");
-    if (err) return err;
+    if (err) { return err; }
 
     if (a->cell[0]->type != CELL_STREAM) {
         return make_cell_error(
@@ -231,7 +231,7 @@ static Cell* lazy_head(const Lex* e, const Cell* a) {
 /* (tail stream) -> stream.cdr */
 static Cell* lazy_tail(const Lex* e, const Cell* a) {
     Cell* err = CHECK_ARITY_EXACT(a, 1, "tail");
-    if (err) return err;
+    if (err) { return err; }
     if (a->cell[0]->type == CELL_NIL) {
         return Nil_Obj;
     }
@@ -250,7 +250,7 @@ static Cell* lazy_tail(const Lex* e, const Cell* a) {
 /* (at n stream) -> value */
 static Cell* lazy_at(const Lex* e, const Cell* a) {
     Cell* err = CHECK_ARITY_EXACT(a, 2, "at");
-    if (err) return err;
+    if (err) { return err; }
     if (a->cell[0]->type != CELL_INTEGER) {
         return make_cell_error(\
             "at: arg1 must be a positive integer",
@@ -276,7 +276,7 @@ static Cell* lazy_at(const Lex* e, const Cell* a) {
          * The result of forcing the tail MUST be another stream. */
         s = lazy_force(e, make_sexpr_len1(s->tail));
 
-        if (s->type == CELL_ERROR) return s;
+        if (s->type == CELL_ERROR) { return s; }
         n--;
     }
 
@@ -293,7 +293,7 @@ static Cell* lazy_at(const Lex* e, const Cell* a) {
  * */
 static Cell* lazy_take(const Lex* e, const Cell* a) {
     Cell* err = CHECK_ARITY_EXACT(a, 2, "take");
-    if (err) return err;
+    if (err) { return err; }
 
     if (a->cell[0]->type != CELL_INTEGER) {
         return make_cell_error(\
@@ -316,15 +316,15 @@ static Cell* lazy_take(const Lex* e, const Cell* a) {
         /* Build the result list node. */
         Cell* new_node = make_cell_pair(s->head, Nil_Obj);
 
-        if (head == Nil_Obj) head = new_node;
-        else tail->cdr = new_node;
+        if (head == Nil_Obj) { head = new_node; }
+        else { tail->cdr = new_node; }
         tail = new_node;
 
         n--;
         if (n > 0) {
             /* Step the stream. */
             s = lazy_tail(e, make_sexpr_len1(s));
-            if (s->type == CELL_ERROR) return s;
+            if (s->type == CELL_ERROR) { return s; }
         }
     }
     return head;
@@ -334,7 +334,7 @@ static Cell* lazy_take(const Lex* e, const Cell* a) {
 /* (drop n stream) -> stream */
 static Cell* lazy_drop(const Lex* e, const Cell* a) {
     Cell* err = CHECK_ARITY_EXACT(a, 2, "drop");
-    if (err) return err;
+    if (err) { return err; }
 
     if (a->cell[0]->type != CELL_INTEGER) {
         return make_cell_error(\
@@ -363,11 +363,11 @@ static Cell* lazy_drop(const Lex* e, const Cell* a) {
 static Cell* lazy_list_to_stream(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "list->stream");
-    if (err) return err;
+    if (err) { return err; }
 
-    Cell* lst = a->cell[0];
+    const Cell* lst = a->cell[0];
 
-    if (lst->type == CELL_NIL) return Nil_Obj;
+    if (lst->type == CELL_NIL) { return Nil_Obj; }
 
     if (lst->type != CELL_PAIR) {
         return make_cell_error(
@@ -393,7 +393,7 @@ static Cell* lazy_list_to_stream(const Lex* e, const Cell* a) {
 static Cell* lazy_list_to_stream_tail(const Lex* e, const Cell* a) {
     Cell* lst = a->cell[0];
 
-    if (lst->type == CELL_NIL) return Nil_Obj;
+    if (lst->type == CELL_NIL) { return Nil_Obj; }
 
     if (lst->type != CELL_PAIR) {
         return make_cell_error(
@@ -412,7 +412,7 @@ static Cell* lazy_list_to_stream_tail(const Lex* e, const Cell* a) {
 static Cell* lazy_iterate(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2, "iterate");
-    if (err) return err;
+    if (err) { return err; }
 
     Cell* proc = a->cell[0];
     Cell* seed = a->cell[1];
@@ -445,7 +445,7 @@ static Cell* lazy_iterate_tail(const Lex* e, const Cell* a) {
 
     /* Apply proc to seed to get the next value. */
     Cell* next = coz_apply_and_get_val(proc, make_sexpr_len1(seed), e);
-    if (next->type == CELL_ERROR) return next;
+    if (next->type == CELL_ERROR) { return next; }
 
     Cell* args = make_cell_sexpr();
     cell_add(args, proc);
@@ -463,8 +463,8 @@ static Cell* lazy_select_from_tail(const Lex* e, const Cell* a) {
 
     /* Force the tail to get the next stream node. */
     Cell* next = lazy_force(e, make_sexpr_len1(s->tail));
-    if (next->type == CELL_ERROR) return next;
-    if (next->type == CELL_NIL)   return Nil_Obj;
+    if (next->type == CELL_ERROR) { return next; }
+    if (next->type == CELL_NIL)   { return Nil_Obj; }
 
     /* Now run select from there. */
     Cell* args = make_cell_sexpr();
@@ -478,12 +478,12 @@ Cell* lazy_select(const Lex* e, const Cell* a) {
     Cell* pred = a->cell[0];
     Cell* s = a->cell[1];
 
-    if (s->type == CELL_NIL) return Nil_Obj;
+    if (s->type == CELL_NIL) { return Nil_Obj; }
 
     while (s->type == CELL_STREAM) {
         /* Test the current head */
         Cell* res = coz_apply_and_get_val(pred, make_sexpr_len1(s->head), e);
-        if (res->type == CELL_ERROR) return res;
+        if (res->type == CELL_ERROR) { return res; }
 
         if (res == True_Obj) {
             /* We found a match at node 's'...
@@ -506,8 +506,8 @@ Cell* lazy_select(const Lex* e, const Cell* a) {
         /* Force the promise in the tail to get the next stream node */
         s = lazy_force(e, make_sexpr_len1(s->tail));
 
-        if (s->type == CELL_ERROR) return s;
-        if (s->type == CELL_NIL) return Nil_Obj;
+        if (s->type == CELL_ERROR) { return s; }
+        if (s->type == CELL_NIL) { return Nil_Obj; }
 
         /* If s->type is not CELL_STREAM here, the user gave us a
            malformed stream (a promise that doesn't evaluate to a stream). */
@@ -525,12 +525,12 @@ Cell* lazy_select(const Lex* e, const Cell* a) {
  * Returns a new stream by applying proc to each element of stream. */
 static Cell* lazy_collect(const Lex* e, const Cell* a) {
     Cell* err = CHECK_ARITY_EXACT(a, 2, "collect");
-    if (err) return err;
+    if (err) { return err; }
 
     Cell* proc = a->cell[0];
     Cell* s = a->cell[1];
 
-    if (s->type == CELL_NIL) return Nil_Obj;
+    if (s->type == CELL_NIL) { return Nil_Obj; }
 
     if (s->type != CELL_STREAM) {
         return make_cell_error(
@@ -540,7 +540,7 @@ static Cell* lazy_collect(const Lex* e, const Cell* a) {
 
     /* Apply proc to the head eagerly. */
     Cell* new_head = coz_apply_and_get_val(proc, make_sexpr_len1(s->head), e);
-    if (new_head->type == CELL_ERROR) return new_head;
+    if (new_head->type == CELL_ERROR) { return new_head; }
 
     /* Build a native thunk for the tail. */
     Cell* tail_args = make_cell_sexpr();
@@ -564,8 +564,8 @@ static Cell* lazy_collect_from_tail(const Lex* e, const Cell* a) {
 
     /* Force the tail to get the next stream node. */
     Cell* next = lazy_force(e, make_sexpr_len1(s->tail));
-    if (next->type == CELL_ERROR) return next;
-    if (next->type == CELL_NIL)   return Nil_Obj;
+    if (next->type == CELL_ERROR) { return next; }
+    if (next->type == CELL_NIL)   { return Nil_Obj; }
 
     if (next->type != CELL_STREAM) {
         return make_cell_error(
@@ -585,12 +585,12 @@ static Cell* lazy_collect_from_tail(const Lex* e, const Cell* a) {
 static Cell* lazy_weave(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2, "weave");
-    if (err) return err;
+    if (err) { return err; }
 
     Cell* s1 = a->cell[0];
     Cell* s2 = a->cell[1];
 
-    if (s1->type == CELL_NIL || s2->type == CELL_NIL) return Nil_Obj;
+    if (s1->type == CELL_NIL || s2->type == CELL_NIL) { return Nil_Obj; }
 
     if (s1->type != CELL_STREAM) {
         return make_cell_error(
@@ -628,13 +628,13 @@ static Cell* lazy_weave_tail(const Lex* e, const Cell* a) {
 
     /* Force both tails. */
     Cell* next1 = lazy_force(e, make_sexpr_len1(s1->tail));
-    if (next1->type == CELL_ERROR) return next1;
+    if (next1->type == CELL_ERROR) { return next1; }
 
     Cell* next2 = lazy_force(e, make_sexpr_len1(s2->tail));
-    if (next2->type == CELL_ERROR) return next2;
+    if (next2->type == CELL_ERROR) { return next2; }
 
     /* If either stream is exhausted, we're done. */
-    if (next1->type == CELL_NIL || next2->type == CELL_NIL) return Nil_Obj;
+    if (next1->type == CELL_NIL || next2->type == CELL_NIL) { return Nil_Obj; }
 
     Cell* args = make_cell_sexpr();
     cell_add(args, next1);
@@ -648,7 +648,7 @@ static Cell* lazy_weave_tail(const Lex* e, const Cell* a) {
  * WARNING: Diverges on infinite streams. Use (take n stream) first. */
 static Cell* lazy_reduce(const Lex* e, const Cell* a) {
     Cell* err = CHECK_ARITY_EXACT(a, 3, "reduce");
-    if (err) return err;
+    if (err) { return err; }
 
     const Cell* proc = a->cell[0];
     Cell* acc = a->cell[1];
@@ -672,17 +672,17 @@ static Cell* lazy_reduce(const Lex* e, const Cell* a) {
         if (s->type == CELL_STREAM) {
             cell_add(args, s->head);
             acc = coz_apply_and_get_val(proc, args, e);
-            if (acc->type == CELL_ERROR) return acc;
+            if (acc->type == CELL_ERROR) { return acc; }
             s = lazy_force(e, make_sexpr_len1(s->tail));
         } else {
             /* CELL_PAIR — traverse as a regular list. */
             cell_add(args, s->car);
             acc = coz_apply_and_get_val(proc, args, e);
-            if (acc->type == CELL_ERROR) return acc;
+            if (acc->type == CELL_ERROR) { return acc; }
             s = s->cdr;
         }
 
-        if (s->type == CELL_ERROR) return s;
+        if (s->type == CELL_ERROR) { return s; }
     }
     return acc;
 }

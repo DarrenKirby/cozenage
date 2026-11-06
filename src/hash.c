@@ -24,6 +24,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define MAX_TABLE_LOAD 70
+
 
 /* Note:
  * This hash table implementation is largely based on the work of Ben Hoyt[0] and James Routely[1].
@@ -36,7 +38,8 @@
 
 /* Mark a deleted item with sentinel 'tombstone' value so that the get
  * collision chain still works, but set can use the free slot. */
-static ht_item HT_DELETED_ITEM = { (char*) -1, nullptr };
+static char tombstone_key;
+static ht_item HT_DELETED_ITEM = { .key = &tombstone_key, .value = nullptr };
 
 /* Initialize a hash table. Initial capacity is directly provided
  * by the caller, so that hash tables for different purposes can be
@@ -102,12 +105,12 @@ Cell* ht_get(const ht_table* table, const char* key)
     /* Loop till we find an empty entry. */
     while (table->items[index].key != NULL) {
         /* Keep iterating if slot marked as deleted. */
-        if (table->items[index].key != HT_DELETED_ITEM.key) {
-            if (strcmp(key, table->items[index].key) == 0) {
+        if ((table->items[index].key != HT_DELETED_ITEM.key) &&
+            (strcmp(key, table->items[index].key) == 0)) {
                 /* Found key, return value. */
                 return table->items[index].value;
-            }
         }
+
         /* Key wasn't in this slot, move to next (linear probing). */
         index++;
         if (index >= table->capacity) {
@@ -186,16 +189,14 @@ static bool ht_resize(ht_table* table)
 
 const char* ht_set(ht_table* table, const char* key, Cell* value)
 {
-    if (value == NULL) {
-        return nullptr;
-    }
+    if (value == NULL) { return nullptr; }
+
     /* Resize table if load >= 70 (0.7) */
     const size_t load = table->count * 100 / table->capacity;
-    if (load >= 70) {
-        if (!ht_resize(table)) {
+    if ((load >= MAX_TABLE_LOAD) && (!ht_resize(table)))  {
             return nullptr;
-        }
     }
+
     /* Set entry and update count. */
     return ht_set_item(table->items, table->capacity, key, value,
                         &table->count);
@@ -205,19 +206,19 @@ const char* ht_set(ht_table* table, const char* key, Cell* value)
 void ht_delete(ht_table* table, const char* key)
 {
     const uint64_t hash = hash_string_key(key);
-    size_t index = hash & (uint64_t)(table->capacity - 1);
+    size_t index = hash & (table->capacity - 1);
 
     while (table->items[index].key != NULL) {
-        if (table->items[index].key != HT_DELETED_ITEM.key) {
-            if (strcmp(key, table->items[index].key) == 0) {
+        if ((table->items[index].key != HT_DELETED_ITEM.key) &&
+            (strcmp(key, table->items[index].key) == 0)) {
                 /* Found item. Free its key (which we own)
                  * and mark the slot as deleted. */
                 GC_free(table->items[index].key);
                 table->items[index] = HT_DELETED_ITEM;
                 table->count--;
                 return; /* Item deleted, we are done. */
-            }
         }
+
         /* Move to next slot */
         index++;
         if (index >= table->capacity) {

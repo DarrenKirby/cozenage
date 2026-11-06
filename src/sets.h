@@ -21,8 +21,6 @@
 #ifndef COZENAGE_SETS_H
 #define COZENAGE_SETS_H
 
-#include "cell.h"
-
 /* Internal helpers. */
 Cell* copy_hash_table(const Cell* t);
 Cell* clear_hash_table(Cell* t);

@@ -43,9 +43,9 @@ Cell* builtin_char_to_int(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "char->integer");
-    if (err) return err;
+    if (err) { return err; }
     err = check_arg_types(a, CELL_CHAR, "char->integer");
-    if (err) return err;
+    if (err) { return err; }
 
     return make_cell_integer(a->cell[0]->char_v);
 }
@@ -58,17 +58,17 @@ Cell* builtin_int_to_char(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "integer->char");
-    if (err) return err;
+    if (err) { return err; }
     err = check_arg_types(a, CELL_INTEGER, "integer->char");
-    if (err) return err;
+    if (err) { return err; }
 
     const UChar32 val = (int)a->cell[0]->integer_v;
-    if (val >= 0xD800 && val <= 0xDFFF) {
+    if (val >= (int)SURROGATE_MIN && val <= (int)SURROGATE_MAX) {
         return make_cell_error(
             "integer->char: invalid code point (surrogate)",
             VALUE_ERR);
     }
-    if (val < 0 || val > 0x10FFFF) {
+    if (val < 0 || val > (int)MAX_VALID_CODEPOINT) {
         return make_cell_error(
             "integer->char: invalid code point",
             VALUE_ERR);
@@ -86,7 +86,7 @@ Cell* builtin_char_equal_pred(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = check_arg_types(a, CELL_CHAR, "char=?");
-    if (err) return err;
+    if (err) { return err; }
 
     Cell** cells = GC_MALLOC(sizeof(Cell*) * a->count);
     for (int i = 0; i < a->count; i++) {
@@ -103,7 +103,7 @@ Cell* builtin_char_lt_pred(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = check_arg_types(a, CELL_CHAR, "char<?");
-    if (err) return err;
+    if (err) { return err; }
 
     Cell** cells = GC_MALLOC(sizeof(Cell*) * a->count);
     for (int i = 0; i < a->count; i++) {
@@ -120,7 +120,7 @@ Cell* builtin_char_lte_pred(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = check_arg_types(a, CELL_CHAR, "char<=?");
-    if (err) return err;
+    if (err) { return err; }
 
     Cell** cells = GC_MALLOC(sizeof(Cell*) * a->count);
     for (int i = 0; i < a->count; i++) {
@@ -137,7 +137,7 @@ Cell* builtin_char_gt_pred(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = check_arg_types(a, CELL_CHAR, "char>?");
-    if (err) return err;
+    if (err) { return err; }
 
     Cell** cells = GC_MALLOC(sizeof(Cell*) * a->count);
     for (int i = 0; i < a->count; i++) {
@@ -154,7 +154,7 @@ Cell* builtin_char_gte_pred(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = check_arg_types(a, CELL_CHAR, "char>=?");
-    if (err) return err;
+    if (err) { return err; }
 
     Cell** cells = GC_MALLOC(sizeof(Cell*) * a->count);
     for (int i = 0; i < a->count; i++) {
@@ -179,7 +179,7 @@ Cell* builtin_char_alphabetic(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "char-alphabetic?");
-    if (err) return err;
+    if (err) { return err; }
     if (a->cell[0]->type != CELL_CHAR) {
         return make_cell_error(
             "char-alphabetic?: arg 1 must be a char",
@@ -194,7 +194,7 @@ Cell* builtin_char_whitespace(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "char-whitespace?");
-    if (err) return err;
+    if (err) { return err; }
     if (a->cell[0]->type != CELL_CHAR) {
         return make_cell_error(
             "char-whitespace?: arg 1 must be a char",
@@ -209,7 +209,7 @@ Cell* builtin_char_numeric(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "char-numeric?");
-    if (err) return err;
+    if (err) { return err; }
     if (a->cell[0]->type != CELL_CHAR) {
         return make_cell_error(
             "char-numeric?: arg 1 must be a char",
@@ -224,7 +224,7 @@ Cell* builtin_char_upper_case(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "char-upper-case?");
-    if (err) return err;
+    if (err) { return err; }
     if (a->cell[0]->type != CELL_CHAR) {
         return make_cell_error(
             "char-upper-case?: arg 1 must be a char",
@@ -238,7 +238,7 @@ Cell* builtin_char_upper_case(const Lex* e, const Cell* a)
 Cell* builtin_char_lower_case(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "char-lower-case?");
-    if (err) return err;
+    if (err) { return err; }
     if (a->cell[0]->type != CELL_CHAR) {
         return make_cell_error(
             "char-lower-case?: arg 1 must be a char",
@@ -257,7 +257,7 @@ Cell* builtin_char_upcase(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "char-upcase");
-    if (err) return err;
+    if (err) { return err; }
     if (a->cell[0]->type != CELL_CHAR) {
         return make_cell_error(
             "char-upcase: arg 1 must be a char",
@@ -276,7 +276,7 @@ Cell* builtin_char_downcase(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "char-downcase");
-    if (err) return err;
+    if (err) { return err; }
     if (a->cell[0]->type != CELL_CHAR) {
         return make_cell_error(
             "char-downcase: arg 1 must be a char",
@@ -295,7 +295,7 @@ Cell* builtin_char_foldcase(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "char-foldcase");
-    if (err) return err;
+    if (err) { return err; }
     if (a->cell[0]->type != CELL_CHAR) {
         return make_cell_error(
             "char-foldcase: arg 1 must be a char",
@@ -313,7 +313,7 @@ Cell* builtin_digit_value(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "digit-value");
-    if (err) return err;
+    if (err) { return err; }
     if (a->cell[0]->type != CELL_CHAR) {
         return make_cell_error(
             "digit-value: arg 1 must be a char",
@@ -338,7 +338,7 @@ Cell* builtin_char_equal_ci(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = check_arg_types(a, CELL_CHAR, "char-ci=?");
-    if (err) return err;
+    if (err) { return err; }
 
     Cell** cells = GC_MALLOC(sizeof(Cell*) * a->count);
     for (int i = 0; i < a->count; i++) {
@@ -357,7 +357,7 @@ Cell* builtin_char_lt_ci(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = check_arg_types(a, CELL_CHAR, "char-ci<?");
-    if (err) return err;
+    if (err) { return err; }
 
     Cell** cells = GC_MALLOC(sizeof(Cell*) * a->count);
     for (int i = 0; i < a->count; i++) {
@@ -376,7 +376,7 @@ Cell* builtin_char_lte_ci(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = check_arg_types(a, CELL_CHAR, "char-ci<=?");
-    if (err) return err;
+    if (err) { return err; }
 
     Cell** cells = GC_MALLOC(sizeof(Cell*) * a->count);
     for (int i = 0; i < a->count; i++) {
@@ -395,7 +395,7 @@ Cell* builtin_char_gt_ci(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = check_arg_types(a, CELL_CHAR, "char-ci>?");
-    if (err) return err;
+    if (err) { return err; }
 
     Cell** cells = GC_MALLOC(sizeof(Cell*) * a->count);
     for (int i = 0; i < a->count; i++) {
@@ -414,7 +414,7 @@ Cell* builtin_char_gte_ci(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = check_arg_types(a, CELL_CHAR, "char-ci>=?");
-    if (err) return err;
+    if (err) { return err; }
 
     Cell** cells = GC_MALLOC(sizeof(Cell*) * a->count);
     for (int i = 0; i < a->count; i++) {

@@ -25,7 +25,7 @@
 
 typedef enum {
     ACTION_RETURN,   /* The handler produced a final value. Exit the eval loop. */
-    ACTION_CONTINUE  /* The handler produced a new expression. Continue the loop. */
+    ACTION_CONTINUE, /* The handler produced a new expression. Continue the loop. */
 } HandlerAction;
 
 

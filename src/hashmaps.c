@@ -58,7 +58,7 @@ Cell* builtin_hash_copy(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "hash-copy");
-    if (err) return err;
+    if (err) { return err; }
 
     const Cell* hash = a->cell[0];
     if (hash->type != CELL_HASH) {
@@ -76,7 +76,7 @@ Cell* builtin_hash_clear(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "hash-clear!");
-    if (err) return err;
+    if (err) { return err; }
 
     Cell* hash = a->cell[0];
     if (hash->type != CELL_HASH) {
@@ -96,7 +96,7 @@ Cell* builtin_hash_get(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_RANGE(a, 2, 3, "hash-get");
-    if (err) return err;
+    if (err) { return err; }
 
     const Cell* hash = a->cell[0];
     const Cell* obj = a->cell[1];
@@ -132,7 +132,7 @@ Cell* builtin_hash_add(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 3, "hash-add!");
-    if (err) return err;
+    if (err) { return err; }
 
     Cell* hash = a->cell[0];
     if (hash->type != CELL_HASH) {
@@ -166,7 +166,7 @@ Cell* builtin_hash_remove(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_RANGE(a, 2, 3, "hash-remove!");
-    if (err) return err;
+    if (err) { return err; }
 
     Cell* hash = a->cell[0];
     if (hash->type != CELL_HASH) {
@@ -202,7 +202,7 @@ Cell* builtin_hash_keys(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "hash-keys");
-    if (err) return err;
+    if (err) { return err; }
     const Cell* hash = a->cell[0];
     if (hash->type != CELL_HASH) {
         return make_cell_error(
@@ -226,7 +226,7 @@ Cell* builtin_hash_values(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "hash-values");
-    if (err) return err;
+    if (err) { return err; }
     const Cell* hash = a->cell[0];
     if (hash->type != CELL_HASH) {
         return make_cell_error(
@@ -251,7 +251,7 @@ Cell* builtin_hash_to_alist(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "hash->alist");
-    if (err) return err;
+    if (err) { return err; }
     const Cell* hash = a->cell[0];
     if (hash->type != CELL_HASH) {
         return make_cell_error(
@@ -277,7 +277,7 @@ Cell* builtin_alist_to_hash(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "alist->hash");
-    if (err) return err;
+    if (err) { return err; }
     const Cell* alist = a->cell[0];
     if (alist->type != CELL_PAIR || a->cell[0]->count == -1) {
         return make_cell_error(
@@ -307,7 +307,7 @@ Cell* builtin_alist_to_hash(const Lex* e, const Cell* a)
 Cell* builtin_hash_keys_map(const Lex* e, const Cell* a)
 {
     Cell* err = CHECK_ARITY_EXACT(a, 2, "hash-keys-map");
-    if (err) return err;
+    if (err) { return err; }
 
     const Cell* proc = a->cell[0];
     const Cell* hash = a->cell[1];
@@ -333,7 +333,7 @@ Cell* builtin_hash_keys_map(const Lex* e, const Cell* a)
 Cell* builtin_hash_keys_foreach(const Lex* e, const Cell* a)
 {
     Cell* err = CHECK_ARITY_EXACT(a, 2, "hash-keys-foreach");
-    if (err) return err;
+    if (err) { return err; }
 
     const Cell* proc = a->cell[0];
     const Cell* hash = a->cell[1];
@@ -358,7 +358,7 @@ Cell* builtin_hash_keys_foreach(const Lex* e, const Cell* a)
 Cell* builtin_hash_values_map(const Lex* e, const Cell* a)
 {
     Cell* err = CHECK_ARITY_EXACT(a, 2, "hash-values-map");
-    if (err) return err;
+    if (err) { return err; }
 
     const Cell* proc = a->cell[0];
     const Cell* hash = a->cell[1];
@@ -384,7 +384,7 @@ Cell* builtin_hash_values_map(const Lex* e, const Cell* a)
 Cell* builtin_hash_values_foreach(const Lex* e, const Cell* a)
 {
     Cell* err = CHECK_ARITY_EXACT(a, 2, "hash-values-foreach");
-    if (err) return err;
+    if (err) { return err; }
 
     const Cell* proc = a->cell[0];
     const Cell* hash = a->cell[1];
@@ -420,10 +420,10 @@ static Cell* map_foreach(const Cell* proc, const Cell* h_table, const Lex* e, co
             val = coz_apply_and_get_val(proc, make_sexpr_len2(it.key, it.value), e);
         }
         /* Propagate errors. */
-        if (val && val->type == CELL_ERROR) return val;
+        if (val && val->type == CELL_ERROR) { return val; }
         if (ret_res) {
             /* Ignore unspecified results. */
-            if (val == USP_Obj) continue;
+            if (val == USP_Obj) { continue; }
             cell_add(result, val);
         }
     }
@@ -440,7 +440,7 @@ static Cell* map_foreach(const Cell* proc, const Cell* h_table, const Lex* e, co
 Cell* builtin_hash_items_map(const Lex* e, const Cell* a)
 {
     Cell* err = CHECK_ARITY_EXACT(a, 2, "hash-items-map");
-    if (err) return err;
+    if (err) { return err; }
 
     const Cell* proc = a->cell[0];
     const Cell* hash = a->cell[1];
@@ -466,7 +466,7 @@ Cell* builtin_hash_items_map(const Lex* e, const Cell* a)
 Cell* builtin_hash_items_foreach(const Lex* e, const Cell* a)
 {
     Cell* err = CHECK_ARITY_EXACT(a, 2, "hash-items-foreach");
-    if (err) return err;
+    if (err) { return err; }
 
     const Cell* proc = a->cell[0];
     const Cell* hash = a->cell[1];

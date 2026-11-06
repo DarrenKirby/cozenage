@@ -42,6 +42,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define BOOTSTRAP_ENV_INIT_SIZE 512
+#define WORKING_ENV_INIT_SIZE 32
+
 
 /* Bootstraps the core language. */
 Lex* lex_initialize_bootstrap_env()
@@ -51,7 +54,7 @@ Lex* lex_initialize_bootstrap_env()
     /* There are currently 311 builtin procedures loaded
      * into the bootstrap environment so initialize the
      * hash to the next largest power of 2, at ~60% cap. */
-    e->working = ht_create(512);
+    e->working = ht_create(BOOTSTRAP_ENV_INIT_SIZE);
     e->bootstrap = nullptr;
     return e;
 }
@@ -62,7 +65,7 @@ Lex* lex_initialize_working_env(ht_table* shared_bootstrap)
 {
     Lex* e = GC_MALLOC(sizeof(Lex));
     e->local = nullptr;
-    e->working = ht_create(32);
+    e->working = ht_create(WORKING_ENV_INIT_SIZE);
     e->bootstrap = shared_bootstrap;
     return e;
 }
@@ -90,7 +93,7 @@ Lex* new_child_env(const Lex* parent_env)
 /* Retrieve a Cell value from an environment. */
 Cell* lex_get(const Lex* e, const Cell* k)
 {
-    if (!e || !k || k->type != CELL_SYMBOL) return nullptr;
+    if (!e || !k || k->type != CELL_SYMBOL) { return nullptr; }
 
     /* Search the entire local environment chain iteratively. */
     const Ch_Env* current_frame = e->local;

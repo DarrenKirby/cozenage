@@ -21,9 +21,8 @@
  * a library of helper functions related to Cozenage types and procedures.
  * For example, it implements procedure arity and type checkers, numeric
  * promotion functions, helpers for building S-expr Cells of various lengths,
- * internal type converters, and finally, it implements the binary search
- * lookup table for mapping #\sigma style helpers to actual #\σ char literals.
- */
+ * internal type converters, and the binary search lookup table for mapping
+ * #\sigma style helpers to actual #\σ char literals. */
 
 #include "bignum.h"
 #include "cell.h"
@@ -40,6 +39,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unicode/ustring.h>
+
+#define FMT_ERR_BUF_SIZE 512
+#define CELL_MASK_NAME_BUF_SIZE 256
 
 #ifdef CRITERION_TEST_BUILD
     /* During tests, STATIC compiles away to nothing, exposing the functions */
@@ -61,91 +63,97 @@ char** g_argv;
 /* Global is_repl used by many. */
 bool is_repl;
 
+/*---------------------------------------------------------*
+ *      Type names to strings                              *
+ * --------------------------------------------------------*/
 
-const char* fmt_err(const char *fmt, ...)
+
+/* The name may be bad. Can use this to format
+ * a string anywhere a string is expected. */
+const char* fmt_err(const char* fmt, ...)
 {
-    static char buf[512];
+    char buf[FMT_ERR_BUF_SIZE];
     va_list args = {};
     va_start(args, fmt);
-    if (vsnprintf(buf, 512, fmt, args) < 0) {
-        fprintf(stderr, "vsnprintf failed!: %s\n", strerror(errno));
+    const int n = vsnprintf(buf, sizeof buf, fmt, args);
+    va_end(args);
+
+    if (n < 0) {
+        return "internal error: failed to format error message";
     }
-    return buf;
+    return GC_strdup(buf);
 }
 
 
-/* Turn a single type into a string (for error reporting). */
-const char* cell_type_name(const int t)
+typedef struct {
+    uint32_t    flag;
+    const char* name;
+} cell_type_entry;
+
+
+static const cell_type_entry CELL_TYPE_TABLE[] = {
+    { .flag = CELL_INTEGER,    .name = "integer" },
+    { .flag = CELL_REAL,       .name = "real" },
+    { .flag = CELL_RATIONAL,   .name = "rational" },
+    { .flag = CELL_COMPLEX,    .name = "complex" },
+    { .flag = CELL_BOOLEAN,    .name = "bool" },
+    { .flag = CELL_SYMBOL,     .name = "symbol" },
+    { .flag = CELL_STRING,     .name = "string" },
+    { .flag = CELL_SEXPR,      .name = "sexpr" },
+    { .flag = CELL_NIL,        .name = "nil" },
+    { .flag = CELL_PROC,       .name = "procedure" },
+    { .flag = CELL_ERROR,      .name = "error" },
+    { .flag = CELL_PAIR,       .name = "pair" },
+    { .flag = CELL_VECTOR,     .name = "vector" },
+    { .flag = CELL_CHAR,       .name = "char" },
+    { .flag = CELL_BYTEVECTOR, .name = "byte vector" },
+    { .flag = CELL_EOF,        .name = "eof" },
+    { .flag = CELL_BIGINT,     .name = "bigint" },
+    { .flag = CELL_BIGRAT,     .name = "bigrat" },
+    { .flag = CELL_BIGFLOAT,   .name = "bigfloat" },
+    { .flag = CELL_PROMISE,    .name = "promise" },
+    { .flag = CELL_STREAM,     .name = "stream" },
+    { .flag = CELL_MACRO,      .name = "macro" },
+};
+
+#define CELL_TYPE_TABLE_LEN (sizeof CELL_TYPE_TABLE / sizeof CELL_TYPE_TABLE[0])
+
+
+/* Turn a single type into a string. */
+const char* cell_type_name(const uint32_t t)
 {
-    switch (t) {
-        case CELL_INTEGER:     return "integer";
-        case CELL_REAL:        return "real";
-        case CELL_RATIONAL:    return "rational";
-        case CELL_COMPLEX:     return "complex";
-        case CELL_BOOLEAN:     return "bool";
-        case CELL_SYMBOL:      return "symbol";
-        case CELL_STRING:      return "string";
-        case CELL_SEXPR:       return "sexpr";
-        case CELL_NIL:         return "nil";
-        case CELL_PROC:        return "procedure";
-        case CELL_ERROR:       return "error";
-        case CELL_PAIR:        return "pair";
-        case CELL_VECTOR:      return "vector";
-        case CELL_CHAR:        return "char";
-        case CELL_BYTEVECTOR:  return "byte vector";
-        case CELL_EOF:         return "eof";
-        case CELL_BIGINT:      return "bigint";
-        case CELL_BIGRAT:      return "bigrat";
-        case CELL_BIGFLOAT:    return "bigfloat";
-        case CELL_PROMISE:     return "promise";
-        case CELL_STREAM:      return "stream";
-        case CELL_MACRO:       return "macro";
-        default:               return "unknown";
+    for (size_t i = 0; i < CELL_TYPE_TABLE_LEN; i++) {
+        if (CELL_TYPE_TABLE[i].flag == t) { return CELL_TYPE_TABLE[i].name; }
     }
+    return "unknown";
 }
 
 
 /* Turn a mask (possibly multiple flags ORed together) into a string
    e.g. (CELL_INTEGER | CELL_REAL) -> "int|real". */
-const char* cell_mask_types(const int mask)
+const char* cell_mask_types(const uint32_t mask)
 {
-    static char buf[128];  /* static to return pointer safely. */
-    buf[0] = '\0';
+    char buf[CELL_MASK_NAME_BUF_SIZE];
+    size_t pos = 0;
 
-    if (mask & CELL_INTEGER)     strcat(buf, "integer|");
-    if (mask & CELL_REAL)        strcat(buf, "real|");
-    if (mask & CELL_RATIONAL)    strcat(buf, "rational|");
-    if (mask & CELL_COMPLEX)     strcat(buf, "complex|");
-    if (mask & CELL_BOOLEAN)     strcat(buf, "bool|");
-    if (mask & CELL_SYMBOL)      strcat(buf, "symbol|");
-    if (mask & CELL_STRING)      strcat(buf, "string|");
-    if (mask & CELL_SEXPR)       strcat(buf, "sexpr|");
-    if (mask & CELL_NIL)         strcat(buf, "nil|");
-    if (mask & CELL_PROC)        strcat(buf, "procedure|");
-    if (mask & CELL_ERROR)       strcat(buf, "error|");
-    if (mask & CELL_PAIR)        strcat(buf, "pair|");
-    if (mask & CELL_VECTOR)      strcat(buf, "vector|");
-    if (mask & CELL_CHAR)        strcat(buf, "char|");
-    if (mask & CELL_BYTEVECTOR)  strcat(buf, "byte vector|");
-    if (mask & CELL_EOF)         strcat(buf, "eof|");
-    if (mask & CELL_BIGINT)      strcat(buf, "bigint|");
-    if (mask & CELL_BIGRAT)      strcat(buf, "bigrat|");
-    if (mask & CELL_BIGFLOAT)    strcat(buf, "bigfloat|");
-    if (mask & CELL_PROMISE)     strcat(buf, "promise|");
-    if (mask & CELL_STREAM)      strcat(buf, "stream|");
-    if (mask & CELL_MACRO)       strcat(buf, "macro|");
+    for (size_t i = 0; i < sizeof CELL_TYPE_TABLE / sizeof CELL_TYPE_TABLE[0]; i++) {
+        if (!(mask & CELL_TYPE_TABLE[i].flag)) { continue; }
 
-    /* Remove trailing '|'. */
-    const size_t len = strlen(buf);
-    if (len > 0 && buf[len-1] == '|') {
-        buf[len-1] = '\0';
+        const size_t n = strlen(CELL_TYPE_TABLE[i].name);
+        if (pos + n + 2 > sizeof buf) { break; }   /* room for '|' and the NUL */
+
+        if (pos > 0) { buf[pos++] = '|'; }
+        memcpy(buf + pos, CELL_TYPE_TABLE[i].name, n);
+        pos += n;
     }
-    return buf;
+    buf[pos] = '\0';
+    return GC_strdup(buf);
 }
 
 /*---------------------------------------------------------*
  *      Procedure argument arity and type validators       *
  * --------------------------------------------------------*/
+
 
 /* Return NULL if all args are valid, else return a CELL_ERROR. */
 Cell* check_arg_types(const Cell* a, const int mask, const char* fname)
@@ -191,15 +199,15 @@ Cell* check_arg_arity(const Cell* a, const int exact, const int min, const int m
 
 
 int check_lambda_arity(const Cell* proc, const int expected) {
-    if (proc->type != CELL_PROC) return 0;
+    if (proc->type != CELL_PROC) { return 0; }
 
     const Cell* formals = proc->lambda->formals;
 
     /* No arguments. */
-    if (formals->count == 0) return 0;
+    if (formals->count == 0) { return 0; }
 
     /* If formals is a symbol (variadic), it accepts anything. */
-    if (formals->type == CELL_SYMBOL) return 1;
+    if (formals->type == CELL_SYMBOL) { return 1; }
 
     int positional_count = 0;
     bool is_variadic = false;
@@ -225,7 +233,7 @@ int check_lambda_arity(const Cell* proc, const int expected) {
 
 
 /*---------------------------------------------------------*
- *       Helper functions for numeric type promotion       *
+ *       Numeric type promotion                            *
  * --------------------------------------------------------*/
 
 /* Convertors. */
@@ -267,7 +275,7 @@ STATIC Cell* to_complex(Cell* v)
 
 STATIC Cell* int_to_bigint(const Cell* v)
 {
-    return make_cell_bigint(nullptr, v, 10);
+    return make_cell_bigint(nullptr, v, BIGINT_BASE);
 }
 
 
@@ -306,7 +314,7 @@ static Cell* promote_to(Cell *a, const Cell_t target)
             if (a->type == CELL_INTEGER) {
                 return int_to_bigint(a);
             }
-            if (a->type == CELL_BIGINT) return a;
+            if (a->type == CELL_BIGINT) { return a; }
             break;
         }
 
@@ -314,7 +322,7 @@ static Cell* promote_to(Cell *a, const Cell_t target)
             if (a->type == CELL_INTEGER) {
                 return int_to_rat(a);
             }
-            if (a->type == CELL_RATIONAL) return a;
+            if (a->type == CELL_RATIONAL) { return a; }
             break;
         }
 
@@ -328,7 +336,7 @@ static Cell* promote_to(Cell *a, const Cell_t target)
             if (a->type == CELL_RATIONAL) {
                 return rat_to_bigrat(a);
             }
-            if (a->type == CELL_BIGRAT) return a;
+            if (a->type == CELL_BIGRAT) { return a; }
             break;
         }
 
@@ -345,7 +353,7 @@ static Cell* promote_to(Cell *a, const Cell_t target)
             if (a->type == CELL_BIGRAT) {
                 return bigrat_to_real(a);
             }
-            if (a->type == CELL_REAL) return a;
+            if (a->type == CELL_REAL) { return a; }
             break;
         }
 
@@ -412,7 +420,7 @@ void numeric_promote(Cell** lhs, Cell** rhs)
 }
 
 /*---------------------------------------------------------*
- *      Helper functions for using builtins internally     *
+ *      Sexpr constructors and transformers                *
  * --------------------------------------------------------*/
 
 /* Construct an S-expression with exactly one element. */
@@ -525,45 +533,13 @@ Cell* make_list_from_sexpr(Cell* c)
 }
 
 
-Cell* make_sexpr_from_list(Cell* v, const bool recurse)
+Cell* make_sexpr_from_list(const Cell* v, const bool recurse)
 {
     Cell* result = make_cell_sexpr();
-    int count;
+    const Cell* p = v;
 
-    /* A proper list is the simple case. */
-    if (v->len != -1) {
-        count = v->len;
-        result->cell = GC_MALLOC(sizeof(Cell*) * count);
-        const Cell* p = v;
-        for (int i = 0; i < count; i++) {
-            if (recurse && p->car->type == CELL_PAIR) {
-                cell_add(result, make_sexpr_from_list(p->car, true));
-            } else {
-                cell_add(result, p->car);
-            }
-            p = p->cdr;
-        }
-        return result;
-    }
-
-    /* Improper List Handling. */
-    count = 0;
-    const Cell* traverser = v;
-
-    /* Count the number of pairs in the chain. */
-    while (traverser != NULL && traverser->type == CELL_PAIR) {
-        count++;
-        traverser = traverser->cdr;
-    }
-
-    /* Allocate space for all the cars from the pairs PLUS the final `cdr`. */
-    result->cell = GC_MALLOC(sizeof(Cell*) * (count + 1));
-
-    /* Copy the car of each pair. */
-    Cell* p = v;
-    for (int i = 0; i < count; i++) {
+    while (p->type == CELL_PAIR) {
         Cell* item = p->car;
-
         if (recurse && item->type == CELL_PAIR) {
             cell_add(result, make_sexpr_from_list(item, true));
         } else {
@@ -572,34 +548,9 @@ Cell* make_sexpr_from_list(Cell* v, const bool recurse)
         p = p->cdr;
     }
 
-    /* Handling the tail of an improper list. */
-    if (v->len == -1) {
-        /* Found a dot. p is the tail. */
-        if (recurse && (p->type == CELL_PAIR || p->type == CELL_SEXPR)) {
-
-            const int old_count = result->count;
-            const int tail_count = p->type == CELL_SEXPR ? p->count : p->len;
-            const int new_total = old_count + tail_count;
-
-            result->cell = GC_REALLOC(result->cell, sizeof(Cell*) * new_total);
-
-            if (p->type == CELL_SEXPR) {
-                /* Dissolve the S-expression directly into the result. */
-                for (int i = 0; i < tail_count; i++) {
-                    result->cell[old_count + i] = p->cell[i];
-                }
-            } else {
-                /* Dissolve the pair-chain into the result. */
-                const Cell* tail_p = p;
-                for (int i = 0; i < tail_count; i++) {
-                    result->cell[old_count + i] = tail_p->car;
-                    tail_p = tail_p->cdr;
-                }
-            }
-            result->count = new_total;
-        } else {
-            cell_add(result, p);
-        }
+    /* Dotted tail: keep it as a single element. */
+    if (p->type != CELL_NIL) {
+        cell_add(result, (Cell*)p);
     }
     return result;
 }
@@ -668,7 +619,7 @@ Cell* flatten_sexpr(const Cell* sexpr)
 Cell* list_get_nth_cell_ptr(const Cell* list, const long n, const bool tail)
 {
     if (n < 0) {
-        return tail == true ? (Cell*)list : list->car;
+        return tail ? (Cell*)list : list->car;
     }
     const Cell* current = list;
     for (long i = 0; i < n; i++) {
@@ -695,8 +646,8 @@ Cell* list_get_nth_cell_ptr(const Cell* list, const long n, const bool tail)
 /* Helper to make C complex from Cell complex */
 long double complex cell_to_c_complex(const Cell* c)
 {
-    long double a = cell_to_long_double(c->real);
-    long double b = cell_to_long_double(c->imag);
+    const long double a = cell_to_long_double(c->real);
+    const long double b = cell_to_long_double(c->imag);
 
     return CMPLXL(a, b);
 }
@@ -705,11 +656,10 @@ long double complex cell_to_c_complex(const Cell* c)
 /* Helper to check if a non-complex numeric cell has a value of zero. */
 bool cell_is_real_zero(const Cell* c)
 {
-    if (!c) return false;
+    if (!c) { return false; }
     switch (c->type) {
         case CELL_BIGINT:
-            if (mpz_cmp_si(*c->bi, 0) == 0) return true;
-            return false;
+            return mpz_cmp_si(*c->bi, 0) == 0;
         case CELL_INTEGER:
             return c->integer_v == 0;
         case CELL_RATIONAL:
@@ -726,7 +676,7 @@ bool cell_is_real_zero(const Cell* c)
 /* Helper to check if a cell represents an integer value, per R7RS tower. */
 bool cell_is_integer(const Cell* c)
 {
-    if (!c) return false;
+    if (!c) { return false; }
 
     const long double num = cell_to_long_double(c);
     if (isinf(num)) {
@@ -756,7 +706,7 @@ bool cell_is_integer(const Cell* c)
 /* Checks if a number is real-valued (i.e., has a zero imaginary part). */
 bool cell_is_real(const Cell* c)
 {
-    if (!c) return false;
+    if (!c) { return false; }
 
     const long double num = cell_to_long_double(c);
     if (isinf(num)) {
@@ -782,28 +732,28 @@ bool cell_is_real(const Cell* c)
  * Note: R7RS 'positive?' is strictly greater than 0. */
 bool cell_is_positive(const Cell* c)
 {
-    if (!c) return false;
+    if (!c) { return false; }
 
     if (c->type == CELL_BIGINT) {
-        return mpz_sgn(*c->bi) == 1 ? true : false;
+        return mpz_sgn(*c->bi) == 1;
     }
 
     const long double num = cell_to_long_double(c);
-    return num > 0 ? true : false;
+    return num > 0;
 }
 
 
 /* Helper for negative? (< 0) */
 bool cell_is_negative(const Cell* c)
 {
-    if (!c) return false;
+    if (!c) { return false; }
 
     if (c->type == CELL_BIGINT) {
-        return mpz_sgn(*c->bi) == -1 ? true : false;
+        return mpz_sgn(*c->bi) == -1;
     }
 
     const long double num = cell_to_long_double(c);
-    return num < 0 ? true : false;
+    return num < 0;
 }
 
 
@@ -827,7 +777,7 @@ bool cell_is_odd(const Cell* c)
 
     long long val;
     switch (c->type) {
-        case CELL_BIGINT: return mpz_odd_p(*c->bi) == 1 ? true : false;
+        case CELL_BIGINT: return mpz_odd_p(*c->bi) == 1;
         case CELL_INTEGER:  val = c->integer_v; break;
         case CELL_REAL: val = (long long)c->real_v; break;
         case CELL_RATIONAL:  val = c->num; break; /* Denominator is 1 if it's an integer. */
@@ -857,7 +807,7 @@ bool cell_is_even(const Cell* c)
 
     long long val;
     switch (c->type) {
-        case CELL_BIGINT: return mpz_even_p(*c->bi) == 1 ? true : false;
+        case CELL_BIGINT: return mpz_even_p(*c->bi) == 1;
         case CELL_INTEGER:  val = c->integer_v; break;
         case CELL_REAL: val = (long long)c->real_v; break;
         case CELL_RATIONAL:  val = c->num; break; /* Denominator is 1 if it's an integer. */
@@ -894,8 +844,8 @@ Cell* negate_numeric(const Cell* x)
 /* GCD helper. */
 static long int gcd_ll(long int a, long int b)
 {
-    if (a < 0) a = -a;
-    if (b < 0) b = -b;
+    if (a < 0) { a = -a; }
+    if (b < 0) { b = -b; }
     while (b != 0) {
         const long int t = b;
         b = a % b;
@@ -1045,94 +995,65 @@ Cell* make_cell_from_double(const long double d)
     return make_cell_real(d);
 }
 
-
-/* A version of strdup that allocates memory using the garbage collector. */
-char* GC_strdup(const char* s)
-{
-    if (s == NULL) {
-        return nullptr;
-    }
-    /* Allocate GC-managed memory for the new string. */
-    size_t len = strlen(s) + 1;
-    char* new_str = GC_MALLOC_ATOMIC(len);
-    if (new_str == NULL) {
-        fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
-        exit(EXIT_FAILURE);
-    }
-    /* Copy the string content. */
-    memcpy(new_str, s, len);
-    return new_str;
-}
-
-
-char* GC_strndup(const char* s, size_t byte_len)
-{
-    /* Allocate GC-managed memory for the new string. */
-    char* new_str = GC_MALLOC_ATOMIC(byte_len + 1);
-    if (new_str == NULL) {
-        fprintf(stderr, "ENOMEM: GC_MALLOC failed\n");
-        exit(EXIT_FAILURE);
-    }
-    /* Copy the string content. */
-    memcpy(new_str, s, byte_len);
-    new_str[byte_len] = '\0';
-    return new_str;
-}
+/*-------------------------------------------*
+ *       Named characters                    *
+ * ------------------------------------------*/
 
 
 /* Mapping of char names to Unicode codepoints.
- * This array MUST be kept sorted alphabetically. */
+ * This array MUST be kept sorted alphabetically
+ * for the binary search. */
 static const NamedChar named_chars[] = {
-    {"Alpha",     0x0391},
-    {"Beta",      0x0392},
-    {"Delta",     0x0394},
-    {"Gamma",     0x0393},
-    {"Iota",      0x0399},
-    {"Lambda",    0x039B},
-    {"Omega",     0x03A9},
-    {"Omicron",   0x039F},
-    {"Phi",       0x03A6},
-    {"Pi",        0x03A0},
-    {"Psi",       0x03A8},
-    {"Rho",       0x03A1},
-    {"Sigma",     0x03A3},
-    {"Theta",     0x0398},
-    {"Xi",        0x039E},
-    {"alpha",     0x03B1},
-    {"beta",      0x03B2},
-    {"chi",       0x03C7},
-    {"copy",      0x00A9},
-    {"curren",    0x00A4},
-    {"deg",       0x00B0},
-    {"delta",     0x03B4},
-    {"divide",    0x00F7},
-    {"epsilon",   0x03B5},
-    {"eta",       0x03B7},
-    {"euro",      0x20AC},
-    {"gamma",     0x03B3},
-    {"iota",      0x03B9},
-    {"iquest",    0x00BF},
-    {"kappa",     0x03BA},
-    {"lambda",    0x03BB},
-    {"micro",     0x00B5},
-    {"mu",        0x03BC},
-    {"omega",     0x03C9},
-    {"para",      0x00B6},
-    {"phi",       0x03C6},
-    {"pi",        0x03C0},
-    {"plusnm",    0x00B1},
-    {"pound",     0x00A3},
-    {"psi",       0x03C8},
-    {"reg",       0x00AE},
-    {"rho",       0x03C1},
-    {"sect",      0x00A7},
-    {"sigma",     0x03C3},
-    {"tau",       0x03C4},
-    {"theta",     0x03B8},
-    {"times",     0x00D7},
-    {"xi",        0x03BE},
-    {"yen",       0x00A5},
-    {"zeta",      0x03B6}
+    {.name = "Alpha",     .codepoint = 0x0391},
+    {.name = "Beta",      .codepoint = 0x0392},
+    {.name = "Delta",     .codepoint = 0x0394},
+    {.name = "Gamma",     .codepoint = 0x0393},
+    {.name = "Iota",      .codepoint = 0x0399},
+    {.name = "Lambda",    .codepoint = 0x039B},
+    {.name = "Omega",     .codepoint = 0x03A9},
+    {.name = "Omicron",   .codepoint = 0x039F},
+    {.name = "Phi",       .codepoint = 0x03A6},
+    {.name = "Pi",        .codepoint = 0x03A0},
+    {.name = "Psi",       .codepoint = 0x03A8},
+    {.name = "Rho",       .codepoint = 0x03A1},
+    {.name = "Sigma",     .codepoint = 0x03A3},
+    {.name = "Theta",     .codepoint = 0x0398},
+    {.name = "Xi",        .codepoint = 0x039E},
+    {.name = "alpha",     .codepoint = 0x03B1},
+    {.name = "beta",      .codepoint = 0x03B2},
+    {.name = "chi",       .codepoint = 0x03C7},
+    {.name = "copy",      .codepoint = 0x00A9},
+    {.name = "curren",    .codepoint = 0x00A4},
+    {.name = "deg",       .codepoint = 0x00B0},
+    {.name = "delta",     .codepoint = 0x03B4},
+    {.name = "divide",    .codepoint = 0x00F7},
+    {.name = "epsilon",   .codepoint = 0x03B5},
+    {.name = "eta",       .codepoint = 0x03B7},
+    {.name = "euro",      .codepoint = 0x20AC},
+    {.name = "gamma",     .codepoint = 0x03B3},
+    {.name = "iota",      .codepoint = 0x03B9},
+    {.name = "iquest",    .codepoint = 0x00BF},
+    {.name = "kappa",     .codepoint = 0x03BA},
+    {.name = "lambda",    .codepoint = 0x03BB},
+    {.name = "micro",     .codepoint = 0x00B5},
+    {.name = "mu",        .codepoint = 0x03BC},
+    {.name = "omega",     .codepoint = 0x03C9},
+    {.name = "para",      .codepoint = 0x00B6},
+    {.name = "phi",       .codepoint = 0x03C6},
+    {.name = "pi",        .codepoint = 0x03C0},
+    {.name = "plusnm",    .codepoint = 0x00B1},
+    {.name = "pound",     .codepoint = 0x00A3},
+    {.name = "psi",       .codepoint = 0x03C8},
+    {.name = "reg",       .codepoint = 0x00AE},
+    {.name = "rho",       .codepoint = 0x03C1},
+    {.name = "sect",      .codepoint = 0x00A7},
+    {.name = "sigma",     .codepoint = 0x03C3},
+    {.name = "tau",       .codepoint = 0x03C4},
+    {.name = "theta",     .codepoint = 0x03B8},
+    {.name = "times",     .codepoint = 0x00D7},
+    {.name = "xi",        .codepoint = 0x03BE},
+    {.name = "yen",       .codepoint = 0x00A5},
+    {.name = "zeta",      .codepoint = 0x03B6},
 };
 
 
@@ -1150,121 +1071,115 @@ int compare_named_chars(const void* key, const void* element)
 const NamedChar* find_named_char(const char* name)
 {
     return bsearch(
-        name,                                      /* The key to search for. */
+        name,                                     /* The key to search for. */
         named_chars,                              /* The array to search in. */
-        sizeof(named_chars) / sizeof(NamedChar),   /* Number of elements in the array. */
+        sizeof(named_chars) / sizeof(NamedChar),  /* Number of elements in the array. */
         sizeof(NamedChar),                        /* The size of each element. */
-        compare_named_chars                            /* The comparison function. */
+        compare_named_chars                       /* The comparison function. */
     );
 }
 
+/*-------------------------------------------*
+ *       Unicode and UTF8                    *
+ * ------------------------------------------*/
 
-/* Helpers for dealing with strings and Unicode. */
 
-/* Encodes a Unicode code point into a byte array. Returns number of bytes (1-4). */
+typedef struct {
+    uint8_t  mask;     /* bits that identify the lead byte */
+    uint8_t  tag;      /* value of those bits */
+    uint8_t  payload;  /* lead-byte bits that carry code point data */
+    uint32_t min_cp;   /* smallest code point needing this length (rejects overlong) */
+} utf8_form;
+
+
+static const utf8_form UTF8_FORMS[UTF8_MAX_LEN + 1] = {
+    [1] = { .mask = 0x80, .tag = 0x00, .payload = 0x7F, .min_cp = 0x000000 },
+    [2] = { .mask = 0xE0, .tag = 0xC0, .payload = 0x1F, .min_cp = 0x000080 },
+    [3] = { .mask = 0xF0, .tag = 0xE0, .payload = 0x0F, .min_cp = 0x000800 },
+    [4] = { .mask = 0xF8, .tag = 0xF0, .payload = 0x07, .min_cp = 0x010000 },
+};
+
+
+int utf8_len(const uint8_t first_byte) {
+    for (int len = 1; len <= UTF8_MAX_LEN; len++) {
+        if ((first_byte & UTF8_FORMS[len].mask) == UTF8_FORMS[len].tag) { return len; }
+    }
+    return -1;
+}
+
+
+int utf8_code_point_len(const uint32_t cp) {
+    /* Bad value becomes U+FFFD. */
+    if (!is_scalar_value(cp)) { return 3; }
+    int len = 1;
+    while (len < UTF8_MAX_LEN && cp >= UTF8_FORMS[len + 1].min_cp) { len++; }
+    return len;
+}
+
+
 int utf8_encode(const UChar32 c, uint8_t* out_buf) {
-    if (c <= 0x7F) {
-        out_buf[0] = (uint8_t)c;
-        return 1;
-    }
-    if (c <= 0x7FF) {
-        out_buf[0] = (uint8_t)((c >> 6) | 0xC0);
-        out_buf[1] = (uint8_t)((c & 0x3F) | 0x80);
-        return 2;
-    }
-    if (c<=0xd7ff || (0xe000<=c && c<=0xffff)) {
-        out_buf[0] = (uint8_t)((c >> 12) | 0xE0);
-        out_buf[1] = (uint8_t)(((c >> 6) & 0x3F) | 0x80);
-        out_buf[2] = (uint8_t)((c & 0x3F) | 0x80);
-        return 3;
-    }
-    if (0xffff < c && c <= 0x10ffff) {
-        out_buf[0] = (uint8_t)((c >> 18) | 0xF0);
-        out_buf[1] = (uint8_t)(((c >> 12) & 0x3F) | 0x80);
-        out_buf[2] = (uint8_t)(((c >> 6) & 0x3F) | 0x80);
-        out_buf[3] = (uint8_t)((c & 0x3F) | 0x80);
-        return 4;
-    }
-    /* If the codepoint is invalid, fall back to the Unicode
-     * Replacement Character: U+FFFD.
-     * In UTF-8, this is 3 bytes: 0xEF, 0xBF, 0xBD. */
-    out_buf[0] = 0xEF;
-    out_buf[1] = 0xBF;
-    out_buf[2] = 0xBD;
-    return 3;
-}
+    uint32_t cp = (uint32_t)c;   /* negatives become huge and fail below */
+    if (!is_scalar_value(cp)) { cp = UNICODE_REPLACEMENT; }
 
-
-/* Return UTF-8 sequence length from the first byte. */
-int utf8_len(const uint8_t first_byte)
-{
-    if ((first_byte & 0x80) == 0)    return 1;
-    if ((first_byte & 0xE0) == 0xC0) return 2;
-    if ((first_byte & 0xF0) == 0xE0) return 3;
-    if ((first_byte & 0xF8) == 0xF0) return 4;
-    return -1; /* Invalid UTF-8 start byte. */
-}
-
-
-/* Return UTF-8 sequence length from a codepoint. */
-int utf8_code_point_len(const uint32_t cp)
-{
-    if (cp <= 0x7F)                    { return 1; }
-    if (cp <= 0x7FF)                   { return 2; }
-    if (cp <= 0xD7FF)                  { return 3; }
-    if (cp <= 0xDFFF || cp > 0x10FFFF) { return 0; }
-    if (cp <= 0xFFFF)                  { return 3; }
-    return 4;
-}
-
-
-/* Extract the next (potentially) multibyte char starting from *p. */
-uint32_t utf8_next(const uint8_t **p, const uint8_t *end)
-{
-    if (*p >= end) return 0xFFFD;
-
-    const uint8_t lead = *(*p)++;
-
-    if (lead < 0x80)
-        return lead;
-
-    int len;
-    uint32_t cp;
-
-    if ((lead & 0xE0) == 0xC0)      { len = 2; cp = lead & 0x1F; }
-    else if ((lead & 0xF0) == 0xE0) { len = 3; cp = lead & 0x0F; }
-    else if ((lead & 0xF8) == 0xF0) { len = 4; cp = lead & 0x07; }
-    else
-        return 0xFFFD;
-
+    const int len = utf8_code_point_len(cp);
+    out_buf[0] = (uint8_t)(UTF8_FORMS[len].tag | (cp >> (UTF8_CONT_BITS * (len - 1))));
     for (int i = 1; i < len; i++) {
-        if (*p >= end) return 0xFFFD;
-
-        const uint8_t cont = *(*p)++;
-        if ((cont & 0xC0) != 0x80)
-            return 0xFFFD;
-
-        cp = (cp << 6) | (cont & 0x3F);
+        const int shift = UTF8_CONT_BITS * (len - 1 - i);
+        out_buf[i] = (uint8_t)(UTF8_CONT_TAG | ((cp >> shift) & UTF8_CONT_MASK));
     }
-    return cp;
+    return len;
+}
+
+
+/* Decode one code point from the n bytes at s. Returns bytes consumed (1-4) and
+ * stores the code point in *cp, or returns 0 if s is not a complete, valid,
+ * shortest-form sequence. */
+int utf8_decode(const uint8_t* s, const size_t n, UChar32* cp) {
+    if (n == 0) { return 0; }
+    const int len = utf8_len(s[0]);
+    if (len < 1 || (size_t)len > n) { return 0; }
+
+    uint32_t c = s[0] & UTF8_FORMS[len].payload;
+    for (int i = 1; i < len; i++) {
+        if ((s[i] & UTF8_MASK_TAG) != UTF8_CONT_TAG) { return 0; }
+        c = (c << UTF8_CONT_BITS) | (s[i] & UTF8_CONT_MASK);
+    }
+    if (c < UTF8_FORMS[len].min_cp || !is_scalar_value(c)) { return 0; }
+
+    *cp = (UChar32)c;
+    return len;
+}
+
+
+uint32_t utf8_next(const uint8_t** p, const uint8_t* end) {
+    if (*p >= end) { return UNICODE_REPLACEMENT; }
+
+    UChar32 cp = U_SENTINEL;
+    const int used = utf8_decode(*p, (size_t)(end - *p), &cp);
+    if (used == 0) {
+        (*p)++;                              /* skip one bad byte and resync */
+        return UNICODE_REPLACEMENT;
+    }
+    *p += used;
+    return (uint32_t)cp;
 }
 
 
 size_t utf8_prev_char(const char* str, size_t pos)
 {
-    if (pos == 0) return 0;
+    if (pos == 0) { return 0; }
     pos--;
-    while (pos > 0 && (str[pos] & 0xC0) == 0x80) pos--;
+    while (pos > 0 && (str[pos] & UTF8_MASK_TAG) == UTF8_CONT_TAG) { pos--; }
     return pos;
 }
 
 
 size_t utf8_next_char(const char* str, size_t pos, const size_t len)
 {
-    if (pos >= len) return len;
+    if (pos >= len) { return len; }
     const size_t char_len = utf8_len((unsigned char)str[pos]);
     pos += char_len;
-    if (pos > len) return len;
+    if (pos > len) { return len; }
     return pos;
 }
 
@@ -1273,8 +1188,9 @@ size_t utf8_next_char(const char* str, size_t pos, const size_t len)
 static size_t utf8_advance(const char* str, const size_t len, int n)
 {
     size_t pos = 0;
-    while (n-- > 0 && pos < len)
+    while (n-- > 0 && pos < len) {
         pos = utf8_next_char(str, pos, len);
+    }
     return pos;
 }
 
@@ -1282,8 +1198,9 @@ static size_t utf8_advance(const char* str, const size_t len, int n)
 /* Move backward N codepoints and return byte offset. */
 static size_t utf8_retreat(const char* str, size_t pos, int n)
 {
-    while (n-- > 0 && pos > 0)
+    while (n-- > 0 && pos > 0) {
         pos = utf8_prev_char(str, pos);
+    }
     return pos;
 }
 
@@ -1291,7 +1208,7 @@ static size_t utf8_retreat(const char* str, size_t pos, int n)
 /* Returns the byte offset for the k-th character in a string. */
 int32_t get_utf8_byte_offset(const Cell* s, const int32_t char_idx)
 {
-    if (s->ascii) return char_idx;
+    if (s->ascii) { return char_idx; }
 
     if (char_idx <= s->char_count / 2) {
         return (int)utf8_advance(s->str, s->count, char_idx);
@@ -1305,20 +1222,22 @@ int32_t get_utf8_byte_offset(const Cell* s, const int32_t char_idx)
 int32_t utf8_strlen(const char* s)
 {
     int32_t len = 0;
-    for (; *s; ++s) if ((*s & 0xC0) != 0x80) ++len;
+    for (; *s; ++s) {
+        if ((*s & UTF8_MASK_TAG) != UTF8_CONT_TAG) { ++len; }
+    }
     return len;
 }
 
 
-/* Validate UTF-8 byte sequences for correctness and identify invalid characters using SIMD (Single Instruction,
- * Multiple Data) principles within a single register (SWAR). */
+/* Validate UTF-8 byte sequences for correctness and identify invalid characters using SIMD
+ * (Single Instruction, Multiple Data) principles within a single register (SWAR). */
 bool is_pure_ascii(const char *str, size_t len) {
     const unsigned char *ptr = (const unsigned char *)str;
 
     /* Alignment Loop: Process bytes one by one until pointer is 8-byte aligned.
        We check ((uintptr_t)ptr & 7) to see if we are aligned. */
-    while (len > 0 && (uintptr_t)ptr & 7) {
-        if (*ptr & 0x80) return false;
+    while (len > 0 && (uintptr_t)ptr & (WORD_SIZE - 1)) {
+        if (*ptr & UTF8_CONT_TAG) { return false; }
         ptr++;
         len--;
     }
@@ -1329,19 +1248,19 @@ bool is_pure_ascii(const char *str, size_t len) {
     // ReSharper disable once CppTooWideScope
     constexpr uint64_t high_bit_mask = 0x8080808080808080ULL;
 
-    while (len >= 8) {
+    while (len >= WORD_SIZE) {
         /* If (chunk & mask) is non-zero, one of the bytes had the high bit set. */
         if (*ptr64 & high_bit_mask) {
             return false;
         }
         ptr64++;
-        len -= 8;
+        len -= WORD_SIZE;
     }
 
     /* Cleanup Loop: Process any remaining bytes (0-7 bytes left). */
     ptr = (const unsigned char *)ptr64;
     while (len > 0) {
-        if (*ptr & 0x80) return false;
+        if (*ptr & UTF8_CONT_TAG) { return false; }
         ptr++;
         len--;
     }

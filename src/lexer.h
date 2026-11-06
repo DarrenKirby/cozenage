@@ -48,7 +48,7 @@ typedef enum {
     T_COMMA_AT,
     /* Special tokens */
     T_ERROR,
-    T_EOF
+    T_EOF,
 } TokenType;
 
 typedef struct {

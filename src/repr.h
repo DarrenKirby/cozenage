@@ -21,6 +21,7 @@
 #define COZENAGE_REPR_H
 
 #include "cell.h"
+#include "environment.h"
 
 typedef enum {
     /* R7RS `write` mode.
@@ -33,7 +34,7 @@ typedef enum {
 
     /* For the REPL.
         Like MODE_WRITE, but with ANSI colour codes. */
-    MODE_REPL
+    MODE_REPL,
 } print_mode_t;
 
 char* cell_to_string(const Cell* cell, print_mode_t mode);

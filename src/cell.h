@@ -21,7 +21,7 @@
 /* This file defines the Cell structure/tagged union which is used to
  * represent all 'Cozenage values' internally and externally. It also
  * defines associated structs for Cell values that require additional
- * fields such as lambdas, bytevectors, ports, and bigints. It defines
+ * fields such as lambdas, byte vectors, ports, and bigints. It defines
  * various type enums which are used by the Cell and other derived structs,
  * and it exports declarations for global singleton objects and the Cell
  * constructor functions which are defined in cell.c
@@ -40,7 +40,7 @@
 
 
 /* Cell_t type enum. */
-typedef enum Cell_t : uint32_t {
+typedef enum Cell_t: uint32_t {
     CELL_INTEGER    = 1 << 0,   /* An integer value. */
     CELL_RATIONAL   = 1 << 1,   /* A rational number. */
     CELL_REAL       = 1 << 2,   /* A real number. */
@@ -94,7 +94,7 @@ typedef enum P_Status_t : uint8_t {
     LAZY,      /* Used by delay-force to trigger trampoline evaluation. */
     RUNNING,   /* Used to detect re-entrant promises. */
     DONE,      /* An evaluated and cached value. */
-    NATIVE     /* Native C code, called directly. */
+    NATIVE,    /* Native C code, called directly. */
 } p_status_t;
 
 /* Promise struct. */
@@ -127,7 +127,8 @@ typedef enum BV_t : uint8_t {
     BV_U64,
     BV_S64,
     BV_F32,
-    BV_F64
+    BV_F64,
+    BV_INVALID,
 } bv_t;
 
 /* Bytevector struct. */
@@ -147,14 +148,14 @@ typedef struct ByteV {
 typedef enum Stream_t : uint8_t  {
     INPUT_STREAM,
     OUTPUT_STREAM,
-    ASYNC_STREAM
+    ASYNC_STREAM,
 } stream_t;
 
 typedef enum Backend_t : uint8_t  {
     BK_FILE_TEXT,
     BK_FILE_BINARY,
     BK_STRING,
-    BK_BYTEVECTOR
+    BK_BYTEVECTOR,
 } backend_t;
 
 typedef struct PortInterface {
@@ -193,7 +194,7 @@ typedef enum Err_t : uint8_t  {
     INDEX_ERR,  /* Index error - invalid index passed for compound type. */
     VALUE_ERR,  /* Value error - Invalid value of correct type. */
     OS_ERR,     /* OS error - mainly used in system library to report failed syscalls. */
-    STACK_ERR   /* Signals stack overflow/recursion error. */
+    STACK_ERR,  /* Signals stack overflow/recursion error. */
 } err_t;
 
 
@@ -244,7 +245,7 @@ typedef struct Cell {
         /* Symbols */
         struct {
             char* sym;        /* Symbol text */
-            int32_t sf_id;        /* Special form id */
+            int32_t sf_id;    /* Special form id */
         };
 
         /* Strings */

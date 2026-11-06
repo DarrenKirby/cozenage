@@ -27,18 +27,26 @@
 #include <string.h>
 
 #define GHT_TOMBSTONE ((Cell*)0x1)
+#define MAX_TABLE_LOAD 70
+#define FIXED_NAN_HASH 0x9e3779b97f4a7c15ULL
+#define BIT_8   8
+#define BIT_14 14
+#define BIT_21 21
+#define BIT_24 24
+#define BIT_28 28
+#define BIT_31 31
 
 
 /* Thomas Wang's fast, avalanching, 64-bit integer hash function. */
 static uint64_t hash_int_key(uint64_t key)
 {
-    key = (~key) + (key << 21);
-    key = key ^ (key >> 24);
-    key = (key + (key << 3)) + (key << 8);
-    key = key ^ (key >> 14);
-    key = (key + (key << 2)) + (key << 4);
-    key = key ^ (key >> 28);
-    key = key + (key << 31);
+    key = ~key + (key << BIT_21);
+    key = key ^ (key >> BIT_24);
+    key = key + (key << 3) + (key << BIT_8);
+    key = key ^ (key >> BIT_14);
+    key = key + (key << 2) + (key << 4);
+    key = key ^ (key >> BIT_28);
+    key = key + (key << BIT_31);
     return key;
 }
 
@@ -51,7 +59,7 @@ static uint64_t hash_real_key(const long double key)
     }
     /* Use a fixed hash for NaN. */
     if (isnan(key)) {
-        return 0x9e3779b97f4a7c15ULL;
+        return FIXED_NAN_HASH;
     }
 
     int exp;
@@ -122,21 +130,21 @@ static bool equal_cell(const Cell* a, const Cell* b)
             if (a->count != b->count || a->char_count != b->char_count) {
                 return false;
             }
-            return memcmp(a->str, b->str, a->count) == 0 ? true : false;
+            return memcmp(a->str, b->str, a->count) == 0;
         case CELL_SYMBOL:
-            return a == b ? true : false;
+            return a == b;
         case CELL_INTEGER:
-            return a->integer_v == b->integer_v ? true : false;
+            return a->integer_v == b->integer_v;
         case CELL_RATIONAL:
-            return (a->num == b->num) && (a->den == b->den) ? true : false;
+            return (a->num == b->num) && (a->den == b->den);
         case CELL_REAL:
-            return a->real_v == b->real_v ? true : false;
+            return a->real_v == b->real_v;
         case CELL_COMPLEX:
             return equal_cell(a->real, b->real) && equal_cell(a->imag, b->imag);
         case CELL_BOOLEAN:
-            return a->boolean_v == b->boolean_v ? true : false;
+            return a->boolean_v == b->boolean_v;
         case CELL_CHAR:
-            return a->char_v == b->char_v ? true : false;
+            return a->char_v == b->char_v;
         default:
             return false;
     }
@@ -163,7 +171,7 @@ bool cell_is_hashable(const Cell* c)
 }
 
 
-static ght_item GHT_DELETED_ITEM = { GHT_TOMBSTONE, nullptr };
+static ght_item GHT_DELETED_ITEM = { .key = GHT_TOMBSTONE, .value = nullptr };
 
 
 ght_table* ght_create(const size_t initial_capacity)
@@ -208,12 +216,12 @@ Cell* ght_get(const ght_table* table, const Cell* key)
     /* Loop till we find an empty entry. */
     while (table->items[index].key != NULL) {
         /* Keep iterating if slot marked as deleted. */
-        if (table->items[index].key != GHT_DELETED_ITEM.key) {
-            if (equal_cell(table->items[index].key, key)) {
+        if ((table->items[index].key != GHT_DELETED_ITEM.key) &&
+            equal_cell(table->items[index].key, key)) {
                 /* Found key, return value. */
                 return table->items[index].value;
-            }
         }
+
         /* Key wasn't in this slot, move to next (linear probing). */
         index++;
         if (index >= table->capacity) {
@@ -293,11 +301,10 @@ bool ght_set(ght_table* table, Cell* key, Cell* value)
 {
     /* Resize table if load >= 0.7. */
     const size_t load = table->count * 100 / table->capacity;
-    if (load >= 70) {
-        if (!ght_resize(table)) {
+    if ((load >= MAX_TABLE_LOAD) && !ght_resize(table))  {
             return false;
-        }
     }
+
     /* Set entry and update count. */
     return ght_set_item(table->items, table->capacity, key, value, &table->count);
 }
@@ -306,18 +313,18 @@ bool ght_set(ght_table* table, Cell* key, Cell* value)
 bool ght_delete(ght_table* table, const Cell* key)
 {
     const uint64_t hash = hash_cell(key);
-    size_t index = hash & (uint64_t)(table->capacity - 1);
+    size_t index = hash & (table->capacity - 1);
 
     while (table->items[index].key != NULL) {
-        if (table->items[index].key != GHT_DELETED_ITEM.key) {
-            if (equal_cell(key, table->items[index].key)) {
+        if ((table->items[index].key != GHT_DELETED_ITEM.key) &&
+            equal_cell(key, table->items[index].key)) {
                 /* Found item. Do not free the key,
                  * just mark the slot as deleted. */
                 table->items[index] = GHT_DELETED_ITEM;
                 table->count--;
                 return true;
-            }
         }
+
         /* Move to next slot. */
         index++;
         if (index >= table->capacity) {

@@ -33,33 +33,32 @@
 #include <sys/select.h>
 
 
-/* The actual character reader. */
+/* This interface maps the backend stores to the
+ * frontend methods that act upon them. This should
+ * probably be extracted into a separate io.c file ... */
+
+/* The character reader. */
 static ssize_t port_read_char(const Cell* p, UChar32* out_char, int* err)
 {
-    uint8_t buf[4];
+    uint8_t buf[UTF8_MAX_LEN];
 
-    /* Read the first byte. */
     const ssize_t status = p->port->vtable->read(buf, 1, p, err);
-    if (status <= 0) return status; /* R_EOF or R_ERR. */
+    if (status <= 0) { return status; } /* R_EOF or R_ERR. */
 
     const int len = utf8_len(buf[0]);
-    if (len == 1) {
-        *out_char = (UChar32)buf[0];
-        return R_OK;
+    if (len < 1) { *err = EILSEQ; return R_ERR; }
+
+    if (len > 1) {
+        const ssize_t got = p->port->vtable->read(buf + 1, len - 1, p, err);
+        if (got != len - 1) {
+            if (got != R_ERR) { *err = EILSEQ; } /* EOF mid-character. */
+            return R_ERR;
+        }
     }
 
-    /* Read the remaining bytes (len - 1). */
-    if (p->port->vtable->read(buf + 1, len - 1, p, err) != (len - 1)) {
-        return R_ERR; /* Truncated multi-byte character. */
-    }
-
-    /* Reconstruct UChar32 */
-    if (len == 2) {
-        *out_char = ((buf[0] & 0x1F) << 6) | (buf[1] & 0x3F);
-    } else if (len == 3) {
-        *out_char = ((buf[0] & 0x0F) << 12) | ((buf[1] & 0x3F) << 6) | (buf[2] & 0x3F);
-    } else if (len == 4) {
-        *out_char = ((buf[0] & 0x07) << 18) | ((buf[1] & 0x3F) << 12) | ((buf[2] & 0x3F) << 6) | (buf[3] & 0x3F);
+    if (utf8_decode(buf, (size_t)len, out_char) == 0) {
+        *err = EILSEQ;
+        return R_ERR;
     }
     return R_OK;
 }
@@ -68,7 +67,6 @@ static ssize_t port_read_char(const Cell* p, UChar32* out_char, int* err)
 /* These next 12 static functions are the actual handlers for the builtin
  * generic I/O procedures. They are specific to whether the backing store
  * is a file or memory.*/
-
 static ssize_t file_write(const void* buf, const size_t len, const Cell* p, int* err)
 {
     const size_t ret = fwrite(buf, 1, len, p->port->fh);
@@ -85,10 +83,8 @@ static ssize_t file_read(void* buf, const size_t len, const Cell* p, int* err)
     const size_t ret = fread(buf, 1, len, p->port->fh);
 
     /* There were bytes to read, but not as many as asked for. */
-    if (ret > 0) {
-        if (ret < len) {
-            return (long)ret;
-        }
+    if ((ret > 0) && (ret < len)) {
+        return (long)ret;
     }
 
     /* Check for EOF or error. */
@@ -118,7 +114,7 @@ static long file_tell(const Cell* p, int* err)
 
 static int file_seek(const Cell* p, const long offset, int* err)
 {
-    if (fseek(p->port->fh, offset, SEEK_SET) == 0) return R_OK;
+    if (fseek(p->port->fh, offset, SEEK_SET) == 0) { return R_OK; }
     *err = errno;
     return R_ERR;
 }
@@ -164,7 +160,7 @@ static ssize_t memory_read(void* buf, const size_t len, const Cell* p, int* err)
     /* Use void* buf as char* buf. */
     char* dest = buf;
     /* Check for EOF-type situation. */
-    size_t bytes_in_store = p->port->data->length - p->port->index;
+    const size_t bytes_in_store = p->port->data->length - p->port->index;
 
     if (bytes_in_store < len) {
         /* If no bytes to read, return EOF now. */
@@ -201,17 +197,15 @@ static int memory_seek(const Cell* p, const long offset, int* err)
 
 static ssize_t memory_getdelim(char **lineptr, size_t *n, const int delim, const Cell* p, int *err)
 {
-    if (p->port->index >= p->port->data->length)
-        return R_EOF;
+    if (p->port->index >= p->port->data->length) { return R_EOF; }
 
     const size_t start = p->port->index;
     size_t i = start;
 
-    while (i < p->port->data->length && p->port->data->buffer[i] != (char)delim)
-        i++;
+    while (i < p->port->data->length && p->port->data->buffer[i] != (char)delim) { i++; }
 
     size_t len = i - start;
-    if (i < p->port->data->length) len++; /* Include delimiter. */
+    if (i < p->port->data->length) { len++; } /* Include delimiter. */
 
     if (*lineptr == NULL || *n < len + 1) {
         char *tmp = realloc(*lineptr, len + 1);
@@ -233,7 +227,7 @@ static ssize_t memory_getdelim(char **lineptr, size_t *n, const int delim, const
 
 static void memory_close(Cell* p)
 {
-    if (p->is_open) p->is_open = 0;
+    if (p->is_open) { p->is_open = 0; }
 }
 
 
@@ -247,7 +241,7 @@ const PortInterface FileVTable = {
     .tell     = file_tell,
     .seek     = file_seek,
     .getdelim = file_getdelim,
-    .close    = file_close
+    .close    = file_close,
 };
 
 /* A port with in-memory backing store. */
@@ -257,7 +251,7 @@ const PortInterface MemoryVTable = {
     .tell     = memory_tell,
     .seek     = memory_seek,
     .getdelim = memory_getdelim,
-    .close    = memory_close
+    .close    = memory_close,
 };
 
 /*-------------------------------------------------------*
@@ -298,7 +292,7 @@ Cell* builtin_input_port_pred(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "input-port?");
-    if (err) return err;
+    if (err) { return err; }
     if (a->cell[0]->type != CELL_PORT || a->cell[0]->port->stream_t != INPUT_STREAM) {
         return False_Obj;
     }
@@ -312,7 +306,7 @@ Cell* builtin_output_port_pred(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "output-port?");
-    if (err) return err;
+    if (err) { return err; }
     if (a->cell[0]->type != CELL_PORT || a->cell[0]->port->stream_t != OUTPUT_STREAM) {
         return False_Obj;
     }
@@ -326,7 +320,7 @@ Cell* builtin_text_port_pred(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "text-port?");
-    if (err) return err;
+    if (err) { return err; }
     if (a->cell[0]->type != CELL_PORT || a->cell[0]->port->backend_t == BK_BYTEVECTOR ||
         a->cell[0]->port->backend_t == BK_FILE_BINARY) {
         return False_Obj;
@@ -341,7 +335,7 @@ Cell* builtin_binary_port_pred(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "binary-port?");
-    if (err) return err;
+    if (err) { return err; }
     if (a->cell[0]->type != CELL_PORT || a->cell[0]->port->backend_t == BK_STRING ||
         a->cell[0]->port->backend_t == BK_FILE_TEXT) {
         return False_Obj;
@@ -356,10 +350,10 @@ Cell* builtin_input_port_open(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "input-port-open?");
-    if (err) return err;
+    if (err) { return err; }
     if (a->cell[0]->type == CELL_PORT &&
         a->cell[0]->port->stream_t == INPUT_STREAM &&
-        a->cell[0]->is_open == true) {
+        a->cell[0]->is_open) {
         return True_Obj;
         }
     return False_Obj;
@@ -372,10 +366,10 @@ Cell* builtin_output_port_open(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "output-port-open?");
-    if (err) return err;
+    if (err) { return err; }
     if (a->cell[0]->type == CELL_PORT &&
         a->cell[0]->port->stream_t == OUTPUT_STREAM &&
-        a->cell[0]->is_open == true) {
+        a->cell[0]->is_open) {
         return True_Obj;
     }
     return False_Obj;
@@ -389,7 +383,7 @@ Cell* builtin_close_port(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "close-port");
-    if (err) return err;
+    if (err) { return err; }
     Cell* p = a->cell[0];
     if (p->type != CELL_PORT) {
         return make_cell_error(
@@ -421,18 +415,19 @@ Cell* builtin_read_line(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_RANGE(a, 0, 1, "read-line");
-    if (err) return err;
+    if (err) { return err; }
     err = check_arg_types(a, CELL_PORT, "read-line");
-    if (err) return err;
+    if (err) { return err; }
 
     const Cell* port = (a->count == 0)
         ? builtin_current_input_port(e, a)
         : a->cell[0];
 
-    if (!port->is_open || port->port->stream_t != INPUT_STREAM)
+    if (!port->is_open || port->port->stream_t != INPUT_STREAM) {
         return make_cell_error(
             "read-line: port is not open for input",
             FILE_ERR);
+    }
 
     char *line = nullptr;
     size_t n = 0;
@@ -453,8 +448,7 @@ Cell* builtin_read_line(const Lex* e, const Cell* a)
     }
 
     /* Strip newline, if present. */
-    if (len > 0 && line[len - 1] == '\n')
-        line[len - 1] = '\0';
+    if (len > 0 && line[len - 1] == '\n') { line[len - 1] = '\0'; }
 
     Cell *result = make_cell_string(line);
     free(line);
@@ -469,18 +463,19 @@ Cell* builtin_read_line(const Lex* e, const Cell* a)
 Cell* builtin_read_lines(const Lex* e, const Cell* a)
 {
     Cell* err = CHECK_ARITY_RANGE(a, 0, 1, "read-lines");
-    if (err) return err;
+    if (err) { return err; }
     err = check_arg_types(a, CELL_PORT, "read-lines");
-    if (err) return err;
+    if (err) { return err; }
 
     const Cell* port = a->count == 0
         ? builtin_current_input_port(e, a)
         : a->cell[0];
 
-    if (!port->is_open || port->port->stream_t != INPUT_STREAM)
+    if (!port->is_open || port->port->stream_t != INPUT_STREAM) {
         return make_cell_error(
             "read-lines: port is not open for input",
             FILE_ERR);
+    }
 
     char *line = nullptr;
     size_t n = 0;
@@ -491,8 +486,7 @@ Cell* builtin_read_lines(const Lex* e, const Cell* a)
         const ssize_t len = port->port->vtable->getdelim(
             &line, &n, '\n', port, &err_r);
 
-        if (len == R_EOF)
-            break;
+        if (len == R_EOF) { break; }
 
         if (len == R_ERR) {
             free(line);
@@ -514,18 +508,19 @@ Cell* builtin_read_lines(const Lex* e, const Cell* a)
 
 Cell* builtin_read(const Lex* e, const Cell* a) {
     Cell* err = CHECK_ARITY_RANGE(a, 0, 1, "read");
-    if (err) return err;
+    if (err) { return err; }
     err = check_arg_types(a, CELL_PORT, "read");
-    if (err) return err;
+    if (err) { return err; }
 
     const Cell* port = a->count == 0
         ? builtin_current_input_port(e, a)
         : a->cell[0];
 
-    if (!port->is_open || port->port->stream_t != INPUT_STREAM)
+    if (!port->is_open || port->port->stream_t != INPUT_STREAM) {
         return make_cell_error(
             "read: port is not open for input",
             FILE_ERR);
+    }
 
     /* Initialize buffer. */
     str_buf_t* buf = sb_new();
@@ -539,8 +534,7 @@ Cell* builtin_read(const Lex* e, const Cell* a) {
             &t_buf, &n, '\n', port, &err_r);
         sb_append_str(buf, t_buf);
 
-        if (len == R_EOF)
-            return EOF_Obj;
+        if (len == R_EOF) { return EOF_Obj; }
 
         if (len == R_ERR) {
             return make_cell_error(
@@ -551,10 +545,10 @@ Cell* builtin_read(const Lex* e, const Cell* a) {
         TokenArray* ta = scan_all_tokens(buf->buffer);
         Cell* result = parse_tokens(ta);
 
-        if (!result) continue; /* Not enough data for a datum. */
+        if (!result) { continue; } /* Not enough data for a datum. */
         if (result->type == CELL_ERROR) {
             /* Syntax error: bad parser input. */
-            if (result->err_t == SYNTAX_ERR) continue;
+            if (result->err_t == SYNTAX_ERR) { continue; }
             /* Otherwise, legitimate error. */
             return result;
         }
@@ -574,7 +568,7 @@ Cell* builtin_read_string(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_RANGE(a, 1, 2, "read-string");
-    if (err) return err;
+    if (err) { return err; }
     if (a->cell[0]->type != CELL_INTEGER) {
         return make_cell_error(
             "read-string: arg 1 must be exact positive integer",
@@ -599,7 +593,7 @@ Cell* builtin_read_string(const Lex* e, const Cell* a)
     }
 
     /* Buffer size = the chars to read by potential 4 bytes each, plus 1 for \0. */
-    char* buffer = GC_MALLOC_ATOMIC(chars_to_read * 4 + 1);
+    char* buffer = GC_MALLOC_ATOMIC((chars_to_read * 4) + 1);
     int err_r;
     const ssize_t chars_read = port->port->vtable->read(buffer, chars_to_read, port, &err_r);
 
@@ -624,18 +618,19 @@ Cell* builtin_read_char(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_RANGE(a, 0, 1, "read-char");
-    if (err) return err;
+    if (err) { return err; }
     err = check_arg_types(a, CELL_PORT,"read-char");
-    if (err) return err;
+    if (err) { return err; }
 
     const Cell* port = a->count == 0
         ? builtin_current_input_port(e, a)
         : a->cell[0];
 
-    if (port->is_open == 0 || port->port->stream_t != INPUT_STREAM)
+    if (port->is_open == 0 || port->port->stream_t != INPUT_STREAM) {
         return make_cell_error(
             "read-char: port is not open for input",
             FILE_ERR);
+    }
 
     if (port->port->backend_t == BK_FILE_BINARY || port->port->backend_t == BK_BYTEVECTOR) {
         return make_cell_error(
@@ -643,9 +638,8 @@ Cell* builtin_read_char(const Lex* e, const Cell* a)
             VALUE_ERR);
     }
 
-
-    int err_r;
-    UChar32 out;
+    int err_r = 0;
+    UChar32 out = U_SENTINEL;
     const ssize_t wc = port_read_char(port, &out, &err_r);
     if (wc == R_EOF) {
         return EOF_Obj;
@@ -666,18 +660,19 @@ Cell* builtin_read_char(const Lex* e, const Cell* a)
 Cell* builtin_read_u8(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_RANGE(a, 0, 1, "read-u8");
-    if (err) return err;
+    if (err) { return err; }
     err = check_arg_types(a, CELL_PORT,"read-u8");
-    if (err) return err;
+    if (err) { return err; }
 
     const Cell* port = a->count == 0
         ? builtin_current_input_port(e, a)
         : a->cell[0];
 
-    if (port->is_open == 0 || port->port->stream_t != INPUT_STREAM)
+    if (port->is_open == 0 || port->port->stream_t != INPUT_STREAM) {
         return make_cell_error(
             "read-u8: port is not open for input",
             FILE_ERR);
+    }
 
     int err_r;
     uint8_t out;
@@ -705,7 +700,7 @@ Cell* builtin_read_bytevector(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_RANGE(a, 1, 2, "read-bytevector");
-    if (err) return err;
+    if (err) { return err; }
 
     if (a->cell[0]->type != CELL_INTEGER) {
         return make_cell_error(
@@ -729,10 +724,11 @@ Cell* builtin_read_bytevector(const Lex* e, const Cell* a)
         }
         port = a->cell[1];
         /* Make sure port is an open input port. */
-        if (port->is_open == 0 || port->port->stream_t != INPUT_STREAM)
+        if (port->is_open == 0 || port->port->stream_t != INPUT_STREAM) {
             return make_cell_error(
                 "read-bytevector: port is not open for input",
                 FILE_ERR);
+        }
     }
 
     Cell* bv = make_cell_bytevector(BV_U8, bytes_to_read);
@@ -771,7 +767,7 @@ Cell* builtin_read_bytevector_bang(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_RANGE(a, 1, 4, "read-bytevector!");
-    if (err) return err;
+    if (err) { return err; }
 
     /* Ensure arg1 is a u8 bytevector. */
     if (a->cell[0]->type != CELL_BYTEVECTOR) {
@@ -856,7 +852,7 @@ Cell* builtin_read_bytevector_bang(const Lex* e, const Cell* a)
             VALUE_ERR);
     }
 
-    if (bytes_to_read == 0) return make_cell_integer(0);
+    if (bytes_to_read == 0) { return make_cell_integer(0); }
 
     /* Cast void* to uint8_t* to allow correct pointer arithmetic. */
     uint8_t* buffer_ptr = bv->bv->data;
@@ -887,9 +883,9 @@ Cell* builtin_peek_char(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_RANGE(a, 0, 1, "peek-char");
-    if (err) return err;
+    if (err) { return err; }
     err = check_arg_types(a, CELL_PORT, "peek-char");
-    if (err) return err;
+    if (err) { return err; }
 
     const Cell* port = a->count == 0
         ? builtin_current_input_port(e, a)
@@ -907,13 +903,13 @@ Cell* builtin_peek_char(const Lex* e, const Cell* a)
             FILE_ERR);
     }
 
-    int err_r;
+    int err_r = 0;
     /* Grab and save current index. */
     const long curr_index = port->port->vtable->tell(port, &err_r);
-    if (curr_index < 0) goto error;
+    if (curr_index < 0) { goto error; }
 
     /* Grab the char. */
-    UChar32 out;
+    UChar32 out = U_SENTINEL;
     const ssize_t ret = port_read_char(port, &out, &err_r);
 
     /* Reset index, even if there is an error. */
@@ -925,7 +921,7 @@ Cell* builtin_peek_char(const Lex* e, const Cell* a)
     }
 
     /* Error on byte read. */
-    if (ret == R_ERR) goto error;
+    if (ret == R_ERR) { goto error; }
     /* Legitimate EOF. */
     if (ret == R_EOF) {
         return EOF_Obj;
@@ -948,9 +944,9 @@ Cell* builtin_peek_u8(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_RANGE(a, 0, 1, "peek-u8");
-    if (err) return err;
+    if (err) { return err; }
     err = check_arg_types(a, CELL_PORT,"peek-u8");
-    if (err) return err;
+    if (err) { return err; }
 
     const Cell* port = a->count == 0
         ? builtin_current_input_port(e, a)
@@ -971,7 +967,7 @@ Cell* builtin_peek_u8(const Lex* e, const Cell* a)
     int err_r;
     /* Grab and save current index. */
     const long curr_index = port->port->vtable->tell(port, &err_r);
-    if (curr_index < 0) goto error;
+    if (curr_index < 0) { goto error; }
 
     /* Grab the byte. */
     uint8_t byte;
@@ -986,7 +982,7 @@ Cell* builtin_peek_u8(const Lex* e, const Cell* a)
     }
 
     /* Error on byte read. */
-    if (ret == R_ERR) goto error;
+    if (ret == R_ERR) { goto error; }
     /* Legitimate EOF. */
     if (ret == R_EOF) {
         return EOF_Obj;
@@ -1007,7 +1003,7 @@ error:
 Cell* builtin_write_char(const Lex* e, const Cell* a)
 {
     Cell* err = CHECK_ARITY_RANGE(a, 1, 2, "write-char");
-    if (err) return err;
+    if (err) { return err; }
     if (a->cell[0]->type != CELL_CHAR) {
         return make_cell_error(
             "write-char: arg1 must be a char",
@@ -1015,12 +1011,10 @@ Cell* builtin_write_char(const Lex* e, const Cell* a)
     }
     const UChar32 the_char = a->cell[0]->char_v;
 
-    if (a->count == 2) {
-        if (a->cell[1]->type != CELL_PORT) {
-            return make_cell_error(
-                "write-char: arg2 must be a port",
-                TYPE_ERR);
-        }
+    if ((a->count == 2) && (a->cell[1]->type != CELL_PORT)) {
+        return make_cell_error(
+        "write-char: arg2 must be a port",
+        TYPE_ERR);
     }
 
     const Cell* port = a->count == 0
@@ -1065,18 +1059,16 @@ Cell* builtin_write_char(const Lex* e, const Cell* a)
 Cell* builtin_write_string(const Lex* e, const Cell* a)
 {
     Cell* err = CHECK_ARITY_RANGE(a, 1, 4, "write-string");
-    if (err) return err;
+    if (err) { return err; }
     if (a->cell[0]->type != CELL_STRING) {
         return make_cell_error(
             "write-string: arg1 must be a string",
             TYPE_ERR);
     }
-    if (a->count >= 2) {
-        if (a->cell[1]->type != CELL_PORT) {
-            return make_cell_error(
-                "write-string: arg2 must be a port",
-                TYPE_ERR);
-        }
+    if ((a->count >= 2) && (a->cell[1]->type != CELL_PORT)) {
+        return make_cell_error(
+        "write-string: arg2 must be a port",
+        TYPE_ERR);
     }
 
     int start = 0;
@@ -1130,11 +1122,11 @@ Cell* builtin_write_string(const Lex* e, const Cell* a)
 Cell* builtin_write_u8(const Lex* e, const Cell* a)
 {
     Cell* err = CHECK_ARITY_RANGE(a, 1, 2, "write-u8");
-    if (err) return err;
+    if (err) { return err; }
 
     /* Ensure the argument is an unsigned byte. */
     if (a->cell[0]->type != CELL_INTEGER ||
-        a->cell[0]->integer_v > 255 ||
+        a->cell[0]->integer_v > UINT8_MAX ||
         a->cell[0]->integer_v < 0) {
         return make_cell_error(
             "write-u8: argument must be an octet (0-255)",
@@ -1145,12 +1137,10 @@ Cell* builtin_write_u8(const Lex* e, const Cell* a)
     uint8_t byte[1];
     byte[0] = (uint8_t)a->cell[0]->integer_v;
 
-    if (a->count == 2) {
-        if (a->cell[1]->type != CELL_PORT) {
-            return make_cell_error(
-                "write-u8: arg2 must be a port",
-                TYPE_ERR);
-        }
+    if ((a->count == 2) && (a->cell[1]->type != CELL_PORT)) {
+        return make_cell_error(
+            "write-u8: arg2 must be a port",
+            TYPE_ERR);
     }
 
     const Cell* port = a->count == 0
@@ -1192,19 +1182,17 @@ Cell* builtin_write_bytevector(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_RANGE(a, 1, 4, "write-bytevector");
-    if (err) return err;
+    if (err) { return err; }
     if (a->cell[0]->type != CELL_BYTEVECTOR) {
         return make_cell_error(
             "write-bytevector: arg1 must be a bytevector",
             TYPE_ERR);
     }
 
-    if (a->count == 2) {
-        if (a->cell[1]->type != CELL_PORT) {
-            return make_cell_error(
-                "write-bytevector: arg2 must be a port",
-                TYPE_ERR);
-        }
+    if ((a->count == 2) && (a->cell[1]->type != CELL_PORT)) {
+        return make_cell_error(
+            "write-bytevector: arg2 must be a port",
+            TYPE_ERR);
     }
 
     int start = 0;
@@ -1273,7 +1261,7 @@ Cell* builtin_write_bytevector(const Lex* e, const Cell* a)
 Cell* builtin_newline(const Lex* e, const Cell* a)
 {
     Cell* err = CHECK_ARITY_RANGE(a, 0, 1, "newline");
-    if (err) return err;
+    if (err) { return err; }
 
     Cell* port;
     if (a->count == 0) {
@@ -1301,7 +1289,7 @@ Cell* builtin_newline(const Lex* e, const Cell* a)
 
     /* Write the newline. */
     int err_r = 0;
-    char c = 0x0A;
+    constexpr char c = 0x0A;
     const ssize_t rv = port->port->vtable->write(&c, 1, port, &err_r);
 
     if (rv == R_ERR) {
@@ -1321,7 +1309,7 @@ Cell* builtin_eof(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 0, "eof-object");
-    if (err) return err;
+    if (err) { return err; }
     return EOF_Obj;
 }
 
@@ -1332,7 +1320,7 @@ Cell* builtin_read_error(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "read-error?");
-    if (err) return err;
+    if (err) { return err; }
 
     const Cell* obj = a->cell[0];
     if (obj->type != CELL_ERROR) {
@@ -1353,7 +1341,7 @@ Cell* builtin_file_error(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "file-error?");
-    if (err) return err;
+    if (err) { return err; }
 
     const Cell* obj = a->cell[0];
     if (obj->type != CELL_ERROR) {
@@ -1375,14 +1363,14 @@ Cell* builtin_file_error(const Lex* e, const Cell* a)
 Cell* builtin_flush_output_port(const Lex* e, const Cell* a)
 {
     Cell* err = CHECK_ARITY_RANGE(a, 0, 1, "flush-output-port");
-    if (err) return err;
+    if (err) { return err; }
 
     Cell* port;
     if (a->count == 0) {
         port = builtin_current_output_port(e, a);
     } else {
         err = check_arg_types(a, CELL_PORT, "flush-output-port");
-        if (err) return err;
+        if (err) { return err; }
         port = a->cell[0];
     }
 
@@ -1399,15 +1387,15 @@ Cell* builtin_flush_output_port(const Lex* e, const Cell* a)
     }
 
     /* Call fflush() on file ports. */
-    int es;
-    if ((es = fflush(port->port->fh)) != 0) {
+    const int es = fflush(port->port->fh);
+    if (es != 0) {
         return make_cell_error(strerror(es), FILE_ERR);
     }
     return USP_Obj;
 }
 
 
-#if defined(__GLIBC__)
+#ifdef __GLIBC__
 /* glibc internal check */
 #define HAS_BUFFERED_DATA(fp) ((fp)->_IO_read_ptr < (fp)->_IO_read_end)
 #elif defined(__APPLE__) || defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__NetBSD__)
@@ -1470,14 +1458,14 @@ Cell* builtin_char_ready(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_RANGE(a, 0, 1, "char-ready?");
-    if (err) return err;
+    if (err) { return err; }
 
     Cell* port;
     if (a->count == 0) {
         port = builtin_current_input_port(e, a);
     } else {
         err = check_arg_types(a, CELL_PORT, "char-ready?");
-        if (err) return err;
+        if (err) { return err; }
         port = a->cell[0];
     }
 
@@ -1519,14 +1507,14 @@ Cell* builtin_u8_ready(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_RANGE(a, 0, 1, "u8-ready?");
-    if (err) return err;
+    if (err) { return err; }
 
     Cell* port;
     if (a->count == 0) {
         port = builtin_current_input_port(e, a);
     } else {
         err = check_arg_types(a, CELL_PORT, "u8-ready?");
-        if (err) return err;
+        if (err) { return err; }
         port = a->cell[0];
     }
 
@@ -1573,7 +1561,7 @@ Cell* builtin_u8_ready(const Lex* e, const Cell* a)
 Cell* builtin_display(const Lex* e, const Cell* a)
 {
     Cell* err = CHECK_ARITY_RANGE(a, 1, 2, "display");
-    if (err) return err;
+    if (err) { return err; }
 
     Cell* p;
     if (a->count == 1) {
@@ -1612,7 +1600,7 @@ Cell* builtin_display(const Lex* e, const Cell* a)
 Cell* builtin_displayln(const Lex* e, const Cell* a)
 {
     Cell* err = CHECK_ARITY_RANGE(a, 1, 2, "displayln");
-    if (err) return err;
+    if (err) { return err; }
 
     Cell* p;
     if (a->count == 1) {
@@ -1663,7 +1651,7 @@ Cell* builtin_displayln(const Lex* e, const Cell* a)
 Cell* builtin_write(const Lex* e, const Cell* a)
 {
     Cell* err = CHECK_ARITY_RANGE(a, 1, 2, "write");
-    if (err) return err;
+    if (err) { return err; }
 
     Cell* p;
     if (a->count == 1) {
@@ -1703,7 +1691,7 @@ Cell* builtin_write(const Lex* e, const Cell* a)
 Cell* builtin_writeln(const Lex* e, const Cell* a)
 {
     Cell* err = CHECK_ARITY_RANGE(a, 1, 2, "writeln");
-    if (err) return err;
+    if (err) { return err; }
 
     Cell* p;
     if (a->count == 1) {
@@ -2100,13 +2088,12 @@ Cell* builtin_call_with_port(const Lex* e, const Cell* a) {
     const Cell* proc = a->cell[1];
 
     /* Check arity if proc is a lambda. */
-    if (!proc->is_builtin) {
-        if (check_lambda_arity(proc, 1) != 1) {
-            return make_cell_error(
-                "call-with-port: lambda must take only one argument",
-                VALUE_ERR);
-        }
+    if ((!proc->is_builtin) && (check_lambda_arity(proc, 1) != 1)) {
+        return make_cell_error(
+            "call-with-port: lambda must take only one argument",
+            VALUE_ERR);
     }
+
     Cell* args = make_sexpr_len2(proc, p);
     Cell* result = coz_eval((Lex*)e, args);
 
@@ -2140,12 +2127,10 @@ Cell* builtin_call_with_input_file(const Lex* e, const Cell* a) {
     const Cell* proc = a->cell[1];
 
     /* Check arity of lambda. */
-    if (!proc->is_builtin) {
-        if (check_lambda_arity(proc, 1) != 1) {
-            return make_cell_error(
-                "call-with-input-file: lambda must take exactly one arg",
-                ARITY_ERR);
-        }
+    if ((!proc->is_builtin) && (check_lambda_arity(proc, 1) != 1)) {
+        return make_cell_error(
+            "call-with-input-file: lambda must take exactly one arg",
+            ARITY_ERR);
     }
 
     /* Open the port for reading. */
@@ -2187,12 +2172,10 @@ Cell* builtin_call_with_output_file(const Lex* e, const Cell* a) {
     const Cell* proc = a->cell[1];
 
     /* Check arity of lambda. */
-    if (!proc->is_builtin) {
-        if (check_lambda_arity(proc, 1) != 1) {
-            return make_cell_error(
-                "call-with-output-file: lambda must take exactly one arg",
-                ARITY_ERR);
-        }
+    if ((!proc->is_builtin) && (check_lambda_arity(proc, 1) != 1)) {
+        return make_cell_error(
+            "call-with-output-file: lambda must take exactly one arg",
+            ARITY_ERR);
     }
 
     /* Open the port for writing */
@@ -2235,12 +2218,10 @@ Cell* builtin_with_input_from_file(const Lex* e, const Cell* a) {
     const Cell* proc = a->cell[1];
 
     /* Check arity of lambda. */
-    if (!proc->is_builtin) {
-        if (check_lambda_arity(proc, 0) != 0) {
-            return make_cell_error(
-                "with-input-from-file: lambda must not take args",
-                ARITY_ERR);
-        }
+    if ((!proc->is_builtin) && (check_lambda_arity(proc, 0) != 0)) {
+        return make_cell_error(
+            "with-input-from-file: lambda must not take args",
+            ARITY_ERR);
     }
 
     /* Save stdin port to local var. */
@@ -2289,12 +2270,10 @@ Cell* builtin_with_output_to_file(const Lex* e, const Cell* a) {
     const Cell* proc = a->cell[1];
 
     /* Check arity of lambda. */
-    if (!proc->is_builtin) {
-        if (check_lambda_arity(proc, 0) != 0) {
-            return make_cell_error(
-                "with-output-to-file: lambda must not take args",
-                ARITY_ERR);
-        }
+    if ((!proc->is_builtin) && (check_lambda_arity(proc, 0) != 0)) {
+        return make_cell_error(
+            "with-output-to-file: lambda must not take args",
+            ARITY_ERR);
     }
 
     /* Save stdout port to local var. */

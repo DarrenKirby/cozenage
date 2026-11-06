@@ -79,7 +79,7 @@ static int paren_balance(const char *s, int *in_string)
         } else if (*p == '#' && *(p+1) == '\\') {
             /* Char literal — skip this and next. */
             p++;
-            if (*p && *(p+1)) p++;
+            if (*p && *(p+1)) { p++; }
         } else if (*p == '(') {
             balance++;
         } else if (*p == ')') {
@@ -117,8 +117,7 @@ static char* read_multiline(const char* prompt, const char* cont_prompt)
     }
 
     /* Should not ever be null here, but be defensive. */
-    if (!r.line)
-        return GC_strdup("");
+    if (!r.line) { return GC_strdup(""); }
 
     /* Add first line to history immediately. */
     if (r.line[0] != '\0') {
@@ -226,7 +225,7 @@ int run_repl(const lib_load_config load_libs)
     /* Initialize signal handler. */
     install_signal_handlers();
     /* Initialize symbol table with initial size of 128. */
-    symbol_table = ht_create(128);
+    symbol_table = ht_create(INIT_SYMBOL_TABLE_SIZE);
     /* Load readline history. */
     read_history_from_file();
     /* Initialize default ports. */

@@ -29,6 +29,8 @@
 #include <gc/gc.h>
 #include <stdlib.h>
 
+#define MAX_ASCII_BYTE 0x7F
+
 
 /*-------------------------------------------------------*
  *    Control features and list iteration procedures     *
@@ -43,7 +45,7 @@ Cell* builtin_eval(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_MIN(a, 1, "eval");
-    if (err) return err;
+    if (err) { return err; }
     Cell* args;
     /* Convert list to s-expr if we are handed a quote. */
     if (a->cell[0]->type == CELL_PAIR) {
@@ -70,7 +72,7 @@ Cell* builtin_apply(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_MIN(a, 2, "apply");
-    if (err) return err;
+    if (err) { return err; }
     if (a->cell[0]->type != CELL_PROC) {
         return make_cell_error(
             "apply: arg 1 must be a procedure",
@@ -113,13 +115,14 @@ Cell* builtin_map(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_MIN(a, 2, "map");
-    if (err) return err;
+    if (err) { return err; }
 
     const Cell* proc = a->cell[0];
-    if (proc->type != CELL_PROC)
+    if (proc->type != CELL_PROC) {
         return make_cell_error(
             "map: arg 1 must be a procedure",
             TYPE_ERR);
+    }
 
     const int num_lists = a->count - 1;
     int shortest_len = INT32_MAX;
@@ -136,7 +139,7 @@ Cell* builtin_map(const Lex* e, const Cell* a)
             lst = make_list_from_sexpr(lst);
         }
 
-        if (lst->type == CELL_NIL) return make_cell_nil();
+        if (lst->type == CELL_NIL) { return make_cell_nil(); }
         if (lst->type != CELL_PAIR) {
             return make_cell_error(
                 fmt_err("map: arg %d must be a proper list", i+2),
@@ -158,7 +161,7 @@ Cell* builtin_map(const Lex* e, const Cell* a)
             lst->len = (int)len_obj->integer_v;
         }
 
-        if (lst->len < shortest_len) shortest_len = lst->len;
+        if (lst->len < shortest_len) { shortest_len = lst->len; }
         cursors[i] = lst;
     }
 
@@ -186,9 +189,9 @@ Cell* builtin_map(const Lex* e, const Cell* a)
             val = coz_apply_and_get_val(proc, args_sexpr, (Lex*)e);
         }
 
-        if (val && val->type == CELL_ERROR) return val;
+        if (val && val->type == CELL_ERROR) { return val; }
         /* Ignore unspecified results. */
-        if (val == USP_Obj) continue;
+        if (val == USP_Obj) { continue; }
 
         /* Append to final result list. */
         Cell* result_pair = make_cell_pair(val, make_cell_nil());
@@ -215,7 +218,7 @@ Cell* builtin_vector_map(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_MIN(a, 2, "vector-map");
-    if (err) return err;
+    if (err) { return err; }
     if (a->cell[0]->type != CELL_PROC) {
         return make_cell_error(
             "vector-map: arg 1 must be a procedure",
@@ -244,7 +247,7 @@ Cell* builtin_vector_map(const Lex* e, const Cell* a)
     Cell* final_result = make_cell_vector();
 
     for (int i = 0; i < shortest_len; i++) {
-        /* Build a S-expr of the i-th arguments. */
+        /* Build an S-expr of the i-th arguments. */
         Cell* arg_list = make_cell_sexpr();
         for (int j = 0; j < num_args; j++) {
             const Cell* current_vec = a->cell[j + 1];
@@ -263,8 +266,8 @@ Cell* builtin_vector_map(const Lex* e, const Cell* a)
         }
         /* Deal with legitimate null value. I think this is now unnecessary
          * after replacing all 'legitimate' null returns with USP_Obj. */
-        if (!tmp_result) continue;
-        if (tmp_result == USP_Obj) continue;
+        if (!tmp_result) { continue; }
+        if (tmp_result == USP_Obj) { continue; }
         if (tmp_result->type == CELL_ERROR) {
             /* Propagate any evaluation errors */
             return tmp_result;
@@ -285,13 +288,14 @@ Cell* builtin_string_map(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_MIN(a, 2, "string-map");
-    if (err) return err;
+    if (err) { return err; }
 
     const Cell* proc = a->cell[0];
-    if (proc->type != CELL_PROC)
+    if (proc->type != CELL_PROC) {
         return make_cell_error(
             "string-map: arg 1 must be a procedure",
             TYPE_ERR);
+    }
 
     const int num_strings = a->count - 1;
     int shortest_len = INT32_MAX;
@@ -302,17 +306,18 @@ Cell* builtin_string_map(const Lex* e, const Cell* a)
 
     for (int i = 0; i < num_strings; i++) {
         const Cell* s = a->cell[i + 1];
-        if (s->type != CELL_STRING)
+        if (s->type != CELL_STRING) {
             return make_cell_error(
                 fmt_err("string-map: arg %d must be a string", i+2),
                 TYPE_ERR);
+        }
 
-        if (s->char_count < shortest_len) shortest_len = s->char_count;
+        if (s->char_count < shortest_len) { shortest_len = s->char_count; }
         s_cells[i] = s;
         byte_offsets[i] = 0;
     }
 
-    if (shortest_len == 0) return make_cell_string("");
+    if (shortest_len == 0) { return make_cell_string(""); }
 
     /* Collect Resulting Characters in a temporary array. */
     /* Use an array of UChar32 to avoid repeated UTF-8 encoding/shifting inside the loop. */
@@ -341,18 +346,19 @@ Cell* builtin_string_map(const Lex* e, const Cell* a)
             val = coz_apply_and_get_val(proc, args_sexpr, (Lex*)e);
         }
 
-        if (!val) return nullptr;
-        if (val->type == CELL_ERROR) return val;
-        if (val->type != CELL_CHAR)
+        if (!val) { return nullptr; }
+        if (val->type == CELL_ERROR) { return val; }
+        if (val->type != CELL_CHAR) {
             return make_cell_error(
                 "string-map: procedure must return a char",
                 TYPE_ERR);
+        }
 
         const UChar32 res_c = val->char_v;
         res_chars[i] = res_c;
         const int b_len = utf8_code_point_len(res_c);
         total_bytes += b_len;
-        if (res_c > 0x7F) {
+        if (res_c > MAX_ASCII_BYTE) {
             is_ascii = 0;
         }
     }
@@ -384,13 +390,14 @@ Cell* builtin_foreach(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_MIN(a, 2, "for-each");
-    if (err) return err;
+    if (err) { return err; }
 
     const Cell* proc = a->cell[0];
-    if (proc->type != CELL_PROC)
+    if (proc->type != CELL_PROC) {
         return make_cell_error(
             "for-each: arg 1 must be a procedure",
             TYPE_ERR);
+    }
 
     const int num_lists = a->count - 1;
     int shortest_len = INT32_MAX;
@@ -399,7 +406,7 @@ Cell* builtin_foreach(const Lex* e, const Cell* a)
     const Cell** cursors = GC_MALLOC(sizeof(Cell*) * num_lists);
     for (int i = 0; i < num_lists; i++) {
         Cell* lst = a->cell[i + 1];
-        if (lst->type == CELL_NIL) return USP_Obj;
+        if (lst->type == CELL_NIL) { return USP_Obj; }
 
         /* Ensure all list args are lists. */
         if (lst->type != CELL_PAIR) {
@@ -421,7 +428,7 @@ Cell* builtin_foreach(const Lex* e, const Cell* a)
 
             lst->len = (int)len_obj->integer_v;
         }
-        if (lst->len < shortest_len) shortest_len = lst->len;
+        if (lst->len < shortest_len) { shortest_len = lst->len; }
         cursors[i] = lst;
     }
 
@@ -441,7 +448,7 @@ Cell* builtin_foreach(const Lex* e, const Cell* a)
         }
 
         /* If the procedure returns an error, stop and propagate it. */
-        if (val && val->type == CELL_ERROR) return val;
+        if (val && val->type == CELL_ERROR) { return val; }
     }
     return USP_Obj;
 }
@@ -454,13 +461,14 @@ Cell* builtin_vector_foreach(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_MIN(a, 2, "vector-for-each");
-    if (err) return err;
+    if (err) { return err; }
 
     const Cell* proc = a->cell[0];
-    if (proc->type != CELL_PROC)
+    if (proc->type != CELL_PROC) {
         return make_cell_error(
             "vector-for-each: arg 1 must be a procedure",
             TYPE_ERR);
+    }
 
     const int num_vectors = a->count - 1;
     int shortest_len = INT32_MAX;
@@ -468,15 +476,16 @@ Cell* builtin_vector_foreach(const Lex* e, const Cell* a)
     /* Calculate the shortest length and validate types. */
     for (int i = 0; i < num_vectors; i++) {
         const Cell* v = a->cell[i + 1];
-        if (v->type != CELL_VECTOR)
+        if (v->type != CELL_VECTOR) {
             return make_cell_error(
                 fmt_err("vector-for-each: arg %d must be a vector", i+2),
                 TYPE_ERR);
+        }
 
-        if (v->len < shortest_len) shortest_len = v->count;
+        if (v->len < shortest_len) { shortest_len = v->count; }
     }
 
-    if (shortest_len == 0) return USP_Obj;
+    if (shortest_len == 0) { return USP_Obj; }
 
     /* Side effect loop: No allocations for result collection! */
     for (int i = 0; i < shortest_len; i++) {
@@ -493,7 +502,7 @@ Cell* builtin_vector_foreach(const Lex* e, const Cell* a)
         }
 
         /* Stop execution and return if the procedure returns an error. */
-        if (tmp_result && tmp_result->type == CELL_ERROR) return tmp_result;
+        if (tmp_result && tmp_result->type == CELL_ERROR) { return tmp_result; }
     }
     return USP_Obj;
 }
@@ -506,13 +515,14 @@ Cell* builtin_string_foreach(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_MIN(a, 2, "string-for-each");
-    if (err) return err;
+    if (err) { return err; }
 
     const Cell* proc = a->cell[0];
-    if (proc->type != CELL_PROC)
+    if (proc->type != CELL_PROC) {
         return make_cell_error(
             "string-for-each: arg 1 must be a procedure",
             TYPE_ERR);
+    }
 
     const int num_strings = a->count - 1;
     int shortest_len = INT32_MAX;
@@ -523,12 +533,13 @@ Cell* builtin_string_foreach(const Lex* e, const Cell* a)
 
     for (int i = 0; i < num_strings; i++) {
         const Cell* s = a->cell[i + 1];
-        if (s->type != CELL_STRING)
+        if (s->type != CELL_STRING) {
             return make_cell_error(
-                fmt_err("string-for-each: arg %d must be a string", i+2),
+                fmt_err("string-for-each: arg %d must be a string", i + 2),
                 TYPE_ERR);
+        }
 
-        if (s->char_count < shortest_len) shortest_len = s->char_count;
+        if (s->char_count < shortest_len) { shortest_len = s->char_count; }
         s_cells[i] = s;
         byte_offsets[i] = 0;
     }
@@ -555,7 +566,7 @@ Cell* builtin_string_foreach(const Lex* e, const Cell* a)
             val = coz_apply_and_get_val(proc, args_sexpr, (Lex*)e);
         }
 
-        if (val && val->type == CELL_ERROR) return val;
+        if (val && val->type == CELL_ERROR) { return val; }
         /* Return value is ignored in for-each. */
     }
     return USP_Obj;
@@ -569,7 +580,7 @@ Cell* builtin_string_foreach(const Lex* e, const Cell* a)
 Cell* builtin_load(const Lex* e, const Cell* a)
 {
     Cell* err = CHECK_ARITY_EXACT(a, 1, "load");
-    if (err) return err;
+    if (err) { return err; }
     if (a->cell[0]->type != CELL_STRING) {
         return make_cell_error(
             "load: arg must be a string",

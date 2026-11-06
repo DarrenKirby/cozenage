@@ -52,11 +52,12 @@ static void check_and_warn_extension(const char *file_path)
 static void check_paren_balance(const TokenArray* ta, const char *file)
 {
     /* First check that the expression is balanced. */
-    int left_count = 0, right_count = 0;
+    int left_count = 0;
+    int right_count = 0;
 
     for (int i = 0; i < ta->count; i++) {
-        if (ta->tokens[i].type == T_LEFT_PAREN) left_count++;
-        if (ta->tokens[i].type == T_RIGHT_PAREN) right_count++;
+        if (ta->tokens[i].type == T_LEFT_PAREN) { left_count++; }
+        if (ta->tokens[i].type == T_RIGHT_PAREN) { right_count++; }
     }
 
     if (left_count != right_count) {
@@ -115,7 +116,7 @@ int run_file_script(const char *file_path, const lib_load_config load_libs)
     check_and_warn_extension(file_path);
 
     /* Initialize symbol table with initial size of 128. */
-    symbol_table = ht_create(128);
+    symbol_table = ht_create(INIT_SYMBOL_TABLE_SIZE);
     /* Initialize default ports. */
     init_default_ports();
     /* Initialize global singleton objects, nil, #t, #f, and EOF. */
@@ -163,8 +164,8 @@ Cell* parse_all_expressions(Lex* e, TokenArray* ta)
             break;
         }
 
-        //printf("Before transform: \n");
-        //debug_print_cell(expression);
+        // printf("Before transform: \n");
+        // debug_print_cell(expression);
         /* Kick all S-expressions off to the transformer. */
         if (expression->type == CELL_SEXPR) {
             expression = expand(expression);
@@ -175,8 +176,8 @@ Cell* parse_all_expressions(Lex* e, TokenArray* ta)
             return expression;
         }
 
-        //printf("After transform: \n");
-        //debug_print_cell(expression);
+        // printf("After transform: \n");
+        // debug_print_cell(expression);
 
         /* Evaluate the expression. */
         Cell* result = coz_eval(e, expression);

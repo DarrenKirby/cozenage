@@ -119,7 +119,7 @@ Cell* load_scheme_lib(const Cell* libspec, const Lex* e, char *path, const Impor
 
         if (block_type == make_cell_symbol("import")) {
             Cell *res = coz_eval(sandbox, ast->cell[k]);
-            if (res->type == CELL_ERROR) return res;
+            if (res->type == CELL_ERROR) { return res; }
         }
         else if (block_type == make_cell_symbol("export")) {
             exports = ast->cell[k];
@@ -166,9 +166,9 @@ Cell* load_scheme_lib(const Cell* libspec, const Lex* e, char *path, const Impor
             }
         }
 
-        if (skip) continue;
+        if (skip) { continue; }
 
-        /* Apply RENAME modifier. */
+        /* Apply the RENAME modifier. */
         const char* dest_name = orig_name;
         for (int j = 0; j < spec->rename_count; j++) {
             if (strcmp(orig_name, spec->renames[j].from) == 0) {
@@ -232,7 +232,7 @@ Cell* parse_import_spec(const Cell* node, ImportSpec* spec)
 
     /* Recurse first so modifiers apply inside-out. */
     Cell* inner_res = parse_import_spec(node->cell[1], spec);
-    if (inner_res->type == CELL_ERROR) return inner_res;
+    if (inner_res->type == CELL_ERROR) { return inner_res; }
 
     const char* mod = node->cell[0]->sym;
 
@@ -240,16 +240,16 @@ Cell* parse_import_spec(const Cell* node, ImportSpec* spec)
         spec->mode = IMPORT_ONLY;
         spec->filter_count = node->count - 2;
         spec->filter_names = GC_malloc(spec->filter_count * sizeof(char*));
-        for (int j = 0; j < spec->filter_count; j++)
+        for (int j = 0; j < spec->filter_count; j++) {
             spec->filter_names[j] = node->cell[j + 2]->sym;
-
+        }
     } else if (strcmp(mod, "except") == 0) {
         spec->mode = IMPORT_EXCEPT;
         spec->filter_count = node->count - 2;
         spec->filter_names = GC_malloc(spec->filter_count * sizeof(char*));
-        for (int j = 0; j < spec->filter_count; j++)
+        for (int j = 0; j < spec->filter_count; j++) {
             spec->filter_names[j] = node->cell[j + 2]->sym;
-
+        }
     } else if (strcmp(mod, "prefix") == 0) {
         if (node->count != 3) {
             return make_cell_error(
@@ -274,7 +274,9 @@ Cell* parse_import_spec(const Cell* node, ImportSpec* spec)
         CznRename* combined = GC_malloc(total_count * sizeof(CznRename));
 
         /* Copy existing. */
-        for (int j = 0; j < spec->rename_count; j++) combined[j] = spec->renames[j];
+        for (int j = 0; j < spec->rename_count; j++) {
+            combined[j] = spec->renames[j];
+        }
 
         /* Add new. */
         for (int j = 0; j < new_count; j++) {
@@ -304,7 +306,7 @@ Cell* parse_import_spec(const Cell* node, ImportSpec* spec)
 static bool name_in_list(const char* name, const char** list, const int count)
 {
     for (int i = 0; i < count; i++) {
-        if (strcmp(name, list[i]) == 0) return true;
+        if (strcmp(name, list[i]) == 0)  { return true; }
     }
     return false;
 }
@@ -325,12 +327,9 @@ static void apply_import_spec(const Lex* env,
 
         /* Apply only/except filter. */
         if (spec->mode == IMPORT_ONLY) {
-            if (!name_in_list(scheme_name, spec->filter_names, spec->filter_count))
-                continue;
-        } else if (spec->mode == IMPORT_EXCEPT) {
-            if (name_in_list(scheme_name, spec->filter_names, spec->filter_count))
-                continue;
-        }
+            if (!name_in_list(scheme_name, spec->filter_names, spec->filter_count)) { continue; }
+        } else if ((spec->mode == IMPORT_EXCEPT) &&
+            name_in_list(scheme_name, spec->filter_names, spec->filter_count)) { continue; }
 
         /* Apply the rename: check if this binding has a rename entry.
          * Bindings not mentioned in the rename list pass through unchanged. */
@@ -399,7 +398,7 @@ void load_library(const char* libname, const Lex* env) {
     char **search_paths = get_load_paths();
 
     for (int j = 0; search_paths[j] != nullptr; ++j) {
-        if (search_paths[j][0] == '\0') continue;
+        if (search_paths[j][0] == '\0') { continue; }
         snprintf(path, sizeof(path), "%s/%s/%s.%s",
             search_paths[j], "base", libname, C_LIB_EXT);
 

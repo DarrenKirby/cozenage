@@ -125,7 +125,7 @@ char* tilde_expand(const char* path)
     } else {
         /* ~username/... */
         const char* slash = strchr(path + 1, '/');
-        size_t username_len = slash ? (size_t)(slash - path - 1) : strlen(path + 1);
+        const size_t username_len = slash ? (size_t)(slash - path - 1) : strlen(path + 1);
         char* username = GC_MALLOC_ATOMIC(username_len + 1);
         memcpy(username, path + 1, username_len);
         username[username_len] = '\0';
@@ -143,7 +143,7 @@ char* tilde_expand(const char* path)
         return GC_strdup(path);
     }
 
-    size_t result_len = strlen(home) + strlen(rest) + 1;
+    const size_t result_len = strlen(home) + strlen(rest) + 1;
     char* result = GC_MALLOC_ATOMIC(result_len);
     snprintf(result, result_len, "%s%s", home, rest);
     return result;
@@ -164,7 +164,7 @@ void setup_history() {
         if (mkdir_p(dir_part) == 0) {
             /* Ensure the file itself exists. */
             FILE *f = fopen(cozenage_history_path, "a");
-            if (f) fclose(f);
+            if (f) { fclose(f); }
         }
     }
     free(dir_part);

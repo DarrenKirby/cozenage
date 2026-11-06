@@ -29,12 +29,14 @@
 #include "symbols.h"
 #include "transforms.h"
 
+#define GEN_SYM_BUF_SIZE 64
+
 
 static int gen_sym_counter = 0;
 
 
 static Cell* gen_sym() {
-    char name[64];
+    char name[GEN_SYM_BUF_SIZE];
     /* Use the prefix "_" to further distinguish from user symbols. */
     snprintf(name, sizeof(name), "_case%d", gen_sym_counter++);
     return make_cell_symbol(name);
@@ -52,7 +54,7 @@ static Cell* transform_defines_to_bindings(const Cell* inner_defines) {
     Cell* bindings_list = make_cell_sexpr();
 
     for (int i = 0; i < inner_defines->count; i++) {
-        Cell* def = inner_defines->cell[i];
+        const Cell* def = inner_defines->cell[i];
         Cell* binding_pair = make_cell_sexpr();
 
         /* def->cell[0] is 'define'
@@ -103,9 +105,9 @@ Cell* expand_body_expressions(const Cell* body_elements, const int start_index) 
             is_same_symbol(current->cell[0], G_define_sym)) {
             cell_add(inner_defines, current);
             i++;
-            } else {
-                break;
-            }
+        } else {
+            break;
+        }
     }
 
     Cell* final_body_expr;
@@ -216,9 +218,11 @@ static Cell* expand_named_let(const Cell* c) {
  * A ⟨step⟩ can be omitted, in which case the effect is the same as if (⟨variable⟩ ⟨init⟩ ⟨variable⟩) had been written
  * instead of (⟨variable⟩ ⟨init⟩). */
 static Cell* expand_do(const Cell* c) {
-    if (c->count < 3) return make_cell_error(
+    if (c->count < 3) {
+        return make_cell_error(
         "Malformed do expression",
         SYNTAX_ERR);
+    }
 
     const Cell* bindings_input = c->cell[1];
     const Cell* test_clause = c->cell[2];
@@ -308,9 +312,11 @@ static Cell* expand_do(const Cell* c) {
  * and the values returned by this procedure are returned by the case expression. */
 static Cell* expand_case(const Cell* c) {
     /* c is (case key clauses...). */
-    if (c->count < 3) return make_cell_error(
+    if (c->count < 3) {
+        return make_cell_error(
         "Malformed case expression",
         SYNTAX_ERR);
+    }
 
     Cell* key_expr = expand(c->cell[1]);
 
@@ -324,7 +330,7 @@ static Cell* expand_case(const Cell* c) {
     /* Iterate through clauses starting at index 2. */
     for (int i = 2; i < c->count; i++) {
         const Cell* clause = c->cell[i];
-        if (clause->type != CELL_SEXPR || clause->count < 2) continue;
+        if (clause->type != CELL_SEXPR || clause->count < 2) { continue; }
 
         Cell* cond_clause = make_cell_sexpr();
         Cell* datalist = clause->cell[0];
@@ -483,7 +489,7 @@ Cell* transform_qq(const Cell* input, const int depth) {
 
     /* UNQUOTE: If depth is 1, return the expression directly to be evaluated. */
     if (first == G_unquote_sym) {
-        if (depth == 1) return input->cell[1];
+        if (depth == 1) { return input->cell[1]; }
 
         /* If depth > 1, this is inside a nested quote, so rebuild (list 'unquote ...). */
         return make_sexpr_len3(
@@ -536,7 +542,7 @@ Cell* transform_qq(const Cell* input, const int depth) {
 
 Cell* expand(Cell* c) {
     /* Base case: only S-expressions can be expanded */
-    if (c->type != CELL_SEXPR || c->count == 0) return c;
+    if (c->type != CELL_SEXPR || c->count == 0) { return c; }
 
     const Cell* head = c->cell[0];
 
@@ -591,9 +597,9 @@ Cell* expand(Cell* c) {
         }
 
         /* let*, letrec, and letrec* primitives handled the same. */
-        if (is_same_symbol(head, G_let_star_sym))    return expand_let_family(c);
-        if (is_same_symbol(head, G_letrec_sym))      return expand_let_family(c);
-        if (is_same_symbol(head, G_letrec_star_sym)) return expand_let_family(c);
+        if (is_same_symbol(head, G_let_star_sym))    { return expand_let_family(c); }
+        if (is_same_symbol(head, G_letrec_sym))      { return expand_let_family(c); }
+        if (is_same_symbol(head, G_letrec_star_sym)) { return expand_let_family(c); }
     }
 
     /* Fallback: expand elements of the list. */

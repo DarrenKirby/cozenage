@@ -31,33 +31,36 @@
 #include <unicode/umachine.h>
 #include <unicode/ustring.h>
 
+/* Large enough for 64bit binary string. */
+#define CONV_BUF_SIZE 128
+
 
 static int string_compare(const Cell* a, const Cell* b) {
     const int32_t min_len = (a->count < b->count) ? a->count : b->count;
     const int res = memcmp(a->str, b->str, min_len);
-    if (res != 0) return res;
+    if (res != 0) { return res; }
     /* If prefixes are identical, the shorter string comes first. */
-    if (a->count < b->count) return -1;
-    if (a->count > b->count) return 1;
+    if (a->count < b->count) { return -1; }
+    if (a->count > b->count) { return 1; }
     return 0;
 }
 
 
 /* Helper for radix 2 number->string call. */
 static void integer_to_binary_string(const int64_t val, char* buf) {
-    if (val == 0) { strcpy(buf, "0"); return; }
-    char temp[66];
+    if (val == 0) { strncpy(buf, "0", CONV_BUF_SIZE); return; }
+    char temp[CONV_BUF_SIZE];
     int i = 0;
     uint64_t v = (val < 0) ? -val : val;
     while (v > 0) {
         temp[i++] = (v & 1) ? '1' : '0';
         v >>= 1;
     }
-    if (val < 0) temp[i++] = '-';
+    if (val < 0) { temp[i++] = '-'; }
 
     /* Reverse into buf. */
     int j = 0;
-    while (i > 0 && (size_t)j < 128 - 1) buf[j++] = temp[--i];
+    while (i > 0 && (size_t)j < CONV_BUF_SIZE - 1) { buf[j++] = temp[--i]; }
     buf[j] = '\0';
 }
 
@@ -68,13 +71,18 @@ static void integer_to_oct_or_hex_string(const int64_t val, char* buf, const uin
     const unsigned long long mag = neg ? -(unsigned long long)val
                                  : (unsigned long long)val;
 
-    const char *fmt = (radix == 8) ? "%llo" : "%llx";
-    snprintf(buf, 128, fmt, mag);
+    const char *fmt = (radix == BASE_8) ? "%llo" : "%llx";
+    snprintf(buf, CONV_BUF_SIZE, fmt, mag);
 
     if (neg) {
-        char tmp[128];
-        snprintf(tmp, sizeof(tmp), "-%s", buf);
-        strncpy(buf, tmp, 128);
+        size_t len = strlen(buf);
+        // Ensure there is enough space in the buffer to add the minus sign
+        if (len + 1 < CONV_BUF_SIZE) {
+            // Shift the string and its null terminator 1 byte to the right
+            memmove(buf + 1, buf, len + 1);
+            // Insert the minus sign at the beginning
+            buf[0] = '-';
+        }
     }
 }
 
@@ -90,14 +98,14 @@ Cell* builtin_string(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = check_arg_types(a, CELL_CHAR, "string");
-    if (err) return err;
+    if (err) { return err; }
 
     const int32_t char_count = a->count;
     /* Bypass the string constructor and fill metadata directly. */
     Cell* v = GC_MALLOC(sizeof(Cell));
 
     /* Worst-case allocation: 4 bytes per codepoint + null terminator. */
-    uint8_t* buffer = GC_MALLOC_ATOMIC(char_count * 4 + 1);
+    uint8_t* buffer = GC_MALLOC_ATOMIC((char_count * 4) + 1);
 
     int32_t byte_idx = 0;
     int32_t is_ascii = true;
@@ -105,7 +113,7 @@ Cell* builtin_string(const Lex* e, const Cell* a)
     for (int i = 0; i < char_count; i++) {
         const int32_t cp = a->cell[i]->char_v;
 
-        if (cp >= 0x80) is_ascii = false;
+        if (cp >= ASCII_MAX) { is_ascii = false; }
 
         byte_idx += utf8_encode(cp, buffer + byte_idx);
     }
@@ -133,7 +141,7 @@ Cell* builtin_string_length(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "string-length");
-    if (err) return err;
+    if (err) { return err; }
     if (a->cell[0]->type != CELL_STRING) {
         return make_cell_error(
             "string-length: arg 1 must be a string",
@@ -148,17 +156,17 @@ Cell* builtin_string_eq_pred(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING, "string=?");
-    if (err) return err;
+    if (err) { return err; }
 
     /* 0 or 1 args is technically true in R7RS */
-    if (a->count < 2) return True_Obj;
+    if (a->count < 2) { return True_Obj; }
 
     for (int i = 0; i < a->count - 1; i++) {
         const Cell* lhs = a->cell[i];
         const Cell* rhs = a->cell[i+1];
 
         /* Pointer identity. */
-        if (lhs == rhs) continue;
+        if (lhs == rhs) { continue; }
 
         /* Byte length check */
         if (lhs->count != rhs->count) {
@@ -181,14 +189,14 @@ Cell* builtin_string_lt_pred(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING, "string<?");
-    if (err) return err;
-    if (a->count < 2) return True_Obj;
+    if (err) { return err; }
+    if (a->count < 2) { return True_Obj; }
 
     for (int i = 0; i < a->count - 1; i++) {
         const Cell* lhs = a->cell[i];
         const Cell* rhs = a->cell[i+1];
         /* A string is not less than itself. */
-        if (lhs == rhs) return False_Obj;
+        if (lhs == rhs) { return False_Obj; }
 
         if (string_compare(lhs, rhs) >= 0) {
             return False_Obj;
@@ -202,8 +210,8 @@ Cell* builtin_string_lte_pred(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING, "string<=?");
-    if (err) return err;
-    if (a->count < 2) return True_Obj;
+    if (err) { return err; }
+    if (a->count < 2) { return True_Obj; }
 
     for (int i = 0; i < a->count - 1; i++) {
         const Cell* lhs = a->cell[i];
@@ -221,14 +229,14 @@ Cell* builtin_string_gt_pred(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING, "string>?");
-    if (err) return err;
-    if (a->count < 2) return True_Obj;
+    if (err) { return err; }
+    if (a->count < 2) { return True_Obj; }
 
     for (int i = 0; i < a->count - 1; i++) {
         const Cell* lhs = a->cell[i];
         const Cell* rhs = a->cell[i+1];
         /* A string is not less than itself. */
-        if (lhs == rhs) return False_Obj;
+        if (lhs == rhs) { return False_Obj; }
 
         if (string_compare(lhs, rhs) <= 0) {
             return False_Obj;
@@ -242,8 +250,8 @@ Cell* builtin_string_gte_pred(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING, "string>=?");
-    if (err) return err;
-    if (a->count < 2) return True_Obj;
+    if (err) { return err; }
+    if (a->count < 2) { return True_Obj; }
 
     for (int i = 0; i < a->count - 1; i++) {
         const Cell* lhs = a->cell[i];
@@ -264,12 +272,12 @@ Cell* builtin_string_append(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING, "string-append");
-    if (err) return err;
+    if (err) { return err; }
 
     /* Handle (string-append) or (string-append "foo"). */
-    if (a->count == 0) return make_cell_string("");
+    if (a->count == 0) { return make_cell_string(""); }
     /* R7RS says the result must be newly allocated. */
-    if (a->count == 1) return cell_copy(a->cell[0]);
+    if (a->count == 1) { return cell_copy(a->cell[0]); }
 
     uint32_t total_bytes = 0;
     uint32_t total_chars = 0;
@@ -279,7 +287,7 @@ Cell* builtin_string_append(const Lex* e, const Cell* a)
     for (int i = 0; i < a->count; i++) {
         total_bytes += a->cell[i]->count;
         total_chars += a->cell[i]->char_count;
-        if (!a->cell[i]->ascii) is_ascii = 0;
+        if (!a->cell[i]->ascii) { is_ascii = 0; }
     }
 
     /* Allocate the exact buffer once. */
@@ -314,17 +322,19 @@ Cell* builtin_string_ref(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2, "string-ref");
-    if (err) return err;
+    if (err) { return err; }
 
     const Cell* s_cell = a->cell[0];
-    if (s_cell->type != CELL_STRING)
+    if (s_cell->type != CELL_STRING) {
         return make_cell_error(
             "string-ref: arg 1 must be a string",
             TYPE_ERR);
-    if (a->cell[1]->type != CELL_INTEGER)
+    }
+    if (a->cell[1]->type != CELL_INTEGER) {
         return make_cell_error(
             "string-ref: arg 2 must be an integer",
             TYPE_ERR);
+    }
 
     const int32_t char_idx = (int32_t)a->cell[1]->integer_v;
 
@@ -361,23 +371,26 @@ Cell* builtin_make_string(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_RANGE(a, 1, 2, "make-string");
-    if (err) return err;
+    if (err) { return err; }
 
-    if (a->cell[0]->type != CELL_INTEGER)
+    if (a->cell[0]->type != CELL_INTEGER) {
         return make_cell_error(
             "make-string: arg 1 must be an integer",
             TYPE_ERR);
+    }
 
     const int32_t char_count = (int32_t)a->cell[0]->integer_v;
-    if (char_count < 0)
+    if (char_count < 0) {
         return make_cell_error(
             "make-string: length cannot be negative",
             VALUE_ERR);
+    }
 
-    if (a->count == 2 && a->cell[1]->type != CELL_CHAR)
+    if (a->count == 2 && a->cell[1]->type != CELL_CHAR) {
         return make_cell_error(
             "make-string: arg 2 must be a char",
             TYPE_ERR);
+    }
 
     /* Default to space (U+0020) if no char provided. */
     const int32_t fill_cp = (a->count == 2) ? a->cell[1]->char_v : 0x0020;
@@ -425,13 +438,14 @@ Cell* builtin_string_list(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_RANGE(a, 1, 3, "string->list");
-    if (err) return err;
+    if (err) { return err; }
 
     const Cell* s_cell = a->cell[0];
-    if (s_cell->type != CELL_STRING)
+    if (s_cell->type != CELL_STRING) {
         return make_cell_error(
             "string->list: arg 1 must be a string",
             TYPE_ERR);
+    }
 
     const int32_t str_len = s_cell->char_count;
 
@@ -439,17 +453,19 @@ Cell* builtin_string_list(const Lex* e, const Cell* a)
     int32_t end = str_len;
 
     if (a->count >= 2) {
-        if (a->cell[1]->type != CELL_INTEGER)
+        if (a->cell[1]->type != CELL_INTEGER) {
             return make_cell_error(
                 "string->list: start must be an integer",
                 TYPE_ERR);
+        }
         start = (int32_t)a->cell[1]->integer_v;
     }
     if (a->count == 3) {
-        if (a->cell[2]->type != CELL_INTEGER)
+        if (a->cell[2]->type != CELL_INTEGER) {
             return make_cell_error(
                 "string->list: end must be an integer",
                 TYPE_ERR);
+        }
         end = (int32_t)a->cell[2]->integer_v;
     }
 
@@ -501,14 +517,15 @@ Cell* builtin_string_list(const Lex* e, const Cell* a)
 Cell* builtin_list_string(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 1, "list->string");
-    if (err) return err;
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "list-if (err) return err;>string");
+    if (err) { return err; }
 
     const Cell* l = a->cell[0];
-    if (l->type != CELL_PAIR && l->type != CELL_NIL)
+    if (l->type != CELL_PAIR && l->type != CELL_NIL) {
         return make_cell_error(
             "list->string: arg must be a list",
             TYPE_ERR);
+    }
 
     /* Validate types and calculate required memory. */
     int32_t total_bytes = 0;
@@ -517,13 +534,14 @@ Cell* builtin_list_string(const Lex* e, const Cell* a)
     const Cell* curr = l;
 
     while (curr->type == CELL_PAIR) {
-        if (curr->car->type != CELL_CHAR)
+        if (curr->car->type != CELL_CHAR) {
             return make_cell_error(
                 "list->string: all elements must be chars",
                 TYPE_ERR);
+        }
 
         const uint32_t cp = (uint32_t)curr->car->char_v;
-        if (cp >= 0x80) is_ascii = 0;
+        if (cp >= ASCII_MAX) { is_ascii = 0; }
         total_bytes += utf8_code_point_len(cp);
         char_count++;
         curr = curr->cdr;
@@ -537,7 +555,7 @@ Cell* builtin_list_string(const Lex* e, const Cell* a)
     while (curr->type == CELL_PAIR) {
         const int32_t cp = curr->car->char_v;
 
-        if (cp < 0x80) {
+        if (cp < ASCII_MAX) {
             buffer[byte_idx++] = (char)cp;
         } else {
             const int32_t len = utf8_encode(cp, (uint8_t*)(buffer + byte_idx));
@@ -567,13 +585,14 @@ Cell* builtin_substring(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 3, "substring");
-    if (err) return err;
+    if (err) { return err; }
 
     const Cell* s_cell = a->cell[0];
-    if (s_cell->type != CELL_STRING)
+    if (s_cell->type != CELL_STRING) {
         return make_cell_error(
             "substring: arg 1 must be a string",
             TYPE_ERR);
+    }
 
     if (a->cell[1]->type != CELL_INTEGER || a->cell[2]->type != CELL_INTEGER) {
         return make_cell_error(
@@ -585,10 +604,11 @@ Cell* builtin_substring(const Lex* e, const Cell* a)
     const int32_t end   = (int32_t)a->cell[2]->integer_v;
 
     /* Bounds validation. */
-    if (start < 0 || end > s_cell->char_count || start > end)
+    if (start < 0 || end > s_cell->char_count || start > end) {
         return make_cell_error(
             "substring: index out of range",
             INDEX_ERR);
+    }
 
     /* Find byte offsets. */
     int32_t start_byte = 0;
@@ -632,46 +652,50 @@ Cell* builtin_string_set_bang(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 3, "string-set!");
-    if (err) return err;
+    if (err) { return err; }
 
     Cell* s_cell = a->cell[0];
-    if (s_cell->type != CELL_STRING)
+    if (s_cell->type != CELL_STRING) {
         return make_cell_error(
             "string-set!: arg 1 must be a string",
             TYPE_ERR);
-    if (a->cell[1]->type != CELL_INTEGER)
+    }
+    if (a->cell[1]->type != CELL_INTEGER) {
         return make_cell_error(
             "string-set!: arg 2 must be an integer",
             TYPE_ERR);
-    if (a->cell[2]->type != CELL_CHAR)
+    }
+    if (a->cell[2]->type != CELL_CHAR) {
         return make_cell_error(
             "string-set!: arg 3 must be a char",
             TYPE_ERR);
+    }
 
     const int32_t char_idx = (int32_t)a->cell[1]->integer_v;
     const int32_t new_cp = a->cell[2]->char_v;
 
     /* Bounds validation. */
-    if (char_idx < 0 || char_idx >= s_cell->char_count)
+    if (char_idx < 0 || char_idx >= s_cell->char_count) {
         return make_cell_error(
             "string-set!: index out of range",
             INDEX_ERR);
+    }
 
     /* ASCII to ASCII. */
-    if (s_cell->ascii && new_cp < 128) {
+    if (s_cell->ascii && new_cp < ASCII_MAX) {
         s_cell->str[char_idx] = (char)new_cp;
         return USP_Obj;
     }
 
     /* UTF-8 Mutation. */
-    int32_t old_char_offset = get_utf8_byte_offset(s_cell, char_idx);
+    const int32_t old_char_offset = get_utf8_byte_offset(s_cell, char_idx);
 
     /* Determine old char byte length. */
     const int32_t old_char_len = utf8_len(s_cell->str[old_char_offset]);
 
     /* Determine new char byte length. */
     uint8_t new_encoded[4];
-    int32_t new_char_len = utf8_encode(new_cp, new_encoded);
+    const int32_t new_char_len = utf8_encode(new_cp, new_encoded);
 
     if (old_char_len == new_char_len) {
         /* Same size? Just overwrite in place. */
@@ -687,7 +711,7 @@ Cell* builtin_string_set_bang(const Lex* e, const Cell* a)
         memcpy(new_buf + old_char_offset, new_encoded, new_char_len);
         /* Copy suffix. */
         const int32_t suffix_offset = old_char_offset + old_char_len;
-        int32_t suffix_len = s_cell->count - suffix_offset;
+        const int32_t suffix_len = s_cell->count - suffix_offset;
         memcpy(new_buf + old_char_offset + new_char_len, s_cell->str + suffix_offset, suffix_len);
 
         new_buf[new_total_bytes] = '\0';
@@ -710,38 +734,42 @@ Cell* builtin_string_copy(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_RANGE(a, 1, 3, "string-copy");
-    if (err) return err;
+    if (err) { return err; }
 
     const Cell* s_cell = a->cell[0];
-    if (s_cell->type != CELL_STRING)
+    if (s_cell->type != CELL_STRING) {
         return make_cell_error(
             "string-copy: arg 1 must be a string",
             TYPE_ERR);
+    }
 
     /* Extract and default indices. */
     int32_t start = 0;
     int32_t end = s_cell->char_count;
 
     if (a->count >= 2) {
-        if (a->cell[1]->type != CELL_INTEGER)
+        if (a->cell[1]->type != CELL_INTEGER) {
             return make_cell_error(
                 "string-copy: arg 2 must be an integer",
                 TYPE_ERR);
+        }
         start = (int32_t)a->cell[1]->integer_v;
     }
     if (a->count == 3) {
-        if (a->cell[2]->type != CELL_INTEGER)
+        if (a->cell[2]->type != CELL_INTEGER) {
             return make_cell_error(
                 "string-copy: arg 3 must be an integer",
                 TYPE_ERR);
+        }
         end = (int32_t)a->cell[2]->integer_v;
     }
 
     /* Validation. */
-    if (start < 0 || end > s_cell->char_count || start > end)
+    if (start < 0 || end > s_cell->char_count || start > end) {
         return make_cell_error(
             "string-copy: index out of range",
             INDEX_ERR);
+    }
 
     /* Handle full copy shortcut. */
     /* If the user wants the whole string, just do a clean byte-copy and clone metadata. */
@@ -795,54 +823,61 @@ Cell* builtin_string_copy_bang(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_RANGE(a, 3, 5, "string-copy!");
-    if (err) return err;
+    if (err) { return err; }
 
     Cell* to_cell = a->cell[0];
     const Cell* from_cell = a->cell[2];
-    if (to_cell->type != CELL_STRING || from_cell->type != CELL_STRING)
+    if (to_cell->type != CELL_STRING || from_cell->type != CELL_STRING) {
         return make_cell_error(
             "string-copy!: arguments must be strings",
             TYPE_ERR);
+    }
 
-    if (a->cell[1]->type != CELL_INTEGER)
+    if (a->cell[1]->type != CELL_INTEGER) {
         return make_cell_error(
             "string-copy!: arg 2 (at) must be an integer",
             TYPE_ERR);
+    }
     const int32_t to_at = (int32_t)a->cell[1]->integer_v;
 
     int32_t f_start = 0;
     if (a->count >= 4) {
-        if (a->cell[3]->type != CELL_INTEGER)
+        if (a->cell[3]->type != CELL_INTEGER) {
             return make_cell_error(
                 "string-copy!: arg 4 (start) must be an integer",
                 TYPE_ERR);
+        }
         f_start = (int32_t)a->cell[3]->integer_v;
     }
 
     int32_t f_end = from_cell->char_count;
     if (a->count == 5) {
-        if (a->cell[4]->type != CELL_INTEGER)
+        if (a->cell[4]->type != CELL_INTEGER) {
             return make_cell_error(
                 "string-copy!: arg 5 (end) must be an integer",
                 TYPE_ERR);
+        }
         f_end = (int32_t)a->cell[4]->integer_v;
     }
 
     /* Validation using char_count metadata. */
-    if (to_at < 0 || to_at > to_cell->char_count)
+    if (to_at < 0 || to_at > to_cell->char_count) {
         return make_cell_error(
             "string-copy!: 'at' index out of range",
             INDEX_ERR);
-    if (f_start < 0 || f_end > from_cell->char_count || f_start > f_end)
+    }
+    if (f_start < 0 || f_end > from_cell->char_count || f_start > f_end) {
         return make_cell_error(
             "string-copy!: 'from' indices out of range",
             INDEX_ERR);
+    }
 
-    int32_t num_chars = f_end - f_start;
-    if (to_at + num_chars > to_cell->char_count)
+    const int32_t num_chars = f_end - f_start;
+    if (to_at + num_chars > to_cell->char_count) {
         return make_cell_error(
             "string-copy!: target string too small",
             VALUE_ERR);
+    }
 
     /* ASCII to ASCII. */
     if (to_cell->ascii && from_cell->ascii) {
@@ -878,7 +913,7 @@ Cell* builtin_string_copy_bang(const Lex* e, const Cell* a)
     /* Update metadata. */
     to_cell->str = new_str;
     to_cell->count = total_bytes;
-    if (!from_cell->ascii) to_cell->ascii = 0;
+    if (!from_cell->ascii)  { to_cell->ascii = 0; }
 
     return USP_Obj;
 }
@@ -892,12 +927,14 @@ Cell* builtin_string_copy_bang(const Lex* e, const Cell* a)
 Cell* builtin_string_fill_bang(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_RANGE(a, 2, 4, "string-fill!");
-    if (err) return err;
+    if (err) { return err; }
 
     Cell* s = a->cell[0];
-    if (s->type != CELL_STRING) return make_cell_error(
+    if (s->type != CELL_STRING) {
+        return make_cell_error(
         "string-fill!: arg 1 must be string",
         TYPE_ERR);
+    }
 
     if (a->cell[1]->type != CELL_CHAR) {
         return make_cell_error(
@@ -911,24 +948,28 @@ Cell* builtin_string_fill_bang(const Lex* e, const Cell* a) {
 
     if (a->count >= 3) {
         start = (int32_t)a->cell[2]->integer_v;
-        if (start < 0 || start > s->char_count) return make_cell_error(
+        if (start < 0 || start > s->char_count) {
+            return make_cell_error(
             "string-fill!: start out of bounds",
             INDEX_ERR);
+        }
     }
     if (a->count == 4) {
         end = (int32_t)a->cell[3]->integer_v;
-        if (end < start || end > s->char_count) return make_cell_error(
+        if (end < start || end > s->char_count) {
+            return make_cell_error(
             "string-fill!: end out of bounds",
             INDEX_ERR);
+        }
     }
 
     /* Determine fill character properties. */
     uint8_t encoded[4];
     const int32_t char_len = utf8_encode(fill_char, encoded);
-    int32_t num_chars_to_fill = end - start;
+    const int32_t num_chars_to_fill = end - start;
 
     /* ASCII fill on ASCII string. */
-    if (s->ascii && fill_char < 128) {
+    if (s->ascii && fill_char < ASCII_MAX) {
         memset(s->str + start, (char)fill_char, num_chars_to_fill);
         return USP_Obj;
     }
@@ -937,9 +978,9 @@ Cell* builtin_string_fill_bang(const Lex* e, const Cell* a) {
     /* byte-length of the fill char might differ from the existing chars,
        it's safest/cleanest to build a new buffer. */
 
-    int32_t prefix_bytes = get_utf8_byte_offset(s, start);
+    const int32_t prefix_bytes = get_utf8_byte_offset(s, start);
     const int32_t suffix_start_offset = get_utf8_byte_offset(s, end);
-    int32_t suffix_bytes = s->count - suffix_start_offset;
+    const int32_t suffix_bytes = s->count - suffix_start_offset;
 
     const int32_t new_total_bytes = prefix_bytes + (num_chars_to_fill * char_len) + suffix_bytes;
     char* new_str = GC_MALLOC_ATOMIC(new_total_bytes + 1);
@@ -962,7 +1003,7 @@ Cell* builtin_string_fill_bang(const Lex* e, const Cell* a) {
     /* Update metadata. */
     s->str = new_str;
     s->count = new_total_bytes;
-    if (fill_char >= 128) s->ascii = 0;
+    if (fill_char >= ASCII_MAX) { s->ascii = 0; }
 
     return USP_Obj;
 }
@@ -981,26 +1022,29 @@ Cell* builtin_string_number(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_RANGE(a, 1, 2, "string->number");
-    if (err) return err;
+    if (err) { return err; }
 
     const Cell* s_cell = a->cell[0];
-    if (s_cell->type != CELL_STRING)
+    if (s_cell->type != CELL_STRING) {
         return make_cell_error(
             "string->number: arg 1 must be a string",
             TYPE_ERR);
+    }
 
     /* Validate radix. */
-    int radix = 10;
+    int radix = BASE_10;
     if (a->count == 2) {
-        if (a->cell[1]->type != CELL_INTEGER)
+        if (a->cell[1]->type != CELL_INTEGER) {
             return make_cell_error(
                 "string->number: radix must be an integer",
                 TYPE_ERR);
+        }
         radix = (int)a->cell[1]->integer_v;
-        if (radix != 2 && radix != 8 && radix != 10 && radix != 16)
+        if (radix != 2 && radix != BASE_8 && radix != BASE_10 && radix != BASE_16) {
             return make_cell_error(
                 "string->number: invalid radix (must be 2, 8, 10, 16)",
                 VALUE_ERR);
+        }
     }
 
     /* Empty string => #false. */
@@ -1009,19 +1053,20 @@ Cell* builtin_string_number(const Lex* e, const Cell* a)
     }
 
     /* Sanity check: numbers must be ASCII. */
-    if (!s_cell->ascii) return False_Obj;
+    if (!s_cell->ascii) { return False_Obj; }
 
     /* Prepare parsing buffer. */
     /* Add space for the radix prefix (e.g., "#x") and null terminator. */
-    size_t buf_size = s_cell->count + 4;
+    const size_t buf_size = s_cell->count + 4;
     char* parse_buf = GC_MALLOC_ATOMIC(buf_size);
 
-    if (radix == 10) {
+    if (radix == BASE_10) {
         memcpy(parse_buf, s_cell->str, s_cell->count + 1);
     } else {
-        const char* prefix = (radix == 2) ? "#b" : (radix == 8) ? "#o" : "#x";
-
-        if (strpbrk(s_cell->str, ".eEsSfFdDlL")) return False_Obj;
+        char* prefix = nullptr;
+        if (radix == 2) { prefix = "#b"; }
+        else if (radix == BASE_8) { prefix = "#o"; }
+        else { prefix = "#x"; }
 
         /* Use the calculated buf_size here. */
         snprintf(parse_buf, buf_size, "%s%s", prefix, s_cell->str);
@@ -1029,15 +1074,15 @@ Cell* builtin_string_number(const Lex* e, const Cell* a)
 
     /* Use internal lexer/parser. */
     TokenArray* ta = scan_all_tokens(parse_buf);
-    if (!ta) return False_Obj;
+    if (!ta) { return False_Obj; }
 
     Cell* result = parse_tokens(ta);
 
     /* Validation of result. */
-    if (result->type == CELL_ERROR) return False_Obj;
+    if (result->type == CELL_ERROR) { return False_Obj; }
 
     constexpr int num_mask = CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX;
-    if (!(result->type & num_mask)) return False_Obj;
+    if (!(result->type & num_mask)) { return False_Obj; }
 
     return result;
 }
@@ -1065,7 +1110,7 @@ Cell* builtin_number_string(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_RANGE(a, 1, 2, "number->string");
-    if (err) return err;
+    if (err) { return err; }
 
     const Cell* num = a->cell[0];
     constexpr int num_mask = CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX|CELL_BIGINT;
@@ -1075,24 +1120,26 @@ Cell* builtin_number_string(const Lex* e, const Cell* a)
             TYPE_ERR);
     }
 
-    int radix = 10;
+    int radix = BASE_10;
     if (a->count == 2) {
-        if (a->cell[1]->type != CELL_INTEGER)
+        if (a->cell[1]->type != CELL_INTEGER) {
             return make_cell_error(
                 "number->string: radix must be an integer",
                 TYPE_ERR);
+        }
         radix = (int)a->cell[1]->integer_v;
-        if (radix != 2 && radix != 8 && radix != 10 && radix != 16)
+        if (radix != 2 && radix != BASE_8 && radix != BASE_10 && radix != BASE_16) {
             return make_cell_error(
                 "number->string: invalid radix (2, 8, 10, 16)",
                 VALUE_ERR);
+        }
     }
 
-    char buf[128]; /* Large enough for a 64-bit binary string. */
+    char buf[CONV_BUF_SIZE]; /* Large enough for a 64-bit binary string. */
     const char* result_str;
 
     /* Handle integers with radix. */
-    if (num->type == CELL_INTEGER && radix != 10) {
+    if (num->type == CELL_INTEGER && radix != BASE_10) {
         if (radix == 2) {
             integer_to_binary_string(num->integer_v, buf);
         } else {
@@ -1117,19 +1164,20 @@ Cell* builtin_string_downcase(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING, "string-downcase");
-    if (err) return err;
+    if (err) { return err; }
     err = CHECK_ARITY_EXACT(a, 1, "string-downcase");
-    if (err) return err;
+    if (err) { return err; }
 
     UErrorCode status = U_ZERO_ERROR;
     UChar* src = convert_to_utf16(a->cell[0]->str);
-    if (!src) return make_cell_error(
+    if (!src) { return make_cell_error(
         "string-downcase: malformed UTF-8 string",
         VALUE_ERR);
+    }
 
     const int32_t src_len = u_countChar32(src, -1);
 
-    UChar* dst = GC_MALLOC(sizeof(UChar) * src_len + 1);
+    UChar* dst = GC_MALLOC((sizeof(UChar) * src_len) + 1);
     const int32_t dest_len = u_strToLower(dst,
         src_len + 1,
         src, -1, nullptr, &status);
@@ -1155,19 +1203,20 @@ Cell* builtin_string_upcase(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING, "string-upcase");
-    if (err) return err;
+    if (err) { return err; }
     err = CHECK_ARITY_EXACT(a, 1, "string-upcase");
-    if (err) return err;
+    if (err) { return err; }
 
     UErrorCode status = U_ZERO_ERROR;
     UChar* src = convert_to_utf16(a->cell[0]->str);
-    if (!src) return make_cell_error(
+    if (!src) { return make_cell_error(
         "string-upcase: malformed UTF-8 string",
         VALUE_ERR);
+}
 
     const int32_t src_len = u_countChar32(src, -1);
 
-    UChar* dst = GC_MALLOC(sizeof(UChar) * src_len + 1);
+    UChar* dst = GC_MALLOC((sizeof(UChar) * src_len) + 1);
     const int32_t dest_len = u_strToUpper(dst,
         src_len + 1,
         src, -1, nullptr, &status);
@@ -1193,19 +1242,20 @@ Cell* builtin_string_foldcase(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING, "string-foldcase");
-    if (err) return err;
+    if (err) { return err; }
     err = CHECK_ARITY_EXACT(a, 1, "string-foldcase");
-    if (err) return err;
+    if (err) { return err; }
 
     UErrorCode status = U_ZERO_ERROR;
     UChar* src = convert_to_utf16(a->cell[0]->str);
-    if (!src) return make_cell_error(
+    if (!src) { return make_cell_error(
         "string-foldcase: malformed UTF-8 string",
         VALUE_ERR);
+}
 
     const int32_t src_len = u_countChar32(src, -1);
 
-    UChar* dst = GC_MALLOC(sizeof(UChar) * src_len + 1);
+    UChar* dst = GC_MALLOC((sizeof(UChar) * src_len) + 1);
     const int32_t dest_len = u_strFoldCase(dst, src_len + 1, src, -1,
         U_FOLD_CASE_DEFAULT, &status);
 
@@ -1232,10 +1282,10 @@ Cell* builtin_string_equal_ci(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING, "string-ci=?");
-    if (err) return err;
+    if (err) { return err; }
 
     /* 0 or 1 arg is technically true in R7RS. */
-    if (a->count < 2) return True_Obj;
+    if (a->count < 2) { return True_Obj; }
 
     for (int i = 0; i < a->count - 1; i++) {
         const char* lhs = a->cell[i]->str;
@@ -1260,7 +1310,7 @@ Cell* builtin_string_lt_ci(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING, "string-ci<?");
-    if (err) return err;
+    if (err) { return err; }
 
     for (int i = 0; i < a->count - 1; i++) {
         const char* lhs = a->cell[i]->str;
@@ -1285,7 +1335,7 @@ Cell* builtin_string_lte_ci(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING, "string-ci<=?");
-    if (err) return err;
+    if (err) { return err; }
 
     for (int i = 0; i < a->count - 1; i++) {
         const char* lhs = a->cell[i]->str;
@@ -1310,7 +1360,7 @@ Cell* builtin_string_gt_ci(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING, "string-ci>?");
-    if (err) return err;
+    if (err) { return err; }
 
     for (int i = 0; i < a->count - 1; i++) {
         const char* lhs = a->cell[i]->str;
@@ -1335,7 +1385,7 @@ Cell* builtin_string_gte_ci(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING, "string-ci>=?");
-    if (err) return err;
+    if (err) { return err; }
 
     for (int i = 0; i < a->count - 1; i++) {
         const char* lhs = a->cell[i]->str;
@@ -1363,9 +1413,9 @@ Cell* builtin_string_split(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING, "string-split");
-    if (err) return err;
+    if (err) { return err; }
     err = CHECK_ARITY_RANGE(a, 1, 2, "string-split");
-    if (err) return err;
+    if (err) { return err; }
 
     char* sep;
     int sep_len;
@@ -1404,7 +1454,7 @@ Cell* builtin_string_split(const Lex* e, const Cell* a)
 
     /* Add the final token. If the delimiter appears at the end of the string,
      * then src will be '\0', and an empty string will intentionally be added to the
-     * end of the result list. This matches Python's behavior (but not Ruby's)
+     * end of the result list. This matches Python's behaviour (but not Ruby's)
      *
      * Justification is that (string-join (string-split s delim) delim) should
      * just return s unaltered, and dropping the final "" breaks this. */
@@ -1422,7 +1472,7 @@ Cell* builtin_string_split(const Lex* e, const Cell* a)
 Cell* builtin_string_join(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_RANGE(a, 1, 2, "string-join");
-    if (err) return err;
+    if (err) { return err; }
 
     const Cell* l = a->cell[0];
     /* Early exit for empty list edge case. */

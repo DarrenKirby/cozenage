@@ -18,6 +18,8 @@
  */
 
 #include "bytevectors.h"
+#include "cell.h"
+#include "lexer.h"
 #include "main.h"
 #include "parser.h"
 #include "repr.h"
@@ -25,13 +27,17 @@
 
 #include <errno.h>
 #include <gc/gc.h>
-#include <inttypes.h>
 #include <limits.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unicode/uchar.h>
 
+#define ERR_BUF_SIZE 128
+
+
+#define TMP_IMAG_BUF_SIZE 64
 
 STATIC long double parse_float_checked(const char* str, char* err_buf, int* ok)
 {
@@ -40,12 +46,12 @@ STATIC long double parse_float_checked(const char* str, char* err_buf, int* ok)
     const long double val = strtold(str, &end_ptr);
 
     if (end_ptr == str) {
-        snprintf(err_buf, 128, "Invalid numeric: '%s%s%s'",
+        snprintf(err_buf, ERR_BUF_SIZE, "Invalid numeric: '%s%s%s'",
             ANSI_RED_B, str, ANSI_RESET);
         *ok = 0; return 0;
     }
     if (errno == ERANGE) {
-        snprintf(err_buf, 128, "Float out of range: '%s%s%s'",
+        snprintf(err_buf, ERR_BUF_SIZE, "Float out of range: '%s%s%s'",
             ANSI_RED_B, str, ANSI_RESET);
         *ok = 0; return 0;
     }
@@ -56,7 +62,7 @@ STATIC long double parse_float_checked(const char* str, char* err_buf, int* ok)
     }
     /* Raises syntax error for things like "1234HELLO". */
     if (*end_ptr != '\0') {
-        snprintf(err_buf, 128, "Invalid trailing characters in numeric: '%s%s%s'",
+        snprintf(err_buf, ERR_BUF_SIZE, "Invalid trailing characters in numeric: '%s%s%s'",
             ANSI_RED_B, str, ANSI_RESET);
         *ok = 0; return 0;
     }
@@ -73,17 +79,17 @@ STATIC long long parse_int_checked(const char* str, char* err_buf, const int bas
     const long long val = strtoll(str, &end_ptr, base);
 
     if (end_ptr == str) {
-        snprintf(err_buf, 128, "Invalid numeric: '%s%s%s'",
+        snprintf(err_buf, ERR_BUF_SIZE, "Invalid numeric: '%s%s%s'",
             ANSI_RED_B, str, ANSI_RESET);
         *ok = 0; return 0;
     }
     if (errno == ERANGE || val > LLONG_MAX || val < LLONG_MIN) {
-        snprintf(err_buf, 128, "Integer out of range: '%s%s%s'",
+        snprintf(err_buf, ERR_BUF_SIZE, "Integer out of range: '%s%s%s'",
             ANSI_RED_B, str, ANSI_RESET);
         *ok = 0; return 0;
     }
     if (*end_ptr != '\0') {
-        snprintf(err_buf, 128, "Invalid trailing characters in numeric: '%s%s%s'",
+        snprintf(err_buf, ERR_BUF_SIZE, "Invalid trailing characters in numeric: '%s%s%s'",
             ANSI_RED_B, str, ANSI_RESET);
         *ok = 0; return 0;
     }
@@ -121,8 +127,8 @@ STATIC bool fits_in_int64(const char *s) {
     const size_t len = strlen(p);
     const size_t limit_len = strlen(limit);
 
-    if (len < limit_len) return true;
-    if (len > limit_len) return false;
+    if (len < limit_len) { return true; }
+    if (len > limit_len) { return false; }
 
     return strcmp(p, limit) <= 0;
 }
@@ -130,10 +136,10 @@ STATIC bool fits_in_int64(const char *s) {
 
 STATIC Cell* parse_number(char* token, const int line, int len)
 {
-    int base = 10;   /* Default to base 10. */
-    int exact = -1;  /* Default to unspecified. */
-    int ok = 0;      /* error flag. */
-    char err_buf[128] = {0};
+    int base = BASE_10;   /* Default to base 10. */
+    int exact = -1;       /* Default to unspecified. */
+    int ok = 0;           /* error flag. */
+    char err_buf[ERR_BUF_SIZE] = {};
 
     /* This oddball needs to get dispatched before
      * it hits the next if/else block. */
@@ -159,16 +165,19 @@ STATIC Cell* parse_number(char* token, const int line, int len)
 
     /* Check for base prefixes. */
     if (token[0] == 'b' && token[len - 1] != 'i') {
-        base = 2; len -= 1;
+        base = BASE_2;
+        len -= 1;
         tok = token + 1;
     } else if (token[0] == 'o' && token[len - 1] != 'i') {
-        base = 8; len -= 1;
+        base = BASE_8;
+        len -= 1;
         tok = token + 1;
     } else if (token[0] == 'd' && token[len - 1] != 'i') {
         len -= 1;
         tok = token + 1;
     } else if (token[0] == 'x' && token[len - 1] != 'i') {
-        base = 16; len -= 1;
+        base = BASE_16;
+        len -= 1;
         tok = token + 1;
     } else {
         /* No prefix, or complex. */
@@ -215,7 +224,7 @@ STATIC Cell* parse_number(char* token, const int line, int len)
             const char *imag_digits = sep + 1;
 
             /* Rebuild full imag string: e.g. "+10" or "-10". */
-            char buf[64];
+            char buf[TMP_IMAG_BUF_SIZE];
             snprintf(buf, sizeof(buf), "%c%s", sign, imag_digits);
 
             r = parse_number(real_str, line, len);
@@ -278,7 +287,7 @@ STATIC Cell* parse_number(char* token, const int line, int len)
     }
 
     /* Try integer parsing if not base 10, no decimal, and not scientific notation. */
-    if (base != 10 ||
+    if (base != BASE_10 ||
     (!strchr(tok, '.') && !strchr(tok, 'e') && !strchr(tok, 'E'))) {
         const long long i = parse_int_checked(tok, err_buf, base, &ok);
         if (ok) {
@@ -295,7 +304,7 @@ STATIC Cell* parse_number(char* token, const int line, int len)
     }
 
     /* Otherwise, try float. */
-    if (base == 10) {
+    if (base == BASE_10) {
         const long double f = parse_float_checked(tok, err_buf, &ok);
         if (ok) {
             Cell* result = make_cell_real(f);
@@ -376,7 +385,7 @@ STATIC Cell* parse_string(const char* str, const int len)
             while (lex_idx < length && (str[lex_idx] == ' ' || str[lex_idx] == '\t')) {
                 lex_idx++;
             }
-            if (lex_idx >= length) break; /* String ended in \ + spaces. */
+            if (lex_idx >= length) { break; } /* String ended in \ + spaces. */
 
             next_char = str[lex_idx]; /* Look at what's after the spaces. */
         }
@@ -429,9 +438,9 @@ STATIC Cell* parse_string(const char* str, const int len)
 STATIC Cell* parse_boolean(const char* tok, const int line)
 {
     if (strcmp(tok, "t") == 0 ||
-        strcmp(tok, "true") == 0) return True_Obj;
+        strcmp(tok, "true") == 0) { return True_Obj; }
     if (strcmp(tok, "f") == 0 ||
-        strcmp(tok, "false") == 0) return False_Obj;
+        strcmp(tok, "false") == 0) { return False_Obj; }
     /* Otherwise an error. */
     return make_cell_error(fmt_err("Line %d: Unable to parse token: '%s#%s%s'",
                     line, ANSI_RED_B, tok, ANSI_RESET), SYNTAX_ERR);
@@ -446,8 +455,8 @@ STATIC Cell* parse_symbol(char* tok, const int line, const int len)
         strcmp(tok, "-inf.0") == 0 ||
         strcmp(tok, "+nan.0") == 0 ||
         strcmp(tok, "-nan.0") == 0 ||
-        strcmp(tok, "nan.0") == 0 ||
-        strcmp(tok, "inf.0") == 0) {
+        strcmp(tok, "nan.0")  == 0 ||
+        strcmp(tok, "inf.0")  == 0) {
         return parse_number(tok, line, len);
     }
     return make_cell_symbol(tok);
@@ -464,15 +473,15 @@ STATIC Cell* parse_character(char* tok, const int line, const int len)
     /* Check for multi-letter named characters and hex literals. */
     if (len > 1 || tok[0] == 'x') {
         /* Handle (R7RS required) named characters. */
-        if (strcmp(tok, "space") == 0) return make_cell_char(' ');
-        if (strcmp(tok, "newline") == 0) return make_cell_char('\n');
-        if (strcmp(tok, "alarm") == 0) return make_cell_char(0x7);
-        if (strcmp(tok, "backspace") == 0) return make_cell_char(0x8);
-        if (strcmp(tok, "delete") == 0) return make_cell_char(0x7f);
-        if (strcmp(tok, "escape") == 0) return make_cell_char(0x1b);
-        if (strcmp(tok, "null") == 0) return make_cell_char('\0');
-        if (strcmp(tok, "return") == 0) return make_cell_char(0xd);
-        if (strcmp(tok, "tab") == 0) return make_cell_char('\t');
+        if (strcmp(tok, "space") == 0)     { return make_cell_char(' '); }
+        if (strcmp(tok, "newline") == 0)   { return make_cell_char('\n'); }
+        if (strcmp(tok, "alarm") == 0)     { return make_cell_char(ASC_BELL); }
+        if (strcmp(tok, "backspace") == 0) { return make_cell_char(ASC_BACKSPACE); }
+        if (strcmp(tok, "delete") == 0)    { return make_cell_char(ASC_DELETE); }
+        if (strcmp(tok, "escape") == 0)    { return make_cell_char(ASC_ESCAPE); }
+        if (strcmp(tok, "null") == 0)      { return make_cell_char('\0'); }
+        if (strcmp(tok, "return") == 0)    { return make_cell_char(ASC_RETURN); }
+        if (strcmp(tok, "tab") == 0)       { return make_cell_char('\t'); }
 
         /* Check mapping of implementation-specific named chars.
          * Defined in src/types.c. */
@@ -486,13 +495,13 @@ STATIC Cell* parse_character(char* tok, const int line, const int len)
             char* end_ptr;
             const long code = strtol(tok + 1, &end_ptr, 16);
 
-            if (code >= 0xD800 && code <= 0xDFFF) {
+            if (code >= SURROGATE_MIN && code <= SURROGATE_MAX) {
                 return make_cell_error(fmt_err(
                     "Line %d, Invalid Unicode hex value (surrogate): '%s%s%s'",
                     line, ANSI_RED_B, tok, ANSI_RESET), VALUE_ERR);
             }
 
-            if (*end_ptr != '\0' || code < 0 || code > 0x10FFFF) {
+            if (*end_ptr != '\0' || code < 0 || code > MAX_VALID_CODEPOINT) {
                 return make_cell_error(fmt_err("Line %d, Invalid Unicode hex value: '%s%s%s'",
                     line, ANSI_RED_B, tok, ANSI_RESET), VALUE_ERR);
             }
@@ -522,14 +531,14 @@ STATIC Cell* parse_character(char* tok, const int line, const int len)
 
 STATIC Token *peek_p(const TokenArray *p)
 {
-    if (p->position < p->count) return &p->tokens[p->position];
+    if (p->position < p->count) { return &p->tokens[p->position]; }
     return nullptr;
 }
 
 
 STATIC Token *advance_p(TokenArray *p)
 {
-    if (p->position < p->count) return &p->tokens[p->position++];
+    if (p->position < p->count) { return &p->tokens[p->position++]; }
     return nullptr;
 }
 
@@ -538,7 +547,7 @@ Cell* parse_tokens(TokenArray *ta)
 {
     /* Check token type and dispatch accordingly. */
     Token *token = peek_p(ta);
-    if (!token) return nullptr;
+    if (!token) { return nullptr; }
 
     switch (token->type) {
     /* Bail immediately on Syntax errors. */
@@ -637,9 +646,11 @@ Cell* parse_tokens(TokenArray *ta)
 
         while (peek_p(ta) && peek_p(ta)->type != T_RIGHT_BRACE) {
             Cell* next = parse_tokens(ta);
-            if (!next) return make_cell_error("Unexpected EOF",
+            if (!next) {
+                return make_cell_error("Unexpected EOF",
                 SYNTAX_ERR);
-            if (next->type == CELL_ERROR) return next;
+            }
+            if (next->type == CELL_ERROR) { return next; }
             cell_add(sexpr, next);
         }
 
@@ -662,9 +673,11 @@ Cell* parse_tokens(TokenArray *ta)
         int n_forms = 0;
         while (peek_p(ta) && peek_p(ta)->type != T_RIGHT_BRACKET) {
             Cell* next = parse_tokens(ta);
-            if (!next) return make_cell_error("Unexpected EOF",
+            if (!next) {
+                return make_cell_error("Unexpected EOF",
                 SYNTAX_ERR);
-            if (next->type == CELL_ERROR) return next;
+            }
+            if (next->type == CELL_ERROR) { return next; }
             cell_add(sexpr, next);
             n_forms++;
         }
@@ -721,7 +734,7 @@ Cell* parse_tokens(TokenArray *ta)
                     fmt_err("Line %d: Bad bytevector label: %s", token->line, bv_tok),
                     SYNTAX_ERR);
             }
-            Cell* bv = make_cell_bytevector(type, 8);
+            Cell* bv = make_cell_bytevector(type, INIT_BV_CAPACITY);
             token = advance_p(ta); /* consume 'u8'. */
 
             if (peek_p(ta)->type != T_LEFT_PAREN) {
@@ -736,21 +749,23 @@ Cell* parse_tokens(TokenArray *ta)
 
             while (peek_p(ta) && peek_p(ta)->type != T_RIGHT_PAREN) {
                 const Cell* val = parse_tokens(ta);
-                if (!val) return make_cell_error("Unexpected EOF",
+                if (!val) {
+                    return make_cell_error("Unexpected EOF",
                     SYNTAX_ERR);
-                if (val->type == CELL_ERROR) return (Cell*)val; /* Bubble error */
+                }
+                if (val->type == CELL_ERROR) { return (Cell*)val; } /* Bubble error */
 
                 if (type == BV_F32 || type == BV_F64) {
                     long double byte;
                     if (val->type == CELL_INTEGER) {
                         byte = val->integer_v;
                         Cell* err = fp_byte_check(type, byte);
-                        if (err) return err;
+                        if (err) { return err; }
 
                     } else if (val->type == CELL_REAL) {
                         byte = val->real_v;
                         Cell* err = fp_byte_check(type, byte);
-                        if (err) return err;
+                        if (err) { return err; }
                     } else {
                         return make_cell_error(
                         fmt_err("Line %d: bad value: '%s'. bytevector literals must be integers or reals",
@@ -768,7 +783,7 @@ Cell* parse_tokens(TokenArray *ta)
 
                     const int64_t byte = val->integer_v;
                     Cell* err = int_byte_check(type, byte);
-                    if (err) return err;
+                    if (err) { return err; }
                     BV_INT_OPS[bv->bv->type].append(bv, byte);
                 }
             }
@@ -797,9 +812,11 @@ Cell* parse_tokens(TokenArray *ta)
 
         while (peek_p(ta) && peek_p(ta)->type != T_RIGHT_PAREN) {
             Cell* next = parse_tokens(ta);
-            if (!next) return make_cell_error("Unexpected EOF",
+            if (!next) {
+                return make_cell_error("Unexpected EOF",
                 SYNTAX_ERR);
-            if (next->type == CELL_ERROR) return next;
+            }
+            if (next->type == CELL_ERROR) { return next; }
             cell_add(vec, next);
         }
 
@@ -821,9 +838,11 @@ Cell* parse_tokens(TokenArray *ta)
 
         while (peek_p(ta) && peek_p(ta)->type != T_RIGHT_PAREN) {
             Cell* next = parse_tokens(ta);
-            if (!next) return make_cell_error("Unexpected EOF",
+            if (!next) {
+                return make_cell_error("Unexpected EOF",
                 SYNTAX_ERR);
-            if (next->type == CELL_ERROR) return next;
+            }
+            if (next->type == CELL_ERROR) { return next; }
             cell_add(sexpr, next);
         }
 

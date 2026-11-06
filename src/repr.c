@@ -63,17 +63,17 @@
 #include <wchar.h>
 #endif
 
+#define N_STRING_BUF_SIZE 128
 
-/* TODO: does not handle circular objects/datum labels for MODE_REPL/MODE_WRITE */
 
 /* Forward declaration for helpers. */
 static void cell_to_string_worker(const Cell* v, str_buf_t *sb, print_mode_t mode);
 
 
-/* Formats reals . */
+/* Format reals . */
 static void repr_long_double(const long double x, str_buf_t *sb)
 {
-    char buf[128];
+    char buf[N_STRING_BUF_SIZE];
     snprintf(buf, sizeof buf, "%.18Lg", x);
 
     /* If there's no '.' or exponent marker, force a ".0". */
@@ -91,27 +91,23 @@ static void repr_long_double(const long double x, str_buf_t *sb)
 /* Generate external representation of proper lists and dotted pairs. */
 static void repr_pair(const Cell* v, str_buf_t *sb, const print_mode_t mode)
 {
+    const Cell* slow = v;
+    size_t steps = 0;
     sb_append_char(sb, '(');
-    const Cell* cur = v;
-
-    for (;;) {
-        /* Always print the car of the current pair. */
-        cell_to_string_worker(cur->car, sb, mode);
-
-        /* The list continues (cdr is another pair). */
-        if (cur->cdr->type == CELL_PAIR) {
-            sb_append_char(sb, ' ');
-            cur = cur->cdr;
-        }
-        /* This is the end of a proper list. */
-        else if (cur->cdr->type == CELL_NIL) {
+    for (const Cell* p = v; ; ) {
+        cell_to_string_worker(p->car, sb, mode);
+        p = p->cdr;
+        if (p->type != CELL_PAIR) {               /* NIL or improper tail */
+            if (p->type != CELL_NIL) {
+                sb_append_str(sb, " . ");
+                cell_to_string_worker(p, sb, mode);
+            }
             break;
         }
-        /* This is an improper list. */
-        else {
-            sb_append_str(sb, " . ");
-            cell_to_string_worker(cur->cdr, sb, mode);
-            break;
+        sb_append_char(sb, ' ');
+        if ((++steps & 1) == 0) { slow = slow->cdr; }
+        if (p == slow) {                          /* circular spine */
+            sb_append_str(sb, "..."); break;
         }
     }
     sb_append_char(sb, ')');
@@ -127,7 +123,7 @@ static void repr_sequence(const Cell* v,
                           const char close,
                           str_buf_t *sb,
                           const print_mode_t mode) {
-    if (prefix) sb_append_fmt(sb, "%s", prefix);
+    if (prefix) { sb_append_fmt(sb, "%s", prefix); }
     sb_append_fmt(sb, "%c", open);
 
     if (v->type == CELL_SET) {
@@ -136,7 +132,7 @@ static void repr_sequence(const Cell* v,
         size_t i = 0;
         while (ght_next(&it)) {
             cell_to_string_worker(it.key, sb, mode);
-            if (i != t_len - 1) sb_append_char(sb, ' ');
+            if (i != t_len - 1) { sb_append_char(sb, ' '); }
             i++;
         }
     } else if (v->type == CELL_HASH) {
@@ -147,13 +143,13 @@ static void repr_sequence(const Cell* v,
             cell_to_string_worker(it.key, sb, mode);
             sb_append_char(sb, ' ');
             cell_to_string_worker(it.value, sb, mode);
-            if (i != t_len - 1) sb_append_char(sb, ' ');
+            if (i != t_len - 1) { sb_append_char(sb, ' '); }
             i++;
         }
     } else {
         for (int i = 0; i < v->count; i++) {
             cell_to_string_worker(v->cell[i], sb, mode);
-            if (i != v->count - 1) sb_append_char(sb, ' ');
+            if (i != v->count - 1) { sb_append_char(sb, ' '); }
         }
     }
     sb_append_fmt(sb, "%c", close);
@@ -165,7 +161,7 @@ static void cell_to_string_worker(const Cell* v,
                                   str_buf_t *sb,
                                   const print_mode_t mode)
 {
-    if (v == NULL) return;
+    if (v == NULL) { return; }
 
     if (stack_exhausted()) {
         sb_append_str(sb, "... output truncated ...");
@@ -213,11 +209,11 @@ static void cell_to_string_worker(const Cell* v,
 
         case CELL_PROMISE: {
             char* stat;
-            if (v->promise->status == 0) stat = "unevaluated";
-            else if (v->promise->status == 1) stat = "lazy";
-            else if (v->promise->status == 2) stat = "running";
-            else if (v->promise->status == 3) stat = "evaluated";
-            else stat = "native";
+            if (v->promise->status == 0) { stat = "unevaluated"; }
+            else if (v->promise->status == 1) { stat = "lazy"; }
+            else if (v->promise->status == 2) { stat = "running"; }
+            else if (v->promise->status == 3) { stat = "evaluated"; }
+            else { stat = "native"; }
             if (mode == MODE_REPL) {
                 sb_append_fmt(sb, "#<promise object:%s%s%s>", ANSI_BLUE_B, stat, ANSI_RESET);
             } else {
@@ -263,15 +259,15 @@ static void cell_to_string_worker(const Cell* v,
                 sb_append_fmt(sb, "%C", v->char_v);
             } else {
                 switch (v->char_v) {
-                    case '\n': sb_append_str(sb, "#\\newline");   break;
-                    case ' ':  sb_append_str(sb, "#\\space");     break;
-                    case '\t': sb_append_str(sb, "#\\tab");       break;
-                    case 0x7:  sb_append_str(sb, "#\\alarm");     break;
-                    case 0x8:  sb_append_str(sb, "#\\backspace"); break;
-                    case 0x1b: sb_append_str(sb, "#\\escape");    break;
-                    case 0xd:  sb_append_str(sb, "#\\return");    break;
-                    case 0x7f: sb_append_str(sb, "#\\delete");    break;
-                    case '\0': sb_append_str(sb, "#\\null");      break;
+                    case '\n':          sb_append_str(sb, "#\\newline");   break;
+                    case ' ':           sb_append_str(sb, "#\\space");     break;
+                    case '\t':          sb_append_str(sb, "#\\tab");       break;
+                    case ASC_BELL:      sb_append_str(sb, "#\\alarm");     break;
+                    case ASC_BACKSPACE: sb_append_str(sb, "#\\backspace"); break;
+                    case ASC_ESCAPE:    sb_append_str(sb, "#\\escape");    break;
+                    case ASC_RETURN:    sb_append_str(sb, "#\\return");    break;
+                    case ASC_DELETE:    sb_append_str(sb, "#\\delete");    break;
+                    case '\0':          sb_append_str(sb, "#\\null");      break;
 
                     default:   sb_append_fmt(sb, "#\\%lc", (wint_t)v->char_v); break;
                 }
@@ -302,7 +298,7 @@ static void cell_to_string_worker(const Cell* v,
                              * append it directly rather than escaping it.
                              */
                             const unsigned char uc = (unsigned char)v->str[i];
-                            if (uc >= 0x80 || isprint(uc)) {
+                            if (uc >= UTF8_CONT_TAG || isprint(uc)) {
                                 sb_append_char(sb, (char)uc);
                             } else {
                                 /* Print truly non-printable control chars as hex escapes. */
@@ -382,10 +378,10 @@ static void cell_to_string_worker(const Cell* v,
             size_t len;
 
             if (mpz_cmp_ui(den, 1) == 0) {
-                len = mpz_sizeinbase(num, 10) + 2;
+                len = mpz_sizeinbase(num, BASE_10) + 2;
             } else {
-                len = mpz_sizeinbase(num, 10)
-                    + mpz_sizeinbase(den, 10)
+                len = mpz_sizeinbase(num, BASE_10)
+                    + mpz_sizeinbase(den, BASE_10)
                     + 3;
             }
 
@@ -463,7 +459,7 @@ static void cell_to_string_worker(const Cell* v,
 /* Generates the external representation of a Cell as a string. */
 char* cell_to_string(const Cell* cell, const print_mode_t mode)
 {
-    if (cell == NULL) return "";
+    if (cell == NULL) { return ""; }
 
     str_buf_t *sb = sb_new();
     cell_to_string_worker(cell, sb, mode);

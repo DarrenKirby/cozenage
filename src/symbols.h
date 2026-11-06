@@ -52,7 +52,7 @@ typedef enum : int8_t {
     SF_ID_CASE,
     SF_ID_DO,
     /* Interned and assigned SF_ID so it cannot be re-bound */
-    SF_ID_DOT
+    SF_ID_DOT,
 } SpecialFormID;
 
 
@@ -82,6 +82,7 @@ extern Cell* G_debug_sym;
 extern Cell* G_quasiquote_sym;
 extern Cell* G_unquote_sym;
 extern Cell* G_unquote_splicing_sym;
+extern Cell* G_dot_sym;
 
 
 /* The global symbol table. */

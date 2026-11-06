@@ -19,9 +19,9 @@
 
 #include "stack_guard.h"
 
+#include <stddef.h>
 #include <stdint.h>
 #include <sys/resource.h>
-#include <stddef.h>
 
 #define FALLBACK_STACK  (8u * 1024 * 1024)    /* if rlimit is unusable */
 #define STACK_MARGIN    (512u * 1024)         /* headroom for GC, printer, etc. */
@@ -33,12 +33,14 @@ void stack_guard_init()
     size_t limit = FALLBACK_STACK;
     struct rlimit rl;
 
-    if (getrlimit(RLIMIT_STACK, &rl) == 0 && rl.rlim_cur != RLIM_INFINITY)
+    if (getrlimit(RLIMIT_STACK, &rl) == 0 && rl.rlim_cur != RLIM_INFINITY) {
         limit = rl.rlim_cur;
+    }
 
     size_t margin = STACK_MARGIN;
-    if (limit < margin * 4)
+    if (limit < margin * 4) {
         margin = limit / 4;
+    }
 
     char probe;
     stack_floor = (uintptr_t)&probe - (limit - margin);

@@ -85,10 +85,10 @@ static Cell* random_randint(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_RANGE(a, 0, 1, "rand-int");
-    if (err) return err;
+    if (err) { return err; }
     if (a->count == 1) {
         err = check_arg_types(a, CELL_INTEGER, "rand-int");
-        if (err) return err;
+        if (err) { return err; }
         if (a->cell[0]->integer_v < 0) {
             return make_cell_error("rand-int: limit arg must be positive", VALUE_ERR);
         }
@@ -122,9 +122,9 @@ static Cell* random_uniform(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2, "rand-uniform");
-    if (err) return err;
+    if (err) { return err; }
     err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL, "rand-uniform");
-    if (err) return err;
+    if (err) { return err; }
 
     const long double min = cell_to_long_double(a->cell[0]);
     const long double max = cell_to_long_double(a->cell[1]);
@@ -144,9 +144,9 @@ static Cell* random_shuffle(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "shuffle");
-    if (err) return err;
+    if (err) { return err; }
     err = check_arg_types(a, CELL_PAIR|CELL_VECTOR|CELL_SEXPR, "shuffle");
-    if (err) return err;
+    if (err) { return err; }
 
     Cell* arr;
     bool list = false;
@@ -196,9 +196,9 @@ static Cell* random_choice(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "rand-choice");
-    if (err) return err;
+    if (err) { return err; }
     err = check_arg_types(a, CELL_PAIR|CELL_VECTOR|CELL_SEXPR, "rand-choice");
-    if (err) return err;
+    if (err) { return err; }
 
     Cell* arr;
     if (a->cell[0]->type == CELL_PAIR) {
@@ -227,7 +227,7 @@ static Cell* random_choices(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2, "rand-choices");
-    if (err) return err;
+    if (err) { return err; }
 
     constexpr int mask = CELL_PAIR|CELL_VECTOR|CELL_SEXPR;
     if (!(a->cell[0]->type & mask)) {

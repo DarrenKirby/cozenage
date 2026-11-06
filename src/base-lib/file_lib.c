@@ -49,7 +49,7 @@ typedef enum : uint8_t {
     F_LNK,
     F_SOCK,
     F_UK,     /* Unknown file type. */
-    F_ERR     /* stat call error. */
+    F_ERR,    /* stat call error. */
 } f_type;
 
 
@@ -60,13 +60,13 @@ static f_type f_get_type(const char* file)
         /* Signal error to caller. */
         return F_ERR;
     }
-    if (S_ISREG(buf.st_mode)) return F_REG;
-    if (S_ISDIR(buf.st_mode)) return F_DIR;
-    if (S_ISLNK(buf.st_mode)) return F_LNK;
-    if (S_ISCHR(buf.st_mode)) return F_CHR;
-    if (S_ISBLK(buf.st_mode)) return F_BLK;
-    if (S_ISFIFO(buf.st_mode)) return F_FIFO;
-    if (S_ISSOCK(buf.st_mode)) return F_SOCK;
+    if (S_ISREG(buf.st_mode))  { return F_REG; }
+    if (S_ISDIR(buf.st_mode))  { return F_DIR; }
+    if (S_ISLNK(buf.st_mode))  { return F_LNK; }
+    if (S_ISCHR(buf.st_mode))  { return F_CHR; }
+    if (S_ISBLK(buf.st_mode))  { return F_BLK; }
+    if (S_ISFIFO(buf.st_mode)) { return F_FIFO; }
+    if (S_ISSOCK(buf.st_mode)) {return F_SOCK; }
 
     return F_UK;
 }

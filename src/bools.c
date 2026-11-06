@@ -31,9 +31,9 @@
 Cell* builtin_not(const Lex* e, const Cell* a)
 {
     (void)e;
-    Cell* err;
-    if ((err = CHECK_ARITY_EXACT(a, 1, "not"))) { return err; }
-    if (a->cell[0]->type == CELL_BOOLEAN && a->cell[0]->boolean_v == 0) {
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "not");
+    if (err) { return err; }
+    if (a->cell[0]->type == CELL_BOOLEAN && (int)a->cell[0]->boolean_v == 0) {
         return True_Obj;
     }
     return False_Obj;

@@ -62,7 +62,7 @@ special_form_handler_t SF_DISPATCH_TABLE[] = {
     [SF_ID_WHEN]        = &sf_when,
     [SF_ID_UNLESS]      = &sf_unless,
     [SF_ID_DEFMACRO]    = &sf_defmacro,
-    [SF_ID_DEBUG]       = &sf_with_gc_stats
+    [SF_ID_DEBUG]       = &sf_with_gc_stats,
 };
 
 
@@ -78,7 +78,7 @@ Cell* coz_eval(Lex* env, Cell* expr)
     }
 
     while (true) {
-        if (!expr) return nullptr;
+        if (!expr) { return nullptr; }
 
         /* Quick exit for all the self-evaluating types. */
         if (expr->type & (CELL_INTEGER|CELL_REAL|CELL_RATIONAL|CELL_COMPLEX|
@@ -151,6 +151,9 @@ Cell* coz_eval(Lex* env, Cell* expr)
             if (result->type == CELL_ERROR) {
                 return result;
             }
+
+            printf("Before make_Sexp_from_list call: \n");
+            debug_print_cell(result);
             /* Tail-call evaluate the result of the transformation. */
             Cell* s = make_sexpr_from_list(result, true);
             expr = s;

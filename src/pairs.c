@@ -90,7 +90,7 @@ static int32_t list_len(const Cell* list)
         if (fast->type == CELL_PAIR && fast->cdr->type == CELL_PAIR) {
             fast = fast->cdr->cdr;
             slow = slow->cdr;
-            if (fast == slow) return -2;
+            if (fast == slow) { return -2; }
         }
 
         if (list->type == CELL_NIL) {
@@ -114,7 +114,7 @@ Cell* builtin_cons(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2, "cons");
-    if (err) return err;
+    if (err) { return err; }
     return make_cell_pair(a->cell[0], a->cell[1]);
 }
 
@@ -125,7 +125,7 @@ Cell* builtin_car(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "car");
-    if (err) return err;
+    if (err) { return err; }
     return car__(a->cell[0]);
 }
 
@@ -136,7 +136,7 @@ Cell* builtin_cdr(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "cdr");
-    if (err) return err;
+    if (err) { return err; }
     return cdr__(a->cell[0]);
 }
 
@@ -200,7 +200,7 @@ Cell* builtin_set_car(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2, "set-car!");
-    if (err) return err;
+    if (err) { return err; }
     if (a->cell[0]->type != CELL_PAIR) {
         return make_cell_error(
             "set-car!: arg 1 must be a pair",
@@ -217,7 +217,7 @@ Cell* builtin_set_cdr(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2, "set-cdr!");
-    if (err) return err;
+    if (err) { return err; }
 
     Cell* pair = a->cell[0];
     if (pair->type != CELL_PAIR) {
@@ -243,10 +243,10 @@ Cell* builtin_list_length(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "length");
-    if (err) return err;
+    if (err) { return err; }
 
     const Cell* list = a->cell[0];
-    if (list->type == CELL_NIL) return make_cell_integer(0);
+    if (list->type == CELL_NIL) { return make_cell_integer(0); }
     if (list->type != CELL_PAIR) {
         return make_cell_error(
             "length: arg must be a list",
@@ -261,10 +261,10 @@ Cell* builtin_list_length(const Lex* e, const Cell* a)
     /* SLOW PATH: Recount and detect cycles. */
     const int32_t len = list_len(list);
     if (len == -1) {
-        return make_cell_error("list-len: improper list", TYPE_ERR);
+        return make_cell_error("length: improper list", TYPE_ERR);
     }
     if (len == -2) {
-        return make_cell_error("list-length: circular list", VALUE_ERR);
+        return make_cell_error("length: circular list", VALUE_ERR);
     }
     return make_cell_integer(len);
 }
@@ -276,7 +276,7 @@ Cell* builtin_list_ref(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2, "list-ref");
-    if (err) return err;
+    if (err) { return err; }
 
     Cell* list = a->cell[0];
     if (list->type != CELL_PAIR ) {
@@ -377,12 +377,11 @@ Cell* builtin_list_append(const Lex* e, const Cell* a)
 
     if (last_arg->type == CELL_NIL) {
         final_total_len = total_copied_len;
-    } else if (last_arg->type == CELL_PAIR) {
+    } else if ((last_arg->type == CELL_PAIR) && (last_arg->len != -1)) {
         /* If the last arg has a valid length, the result will be a proper list. */
-        if (last_arg->len != -1) {
-             final_total_len = total_copied_len + last_arg->len;
-        }
+        final_total_len = total_copied_len + last_arg->len;
     }
+
 
     /* Build the new list structure. */
     Cell* result_head = make_cell_nil();
@@ -430,7 +429,7 @@ Cell* builtin_list_reverse(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "list-reverse");
-    if (err) return err;
+    if (err) { return err; }
     err = check_arg_types(a, CELL_PAIR|CELL_NIL, "reverse");
     if (err) { return err; }
 
@@ -469,7 +468,7 @@ Cell* builtin_list_tail(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2, "list-tail");
-    if (err) return err;
+    if (err) { return err; }
 
     const Cell* lst = a->cell[0];
 
@@ -486,8 +485,8 @@ Cell* builtin_list_tail(const Lex* e, const Cell* a)
             VALUE_ERR);
     }
 
-    if (lst->type == CELL_NIL) {
-        if (k == 0) return make_cell_nil();
+    if ((lst->type == CELL_NIL) && (k == 0)) {
+        return make_cell_nil();
     }
 
     if (k > lst->len) {
@@ -514,7 +513,7 @@ Cell* builtin_make_list(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_RANGE(a, 1, 2, "make-list");
-    if (err) return err;
+    if (err) { return err; }
     if (a->cell[0]->type != CELL_INTEGER || a->cell[0]->integer_v < 1) {
         return make_cell_error(
             "make-list: arg 1 must be a positive integer",
@@ -545,7 +544,7 @@ Cell* builtin_list_set(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 3, "list-set!");
-    if (err) return err;
+    if (err) { return err; }
     if (a->cell[0]->type != CELL_PAIR) {
         return make_cell_error(
             "list-set!: arg 1 must be a list",
@@ -583,7 +582,7 @@ Cell* builtin_memq(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2, "memq");
-    if (err) return err;
+    if (err) { return err; }
 
     const Cell* key = a->cell[0];
     Cell* list = a->cell[1];
@@ -605,7 +604,7 @@ Cell* builtin_memq(const Lex* e, const Cell* a)
 Cell* builtin_memv(const Lex* e, const Cell* a)
 {
     Cell* err = CHECK_ARITY_EXACT(a, 2, "memv");
-    if (err) return err;
+    if (err) { return err; }
 
     const Cell* key = a->cell[0];
     Cell* list = a->cell[1];
@@ -639,7 +638,7 @@ Cell* builtin_memv(const Lex* e, const Cell* a)
 Cell* builtin_member(const Lex* e, const Cell* a)
 {
     Cell* err = CHECK_ARITY_RANGE(a, 2, 3, "member");
-    if (err) return err;
+    if (err) { return err; }
 
     const Cell* key = a->cell[0];
     Cell* list = a->cell[1];
@@ -675,7 +674,7 @@ Cell* builtin_assq(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2, "assq");
-    if (err) return err;
+    if (err) { return err; }
     if (a->cell[1]->type != CELL_PAIR) {
         return make_cell_error(
             "assq: arg 2 must be a pair",
@@ -707,7 +706,7 @@ Cell* builtin_assv(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2, "assv");
-    if (err) return err;
+    if (err) { return err; }
     if (a->cell[1]->type != CELL_PAIR) {
         return make_cell_error(
             "assv: arg 2 must be a pair",
@@ -740,18 +739,16 @@ Cell* builtin_assoc(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_RANGE(a, 2, 3, "assoc");
-    if (err) return err;
+    if (err) { return err; }
     if (a->cell[1]->type != CELL_PAIR) {
         return make_cell_error(
             "assoc: arg 2 must be a pair",
             TYPE_ERR);
     }
-    if (a->count == 3) {
-        if (a->cell[2]->type != CELL_PROC) {
-            return make_cell_error(
-                "assoc: arg 3 must be a procedure",
-                TYPE_ERR);
-        }
+    if ((a->count == 3) && (a->cell[2]->type != CELL_PROC)) {
+        return make_cell_error(
+            "assoc: arg 3 must be a procedure",
+            TYPE_ERR);
     }
 
     const Cell* p = a->cell[1];
@@ -792,7 +789,7 @@ Cell* builtin_list_copy(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "list-copy");
-    if (err) return err;
+    if (err) { return err; }
     /* Non-pairs get returned unaltered. */
     if (a->cell[0]->type != CELL_PAIR) {
         return a->cell[0];
@@ -804,7 +801,8 @@ Cell* builtin_list_copy(const Lex* e, const Cell* a)
     /* Runner pointers for iteration. */
     Cell* new_p = new_list_head;
     const Cell* old_p = old_list;
-    while (old_p->cdr->type != CELL_NIL && old_p->cdr->type == CELL_PAIR) {
+
+    while (old_p->cdr->type == CELL_PAIR) {
         /* Advance the old pointer. */
         old_p = old_p->cdr;
         /* Create a new cell and link it. */
@@ -830,7 +828,7 @@ Cell* builtin_filter(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2, "filter");
-    if (err) return err;
+    if (err) { return err; }
     if (a->cell[0]->type != CELL_PROC) {
         return make_cell_error(
             "filter: arg 1 must be a procedure",
@@ -879,7 +877,7 @@ Cell* builtin_foldl(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_MIN(a, 3, "foldl");
-    if (err) return err;
+    if (err) { return err; }
     if (a->cell[0]->type != CELL_PROC) {
         return make_cell_error(
             "foldl: arg 1 must be a procedure",
@@ -944,7 +942,7 @@ Cell* builtin_foldr(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_MIN(a, 3, "foldr");
-    if (err) return err;
+    if (err) { return err; }
     if (a->cell[0]->type != CELL_PROC) {
         return make_cell_error(
             "foldr: arg 1 must be a procedure",
@@ -1060,7 +1058,7 @@ Cell* builtin_count(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2, "count");
-    if (err) return err;
+    if (err) { return err; }
     if (a->cell[0]->type != CELL_PROC) {
         return make_cell_error(
             "count: arg 1 must be a predicate procedure",
@@ -1113,7 +1111,7 @@ Cell* builtin_count_equal(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2, "count-equal");
-    if (err) return err;
+    if (err) { return err; }
     if (a->cell[1]->type != CELL_PAIR || a->cell[1]->len == -1) {
         return make_cell_error(
             "count-equal: arg 2 must be a list",

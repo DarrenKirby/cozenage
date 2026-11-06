@@ -70,7 +70,7 @@ static Cell* bytevector_reverse(const Cell* v)
 static char* ascii_reverse(const char* input, const size_t len)
 {
     char* reversed = GC_MALLOC_ATOMIC(len + 1);
-    if (!reversed) return nullptr;
+    if (!reversed) { return nullptr; }
 
     /* Simple swap loop. */
     for (size_t i = 0; i < len; i++) {
@@ -200,7 +200,9 @@ static Cell* bytevector_idx(const Cell* a)
     }
 
     int64_t result_len = 0;
-    for (int64_t i = start; i < stop; i += step) result_len++;
+    for (int64_t i = start; i < stop; i += step) {
+        result_len++;
+    }
 
     Cell* result = make_cell_bytevector(type, (int32_t)result_len);
     for (int64_t i = start; i < stop; i += step) {
@@ -424,11 +426,11 @@ Cell* builtin_len(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "len");
-    if (err) return err;
+    if (err) { return err; }
 
     switch (a->cell[0]->type) {
         case CELL_PAIR:
-            if (a->cell[0]->len >= 0) return make_cell_integer(a->cell[0]->len);
+            if (a->cell[0]->len >= 0) { return make_cell_integer(a->cell[0]->len); }
             /* Still run the check, as the length might not be cached. */
             Cell* result = builtin_list_length(e, a);
             if (result->type == CELL_ERROR) {
@@ -461,7 +463,7 @@ Cell* builtin_idx(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_RANGE(a, 2, 4, "idx");
-    if (err) return err;
+    if (err) { return err; }
 
     switch (a->cell[0]->type) {
         case CELL_PAIR:
@@ -493,7 +495,7 @@ Cell* builtin_rev(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "rev");
-    if (err) return err;
+    if (err) { return err; }
     switch (a->cell[0]->type) {
         case CELL_PAIR:
             return builtin_list_reverse(e, a);
@@ -517,7 +519,7 @@ Cell* builtin_sort(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "sort");
-    if (err) return err;
+    if (err) { return err; }
 
     Cell* cp = cell_copy(a->cell[0]);
 
@@ -540,7 +542,9 @@ Cell* builtin_sort(const Lex* e, const Cell* a)
     }
     if (cp->type == CELL_PAIR) {
         if (cp->len == -1) {
-            return make_cell_error("sort: cannot sort improper list", VALUE_ERR);
+            return make_cell_error(
+                "sort: cannot sort improper list",
+                VALUE_ERR);
         }
         Cell* lv = builtin_list_to_vector(e, make_sexpr_len1(a->cell[0]));
         if (lv->type == CELL_ERROR) {
@@ -572,7 +576,7 @@ Cell* builtin_sort_bang(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "sort");
-    if (err) return err;
+    if (err) { return err; }
 
     Cell* cp = a->cell[0];
 

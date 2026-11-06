@@ -25,6 +25,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define BITS_64 64
+/* 64 + 'b' prefix + '\0' */
+#define BS_BUF_SIZE 66
+
 
 /* Forward declaration */
 static Cell* bits_bitstring_to_int(const Lex* e, const Cell* a);
@@ -46,7 +50,7 @@ static char* format_twos_complement(const long long val)
     int n_bits = 0;
     if (val > 0) {
         /* Find the smallest N such that val fits in N-1 bits. */
-        for (int i = 1; i < 64; ++i) {
+        for (int i = 1; i < BITS_64; ++i) {
             if (val < 1LL << (i - 1)) {
                 n_bits = i;
                 break;
@@ -55,7 +59,7 @@ static char* format_twos_complement(const long long val)
     } else {
         /* For negative numbers, we need a leading '1'.
          * We find the smallest N such that val fits in N bits. */
-        for (int i = 1; i <= 64; ++i) {
+        for (int i = 1; i <= BITS_64; ++i) {
             if (val >= -(1LL << (i - 1))) {
                 n_bits = i;
                 break;
@@ -64,8 +68,8 @@ static char* format_twos_complement(const long long val)
     }
 
     /* Allocate memory for the string (N bits + 1 for null terminator). */
-    char* bitstring = malloc(n_bits + 1);
-    if (bitstring == NULL) return nullptr;
+    char* bitstring = GC_MALLOC(n_bits + 1);
+    if (bitstring == NULL) { return nullptr; }
 
     /* Extract the lowest N bits from the value.
      * We work with the unsigned representation to avoid issues with
@@ -101,9 +105,9 @@ static Cell* bits_right_shift(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2, ">>");
-    if (err) return err;
+    if (err) { return err; }
     err = check_arg_types(a, CELL_INTEGER|CELL_SYMBOL, ">>");
-    if (err) return err;
+    if (err) { return err; }
 
     const Cell* arg1 = a->cell[0];
     const Cell* arg2 = a->cell[1];
@@ -139,9 +143,9 @@ static Cell* bits_left_shift(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2, "<<");
-    if (err) return err;
+    if (err) { return err; }
     err = check_arg_types(a, CELL_INTEGER|CELL_SYMBOL, "<<");
-    if (err) return err;
+    if (err) { return err; }
 
     const Cell* arg1 = a->cell[0];
     const Cell* arg2 = a->cell[1];
@@ -177,9 +181,9 @@ static Cell* bits_bitwise_and(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2, "band");
-    if (err) return err;
+    if (err) { return err; }
     err = check_arg_types(a, CELL_INTEGER|CELL_SYMBOL, "band");
-    if (err) return err;
+    if (err) { return err; }
 
     const Cell* arg1 = a->cell[0];
     const Cell* arg2 = a->cell[1];
@@ -216,9 +220,9 @@ static Cell* bits_bitwise_or(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2, "bor");
-    if (err) return err;
+    if (err) { return err; }
     err = check_arg_types(a, CELL_INTEGER|CELL_SYMBOL, "bor");
-    if (err) return err;
+    if (err) { return err; }
 
     const Cell* arg1 = a->cell[0];
     const Cell* arg2 = a->cell[1];
@@ -254,9 +258,9 @@ static Cell* bits_bitwise_xor(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2, "bxor");
-    if (err) return err;
+    if (err) { return err; }
     err = check_arg_types(a, CELL_INTEGER|CELL_SYMBOL, "bxor");
-    if (err) return err;
+    if (err) { return err; }
 
     const Cell* arg1 = a->cell[0];
     const Cell* arg2 = a->cell[1];
@@ -292,9 +296,9 @@ static Cell* bits_bitwise_not(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "bnot");
-    if (err) return err;
+    if (err) { return err; }
     err = check_arg_types(a, CELL_INTEGER|CELL_SYMBOL, "bnot");
-    if (err) return err;
+    if (err) { return err; }
 
     const Cell* arg1 = a->cell[0];
 
@@ -319,9 +323,9 @@ static Cell* bits_add(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2, "bs+");
-    if (err) return err;
+    if (err) { return err; }
     err = check_arg_types(a, CELL_SYMBOL, "bs+");
-    if (err) return err;
+    if (err) { return err; }
 
     const Cell* arg1 = bits_bitstring_to_int(e, make_sexpr_len1(a->cell[0]));
     const Cell* arg2 = bits_bitstring_to_int(e, make_sexpr_len1(a->cell[1]));
@@ -337,9 +341,9 @@ static Cell* bits_sub(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2, "bs-");
-    if (err) return err;
+    if (err) { return err; }
     err = check_arg_types(a, CELL_SYMBOL, "bs-");
-    if (err) return err;
+    if (err) { return err; }
 
     const Cell* arg1 = bits_bitstring_to_int(e, make_sexpr_len1(a->cell[0]));
     const Cell* arg2 = bits_bitstring_to_int(e, make_sexpr_len1(a->cell[1]));
@@ -355,9 +359,9 @@ static Cell* bits_mul(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2, "bs*");
-    if (err) return err;
+    if (err) { return err; }
     err = check_arg_types(a, CELL_SYMBOL, "bs*");
-    if (err) return err;
+    if (err) { return err; }
 
     const Cell* arg1 = bits_bitstring_to_int(e, make_sexpr_len1(a->cell[0]));
     const Cell* arg2 = bits_bitstring_to_int(e, make_sexpr_len1(a->cell[1]));
@@ -373,9 +377,9 @@ static Cell* bits_div(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2, "bs/");
-    if (err) return err;
+    if (err) { return err; }
     err = check_arg_types(a, CELL_SYMBOL, "bs/");
-    if (err) return err;
+    if (err) { return err; }
 
     const Cell* arg1 = bits_bitstring_to_int(e, make_sexpr_len1(a->cell[0]));
     const Cell* arg2 = bits_bitstring_to_int(e, make_sexpr_len1(a->cell[1]));
@@ -395,14 +399,14 @@ static Cell* bits_int_to_bitstring(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "int->bitstring");
-    if (err) return err;
+    if (err) { return err; }
     err = check_arg_types(a, CELL_INTEGER, "int->bitstring");
-    if (err) return err;
+    if (err) { return err; }
 
-    char* str = format_twos_complement(a->cell[0]->integer_v);
+    const char* str = format_twos_complement(a->cell[0]->integer_v);
     /* 66 = 64 bit max size of long long + '\0' + 'b' prefix */
-    char sym_str[66] = "b";
-    strlcat(sym_str, str, 66);
+    char sym_str[BS_BUF_SIZE] = "b";
+    strlcat(sym_str, str, BS_BUF_SIZE);
     Cell* result = make_cell_symbol(sym_str);
     return result;
 }
@@ -414,7 +418,7 @@ static Cell* bits_bitstring_to_int(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "bitstring->int");
-    if (err) return err;
+    if (err) { return err; }
     if (a->cell[0]->type != CELL_SYMBOL) {
         return make_cell_error(
             "bitstring->int: invalid bitstring",

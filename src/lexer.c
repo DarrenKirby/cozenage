@@ -74,7 +74,7 @@ STATIC char peek()
 
 STATIC char peekNext()
 {
-    if (at_end()) return '\0';
+    if (at_end()) { return '\0'; }
     return scanner.current[1];
 }
 
@@ -117,7 +117,7 @@ STATIC void skip_whitespace()
             break;
         /* Line comment. */
         case ';':
-            while (peek() != '\n' && !at_end()) advance();
+            while (peek() != '\n' && !at_end()) { advance(); }
             break;
             /* Block comment. */
         case '#':
@@ -127,7 +127,7 @@ STATIC void skip_whitespace()
                 advance(); advance();
                 while (peek() != '|' && !at_end())
                 {
-                    if (peek() == '\n') scanner.line++;
+                    if (peek() == '\n') { scanner.line++; }
                     advance();
                 }
                 /* Consume "|#". */
@@ -152,7 +152,7 @@ STATIC Token string()
             advance(); /* Consume the backslash. */
 
             /* Check for EOF right after the backslash. */
-            if (at_end()) return error_token("Unterminated string.");
+            if (at_end()) { return error_token("Unterminated string."); }
 
             /* If the escaped char is a newline, count it. */
             if (peek() == '\n') {
@@ -172,7 +172,7 @@ STATIC Token string()
         }
     }
 
-    if (at_end()) return error_token("Unterminated string.");
+    if (at_end()) { return error_token("Unterminated string."); }
 
     /* Consume the closing quote. */
     advance();
@@ -204,7 +204,7 @@ STATIC Token multi_word_identifier()
     while (peek() != '|' && !at_end()) {
         advance();
     }
-    if (at_end()) return error_token("Unterminated multi-word identifier.");
+    if (at_end()) { return error_token("Unterminated multi-word identifier."); }
 
     advance();
     return make_token(T_SYMBOL);
@@ -235,10 +235,10 @@ STATIC Token lex_token()
     skip_whitespace();
     scanner.start = scanner.current;
 
-    if (at_end()) return make_token(T_EOF);
+    if (at_end()) { return make_token(T_EOF); }
 
     const char c = advance();
-    if (is_digit(c)) return number();
+    if (is_digit(c)) { return number(); }
 
     switch (c) {
         case '(':
@@ -261,23 +261,21 @@ STATIC Token lex_token()
         case '-': {
             /* -inf.0, +inf.0, +nan.0, and -nan.0 need special handling.
              * lex them as symbols, and deal with it in the parser. */
-            if (peek() == 'i' && peekNext() == 'n') return symbol();
+            if (peek() == 'i' && peekNext() == 'n') { return symbol(); }
             /* Catch +i and -i ... should parse to 0+1i and 0-1i respectively. */
-            if (peek() == 'i') return number();
-            if (peek() == 'n' && peekNext() == 'a') return symbol();
-            if (is_digit(peek())) return number();
+            if (peek() == 'i') { return number(); }
+            if (peek() == 'n' && peekNext() == 'a') { return symbol(); }
+            if (is_digit(peek())) { return number(); }
             return make_token(T_SYMBOL);
         }
 
         /* Comma, and comma at. */
         case ',': {
-            switch (peek()) {
-                case '@':
-                    advance();
-                    return make_token(T_COMMA_AT);
-                default:
-                    return make_token(T_COMMA);
+            if (peek() == '@') {
+                advance();
+                return make_token(T_COMMA_AT);
             }
+            return make_token(T_COMMA);
         }
 
         /* Multiple possibilities, depending on what follows the hash. */
@@ -383,7 +381,7 @@ TokenArray* scan_all_tokens(const char* source)
     for (;;) {
         const Token token = lex_token();
         t_array = write_token_array(t_array, token);
-        if (token.type == T_EOF) break;
+        if (token.type == T_EOF) { break; }
     }
 
     return t_array;

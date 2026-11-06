@@ -46,7 +46,7 @@ bool mul_will_overflow_i64(const int64_t a, const int64_t b, int64_t *out) {
 
 bool div_will_overflow_i64(const int64_t a, const int64_t b, int64_t *out) {
     if (b == 0) { return true; } /* division by zero. */
-    if (a == INT64_MIN && b == -1) return true;
+    if (a == INT64_MIN && b == -1) { return true; }
     *out = a / b;
     return false;
 }
@@ -54,7 +54,8 @@ bool div_will_overflow_i64(const int64_t a, const int64_t b, int64_t *out) {
 
 /* bigint demotion check helpers. */
 static bool mpz_fits_int64(const mpz_t z) {
-    mpz_t tmp_max, tmp_min;
+    mpz_t tmp_max;
+    mpz_t tmp_min;
     mpz_init_set_si(tmp_max, 0);
     mpz_set_ui(tmp_max, INT64_MAX);
     mpz_init(tmp_min);
@@ -122,12 +123,13 @@ Cell* bigint_abs(Cell* a)
 
 Cell* bigint_quo_rem(Cell* a, Cell* b, const qr_t op) {
     Cell* result = cell_copy(a);
-    Cell* d;
+    Cell* d = nullptr;
     if (b->type == CELL_INTEGER) {
-        d = make_cell_bigint(nullptr, b, 10);
+        d = make_cell_bigint(nullptr, b, BASE_10);
     } else {
         d = b;
     }
+
     if (op == QR_QUOTIENT) {
         mpz_tdiv_q(*result->bi, *a->bi, *d->bi);
     } else {
@@ -142,8 +144,8 @@ Cell* bigint_quo_rem(Cell* a, Cell* b, const qr_t op) {
 
 
 Cell* bigint_exact_int_sqrt(Cell* a) {
-    Cell* rop1 = make_cell_bigint("0", nullptr, 10);
-    Cell* rop2 = make_cell_bigint("0", nullptr, 10);
+    Cell* rop1 = make_cell_bigint("0", nullptr, BASE_10);
+    Cell* rop2 = make_cell_bigint("0", nullptr, BASE_10);
     mpz_sqrtrem(*rop1->bi, *rop2->bi, *a->bi);
 
     if (mpz_fits_int64(*rop1->bi)) {

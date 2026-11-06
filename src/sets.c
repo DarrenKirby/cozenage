@@ -50,7 +50,7 @@ Cell* copy_hash_table(const Cell* t)
 Cell* clear_hash_table(Cell* t)
 {
     t->table->count = 0;
-    t->table->capacity = 8; /* Default initial capacity. */
+    t->table->capacity = INIT_HASH_CAPACITY; /* Default initial capacity. */
     GC_FREE(t->table->items);
     t->table->items = GC_MALLOC(sizeof(ght_item) * t->table->capacity);
     return t;
@@ -76,10 +76,10 @@ Cell* map_logic(const Cell* proc, const Cell* h_table, const Lex* e, const bool 
                       coz_apply_and_get_val(proc, make_sexpr_len1(it.value), e);
         }
 
-        if (val && val->type == CELL_ERROR) return val;
+        if (val && val->type == CELL_ERROR) { return val; }
         if (ret_res) {
             /* Ignore unspecified results. */
-            if (val == USP_Obj) continue;
+            if (val == USP_Obj) { continue; }
             cell_add(result, val);
         }
     }
@@ -121,7 +121,7 @@ Cell* builtin_set_copy(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "set-copy");
-    if (err) return err;
+    if (err) { return err; }
     const Cell* set = a->cell[0];
     if (set->type != CELL_SET) {
         return make_cell_error(
@@ -139,7 +139,7 @@ Cell* builtin_set_clear(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "set-clear!");
-    if (err) return err;
+    if (err) { return err; }
 
     Cell* set = a->cell[0];
     if (set->type != CELL_SET) {
@@ -159,7 +159,7 @@ Cell* builtin_set_add(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_MIN(a, 2, "set-add!");
-    if (err) return err;
+    if (err) { return err; }
 
     Cell* set = a->cell[0];
     if (set->type != CELL_SET) {
@@ -217,7 +217,7 @@ Cell* builtin_set_remove(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_RANGE(a, 2, 3, "set-remove!");
-    if (err) return err;
+    if (err) { return err; }
 
     Cell* set = a->cell[0];
     if (set->type != CELL_SET) {
@@ -248,7 +248,7 @@ Cell* builtin_set_member(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2, "set-member?");
-    if (err) return err;
+    if (err) { return err; }
     const Cell* set = a->cell[0];
     if (set->type != CELL_SET) {
         return make_cell_error(
@@ -269,9 +269,9 @@ Cell* builtin_set_is_disjoint(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2, "set-disjoint?");
-    if (err) return err;
+    if (err) { return err; }
     err = check_arg_types(a, CELL_SET, "set-disjoint?");
-    if (err) return err;
+    if (err) { return err; }
 
     const Cell* sa = a->cell[0];
     const Cell* sb = a->cell[1];
@@ -292,9 +292,9 @@ Cell* builtin_set_is_subset(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2, "set-subset?");
-    if (err) return err;
+    if (err) { return err; }
     err = check_arg_types(a, CELL_SET, "set-subset?");
-    if (err) return err;
+    if (err) { return err; }
 
     const Cell* sa = a->cell[0];
     const Cell* sb = a->cell[1];
@@ -315,9 +315,9 @@ Cell* builtin_set_is_superset(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2, "set-superset?");
-    if (err) return err;
+    if (err) { return err; }
     err = check_arg_types(a, CELL_SET, "set-superset?");
-    if (err) return err;
+    if (err) { return err; }
 
     const Cell* sa = a->cell[0];
     const Cell* sb = a->cell[1];
@@ -338,9 +338,9 @@ Cell* builtin_set_union(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2, "set-union");
-    if (err) return err;
+    if (err) { return err; }
     err = check_arg_types(a, CELL_SET, "set-union");
-    if (err) return err;
+    if (err) { return err; }
 
     const Cell* sa = a->cell[0];
     const Cell* sb = a->cell[1];
@@ -365,9 +365,9 @@ Cell* builtin_set_union_bang(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2, "set-union!");
-    if (err) return err;
+    if (err) { return err; }
     err = check_arg_types(a, CELL_SET, "set-union!");
-    if (err) return err;
+    if (err) { return err; }
 
     Cell* sa = a->cell[0];
     const Cell* sb = a->cell[1];
@@ -386,9 +386,9 @@ Cell* builtin_set_intersection(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2, "set-intersection");
-    if (err) return err;
+    if (err) { return err; }
     err = check_arg_types(a, CELL_SET, "set-intersection");
-    if (err) return err;
+    if (err) { return err; }
 
     const Cell* sa = a->cell[0];
     const Cell* sb = a->cell[1];
@@ -410,9 +410,9 @@ Cell* builtin_set_intersection_bang(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2, "set-intersection!");
-    if (err) return err;
+    if (err) { return err; }
     err = check_arg_types(a, CELL_SET, "set-intersection!");
-    if (err) return err;
+    if (err) { return err; }
 
     Cell* sa = a->cell[0];
     const Cell* sb = a->cell[1];
@@ -433,9 +433,9 @@ Cell* builtin_set_difference(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2, "set-difference");
-    if (err) return err;
+    if (err) { return err; }
     err = check_arg_types(a, CELL_SET, "set-difference");
-    if (err) return err;
+    if (err) { return err; }
 
     const Cell* sa = a->cell[0];
     const Cell* sb = a->cell[1];
@@ -457,9 +457,9 @@ Cell* builtin_set_difference_bang(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2, "set-difference!");
-    if (err) return err;
+    if (err) { return err; }
     err = check_arg_types(a, CELL_SET, "set-difference!");
-    if (err) return err;
+    if (err) { return err; }
 
     Cell* sa = a->cell[0];
     const Cell* sb = a->cell[1];
@@ -480,9 +480,9 @@ Cell* builtin_set_sym_difference(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2, "set-sym-difference");
-    if (err) return err;
+    if (err) { return err; }
     err = check_arg_types(a, CELL_SET, "set-sym-difference");
-    if (err) return err;
+    if (err) { return err; }
 
     const Cell* sa = a->cell[0];
     const Cell* sb = a->cell[1];
@@ -510,9 +510,9 @@ Cell* builtin_set_sym_difference_bang(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2, "set-sym-difference!");
-    if (err) return err;
+    if (err) { return err; }
     err = check_arg_types(a, CELL_SET, "set-sym-difference!");
-    if (err) return err;
+    if (err) { return err; }
 
     Cell* sa = a->cell[0];
     const Cell* sb = a->cell[1];
@@ -541,7 +541,7 @@ Cell* builtin_set_sym_difference_bang(const Lex* e, const Cell* a)
 Cell* builtin_set_map(const Lex* e, const Cell* a)
 {
     Cell* err = CHECK_ARITY_EXACT(a, 2, "set-map");
-    if (err) return err;
+    if (err) { return err; }
 
     const Cell* proc = a->cell[0];
     const Cell* set = a->cell[1];
@@ -567,7 +567,7 @@ Cell* builtin_set_map(const Lex* e, const Cell* a)
 Cell* builtin_set_foreach(const Lex* e, const Cell* a)
 {
     Cell* err = CHECK_ARITY_EXACT(a, 2, "set-foreach");
-    if (err) return err;
+    if (err) { return err; }
 
     const Cell* proc = a->cell[0];
     const Cell* set = a->cell[1];
@@ -592,7 +592,7 @@ Cell* builtin_list_to_set(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "list->set");
-    if (err) return err;
+    if (err) { return err; }
     if (a->cell[0]->type != CELL_PAIR || a->cell[0]->count == -1) {
         return make_cell_error(
             "list->set: arg must be a proper list",
@@ -608,7 +608,7 @@ Cell* builtin_set_to_list(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "set->list");
-    if (err) return err;
+    if (err) { return err; }
     const Cell* set = a->cell[0];
     if (set->type != CELL_SET) {
         return make_cell_error(

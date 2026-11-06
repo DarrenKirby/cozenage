@@ -99,7 +99,7 @@ static Cell* datetime_current_datetime_utc(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_RANGE(a, 0, 1, "current-datetime-utc");
-    if (err) return err;
+    if (err) { return err; }
 
     char* fmt_str;
     if (a->count > 0 && a->cell[0]->type == CELL_STRING) {
@@ -131,7 +131,7 @@ static Cell* datetime_current_datetime_local(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_RANGE(a, 0, 1, "current-datetime-local");
-    if (err) return err;
+    if (err) { return err; }
 
     char* fmt_str;
     if (a->count > 0 && a->cell[0]->type == CELL_STRING) {

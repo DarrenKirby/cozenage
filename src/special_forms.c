@@ -146,7 +146,7 @@ Cell* get_args_from_sexpr(const Cell* v)
  * where 'sym' is bound. Returns NULL if not found in any local frame. */
 static Ch_Env* lex_find_local_frame(const Lex* e, const char* sym)
 {
-    if (!e) return nullptr;
+    if (!e) { return nullptr; }
 
     Ch_Env* current_frame = e->local;
     while (current_frame != nullptr) {
@@ -422,10 +422,10 @@ HandlerResult sf_cond(Lex* e, Cell* a)
         Cell* test = coz_eval(e, clause->cell[first]);
 
         /* Propagate any errors. */
-        if (test->type == CELL_ERROR) return return_val(test);
+        if (test->type == CELL_ERROR) { return return_val(test); }
 
         /* Move along if current test is #f. */
-        if (test == False_Obj) continue;
+        if (test == False_Obj) { continue; }
 
         /* Test is truthy - first see if there is an expression. */
         if (clause->count == 1) {
@@ -474,7 +474,7 @@ HandlerResult sf_cond(Lex* e, Cell* a)
 
 
 static Cell* get_base_libspec(Cell* node) {
-    if (!node || node->type != CELL_SEXPR || node->count < 2) return nullptr;
+    if (!node || node->type != CELL_SEXPR || node->count < 2) { return nullptr; }
 
     /* Base case: (collection library) */
     if (node->count == 2 &&
@@ -534,7 +534,7 @@ HandlerResult sf_import(Lex* e, Cell* a)
 
         /* Iterate paths and try to find the module/library. */
         for (int j = 0; search_paths[j] != NULL; ++j) {
-            if (search_paths[j][0] == '\0') continue;
+            if (search_paths[j][0] == '\0') { continue; }
 
             /* Check if it's a C module. */
             snprintf(filepath, sizeof(filepath), "%s/%s/%s.%s",
@@ -576,7 +576,7 @@ HandlerResult sf_import(Lex* e, Cell* a)
             /* Load C module. */
             ret = load_c_module(libname_cell, e, filepath, &spec);
         } else {
-            /* Load scheme library. */
+            /* Load Scheme library. */
             ret = load_scheme_lib(libname_cell, e, filepath, &spec);
         }
 
@@ -597,7 +597,7 @@ HandlerResult sf_import(Lex* e, Cell* a)
         exit(EXIT_FAILURE);
     }
 
-    if (is_repl) populate_dynamic_completions(e);
+    if (is_repl) { populate_dynamic_completions(e); }
     return return_val(True_Obj);
 }
 
@@ -646,12 +646,12 @@ HandlerResult sf_let(Lex* e, Cell* a) {
                fail its own validation check when the outer loop reaches it.
                But to be safe and avoid segfaults on malformed input ahead of i: */
             const Cell* next_b = bindings->cell[j];
-            if (next_b->type == CELL_SEXPR && next_b->count > 0 && next_b->cell[0]->type == CELL_SYMBOL) {
-                if (b->cell[0] == next_b->cell[0]) {
+            if ((next_b->type == CELL_SEXPR && next_b->count > 0 &&
+                next_b->cell[0]->type == CELL_SYMBOL) &&
+                (b->cell[0] == next_b->cell[0]))  {
                     return return_val(make_cell_error(
                         "let: duplicate variable in bindings",
                         SYNTAX_ERR));
-                }
             }
         }
     }
@@ -664,18 +664,18 @@ HandlerResult sf_let(Lex* e, Cell* a) {
         const Cell* b = bindings->cell[i];
         /* Evaluate the value in the parent environment. */
         Cell* val = coz_eval(e, b->cell[1]);
-        if (val->type == CELL_ERROR) return return_val(val);
+        if (val->type == CELL_ERROR) { return return_val(val); }
 
         lex_put_local(local_env, b->cell[0], val);
     }
 
-    /* Handle the body (indices 1 to count-1). */
-    const int body_count = a->count - 1;
+    /* Evaluate all but the last body form for side effects. */
+    for (int i = 1; i < a->count - 1; i++) {
+        Cell* r = coz_eval(local_env, a->cell[i]);
+        if (r->type == CELL_ERROR) { return return_val(r); }
+    }
 
-    if (body_count == 0) return return_val(USP_Obj);
-
-    /* Tail call the body expression. If it contains multiple expressions,
-     * the transformer will have sequenced it in a (begin ...) */
+    /* Tail call the final body form. */
     return continue_with(a->cell[last(a)], local_env);
 }
 
@@ -726,7 +726,7 @@ HandlerResult sf_let_star(Lex* e, Cell* a)
 
         /* Evaluate the argument expression in the *current* environment. */
         Cell* val = coz_eval(current_env, arg);
-        if (val->type == CELL_ERROR) return return_val(val);
+        if (val->type == CELL_ERROR) { return return_val(val); }
 
         /* Put the new binding into the new environment. */
         lex_put_local(new_env, formal, val);
@@ -758,9 +758,10 @@ HandlerResult sf_let_star(Lex* e, Cell* a)
 * common uses of letrec, all the ⟨init⟩s are lambda expressions and the restriction is satisfied automatically. */
 HandlerResult sf_letrec(Lex* e, Cell* a)
 {
-    if (a->count < 1) return return_val(make_cell_error(
+    if (a->count < 1) { return return_val(make_cell_error(
         "letrec: missing bindings",
         SYNTAX_ERR));
+    }
 
     const Cell* bindings = a->cell[0];
     if (bindings->type != CELL_SEXPR) {
@@ -832,9 +833,10 @@ HandlerResult sf_letrec(Lex* e, Cell* a)
  * that it is an error to invoke the continuation of an ⟨init⟩ more than once. */
 HandlerResult sf_letrec_star(Lex* e, Cell* a)
 {
-    if (a->count < 1) return return_val(make_cell_error(
+    if (a->count < 1) { return return_val(make_cell_error(
         "letrec*: missing bindings",
         SYNTAX_ERR));
+    }
 
     const Cell* bindings = a->cell[0];
     if (bindings->type != CELL_SEXPR) {
@@ -875,7 +877,7 @@ HandlerResult sf_letrec_star(Lex* e, Cell* a)
         Cell* local_bind = bindings->cell[i]->cell[1];
         Cell* init_exp = coz_eval(local_env, local_bind);
 
-        if (init_exp->type == CELL_ERROR) return return_val(init_exp);
+        if (init_exp->type == CELL_ERROR) { return return_val(init_exp); }
         lex_put_local(local_env, variable, init_exp);
     }
 
@@ -897,7 +899,7 @@ HandlerResult sf_letrec_star(Lex* e, Cell* a)
 HandlerResult sf_set_bang(Lex* e, Cell* a)
 {
     Cell* err = CHECK_ARITY_EXACT(a, 2, "set!");
-    if (err) return return_val(err);
+    if (err) { return return_val(err); }
 
     const Cell* variable = a->cell[first];
     if (variable->type != CELL_SYMBOL) {
@@ -918,12 +920,12 @@ HandlerResult sf_set_bang(Lex* e, Cell* a)
         for (int i = 0; i < target_frame->count; i++) {
             if (strcmp(target_frame->syms[i], sym_to_set) == 0) {
                 target_frame->vals[i] = value_to_set;
-                /* R7RS says the return from set! is unspecified.
-                 * Cozenage will return the value set, for visual
-                 * feedback that the operation was successful (REPL-only). */
-                if (is_repl) {
-                    fprintf(stdout, "%s\n", cell_to_string(value_to_set, MODE_REPL));
-                }
+                // /* R7RS says the return from set! is unspecified.
+                //  * Cozenage will return the value set, for visual
+                //  * feedback that the operation was successful (REPL-only). */
+                // if (is_repl) {
+                //     fprintf(stdout, "%s\n", cell_to_string(value_to_set, MODE_REPL));
+                // }
                 return return_val(USP_Obj);
             }
         }
@@ -981,8 +983,9 @@ HandlerResult sf_begin(Lex* e, Cell* a)
  * #t is returned. */
 HandlerResult sf_and(Lex* e, Cell* a) {
     /* (and) -> #t */
-    if (a->count == 0)
+    if (a->count == 0) {
         return return_val(True_Obj);
+    }
 
     for (int i = 0; i < a->count; i++) {
         /* If it's the last element, tail-call it. */
@@ -991,8 +994,9 @@ HandlerResult sf_and(Lex* e, Cell* a) {
         }
 
         Cell* result = coz_eval(e, a->cell[i]);
-        if (result->type == CELL_ERROR)
+        if (result->type == CELL_ERROR) {
             return return_val(result);
+        }
 
         /* Short-circuit if False. */
         if (result == False_Obj) {
@@ -1020,7 +1024,9 @@ HandlerResult sf_or(Lex* e, Cell* a)
     }
     /* (or e1 e2 ...). */
     Cell *test_result = coz_eval(e, a->cell[0]);
-    if (test_result->type == CELL_ERROR) return return_val(test_result);
+    if (test_result->type == CELL_ERROR) {
+        return return_val(test_result);
+    }
 
     if (test_result == False_Obj) {
         /* It's #f. Continue the search by tail-calling with the rest of the form. */
@@ -1043,11 +1049,11 @@ HandlerResult sf_or(Lex* e, Cell* a)
 HandlerResult sf_when(Lex* e, Cell* a)
 {
     Cell* err = CHECK_ARITY_MIN(a, 2, "when");
-    if (err) return return_val(err);
+    if (err) { return return_val(err); }
 
     /* Evaluate the test. */
     Cell* test = coz_eval(e, a->cell[0]);
-    if (test->type == CELL_ERROR) return return_val(test);
+    if (test->type == CELL_ERROR) { return return_val(test); }
 
     /* Check for literal #f */
     if (test == False_Obj) {
@@ -1068,7 +1074,7 @@ HandlerResult sf_when(Lex* e, Cell* a)
 HandlerResult sf_unless(Lex* e, Cell* a)
 {
     Cell* err = CHECK_ARITY_MIN(a, 2, "unless");
-    if (err) return return_val(err);
+    if (err) { return return_val(err); }
 
     /* Evaluate the test. */
     const Cell* test = coz_eval(e, a->cell[0]);
@@ -1153,9 +1159,11 @@ HandlerResult sf_defmacro(Lex* e, Cell* a) {
  * Implemented as a special form so the arg doesn't get evaluated before
  * the first collect/get_heap_size calls. */
 HandlerResult sf_with_gc_stats(Lex* env, Cell* a) {
-    if (a->count < 1) return return_val(make_cell_error(
-        "Expected an expression to evaluate",
-        SYNTAX_ERR));
+    if (a->count < 1) {
+        return return_val(make_cell_error(
+    "Expected an expression to evaluate",
+    SYNTAX_ERR));
+    }
 
     GC_gcollect();
     const size_t before = GC_get_heap_size();

@@ -24,6 +24,8 @@
 
 #include <gc/gc.h>
 
+#define KB 1024.0
+
 
 /* (error-object? obj)
  * Returns true if its argument is a CELL_ERROR object, else false. */
@@ -31,7 +33,7 @@ Cell* builtin_error_object(const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "error-object?");
-    if (err) return err;
+    if (err) { return err; }
 
     if (a->cell[0]->type == CELL_ERROR) {
         return True_Obj;
@@ -61,7 +63,7 @@ Cell* builtin_error_object(const Lex* e, const Cell* a)
 Cell* builtin_raise(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_RANGE(a, 1, 3, "raise");
-    if (err) return err;
+    if (err) { return err; }
 
     if (a->cell[0]->type != CELL_STRING) {
         return make_cell_error(
@@ -79,7 +81,7 @@ Cell* builtin_raise(const Lex* e, const Cell* a) {
         }
 
         const uint8_t err_no = a->cell[1]->integer_v;
-        if (err_no > 7) {
+        if (err_no > STACK_ERR) {
             return make_cell_error(
                 "raise: invalid error type value",
                 VALUE_ERR);
@@ -113,13 +115,13 @@ static void gc_print_report()
 
     printf("===== GC Report ==========================\n");
     printf("Heap size:           %zu bytes (%.2f MB)\n",
-           heap_size, (double)heap_size / (1024.0 * 1024.0));
+           heap_size, (double)heap_size / (KB * KB));
     printf("Used bytes:          %zu bytes (%.2f MB)\n",
-           used_bytes, (double)used_bytes / (1024.0 * 1024.0));
+           used_bytes, (double)used_bytes / (KB * KB));
     printf("Free bytes:          %zu bytes (%.2f MB)\n",
-           free_bytes, (double)free_bytes / (1024.0 * 1024.0));
+           free_bytes, (double)free_bytes / (KB * KB));
     printf("Unmapped bytes:      %zu bytes (%.2f MB)\n",
-           unmapped_bytes, (double)unmapped_bytes / (1024.0 * 1024.0));
+           unmapped_bytes, (double)unmapped_bytes / (KB * KB));
     printf("Bytes since last GC: %zu bytes\n", bytes_since_gc);
     printf("Total bytes allocd:  %zu bytes (lifetime)\n", total_bytes);
     printf("GC collections:      %lu\n", gc_count);
