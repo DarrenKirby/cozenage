@@ -24,10 +24,12 @@
 #include "repl.h"
 #include "repr.h"
 #include "runner.h"
+#include "transforms.h"
 #include "types.h"
 
 #include <gc/gc.h>
 #include <stdlib.h>
+
 
 #define MAX_ASCII_BYTE 0x7F
 
@@ -43,26 +45,44 @@
  * to pass said environment, but for now it is unary. */
 Cell* builtin_eval(const Lex* e, const Cell* a)
 {
-    (void)e;
-    Cell* err = CHECK_ARITY_MIN(a, 1, "eval");
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "eval");
     if (err) { return err; }
-    Cell* args;
-    /* Convert list to s-expr if we are handed a quote. */
-    if (a->cell[0]->type == CELL_PAIR) {
-        args = make_sexpr_from_list(a->cell[0], false);
-        for (int i = 0; i < args->count; i++ ) {
-            if (args->cell[i]->type == CELL_PAIR && args->cell[i]->len != -1) {
-                Cell* tmp = args->cell[i];
-                args->cell[i] = make_sexpr_from_list(tmp, false);
-            }
-        }
-        /* Otherwise just send straight to eval. */
-    } else {
-        args = a->cell[0];
+
+    /* Code arrives as DATA: convert pairs to S-exprs, all the way down. */
+    Cell* code = a->cell[0];
+    if (code->type == CELL_PAIR) {
+        code = make_sexpr_from_list(code, true);
     }
 
-    return coz_eval((Lex*)e, args);
+    /* This never went through the parser/transformer pipeline, so expand it. */
+    code = expand(code, (Lex*)e);
+    if (code->type == CELL_ERROR) { return code; }
+
+    return coz_eval((Lex*)e, code);
 }
+
+// Cell* builtin_eval(const Lex* e, const Cell* a)
+// {
+//     (void)e;
+//     Cell* err = CHECK_ARITY_MIN(a, 1, "eval");
+//     if (err) { return err; }
+//     Cell* args;
+//     /* Convert list to s-expr if we are handed a quote. */
+//     if (a->cell[0]->type == CELL_PAIR) {
+//         args = make_sexpr_from_list(a->cell[0], false);
+//         for (int i = 0; i < args->count; i++ ) {
+//             if (args->cell[i]->type == CELL_PAIR && args->cell[i]->len != -1) {
+//                 Cell* tmp = args->cell[i];
+//                 args->cell[i] = make_sexpr_from_list(tmp, false);
+//             }
+//         }
+//         /* Otherwise just send straight to eval. */
+//     } else {
+//         args = a->cell[0];
+//     }
+//
+//     return coz_eval((Lex*)e, args);
+// }
 
 
 /* (apply proc arg1 ... args)
