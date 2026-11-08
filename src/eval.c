@@ -39,6 +39,7 @@
 #include "special_forms.h"
 #include "stack_guard.h"
 #include "symbols.h"
+#include "transforms.h"
 #include "types.h"
 
 
@@ -144,18 +145,9 @@ Cell* coz_eval(Lex* env, Cell* expr)
         }
 
         if (f->type == CELL_MACRO) {
-            /* Transform the macro. */
-            Cell* raw_args = get_args_from_sexpr(expr);
-            Cell* result = coz_apply_and_get_val(f, raw_args, env);
-            /* Propagate errors. */
-            if (result->type == CELL_ERROR) {
-                return result;
-            }
-
-            printf("Before make_Sexp_from_list call: \n");
-            debug_print_cell(result);
-            /* Tail-call evaluate the result of the transformation. */
-            Cell* s = make_sexpr_from_list(result, true);
+            /* Macro not known at transform time: expand now, then evaluate. */
+            Cell* s = expand_macro_call(f, expr, env);
+            if (s->type == CELL_ERROR) { return s; }
             expr = s;
             continue;
         }
@@ -185,7 +177,7 @@ Cell* coz_eval(Lex* env, Cell* expr)
         }
 
         Cell* result = coz_apply(f, args, &env, &expr);
-        if (!result) return nullptr;
+        if (!result) { return nullptr; }
 
         if (result != TCS_Obj) {
             /* f was a primitive C function that returned a final value. */
