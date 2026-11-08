@@ -58,6 +58,9 @@ SRFI-4 style fast and efficient floating point and integer vector types backed b
 - u64, s64
 - f32, f64
 
+Note that while only the U8 and s8 vectors hold 'byte-sized' numbers, these vectors all fall under the disjoint
+`bytevector` type.
+
 ### Ports and I/O
 
 - File-backed text and binary ports
