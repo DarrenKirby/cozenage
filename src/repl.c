@@ -224,7 +224,7 @@ int run_repl(const lib_load_config load_libs)
     is_repl = 1;
     /* Initialize signal handler. */
     install_signal_handlers();
-    /* Initialize symbol table with initial size of 128. */
+    /* Initialize symbol table with initial size of 256. */
     symbol_table = ht_create(INIT_SYMBOL_TABLE_SIZE);
     /* Load readline history. */
     read_history_from_file();
