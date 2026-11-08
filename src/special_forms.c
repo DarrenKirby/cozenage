@@ -279,10 +279,7 @@ HandlerResult sf_quote(Lex* e, Cell* a)
             ARITY_ERR));
     }
 
-    /* Extract the expression that was quoted. */
-    Cell* qexpr = a->cell[first];
-
-    return return_val(make_list_from_sexpr(qexpr));
+    return return_val(a->cell[first]);
 }
 
 
@@ -910,6 +907,11 @@ HandlerResult sf_set_bang(Lex* e, Cell* a)
 
     const char* sym_to_set = a->cell[0]->sym;
     Cell* value_to_set = coz_eval(e, a->cell[1]);
+
+    /* Propagate expression errors. */
+    if (value_to_set->type == CELL_ERROR) {
+        return return_val(value_to_set);
+    }
 
     /* First, try to find the variable in the local environment chain. */
     const Ch_Env* target_frame = lex_find_local_frame(e, sym_to_set);
