@@ -168,7 +168,7 @@ Cell* parse_all_expressions(Lex* e, TokenArray* ta)
         // debug_print_cell(expression);
         /* Kick all S-expressions off to the transformer. */
         if (expression->type == CELL_SEXPR) {
-            expression = expand(expression);
+            expression = expand(expression, e);
         }
 
         /* Raise error if generated in parsing or transforming. */
