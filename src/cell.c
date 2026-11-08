@@ -585,10 +585,15 @@ Cell* make_cell_hash(const Cell* values) {
     }
     v->type = CELL_HASH;
     ght_table* t = ght_create(INIT_HASH_CAPACITY);
-    /* Already checked for evenness in the parser. */
-    for (int i = 0; i < values->count; i += 2) {
-        ght_set(t, values->cell[i], values->cell[i + 1]);
+
+    /* If args are passed, place them in the table. */
+    if (values) {
+        /* Already checked for evenness in the parser. */
+        for (int i = 0; i < values->count; i += 2) {
+            ght_set(t, values->cell[i], values->cell[i + 1]);
+        }
     }
+
     v->table = t;
     return v;
 }
