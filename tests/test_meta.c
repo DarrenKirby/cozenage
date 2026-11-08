@@ -6,7 +6,7 @@
 #include "../src/repr.h"
 #include "../src/symbols.h"
 #include "../src/transforms.h"
-#include "runner.h"
+#include "../src/runner.h"
 
 #include <locale.h>
 #include <gc/gc.h>
@@ -47,7 +47,7 @@ char* t_eval(const char* input) {
 
     TokenArray* ta = scan_all_tokens(input);
     Cell* parsed = parse_tokens(ta);
-    Cell* expr = expand(parsed);
+    Cell* expr = expand(parsed, test_env);
     const Cell *result = coz_eval(test_env, expr);
 
     return cell_to_string(result, MODE_WRITE);
