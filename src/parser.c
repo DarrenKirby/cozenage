@@ -35,9 +35,8 @@
 #include <unicode/uchar.h>
 
 #define ERR_BUF_SIZE 128
-
-
 #define TMP_IMAG_BUF_SIZE 64
+
 
 STATIC long double parse_float_checked(const char* str, char* err_buf, int* ok)
 {
@@ -298,8 +297,9 @@ STATIC Cell* parse_number(char* token, const int line, int len)
             return result;
         }
         if (!ok) {
-            return make_cell_error(fmt_err("Error in numeric on line %d: %s", line, err_buf),
-            SYNTAX_ERR);
+            return make_cell_error(
+                fmt_err("Error in numeric on line %d: %s", line, err_buf),
+                 SYNTAX_ERR);
         }
     }
 
@@ -317,7 +317,8 @@ STATIC Cell* parse_number(char* token, const int line, int len)
 
     /* If parsing fails but there is a numeric-like string, return error. */
     if (!ok) {
-        return make_cell_error(fmt_err("Error in numeric on line %d: %s", line, err_buf),
+        return make_cell_error(
+            fmt_err("Error in numeric on line %d: %s", line, err_buf),
             SYNTAX_ERR);
     }
 

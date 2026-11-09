@@ -11,7 +11,7 @@
 #   make install         - installs the binary to ${PREFIX}/bin/cozenage
 #                           and the modules to $(PREFIX)/lib/cozenage/
 #                           Override default using: $ make install PREFIX=/my/custom/path
-#   make uninstall       - deletes the binary and module directory.
+#   make uninstall       - deletes the installed binary and module directory.
 
 # --- Primary Variables ---
 CC ?= cc
@@ -36,7 +36,7 @@ ifeq ($(UNAME_S),Darwin)
 else
 	LIB_EXT = so
 	MODULE_LDFLAGS =
-	# Export interpreter symbols so dlopen'd modules can call back into it.
+	# Export interpreter symbols so dlopen() modules can call back into it.
 	EXE_LDFLAGS = -Wl,--export-dynamic
 endif
 
@@ -53,7 +53,7 @@ LIB_CFLAGS = -shared -fPIC
 
 # --- Source and Object Files ---
 
-# Separated Core sources from Lib sources
+# Separate core sources from lib sources
 CORE_SOURCE_DIRS = src
 LIB_SOURCE_DIRS  = src/base-lib
 TEST_SOURCE_DIRS = tests

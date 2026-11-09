@@ -54,7 +54,7 @@ static int expand_depth = 0;
 
 static Cell* gen_sym(const char* hint) {
     char name[GEN_SYM_BUF_SIZE];
-    /* Use the seperator "_" to further distinguish from user symbols. */
+    /* Use the separator "_" to further distinguish from user symbols. */
     snprintf(name, sizeof(name), "%s_%d", hint, gen_sym_counter++);
     return make_cell_symbol(name);
 }
@@ -738,7 +738,7 @@ Cell* transform_qq(Cell* input, const int depth, Lex* env)
 
 
 /* Apply macro m to the call form c, then expand the result. */
-Cell* expand_macro_call(const Cell* m, Cell* c, Lex* env)
+Cell* expand_macro_call(const Cell* m, const Cell* c, Lex* env)
 {
     if (++expand_depth > MAX_EXPAND_DEPTH) {
         expand_depth--;

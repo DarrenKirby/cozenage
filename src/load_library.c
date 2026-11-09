@@ -19,10 +19,10 @@
 
 #include "cell.h"
 #include "environment.h"
-#include "eval.h"
 #include "load_library.h"
 #include "parser.h"
 #include "runner.h"
+#include "symbols.h"
 #include "types.h"
 
 #include <dlfcn.h>
@@ -31,6 +31,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+
+#include "repr.h"
 
 #define MAX_SEARCH_PATHS 10
 
@@ -91,8 +93,13 @@ char **get_load_paths()
 Cell* load_scheme_lib(const Cell* libspec, const Lex* e, char *path, const ImportSpec *spec)
 {
     Lex *sandbox = lex_initialize_working_env(e->bootstrap);
-    lex_add_builtins(sandbox);
     const char* input = read_file_to_string(path);
+    if (!input) {
+        return make_cell_error(
+            fmt_err("Failed to load file: %s", path),
+            OS_ERR);
+    }
+
     TokenArray* ta = scan_all_tokens(input);
     const Cell* ast = parse_tokens(ta);
 
@@ -110,45 +117,72 @@ Cell* load_scheme_lib(const Cell* libspec, const Lex* e, char *path, const Impor
             SYNTAX_ERR);
     }
 
-    Cell *exports = nullptr;
-    Cell *definitions = nullptr;
+    Cell* all_exports = make_cell_sexpr();
+    bool saw_export = false;
 
-    /* Start at index 2, iterate safely through the array. */
     for (int k = 2; k < ast->count; k++) {
-        const Cell* block_type = ast->cell[k]->cell[0];
+        Cell* decl = ast->cell[k];
+        if (decl->type != CELL_SEXPR || decl->count == 0) {
+            return make_cell_error(
+                fmt_err("malformed declaration in %s", path),
+                SYNTAX_ERR);
+        }
+        const Cell* kind = decl->cell[0];
 
-        if (block_type == make_cell_symbol("import")) {
-            Cell *res = coz_eval(sandbox, ast->cell[k]);
+        if (kind == G_import_sym || kind == G_begin_sym) {
+            Cell* res = expand_and_eval(decl, sandbox);
             if (res->type == CELL_ERROR) { return res; }
-        }
-        else if (block_type == make_cell_symbol("export")) {
-            exports = ast->cell[k];
-        }
-        else if (block_type == make_cell_symbol("begin")) {
-            definitions = ast->cell[k];
+        } else if (kind == make_cell_symbol("export")) {
+            saw_export = true;
+            for (int i = 1; i < decl->count; i++) {
+                if (decl->cell[i]->type != CELL_SYMBOL) {
+                    return make_cell_error(
+                        fmt_err("bad export in %s", path),
+                        SYNTAX_ERR);
+                }
+                cell_add(all_exports, decl->cell[i]);
+            }
+        } else {
+            return make_cell_error(
+                fmt_err("unsupported declaration in %s", path),
+                SYNTAX_ERR);
         }
     }
 
     /* Throw error if export list is not found. */
-    if (!exports) {
+    if (!saw_export) {
         return make_cell_error(fmt_err(
             "missing export list in %s", path),
             SYNTAX_ERR);
     }
 
-    /* Evaluate the library definitions in the sandbox. */
-    Cell *l = coz_eval(sandbox, definitions);
-    if (l->type == CELL_ERROR) {
-        return l;
+    /* Do a validation pass over all exports first. */
+    for (int i = 0; i < all_exports->count; i++) {
+        const char* orig_name = all_exports->cell[i]->sym;
+        Cell* obj = ht_get(sandbox->working, orig_name);
+        if (!obj) {
+            return make_cell_error(fmt_err(
+                "exported symbol '%s' not defined in library: %s", orig_name,
+                cell_to_string(libspec, MODE_REPL)),
+                VALUE_ERR);
+        }
     }
 
-    /* Iterate the export list, copy definitions from the sandbox to the working env,
-     * and apply any import modifiers. */
-    for (int i = 1; i < exports->count; i++) {
-        const char* orig_name = exports->cell[i]->sym;
+    /* Validated second pass, copy definitions from the
+     * sandbox to the working env, and apply any import modifiers. */
+    for (int i = 0; i < all_exports->count; i++) {
+        const char* orig_name = all_exports->cell[i]->sym;
         bool skip = false;
 
         /* Apply ONLY and EXCEPT filters. */
+        /* TODO:
+         * ONLY with an unexported name. (import (only (testlib test) nosuch))
+         * is silently accepted, because the loop only skips things and never
+         * checks that each filter name exists. R7RS makes that an error. It’s
+         * an easy check after the validation pass: for each filter_names[j] in
+         * IMPORT_ONLY mode (and for each renames[j].from), confirm it appears
+         * in all_exports, and report the missing name. Optional, but typos in
+         * an only list are the most likely mistake users make. */
         if (spec->mode == IMPORT_ONLY) {
             skip = true; /* Assume skip unless explicitly found in the 'only' list. */
             for (int j = 0; j < spec->filter_count; j++) {
@@ -190,16 +224,17 @@ Cell* load_scheme_lib(const Cell* libspec, const Lex* e, char *path, const Impor
             dest_cell = make_cell_symbol((char*)dest_name);
         } else {
             /* Unchanged. */
-            dest_cell = exports->cell[i];
+            dest_cell = all_exports->cell[i];
         }
 
-        /* Fetch the object and bind it. */
-        Cell* obj = lex_get(sandbox, exports->cell[i]);
-        if (!obj || obj->type == CELL_ERROR) {
-            return make_cell_error(fmt_err(
-                "exported symbol '%s' not defined in library", orig_name),
-                VALUE_ERR);
-        }
+        /* Look in the sandbox's own definitions only:
+         * no fall-through to bootstrap. */
+        Cell* obj = ht_get(sandbox->working, orig_name);
+        /* TODO:
+         * Collisions. lex_put_working overwrites an existing user binding
+         * with the same name without a warning, so (import (testlib test))
+         * would replace a user-defined circle-area. R7RS treats that as an
+         * error. */
         lex_put_working(e, dest_cell, obj);
     }
 
@@ -362,14 +397,14 @@ Cell* load_c_module(const Cell* libspec, const Lex* e, char* path, const ImportS
         /* Report the error.
          * dlerror() returns a human-readable message. */
         return make_cell_error(fmt_err("failed to load library '%s %s': %s\n",
-            collection, library, dlerror()), GEN_ERR);
+            collection, library, dlerror()), OS_ERR);
     }
 
     CznLibInitFunc init_func;
     *(void**)&init_func = dlsym(lib_handle, "cozenage_library_init");
     if (!init_func) {
         Cell* err = make_cell_error(fmt_err("cannot find 'cozenage_library_init' in '%s': %s\n",
-                path, dlerror()), GEN_ERR);
+                path, dlerror()), OS_ERR);
         dlclose(lib_handle);
         return err;
     }
@@ -377,7 +412,7 @@ Cell* load_c_module(const Cell* libspec, const Lex* e, char* path, const ImportS
     const CznExportTable* table = init_func();
     if (!table) {
         Cell* err = make_cell_error(fmt_err("Library '%s %s' returned a null export table.\n",
-            collection, library), GEN_ERR);
+            collection, library), OS_ERR);
         dlclose(lib_handle);
         return err;
     }

@@ -503,12 +503,15 @@ HandlerResult sf_import(Lex* e, Cell* a)
         Cell* i_set = a->cell[i];
 
         if (i_set->type != CELL_SEXPR || i_set->count < 2) {
-            return return_val(make_cell_error("import: invalid import set",
+            return return_val(make_cell_error(
+                "import: invalid import set",
                 SYNTAX_ERR));
         }
 
         if (i_set->type != CELL_SEXPR || i_set->count < 2) {
-            return return_val(make_cell_error("import: invalid import set", SYNTAX_ERR));
+            return return_val(make_cell_error(
+                "import: invalid import set",
+                SYNTAX_ERR));
         }
 
         /* Drill down to extract the base library name */

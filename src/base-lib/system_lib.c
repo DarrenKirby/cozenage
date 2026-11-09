@@ -57,6 +57,9 @@
 /* For the human-readable string: "up 13 days 11:14". */
 #define UPTIME_BUF_SIZE 256
 
+#define GROUP_MAX 32
+#define EXECL_ERROR 127
+
 
 extern char **environ;
 
@@ -93,7 +96,8 @@ static Cell* system_get_env_var(const Lex* e, const Cell* a)
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING, "get-env-var");
     if (err) { return err; }
-    if ((err = CHECK_ARITY_EXACT(a, 1, "get-env-var"))) { return err; }
+    err = CHECK_ARITY_EXACT(a, 1, "get-env-var");
+    if (err) { return err; }
 
     const char *env = getenv(a->cell[0]->str);
     if (env == NULL) {
@@ -313,7 +317,7 @@ static Cell* system_get_groups(const Lex* e, const Cell* a) {
     if (err) { return err; }
 
     long max = sysconf(_SC_NGROUPS_MAX);
-    if (max < 0) { max = 32; }
+    if (max < 0) { max = GROUP_MAX; }
 
     int ngroups = (int)max;
     gid_t *groups = GC_malloc(sizeof(gid_t) * ngroups);
@@ -463,10 +467,10 @@ static Cell* system_uptime(const Lex* e, const Cell* a) {
     Cell* err = CHECK_ARITY_EXACT(a, 0, "uptime");
     if (err) { return err; }
 
-    uint32_t days, hours, minutes;
-    uint32_t uptime_in_days, uptime_in_hours;
+    uint64_t days; uint32_t hours; uint32_t minutes;
+    uint32_t uptime_in_days; uint32_t uptime_in_hours;
     uint64_t uptime_in_seconds;
-    float av1, av2, av3;
+    double av1; double av2; double av3;
 #ifdef __linux__
     /* Get uptime Linux */
     struct sysinfo s_info;
@@ -479,9 +483,9 @@ static Cell* system_uptime(const Lex* e, const Cell* a) {
     uptime_in_seconds = s_info.uptime;
 
     /* Get load average Linux */
-    av1 = s_info.loads[0] / LOADS_SCALE;
-    av2 = s_info.loads[1] / LOADS_SCALE;
-    av3 = s_info.loads[2] / LOADS_SCALE;
+    av1 = (double)s_info.loads[0] / LOADS_SCALE;
+    av2 = (double)s_info.loads[1] / LOADS_SCALE;
+    av3 = (double)s_info.loads[2] / LOADS_SCALE;
 #else
     /* Get uptime OS X / *BSD */
     struct timeval boot_time;
@@ -532,12 +536,12 @@ static Cell* system_uptime(const Lex* e, const Cell* a) {
     days = uptime_in_seconds / ONE_DAY;
     uptime_in_days = uptime_in_seconds - (days * ONE_DAY);
     hours = uptime_in_days / ONE_HOUR;
-    uptime_in_hours = uptime_in_days - hours * ONE_HOUR;
+    uptime_in_hours = uptime_in_days - (hours * ONE_HOUR);
     minutes = uptime_in_hours / ONE_MINUTE;
 
     /* Format human-readable string. */
     char s_buffer[UPTIME_BUF_SIZE];
-    snprintf(s_buffer, sizeof(s_buffer), "up %d day%s %02d:%02d",
+    snprintf(s_buffer, sizeof(s_buffer), "up %ld day%s %02d:%02d",
         days, (days != 1) ? "s" : "", hours, minutes);
     Cell* up_s = make_cell_string(s_buffer);
 
@@ -577,19 +581,20 @@ static Cell* system_system(const Lex* e, const Cell* a) {
 
     char* cmd = a->cell[0]->str;
 
-    pid_t pid;
-    int status;
-
     /* This is necessary to clear the REPL input bolding. */
     fprintf(stdout, "%s", ANSI_RESET);
     fflush(stdout);
 
-    if ((pid = fork()) < 0) {
+
+    const pid_t pid = fork();
+    int status;
+
+    if (pid < 0) {
         status = -1;
     } else if (pid == 0) {
         /* child */
         execl("/bin/sh", "sh", "-c", cmd, (char *)nullptr);
-        _exit(127);     /* execl error */
+        _exit(EXECL_ERROR);     /* execl error */
     } else {
         /* parent */
         while (waitpid(pid, &status, 0) < 0) {
@@ -644,8 +649,8 @@ static Cell* system_get_nproc(const Lex* e, const Cell* a) {
     Cell* err = CHECK_ARITY_EXACT(a, 0, "cpu-count");
     if (err) { return err; }
 
-    long n_cpu;
-    if ((n_cpu = sysconf(_SC_NPROCESSORS_CONF)) == -1) {
+    long n_cpu = sysconf(_SC_NPROCESSORS_CONF);
+    if (n_cpu == -1) {
         return make_cell_error(
             fmt_err("cpu-count: %s", strerror(errno)),
             OS_ERR);

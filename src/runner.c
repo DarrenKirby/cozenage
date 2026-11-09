@@ -30,6 +30,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
+
+#define MAX_SIZE_SHIFT_AMT 30
 
 
 /* Check the file extension and print a warning if it's non-standard. */
@@ -75,19 +78,47 @@ char* read_file_to_string(const char* filename)
         return nullptr;
     }
 
-    /* Determine file size. */
-    fseek(file, 0, SEEK_END);
-    const int64_t file_size = ftell(file);
-    fseek(file, 0, SEEK_SET);
+    /* stat the file, reject if it's a dir. */
+    struct stat st;
+    if (fstat(fileno(file), &st) != 0) {
+        perror("Error stat-ing file");
+        fclose(file);
+        return nullptr;
+    }
+    if (S_ISDIR(st.st_mode)) {
+        fprintf(stderr, "Is a directory: %s\n", filename);
+        fclose(file);
+        return nullptr;
+    }
 
-    if (file_size == -1) {
+    /* Determine file size. */
+    if (fseek(file, 0, SEEK_END) != 0) {
+        perror("Error seeking file");
+        fclose(file);
+        return nullptr;
+    }
+    const long end = ftell(file);
+    if (end < 0 || fseek(file, 0, SEEK_SET) != 0) {
         perror("Error getting file size");
         fclose(file);
         return nullptr;
     }
 
+    /* Reject sizes that can't be represented once +1 is added. */
+    if ((unsigned long)end >= SIZE_MAX) {
+        fprintf(stderr, "File too large\n");
+        fclose(file);
+        return nullptr;
+    }
+    const size_t size = (size_t)end;
+    /* Put a sane limit on size. */
+    if (size > (1UL << MAX_SIZE_SHIFT_AMT)) {
+        fprintf(stderr, "file: %s too large to open\n", filename);
+        return nullptr;
+    }
+
     /* Allocate memory for the string (+1 for null terminator). */
-    char* buffer = GC_MALLOC_ATOMIC(file_size + 1);
+    char* buffer = GC_MALLOC_ATOMIC(size + 1);
     if (buffer == NULL) {
         perror("Error allocating memory");
         fclose(file);
@@ -95,18 +126,38 @@ char* read_file_to_string(const char* filename)
     }
 
     /* Read file content into the buffer. */
-    const size_t bytes_read = fread(buffer, 1, file_size, file);
-    if (bytes_read != (size_t)file_size) {
+    const size_t bytes_read = fread(buffer, 1, size, file);
+    if (bytes_read != size) {
         perror("Error reading file");
         fclose(file);
         return nullptr;
     }
 
-    /* Null-terminate the string. */
-    buffer[file_size] = '\0';
+    /* buffer has size + 1 bytes and bytes_read == size was verified above. */
+    // NOLINTNEXTLINE(clang-analyzer-security.ArrayBound)
+    buffer[bytes_read] = '\0';
 
     fclose(file);
     return buffer;
+}
+
+
+/* This sends code read from a library through the transformer */
+Cell* expand_and_eval(Cell* form, Lex* env)
+{
+    /* A top-level begin is a sequence of top-level forms: expand and evaluate
+     * each in turn, so a defmacro is visible to the forms after it. */
+    if (form->type == CELL_SEXPR && form->count > 0 && form->cell[0] == G_begin_sym) {
+        Cell* last = USP_Obj;
+        for (int i = 1; i < form->count; i++) {
+            last = expand_and_eval(form->cell[i], env);
+            if (last->type == CELL_ERROR) { return last; }
+        }
+        return last;
+    }
+    Cell* x = expand(form, env);
+    if (x->type == CELL_ERROR) { return x; }
+    return coz_eval(env, x);
 }
 
 

@@ -51,7 +51,7 @@ static Cell* datetime_current_second(const Lex* e, const Cell* a)
     }
 
     /* Convert timespec (sec, nano sec) to a double */
-    const double posix_time = (double)ts.tv_sec + (double)ts.tv_nsec / JIFFIES_PER_SECOND_DBL;
+    const double posix_time = (double)ts.tv_sec + ((double)ts.tv_nsec / JIFFIES_PER_SECOND_DBL);
     const long double tai_time = posix_time + TAI_UTC_OFFSET;
 
     return make_cell_real(tai_time);
@@ -75,7 +75,7 @@ static Cell* datetime_current_jiffy(const Lex* e, const Cell* a)
     }
 
     /* Convert (seconds + nanoseconds) into total nanoseconds. */
-    const int64_t jiffies = (int64_t)ts.tv_sec * JIFFIES_PER_SECOND + (int64_t)ts.tv_nsec;
+    const int64_t jiffies = ((int64_t)ts.tv_sec * JIFFIES_PER_SECOND) + (int64_t)ts.tv_nsec;
 
     return make_cell_integer(jiffies);
 }
@@ -110,7 +110,7 @@ static Cell* datetime_current_datetime_utc(const Lex* e, const Cell* a)
     const time_t t = time(nullptr);
     struct tm ts;
     gmtime_r(&t, &ts);
-    char buf[128];
+    char buf[STRF_BUF_SIZE];
     const size_t result = strftime(buf, sizeof(buf), fmt_str, &ts);
     /* strftime returns zero if the buffer is too small, and buf will be garbage.
      * There are also legitimate 0-length conversions, so we just return an empty

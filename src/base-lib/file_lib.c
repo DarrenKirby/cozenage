@@ -29,11 +29,13 @@
 #include <unistd.h>
 
 #ifdef __linux__
-#include <limits.h>
 #include <sys/sysmacros.h>
 #endif
 
 #define TIME_SIZE 64
+#define YEAR_1900 1900
+
+#define MODE_755 0755
 
 
 /*-------------------------------------------------------*
@@ -95,7 +97,7 @@ static char *format_time(const struct timespec *ts) {
     }
 
     snprintf(str, TIME_SIZE, "%i-%02i-%02i %02i:%02i:%02i.%09li %s",
-        bdt.tm_year + 1900, bdt.tm_mon + 1, bdt.tm_mday,
+        bdt.tm_year + YEAR_1900, bdt.tm_mon + 1, bdt.tm_mday,
         bdt.tm_hour, bdt.tm_min, bdt.tm_sec,
         ts->tv_nsec, bdt.tm_zone
     );
@@ -103,30 +105,35 @@ static char *format_time(const struct timespec *ts) {
 }
 
 
-#define FP_SPECIAL 1
-/* Include set-user-ID, set-group-ID, and sticky
-bit information in returned string */
-
 #define PERM_STR_SIZE sizeof("rwxrwxrwx")
 
-/* Return 'ls -l' style string for file permissions mask, This is from
- * 'The Linux Programming Interface' */
+/* Execute-position character: 'x'/'-' normally, or the special
+ * variants when the special bit is set and the flag is enabled. */
+static char exec_char(const bool exec, const bool special,
+                      const char with_exec, const char without_exec) {
+    if (special) {
+        return exec ? with_exec : without_exec;
+    }
+    return exec ? 'x' : '-';
+}
+
+
 static char *file_perm_str(const mode_t perm) {
     static char str[PERM_STR_SIZE];
-    constexpr int flags = 1;
-    snprintf(str, PERM_STR_SIZE, "%c%c%c%c%c%c%c%c%c",
-    (perm & S_IRUSR) ? 'r' : '-',
-    (perm & S_IWUSR) ? 'w' : '-',
-    (perm & S_IXUSR) ? (((perm & S_ISUID) & (flags & FP_SPECIAL)) ? 's' : 'x') :
-        (((perm & S_ISUID) & (flags & FP_SPECIAL)) ? 'S' : '-'),
-    (perm & S_IRGRP) ? 'r' : '-',
-    (perm & S_IWGRP) ? 'w' : '-',
-    (perm & S_IXGRP) ? (((perm & S_ISGID) & (flags & FP_SPECIAL)) ? 's' : 'x') :
-        (((perm & S_ISGID) & (flags & FP_SPECIAL)) ? 'S' : '-'),
-    (perm & S_IROTH) ? 'r' : '-',
-    (perm & S_IWOTH) ? 'w' : '-',
-    (perm & S_IXOTH) ? (((perm & S_ISVTX) & (flags & FP_SPECIAL)) ? 't' : 'x') :
-        (((perm & S_ISVTX) & (flags & FP_SPECIAL)) ? 'T' : '-'));
+
+    str[0] = (perm & S_IRUSR) ? 'r' : '-';
+    str[1] = (perm & S_IWUSR) ? 'w' : '-';
+    str[2] = exec_char(perm & S_IXUSR, (perm & S_ISUID), 's', 'S');
+
+    str[3] = (perm & S_IRGRP) ? 'r' : '-';
+    str[4] = (perm & S_IWGRP) ? 'w' : '-';
+    str[5] = exec_char(perm & S_IXGRP, (perm & S_ISGID), 's', 'S');
+
+    str[6] = (perm & S_IROTH) ? 'r' : '-';
+    str[7] = (perm & S_IWOTH) ? 'w' : '-';
+    str[8] = exec_char(perm & S_IXOTH, (perm & S_ISVTX), 't', 'T');
+
+    str[9] = '\0';
     return str;
 }
 
@@ -141,7 +148,8 @@ static Cell* file_reg_file_pred(const Lex* e, const Cell* a)
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING, "reg-file?");
     if (err) { return err; }
-    if ((err = CHECK_ARITY_EXACT(a, 1, "reg-file?"))) { return err; }
+    err = CHECK_ARITY_EXACT(a, 1, "reg-file?");
+    if (err) { return err; }
 
     const char* filename = a->cell[0]->str;
     const int8_t ft = f_get_type(filename);
@@ -163,7 +171,8 @@ static Cell* file_directory_pred(const Lex* e, const Cell* a)
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING, "directory?");
     if (err) { return err; }
-    if ((err = CHECK_ARITY_EXACT(a, 1, "directory?"))) { return err; }
+    err = CHECK_ARITY_EXACT(a, 1, "directory?");
+    if (err) { return err; }
 
     const char* filename = a->cell[0]->str;
     const int8_t ft = f_get_type(filename);
@@ -185,7 +194,8 @@ static Cell* file_symlink_pred(const Lex* e, const Cell* a)
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING, "symlink?");
     if (err) { return err; }
-    if ((err = CHECK_ARITY_EXACT(a, 1, "symlink?"))) { return err; }
+    err = CHECK_ARITY_EXACT(a, 1, "symlink?");
+    if (err) { return err; }
 
     const char* filename = a->cell[0]->str;
     const int8_t ft = f_get_type(filename);
@@ -207,7 +217,8 @@ static Cell* file_char_device_pred(const Lex* e, const Cell* a)
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING, "char-device?");
     if (err) { return err; }
-    if ((err = CHECK_ARITY_EXACT(a, 1, "char-device?"))) { return err; }
+    err = CHECK_ARITY_EXACT(a, 1, "char-device?");
+    if (err) { return err; }
 
     const char* filename = a->cell[0]->str;
     const int8_t ft = f_get_type(filename);
@@ -229,7 +240,8 @@ static Cell* file_block_device_pred(const Lex* e, const Cell* a)
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING, "block-device?");
     if (err) { return err; }
-    if ((err = CHECK_ARITY_EXACT(a, 1, "block-device?"))) { return err; }
+    err = CHECK_ARITY_EXACT(a, 1, "char-device?");
+    if (err) { return err; }
 
     const char* filename = a->cell[0]->str;
     const int8_t ft = f_get_type(filename);
@@ -251,7 +263,8 @@ static Cell* file_pipe_pred(const Lex* e, const Cell* a)
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING, "fifo?");
     if (err) { return err; }
-    if ((err = CHECK_ARITY_EXACT(a, 1, "fifo?"))) { return err; }
+    err = CHECK_ARITY_EXACT(a, 1, "char-device?");
+    if (err) { return err; }
 
     const char* filename = a->cell[0]->str;
     const int8_t ft = f_get_type(filename);
@@ -273,7 +286,8 @@ static Cell* file_socket_pred(const Lex* e, const Cell* a)
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING, "socket?");
     if (err) { return err; }
-    if ((err = CHECK_ARITY_EXACT(a, 1, "socket?"))) { return err; }
+    err = CHECK_ARITY_EXACT(a, 1, "char-device?");
+    if (err) { return err; }
 
     const char* filename = a->cell[0]->str;
     const int8_t ft = f_get_type(filename);
@@ -296,7 +310,8 @@ static Cell* file_file_exists_pred(const Lex* e, const Cell* a)
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING, "file-exists?");
     if (err) { return err; }
-    if ((err = CHECK_ARITY_EXACT(a, 1, "file-exists?"))) { return err; }
+    err = CHECK_ARITY_EXACT(a, 1, "char-device?");
+    if (err) { return err; }
 
     const char* filename = a->cell[0]->str;
     if (access(filename, F_OK) == 0) {
@@ -344,7 +359,7 @@ static Cell* file_mkdir(const Lex* e, const Cell* a)
     if (err) { return err; }
 
     const char* path = a->cell[0]->str;
-    if (mkdir(path, 0755) < 0) {
+    if (mkdir(path, MODE_755) < 0) {
         return make_cell_error(
             fmt_err("mkdir: %s", strerror(errno)),
             OS_ERR);
@@ -390,7 +405,8 @@ static Cell* file_unlink(const Lex* e, const Cell* a)
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING, "unlink!");
     if (err) { return err; }
-    if ((err = CHECK_ARITY_EXACT(a, 1, "unlink!"))) { return err; }
+    err = CHECK_ARITY_EXACT(a, 1, "char-device?");
+    if (err) { return err; }
 
     const char* filename = a->cell[0]->str;
     if (unlink(filename) != 0) {
@@ -489,7 +505,7 @@ static Cell* file_stat(const Lex* e, const Cell* a) {
 
     result = make_cell_pair(make_cell_pair(
     make_cell_symbol("st_nlink"),
-    make_cell_integer(buf.st_nlink)), result);
+    make_cell_integer((long long)buf.st_nlink)), result);
     result->len = ++list_len;
 
     result = make_cell_pair(make_cell_pair(
@@ -534,9 +550,9 @@ static Cell* file_stat(const Lex* e, const Cell* a) {
 static Cell* file_file_size(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "file-size");
-    if (err) return err;
+    if (err) { return err; }
     err = check_arg_types(a, CELL_STRING, "file-size");
-    if (err) return err;
+    if (err) { return err; }
 
     const char* path = a->cell[0]->str;
     struct stat buf;
@@ -559,9 +575,9 @@ static Cell* file_file_size(const Lex* e, const Cell* a) {
 static Cell* file_file_mtime(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "file-mtime");
-    if (err) return err;
+    if (err) { return err; }
     err = check_arg_types(a, CELL_STRING, "file-mtime");
-    if (err) return err;
+    if (err) { return err; }
 
     const char* path = a->cell[0]->str;
     struct stat buf;
@@ -594,9 +610,9 @@ static Cell* file_file_mtime(const Lex* e, const Cell* a) {
 static Cell* file_file_ctime(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "file-ctime");
-    if (err) return err;
+    if (err) { return err; }
     err = check_arg_types(a, CELL_STRING, "file-ctime");
-    if (err) return err;
+    if (err) { return err; }
 
     const char* path = a->cell[0]->str;
     struct stat buf;
@@ -629,9 +645,9 @@ static Cell* file_file_ctime(const Lex* e, const Cell* a) {
 static Cell* file_file_atime(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "file-atime");
-    if (err) return err;
+    if (err) { return err; }
     err = check_arg_types(a, CELL_STRING, "file-atime");
-    if (err) return err;
+    if (err) { return err; }
 
     const char* path = a->cell[0]->str;
     struct stat buf;
@@ -660,9 +676,9 @@ static Cell* file_file_atime(const Lex* e, const Cell* a) {
 static Cell* file_file_readable(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "file-readable?");
-    if (err) return err;
+    if (err) { return err; }
     err = check_arg_types(a, CELL_STRING, "file-readable?");
-    if (err) return err;
+    if (err) { return err; }
 
     const char* path = a->cell[0]->str;
 
@@ -684,9 +700,9 @@ static Cell* file_file_readable(const Lex* e, const Cell* a) {
 static Cell* file_file_writable(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "file-writable?");
-    if (err) return err;
+    if (err) { return err; }
     err = check_arg_types(a, CELL_STRING, "file-writable?");
-    if (err) return err;
+    if (err) { return err; }
 
     const char* path = a->cell[0]->str;
 
@@ -708,9 +724,9 @@ static Cell* file_file_writable(const Lex* e, const Cell* a) {
 static Cell* file_file_executable(const Lex* e, const Cell* a) {
     (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "file-executable?");
-    if (err) return err;
+    if (err) { return err; }
     err = check_arg_types(a, CELL_STRING, "file-executable?");
-    if (err) return err;
+    if (err) { return err; }
 
     const char* path = a->cell[0]->str;
 
