@@ -1,9 +1,9 @@
 #include <criterion/criterion.h>
 #include <criterion/internal/test.h>
 #include <gc/gc.h>
-#include "cell.h"
-#include "types.h"
-#include "strings.h"
+#include "../src/cell.h"
+#include "../src/types.h"
+#include "../src/strings.h"
 
 
 static void setup(void) {
