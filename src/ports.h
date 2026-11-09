@@ -28,10 +28,9 @@
 #define UTF8_MAX_LEN 4
 
 
-/* */
+/* Declare lookup tables for port back ends. */
 extern const PortInterface FileVTable;
 extern const PortInterface MemoryVTable;
-
 
 /* Input/output and ports. */
 Cell* builtin_current_input_port(const Lex* e, const Cell* a);

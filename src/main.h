@@ -23,7 +23,7 @@
 #define APP_NAME "Cozenage"
 
 #ifndef APP_VERSION
-#define APP_VERSION "0.20.1"
+#define APP_VERSION "0.21.0"
 #endif
 
 #define PS1_PROMPT "--> \001\x1b[37;1m\002"

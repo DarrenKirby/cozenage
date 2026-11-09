@@ -24,7 +24,7 @@
 #include "environment.h"
 
 
-typedef enum : int8_t {
+typedef enum SpecialFormID : int8_t {
     /* These are the SFs that are implemented primitively. */
     SF_ID_DEFINE = 1,
     SF_ID_QUOTE,
@@ -48,7 +48,7 @@ typedef enum : int8_t {
     SF_ID_DEFMACRO,
     SF_ID_DEBUG,
     /* These are the SFs implemented as transforms. */
-    SF_ID_ELSE = 50,
+    SF_ID_ELSE,
     SF_ID_CASE,
     SF_ID_DO,
     /* Interned and assigned SF_ID so it cannot be re-bound */

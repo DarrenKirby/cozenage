@@ -21,7 +21,7 @@
 #ifndef COZENAGE_HASHMAPS_H
 #define COZENAGE_HASHMAPS_H
 
-#include "cell.h"
+#include "types.h"
 
 Cell* builtin_hash(const Lex* e, const Cell* a);
 Cell* builtin_hash_copy(const Lex* e, const Cell* a);

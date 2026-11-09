@@ -23,11 +23,11 @@
 #include "environment.h"
 #include "special_forms.h"
 
-
 /* This needs to be kept in sync with the number of
  * primitive SFs in the SpecialFormID enum (symbols.h)
  * +1 - don't forget the null in the zeroth spot! */
 #define SF_MAX 22
+
 
 typedef HandlerResult (*special_form_handler_t)(Lex*, Cell*);
 extern special_form_handler_t SF_DISPATCH_TABLE[SF_MAX];

@@ -20,11 +20,9 @@
 #ifndef COZENAGE_TYPES_H
 #define COZENAGE_TYPES_H
 
-#include "cell.h"
 #include "environment.h"
 
 #include <complex.h>
-#include <stddef.h>
 #include <stdint.h>
 #include <unicode/umachine.h>
 
@@ -154,4 +152,3 @@ Cell* int_to_real(const Cell* v);
 #endif
 
 #endif // COZENAGE_TYPES_H
-

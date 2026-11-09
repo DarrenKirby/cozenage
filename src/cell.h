@@ -201,7 +201,7 @@ typedef enum Err_t : uint8_t  {
 /* Definition of the Cell struct/tagged union.
  *
  * This object represents all user-facing Cozenage types, as well as a handful of internal
- * types. Most Cozenage values are stored directly, however, ports, lambdas, bytevectors,
+ * types. Most Cozenage values are stored directly, however, ports, lambdas, byte vectors,
  * bigints, and promises are represented by a pointer to their external structs to keep the
  * core size at a reasonable 24 bytes. */
 typedef struct Cell {

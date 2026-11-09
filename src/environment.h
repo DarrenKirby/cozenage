@@ -22,10 +22,10 @@
 
 #include "hash.h"
 
+#define INITIAL_CHILD_ENV_CAPACITY 4
+
 
 typedef struct Ch_Env Ch_Env;
-
-#define INITIAL_CHILD_ENV_CAPACITY 4
 
 /* Wrapper which holds the current child-env (if any), and
  * pointers to the global env hash tables. */
@@ -47,7 +47,6 @@ typedef struct Ch_Env {
 
 
 /* Environment management. */
-//Lex* lex_initialize_global_env();
 Lex* lex_initialize_bootstrap_env();
 Lex* lex_initialize_working_env(ht_table* shared_bootstrap);
 Lex* new_child_env(const Lex* parent_env);

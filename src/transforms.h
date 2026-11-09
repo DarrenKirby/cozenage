@@ -26,6 +26,6 @@
 Cell* expand_body_expressions(const Cell* body_elements, int start_index, Lex* env);
 Cell* expand(Cell* c, Lex* env);
 Cell* transform_qq(Cell* input, int depth, Lex* env);
-Cell* expand_macro_call(const Cell* m, Cell* c, Lex* env);
+Cell* expand_macro_call(const Cell* m, const Cell* c, Lex* env);
 
 #endif //COZENAGE_TRANSFORMS_H

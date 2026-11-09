@@ -20,8 +20,8 @@
 #ifndef COZENAGE_REPR_H
 #define COZENAGE_REPR_H
 
-#include "cell.h"
 #include "environment.h"
+
 
 typedef enum {
     /* R7RS `write` mode.

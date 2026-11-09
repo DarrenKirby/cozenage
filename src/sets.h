@@ -17,9 +17,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 #ifndef COZENAGE_SETS_H
 #define COZENAGE_SETS_H
+
 
 /* Internal helpers. */
 Cell* copy_hash_table(const Cell* t);
