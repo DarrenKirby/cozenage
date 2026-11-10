@@ -18,6 +18,7 @@
  */
 
 #include "control_features.h"
+#include "cell.h"
 #include "eval.h"
 #include "lexer.h"
 #include "pairs.h"
@@ -608,6 +609,10 @@ Cell* builtin_load(const Lex* e, const Cell* a)
     }
     const char* file = a->cell[0]->str;
     const char* input = read_file_to_string(file);
+    if (!input) {
+        fprintf(stderr, "Unable to load file: '%s'\n", file);
+        return False_Obj;
+    }
     TokenArray* ta = scan_all_tokens(input);
     const Cell* result = parse_all_expressions((Lex*)e, ta);
 
