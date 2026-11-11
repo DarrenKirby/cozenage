@@ -838,11 +838,11 @@ static int cp(const char* source, const char* destination)
     }
 #elifdef __FreeBSD__
     struct stat file_stat = {0};
-    result = fstat(input, &file_stat);
+    result = fstat(i_fd, &file_stat);
     off_t copied = 0;
     while (result == 0 && copied < file_stat.st_size) {
         errno = 0;
-        ssize_t written = copy_file_range(input, 0, output, NULL, SSIZE_MAX, 0);
+        ssize_t written = copy_file_range(i_fd, 0, o_fd, NULL, SSIZE_MAX, 0);
         copied += written;
         if (written == -1) {
             result = errno;
