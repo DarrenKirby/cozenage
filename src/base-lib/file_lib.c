@@ -22,13 +22,22 @@
 #include "types.h"
 
 #include <errno.h>
+#include <fcntl.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
 
-#ifdef __linux__
+#ifdef __APPLE__
+#include <copyfile.h>
+#elifdef __FreeBSD__
+#include <limits.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#else /* Linux and others. */
+#include <limits.h>
+#include <sys/sendfile.h>
 #include <sys/sysmacros.h>
 #endif
 
@@ -88,7 +97,8 @@ static char *filetype(const mode_t st_mode) {
 }
 
 
-static char *format_time(const struct timespec *ts) {
+static char *format_time(const struct timespec *ts)
+{
     struct tm bdt;
     static char str[TIME_SIZE];
 
@@ -110,7 +120,8 @@ static char *format_time(const struct timespec *ts) {
 /* Execute-position character: 'x'/'-' normally, or the special
  * variants when the special bit is set and the flag is enabled. */
 static char exec_char(const bool exec, const bool special,
-                      const char with_exec, const char without_exec) {
+                      const char with_exec, const char without_exec)
+{
     if (special) {
         return exec ? with_exec : without_exec;
     }
@@ -118,7 +129,8 @@ static char exec_char(const bool exec, const bool special,
 }
 
 
-static char *file_perm_str(const mode_t perm) {
+static char *file_perm_str(const mode_t perm)
+{
     static char str[PERM_STR_SIZE];
 
     str[0] = (perm & S_IRUSR) ? 'r' : '-';
@@ -143,9 +155,8 @@ static char *file_perm_str(const mode_t perm) {
  * ------------------------------------------------------*/
 
 
-static Cell* file_reg_file_pred(const Lex* e, const Cell* a)
+static Cell* file_reg_file_pred( [[ maybe_unused ]] const Lex* e, const Cell* a)
 {
-    (void)e;
     Cell* err = check_arg_types(a, CELL_STRING, "reg-file?");
     if (err) { return err; }
     err = CHECK_ARITY_EXACT(a, 1, "reg-file?");
@@ -166,9 +177,8 @@ static Cell* file_reg_file_pred(const Lex* e, const Cell* a)
 }
 
 
-static Cell* file_directory_pred(const Lex* e, const Cell* a)
+static Cell* file_directory_pred( [[ maybe_unused ]] const Lex* e, const Cell* a)
 {
-    (void)e;
     Cell* err = check_arg_types(a, CELL_STRING, "directory?");
     if (err) { return err; }
     err = CHECK_ARITY_EXACT(a, 1, "directory?");
@@ -189,9 +199,8 @@ static Cell* file_directory_pred(const Lex* e, const Cell* a)
 }
 
 
-static Cell* file_symlink_pred(const Lex* e, const Cell* a)
+static Cell* file_symlink_pred( [[ maybe_unused ]] const Lex* e, const Cell* a)
 {
-    (void)e;
     Cell* err = check_arg_types(a, CELL_STRING, "symlink?");
     if (err) { return err; }
     err = CHECK_ARITY_EXACT(a, 1, "symlink?");
@@ -212,9 +221,8 @@ static Cell* file_symlink_pred(const Lex* e, const Cell* a)
 }
 
 
-static Cell* file_char_device_pred(const Lex* e, const Cell* a)
+static Cell* file_char_device_pred( [[ maybe_unused ]] const Lex* e, const Cell* a)
 {
-    (void)e;
     Cell* err = check_arg_types(a, CELL_STRING, "char-device?");
     if (err) { return err; }
     err = CHECK_ARITY_EXACT(a, 1, "char-device?");
@@ -235,12 +243,11 @@ static Cell* file_char_device_pred(const Lex* e, const Cell* a)
 }
 
 
-static Cell* file_block_device_pred(const Lex* e, const Cell* a)
+static Cell* file_block_device_pred( [[ maybe_unused ]] const Lex* e, const Cell* a)
 {
-    (void)e;
     Cell* err = check_arg_types(a, CELL_STRING, "block-device?");
     if (err) { return err; }
-    err = CHECK_ARITY_EXACT(a, 1, "char-device?");
+    err = CHECK_ARITY_EXACT(a, 1, "block-device?");
     if (err) { return err; }
 
     const char* filename = a->cell[0]->str;
@@ -258,12 +265,11 @@ static Cell* file_block_device_pred(const Lex* e, const Cell* a)
 }
 
 
-static Cell* file_pipe_pred(const Lex* e, const Cell* a)
+static Cell* file_pipe_pred( [[ maybe_unused ]] const Lex* e, const Cell* a)
 {
-    (void)e;
     Cell* err = check_arg_types(a, CELL_STRING, "fifo?");
     if (err) { return err; }
-    err = CHECK_ARITY_EXACT(a, 1, "char-device?");
+    err = CHECK_ARITY_EXACT(a, 1, "fifo?");
     if (err) { return err; }
 
     const char* filename = a->cell[0]->str;
@@ -281,12 +287,11 @@ static Cell* file_pipe_pred(const Lex* e, const Cell* a)
 }
 
 
-static Cell* file_socket_pred(const Lex* e, const Cell* a)
+static Cell* file_socket_pred( [[ maybe_unused ]] const Lex* e, const Cell* a)
 {
-    (void)e;
     Cell* err = check_arg_types(a, CELL_STRING, "socket?");
     if (err) { return err; }
-    err = CHECK_ARITY_EXACT(a, 1, "char-device?");
+    err = CHECK_ARITY_EXACT(a, 1, "socket?");
     if (err) { return err; }
 
     const char* filename = a->cell[0]->str;
@@ -305,12 +310,11 @@ static Cell* file_socket_pred(const Lex* e, const Cell* a)
 
 
 /*  */
-static Cell* file_file_exists_pred(const Lex* e, const Cell* a)
+static Cell* file_file_exists_pred( [[ maybe_unused ]] const Lex* e, const Cell* a)
 {
-    (void)e;
     Cell* err = check_arg_types(a, CELL_STRING, "file-exists?");
     if (err) { return err; }
-    err = CHECK_ARITY_EXACT(a, 1, "char-device?");
+    err = CHECK_ARITY_EXACT(a, 1, "file-exists?");
     if (err) { return err; }
 
     const char* filename = a->cell[0]->str;
@@ -320,7 +324,6 @@ static Cell* file_file_exists_pred(const Lex* e, const Cell* a)
     return False_Obj;
 }
 
-
 /*-------------------------------------------------------*
  *            Basic file operation procedures            *
  * ------------------------------------------------------*/
@@ -328,9 +331,8 @@ static Cell* file_file_exists_pred(const Lex* e, const Cell* a)
 
 /* (rmdir! path)
  * Removes the directory pointed to by path. The directory must be empty. */
-static Cell* file_rmdir(const Lex* e, const Cell* a)
+static Cell* file_rmdir( [[ maybe_unused ]] const Lex* e, const Cell* a)
 {
-    (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "rmdir!");
     if (err) { return err; }
     err = check_arg_types(a, CELL_STRING, "rmdir!");
@@ -350,9 +352,8 @@ static Cell* file_rmdir(const Lex* e, const Cell* a)
 /* TODO - mkdir -p style mkdir procedure */
 /* (mkdir path)
  * Creates the directory named by path. If path is relative, it is created in the CWD. */
-static Cell* file_mkdir(const Lex* e, const Cell* a)
+static Cell* file_mkdir( [[ maybe_unused ]] const Lex* e, const Cell* a)
 {
-    (void)e;
     Cell* err = check_arg_types(a, CELL_STRING, "mkdir");
     if (err) { return err; }
     err = CHECK_ARITY_EXACT(a, 1, "mkdir");
@@ -363,6 +364,7 @@ static Cell* file_mkdir(const Lex* e, const Cell* a)
         return make_cell_error(
             fmt_err("mkdir: %s", strerror(errno)),
             OS_ERR);
+        
     }
     return True_Obj;
 }
@@ -400,7 +402,7 @@ static Cell* file_mkdir(const Lex* e, const Cell* a)
 
 /* (unlink! path)
  * Unlinks (and possibly deletes) the file pointed to by path. */
-static Cell* file_unlink(const Lex* e, const Cell* a)
+static Cell* file_unlink( [[ maybe_unused ]] const Lex* e, const Cell* a)
 {
     (void)e;
     Cell* err = check_arg_types(a, CELL_STRING, "unlink!");
@@ -424,7 +426,8 @@ static Cell* file_unlink(const Lex* e, const Cell* a)
 
 
 /* Helper to grab stat buffer for procedures which need it. */
-static int get_stat_buf(struct stat* buffer, const char* path) {
+static int get_stat_buf(struct stat* buffer, const char* path)
+{
     if (stat(path, buffer) == -1) {
         return -1;
     }
@@ -432,25 +435,12 @@ static int get_stat_buf(struct stat* buffer, const char* path) {
 }
 
 
+/* Helper which builds the result body
+ * for stat and lstat calls. */
 /* TODO: change this to return machine-readable time values
  * as well as human-readable. */
-static Cell* file_stat(const Lex* e, const Cell* a) {
-    (void)e;
-    Cell* err = CHECK_ARITY_EXACT(a, 1, "stat");
-    if (err) { return err; }
-    if (a->cell[0]->type != CELL_STRING) {
-        return make_cell_error(
-            "stat: file path must be passed as a string",
-            TYPE_ERR);
-    }
-
-    struct stat buf;
-    if (get_stat_buf(&buf, a->cell[0]->str) == -1) {
-        return make_cell_error(
-            fmt_err("stat: '%s': %s", a->cell[0]->str, strerror(errno)),
-            OS_ERR);
-    }
-
+static Cell* build_stat_body(struct stat buf)
+{
     Cell* result = make_cell_nil();
     int list_len;
 
@@ -545,10 +535,57 @@ static Cell* file_stat(const Lex* e, const Cell* a) {
 }
 
 
+/* (stat "filename")
+ * Return a list of values returned from a stat call. */
+static Cell* file_stat( [[ maybe_unused ]] const Lex* e, const Cell* a)
+{
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "stat");
+    if (err) { return err; }
+    if (a->cell[0]->type != CELL_STRING) {
+        return make_cell_error(
+            "stat: file path must be passed as a string",
+            TYPE_ERR);
+    }
+
+    struct stat buf;
+
+    if (stat(a->cell[0]->str, &buf) == -1) {
+        return make_cell_error(
+            fmt_err("stat: '%s': %s", a->cell[0]->str, strerror(errno)),
+            OS_ERR);
+    }
+    return build_stat_body(buf);
+}
+
+
+/* (lstat "filename")
+ * Return a list of values returned by an lstat call.
+ * Unlike stat, if filename is a link, return values
+ * for the link itself rather than file the link points to. */
+static Cell* file_lstat( [[ maybe_unused ]] const Lex* e, const Cell* a)
+{
+    Cell* err = CHECK_ARITY_EXACT(a, 1, "lstat");
+    if (err) { return err; }
+    if (a->cell[0]->type != CELL_STRING) {
+        return make_cell_error(
+            "lstat: file path must be passed as a string",
+            TYPE_ERR);
+    }
+
+    struct stat buf;
+    if (lstat(a->cell[0]->str, &buf) == -1) {
+        return make_cell_error(
+            fmt_err("lstat: '%s': %s", a->cell[0]->str, strerror(errno)),
+            OS_ERR);
+    }
+    return build_stat_body(buf);
+}
+
+
 /* (file-size path)
  * Returns the size in bytes of the file pointed to by path. */
-static Cell* file_file_size(const Lex* e, const Cell* a) {
-    (void)e;
+static Cell* file_file_size( [[ maybe_unused ]] const Lex* e, const Cell* a)
+{
     Cell* err = CHECK_ARITY_EXACT(a, 1, "file-size");
     if (err) { return err; }
     err = check_arg_types(a, CELL_STRING, "file-size");
@@ -572,8 +609,8 @@ static Cell* file_file_size(const Lex* e, const Cell* a) {
  * seconds (integer)
  * nanoseconds (integer)
  * human-readable string in the form "2026-01-31 19:12:11.387617529 PST" where PST is the local TZ. */
-static Cell* file_file_mtime(const Lex* e, const Cell* a) {
-    (void)e;
+static Cell* file_file_mtime( [[ maybe_unused ]] const Lex* e, const Cell* a)
+{
     Cell* err = CHECK_ARITY_EXACT(a, 1, "file-mtime");
     if (err) { return err; }
     err = check_arg_types(a, CELL_STRING, "file-mtime");
@@ -607,8 +644,8 @@ static Cell* file_file_mtime(const Lex* e, const Cell* a) {
  * seconds (integer)
  * nanoseconds (integer)
  * human-readable string in the form "2026-01-31 19:12:11.387617529 PST" where PST is the local TZ. */
-static Cell* file_file_ctime(const Lex* e, const Cell* a) {
-    (void)e;
+static Cell* file_file_ctime( [[ maybe_unused ]] const Lex* e, const Cell* a)
+{
     Cell* err = CHECK_ARITY_EXACT(a, 1, "file-ctime");
     if (err) { return err; }
     err = check_arg_types(a, CELL_STRING, "file-ctime");
@@ -642,8 +679,8 @@ static Cell* file_file_ctime(const Lex* e, const Cell* a) {
  * seconds (integer)
  * nanoseconds (integer)
  * human-readable string in the form "2026-01-31 19:12:11.387617529 PST" where PST is the local TZ. */
-static Cell* file_file_atime(const Lex* e, const Cell* a) {
-    (void)e;
+static Cell* file_file_atime( [[ maybe_unused ]] const Lex* e, const Cell* a)
+{
     Cell* err = CHECK_ARITY_EXACT(a, 1, "file-atime");
     if (err) { return err; }
     err = check_arg_types(a, CELL_STRING, "file-atime");
@@ -672,9 +709,10 @@ static Cell* file_file_atime(const Lex* e, const Cell* a) {
 
 
 /* (file-readable? path)
- * Returns true if the currently running process has read permissions for the file/directory pointed to by path. */
-static Cell* file_file_readable(const Lex* e, const Cell* a) {
-    (void)e;
+ * Returns true if the currently running process has read
+ * permissions for the file/directory pointed to by path. */
+static Cell* file_file_readable( [[ maybe_unused ]] const Lex* e, const Cell* a)
+{
     Cell* err = CHECK_ARITY_EXACT(a, 1, "file-readable?");
     if (err) { return err; }
     err = check_arg_types(a, CELL_STRING, "file-readable?");
@@ -696,9 +734,10 @@ static Cell* file_file_readable(const Lex* e, const Cell* a) {
 
 
 /* (file-writable? path)
- * Returns true if the currently running process has write permissions for the file/directory pointed to by path. */
-static Cell* file_file_writable(const Lex* e, const Cell* a) {
-    (void)e;
+ * Returns true if the currently running process has write
+ * permissions for the file/directory pointed to by path. */
+static Cell* file_file_writable( [[ maybe_unused ]] const Lex* e, const Cell* a)
+{
     Cell* err = CHECK_ARITY_EXACT(a, 1, "file-writable?");
     if (err) { return err; }
     err = check_arg_types(a, CELL_STRING, "file-writable?");
@@ -720,9 +759,10 @@ static Cell* file_file_writable(const Lex* e, const Cell* a) {
 
 
 /* (file-executable? path)
- * Returns true if the currently running process has execute permissions for the file/directory pointed to by path. */
-static Cell* file_file_executable(const Lex* e, const Cell* a) {
-    (void)e;
+ * Returns true if the currently running process has execute
+ * permissions for the file/directory pointed to by path. */
+static Cell* file_file_executable( [[ maybe_unused ]] const Lex* e, const Cell* a)
+{
     Cell* err = CHECK_ARITY_EXACT(a, 1, "file-executable?");
     if (err) { return err; }
     err = check_arg_types(a, CELL_STRING, "file-executable?");
@@ -730,6 +770,7 @@ static Cell* file_file_executable(const Lex* e, const Cell* a) {
 
     const char* path = a->cell[0]->str;
 
+    errno = 0;
     if (access(path, X_OK) == -1) {
         const int saved_errno = errno;
         if (saved_errno == EACCES) {
@@ -742,14 +783,116 @@ static Cell* file_file_executable(const Lex* e, const Cell* a) {
     return True_Obj;
 }
 
+/*-------------------------------------------------------*
+ *                  copying and renaming                 *
+ * ------------------------------------------------------*/
+
+
+static Cell* file_rename_bang( [[ maybe_unused ]] const Lex* e, const Cell* a)
+{
+    Cell* err = CHECK_ARITY_EXACT(a, 2, "rename!");
+    if (err) { return err; }
+    err = check_arg_types(a, CELL_STRING, "rename!");
+    if (err) { return err; }
+
+    const char* from = a->cell[0]->str;
+    const char* to = a->cell[1]->str;
+
+    errno = 0;
+    if (rename(from, to) == -1) {
+        const int saved_errno = errno;
+        return make_cell_error(
+    fmt_err("rename!: %s", strerror(saved_errno)),
+    OS_ERR);
+    }
+    return True_Obj;
+}
+
+
+/* Portable, non-userspace file copy helper. */
+static int cp(const char* source, const char* destination)
+{
+    int result = 0;
+
+    errno = 0;
+    const int i_fd = open(source, O_RDONLY);
+    if (i_fd == -1) {
+        return errno;
+    }
+
+    /* Create new or truncate existing at destination. */
+    errno = 0;
+    const int o_fd = creat(destination, 0660); /* TODO: get perms from in file. */
+    if (o_fd == -1) {
+        const int saved_errno = errno;
+        close(i_fd);
+        return saved_errno;
+    }
+
+    /* Use platform-specific APIs to perform a kernel-mode file copy. */
+#ifdef __APPLE__
+    result = fcopyfile(input, output, 0, COPYFILE_ALL);
+#elifdef __FreeBSD__
+    struct stat file_stat = {0};
+    result = fstat(input, &file_stat);
+    off_t copied = 0;
+    while (result == 0 && copied < file_stat.st_size) {
+        errno = 0;
+        ssize_t written = copy_file_range(input, 0, output, NULL, SSIZE_MAX, 0);
+        copied += written;
+        if (written == -1) {
+            result = errno;
+            goto cleanup;
+        }
+    }
+#else
+    struct stat file_stat = {0};
+    result = fstat(i_fd, &file_stat);
+    off_t copied = 0;
+    while (result == 0 && copied < file_stat.st_size) {
+        errno = 0;
+        const ssize_t written = sendfile(o_fd, i_fd, &copied, SSIZE_MAX);
+        copied += written;
+        if (written == -1) {
+            result = errno;
+            goto cleanup;
+        }
+    }
+#endif
+
+cleanup:
+    close(i_fd);
+    close(o_fd);
+
+    return result;
+}
+
+
+static Cell* file_copy_file( [[ maybe_unused ]] const Lex* e, const Cell* a)
+{
+    Cell* err = CHECK_ARITY_EXACT(a, 2, "rename!");
+    if (err) { return err; }
+    err = check_arg_types(a, CELL_STRING, "rename!");
+    if (err) { return err; }
+
+    const char* from = a->cell[0]->str;
+    const char* to = a->cell[1]->str;
+
+    const int result = cp(from, to);
+    if (result != 0) {
+        return make_cell_error(
+            fmt_err("copy-file: %s", strerror(result)),
+            OS_ERR);
+    }
+
+    return True_Obj;
+}
+
 
 /* TODO:
- * lstat
  * readlink
  * realpath
  * list-directory
- * rename!
- * copy-file
  * touch!
  * link! / symlink!
  * file-type
@@ -772,6 +915,7 @@ static const CznExport file_exports[] = {
     { .scheme_name = "mkdir",              .func = file_mkdir },
     { .scheme_name = "unlink!",            .func = file_unlink },
     { .scheme_name = "stat",               .func = file_stat },
+    { .scheme_name = "lstat",              .func = file_lstat },
     { .scheme_name = "file-size",          .func = file_file_size },
     { .scheme_name = "file-atime",         .func = file_file_atime },
     { .scheme_name = "file-ctime",         .func = file_file_ctime },
@@ -779,6 +923,8 @@ static const CznExport file_exports[] = {
     { .scheme_name = "file-readable?",     .func = file_file_readable },
     { .scheme_name = "file-writeable?",    .func = file_file_writable },
     { .scheme_name = "file-executable?",   .func = file_file_executable },
+    { .scheme_name = "rename!",            .func = file_rename_bang },
+    { .scheme_name = "copy-file",          .func = file_copy_file },
 };
 
 
