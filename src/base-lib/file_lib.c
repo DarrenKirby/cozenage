@@ -831,7 +831,11 @@ static int cp(const char* source, const char* destination)
 
     /* Use platform-specific APIs to perform a kernel-mode file copy. */
 #ifdef __APPLE__
-    result = fcopyfile(input, output, 0, COPYFILE_ALL);
+    result = fcopyfile(i_fd, o_fd, 0, COPYFILE_ALL);
+    /* Returns 0 on success. */
+    if (result < 0) {
+        goto cleanup;
+    }
 #elifdef __FreeBSD__
     struct stat file_stat = {0};
     result = fstat(input, &file_stat);

@@ -535,7 +535,7 @@ static Cell* system_uptime( [[ maybe_unused ]] const Lex* e, const Cell* a) {
 
     /* Format human-readable string. */
     char s_buffer[UPTIME_BUF_SIZE];
-    snprintf(s_buffer, sizeof(s_buffer), "up %ld day%s %02d:%02d",
+    snprintf(s_buffer, sizeof(s_buffer), "up %llu day%s %02d:%02d",
         days, (days != 1) ? "s" : "", hours, minutes);
     Cell* up_s = make_cell_string(s_buffer);
 
