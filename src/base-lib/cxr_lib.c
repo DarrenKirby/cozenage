@@ -45,9 +45,8 @@
  * (c*r pair)
  */
 
-static Cell* cxr_caaar(const Lex* e, const Cell* a)
+static Cell* cxr_caaar( [[ maybe_unused ]] const Lex* e, const Cell* a)
 {
-    (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "caaar");
     if (err) { return err; }
 
@@ -55,9 +54,8 @@ static Cell* cxr_caaar(const Lex* e, const Cell* a)
 }
 
 
-static Cell* cxr_caaaar(const Lex* e, const Cell* a)
+static Cell* cxr_caaaar( [[ maybe_unused ]] const Lex* e, const Cell* a)
 {
-    (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "caaaar");
     if (err) { return err; }
 
@@ -65,9 +63,8 @@ static Cell* cxr_caaaar(const Lex* e, const Cell* a)
 }
 
 
-static Cell* cxr_caaddr(const Lex* e, const Cell* a)
+static Cell* cxr_caaddr( [[ maybe_unused ]] const Lex* e, const Cell* a)
 {
-    (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "caaddr");
     if (err) { return err; }
 
@@ -75,9 +72,8 @@ static Cell* cxr_caaddr(const Lex* e, const Cell* a)
 }
 
 
-static Cell* cxr_cadaar(const Lex* e, const Cell* a)
+static Cell* cxr_cadaar( [[ maybe_unused ]] const Lex* e, const Cell* a)
 {
-    (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "cadaar");
     if (err) { return err; }
 
@@ -85,9 +81,8 @@ static Cell* cxr_cadaar(const Lex* e, const Cell* a)
 }
 
 
-static Cell* cxr_cadar(const Lex* e, const Cell* a)
+static Cell* cxr_cadar( [[ maybe_unused ]] const Lex* e, const Cell* a)
 {
-    (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "cadar");
     if (err) { return err; }
 
@@ -95,9 +90,8 @@ static Cell* cxr_cadar(const Lex* e, const Cell* a)
 }
 
 
-static Cell* cxr_cadddr(const Lex* e, const Cell* a)
+static Cell* cxr_cadddr( [[ maybe_unused ]] const Lex* e, const Cell* a)
 {
-    (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "cadddr");
     if (err) { return err; }
 
@@ -105,9 +99,8 @@ static Cell* cxr_cadddr(const Lex* e, const Cell* a)
 }
 
 
-static Cell* cxr_cdaaar(const Lex* e, const Cell* a)
+static Cell* cxr_cdaaar( [[ maybe_unused ]] const Lex* e, const Cell* a)
 {
-    (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "cdaaar");
     if (err) { return err; }
 
@@ -115,9 +108,8 @@ static Cell* cxr_cdaaar(const Lex* e, const Cell* a)
 }
 
 
-static Cell* cxr_cdaar(const Lex* e, const Cell* a)
+static Cell* cxr_cdaar( [[ maybe_unused ]] const Lex* e, const Cell* a)
 {
-    (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "cdaar");
     if (err) { return err; }
 
@@ -125,9 +117,8 @@ static Cell* cxr_cdaar(const Lex* e, const Cell* a)
 }
 
 
-static Cell* cxr_cdaddr(const Lex* e, const Cell* a)
+static Cell* cxr_cdaddr( [[ maybe_unused ]] const Lex* e, const Cell* a)
 {
-    (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "cdaddr");
     if (err) { return err; }
 
@@ -135,9 +126,8 @@ static Cell* cxr_cdaddr(const Lex* e, const Cell* a)
 }
 
 
-static Cell* cxr_cddaar(const Lex* e, const Cell* a)
+static Cell* cxr_cddaar( [[ maybe_unused ]] const Lex* e, const Cell* a)
 {
-    (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "cddaar");
     if (err) { return err; }
 
@@ -145,9 +135,8 @@ static Cell* cxr_cddaar(const Lex* e, const Cell* a)
 }
 
 
-static Cell* cxr_cddar(const Lex* e, const Cell* a)
+static Cell* cxr_cddar( [[ maybe_unused ]] const Lex* e, const Cell* a)
 {
-    (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "cddar");
     if (err) { return err; }
 
@@ -155,9 +144,8 @@ static Cell* cxr_cddar(const Lex* e, const Cell* a)
 }
 
 
-static Cell* cxr_cddddr(const Lex* e, const Cell* a)
+static Cell* cxr_cddddr( [[ maybe_unused ]] const Lex* e, const Cell* a)
 {
-    (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "cdddddr");
     if (err) { return err; }
 
@@ -165,9 +153,8 @@ static Cell* cxr_cddddr(const Lex* e, const Cell* a)
 }
 
 
-static Cell* cxr_caaadr(const Lex* e, const Cell* a)
+static Cell* cxr_caaadr( [[ maybe_unused ]] const Lex* e, const Cell* a)
 {
-    (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "caaaddr");
     if (err) { return err; }
 
@@ -175,9 +162,8 @@ static Cell* cxr_caaadr(const Lex* e, const Cell* a)
 }
 
 
-static Cell* cxr_caadar(const Lex* e, const Cell* a)
+static Cell* cxr_caadar( [[ maybe_unused ]] const Lex* e, const Cell* a)
 {
-    (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "caadar");
     if (err) { return err; }
 
@@ -185,9 +171,8 @@ static Cell* cxr_caadar(const Lex* e, const Cell* a)
 }
 
 
-static Cell* cxr_caadr(const Lex* e, const Cell* a)
+static Cell* cxr_caadr( [[ maybe_unused ]] const Lex* e, const Cell* a)
 {
-    (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "caadr");
     if (err) { return err; }
 
@@ -195,9 +180,8 @@ static Cell* cxr_caadr(const Lex* e, const Cell* a)
 }
 
 
-static Cell* cxr_cadadr(const Lex* e, const Cell* a)
+static Cell* cxr_cadadr( [[ maybe_unused ]] const Lex* e, const Cell* a)
 {
-    (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "cadadr");
     if (err) { return err; }
 
@@ -205,9 +189,8 @@ static Cell* cxr_cadadr(const Lex* e, const Cell* a)
 }
 
 
-static Cell* cxr_caddar(const Lex* e, const Cell* a)
+static Cell* cxr_caddar( [[ maybe_unused ]] const Lex* e, const Cell* a)
 {
-    (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "caddar");
     if (err) { return err; }
 
@@ -215,9 +198,8 @@ static Cell* cxr_caddar(const Lex* e, const Cell* a)
 }
 
 
-static Cell* cxr_caddr(const Lex* e, const Cell* a)
+static Cell* cxr_caddr( [[ maybe_unused ]] const Lex* e, const Cell* a)
 {
-    (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "caddr");
     if (err) { return err; }
 
@@ -225,9 +207,8 @@ static Cell* cxr_caddr(const Lex* e, const Cell* a)
 }
 
 
-static Cell* cxr_cdaadr(const Lex* e, const Cell* a)
+static Cell* cxr_cdaadr( [[ maybe_unused ]] const Lex* e, const Cell* a)
 {
-    (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "cdaadr");
     if (err) { return err; }
 
@@ -235,9 +216,8 @@ static Cell* cxr_cdaadr(const Lex* e, const Cell* a)
 }
 
 
-static Cell* cxr_cdadar(const Lex* e, const Cell* a)
+static Cell* cxr_cdadar( [[ maybe_unused ]] const Lex* e, const Cell* a)
 {
-    (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "cdadar");
     if (err) { return err; }
 
@@ -245,9 +225,8 @@ static Cell* cxr_cdadar(const Lex* e, const Cell* a)
 }
 
 
-static Cell* cxr_cdadr(const Lex* e, const Cell* a)
+static Cell* cxr_cdadr( [[ maybe_unused ]] const Lex* e, const Cell* a)
 {
-    (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "cdadr");
     if (err) { return err; }
 
@@ -255,9 +234,8 @@ static Cell* cxr_cdadr(const Lex* e, const Cell* a)
 }
 
 
-static Cell* cxr_cddadr(const Lex* e, const Cell* a)
+static Cell* cxr_cddadr( [[ maybe_unused ]] const Lex* e, const Cell* a)
 {
-    (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "cddadr");
     if (err) { return err; }
 
@@ -265,9 +243,8 @@ static Cell* cxr_cddadr(const Lex* e, const Cell* a)
 }
 
 
-static Cell* cxr_cdddar(const Lex* e, const Cell* a)
+static Cell* cxr_cdddar( [[ maybe_unused ]] const Lex* e, const Cell* a)
 {
-    (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "cdddar");
     if (err) { return err; }
 
@@ -275,9 +252,8 @@ static Cell* cxr_cdddar(const Lex* e, const Cell* a)
 }
 
 
-static Cell* cxr_cdddr(const Lex* e, const Cell* a)
+static Cell* cxr_cdddr( [[ maybe_unused ]] const Lex* e, const Cell* a)
 {
-    (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "cdddr");
     if (err) { return err; }
 
@@ -287,9 +263,8 @@ static Cell* cxr_cdddr(const Lex* e, const Cell* a)
 
 /* Racket-style list accessors. */
 
-static Cell* cxr_first(const Lex* e, const Cell* a)
+static Cell* cxr_first( [[ maybe_unused ]] const Lex* e, const Cell* a)
 {
-    (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "first");
     if (err) { return err; }
 
@@ -297,9 +272,8 @@ static Cell* cxr_first(const Lex* e, const Cell* a)
 }
 
 
-static Cell* cxr_second(const Lex* e, const Cell* a)
+static Cell* cxr_second( [[ maybe_unused ]] const Lex* e, const Cell* a)
 {
-    (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "second");
     if (err) { return err; }
 
@@ -307,9 +281,8 @@ static Cell* cxr_second(const Lex* e, const Cell* a)
 }
 
 
-static Cell* cxr_third(const Lex* e, const Cell* a)
+static Cell* cxr_third( [[ maybe_unused ]] const Lex* e, const Cell* a)
 {
-    (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "third");
     if (err) { return err; }
 
@@ -317,9 +290,8 @@ static Cell* cxr_third(const Lex* e, const Cell* a)
 }
 
 
-static Cell* cxr_fourth(const Lex* e, const Cell* a)
+static Cell* cxr_fourth( [[ maybe_unused ]] const Lex* e, const Cell* a)
 {
-    (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "fourth");
     if (err) { return err; }
 
@@ -327,9 +299,8 @@ static Cell* cxr_fourth(const Lex* e, const Cell* a)
 }
 
 
-static Cell* cxr_fifth(const Lex* e, const Cell* a)
+static Cell* cxr_fifth( [[ maybe_unused ]] const Lex* e, const Cell* a)
 {
-    (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "fifth");
     if (err) { return err; }
 
@@ -338,9 +309,8 @@ static Cell* cxr_fifth(const Lex* e, const Cell* a)
 }
 
 
-static Cell* cxr_sixth(const Lex* e, const Cell* a)
+static Cell* cxr_sixth( [[ maybe_unused ]] const Lex* e, const Cell* a)
 {
-    (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "sixth");
     if (err) { return err; }
 
@@ -349,9 +319,8 @@ static Cell* cxr_sixth(const Lex* e, const Cell* a)
 }
 
 
-static Cell* cxr_seventh(const Lex* e, const Cell* a)
+static Cell* cxr_seventh( [[ maybe_unused ]] const Lex* e, const Cell* a)
 {
-    (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "seventh");
     if (err) { return err; }
 
@@ -360,9 +329,8 @@ static Cell* cxr_seventh(const Lex* e, const Cell* a)
 }
 
 
-static Cell* cxr_eighth(const Lex* e, const Cell* a)
+static Cell* cxr_eighth( [[ maybe_unused ]] const Lex* e, const Cell* a)
 {
-    (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "eighth");
     if (err) { return err; }
 
@@ -371,9 +339,8 @@ static Cell* cxr_eighth(const Lex* e, const Cell* a)
 }
 
 
-static Cell* cxr_ninth(const Lex* e, const Cell* a)
+static Cell* cxr_ninth( [[ maybe_unused ]] const Lex* e, const Cell* a)
 {
-    (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "ninth");
     if (err) { return err; }
 
@@ -382,9 +349,8 @@ static Cell* cxr_ninth(const Lex* e, const Cell* a)
 }
 
 
-static Cell* cxr_tenth(const Lex* e, const Cell* a)
+static Cell* cxr_tenth( [[ maybe_unused ]] const Lex* e, const Cell* a)
 {
-    (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "tenth");
     if (err) { return err; }
 

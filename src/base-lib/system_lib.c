@@ -66,9 +66,8 @@ extern char **environ;
 
 /* (get-pid)
  * Returns the process ID of the calling process. */
-static Cell* system_get_pid(const Lex* e, const Cell* a)
+static Cell* system_get_pid( [[ maybe_unused ]] const Lex* e, const Cell* a)
 {
-    (void) e; (void)a;
     Cell* err = CHECK_ARITY_EXACT(a, 0, "get-pid");
     if (err) { return err; }
 
@@ -78,9 +77,8 @@ static Cell* system_get_pid(const Lex* e, const Cell* a)
 
 /* (get-ppid)
  * Returns the process ID of the parent of the calling process. */
-static Cell* system_get_ppid(const Lex* e, const Cell* a)
+static Cell* system_get_ppid( [[ maybe_unused ]] const Lex* e, const Cell* a)
 {
-    (void) e; (void)a;
     Cell* err = CHECK_ARITY_EXACT(a, 0, "get-ppid");
     if (err) { return err; }
 
@@ -91,9 +89,8 @@ static Cell* system_get_ppid(const Lex* e, const Cell* a)
 /* (get-env-var string)
  * Returns the value of environmental variable 'string', or else
  * #false if the variable is unset. */
-static Cell* system_get_env_var(const Lex* e, const Cell* a)
+static Cell* system_get_env_var( [[ maybe_unused ]] const Lex* e, const Cell* a)
 {
-    (void)e;
     Cell* err = check_arg_types(a, CELL_STRING, "get-env-var");
     if (err) { return err; }
     err = CHECK_ARITY_EXACT(a, 1, "get-env-var");
@@ -110,9 +107,8 @@ static Cell* system_get_env_var(const Lex* e, const Cell* a)
 
 /* (get-env-vars)
  * Returns an alist of all var=val pairs in the running process' environment. */
-static Cell* system_get_env_vars(const Lex* e, const Cell* a)
+static Cell* system_get_env_vars( [[ maybe_unused ]] const Lex* e, const Cell* a)
 {
-    (void)e; (void)a;
     Cell* err = CHECK_ARITY_EXACT(a, 0, "get-env-vars");
     if (err) { return err; }
 
@@ -146,8 +142,8 @@ static Cell* system_get_env_vars(const Lex* e, const Cell* a)
 
 /* (get-home)
  * Returns the home directory of the current user as a string. */
-static Cell* system_get_home(const Lex* e, const Cell* a) {
-    (void)e; (void)a;
+static Cell* system_get_home( [[ maybe_unused ]] const Lex* e, const Cell* a)
+{
     Cell* err = CHECK_ARITY_EXACT(a, 0, "get-home");
     if (err) { return err; }
 
@@ -158,8 +154,8 @@ static Cell* system_get_home(const Lex* e, const Cell* a) {
 /* (get-path)
  * Returns a list composed of each directory in the current user's path as a string.
  * The list is ordered as per the shell's search order. */
-static Cell* system_get_path(const Lex* e, const Cell* a) {
-    (void)e; (void)a;
+static Cell* system_get_path( [[ maybe_unused ]] const Lex* e, const Cell* a)
+{
     Cell* err = CHECK_ARITY_EXACT(a, 0, "get-path");
     if (err) { return err; }
 
@@ -202,32 +198,32 @@ static Cell* system_get_path(const Lex* e, const Cell* a) {
  * These procedures return the user id, group id,
  * effective user id, and effective group id of the
  * running process, respectively. */
-static Cell* system_get_uid(const Lex* e, const Cell* a) {
-    (void)e; (void)a;
+static Cell* system_get_uid( [[ maybe_unused ]] const Lex* e, const Cell* a)
+{
     Cell* err = CHECK_ARITY_EXACT(a, 0, "get-uid");
     if (err) { return err; }
     return make_cell_integer(getuid());
 }
 
 
-static Cell* system_get_gid(const Lex* e, const Cell* a) {
-    (void)e; (void)a;
+static Cell* system_get_gid( [[ maybe_unused ]] const Lex* e, const Cell* a)
+{
     Cell* err = CHECK_ARITY_EXACT(a, 0, "get-gid");
     if (err) { return err; }
     return make_cell_integer(getgid());
 }
 
 
-static Cell* system_get_euid(const Lex* e, const Cell* a) {
-    (void)e; (void)a;
+static Cell* system_get_euid( [[ maybe_unused ]] const Lex* e, const Cell* a)
+{
     Cell* err = CHECK_ARITY_EXACT(a, 0, "get-euid");
     if (err) { return err; }
     return make_cell_integer(geteuid());
 }
 
 
-static Cell* system_get_egid(const Lex* e, const Cell* a) {
-    (void)e; (void)a;
+static Cell* system_get_egid( [[ maybe_unused ]] const Lex* e, const Cell* a)
+{
     Cell* err = CHECK_ARITY_EXACT(a, 0, "get-egid");
     if (err) { return err; }
     return make_cell_integer(getegid());
@@ -238,8 +234,8 @@ static Cell* system_get_egid(const Lex* e, const Cell* a) {
  * (set-gid! n)
  * These functions set the user id or group id of the currently running process to the uid/gid indicated by n. They
  * return #true on success, or else return an OS error.  */
-static Cell* system_set_uid(const Lex* e, const Cell* a) {
-    (void)e;
+static Cell* system_set_uid( [[ maybe_unused ]] const Lex* e, const Cell* a)
+{
     Cell* err = CHECK_ARITY_EXACT(a, 1, "set-uid!");
     if (err) { return err; }
     err = check_arg_types(a, CELL_INTEGER, "set-uid!");
@@ -255,8 +251,8 @@ static Cell* system_set_uid(const Lex* e, const Cell* a) {
 }
 
 
-static Cell* system_set_gid(const Lex* e, const Cell* a) {
-    (void)e;
+static Cell* system_set_gid( [[ maybe_unused ]] const Lex* e, const Cell* a)
+{
     Cell* err = CHECK_ARITY_EXACT(a, 1, "set-gid!");
     if (err) { return err; }
     err = check_arg_types(a, CELL_INTEGER, "set-gid!");
@@ -272,12 +268,11 @@ static Cell* system_set_gid(const Lex* e, const Cell* a) {
 }
 
 
-
 /* (get-username)
  * Returns the username associated with the uid of the running process,
  * or #false if it cannot be obtained. */
-static Cell* system_get_username(const Lex* e, const Cell* a) {
-    (void)e; (void)a;
+static Cell* system_get_username( [[ maybe_unused ]] const Lex* e, const Cell* a)
+{
     Cell* err = CHECK_ARITY_EXACT(a, 0, "get_username");
     if (err) { return err; }
 
@@ -290,37 +285,37 @@ static Cell* system_get_username(const Lex* e, const Cell* a) {
     return False_Obj;
 }
 
-static int portable_getgrouplist(const char *user, const gid_t basegid,
-                      gid_t *groups, int *ngroups) {
+static int portable_getgrouplist(const char *user, const gid_t base_gid,
+                                 gid_t *groups, int *n_groups)
+{
 #ifdef __APPLE__
-    /* macOS getgrouplist takes int* for both basegid and groups */
-    int *igroups = GC_malloc(sizeof(int) * (*ngroups));
-    const int ret = getgrouplist(user, (int)basegid, igroups, ngroups);
-    for (int i = 0; i < *ngroups; i++) {
-        groups[i] = (gid_t)igroups[i];
+    /* macOS getgrouplist takes int* for both base_gid and groups */
+    int *i_groups = GC_malloc(sizeof(int) * (*n_groups));
+    const int ret = getgrouplist(user, (int)base_gid, i_groups, n_groups);
+    for (int i = 0; i < *n_groups; i++) {
+        groups[i] = (gid_t)i_groups[i];
     }
     return ret;
 #else
     /* Linux and FreeBSD both use gid_t* natively */
-    return getgrouplist(user, basegid, groups, ngroups);
+    return getgrouplist(user, base_gid, groups, n_groups);
 #endif
 }
-
 
 
 /* (get-groups)
  * Returns an alist of (gid . "groupname") pairs for all groups
  * associated with the current process' euid. */
-static Cell* system_get_groups(const Lex* e, const Cell* a) {
-    (void)e; (void)a;
+static Cell* system_get_groups( [[ maybe_unused ]] const Lex* e, const Cell* a)
+{
     Cell* err = CHECK_ARITY_EXACT(a, 0, "get-groups");
     if (err) { return err; }
 
     long max = sysconf(_SC_NGROUPS_MAX);
     if (max < 0) { max = GROUP_MAX; }
 
-    int ngroups = (int)max;
-    gid_t *groups = GC_malloc(sizeof(gid_t) * ngroups);
+    int n_groups = (int)max;
+    gid_t *groups = GC_malloc(sizeof(gid_t) * n_groups);
 
     const uid_t uid = geteuid();
     const struct passwd *pw = getpwuid(uid);
@@ -330,17 +325,17 @@ static Cell* system_get_groups(const Lex* e, const Cell* a) {
             OS_ERR);
     }
 
-    const int ret = portable_getgrouplist(pw->pw_name, pw->pw_gid, groups, &ngroups);
+    const int ret = portable_getgrouplist(pw->pw_name, pw->pw_gid, groups, &n_groups);
     if (ret == -1) {
-        /* Nothing really to do here, as NGROUPS_MAX was used to set ngroups for the call.
-         * BSD truncation: ngroups is "how many were stored"
-         * glibc: ngroups is "required size" */
+        /* Nothing really to do here, as NGROUPS_MAX was used to set n_groups for the call.
+         * BSD truncation: n_groups is "how many were stored"
+         * glibc: n_groups is "required size" */
     }
 
     Cell* result = make_cell_nil();
     int len = 1;
 
-    for (int j = 0; j < ngroups; j++) {
+    for (int j = 0; j < n_groups; j++) {
         Cell* vr = make_cell_integer(groups[j]);
         Cell* vl;
         const struct group *gr = getgrgid(groups[j]);
@@ -360,8 +355,8 @@ static Cell* system_get_groups(const Lex* e, const Cell* a) {
 /* (get-cwd)
  * Returns the current working directory of the process
  * as a string. */
-static Cell* system_get_cwd(const Lex* e, const Cell* a) {
-    (void)e; (void)a;
+static Cell* system_get_cwd( [[ maybe_unused ]] const Lex* e, const Cell* a)
+{
     Cell* err = CHECK_ARITY_EXACT(a, 0, "get-cwd");
     if (err) { return err; }
 
@@ -380,8 +375,8 @@ static Cell* system_get_cwd(const Lex* e, const Cell* a) {
 /* (chdir string)
  * Changes the CWD of the process to the path
  * represented by string. */
-static Cell* system_chdir(const Lex* e, const Cell* a) {
-    (void)e;
+static Cell* system_chdir( [[ maybe_unused ]] const Lex* e, const Cell* a)
+{
     Cell* err = CHECK_ARITY_EXACT(a, 1, "chdir");
     if (err) { return err; }
     if (a->cell[0]->type != CELL_STRING) {
@@ -403,8 +398,8 @@ static Cell* system_chdir(const Lex* e, const Cell* a) {
 /* (uname)
  * Returns a 5-tuple (ie: a list of length five) which contains system and platform information
  * as per the system 'uname' command. */
-static Cell* system_uname(const Lex* e, const Cell* a) {
-    (void)e; (void)a;
+static Cell* system_uname( [[ maybe_unused ]] const Lex* e, const Cell* a)
+{
     Cell* err = CHECK_ARITY_EXACT(a, 0, "uname");
     if (err) { return err; }
 
@@ -433,8 +428,8 @@ static Cell* system_uname(const Lex* e, const Cell* a) {
 /* (chmod path mode)
  * Changes the mode bits, specified by integer (represented in octal) arg 'mode',
  * of the file path represented by 'path', passed as a string. */
-static Cell* system_chmod(const Lex* e, const Cell* a) {
-    (void)e;
+static Cell* system_chmod( [[ maybe_unused ]] const Lex* e, const Cell* a)
+{
     Cell* err = CHECK_ARITY_EXACT(a, 2, "chmod");
     if (err) { return err; }
     if (a->cell[0]->type != CELL_STRING) {
@@ -462,8 +457,7 @@ static Cell* system_chmod(const Lex* e, const Cell* a) {
  * The first item is an integer representing uptime in seconds. The second item is a human-readable uptime string of
  * the form "up 31 days 16:37". The third item is itself a three item list of floats which represent the 1, 5, and 15-
  * minute load average figures in that order. */
-static Cell* system_uptime(const Lex* e, const Cell* a) {
-    (void)e; (void)a;
+static Cell* system_uptime( [[ maybe_unused ]] const Lex* e, const Cell* a) {
     Cell* err = CHECK_ARITY_EXACT(a, 0, "uptime");
     if (err) { return err; }
 
@@ -572,8 +566,8 @@ static Cell* system_uptime(const Lex* e, const Cell* a) {
 /* (system string)
  * Forks a new process and runs the command specified by string in a new shell.
  * Returns the exit status of the command as an integer. */
-static Cell* system_system(const Lex* e, const Cell* a) {
-    (void)e;
+static Cell* system_system( [[ maybe_unused ]] const Lex* e, const Cell* a)
+{
     Cell* err = CHECK_ARITY_EXACT(a, 1, "system");
     if (err) { return err; }
     err = check_arg_types(a, CELL_STRING, "system");
@@ -610,8 +604,8 @@ static Cell* system_system(const Lex* e, const Cell* a) {
 
 /* (sleep n)
  * Causes the running process to sleep for n seconds. */
-static Cell* system_sleep(const Lex* e, const Cell* a) {
-    (void)e;
+static Cell* system_sleep( [[ maybe_unused ]] const Lex* e, const Cell* a)
+{
     Cell* err = CHECK_ARITY_EXACT(a, 1, "sleep");
     if (err) { return err; }
     err = check_arg_types(a, CELL_INTEGER, "sleep");
@@ -626,8 +620,8 @@ static Cell* system_sleep(const Lex* e, const Cell* a) {
 
 /* (get-hostname)
  * Returns the hostname of the system as a string. */
-static Cell* system_get_hostname(const Lex* e, const Cell* a) {
-    (void)e;
+static Cell* system_get_hostname( [[ maybe_unused ]] const Lex* e, const Cell* a)
+{
     Cell* err = CHECK_ARITY_EXACT(a, 0, "get-hostname");
     if (err) { return err; }
 
@@ -644,8 +638,8 @@ static Cell* system_get_hostname(const Lex* e, const Cell* a) {
 
 /* (cpu-count)
  * Returns the number of processors as an integer. */
-static Cell* system_get_nproc(const Lex* e, const Cell* a) {
-    (void)e;
+static Cell* system_get_nproc( [[ maybe_unused ]] const Lex* e, const Cell* a)
+{
     Cell* err = CHECK_ARITY_EXACT(a, 0, "cpu-count");
     if (err) { return err; }
 
@@ -662,8 +656,8 @@ static Cell* system_get_nproc(const Lex* e, const Cell* a) {
 /* (is-root?)
  * Returns #true if the effective uid of the currently running process is 0,
  * otherwise, returns #false. */
-static Cell* system_is_root(const Lex* e, const Cell* a) {
-    (void)e;
+static Cell* system_is_root( [[ maybe_unused ]] const Lex* e, const Cell* a)
+{
     Cell* err = CHECK_ARITY_EXACT(a, 0, "is-root?");
     if (err) { return err; }
 

@@ -55,16 +55,14 @@ static inline long double complex ctanl(long double complex z) {
 
 /* (cos z)
  * Returns the cosine of arg (arg is in radians). */
-static Cell* math_cos(const Lex* e, const Cell* a)
+static Cell* math_cos( [[ maybe_unused ]] const Lex* e, const Cell* a)
 {
-    (void)e;
     Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX, "cos");
     if (err) { return err; }
     err = CHECK_ARITY_EXACT(a, 1, "cos");
     if (err) { return err; }
 
-    if (a->cell[0]->type == CELL_COMPLEX)
-    {
+    if (a->cell[0]->type == CELL_COMPLEX) {
         const long double complex z = cell_to_c_complex(a->cell[0]);
         const long double complex z_result = ccosl(z);
         Cell* real = make_cell_real(creall(z_result));
@@ -79,16 +77,14 @@ static Cell* math_cos(const Lex* e, const Cell* a)
 
 /* (acos z)
  * Returns the arccosine of arg, in radians. */
-static Cell* math_acos(const Lex* e, const Cell* a)
+static Cell* math_acos( [[ maybe_unused ]] const Lex* e, const Cell* a)
 {
-    (void)e;
     Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX, "acos");
     if (err) { return err; }
     err = CHECK_ARITY_EXACT(a, 1, "acos");
     if (err) { return err; }
 
-    if (a->cell[0]->type == CELL_COMPLEX)
-    {
+    if (a->cell[0]->type == CELL_COMPLEX) {
         const long double complex z = cell_to_c_complex(a->cell[0]);
         const long double complex z_result = cacosl(z);
         Cell* real = make_cell_real(creall(z_result));
@@ -103,16 +99,14 @@ static Cell* math_acos(const Lex* e, const Cell* a)
 
 /* (sin z)
  * Returns the sine of arg (arg is in radians). */
-static Cell* math_sin(const Lex* e, const Cell* a)
+static Cell* math_sin( [[ maybe_unused ]] const Lex* e, const Cell* a)
 {
-    (void)e;
     Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX, "sin");
     if (err) { return err; }
     err = CHECK_ARITY_EXACT(a, 1, "sin");
     if (err) { return err; }
 
-    if (a->cell[0]->type == CELL_COMPLEX)
-    {
+    if (a->cell[0]->type == CELL_COMPLEX) {
         const long double complex z = cell_to_c_complex(a->cell[0]);
         const long double complex z_result = csinl(z);
         Cell* real = make_cell_real(creall(z_result));
@@ -127,16 +121,14 @@ static Cell* math_sin(const Lex* e, const Cell* a)
 
 /* (asin z)
  * Returns the arcsine of arg, in radians. */
-static Cell* math_asin(const Lex* e, const Cell* a)
+static Cell* math_asin( [[ maybe_unused ]] const Lex* e, const Cell* a)
 {
-    (void)e;
     Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX, "asin");
     if (err) { return err; }
     err = CHECK_ARITY_EXACT(a, 1, "asin");
     if (err) { return err; }
 
-    if (a->cell[0]->type == CELL_COMPLEX)
-    {
+    if (a->cell[0]->type == CELL_COMPLEX) {
         const long double complex z = cell_to_c_complex(a->cell[0]);
         const long double complex z_result = casinl(z);
         Cell* real = make_cell_real(creall(z_result));
@@ -151,16 +143,14 @@ static Cell* math_asin(const Lex* e, const Cell* a)
 
 /* (tan z)
  * Returns the tangent of arg (arg is in radians). */
-static Cell* math_tan(const Lex* e, const Cell* a)
+static Cell* math_tan( [[ maybe_unused ]] const Lex* e, const Cell* a)
 {
-    (void)e;
     Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX, "tan");
     if (err) { return err; }
     err = CHECK_ARITY_EXACT(a, 1, "tan");
     if (err) { return err; }
 
-    if (a->cell[0]->type == CELL_COMPLEX)
-    {
+    if (a->cell[0]->type == CELL_COMPLEX) {
         const long double complex z = cell_to_c_complex(a->cell[0]);
         const long double complex z_result = ctanl(z);
         Cell* real = make_cell_real(creall(z_result));
@@ -178,9 +168,8 @@ static Cell* math_tan(const Lex* e, const Cell* a)
  * With one arg: Returns the arctangent of arg as a numeric value between -PI/2 and PI/2 radians
  * With two args: Returns the angle theta from the conversion of rectangular coordinates (x, y)
  * to polar coordinates (r, theta) */
-static Cell* math_atan(const Lex* e, const Cell* a)
+static Cell* math_atan( [[ maybe_unused ]] const Lex* e, const Cell* a)
 {
-    (void)e;
     Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX, "atan");
     if (err) { return err; }
     err = CHECK_ARITY_RANGE(a, 1, 2, "atan");
@@ -188,8 +177,7 @@ static Cell* math_atan(const Lex* e, const Cell* a)
 
     if (a->count == 1) {
 
-        if (a->cell[0]->type == CELL_COMPLEX)
-        {
+        if (a->cell[0]->type == CELL_COMPLEX) {
             const long double complex z = cell_to_c_complex(a->cell[0]);
             const long double complex z_result = catanl(z);
             Cell* real = make_cell_real(creall(z_result));
@@ -216,16 +204,14 @@ static Cell* math_atan(const Lex* e, const Cell* a)
 
 /* (exp z)
  * Returns the value of E raised to arg power. */
-static Cell* math_exp(const Lex* e, const Cell* a)
+static Cell* math_exp( [[ maybe_unused ]] const Lex* e, const Cell* a)
 {
-    (void)e;
     Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX, "exp");
     if (err) { return err; }
     err = CHECK_ARITY_EXACT(a, 1, "exp");
     if (err) { return err; }
 
-    if (a->cell[0]->type == CELL_COMPLEX)
-    {
+    if (a->cell[0]->type == CELL_COMPLEX) {
         const long double complex z = cell_to_c_complex(a->cell[0]);
         const long double complex z_result = cexpl(z);
         Cell* real = make_cell_real(creall(z_result));
@@ -242,9 +228,8 @@ static Cell* math_exp(const Lex* e, const Cell* a)
  * (log z1 z2)
  * With one arg: Returns the natural logarithm of arg.
  * With two args (n, b): Returns log n base b. */
-static Cell* math_log(const Lex* e, const Cell* a)
+static Cell* math_log( [[ maybe_unused ]] const Lex* e, const Cell* a)
 {
-    (void)e;
     Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL|CELL_COMPLEX, "log");
     if (err) { return err; }
     err = CHECK_ARITY_RANGE(a, 1, 2, "log");
@@ -252,8 +237,7 @@ static Cell* math_log(const Lex* e, const Cell* a)
 
     if (a->count == 1) {
 
-        if (a->cell[0]->type == CELL_COMPLEX)
-        {
+        if (a->cell[0]->type == CELL_COMPLEX) {
             const long double complex z = cell_to_c_complex(a->cell[0]);
             const long double complex z_result = clogl(z);
             Cell* real = make_cell_real(creall(z_result));
@@ -280,9 +264,8 @@ static Cell* math_log(const Lex* e, const Cell* a)
 
 /* (log2 z)
  * Equivalent to (log n 2). */
-static Cell* math_log2(const Lex* e, const Cell* a)
+static Cell* math_log2( [[ maybe_unused ]] const Lex* e, const Cell* a)
 {
-    (void)e;
     Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL, "log2");
     if (err) { return err; }
     err = CHECK_ARITY_EXACT(a, 1, "log2");
@@ -295,9 +278,8 @@ static Cell* math_log2(const Lex* e, const Cell* a)
 
 /* (log10 z)
  * Equivalent to (log n 10). */
-static Cell* math_log10(const Lex* e, const Cell* a)
+static Cell* math_log10( [[ maybe_unused ]] const Lex* e, const Cell* a)
 {
-    (void)e;
     Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL, "log10");
     if (err) { return err; }
     err = CHECK_ARITY_EXACT(a, 1, "log10");
@@ -311,9 +293,8 @@ static Cell* math_log10(const Lex* e, const Cell* a)
 /* (cbrt z)
  * Returns the cube root of arg.
  * */
-static Cell* math_cbrt(const Lex* e, const Cell* a)
+static Cell* math_cbrt( [[ maybe_unused ]] const Lex* e, const Cell* a)
 {
-    (void)e;
     Cell* err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL, "cbrt");
     if (err) { return err; }
     err = CHECK_ARITY_EXACT(a, 1, "cbrt");
@@ -335,9 +316,8 @@ static Cell* math_cbrt(const Lex* e, const Cell* a)
  */
 
 /* (floor-quotient n1 n2) */
-static Cell* math_floor_quotient(const Lex* e, const Cell* a)
+static Cell* math_floor_quotient( [[ maybe_unused ]] const Lex* e, const Cell* a)
 {
-    (void)e;
     Cell* err = check_arg_types(a, CELL_INTEGER, "floor-quotient");
     if (err) { return err; }
     err = CHECK_ARITY_EXACT(a, 2, "floor-quotient");
@@ -360,7 +340,6 @@ static Cell* math_floor_quotient(const Lex* e, const Cell* a)
 /* (floor/ n1 n2 ) */
 static Cell* math_floor_div(const Lex* e, const Cell* a)
 {
-    (void)e;
     Cell* err = check_arg_types(a, CELL_INTEGER, "floor/");
     if (err) { return err; }
     err = CHECK_ARITY_EXACT(a, 2, "floor/");
@@ -393,9 +372,8 @@ static Cell* math_floor_div(const Lex* e, const Cell* a)
 
 
 /* (truncate/ n1 n2 ) */
-static Cell* math_truncate_div(const Lex* e, const Cell* a)
+static Cell* math_truncate_div( [[ maybe_unused ]] const Lex* e, const Cell* a)
 {
-    (void)e;
     Cell* err = check_arg_types(a, CELL_INTEGER, "truncate/");
     if (err) { return err; }
     err = CHECK_ARITY_EXACT(a, 2, "truncate/");
@@ -421,9 +399,8 @@ static Cell* math_truncate_div(const Lex* e, const Cell* a)
 
 /* (real-part z)
  * returns the real part of a complex number. */
-static Cell* math_real_part(const Lex* e, const Cell* a)
+static Cell* math_real_part( [[ maybe_unused ]] const Lex* e, const Cell* a)
 {
-    (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "real-part");
     if (err) { return err; }
     Cell* sub = a->cell[0];
@@ -445,8 +422,8 @@ static Cell* math_real_part(const Lex* e, const Cell* a)
 
 /* (imag-part z)
  * returns the imaginary part of a complex number. */
-static Cell* math_imag_part(const Lex* e, const Cell* a) {
-    (void)e;
+static Cell* math_imag_part( [[ maybe_unused ]] const Lex* e, const Cell* a)
+{
     Cell* err = CHECK_ARITY_EXACT(a, 1, "imag-part");
     if (err) { return err; }
     const Cell* sub = a->cell[0];
@@ -468,9 +445,8 @@ static Cell* math_imag_part(const Lex* e, const Cell* a) {
 
 /* (make-rectangular x1 x2 )
  * Convert a complex number to rectangular form. */
-static Cell* math_make_rectangular(const Lex* e, const Cell* a)
+static Cell* math_make_rectangular( [[ maybe_unused ]] const Lex* e, const Cell* a)
 {
-    (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2, "make-rectangular");
     if (err) { return err; }
     err = check_arg_types(a, CELL_REAL|CELL_RATIONAL|CELL_INTEGER, "make-rectangular");
@@ -482,9 +458,8 @@ static Cell* math_make_rectangular(const Lex* e, const Cell* a)
 
 /* (angle z)
  * Calculate angle 'θ' of complex number. */
-static Cell* math_angle(const Lex* e, const Cell* a)
+static Cell* math_angle( [[ maybe_unused ]] const Lex* e, const Cell* a)
 {
-    (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "angle");
     if (err) { return err; }
     err = check_arg_types(a, CELL_REAL|CELL_RATIONAL|CELL_INTEGER|CELL_COMPLEX, "angle");
@@ -503,9 +478,8 @@ static Cell* math_angle(const Lex* e, const Cell* a)
 
 /* (make-polar x3 x4)
  * Convert a complex number to polar form. */
-static Cell* math_make_polar(const Lex* e, const Cell* a)
+static Cell* math_make_polar( [[ maybe_unused ]] const Lex* e, const Cell* a)
 {
-    (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2, "make-polar");
     if (err) { return err; }
     err = check_arg_types(a, CELL_REAL|CELL_RATIONAL|CELL_INTEGER, "make-polar");

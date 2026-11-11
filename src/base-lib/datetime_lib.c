@@ -39,9 +39,9 @@
  * midnight Universal Time) and the value 1.0 represents one TAI second later. Neither high accuracy
  * nor high precision are required; in particular, returning Coordinated Universal Time plus a
  * suitable constant might be the best an implementation can do. */
-static Cell* datetime_current_second(const Lex* e, const Cell* a)
+static Cell* datetime_current_second( [[ maybe_unused ]] const Lex* e,
+                                      [[ maybe_unused ]] const Cell* a)
 {
-    (void)e; (void)a;
     struct timespec ts;
 
     /* CLOCK_REALTIME gives POSIX time (seconds since UTC epoch). */
@@ -63,9 +63,9 @@ static Cell* datetime_current_second(const Lex* e, const Cell* a)
  * implementation-defined epoch. A jiffy is an implementation-defined fraction of a second which is
  * defined by the return value of the jiffies-per-second procedure. The starting epoch is guaranteed
  * to be constant during a run of the program, but may vary between runs. */
-static Cell* datetime_current_jiffy(const Lex* e, const Cell* a)
+static Cell* datetime_current_jiffy( [[ maybe_unused ]] const Lex* e,
+                                     [[ maybe_unused ]] const Cell* a)
 {
-    (void)e; (void)a;
     struct timespec ts;
 
     /* Use CLOCK_MONOTONIC, not CLOCK_REALTIME. */
@@ -84,9 +84,9 @@ static Cell* datetime_current_jiffy(const Lex* e, const Cell* a)
 /* (jiffies-per-second)
  * Returns an exact integer representing the number of jiffies per SI second. This value is an
  * implementation-specified constant. */
-static Cell* datetime_jiffies_per_second(const Lex* e, const Cell* a)
+static Cell* datetime_jiffies_per_second( [[ maybe_unused ]] const Lex* e,
+                                          [[ maybe_unused ]] const Cell* a)
 {
-    (void)e; (void)a;
     return make_cell_integer(JIFFIES_PER_SECOND);
 }
 
@@ -95,9 +95,8 @@ static Cell* datetime_jiffies_per_second(const Lex* e, const Cell* a)
  * Can be called with zero or one argument. If an argument is provided, it must be a string which is
  * a format specification as per the C library function strftime(3). With no argument, the format
  * specifier is "%Y-%m-%d %H:%M:%S", which prints the date/time as: "2025-10-23 17:00:17" in UTC. */
-static Cell* datetime_current_datetime_utc(const Lex* e, const Cell* a)
+static Cell* datetime_current_datetime_utc( [[ maybe_unused ]] const Lex* e, const Cell* a)
 {
-    (void)e;
     Cell* err = CHECK_ARITY_RANGE(a, 0, 1, "current-datetime-utc");
     if (err) { return err; }
 
@@ -127,9 +126,8 @@ static Cell* datetime_current_datetime_utc(const Lex* e, const Cell* a)
  * a format specification as per the C library function strftime(3). With no argument, the format
  * specifier is "%Y-%m-%d %H:%M:%S", which prints the date/time as: "2025-10-23 17:00:17" in the
  * local time. */
-static Cell* datetime_current_datetime_local(const Lex* e, const Cell* a)
+static Cell* datetime_current_datetime_local( [[ maybe_unused ]] const Lex* e, const Cell* a)
 {
-    (void)e;
     Cell* err = CHECK_ARITY_RANGE(a, 0, 1, "current-datetime-local");
     if (err) { return err; }
 
@@ -155,11 +153,11 @@ static Cell* datetime_current_datetime_local(const Lex* e, const Cell* a)
 
 
 static const CznExport date_exports[] = {
-    { .scheme_name = "current-second",    .func = datetime_current_second},
-    { .scheme_name = "current-jiffy",     .func = datetime_current_jiffy},
-    { .scheme_name = "jiffies-per-second",.func = datetime_jiffies_per_second},
-    { .scheme_name = "current-dt-utc",    .func = datetime_current_datetime_utc},
-    { .scheme_name = "current-dt-local",  .func = datetime_current_datetime_local},
+    { .scheme_name = "current-second",     .func = datetime_current_second},
+    { .scheme_name = "current-jiffy",      .func = datetime_current_jiffy},
+    { .scheme_name = "jiffies-per-second", .func = datetime_jiffies_per_second},
+    { .scheme_name = "current-dt-utc",     .func = datetime_current_datetime_utc},
+    { .scheme_name = "current-dt-local",   .func = datetime_current_datetime_local},
 };
 
 

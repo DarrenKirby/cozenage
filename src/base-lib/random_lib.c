@@ -23,6 +23,9 @@
 
 #include <openssl/rand.h>
 
+#define SHIFT_32 32
+#define SHIFT_11 11
+
 
 /* Random integer in [0, limit)
  * Implements the Lemire method. */
@@ -51,7 +54,7 @@ static unsigned int rand_uint(const uint32_t limit) {
     } while (l < t); /* Reject if the lower bits fall in the biased range. */
 
     /* The upper 32 bits of the product are the unbiased, scaled result. */
-    return m >> 32;
+    return m >> SHIFT_32;
 }
 
 
@@ -70,7 +73,7 @@ static double rand_double() {
         exit(1);
     }
     /* 53 bits / 2**53 */
-    return (double)(u.i >> 11) * (1.0/RAND_DOUBLE_SCALE);
+    return (double)(u.i >> SHIFT_11) * (1.0/RAND_DOUBLE_SCALE);
 }
 
 
@@ -81,9 +84,8 @@ static double rand_double() {
  * The result is generated using an unbiased rejection-sampling method
  * (Lemire's algorithm), ensuring uniform distribution even when the limit
  * does not evenly divide the underlying random number range. */
-static Cell* random_randint(const Lex* e, const Cell* a)
+static Cell* random_randint( [[ maybe_unused ]] const Lex* e, const Cell* a)
 {
-    (void)e;
     Cell* err = CHECK_ARITY_RANGE(a, 0, 1, "rand-int");
     if (err) { return err; }
     if (a->count == 1) {
@@ -106,9 +108,9 @@ static Cell* random_randint(const Lex* e, const Cell* a)
  * Returns a uniformly distributed random real number in the range [0.0, 1.0).
  * The value is generated from 53 bits of randomness, matching the precision
  * of an IEEE 754 double. */
-static Cell* random_randbl(const Lex* e, const Cell* a)
+static Cell* random_randbl( [[ maybe_unused ]] const Lex* e,
+                            [[ maybe_unused ]] const Cell* a)
 {
-    (void)e; (void)a;
     return make_cell_real(rand_double());
 }
 
@@ -118,9 +120,8 @@ static Cell* random_randbl(const Lex* e, const Cell* a)
  * Both min and max may be integers, rationals, or real numbers.
  * The result is computed by scaling a random value in [0.0, 1.0) to the
  * requested interval. */
-static Cell* random_uniform(const Lex* e, const Cell* a)
+static Cell* random_uniform( [[ maybe_unused ]] const Lex* e, const Cell* a)
 {
-    (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2, "rand-uniform");
     if (err) { return err; }
     err = check_arg_types(a, CELL_INTEGER|CELL_RATIONAL|CELL_REAL, "rand-uniform");
@@ -129,7 +130,7 @@ static Cell* random_uniform(const Lex* e, const Cell* a)
     const long double min = cell_to_long_double(a->cell[0]);
     const long double max = cell_to_long_double(a->cell[1]);
 
-    return make_cell_real(min + (max - min) * rand_double());
+    return make_cell_real(min + ((max - min) * rand_double()));
 }
 
 
@@ -140,9 +141,8 @@ static Cell* random_uniform(const Lex* e, const Cell* a)
  * The shuffling is performed using a modern Fisher–Yates algorithm,
  * producing an unbiased permutation. The return type matches the input
  * sequence type (list or vector). */
-static Cell* random_shuffle(const Lex* e, const Cell* a)
+static Cell* random_shuffle( [[ maybe_unused ]] const Lex* e, const Cell* a)
 {
-    (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "shuffle");
     if (err) { return err; }
     err = check_arg_types(a, CELL_PAIR|CELL_VECTOR|CELL_SEXPR, "shuffle");
@@ -192,9 +192,8 @@ static Cell* random_shuffle(const Lex* e, const Cell* a)
  * Returns a single element chosen uniformly at random from seq.
  * seq may be a list, vector, or quoted list expression.
  * Each element has equal probability of being selected. */
-static Cell* random_choice(const Lex* e, const Cell* a)
+static Cell* random_choice( [[ maybe_unused ]] const Lex* e, const Cell* a)
 {
-    (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "rand-choice");
     if (err) { return err; }
     err = check_arg_types(a, CELL_PAIR|CELL_VECTOR|CELL_SEXPR, "rand-choice");
@@ -223,9 +222,8 @@ static Cell* random_choice(const Lex* e, const Cell* a)
  * seq may be a list, vector, or quoted list expression.
  * k must be a non-negative integer.
  * The return type matches the input sequence type (list or vector). */
-static Cell* random_choices(const Lex* e, const Cell* a)
+static Cell* random_choices( [[ maybe_unused ]] const Lex* e, const Cell* a)
 {
-    (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 2, "rand-choices");
     if (err) { return err; }
 

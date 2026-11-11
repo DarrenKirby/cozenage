@@ -107,9 +107,8 @@ HandlerResult sf_stream(Lex* e, Cell* a)
  * “memoized”) so that if it is forced a second time, the previously computed value is returned. Consequently, a delayed
  * expression is evaluated using the parameter values and exception handler of the call to force which first requested
  * its value. If promise is not a promise, it may be returned unchanged. */
-static Cell* lazy_force(const Lex* e, const Cell* a)
+static Cell* lazy_force( [[ maybe_unused ]] const Lex* e, const Cell* a)
 {
-    (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "force");
     if (err) { return err; }
 
@@ -166,9 +165,8 @@ static Cell* lazy_force(const Lex* e, const Cell* a)
 /* (make-promise obj)
  * The make-promise procedure returns a promise which, when forced, will return obj. It is similar to delay, but does
  * not delay its argument: it is a procedure rather than syntax. If obj is already a promise, it is returned. */
-static Cell* lazy_make_promise(const Lex* e, const Cell* a)
+static Cell* lazy_make_promise( [[ maybe_unused ]] const Lex* e, const Cell* a)
 {
-    (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "make-promise");
     if (err) { return err; }
 
@@ -185,9 +183,8 @@ static Cell* lazy_make_promise(const Lex* e, const Cell* a)
 /* (promise? obj)
  * The promise? procedure returns #t if its argument is a promise, and #f otherwise. Note that promises are not
  * necessarily disjoint from other Scheme types such as procedures. */
-static Cell* lazy_promise_pred(const Lex* e, const Cell* a)
+static Cell* lazy_promise_pred( [[ maybe_unused ]] const Lex* e, const Cell* a)
 {
-    (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "promise?");
     if (err) { return err; }
 
@@ -200,9 +197,8 @@ static Cell* lazy_promise_pred(const Lex* e, const Cell* a)
 
 /* (stream? obj)
  * The stream? procedure returns #t if obj represents a stream, and #f otherwise. */
-static Cell* lazy_stream_pred(const Lex* e, const Cell* a)
+static Cell* lazy_stream_pred( [[ maybe_unused ]] const Lex* e, const Cell* a)
 {
-    (void)e;
     Cell* err = CHECK_ARITY_EXACT(a, 1, "stream?");
     if (err) { return err; }
 
@@ -214,8 +210,8 @@ static Cell* lazy_stream_pred(const Lex* e, const Cell* a)
 
 
 /* (head stream) -> stream.car */
-static Cell* lazy_head(const Lex* e, const Cell* a) {
-    (void)e;
+static Cell* lazy_head( [[ maybe_unused ]] const Lex* e, const Cell* a)
+{
     Cell* err = CHECK_ARITY_EXACT(a, 1, "head");
     if (err) { return err; }
 
@@ -229,7 +225,8 @@ static Cell* lazy_head(const Lex* e, const Cell* a) {
 
 
 /* (tail stream) -> stream.cdr */
-static Cell* lazy_tail(const Lex* e, const Cell* a) {
+static Cell* lazy_tail(const Lex* e, const Cell* a)
+{
     Cell* err = CHECK_ARITY_EXACT(a, 1, "tail");
     if (err) { return err; }
     if (a->cell[0]->type == CELL_NIL) {
@@ -248,7 +245,8 @@ static Cell* lazy_tail(const Lex* e, const Cell* a) {
 
 
 /* (at n stream) -> value */
-static Cell* lazy_at(const Lex* e, const Cell* a) {
+static Cell* lazy_at(const Lex* e, const Cell* a)
+{
     Cell* err = CHECK_ARITY_EXACT(a, 2, "at");
     if (err) { return err; }
     if (a->cell[0]->type != CELL_INTEGER) {
@@ -291,7 +289,8 @@ static Cell* lazy_at(const Lex* e, const Cell* a) {
 
 /* (take n stream)
  * */
-static Cell* lazy_take(const Lex* e, const Cell* a) {
+static Cell* lazy_take(const Lex* e, const Cell* a)
+{
     Cell* err = CHECK_ARITY_EXACT(a, 2, "take");
     if (err) { return err; }
 
@@ -332,7 +331,8 @@ static Cell* lazy_take(const Lex* e, const Cell* a) {
 
 
 /* (drop n stream) -> stream */
-static Cell* lazy_drop(const Lex* e, const Cell* a) {
+static Cell* lazy_drop(const Lex* e, const Cell* a)
+{
     Cell* err = CHECK_ARITY_EXACT(a, 2, "drop");
     if (err) { return err; }
 
@@ -360,8 +360,8 @@ static Cell* lazy_drop(const Lex* e, const Cell* a) {
 
 /* (list->stream list) -> stream
  * Converts a finite list into a stream. */
-static Cell* lazy_list_to_stream(const Lex* e, const Cell* a) {
-    (void)e;
+static Cell* lazy_list_to_stream( [[ maybe_unused ]] const Lex* e, const Cell* a)
+{
     Cell* err = CHECK_ARITY_EXACT(a, 1, "list->stream");
     if (err) { return err; }
 
@@ -390,7 +390,8 @@ static Cell* lazy_list_to_stream(const Lex* e, const Cell* a) {
 }
 
 
-static Cell* lazy_list_to_stream_tail(const Lex* e, const Cell* a) {
+static Cell* lazy_list_to_stream_tail(const Lex* e, const Cell* a)
+{
     Cell* lst = a->cell[0];
 
     if (lst->type == CELL_NIL) { return Nil_Obj; }
@@ -409,8 +410,8 @@ static Cell* lazy_list_to_stream_tail(const Lex* e, const Cell* a) {
 
 /* (iterate proc seed) -> stream
  * Returns an infinite stream (seed (f seed) (f (f seed)) ...) */
-static Cell* lazy_iterate(const Lex* e, const Cell* a) {
-    (void)e;
+static Cell* lazy_iterate( [[ maybe_unused ]] const Lex* e, const Cell* a)
+{
     Cell* err = CHECK_ARITY_EXACT(a, 2, "iterate");
     if (err) { return err; }
 
@@ -439,7 +440,8 @@ static Cell* lazy_iterate(const Lex* e, const Cell* a) {
 }
 
 
-static Cell* lazy_iterate_tail(const Lex* e, const Cell* a) {
+static Cell* lazy_iterate_tail(const Lex* e, const Cell* a)
+{
     Cell* proc = a->cell[0];
     const Cell* seed = a->cell[1];
 
@@ -457,7 +459,8 @@ static Cell* lazy_iterate_tail(const Lex* e, const Cell* a) {
 static Cell* lazy_select(const Lex* e, const Cell* a);
 
 /* Advance s by one tail step, then run select. Used as a native thunk. */
-static Cell* lazy_select_from_tail(const Lex* e, const Cell* a) {
+static Cell* lazy_select_from_tail(const Lex* e, const Cell* a)
+{
     Cell* pred = a->cell[0];
     const Cell* s = a->cell[1];
 
@@ -474,7 +477,8 @@ static Cell* lazy_select_from_tail(const Lex* e, const Cell* a) {
 }
 
 
-Cell* lazy_select(const Lex* e, const Cell* a) {
+Cell* lazy_select(const Lex* e, const Cell* a)
+{
     Cell* pred = a->cell[0];
     Cell* s = a->cell[1];
 
@@ -523,7 +527,8 @@ Cell* lazy_select(const Lex* e, const Cell* a) {
 
 /* (collect proc stream) -> stream
  * Returns a new stream by applying proc to each element of stream. */
-static Cell* lazy_collect(const Lex* e, const Cell* a) {
+static Cell* lazy_collect(const Lex* e, const Cell* a)
+{
     Cell* err = CHECK_ARITY_EXACT(a, 2, "collect");
     if (err) { return err; }
 
@@ -558,7 +563,8 @@ static Cell* lazy_collect(const Lex* e, const Cell* a) {
 }
 
 
-static Cell* lazy_collect_from_tail(const Lex* e, const Cell* a) {
+static Cell* lazy_collect_from_tail(const Lex* e, const Cell* a)
+{
     Cell* proc = a->cell[0];
     const Cell* s = a->cell[1];
 
@@ -582,8 +588,8 @@ static Cell* lazy_collect_from_tail(const Lex* e, const Cell* a) {
 
 /* (weave stream1 stream2) -> stream
  * Returns a new stream of pairs, combining elements from two streams. */
-static Cell* lazy_weave(const Lex* e, const Cell* a) {
-    (void)e;
+static Cell* lazy_weave( [[ maybe_unused ]] const Lex* e, const Cell* a)
+{
     Cell* err = CHECK_ARITY_EXACT(a, 2, "weave");
     if (err) { return err; }
 
@@ -622,7 +628,8 @@ static Cell* lazy_weave(const Lex* e, const Cell* a) {
 }
 
 
-static Cell* lazy_weave_tail(const Lex* e, const Cell* a) {
+static Cell* lazy_weave_tail(const Lex* e, const Cell* a)
+{
     const Cell* s1 = a->cell[0];
     const Cell* s2 = a->cell[1];
 
@@ -646,7 +653,8 @@ static Cell* lazy_weave_tail(const Lex* e, const Cell* a) {
 /* (reduce proc init stream) -> value
  * Folds proc over a finite stream, accumulating a result.
  * WARNING: Diverges on infinite streams. Use (take n stream) first. */
-static Cell* lazy_reduce(const Lex* e, const Cell* a) {
+static Cell* lazy_reduce(const Lex* e, const Cell* a)
+{
     Cell* err = CHECK_ARITY_EXACT(a, 3, "reduce");
     if (err) { return err; }
 
