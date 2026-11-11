@@ -19,9 +19,7 @@
 
 #include "config.h"
 #include "main.h"
-#include "repl.h"
 #include "runner.h"
-#include "stack_guard.h"
 #include "types.h"
 
 #include <gc/gc.h>
@@ -31,9 +29,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-
-/* Initialize load_libs struct to zeros. */
-static lib_load_config load_libs = {0};
 
 
 static void show_help()
@@ -92,11 +87,13 @@ static void process_library_arg(struct lib_load *l, const char *arg)
 
 int main(const int argc, char** argv)
 {
-    /* GC docs say this probably isn't necessary,
-     * but to do it to be portable with older versions. */
+    /* Initialize the GC. */
     GC_INIT();
 
     setlocale(LC_ALL, "");
+
+    /* Initialize load_libs struct to zeros. */
+    lib_load_config load_libs = {0};
 
     const struct option long_opts[] = {
         { .name = "help",    .has_arg = no_argument,       .flag = nullptr, .val = 'h' },
@@ -119,17 +116,14 @@ int main(const int argc, char** argv)
                 process_library_arg(&load_libs, optarg);
                 break;
             default:
-                ;
+                /* getopt prints 'bad arg' message, so just exit... */
+                exit(EXIT_FAILURE);
         }
     }
 
     const int non_option_args = argc - optind;
 
-    /*  Initialize stack protection. */
-    stack_guard_init();
-
     /* File runner mode. */
-
     if (non_option_args > 0) {
         is_repl = false;
         /* Grab the number of args, and the args themselves starting from the file arg
@@ -141,19 +135,14 @@ int main(const int argc, char** argv)
         /* File-Runner mode. */
         const char *file_path = argv[optind];
 
-        /* Pass the file path (argv[optind]) and the load_libs struct. */
-        return run_file_script(file_path, load_libs);
+        init_interpreter(file_path, load_libs);
+
+        return EXIT_SUCCESS;
     }
 
     /* REPL mode (no non-option arguments were provided). */
-
     is_repl = true;
-    /* Check if history file exists. If not, create it. */
-    init_history_path();
-    if (access(cozenage_history_path, F_OK) == -1) {
-        setup_history();
-    }
-    /* Run the REPL. */
-    run_repl(load_libs);
+    init_interpreter(nullptr, load_libs);
+
     return EXIT_SUCCESS;
 }

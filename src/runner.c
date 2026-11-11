@@ -1,7 +1,7 @@
 /*
  * 'src/runner.c'
  * This file is part of Cozenage - https://github.com/DarrenKirby/cozenage
- * Copyright © 2025 Darren Kirby <darren@dragonbyte.ca>
+ * Copyright © 2025 - 2026 Darren Kirby <darren@dragonbyte.ca>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,6 +23,7 @@
 #include "repl.h"
 #include "repr.h"
 #include "runner.h"
+#include "stack_guard.h"
 #include "symbols.h"
 #include "transforms.h"
 
@@ -35,26 +36,38 @@
 #define MAX_SIZE_SHIFT_AMT 30
 
 
-/* Check the file extension and print a warning if it's non-standard. */
-static void check_and_warn_extension(const char *file_path)
-{
-    const char *ext = strrchr(file_path, '.');
+void init_interpreter(const char *filepath, const lib_load_config load_libs) {
+    /* Initialize symbol table with initial size of 256. */
+    symbol_table = ht_create(INIT_SYMBOL_TABLE_SIZE);
+    /* Initialize default ports. */
+    init_default_ports();
+    /* Initialize global singleton objects, nil, #t, #f, and EOF. */
+    init_global_singletons();
+    /* Initialize bootstrap environment. */
+    const Lex* bootstrap = lex_initialize_bootstrap_env();
+    lex_add_builtins(bootstrap);
+    ht_table* core_builtins = bootstrap->working;
+    /* Initialize working environment. */
+    Lex* e = lex_initialize_working_env(core_builtins);
+    /* Initialize special form lookup table. */
+    init_special_forms();
+    /* Loads the CLI-specified libraries into the environment. */
+    load_initial_libraries(e, load_libs);
+    /*  Initialize stack protection. */
+    stack_guard_init();
 
-    /* Does the file have an extension? Is the extension NOT .scm AND NOT .ss? */
-    if (ext != NULL && strcmp(ext, ".scm") != 0 && strcmp(ext, ".ss") != 0) {
-        /* Print the non-fatal warning to stderr. */
-        fprintf(stderr,
-                "Warning: Running file '%s' which does not have the standard .scm or .ss extension.\n",
-                file_path);
+    if (filepath) {
+        run_file_script(filepath, e);
     }
+
+    run_repl(e);
 }
 
 
-/* The REPL has its own paren balance logic, so this only runs
- * for the file runner... */
+/* The REPL has its own (more complicated) parenthesis
+ * balance logic, so this only runs for the file runner... */
 static void check_paren_balance(const TokenArray* ta, const char *file)
 {
-    /* First check that the expression is balanced. */
     int left_count = 0;
     int right_count = 0;
 
@@ -64,7 +77,7 @@ static void check_paren_balance(const TokenArray* ta, const char *file)
     }
 
     if (left_count != right_count) {
-        fprintf(stderr, "Syntax error: code in %s has unbalanced parentheses\n", file);
+        fprintf(stderr, "Syntax error: code in '%s' has unbalanced parentheses\n", file);
         exit(EXIT_FAILURE);
     }
 }
@@ -142,47 +155,8 @@ char* read_file_to_string(const char* filename)
 }
 
 
-/* This sends code read from a library through the transformer */
-Cell* expand_and_eval(Cell* form, Lex* env)
+int run_file_script(const char *file_path, Lex* e)
 {
-    /* A top-level begin is a sequence of top-level forms: expand and evaluate
-     * each in turn, so a defmacro is visible to the forms after it. */
-    if (form->type == CELL_SEXPR && form->count > 0 && form->cell[0] == G_begin_sym) {
-        Cell* last = USP_Obj;
-        for (int i = 1; i < form->count; i++) {
-            last = expand_and_eval(form->cell[i], env);
-            if (last->type == CELL_ERROR) { return last; }
-        }
-        return last;
-    }
-    Cell* x = expand(form, env);
-    if (x->type == CELL_ERROR) { return x; }
-    return coz_eval(env, x);
-}
-
-
-int run_file_script(const char *file_path, const lib_load_config load_libs)
-{
-    /* Check extension and issue non-fatal warning. */
-    check_and_warn_extension(file_path);
-
-    /* Initialize symbol table with initial size of 128. */
-    symbol_table = ht_create(INIT_SYMBOL_TABLE_SIZE);
-    /* Initialize default ports. */
-    init_default_ports();
-    /* Initialize global singleton objects, nil, #t, #f, and EOF. */
-    init_global_singletons();
-    /* Initialize bootstrap environment. */
-    const Lex* bootstrap = lex_initialize_bootstrap_env();
-    lex_add_builtins(bootstrap);
-    ht_table* core_builtins = bootstrap->working;
-    /* Initialize working environment. */
-    Lex* e = lex_initialize_working_env(core_builtins);
-    /* Initialize special form lookup table. */
-    init_special_forms();
-    /* Loads the CLI-specified libraries into the environment. */
-    load_initial_libraries(e, load_libs);
-
     const char* input = read_file_to_string(file_path);
     if (input == NULL) {
         fprintf(stderr, "Fatal: could not open and read '%s'.\n", file_path);
@@ -202,7 +176,7 @@ int run_file_script(const char *file_path, const lib_load_config load_libs)
         exit(EXIT_FAILURE);
     }
 
-    exit(EXIT_FAILURE);
+    exit(EXIT_SUCCESS);
 }
 
 

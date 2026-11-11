@@ -81,7 +81,6 @@ void init_history_path() {
 }
 
 
-/* TODO: incorporate this into file library. */
 static int mkdir_p(const char *path) {
     char temp[PATH_MAX];
 
@@ -154,7 +153,7 @@ void setup_history() {
     init_history_path();
 
     /* Isolate the directory part of the path. */
-    char *dir_part = strdup(cozenage_history_path);
+    char *dir_part = GC_strdup(cozenage_history_path);
     char *last_slash = strrchr(dir_part, '/');
 
     if (last_slash) {
@@ -167,5 +166,4 @@ void setup_history() {
             if (f) { fclose(f); }
         }
     }
-    free(dir_part);
 }

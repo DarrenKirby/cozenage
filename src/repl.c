@@ -214,36 +214,23 @@ static void repl(Lex* e)
 }
 
 
-int run_repl(const lib_load_config load_libs)
+int run_repl(Lex* e)
 {
     /* Print Version and Exit Information. */
     printf("  %s%s%s version %s\n", ANSI_BLUE_B, APP_NAME, ANSI_RESET, APP_VERSION);
     printf("  Press <Ctrl+d> or type '(exit)' to quit\n\n");
 
-    /* Initialize the is_repl global flag. */
-    is_repl = 1;
     /* Initialize signal handler. */
     install_signal_handlers();
-    /* Initialize symbol table with initial size of 256. */
-    symbol_table = ht_create(INIT_SYMBOL_TABLE_SIZE);
-    /* Load readline history. */
+    /* Check if history file exists. If not, create it. */
+    init_history_path();
+    if (access(cozenage_history_path, F_OK) == -1) {
+        setup_history();
+    }
+    /* Load line edit history. */
     read_history_from_file();
-    /* Initialize default ports. */
-    init_default_ports();
-    /* Initialize global singleton objects. */
-    init_global_singletons();
-    /* Initialize bootstrap environment. */
-    const Lex* bootstrap = lex_initialize_bootstrap_env();
-    lex_add_builtins(bootstrap);
-    ht_table* core_builtins = bootstrap->working;
-    /* Initialize working environment. */
-    Lex* e = lex_initialize_working_env(core_builtins);
-    /* Loads the CLI-specified libraries into the environment. */
-    load_initial_libraries(e, load_libs);
     /* Load tab-completion candidate array from symbols in the environment. */
     populate_dynamic_completions(e);
-    /* Initialize special form lookup table */
-    init_special_forms();
 
     /* Run until we don't. */
     repl(e);

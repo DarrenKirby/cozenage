@@ -24,9 +24,9 @@
 #include "lexer.h"
 
 
-int run_file_script(const char *file_path, lib_load_config load_libs);
+void init_interpreter(const char *filepath, lib_load_config load_libs);
+int run_file_script(const char *file_path, Lex* e);
 Cell* parse_all_expressions(Lex* e, TokenArray* ta);
 char* read_file_to_string(const char* filename);
-Cell* expand_and_eval(Cell* form, Lex* env);
 
 #endif //COZENAGE_RUNNER_H

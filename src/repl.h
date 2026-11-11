@@ -23,7 +23,7 @@
 #include "config.h"
 
 
-int run_repl(lib_load_config load_libs);
+int run_repl(Lex* e);
 void coz_print(const Cell* v);
 void save_history_to_file();
 

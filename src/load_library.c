@@ -19,10 +19,13 @@
 
 #include "cell.h"
 #include "environment.h"
+#include "eval.h"
 #include "load_library.h"
 #include "parser.h"
+#include "repr.h"
 #include "runner.h"
 #include "symbols.h"
+#include "transforms.h"
 #include "types.h"
 
 #include <dlfcn.h>
@@ -32,17 +35,34 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "repr.h"
-
 #define MAX_SEARCH_PATHS 10
+
+
+/* This sends code read from a library through the transformer */
+static Cell* expand_and_eval(Cell* form, Lex* env)
+{
+    /* A top-level begin is a sequence of top-level forms: expand and evaluate
+     * each in turn, so a defmacro is visible to the forms after it. */
+    if (form->type == CELL_SEXPR && form->count > 0 && form->cell[0] == G_begin_sym) {
+        Cell* last = USP_Obj;
+        for (int i = 1; i < form->count; i++) {
+            last = expand_and_eval(form->cell[i], env);
+            if (last->type == CELL_ERROR) { return last; }
+        }
+        return last;
+    }
+    Cell* x = expand(form, env);
+    if (x->type == CELL_ERROR) { return x; }
+    return coz_eval(env, x);
+}
 
 
 /* Library Search Path Logic.
  * It first checks if the $COZENAGE_LIB_PATH ENV VAR has been set.
+ * Then, it looks in "./lib/cozenage" for running from the build directory.
  * It then checks in $XDG_DATA_HOME/cozenage, or ~/.local/share/cozenage if it is not set.
  * If none of these resolve, it will look in /usr/lib and /usr/lib64/
- * for regular/multilib Linux systems, and in /usr/local/lib/ for macOS and *BSD.
- * Lastly, it looks in "./lib/cozenage" for running from the build directory. */
+ * for regular/multilib Linux systems, and in /usr/local/lib/ for macOS and *BSD. */
 char **get_load_paths()
 {
     char **paths = GC_MALLOC(MAX_SEARCH_PATHS * sizeof(char*));
@@ -53,6 +73,9 @@ char **get_load_paths()
     if (env_path && env_path[0] != '\0') {
         paths[i++] = GC_STRDUP(env_path);
     }
+
+    /* For running from build directory. */
+    paths[i++] = GC_STRDUP("./lib/cozenage");
 
     /* XDG Data Home / Fallback. */
     const char *xdg_data = getenv("XDG_DATA_HOME");
@@ -75,9 +98,6 @@ char **get_load_paths()
     paths[i++] = GC_STRDUP("/usr/lib64/cozenage");
 #endif
     paths[i++] = GC_STRDUP("/usr/local/lib/cozenage");
-
-    /* For running from build directory. */
-    paths[i++] = GC_STRDUP("./lib/cozenage");
 
     paths[i] = nullptr;
     return paths;
